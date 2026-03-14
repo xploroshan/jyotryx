@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/store";
 
 const navLinks = [
   { href: "/chat", label: "AI Astrologer" },
@@ -10,12 +11,11 @@ const navLinks = [
   { href: "/horoscope", label: "Horoscope" },
   { href: "/palmistry", label: "Palmistry" },
   { href: "/matching", label: "Matching" },
-  { href: "/panchang", label: "Panchang" },
-  { href: "/pricing", label: "Pricing" },
 ];
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
@@ -43,18 +43,32 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/auth?mode=login"
-              className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
-            >
-              Login
-            </Link>
-            <Link
-              href="/auth?mode=signup"
-              className="px-4 py-2 text-sm bg-gradient-to-r from-primary-600 to-mystic-600 text-white rounded-lg hover:from-primary-500 hover:to-mystic-500 transition-all"
-            >
-              Get Started
-            </Link>
+            {isAuthenticated ? (
+              <>
+                {user?.role === "ADMIN" && (
+                  <Link href="/admin" className="px-3 py-2 text-sm text-red-400 hover:text-red-300 transition-colors">
+                    Admin
+                  </Link>
+                )}
+                <span className="text-sm text-gray-400">{user?.credits} credits</span>
+                <span className="text-sm text-gray-300">{user?.name}</span>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-sm text-gray-300 hover:text-white glass rounded-lg transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth?mode=login" className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                  Login
+                </Link>
+                <Link href="/auth?mode=signup" className="px-4 py-2 text-sm bg-gradient-to-r from-primary-600 to-mystic-600 text-white rounded-lg hover:from-primary-500 hover:to-mystic-500 transition-all">
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
 
           <button

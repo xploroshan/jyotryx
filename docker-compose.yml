@@ -34,6 +34,43 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: jyotryx-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://jyotryx:jyotryx_secret@postgres:5432/jyotryx?schema=public
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      PORT: "4000"
+      CORS_ORIGIN: https://www.jyotryx.com
+    env_file:
+      - ./apps/api/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: jyotryx-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: https://api.jyotryx.com/api
+      NEXT_PUBLIC_APP_URL: https://www.jyotryx.com
+      NODE_ENV: production
+    depends_on:
+      - api
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: jyotryx-pgadmin

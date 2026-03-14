@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto, LoginDto, SendOtpDto, VerifyOtpDto, GoogleAuthDto, RefreshTokenDto } from './dto';
 
 export interface AuthTokens {
@@ -22,26 +22,14 @@ export interface AuthResponse {
     id: string;
     name: string;
     email: string;
-    phone?: string;
+    phone?: string | null;
     credits: number;
+    role: string;
   };
   tokens: AuthTokens;
 }
 
-// In-memory stores for development (replace with DB/Redis in production)
-const usersStore: Map<string, {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  password: string;
-  dateOfBirth?: string;
-  timeOfBirth?: string;
-  placeOfBirth?: string;
-  credits: number;
-  createdAt: Date;
-}> = new Map();
-
+// In-memory OTP store (use Redis in production)
 const otpStore: Map<string, { otp: string; expiresAt: Date }> = new Map();
 
 @Injectable()
@@ -49,39 +37,36 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
+    private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    // Check if user already exists
-    const existingUser = Array.from(usersStore.values()).find(
-      (u) => u.email === dto.email,
-    );
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
-    const userId = uuidv4();
 
-    const user = {
-      id: userId,
-      name: dto.name,
-      email: dto.email,
-      phone: dto.phone,
-      password: hashedPassword,
-      dateOfBirth: dto.dateOfBirth,
-      timeOfBirth: dto.timeOfBirth,
-      placeOfBirth: dto.placeOfBirth,
-      credits: this.configService.get<number>('credits.freeMonthly', 10),
-      createdAt: new Date(),
-    };
+    const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        passwordHash: hashedPassword,
+        phone: dto.phone,
+        dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+        timeOfBirth: dto.timeOfBirth,
+        placeOfBirth: dto.placeOfBirth ? { name: dto.placeOfBirth } : undefined,
+        credits: this.configService.get<number>('credits.freeMonthly', 10),
+      },
+    });
 
-    usersStore.set(userId, user);
     this.logger.log(`User registered: ${user.email}`);
-
-    const tokens = await this.generateTokens(userId, user.email, user.name);
+    const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
       user: {
@@ -90,21 +75,22 @@ export class AuthService {
         email: user.email,
         phone: user.phone,
         credits: user.credits,
+        role: user.role,
       },
       tokens,
     };
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    const user = Array.from(usersStore.values()).find(
-      (u) => u.email === dto.email,
-    );
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
 
-    if (!user) {
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -119,6 +105,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone,
         credits: user.credits,
+        role: user.role,
       },
       tokens,
     };
@@ -165,22 +152,19 @@ export class AuthService {
     otpStore.delete(dto.phone);
 
     // Find or create user by phone
-    let user = Array.from(usersStore.values()).find(
-      (u) => u.phone === dto.phone,
-    );
+    let user = await this.prisma.user.findUnique({
+      where: { phone: dto.phone },
+    });
 
     if (!user) {
-      const userId = uuidv4();
-      user = {
-        id: userId,
-        name: 'User',
-        email: `${dto.phone.replace(/\+/g, '')}@phone.jyotryx.com`,
-        phone: dto.phone,
-        password: '',
-        credits: this.configService.get<number>('credits.freeMonthly', 10),
-        createdAt: new Date(),
-      };
-      usersStore.set(userId, user);
+      user = await this.prisma.user.create({
+        data: {
+          name: 'User',
+          email: `${dto.phone.replace(/\+/g, '')}@phone.jyotryx.com`,
+          phone: dto.phone,
+          credits: this.configService.get<number>('credits.freeMonthly', 10),
+        },
+      });
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.name);
@@ -192,6 +176,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone,
         credits: user.credits,
+        role: user.role,
       },
       tokens,
     };
@@ -199,22 +184,38 @@ export class AuthService {
 
   async googleAuth(dto: GoogleAuthDto): Promise<AuthResponse> {
     // TODO: Verify Google ID token with Google OAuth2 API
-    // For now, return mock data
     this.logger.warn('Google auth: using mock verification (implement Google OAuth2 verification)');
 
-    const mockUserId = uuidv4();
-    const tokens = await this.generateTokens(
-      mockUserId,
-      'google-user@example.com',
-      'Google User',
-    );
+    // In production, decode the Google token and extract user info
+    const email = 'google-user@example.com';
+    const name = 'Google User';
+
+    let user = await this.prisma.user.findFirst({
+      where: { provider: 'GOOGLE', providerId: dto.idToken.substring(0, 50) },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          name,
+          email: `google_${Date.now()}@jyotryx.com`,
+          provider: 'GOOGLE',
+          providerId: dto.idToken.substring(0, 50),
+          credits: this.configService.get<number>('credits.freeMonthly', 10),
+        },
+      });
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
       user: {
-        id: mockUserId,
-        name: 'Google User',
-        email: 'google-user@example.com',
-        credits: this.configService.get<number>('credits.freeMonthly', 10),
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        credits: user.credits,
+        role: user.role,
       },
       tokens,
     };

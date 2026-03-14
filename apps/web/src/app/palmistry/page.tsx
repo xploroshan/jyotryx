@@ -62,12 +62,27 @@ export default function PalmistryPage() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     setAnalyzing(true);
-    setTimeout(() => {
+    try {
+      const { useAuthStore } = await import("@/lib/store");
+      const token = useAuthStore.getState().accessToken;
+      if (token && fileRef.current?.files?.[0]) {
+        const { api } = await import("@/lib/api");
+        const formData = new FormData();
+        formData.append("image", fileRef.current.files[0]);
+        const result = await api.upload<any>("/palmistry/analyze", formData, token);
+        if (result?.lines) {
+          setAnalysis(result);
+          return;
+        }
+      }
       setAnalysis(mockAnalysis);
+    } catch {
+      setAnalysis(mockAnalysis);
+    } finally {
       setAnalyzing(false);
-    }, 3000);
+    }
   };
 
   const tabs = [

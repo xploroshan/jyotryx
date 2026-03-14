@@ -1,0 +1,29 @@
+# Cloudflare Tunnel Configuration
+# Run: cloudflared tunnel --config cloudflare-tunnel.yml run jyotryx
+#
+# Setup steps:
+# 1. Install cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+# 2. Authenticate: cloudflared tunnel login
+# 3. Create tunnel: cloudflared tunnel create jyotryx
+# 4. Add DNS: cloudflared tunnel route dns jyotryx www.jyotryx.com
+# 5. Add DNS: cloudflared tunnel route dns jyotryx api.jyotryx.com
+# 6. Run: cloudflared tunnel --config cloudflare-tunnel.yml run jyotryx
+
+tunnel: <YOUR_TUNNEL_ID>
+credentials-file: /root/.cloudflared/<YOUR_TUNNEL_ID>.json
+
+ingress:
+  # API backend
+  - hostname: api.jyotryx.com
+    service: http://localhost:4000
+
+  # Web frontend
+  - hostname: www.jyotryx.com
+    service: http://localhost:3000
+
+  # Root domain redirect
+  - hostname: jyotryx.com
+    service: http://localhost:3000
+
+  # Catch-all (required)
+  - service: http_status:404
