@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #fdf4ff;
+  --color-primary-100: #fae8ff;
+  --color-primary-200: #f5d0fe;
+  --color-primary-300: #f0abfc;
+  --color-primary-400: #e879f9;
+  --color-primary-500: #d946ef;
+  --color-primary-600: #c026d3;
+  --color-primary-700: #a21caf;
+  --color-primary-800: #86198f;
+  --color-primary-900: #701a75;
+
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+
+  --color-mystic-50: #eef2ff;
+  --color-mystic-100: #e0e7ff;
+  --color-mystic-200: #c7d2fe;
+  --color-mystic-300: #a5b4fc;
+  --color-mystic-400: #818cf8;
+  --color-mystic-500: #6366f1;
+  --color-mystic-600: #4f46e5;
+  --color-mystic-700: #4338ca;
+  --color-mystic-800: #3730a3;
+  --color-mystic-900: #312e81;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-400 via-accent-400 to-mystic-400 bg-clip-text text-transparent;
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+
+  .glow {
+    box-shadow: 0 0 40px rgba(217, 70, 239, 0.15),
+      0 0 80px rgba(99, 102, 241, 0.1);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 20px rgba(217, 70, 239, 0.5);
+  }
+}

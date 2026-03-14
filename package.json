@@ -1,0 +1,27 @@
+{
+  "name": "jyotryx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Astrology Platform - iOS | Android | Web",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:api": "cd apps/api && npm run start:dev",
+    "db:migrate": "cd apps/api && npx prisma migrate dev",
+    "db:seed": "cd apps/api && npx prisma db seed",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
