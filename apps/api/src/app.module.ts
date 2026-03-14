@@ -1,0 +1,29 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import configuration from './config/configuration';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { AstrologyModule } from './modules/astrology/astrology.module';
+import { PalmistryModule } from './modules/palmistry/palmistry.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { ReportModule } from './modules/report/report.module';
+import { NotificationModule } from './modules/notification/notification.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+    }),
+    AuthModule,
+    UserModule,
+    ChatModule,
+    AstrologyModule,
+    PalmistryModule,
+    PaymentModule,
+    ReportModule,
+    NotificationModule,
+  ],
+})
+export class AppModule {}

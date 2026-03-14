@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  PREMIUM
+  ADMIN
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  APPLE
+}
+
+enum PlanType {
+  FREE
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  CREDITS
+  SUBSCRIPTION
+  REPORT
+}
+
+enum ReportType {
+  LIFE
+  CAREER
+  MARRIAGE
+  WEALTH
+  PALM
+  ANNUAL
+}
+
+enum ReportStatus {
+  GENERATING
+  READY
+  FAILED
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  DAILY_FREE
+  CHAT_DEDUCTION
+  REPORT_PURCHASE
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  phone             String?   @unique
+  passwordHash      String?
+  name              String
+  dateOfBirth       DateTime?
+  timeOfBirth       String?
+  placeOfBirth      Json?     /// { lat: number, lng: number, name: string }
+  gender            String?
+  profilePhoto      String?
+  preferredLanguage String    @default("en")
+  role              Role      @default(USER)
+  credits           Int       @default(3)
+  provider          AuthProvider @default(LOCAL)
+  providerId        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  subscriptions      Subscription[]
+  chatSessions       ChatSession[]
+  kundliCharts       KundliChart[]
+  matchingResults    MatchingResult[]
+  palmistryReadings  PalmistryReading[]
+  payments           Payment[]
+  reports            Report[]
+  creditTransactions CreditTransaction[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([provider, providerId])
+  @@map("users")
+}
+
+model Subscription {
+  id                      String             @id @default(uuid()) @db.Uuid
+  userId                  String             @db.Uuid
+  plan                    PlanType           @default(FREE)
+  status                  SubscriptionStatus @default(ACTIVE)
+  razorpaySubscriptionId  String?            @unique
+  startDate               DateTime           @default(now())
+  endDate                 DateTime?
+  createdAt               DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([razorpaySubscriptionId])
+  @@map("subscriptions")
+}
+
+model ChatSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  category  String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  sessionId String   @db.Uuid
+  role      MessageRole
+  content   String
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}
+
+model KundliChart {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  name         String
+  dateOfBirth  DateTime
+  timeOfBirth  String
+  placeOfBirth Json     /// { lat: number, lng: number, name: string }
+  chartData    Json     /// Full computed chart data
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("kundli_charts")
+}
+
+model MatchingResult {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  personAName String
+  personADob  DateTime
+  personATime String
+  personAPlace Json    /// { lat: number, lng: number, name: string }
+  personBName String
+  personBDob  DateTime
+  personBTime String
+  personBPlace Json    /// { lat: number, lng: number, name: string }
+  gunaScore   Int
+  manglikA    Boolean  @default(false)
+  manglikB    Boolean  @default(false)
+  resultData  Json     /// Full matching analysis
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("matching_results")
+}
+
+model PalmistryReading {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  imageUrl     String
+  analysisData Json     /// AI-generated palm analysis
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("palmistry_readings")
+}
+
+model Payment {
+  id                 String        @id @default(uuid()) @db.Uuid
+  userId             String        @db.Uuid
+  amount             Decimal       @db.Decimal(10, 2)
+  currency           String        @default("INR")
+  status             PaymentStatus @default(PENDING)
+  razorpayOrderId    String?       @unique
+  razorpayPaymentId  String?       @unique
+  type               PaymentType
+  metadata           Json?
+  createdAt          DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([razorpayOrderId])
+  @@index([razorpayPaymentId])
+  @@map("payments")
+}
+
+model Report {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  type      ReportType
+  status    ReportStatus @default(GENERATING)
+  fileUrl   String?
+  price     Decimal      @db.Decimal(10, 2)
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, type])
+  @@map("reports")
+}
+
+model CreditTransaction {
+  id          String                @id @default(uuid()) @db.Uuid
+  userId      String                @db.Uuid
+  amount      Int                   /// Positive for credits added, negative for deductions
+  type        CreditTransactionType
+  description String?
+  createdAt   DateTime              @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("credit_transactions")
+}

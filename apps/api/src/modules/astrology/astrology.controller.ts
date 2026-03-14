@@ -1,0 +1,79 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  AstrologyService,
+  BirthDetails,
+  KundliResult,
+  MatchingResult,
+  HoroscopeResult,
+  PanchangResult,
+  MuhuratRequest,
+  MuhuratResult,
+  DoshaResult,
+} from './astrology.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
+
+@ApiTags('Astrology')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(JwtAuthGuard)
+@Controller('astrology')
+export class AstrologyController {
+  constructor(private readonly astrologyService: AstrologyService) {}
+
+  @Post('kundli')
+  @ApiOperation({ summary: 'Generate a Kundli (birth chart)' })
+  @ApiResponse({ status: 201, description: 'Kundli generated successfully' })
+  async generateKundli(
+    @CurrentUser() user: JwtPayload,
+    @Body() birthDetails: BirthDetails,
+  ): Promise<KundliResult> {
+    return this.astrologyService.generateKundli(user.sub, birthDetails);
+  }
+
+  @Post('matching')
+  @ApiOperation({ summary: 'Perform Kundli matching (Ashtakoot Guna)' })
+  @ApiResponse({ status: 201, description: 'Matching result generated' })
+  async getMatching(
+    @Body() body: { partner1: BirthDetails; partner2: BirthDetails },
+  ): Promise<MatchingResult> {
+    return this.astrologyService.getMatching(body.partner1, body.partner2);
+  }
+
+  @Get('horoscope/:sign')
+  @Public()
+  @ApiOperation({ summary: 'Get daily horoscope for a zodiac sign' })
+  @ApiResponse({ status: 200, description: 'Horoscope returned' })
+  async getHoroscope(@Param('sign') sign: string): Promise<HoroscopeResult> {
+    return this.astrologyService.getHoroscope(sign);
+  }
+
+  @Get('panchang')
+  @Public()
+  @ApiOperation({ summary: 'Get today\'s Panchang (Hindu calendar details)' })
+  @ApiResponse({ status: 200, description: 'Panchang details returned' })
+  async getPanchang(): Promise<PanchangResult> {
+    return this.astrologyService.getPanchang();
+  }
+
+  @Post('muhurat')
+  @ApiOperation({ summary: 'Find auspicious muhurat times' })
+  @ApiResponse({ status: 201, description: 'Muhurat times returned' })
+  async getMuhurat(@Body() dto: MuhuratRequest): Promise<MuhuratResult> {
+    return this.astrologyService.getMuhurat(dto);
+  }
+
+  @Get('dosha/:userId')
+  @ApiOperation({ summary: 'Get dosha analysis for a user' })
+  @ApiResponse({ status: 200, description: 'Dosha analysis returned' })
+  async getDosha(@Param('userId') userId: string): Promise<DoshaResult> {
+    return this.astrologyService.getDosha(userId);
+  }
+}
