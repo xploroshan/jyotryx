@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 const zodiacSigns = [
   { id: "aries", name: "Aries", symbol: "\u2648", date: "Mar 21 - Apr 19", element: "Fire" },
@@ -58,9 +58,22 @@ const mockHoroscope: Record<string, { overview: string; love: string; career: st
 export default function HoroscopePage() {
   const [selectedSign, setSelectedSign] = useState("aries");
   const [selectedPeriod, setSelectedPeriod] = useState("daily");
+  const [apiPrediction, setApiPrediction] = useState<string | null>(null);
 
   const sign = zodiacSigns.find((s) => s.id === selectedSign)!;
   const horoscope = mockHoroscope[selectedPeriod];
+
+  // Fetch live horoscope from API for daily period
+  React.useEffect(() => {
+    if (selectedPeriod === "daily") {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/horoscope/${selectedSign}`)
+        .then((res) => res.json())
+        .then((data) => { if (data?.prediction) setApiPrediction(data.prediction); })
+        .catch(() => setApiPrediction(null));
+    } else {
+      setApiPrediction(null);
+    }
+  }, [selectedSign, selectedPeriod]);
 
   const elementColor = (el: string) =>
     el === "Fire" ? "text-red-400" : el === "Earth" ? "text-emerald-400" : el === "Air" ? "text-sky-400" : "text-blue-400";
@@ -143,7 +156,7 @@ export default function HoroscopePage() {
             <h3 className="text-lg font-display font-bold text-gradient mb-4">
               {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Overview
             </h3>
-            <p className="text-gray-300 leading-relaxed">{horoscope.overview}</p>
+            <p className="text-gray-300 leading-relaxed">{apiPrediction || horoscope.overview}</p>
           </div>
 
           {/* Lucky */}

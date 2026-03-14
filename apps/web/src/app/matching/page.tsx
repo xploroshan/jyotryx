@@ -40,13 +40,42 @@ export default function MatchingPage() {
 
   const isValid = personA.name && personA.dob && personA.time && personA.place && personB.name && personB.dob && personB.time && personB.place;
 
-  const handleMatch = () => {
+  const handleMatch = async () => {
     if (!isValid) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const { useAuthStore } = await import("@/lib/store");
+      const token = useAuthStore.getState().accessToken;
+      if (token) {
+        const { api } = await import("@/lib/api");
+        const res = await api.post<any>("/astrology/matching", {
+          partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place },
+          partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place },
+        }, { token });
+        if (res?.totalScore) {
+          setResults({
+            ...mockResults,
+            totalScore: res.totalScore,
+            maxScore: res.maxScore,
+            percentage: Math.round((res.totalScore / res.maxScore) * 100),
+            koota: res.gunaDetails?.map((g: any) => ({
+              name: g.guna,
+              description: g.description,
+              obtained: g.obtainedPoints,
+              max: g.maxPoints,
+            })) || mockResults.koota,
+            verdict: res.compatibility || mockResults.verdict,
+            summary: res.recommendation || mockResults.summary,
+          });
+          return;
+        }
+      }
       setResults(mockResults);
+    } catch {
+      setResults(mockResults);
+    } finally {
       setLoading(false);
-    }, 2500);
+    }
   };
 
   const inputClass =

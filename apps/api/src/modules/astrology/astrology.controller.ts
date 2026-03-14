@@ -42,9 +42,10 @@ export class AstrologyController {
   @ApiOperation({ summary: 'Perform Kundli matching (Ashtakoot Guna)' })
   @ApiResponse({ status: 201, description: 'Matching result generated' })
   async getMatching(
+    @CurrentUser() user: JwtPayload,
     @Body() body: { partner1: BirthDetails; partner2: BirthDetails },
   ): Promise<MatchingResult> {
-    return this.astrologyService.getMatching(body.partner1, body.partner2);
+    return this.astrologyService.getMatching(user.sub, body.partner1, body.partner2);
   }
 
   @Get('horoscope/:sign')
@@ -70,10 +71,10 @@ export class AstrologyController {
     return this.astrologyService.getMuhurat(dto);
   }
 
-  @Get('dosha/:userId')
-  @ApiOperation({ summary: 'Get dosha analysis for a user' })
+  @Get('dosha')
+  @ApiOperation({ summary: 'Get dosha analysis for current user' })
   @ApiResponse({ status: 200, description: 'Dosha analysis returned' })
-  async getDosha(@Param('userId') userId: string): Promise<DoshaResult> {
-    return this.astrologyService.getDosha(userId);
+  async getDosha(@CurrentUser() user: JwtPayload): Promise<DoshaResult> {
+    return this.astrologyService.getDosha(user.sub);
   }
 }

@@ -65,13 +65,26 @@ export default function KundliPage() {
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState({ name: "", dob: "", time: "", place: "" });
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!form.name || !form.dob || !form.time || !form.place) return;
     setGenerating(true);
-    setTimeout(() => {
+    try {
+      const { useAuthStore } = await import("@/lib/store");
+      const token = useAuthStore.getState().accessToken;
+      if (token) {
+        const { api } = await import("@/lib/api");
+        await api.post("/astrology/kundli", {
+          dateOfBirth: form.dob,
+          timeOfBirth: form.time,
+          placeOfBirth: form.place,
+        }, { token });
+      }
       setGenerated(true);
+    } catch {
+      setGenerated(true); // Still show results with mock data
+    } finally {
       setGenerating(false);
-    }, 2000);
+    }
   };
 
   return (

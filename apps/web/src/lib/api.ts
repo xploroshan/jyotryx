@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 interface ApiOptions extends RequestInit {
   token?: string;
@@ -41,4 +41,22 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: ApiOptions) =>
     apiRequest<T>(endpoint, { ...options, method: "DELETE" }),
+
+  upload: async <T>(endpoint: string, formData: FormData, token?: string): Promise<T> => {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: "Upload failed" }));
+      throw new Error(error.message || `API Error: ${response.status}`);
+    }
+
+    return response.json();
+  },
 };
