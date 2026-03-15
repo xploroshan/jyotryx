@@ -73,6 +73,15 @@ enum CreditTransactionType {
   REPORT_PURCHASE
 }
 
+enum AdminAction {
+  USER_UPDATE
+  USER_DELETE
+  USER_CREDITS_UPDATE
+  USER_ROLE_CHANGE
+  SUBSCRIPTION_CANCEL
+  SUBSCRIPTION_UPDATE
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -259,4 +268,24 @@ model CreditTransaction {
   @@index([userId])
   @@index([userId, createdAt])
   @@map("credit_transactions")
+}
+
+model ActivityLog {
+  id           String      @id @default(uuid()) @db.Uuid
+  adminId      String      @db.Uuid
+  adminEmail   String
+  action       AdminAction
+  entityType   String      /// e.g. "User", "Subscription"
+  entityId     String      @db.Uuid
+  entityLabel  String?     /// Human-readable label e.g. user email
+  previousData Json?       /// Snapshot before change
+  newData      Json?       /// Snapshot after change
+  undone       Boolean     @default(false)
+  undoneAt     DateTime?
+  createdAt    DateTime    @default(now())
+
+  @@index([adminId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
 }

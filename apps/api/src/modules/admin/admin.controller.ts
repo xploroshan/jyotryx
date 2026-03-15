@@ -2,14 +2,16 @@ import {
   Controller,
   Get,
   Put,
+  Post,
   Delete,
   Body,
   Param,
   Query,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AdminService, DashboardStats, UserListItem, AdminUserUpdate } from './admin.service';
+import { AdminService, DashboardStats, UserListItem, UserDetail, AdminUserUpdate } from './admin.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
 
@@ -42,21 +44,32 @@ export class AdminController {
     );
   }
 
+  @Get('users/:id')
+  @ApiOperation({ summary: 'Get detailed user information' })
+  @ApiResponse({ status: 200, description: 'User detail returned' })
+  async getUserDetail(@Param('id') userId: string): Promise<UserDetail> {
+    return this.adminService.getUserDetail(userId);
+  }
+
   @Put('users/:id')
-  @ApiOperation({ summary: 'Update user role or credits' })
+  @ApiOperation({ summary: 'Update user details' })
   @ApiResponse({ status: 200, description: 'User updated' })
   async updateUser(
     @Param('id') userId: string,
     @Body() dto: AdminUserUpdate,
+    @Request() req: any,
   ): Promise<UserListItem> {
-    return this.adminService.updateUser(userId, dto);
+    return this.adminService.updateUser(userId, dto, req.user.sub, req.user.email);
   }
 
   @Delete('users/:id')
   @ApiOperation({ summary: 'Delete a user' })
   @ApiResponse({ status: 200, description: 'User deleted' })
-  async deleteUser(@Param('id') userId: string): Promise<{ deleted: boolean }> {
-    return this.adminService.deleteUser(userId);
+  async deleteUser(
+    @Param('id') userId: string,
+    @Request() req: any,
+  ): Promise<{ deleted: boolean }> {
+    return this.adminService.deleteUser(userId, req.user.sub, req.user.email);
   }
 
   @Get('payments')
@@ -71,5 +84,40 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Chat session list returned' })
   async getChats(@Query('limit') limit?: string) {
     return this.adminService.getRecentChats(parseInt(limit || '20', 10));
+  }
+
+  @Get('activity')
+  @ApiOperation({ summary: 'Get activity logs' })
+  @ApiResponse({ status: 200, description: 'Activity logs returned' })
+  async getActivityLogs(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('action') action?: string,
+  ) {
+    return this.adminService.getActivityLogs(
+      parseInt(page || '1', 10),
+      parseInt(limit || '30', 10),
+      action,
+    );
+  }
+
+  @Post('activity/:id/undo')
+  @ApiOperation({ summary: 'Undo an admin action' })
+  @ApiResponse({ status: 200, description: 'Action undone successfully' })
+  async undoActivity(
+    @Param('id') logId: string,
+    @Request() req: any,
+  ) {
+    return this.adminService.undoActivity(logId, req.user.sub, req.user.email);
+  }
+
+  @Post('subscriptions/:id/cancel')
+  @ApiOperation({ summary: 'Cancel a user subscription' })
+  @ApiResponse({ status: 200, description: 'Subscription cancelled' })
+  async cancelSubscription(
+    @Param('id') subscriptionId: string,
+    @Request() req: any,
+  ) {
+    return this.adminService.cancelSubscription(subscriptionId, req.user.sub, req.user.email);
   }
 }
