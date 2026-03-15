@@ -116,7 +116,7 @@ export class ReportService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return reports.map((r) => ({
+    return reports.map((r: any) => ({
       id: r.id,
       userId: r.userId,
       type: r.type,

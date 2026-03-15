@@ -106,7 +106,7 @@ export class UserService {
   }
 
   async deductCredits(userId: string, amount: number, description: string): Promise<boolean> {
-    return await this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx: any) => {
       const user = await tx.user.findUnique({ where: { id: userId } });
       if (!user || user.credits < amount) return false;
 
@@ -129,7 +129,7 @@ export class UserService {
   }
 
   async addCredits(userId: string, amount: number, type: string, description: string): Promise<boolean> {
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: any) => {
       await tx.user.update({
         where: { id: userId },
         data: { credits: { increment: amount } },

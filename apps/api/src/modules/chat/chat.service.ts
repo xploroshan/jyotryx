@@ -81,7 +81,7 @@ export class ChatService {
     const aiReply = await this.generateAIResponse(
       dto.message,
       dbSession.category,
-      dbSession.messages.map((m) => ({ role: m.role.toLowerCase(), content: m.content })),
+      dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
     );
 
     // Save assistant message
@@ -104,7 +104,7 @@ export class ChatService {
       userId: updatedSession!.userId,
       title: updatedSession!.title,
       category: updatedSession!.category,
-      messages: updatedSession!.messages.map((m) => ({
+      messages: updatedSession!.messages.map((m: any) => ({
         id: m.id,
         sessionId: m.sessionId,
         role: m.role.toLowerCase() as 'user' | 'assistant',
@@ -132,7 +132,7 @@ export class ChatService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return sessions.map((s) => ({
+    return sessions.map((s: any) => ({
       id: s.id,
       userId: s.userId,
       title: s.title,
@@ -157,7 +157,7 @@ export class ChatService {
       userId: session.userId,
       title: session.title,
       category: session.category,
-      messages: session.messages.map((m) => ({
+      messages: session.messages.map((m: any) => ({
         id: m.id,
         sessionId: m.sessionId,
         role: m.role.toLowerCase() as 'user' | 'assistant',

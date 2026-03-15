@@ -49,7 +49,7 @@ export class PalmistryController {
   @ApiResponse({ status: 400, description: 'Invalid image or insufficient credits' })
   async analyzePalm(
     @CurrentUser() user: JwtPayload,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFile() file?: any,
   ): Promise<PalmistryAnalysis> {
     return this.palmistryService.analyzePalm(
       user.sub,
