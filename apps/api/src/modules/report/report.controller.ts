@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ReportService, Report, GenerateReportDto } from './report.service';
+import { ReportService, ReportResponse, GenerateReportDto } from './report.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload } from '../../common/decorators/current-user.decorator';
 
@@ -25,7 +25,7 @@ export class ReportController {
   async generateReport(
     @CurrentUser() user: JwtPayload,
     @Body() dto: GenerateReportDto,
-  ): Promise<Report> {
+  ): Promise<ReportResponse> {
     return this.reportService.generateReport(user.sub, dto);
   }
 
@@ -36,7 +36,7 @@ export class ReportController {
   async getReport(
     @CurrentUser() user: JwtPayload,
     @Param('id') reportId: string,
-  ): Promise<Report> {
+  ): Promise<ReportResponse> {
     return this.reportService.getReport(user.sub, reportId);
   }
 
@@ -45,7 +45,7 @@ export class ReportController {
   @ApiResponse({ status: 200, description: 'List of reports' })
   async getUserReports(
     @CurrentUser() user: JwtPayload,
-  ): Promise<Omit<Report, 'sections'>[]> {
+  ): Promise<Omit<ReportResponse, 'sections'>[]> {
     return this.reportService.getUserReports(user.sub);
   }
 }

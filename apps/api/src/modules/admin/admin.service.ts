@@ -105,7 +105,7 @@ export class AdminService {
     ]);
 
     return {
-      users: users.map((u) => ({
+      users: users.map((u: any) => ({
         ...u,
         createdAt: u.createdAt.toISOString(),
       })),
@@ -152,7 +152,7 @@ export class AdminService {
       include: { user: { select: { name: true, email: true } } },
     });
 
-    return payments.map((p) => ({
+    return payments.map((p: any) => ({
       id: p.id,
       userName: p.user.name,
       userEmail: p.user.email,
@@ -174,7 +174,7 @@ export class AdminService {
       },
     });
 
-    return sessions.map((s) => ({
+    return sessions.map((s: any) => ({
       id: s.id,
       userName: s.user.name,
       userEmail: s.user.email,

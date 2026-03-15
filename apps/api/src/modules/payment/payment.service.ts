@@ -269,7 +269,7 @@ export class PaymentService {
       take: 50,
     });
 
-    return payments.map((p) => ({
+    return payments.map((p: any) => ({
       id: p.id,
       orderId: p.razorpayOrderId,
       amount: Number(p.amount),
