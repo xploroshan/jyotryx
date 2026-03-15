@@ -8,7 +8,7 @@ export default () => ({
 
   jwt: {
     secret: process.env.JWT_SECRET || 'jyotryx-dev-secret-change-in-production',
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: process.env.JWT_EXPIRES_IN || '1d',
     refreshSecret:
       process.env.JWT_REFRESH_SECRET || 'jyotryx-refresh-secret-change-in-production',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',

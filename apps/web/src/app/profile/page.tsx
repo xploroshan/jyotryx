@@ -36,14 +36,23 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [activeTab, setActiveTab] = useState<"profile" | "credits">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "credits" | "security">("profile");
 
-  // Form state
+  // Profile form
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
   const [pob, setPob] = useState("");
+
+  // Security form
+  const [hasPassword, setHasPassword] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [changingPw, setChangingPw] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -57,12 +66,14 @@ export default function ProfilePage() {
     setLoading(true);
     setError("");
     try {
-      const [profileData, creditsData] = await Promise.all([
+      const [profileData, creditsData, authStatus] = await Promise.all([
         api.get<UserProfile>("/users/me", { token: accessToken! }),
         api.get<CreditInfo>("/users/me/credits", { token: accessToken! }),
+        api.get<{ hasPassword: boolean }>("/auth/status", { token: accessToken! }),
       ]);
       setProfile(profileData);
       setCreditInfo(creditsData);
+      setHasPassword(authStatus.hasPassword);
       setName(profileData.name || "");
       setPhone(profileData.phone || "");
       setDob(profileData.dateOfBirth ? profileData.dateOfBirth.split("T")[0] : "");
@@ -103,6 +114,73 @@ export default function ProfilePage() {
     }
   };
 
+  const handleChangePassword = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!hasPassword) {
+      // Setting password for OTP/social users
+      if (!newPassword || newPassword.length < 8) {
+        setError("Password must be at least 8 characters");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+      setChangingPw(true);
+      try {
+        const res = await api.post<{ message: string }>("/auth/set-password", { password: newPassword }, { token: accessToken! });
+        setSuccess(res.message);
+        setHasPassword(true);
+        setNewPassword("");
+        setConfirmPassword("");
+        setTimeout(() => setSuccess(""), 3000);
+      } catch (err: any) {
+        setError(err.message || "Failed to set password");
+      } finally {
+        setChangingPw(false);
+      }
+      return;
+    }
+
+    // Changing existing password
+    if (!currentPassword) {
+      setError("Please enter your current password");
+      return;
+    }
+    if (!newPassword || newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setError("New password must be different from current password");
+      return;
+    }
+
+    setChangingPw(true);
+    try {
+      const res = await api.post<{ message: string }>(
+        "/auth/change-password",
+        { currentPassword, newPassword },
+        { token: accessToken! }
+      );
+      setSuccess(res.message);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message || "Failed to change password");
+    } finally {
+      setChangingPw(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     router.push("/");
@@ -110,6 +188,20 @@ export default function ProfilePage() {
 
   const roleBadge = (role: string) =>
     role === "ADMIN" ? "bg-red-500/20 text-red-400" : role === "PREMIUM" ? "bg-purple-500/20 text-purple-400" : "bg-white/5 text-gray-400";
+
+  const passwordStrength = (pw: string) => {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[a-z]/.test(pw)) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^a-zA-Z0-9]/.test(pw)) score++;
+    return score;
+  };
+
+  const strength = passwordStrength(newPassword);
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong", "Very Strong"][strength] || "";
+  const strengthColor = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"][strength] || "";
 
   return (
     <div className="relative min-h-screen">
@@ -135,7 +227,10 @@ export default function ProfilePage() {
         )}
 
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
+            {error}
+            <button onClick={() => setError("")} className="text-red-400 hover:text-red-300 ml-2">&times;</button>
+          </div>
         )}
         {success && (
           <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">{success}</div>
@@ -163,14 +258,19 @@ export default function ProfilePage() {
 
             {/* Tabs */}
             <div className="flex gap-2 mb-6 rounded-xl bg-white/5 p-1 w-fit">
-              {(["profile", "credits"] as const).map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white" : "text-gray-400 hover:text-white"}`}>
-                  {tab === "profile" ? "Birth Details" : "Credits"}
+              {([
+                { id: "profile" as const, label: "Birth Details" },
+                { id: "security" as const, label: "Security" },
+                { id: "credits" as const, label: "Credits" },
+              ]).map((t) => (
+                <button key={t.id} onClick={() => { setActiveTab(t.id); setError(""); setSuccess(""); }}
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === t.id ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                  {t.label}
                 </button>
               ))}
             </div>
 
+            {/* Birth Details Tab */}
             {activeTab === "profile" && (
               <div className="glass-card p-6">
                 <h3 className="text-lg font-display font-bold text-white mb-6">Birth Details</h3>
@@ -210,9 +310,121 @@ export default function ProfilePage() {
               </div>
             )}
 
+            {/* Security Tab */}
+            {activeTab === "security" && (
+              <div className="space-y-6">
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-display font-bold text-white mb-2">
+                    {hasPassword ? "Change Password" : "Set Password"}
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-6">
+                    {hasPassword
+                      ? "Update your password to keep your account secure."
+                      : "You signed in via OTP/social login. Set a password to also log in with email."}
+                  </p>
+
+                  <div className="space-y-4">
+                    {hasPassword && (
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-2">Current Password</label>
+                        <div className="relative">
+                          <input type={showCurrentPw ? "text" : "password"} value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password"
+                            className="w-full px-4 py-3 pr-16 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                          <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300">
+                            {showCurrentPw ? "Hide" : "Show"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-2">New Password</label>
+                      <div className="relative">
+                        <input type={showNewPw ? "text" : "password"} value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 8 chars, upper + lower + number"
+                          className="w-full px-4 py-3 pr-16 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                        <button type="button" onClick={() => setShowNewPw(!showNewPw)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300">
+                          {showNewPw ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                      {newPassword.length > 0 && (
+                        <div className="mt-2">
+                          <div className="flex gap-1 mb-1">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                              <div key={i} className={`h-1 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-white/10"}`} />
+                            ))}
+                          </div>
+                          <p className={`text-xs ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`}>
+                            {strengthLabel}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-2">Confirm New Password</label>
+                      <input type="password" value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                      {confirmPassword && newPassword !== confirmPassword && (
+                        <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
+                      )}
+                    </div>
+
+                    <button onClick={handleChangePassword} disabled={changingPw}
+                      className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-medium hover:from-primary-500 hover:to-mystic-500 transition-all disabled:opacity-50">
+                      {changingPw ? "Saving..." : hasPassword ? "Change Password" : "Set Password"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Account Info */}
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-display font-bold text-white mb-4">Account Security</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                      <div>
+                        <p className="text-sm text-white">Password</p>
+                        <p className="text-xs text-gray-500">Authentication method</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${hasPassword ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
+                        {hasPassword ? "Set" : "Not Set"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                      <div>
+                        <p className="text-sm text-white">Email</p>
+                        <p className="text-xs text-gray-500">{profile.email}</p>
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">Verified</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                      <div>
+                        <p className="text-sm text-white">Phone</p>
+                        <p className="text-xs text-gray-500">{profile.phone || "Not added"}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${profile.phone ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-gray-500"}`}>
+                        {profile.phone ? "Linked" : "Not Linked"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                      <div>
+                        <p className="text-sm text-white">Two-Factor Auth</p>
+                        <p className="text-xs text-gray-500">Extra security layer</p>
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-500">Coming Soon</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Credits Tab */}
             {activeTab === "credits" && creditInfo && (
               <div className="space-y-6">
-                {/* Credit Overview */}
                 <div className="glass-card p-6">
                   <h3 className="text-lg font-display font-bold text-white mb-4">Credit Balance</h3>
                   <div className="grid grid-cols-3 gap-4">
@@ -240,7 +452,6 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                {/* Buy More */}
                 <div className="glass-card p-6">
                   <h3 className="text-lg font-display font-bold text-white mb-2">Need More Credits?</h3>
                   <p className="text-sm text-gray-400 mb-4">
