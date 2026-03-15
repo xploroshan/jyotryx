@@ -11,6 +11,9 @@ const categories = [
   { id: "general", label: "General", icon: "\u2B50", color: "from-emerald-500 to-green-500" },
   { id: "kundli", label: "Kundli", icon: "\uD83E\uDE90", color: "from-violet-500 to-purple-500" },
   { id: "remedy", label: "Remedies", icon: "\uD83D\uDD2E", color: "from-amber-500 to-yellow-500" },
+  { id: "wealth", label: "Wealth", icon: "\uD83D\uDCB0", color: "from-emerald-500 to-teal-500" },
+  { id: "health", label: "Health", icon: "\uD83C\uDFE5", color: "from-red-500 to-orange-500" },
+  { id: "numerology", label: "Numerology", icon: "\uD83D\uDD22", color: "from-indigo-500 to-violet-500" },
 ];
 
 const suggestedQuestions = [

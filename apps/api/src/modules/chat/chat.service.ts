@@ -24,7 +24,7 @@ export interface ChatSession {
 export interface SendMessageDto {
   sessionId?: string;
   message: string;
-  category?: 'general' | 'kundli' | 'career' | 'relationship' | 'remedy';
+  category?: 'general' | 'kundli' | 'career' | 'relationship' | 'remedy' | 'wealth' | 'health' | 'numerology';
 }
 
 @Injectable()
@@ -216,6 +216,12 @@ export class ChatService {
         'Your Navamsa chart indicates Venus in an exalted position, suggesting deep romantic connections. The 7th lord placement suggests a supportive and understanding partner will enter your life soon.',
       remedy:
         'Based on your planetary positions, wearing a Yellow Sapphire (Pukhraj) on the index finger of your right hand on a Thursday morning can strengthen Jupiter\'s influence. Chanting the Guru Beej Mantra "Om Graam Greem Graum Sah Gurave Namah" 108 times daily is also recommended.',
+      wealth:
+        'The 2nd and 11th houses in your chart suggest promising financial opportunities. Jupiter\'s transit through your wealth sector indicates potential gains through investments and career advancement. Consider starting new financial ventures during the upcoming Jupiter-Venus conjunction for maximum benefit.',
+      health:
+        'Your birth chart indicates strong vitality with Sun well-placed in the Lagna. However, Saturn\'s aspect on the 6th house suggests paying attention to bone health and joint care. Regular yoga, especially Surya Namaskar, and a Pitta-balancing diet are recommended. Please consult a medical professional for specific health concerns.',
+      numerology:
+        'Based on your date of birth, your Life Path Number reveals key insights about your destiny. The current Personal Year cycle suggests a period of growth and new beginnings. Your Name Number indicates strong leadership qualities. Consider the number vibrations when making important decisions this month.',
     };
 
     return responses[category] || responses.general;
@@ -229,6 +235,9 @@ export class ChatService {
       relationship: `${basePrompt} Focus on relationship compatibility, Navamsa chart, Venus placements, 7th house analysis, and love predictions.`,
       kundli: `${basePrompt} Focus on birth chart interpretation, planetary positions, house analysis, Dasha periods, and Yogas.`,
       remedy: `${basePrompt} Focus on astrological remedies: gemstones, mantras, pujas, fasting, and charitable acts. Be specific with instructions.`,
+      wealth: `${basePrompt} Focus on financial astrology: 2nd and 11th house analysis, Dhana Yogas, wealth-producing planetary combinations, investment timing, and financial planning based on transits.`,
+      health: `${basePrompt} Focus on medical astrology: 6th and 8th house analysis, planetary influences on health, Ayurvedic constitution, favorable periods for health improvements. Always include a disclaimer that this is not a substitute for medical advice.`,
+      numerology: `${basePrompt} Focus on Vedic and Chaldean numerology: Life Path numbers, Name Numbers, Personal Year cycles, lucky numbers, and practical numerological guidance.`,
       general: basePrompt,
     };
 
