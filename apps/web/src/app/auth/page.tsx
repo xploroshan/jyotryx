@@ -14,19 +14,32 @@ export default function AuthPage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSendOtp = async () => {
-    if (phone.length < 10) return;
+    if (phone.length < 10) {
+      setError("Please enter a valid 10-digit phone number");
+      return;
+    }
     setLoading(true);
     setError("");
+    setDevOtp(null);
     try {
-      await api.post("/auth/otp/send", { phone: `+91${phone}` });
+      const res = await api.post<{ message: string; expiresIn: number; devOtp?: string }>(
+        "/auth/otp/send",
+        { phone: `+91${phone}` }
+      );
       setOtpSent(true);
+      if (res.devOtp) {
+        setDevOtp(res.devOtp);
+        setOtp(res.devOtp);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to send OTP");
     } finally {
@@ -35,6 +48,10 @@ export default function AuthPage() {
   };
 
   const handleVerifyOtp = async () => {
+    if (otp.length < 4) {
+      setError("Please enter the OTP");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -49,6 +66,10 @@ export default function AuthPage() {
   };
 
   const handleEmailAuth = async () => {
+    if (!email) { setError("Please enter your email"); return; }
+    if (!password || password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (tab === "signup" && !name) { setError("Please enter your name"); return; }
+
     setLoading(true);
     setError("");
     try {
@@ -63,6 +84,20 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
+
+  const passwordStrength = (pw: string) => {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[a-z]/.test(pw)) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^a-zA-Z0-9]/.test(pw)) score++;
+    return score;
+  };
+
+  const strength = passwordStrength(password);
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong", "Very Strong"][strength] || "";
+  const strengthColor = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"][strength] || "";
 
   return (
     <div className="relative min-h-[85vh] flex items-center justify-center px-4 py-16">
@@ -131,7 +166,7 @@ export default function AuthPage() {
           {/* Auth Method Toggle */}
           <div className="flex gap-2 mb-6">
             <button
-              onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); }}
+              onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); setDevOtp(null); }}
               className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
                 authMethod === "phone" ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"
               }`}
@@ -164,17 +199,26 @@ export default function AuthPage() {
                   <label className="block text-sm text-gray-400 mb-1.5">Phone Number</label>
                   <div className="flex gap-2">
                     <span className="flex items-center px-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-sm">+91</span>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number"
-                      className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors" />
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="Enter phone number"
+                      disabled={otpSent}
+                      className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
                   </div>
                 </div>
 
                 {otpSent && (
                   <div>
                     <label className="block text-sm text-gray-400 mb-1.5">Enter OTP</label>
-                    <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit OTP" maxLength={6}
+                    <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit OTP" maxLength={6}
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors tracking-widest text-center text-lg" />
-                    <button onClick={handleSendOtp} className="text-xs text-primary-400 hover:text-primary-300 mt-2">Resend OTP</button>
+                    {devOtp && (
+                      <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs text-center">
+                        Dev Mode - OTP auto-filled: <span className="font-mono font-bold">{devOtp}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      <button onClick={handleSendOtp} disabled={loading} className="text-xs text-primary-400 hover:text-primary-300">Resend OTP</button>
+                      <button onClick={() => { setOtpSent(false); setOtp(""); setDevOtp(null); }} className="text-xs text-gray-500 hover:text-gray-300">Change Number</button>
+                    </div>
                   </div>
                 )}
 
@@ -195,8 +239,28 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1.5">Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors" />
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 8 characters"
+                      className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-sm">
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {/* Password strength meter for signup */}
+                  {tab === "signup" && password.length > 0 && (
+                    <div className="mt-2">
+                      <div className="flex gap-1 mb-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className={`h-1 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-white/10"}`} />
+                        ))}
+                      </div>
+                      <p className={`text-xs ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`}>
+                        {strengthLabel}
+                        {strength < 3 && " - Use uppercase, lowercase, numbers"}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <button
