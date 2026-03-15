@@ -11,6 +11,8 @@ const navLinks = [
   { href: "/horoscope", label: "Horoscope" },
   { href: "/palmistry", label: "Palmistry" },
   { href: "/matching", label: "Matching" },
+  { href: "/panchang", label: "Panchang" },
+  { href: "/muhurat", label: "Muhurat" },
 ];
 
 export default function Navbar() {
@@ -50,8 +52,15 @@ export default function Navbar() {
                     Admin
                   </Link>
                 )}
-                <span className="text-sm text-gray-400">{user?.credits} credits</span>
-                <span className="text-sm text-gray-300">{user?.name}</span>
+                <Link href="/reports" className="px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                  Reports
+                </Link>
+                <Link href="/pricing" className="px-3 py-2 text-sm text-accent-400 hover:text-accent-300 transition-colors">
+                  {user?.credits} credits
+                </Link>
+                <Link href="/profile" className="px-3 py-2 text-sm text-gray-300 hover:text-white transition-colors">
+                  {user?.name}
+                </Link>
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-sm text-gray-300 hover:text-white glass rounded-lg transition-colors"
