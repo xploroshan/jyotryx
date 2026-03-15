@@ -201,7 +201,7 @@ export class AstrologyService {
         personBTime: partner2.timeOfBirth,
         personBPlace: { name: partner2.placeOfBirth, lat: partner2.latitude || 0, lng: partner2.longitude || 0 },
         gunaScore: totalScore,
-        resultData: { gunaDetails, compatibility: totalScore >= 24 ? 'Very Good' : totalScore >= 18 ? 'Good' : 'Average' },
+        resultData: JSON.parse(JSON.stringify({ gunaDetails, compatibility: totalScore >= 24 ? 'Very Good' : totalScore >= 18 ? 'Good' : 'Average' })),
       },
     });
 
