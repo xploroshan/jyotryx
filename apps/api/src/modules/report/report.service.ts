@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
@@ -56,7 +56,10 @@ export class ReportService {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
     const creditCost = this.configService.get<number>('credits.reportCost', 5);
 
-    await this.userService.deductCredits(userId, creditCost, `${dto.type} report generation`);
+    const deducted = await this.userService.deductCredits(userId, creditCost, `${dto.type} report generation`);
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
 
     // Fetch user's profile for personalized reports
     const user = await this.prisma.user.findUnique({

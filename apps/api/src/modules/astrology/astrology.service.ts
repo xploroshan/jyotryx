@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
@@ -181,7 +181,10 @@ export class AstrologyService {
     this.logger.log(`Generating Kundli for user: ${userId}`);
 
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    await this.userService.deductCredits(userId, creditCost, 'Kundli generation');
+    const deducted = await this.userService.deductCredits(userId, creditCost, 'Kundli generation');
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
 
     const chartData = await this.generateAIKundli(birthDetails);
 
@@ -318,21 +321,23 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
 
     // Detect basic yogas
     const yogas: Yoga[] = [];
-    const jupiterHouse = planetaryPositions.find((p) => p.planet === 'Jupiter')!.house;
-    const moonHouse = planetaryPositions.find((p) => p.planet === 'Moon')!.house;
-    if ([1, 4, 7, 10].includes(((jupiterHouse - moonHouse + 12) % 12) + 1)) {
+    const findHouse = (name: string) => planetaryPositions.find((p) => p.planet === name)?.house;
+    const jupiterHouse = findHouse('Jupiter');
+    const moonHouse = findHouse('Moon');
+    const sunH = findHouse('Sun');
+    const mercuryH = findHouse('Mercury');
+    const venusH = findHouse('Venus');
+
+    if (jupiterHouse != null && moonHouse != null && [1, 4, 7, 10].includes(((jupiterHouse - moonHouse + 12) % 12) + 1)) {
       yogas.push({ name: 'Gaja Kesari Yoga', description: 'Jupiter in Kendra from Moon - bestows wisdom, prosperity, and fame', effect: 'benefic' });
     }
-    const sunH = planetaryPositions.find((p) => p.planet === 'Sun')!.house;
-    const mercuryH = planetaryPositions.find((p) => p.planet === 'Mercury')!.house;
-    if (sunH === mercuryH) {
+    if (sunH != null && mercuryH != null && sunH === mercuryH) {
       yogas.push({ name: 'Budhaditya Yoga', description: 'Sun-Mercury conjunction - grants sharp intellect and communication skills', effect: 'benefic' });
     }
-    const venusH = planetaryPositions.find((p) => p.planet === 'Venus')!.house;
-    if (venusH === 1 || venusH === 4 || venusH === 7) {
+    if (venusH != null && (venusH === 1 || venusH === 4 || venusH === 7)) {
       yogas.push({ name: 'Malavya Yoga', description: 'Venus in Kendra - bestows luxury, beauty, and artistic talents', effect: 'benefic' });
     }
-    if (jupiterHouse === 1 || jupiterHouse === 4 || jupiterHouse === 7 || jupiterHouse === 10) {
+    if (jupiterHouse != null && [1, 4, 7, 10].includes(jupiterHouse)) {
       yogas.push({ name: 'Hamsa Yoga', description: 'Jupiter in Kendra - bestows righteousness and spiritual wisdom', effect: 'benefic' });
     }
 
@@ -374,7 +379,10 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
     this.logger.log('Performing Kundli matching');
 
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    await this.userService.deductCredits(userId, creditCost, 'Kundli matching');
+    const deducted = await this.userService.deductCredits(userId, creditCost, 'Kundli matching');
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
 
     const aiResult = await this.callOpenAI(
       `You are an expert Vedic astrologer performing Ashtakoota Guna matching. Calculate the actual compatibility scores based on the birth details provided. Return a JSON object with:
