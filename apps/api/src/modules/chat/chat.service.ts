@@ -69,11 +69,23 @@ export class ChatService {
     }
 
     // Save user message
-    const userMsg = await this.prisma.chatMessage.create({
+    await this.prisma.chatMessage.create({
       data: {
         sessionId: dbSession.id,
         role: 'USER',
         content: dto.message,
+      },
+    });
+
+    // Fetch user profile for personalized AI responses
+    const userProfile = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        dateOfBirth: true,
+        timeOfBirth: true,
+        placeOfBirth: true,
+        gender: true,
       },
     });
 
@@ -82,6 +94,7 @@ export class ChatService {
       dto.message,
       dbSession.category,
       dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
+      userProfile,
     );
 
     // Save assistant message
@@ -173,6 +186,7 @@ export class ChatService {
     message: string,
     category: string,
     history: { role: string; content: string }[],
+    userProfile: any,
   ): Promise<string> {
     const apiKey = this.configService.get<string>('openai.apiKey');
 
@@ -181,7 +195,7 @@ export class ChatService {
         const OpenAI = require('openai');
         const openai = new OpenAI({ apiKey });
 
-        const systemPrompt = this.getSystemPrompt(category);
+        const systemPrompt = this.getSystemPrompt(category, userProfile);
         const messages = [
           { role: 'system', content: systemPrompt },
           ...history.slice(-10).map((m) => ({
@@ -204,43 +218,71 @@ export class ChatService {
       }
     }
 
-    // Fallback responses when no API key is configured
-    const responses: Record<string, string> = {
-      general:
-        'Based on your Vedic chart analysis, the current planetary alignment suggests a period of growth and transformation. The transit of Jupiter through your 10th house indicates favorable opportunities in your professional life. I recommend focusing on new initiatives during this auspicious period.',
-      kundli:
-        'Your Kundli reveals a strong placement of Moon in the 4th house, indicating emotional depth and strong family bonds. The conjunction of Venus and Mercury in your 7th house suggests harmonious relationships ahead.',
-      career:
-        'The Dashamsha (D10) chart shows Saturn in the 10th house, indicating disciplined career progression. The upcoming Mahadasha transition suggests a significant career shift in the next 18 months. Focus on skill development during this transition.',
-      relationship:
-        'Your Navamsa chart indicates Venus in an exalted position, suggesting deep romantic connections. The 7th lord placement suggests a supportive and understanding partner will enter your life soon.',
-      remedy:
-        'Based on your planetary positions, wearing a Yellow Sapphire (Pukhraj) on the index finger of your right hand on a Thursday morning can strengthen Jupiter\'s influence. Chanting the Guru Beej Mantra "Om Graam Greem Graum Sah Gurave Namah" 108 times daily is also recommended.',
-      wealth:
-        'The 2nd and 11th houses in your chart suggest promising financial opportunities. Jupiter\'s transit through your wealth sector indicates potential gains through investments and career advancement. Consider starting new financial ventures during the upcoming Jupiter-Venus conjunction for maximum benefit.',
-      health:
-        'Your birth chart indicates strong vitality with Sun well-placed in the Lagna. However, Saturn\'s aspect on the 6th house suggests paying attention to bone health and joint care. Regular yoga, especially Surya Namaskar, and a Pitta-balancing diet are recommended. Please consult a medical professional for specific health concerns.',
-      numerology:
-        'Based on your date of birth, your Life Path Number reveals key insights about your destiny. The current Personal Year cycle suggests a period of growth and new beginnings. Your Name Number indicates strong leadership qualities. Consider the number vibrations when making important decisions this month.',
-    };
-
-    return responses[category] || responses.general;
+    // Fallback responses - personalized where possible
+    return this.getFallbackResponse(category, userProfile);
   }
 
-  private getSystemPrompt(category: string): string {
-    const basePrompt = `You are Jyotryx, an expert AI Vedic astrologer. You provide insightful, compassionate guidance based on Vedic astrology principles. Always be respectful and positive. Include specific planetary references and Vedic terminology where appropriate. Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.`;
+  private getSystemPrompt(category: string, userProfile: any): string {
+    let profileContext = '';
+    if (userProfile) {
+      const parts: string[] = [];
+      if (userProfile.name) parts.push(`Name: ${userProfile.name}`);
+      if (userProfile.dateOfBirth) parts.push(`DOB: ${new Date(userProfile.dateOfBirth).toISOString().split('T')[0]}`);
+      if (userProfile.timeOfBirth) parts.push(`Time of Birth: ${userProfile.timeOfBirth}`);
+      if (userProfile.placeOfBirth) {
+        const place = typeof userProfile.placeOfBirth === 'object' ? userProfile.placeOfBirth.name : userProfile.placeOfBirth;
+        if (place) parts.push(`Place of Birth: ${place}`);
+      }
+      if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
+
+      if (parts.length > 0) {
+        profileContext = `\n\nUser's birth details (use these for personalized readings):\n${parts.join('\n')}`;
+      }
+    }
+
+    const basePrompt = `You are Jyotryx, an expert AI Vedic astrologer. You provide insightful, compassionate guidance based on Vedic astrology principles. Always be respectful and positive. Include specific planetary references and Vedic terminology where appropriate. Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
 
     const categoryPrompts: Record<string, string> = {
-      career: `${basePrompt} Focus on career guidance, professional growth, Dashamsha chart analysis, and work-related planetary transits.`,
-      relationship: `${basePrompt} Focus on relationship compatibility, Navamsa chart, Venus placements, 7th house analysis, and love predictions.`,
-      kundli: `${basePrompt} Focus on birth chart interpretation, planetary positions, house analysis, Dasha periods, and Yogas.`,
-      remedy: `${basePrompt} Focus on astrological remedies: gemstones, mantras, pujas, fasting, and charitable acts. Be specific with instructions.`,
-      wealth: `${basePrompt} Focus on financial astrology: 2nd and 11th house analysis, Dhana Yogas, wealth-producing planetary combinations, investment timing, and financial planning based on transits.`,
-      health: `${basePrompt} Focus on medical astrology: 6th and 8th house analysis, planetary influences on health, Ayurvedic constitution, favorable periods for health improvements. Always include a disclaimer that this is not a substitute for medical advice.`,
-      numerology: `${basePrompt} Focus on Vedic and Chaldean numerology: Life Path numbers, Name Numbers, Personal Year cycles, lucky numbers, and practical numerological guidance.`,
+      career: `${basePrompt}\n\nFocus on career guidance, professional growth, Dashamsha chart analysis, and work-related planetary transits. Reference the user's birth chart specifics if available.`,
+      relationship: `${basePrompt}\n\nFocus on relationship compatibility, Navamsa chart, Venus placements, 7th house analysis, and love predictions. Personalize based on the user's chart if birth details are available.`,
+      kundli: `${basePrompt}\n\nFocus on birth chart interpretation, planetary positions, house analysis, Dasha periods, and Yogas. Use the user's actual birth details for accurate chart reading.`,
+      remedy: `${basePrompt}\n\nFocus on astrological remedies: gemstones, mantras, pujas, fasting, and charitable acts. Be specific with instructions. Tailor remedies to the user's chart if birth details are available.`,
+      wealth: `${basePrompt}\n\nFocus on financial astrology: 2nd and 11th house analysis, Dhana Yogas, wealth-producing planetary combinations, investment timing, and financial planning based on transits.`,
+      health: `${basePrompt}\n\nFocus on medical astrology: 6th and 8th house analysis, planetary influences on health, Ayurvedic constitution, favorable periods for health improvements. Always include a disclaimer that this is not a substitute for medical advice.`,
+      numerology: `${basePrompt}\n\nFocus on Vedic and Chaldean numerology: Life Path numbers, Name Numbers, Personal Year cycles, lucky numbers, and practical numerological guidance. Use the user's date of birth for accurate calculations.`,
       general: basePrompt,
     };
 
     return categoryPrompts[category] || categoryPrompts.general;
+  }
+
+  private getFallbackResponse(category: string, userProfile: any): string {
+    const userName = userProfile?.name || 'you';
+    const hasBirthDetails = userProfile?.dateOfBirth;
+
+    const responses: Record<string, string> = {
+      general: hasBirthDetails
+        ? `Based on your birth chart analysis, ${userName}, the current planetary alignment suggests a period of growth and transformation. The transit of Jupiter through your chart indicates favorable opportunities. I recommend focusing on new initiatives during this auspicious period.\n\n*Note: For the most accurate personalized readings, I'm analyzing your chart based on your profile birth details.*`
+        : `The current planetary alignment suggests a period of positive energy and new opportunities. The stars favor growth and creative pursuits at this time. For a personalized reading based on your specific birth chart, please update your birth details in your profile.\n\n*Note: Add your date of birth, time, and place in your Profile for personalized astrological guidance.*`,
+      kundli: hasBirthDetails
+        ? `${userName}, analyzing your Kundli based on your birth details, I can see important planetary placements that define your life path. The current Dasha period suggests focusing on personal development and career growth. Would you like me to dive deeper into any specific aspect of your chart?`
+        : `For an accurate Kundli reading, I need your birth details. Please update your Date of Birth, Time of Birth, and Place of Birth in your Profile page, and I'll provide personalized chart analysis.`,
+      career: hasBirthDetails
+        ? `${userName}, the Dashamsha (D10) chart based on your birth details shows promising career indicators. The upcoming planetary transits suggest a significant professional shift. Focus on skill development during this transition period for maximum benefit.`
+        : `The current planetary alignments favor professional growth. Saturn's disciplined energy supports long-term career goals. For personalized career guidance based on your Dashamsha chart, please add your birth details to your profile.`,
+      relationship: hasBirthDetails
+        ? `${userName}, your Navamsa chart reveals important insights about your relationships. Venus's placement suggests deep romantic connections ahead. The 7th lord's position indicates a supportive partnership dynamic in your chart.`
+        : `Venus is currently in a favorable transit, bringing positive energy to relationships. For personalized relationship guidance based on your Navamsa chart and Venus placement, please add your birth details to your profile.`,
+      remedy: hasBirthDetails
+        ? `Based on your planetary positions, ${userName}, I recommend these remedies: Chanting the appropriate Beej Mantra for your chart's most afflicted planet during Brahma Muhurat (4:00-5:30 AM) can bring significant positive changes. Wearing the gemstone suited to your Lagna lord is also beneficial.`
+        : `General remedies for the current planetary period include regular meditation, chanting Om Namah Shivaya on Mondays, and practicing gratitude. For personalized remedies based on your specific chart, please add your birth details to your profile.`,
+      wealth: `The 2nd and 11th houses in your chart suggest promising financial opportunities. Jupiter's transit through your wealth sector indicates potential gains through investments and career advancement. Consider starting new financial ventures during favorable Muhurat periods.`,
+      health: `Your chart indicates strong vitality overall. Regular yoga practice, especially Surya Namaskar, is recommended based on the current planetary period. Please note: astrological health guidance is complementary and should not replace professional medical advice.`,
+      numerology: hasBirthDetails
+        ? `${userName}, based on your date of birth, your Life Path Number reveals important aspects of your destiny. The current Personal Year cycle suggests a period of growth. I can provide detailed numerological analysis of your name and birth numbers.`
+        : `Numerology can reveal powerful insights about your life path and destiny. For accurate numerological calculations, I need your date of birth. Please update your profile with your birth details for personalized numerology readings.`,
+    };
+
+    return responses[category] || responses.general;
   }
 }
