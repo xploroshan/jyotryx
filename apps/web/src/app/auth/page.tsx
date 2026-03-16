@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [tab, setTab] = useState<"login" | "signup">("login");
+
+  useEffect(() => {
+    const mode = searchParams.get("mode");
+    if (mode === "signup") setTab("signup");
+    else if (mode === "login") setTab("login");
+  }, [searchParams]);
   const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");

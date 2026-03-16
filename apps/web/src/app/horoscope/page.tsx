@@ -41,6 +41,7 @@ export default function HoroscopePage() {
 
   const sign = zodiacSigns.find((s) => s.id === selectedSign)!;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     fetchHoroscope();
   }, [selectedSign, selectedPeriod]);
@@ -50,21 +51,23 @@ export default function HoroscopePage() {
     setError("");
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/horoscope/${selectedSign}`
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/horoscope/${selectedSign}?period=${selectedPeriod}`
       );
       if (!res.ok) throw new Error("Failed to fetch horoscope");
       const data = await res.json();
 
+      const periodLabel = selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1);
+
       // Map API response to our display format
       setHoroscope({
         overview: data.prediction || "Horoscope data is currently unavailable. Please try again later.",
-        love: `Compatibility with ${data.compatibility || "Leo"} is highlighted. ${data.mood || "Optimistic"} energy surrounds your relationships today.`,
-        career: `Professional energy is ${data.mood?.toLowerCase() || "positive"} today. Focus on opportunities and remain open to collaboration.`,
-        health: "Pay attention to your energy levels and maintain a balanced routine. Mindfulness practices are especially beneficial today.",
+        love: `Compatibility with ${data.compatibility || "Leo"} is highlighted. ${data.mood || "Optimistic"} energy surrounds your relationships ${selectedPeriod === "daily" ? "today" : `this ${selectedPeriod.replace("ly", "")}`}.`,
+        career: `Professional energy is ${data.mood?.toLowerCase() || "positive"} ${selectedPeriod === "daily" ? "today" : `this ${selectedPeriod.replace("ly", "")}`}. Focus on opportunities and remain open to collaboration.`,
+        health: `Pay attention to your energy levels and maintain a balanced routine. Mindfulness practices are especially beneficial ${selectedPeriod === "daily" ? "today" : "during this period"}.`,
         lucky: {
           number: String(data.luckyNumber || "7"),
           color: data.luckyColor || "Purple",
-          time: "2:00 PM - 4:00 PM",
+          time: selectedPeriod === "daily" ? "2:00 PM - 4:00 PM" : "Varies by day",
         },
       });
     } catch {

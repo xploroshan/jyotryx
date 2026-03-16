@@ -37,42 +37,48 @@ export default function MatchingPage() {
   const [personB, setPersonB] = useState<PersonForm>({ ...emptyPerson });
   const [results, setResults] = useState<typeof mockResults | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const isValid = personA.name && personA.dob && personA.time && personA.place && personB.name && personB.dob && personB.time && personB.place;
 
   const handleMatch = async () => {
     if (!isValid) return;
     setLoading(true);
+    setError("");
     try {
       const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
-      if (token) {
-        const { api } = await import("@/lib/api");
-        const res = await api.post<any>("/astrology/matching", {
-          partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place },
-          partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place },
-        }, { token });
-        if (res?.totalScore) {
-          setResults({
-            ...mockResults,
-            totalScore: res.totalScore,
-            maxScore: res.maxScore,
-            percentage: Math.round((res.totalScore / res.maxScore) * 100),
-            koota: res.gunaDetails?.map((g: any) => ({
-              name: g.guna,
-              description: g.description,
-              obtained: g.obtainedPoints,
-              max: g.maxPoints,
-            })) || mockResults.koota,
-            verdict: res.compatibility || mockResults.verdict,
-            summary: res.recommendation || mockResults.summary,
-          });
-          return;
-        }
+      if (!token) {
+        setError("Please log in to use Kundli Matching.");
+        return;
       }
-      setResults(mockResults);
-    } catch {
-      setResults(mockResults);
+      const { api } = await import("@/lib/api");
+      const res = await api.post<any>("/astrology/matching", {
+        partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place },
+        partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place },
+      }, { token });
+
+      const totalScore = res.totalScore ?? mockResults.totalScore;
+      const maxScore = res.maxScore ?? mockResults.maxScore;
+      const percentage = Math.round((totalScore / maxScore) * 100);
+
+      setResults({
+        totalScore,
+        maxScore,
+        percentage,
+        manglikA: false,
+        manglikB: false,
+        koota: res.gunaDetails?.map((g: any) => ({
+          name: g.guna,
+          description: g.description,
+          obtained: g.obtainedPoints,
+          max: g.maxPoints,
+        })) || mockResults.koota,
+        verdict: res.compatibility || (percentage >= 75 ? "Excellent Match" : percentage >= 50 ? "Good Match" : "Average Match"),
+        summary: res.recommendation || mockResults.summary,
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to check compatibility. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -201,6 +207,12 @@ export default function MatchingPage() {
             )}
           </button>
         </div>
+
+        {error && (
+          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
 
         {/* Results */}
         {results && (

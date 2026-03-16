@@ -44,6 +44,7 @@ export default function PalmistryPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState("major");
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (file: File) => {
@@ -64,6 +65,7 @@ export default function PalmistryPage() {
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
+    setError("");
     try {
       const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
@@ -72,13 +74,25 @@ export default function PalmistryPage() {
         const formData = new FormData();
         formData.append("image", fileRef.current.files[0]);
         const result = await api.upload<any>("/palmistry/analyze", formData, token);
-        if (result?.lines) {
-          setAnalysis(result);
+        if (result?.majorLines || result?.lines || result?.analysis) {
+          // Map API response to our display format
+          const mapped: AnalysisResult = {
+            majorLines: result.majorLines || result.lines?.major || mockAnalysis.majorLines,
+            minorLines: result.minorLines || result.lines?.minor || mockAnalysis.minorLines,
+            mounts: result.mounts || mockAnalysis.mounts,
+            personality: result.personality || result.traits || mockAnalysis.personality,
+          };
+          setAnalysis(mapped);
           return;
         }
+      } else if (!token) {
+        setError("Please log in to analyze your palm.");
+        return;
       }
+      // Fallback for demo purposes
       setAnalysis(mockAnalysis);
-    } catch {
+    } catch (err: any) {
+      setError(err.message || "Analysis failed. Showing sample results.");
       setAnalysis(mockAnalysis);
     } finally {
       setAnalyzing(false);
@@ -172,6 +186,10 @@ export default function PalmistryPage() {
                 </>
               )}
             </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+            )}
 
             {image && !analysis && (
               <button

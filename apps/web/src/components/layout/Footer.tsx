@@ -10,18 +10,16 @@ const footerLinks = {
     { label: "Panchang", href: "/panchang" },
     { label: "Muhurat Finder", href: "/muhurat" },
   ],
-  Company: [
-    { label: "About Us", href: "/about" },
+  Resources: [
     { label: "Pricing", href: "/pricing" },
-    { label: "Blog", href: "/blog" },
-    { label: "Careers", href: "/careers" },
-    { label: "Contact", href: "/contact" },
+    { label: "Reports", href: "/reports" },
+    { label: "AI Chat", href: "/chat" },
+    { label: "Get Started", href: "/auth?mode=signup" },
   ],
-  Legal: [
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Refund Policy", href: "/refund" },
-    { label: "Disclaimer", href: "/disclaimer" },
+  Support: [
+    { label: "Profile & Settings", href: "/profile" },
+    { label: "Sign In", href: "/auth?mode=login" },
+    { label: "Buy Credits", href: "/pricing" },
   ],
 };
 

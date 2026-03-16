@@ -30,12 +30,22 @@ export interface SendMessageDto {
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
+  private openaiClient: any = null;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
   ) {}
+
+  private getOpenAIClient(): any | null {
+    if (this.openaiClient) return this.openaiClient;
+    const apiKey = this.configService.get<string>('openai.apiKey');
+    if (!apiKey) return null;
+    const OpenAI = require('openai');
+    this.openaiClient = new OpenAI({ apiKey });
+    return this.openaiClient;
+  }
 
   async sendMessage(
     userId: string,
@@ -188,13 +198,10 @@ export class ChatService {
     history: { role: string; content: string }[],
     userProfile: any,
   ): Promise<string> {
-    const apiKey = this.configService.get<string>('openai.apiKey');
+    const openai = this.getOpenAIClient();
 
-    if (apiKey) {
+    if (openai) {
       try {
-        const OpenAI = require('openai');
-        const openai = new OpenAI({ apiKey });
-
         const systemPrompt = this.getSystemPrompt(category, userProfile);
         const messages = [
           { role: 'system', content: systemPrompt },
