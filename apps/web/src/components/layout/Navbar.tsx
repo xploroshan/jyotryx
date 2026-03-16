@@ -107,13 +107,40 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <div className="pt-3 border-t border-white/10 flex gap-2">
-            <Link href="/auth?mode=login" className="flex-1 text-center px-4 py-2 text-sm text-gray-300 border border-white/20 rounded-lg">
-              Login
-            </Link>
-            <Link href="/auth?mode=signup" className="flex-1 text-center px-4 py-2 text-sm bg-gradient-to-r from-primary-600 to-mystic-600 text-white rounded-lg">
-              Sign Up
-            </Link>
+          <div className="pt-3 border-t border-white/10">
+            {isAuthenticated ? (
+              <div className="space-y-1">
+                {user?.role === "ADMIN" && (
+                  <Link href="/admin" className="block px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                    Admin Panel
+                  </Link>
+                )}
+                <Link href="/reports" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  Reports
+                </Link>
+                <Link href="/pricing" className="block px-3 py-2 text-sm text-accent-400 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  {user?.credits} credits
+                </Link>
+                <Link href="/profile" className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  {user?.name}
+                </Link>
+                <button
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Link href="/auth?mode=login" className="flex-1 text-center px-4 py-2 text-sm text-gray-300 border border-white/20 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  Login
+                </Link>
+                <Link href="/auth?mode=signup" className="flex-1 text-center px-4 py-2 text-sm bg-gradient-to-r from-primary-600 to-mystic-600 text-white rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

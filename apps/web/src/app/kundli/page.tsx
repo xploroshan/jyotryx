@@ -11,81 +11,103 @@ const tabs = [
   { id: "doshas", label: "Doshas" },
 ];
 
-const mockPlanets = [
-  { name: "Sun (Surya)", sign: "Leo", house: "10th", degree: "15\u00b024'", nakshatra: "Magha", status: "Own Sign" },
-  { name: "Moon (Chandra)", sign: "Cancer", house: "9th", degree: "22\u00b011'", nakshatra: "Ashlesha", status: "Own Sign" },
-  { name: "Mars (Mangal)", sign: "Aries", house: "6th", degree: "8\u00b045'", nakshatra: "Ashwini", status: "Own Sign" },
-  { name: "Mercury (Budh)", sign: "Virgo", house: "11th", degree: "3\u00b018'", nakshatra: "Uttara Phalguni", status: "Exalted" },
-  { name: "Jupiter (Guru)", sign: "Sagittarius", house: "2nd", degree: "19\u00b052'", nakshatra: "Purva Ashadha", status: "Own Sign" },
-  { name: "Venus (Shukra)", sign: "Libra", house: "12th", degree: "27\u00b033'", nakshatra: "Vishakha", status: "Own Sign" },
-  { name: "Saturn (Shani)", sign: "Aquarius", house: "4th", degree: "11\u00b007'", nakshatra: "Shatabhisha", status: "Own Sign" },
-  { name: "Rahu", sign: "Gemini", house: "8th", degree: "14\u00b029'", nakshatra: "Ardra", status: "Neutral" },
-  { name: "Ketu", sign: "Sagittarius", house: "2nd", degree: "14\u00b029'", nakshatra: "Moola", status: "Neutral" },
-];
+interface KundliData {
+  id: string;
+  ascendant: string;
+  moonSign: string;
+  sunSign: string;
+  nakshatra: string;
+  houses: { house: number; sign: string; planets: string[] }[];
+  planetaryPositions: {
+    planet: string;
+    sign: string;
+    house: number;
+    degree: number;
+    isRetrograde: boolean;
+    nakshatra: string;
+  }[];
+  dashas: {
+    planet: string;
+    startDate: string;
+    endDate: string;
+    subPeriods?: { planet: string; startDate: string; endDate: string }[];
+  }[];
+  yogas: { name: string; description: string; effect: string }[];
+}
 
-const mockHouses = [
-  { house: "1st (Lagna)", sign: "Scorpio", lord: "Mars", significance: "Self, personality, physical body", interpretation: "Strong Lagna lord Mars in 6th house gives competitive spirit and ability to overcome enemies." },
-  { house: "2nd", sign: "Sagittarius", lord: "Jupiter", significance: "Wealth, family, speech", interpretation: "Jupiter in own sign in 2nd house indicates abundant wealth, good family values, and eloquent speech." },
-  { house: "3rd", sign: "Capricorn", lord: "Saturn", significance: "Courage, siblings, communication", interpretation: "Saturn's influence gives determined communication style and responsible relationships with siblings." },
-  { house: "4th", sign: "Aquarius", lord: "Saturn", significance: "Home, mother, comfort", interpretation: "Saturn in own sign provides stable domestic life and strong connection to heritage." },
-  { house: "5th", sign: "Pisces", lord: "Jupiter", significance: "Children, education, creativity", interpretation: "Jupiter's lordship blesses with intelligent children and strong creative or spiritual inclinations." },
-  { house: "7th", sign: "Taurus", lord: "Venus", significance: "Marriage, partnerships, business", interpretation: "Venus as 7th lord indicates a harmonious marriage with an attractive and cultured partner." },
-  { house: "10th", sign: "Leo", lord: "Sun", significance: "Career, status, authority", interpretation: "Sun in own sign in 10th house gives leadership roles, government connections, and high status." },
-];
-
-const mockDasha = [
-  { planet: "Jupiter", period: "2018 - 2034", sub: [
-    { planet: "Jupiter-Jupiter", period: "2018-2020", status: "completed" },
-    { planet: "Jupiter-Saturn", period: "2020-2023", status: "completed" },
-    { planet: "Jupiter-Mercury", period: "2023-2025", status: "completed" },
-    { planet: "Jupiter-Ketu", period: "2025-2026", status: "active" },
-    { planet: "Jupiter-Venus", period: "2026-2029", status: "upcoming" },
-    { planet: "Jupiter-Sun", period: "2029-2030", status: "upcoming" },
-    { planet: "Jupiter-Moon", period: "2030-2032", status: "upcoming" },
-    { planet: "Jupiter-Mars", period: "2032-2034", status: "upcoming" },
-  ]},
-];
-
-const mockYogas = [
-  { name: "Gajakesari Yoga", planets: "Jupiter + Moon", effect: "Wisdom, wealth, and high social status. The native will be renowned and hold positions of authority.", strength: "Strong" },
-  { name: "Budhaditya Yoga", planets: "Sun + Mercury", effect: "Intelligence, fame, and success in education. The native excels in analytical and communication fields.", strength: "Strong" },
-  { name: "Dhana Yoga", planets: "2nd & 11th lords", effect: "Significant wealth accumulation through career and investments. Financial stability throughout life.", strength: "Moderate" },
-  { name: "Raja Yoga", planets: "9th & 10th lords", effect: "Power, authority, and high status. The native will achieve prominent positions in career or public life.", strength: "Strong" },
-];
-
-const mockDoshas = [
-  { name: "Manglik Dosha", status: "Mild", description: "Mars is placed in the 6th house, which is considered a mild Manglik position. Its effects are significantly reduced after the age of 28.", remedy: "Worship Lord Hanuman on Tuesdays. Chant Mangal Stotra." },
-  { name: "Kaal Sarp Dosha", status: "Absent", description: "All planets are not between Rahu and Ketu. This dosha is not present in your chart.", remedy: "No remedies required." },
-  { name: "Pitru Dosha", status: "Absent", description: "Sun is well-placed and not afflicted. No Pitru Dosha detected.", remedy: "No remedies required." },
-];
+interface DoshaData {
+  doshas: {
+    name: string;
+    present: boolean;
+    severity: string;
+    description: string;
+    remedies: string[];
+  }[];
+}
 
 export default function KundliPage() {
   const [activeTab, setActiveTab] = useState("chart");
-  const [generated, setGenerated] = useState(false);
+  const [kundli, setKundli] = useState<KundliData | null>(null);
+  const [doshas, setDoshas] = useState<DoshaData | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", dob: "", time: "", place: "" });
 
   const handleGenerate = async () => {
     if (!form.name || !form.dob || !form.time || !form.place) return;
     setGenerating(true);
+    setError("");
     try {
       const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
       if (token) {
         const { api } = await import("@/lib/api");
-        await api.post("/astrology/kundli", {
+        const result = await api.post<KundliData>("/astrology/kundli", {
           dateOfBirth: form.dob,
           timeOfBirth: form.time,
           placeOfBirth: form.place,
         }, { token });
+        setKundli(result);
+
+        // Also fetch doshas
+        try {
+          const doshaResult = await api.get<DoshaData>("/astrology/dosha", { token });
+          setDoshas(doshaResult);
+        } catch {
+          // Dosha fetch is optional
+        }
+      } else {
+        setError("Please log in to generate your Kundli.");
       }
-      setGenerated(true);
-    } catch {
-      setGenerated(true); // Still show results with mock data
+    } catch (err: any) {
+      setError(err.message || "Failed to generate Kundli. Please try again.");
     } finally {
       setGenerating(false);
     }
   };
+
+  // Build chart SVG data from houses
+  const getChartPlanets = (houseNum: number) => {
+    if (!kundli?.houses) return "";
+    const house = kundli.houses.find(h => h.house === houseNum);
+    return house?.planets?.join(", ") || "";
+  };
+
+  // North Indian chart house positions (approximate SVG text coords)
+  const housePositions = [
+    { x: 185, y: 120 }, // 1 - top center
+    { x: 295, y: 95 },  // 2 - top right
+    { x: 315, y: 200 }, // 3 - right top
+    { x: 295, y: 310 }, // 4 - right bottom
+    { x: 185, y: 290 }, // 5 - bottom center
+    { x: 75, y: 310 },  // 6 - left bottom
+    { x: 55, y: 200 },  // 7 - left top
+    { x: 75, y: 95 },   // 8 - top left
+    { x: 185, y: 60 },  // 9 - far top
+    { x: 340, y: 60 },  // 10 - far top right
+    { x: 340, y: 340 }, // 11 - far bottom right
+    { x: 55, y: 340 },  // 12 - far bottom left
+  ];
 
   return (
     <div className="relative min-h-screen">
@@ -104,15 +126,20 @@ export default function KundliPage() {
             Kundli <span className="text-gradient">Generator</span>
           </h1>
           <p className="text-gray-400 max-w-xl mx-auto">
-            Generate your complete Vedic birth chart with planetary positions, Dasha periods, Yogas, and detailed house analysis.
+            Generate your complete Vedic birth chart with planetary positions, Dasha periods, Yogas, and detailed house analysis powered by AI.
           </p>
         </div>
 
         {/* Birth Details Form */}
-        {!generated && (
+        {!kundli && (
           <div className="max-w-lg mx-auto">
             <div className="glass-card p-8">
               <h2 className="text-lg font-display font-bold text-white mb-6">Enter Birth Details</h2>
+
+              {error && (
+                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+              )}
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1.5">Full Name</label>
@@ -153,7 +180,7 @@ export default function KundliPage() {
                     placeholder="Search city..."
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors"
                   />
-                  <p className="text-xs text-gray-600 mt-1">Start typing for city suggestions</p>
+                  <p className="text-xs text-gray-600 mt-1">Enter your birth city name</p>
                 </div>
                 <button
                   onClick={handleGenerate}
@@ -166,7 +193,7 @@ export default function KundliPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Generating Kundli...
+                      Generating Kundli with AI...
                     </span>
                   ) : (
                     "Generate Kundli"
@@ -178,19 +205,24 @@ export default function KundliPage() {
         )}
 
         {/* Kundli Results */}
-        {generated && (
+        {kundli && (
           <div>
-            {/* Profile summary */}
+            {/* Profile summary - actual data */}
             <div className="glass-card p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-white">{form.name}</h2>
                 <p className="text-sm text-gray-400">
                   {form.dob} at {form.time} &bull; {form.place}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Ascendant: Scorpio &bull; Moon Sign: Cancer &bull; Sun Sign: Leo</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Ascendant: <span className="text-primary-400">{kundli.ascendant}</span> &bull;
+                  Moon Sign: <span className="text-primary-400">{kundli.moonSign}</span> &bull;
+                  Sun Sign: <span className="text-primary-400">{kundli.sunSign}</span> &bull;
+                  Nakshatra: <span className="text-primary-400">{kundli.nakshatra}</span>
+                </p>
               </div>
               <button
-                onClick={() => { setGenerated(false); setForm({ name: "", dob: "", time: "", place: "" }); }}
+                onClick={() => { setKundli(null); setDoshas(null); setForm({ name: "", dob: "", time: "", place: "" }); setError(""); }}
                 className="px-4 py-2 rounded-xl glass text-sm text-gray-400 hover:text-white hover:bg-white/10 transition-all"
               >
                 New Kundli
@@ -218,32 +250,34 @@ export default function KundliPage() {
             {activeTab === "chart" && (
               <div className="glass-card p-8 flex flex-col items-center">
                 <h3 className="text-lg font-display font-bold text-gradient mb-6">Rashi Chart (D1)</h3>
-                {/* Placeholder North Indian chart */}
                 <div className="relative w-80 h-80 sm:w-96 sm:h-96">
                   <svg viewBox="0 0 400 400" className="w-full h-full">
-                    {/* Outer square */}
                     <rect x="10" y="10" width="380" height="380" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
-                    {/* Diagonals */}
                     <line x1="10" y1="10" x2="390" y2="390" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
                     <line x1="390" y1="10" x2="10" y2="390" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-                    {/* Inner diamond */}
                     <line x1="200" y1="10" x2="390" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
                     <line x1="390" y1="200" x2="200" y2="390" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
                     <line x1="200" y1="390" x2="10" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
                     <line x1="10" y1="200" x2="200" y2="10" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
-                    {/* House numbers and planets */}
-                    <text x="190" y="110" fill="rgba(217,70,239,0.6)" fontSize="11" fontFamily="sans-serif">Asc</text>
-                    <text x="185" y="130" fill="rgba(255,255,255,0.7)" fontSize="10" fontFamily="sans-serif">Sc</text>
-                    <text x="295" y="100" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Ju,Ke</text>
-                    <text x="310" y="200" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Sa</text>
-                    <text x="295" y="310" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Me</text>
-                    <text x="60" y="310" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Ve</text>
-                    <text x="55" y="100" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Su,Mo</text>
-                    <text x="80" y="200" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Ma</text>
-                    <text x="185" y="295" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="sans-serif">Ra</text>
+                    {/* Ascendant label */}
+                    <text x="185" y="105" fill="rgba(217,70,239,0.6)" fontSize="11" fontFamily="sans-serif">Asc</text>
+                    <text x="180" y="125" fill="rgba(255,255,255,0.7)" fontSize="10" fontFamily="sans-serif">
+                      {kundli.ascendant?.substring(0, 3)}
+                    </text>
+                    {/* Display planets in houses */}
+                    {kundli.houses?.slice(0, 12).map((house, i) => {
+                      const pos = housePositions[i];
+                      if (!pos) return null;
+                      const planetText = house.planets?.join(", ") || "";
+                      return planetText ? (
+                        <text key={i} x={pos.x} y={pos.y} fill="rgba(255,255,255,0.5)" fontSize="9" fontFamily="sans-serif">
+                          {planetText.length > 12 ? planetText.substring(0, 12) + "..." : planetText}
+                        </text>
+                      ) : null;
+                    })}
                   </svg>
                 </div>
-                <p className="text-xs text-gray-500 mt-4">North Indian style birth chart. Click on planets for details.</p>
+                <p className="text-xs text-gray-500 mt-4">North Indian style birth chart based on your birth details.</p>
               </div>
             )}
 
@@ -262,20 +296,18 @@ export default function KundliPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {mockPlanets.map((p) => (
-                        <tr key={p.name} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="px-6 py-3 font-medium text-white">{p.name}</td>
+                      {kundli.planetaryPositions?.map((p) => (
+                        <tr key={p.planet} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="px-6 py-3 font-medium text-white">{p.planet}</td>
                           <td className="px-6 py-3 text-gray-300">{p.sign}</td>
                           <td className="px-6 py-3 text-gray-300">{p.house}</td>
-                          <td className="px-6 py-3 text-gray-400">{p.degree}</td>
+                          <td className="px-6 py-3 text-gray-400">{p.degree}&deg;</td>
                           <td className="px-6 py-3 text-gray-400">{p.nakshatra}</td>
                           <td className="px-6 py-3">
                             <span className={`text-xs px-2 py-1 rounded-full ${
-                              p.status === "Exalted" ? "bg-emerald-500/20 text-emerald-400" :
-                              p.status === "Own Sign" ? "bg-primary-500/20 text-primary-400" :
-                              "bg-white/5 text-gray-400"
+                              p.isRetrograde ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
                             }`}>
-                              {p.status}
+                              {p.isRetrograde ? "Retrograde" : "Direct"}
                             </span>
                           </td>
                         </tr>
@@ -288,17 +320,25 @@ export default function KundliPage() {
 
             {activeTab === "houses" && (
               <div className="space-y-4">
-                {mockHouses.map((h) => (
+                {kundli.houses?.map((h) => (
                   <div key={h.house} className="glass-card p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                      <h4 className="font-semibold text-white">{h.house}</h4>
+                      <h4 className="font-semibold text-white">House {h.house}</h4>
                       <div className="flex gap-2">
                         <span className="text-xs px-2 py-1 rounded-full bg-mystic-500/20 text-mystic-400">{h.sign}</span>
-                        <span className="text-xs px-2 py-1 rounded-full bg-primary-500/20 text-primary-400">Lord: {h.lord}</span>
+                        {h.planets.length > 0 && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-primary-500/20 text-primary-400">
+                            {h.planets.join(", ")}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 mb-1">{h.significance}</p>
-                    <p className="text-sm text-gray-300">{h.interpretation}</p>
+                    <p className="text-sm text-gray-300">
+                      {h.planets.length > 0
+                        ? `${h.planets.join(", ")} ${h.planets.length === 1 ? "is" : "are"} placed in ${h.sign} in the ${h.house}${getOrdinal(h.house)} house.`
+                        : `${h.sign} rules the ${h.house}${getOrdinal(h.house)} house with no planets placed here.`
+                      }
+                    </p>
                   </div>
                 ))}
               </div>
@@ -307,36 +347,45 @@ export default function KundliPage() {
             {activeTab === "dasha" && (
               <div className="glass-card p-6">
                 <h3 className="text-lg font-display font-bold text-gradient mb-4">Vimshottari Dasha</h3>
-                {mockDasha.map((d) => (
-                  <div key={d.planet}>
+                {kundli.dashas?.map((d, di) => (
+                  <div key={di} className="mb-6">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-sm font-semibold text-white">Mahadasha: {d.planet}</span>
-                      <span className="text-xs text-gray-500">{d.period}</span>
+                      <span className="text-xs text-gray-500">{d.startDate} to {d.endDate}</span>
                     </div>
-                    <div className="space-y-2">
-                      {d.sub.map((s) => (
-                        <div
-                          key={s.planet}
-                          className={`flex items-center justify-between p-3 rounded-xl ${
-                            s.status === "active"
-                              ? "bg-gradient-to-r from-primary-600/20 to-mystic-600/20 border border-primary-500/30"
-                              : s.status === "completed"
-                              ? "bg-white/3"
-                              : "bg-white/5"
-                          }`}
-                        >
-                          <span className={`text-sm ${s.status === "active" ? "text-white font-medium" : "text-gray-400"}`}>
-                            {s.planet}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">{s.period}</span>
-                            {s.status === "active" && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300">Current</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    {d.subPeriods && d.subPeriods.length > 0 && (
+                      <div className="space-y-2 ml-4">
+                        {d.subPeriods.map((s, si) => {
+                          const now = new Date();
+                          const start = new Date(s.startDate);
+                          const end = new Date(s.endDate);
+                          const isActive = now >= start && now <= end;
+                          const isCompleted = now > end;
+                          return (
+                            <div
+                              key={si}
+                              className={`flex items-center justify-between p-3 rounded-xl ${
+                                isActive
+                                  ? "bg-gradient-to-r from-primary-600/20 to-mystic-600/20 border border-primary-500/30"
+                                  : isCompleted
+                                  ? "bg-white/3"
+                                  : "bg-white/5"
+                              }`}
+                            >
+                              <span className={`text-sm ${isActive ? "text-white font-medium" : "text-gray-400"}`}>
+                                {d.planet}-{s.planet}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">{s.startDate} - {s.endDate}</span>
+                                {isActive && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300">Current</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -344,43 +393,63 @@ export default function KundliPage() {
 
             {activeTab === "yogas" && (
               <div className="space-y-4">
-                {mockYogas.map((y) => (
-                  <div key={y.name} className="glass-card p-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-white">{y.name}</h4>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        y.strength === "Strong" ? "bg-emerald-500/20 text-emerald-400" : "bg-accent-500/20 text-accent-400"
-                      }`}>
-                        {y.strength}
-                      </span>
+                {kundli.yogas && kundli.yogas.length > 0 ? (
+                  kundli.yogas.map((y, i) => (
+                    <div key={i} className="glass-card p-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-white">{y.name}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          y.effect === "benefic" ? "bg-emerald-500/20 text-emerald-400" :
+                          y.effect === "malefic" ? "bg-red-500/20 text-red-400" :
+                          "bg-accent-500/20 text-accent-400"
+                        }`}>
+                          {y.effect.charAt(0).toUpperCase() + y.effect.slice(1)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-300">{y.description}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mb-1">Formed by: {y.planets}</p>
-                    <p className="text-sm text-gray-300">{y.effect}</p>
+                  ))
+                ) : (
+                  <div className="glass-card p-8 text-center text-gray-500">
+                    No significant yogas detected in your chart.
                   </div>
-                ))}
+                )}
               </div>
             )}
 
             {activeTab === "doshas" && (
               <div className="space-y-4">
-                {mockDoshas.map((d) => (
-                  <div key={d.name} className="glass-card p-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-white">{d.name}</h4>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        d.status === "Absent" ? "bg-emerald-500/20 text-emerald-400" :
-                        d.status === "Mild" ? "bg-accent-500/20 text-accent-400" :
-                        "bg-red-500/20 text-red-400"
-                      }`}>
-                        {d.status}
-                      </span>
+                {doshas?.doshas ? (
+                  doshas.doshas.map((d, i) => (
+                    <div key={i} className="glass-card p-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-white">{d.name}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          !d.present ? "bg-emerald-500/20 text-emerald-400" :
+                          d.severity === "mild" ? "bg-accent-500/20 text-accent-400" :
+                          d.severity === "moderate" ? "bg-amber-500/20 text-amber-400" :
+                          "bg-red-500/20 text-red-400"
+                        }`}>
+                          {d.present ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : "Absent"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-300 mb-2">{d.description}</p>
+                      {d.remedies && d.remedies.length > 0 && (
+                        <div className="p-3 rounded-lg bg-white/3">
+                          <p className="text-xs text-gray-400">
+                            <span className="text-primary-400 font-medium">Remedies:</span>{" "}
+                            {d.remedies.join(". ")}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-300 mb-2">{d.description}</p>
-                    <div className="p-3 rounded-lg bg-white/3">
-                      <p className="text-xs text-gray-400"><span className="text-primary-400 font-medium">Remedy:</span> {d.remedy}</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="glass-card p-8 text-center">
+                    <p className="text-gray-500">Dosha analysis is generated from your birth chart data.</p>
+                    <p className="text-xs text-gray-600 mt-2">Complete the Kundli generation to view Dosha analysis.</p>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
@@ -388,4 +457,10 @@ export default function KundliPage() {
       </div>
     </div>
   );
+}
+
+function getOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
 }

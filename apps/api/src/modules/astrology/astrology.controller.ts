@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -50,10 +51,13 @@ export class AstrologyController {
 
   @Get('horoscope/:sign')
   @Public()
-  @ApiOperation({ summary: 'Get daily horoscope for a zodiac sign' })
+  @ApiOperation({ summary: 'Get horoscope for a zodiac sign' })
   @ApiResponse({ status: 200, description: 'Horoscope returned' })
-  async getHoroscope(@Param('sign') sign: string): Promise<HoroscopeResult> {
-    return this.astrologyService.getHoroscope(sign);
+  async getHoroscope(
+    @Param('sign') sign: string,
+    @Query('period') period?: string,
+  ): Promise<HoroscopeResult> {
+    return this.astrologyService.getHoroscope(sign, period as any);
   }
 
   @Get('panchang')

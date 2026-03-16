@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
@@ -35,6 +35,7 @@ export interface ReportSection {
 @Injectable()
 export class ReportService {
   private readonly logger = new Logger(ReportService.name);
+  private openaiClient: any = null;
 
   constructor(
     private prisma: PrismaService,
@@ -42,11 +43,23 @@ export class ReportService {
     private userService: UserService,
   ) {}
 
+  private getOpenAIClient(): any | null {
+    if (this.openaiClient) return this.openaiClient;
+    const apiKey = this.configService.get<string>('openai.apiKey');
+    if (!apiKey) return null;
+    const OpenAI = require('openai');
+    this.openaiClient = new OpenAI({ apiKey });
+    return this.openaiClient;
+  }
+
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
     const creditCost = this.configService.get<number>('credits.reportCost', 5);
 
-    await this.userService.deductCredits(userId, creditCost, `${dto.type} report generation`);
+    const deducted = await this.userService.deductCredits(userId, creditCost, `${dto.type} report generation`);
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
 
     // Fetch user's profile for personalized reports
     const user = await this.prisma.user.findUnique({
@@ -101,14 +114,12 @@ export class ReportService {
     name: string,
     gender?: string | null,
   ): Promise<ReportSection[]> {
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    if (!apiKey || !birthDetails.dateOfBirth) {
+    const openai = this.getOpenAIClient();
+    if (!openai || !birthDetails.dateOfBirth) {
       return this.getFallbackSections(type, birthDetails, name);
     }
 
     try {
-      const OpenAI = require('openai');
-      const openai = new OpenAI({ apiKey });
 
       const sectionStructure = this.getSectionStructure(type);
       const prompt = `Generate a detailed Vedic astrology ${type.toLowerCase()} report for:
@@ -256,6 +267,22 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
         { title: 'Wealth Growth Periods', content: `The coming years show financial growth peaks during specific Dasha transitions. Save and invest during Saturn's productive transits, and expand during Jupiter's wealth-house transits. Real estate investments are particularly favored.`, order: 5 },
         { title: 'Financial Remedies', content: `Enhance financial prosperity by: keeping a Kuber Yantra in your safe, chanting the Lakshmi Mantra on Fridays, donating to charity on auspicious days, wearing a Yellow Sapphire for Jupiter's blessings (after consultation), and beginning financial ventures during Pushya Nakshatra.`, order: 6 },
       ],
+      PALM: [
+        { title: 'Palm Lines Overview', content: `${name}, your palm analysis reveals a fascinating combination of lines and patterns. ${hasBirth ? `Being born under ${sign}` : 'Your palm lines'}, the major lines on your palm indicate a life of purpose, emotional depth, and intellectual vigor. The clarity and depth of your lines suggest strong life force energy and determination.`, order: 1 },
+        { title: 'Heart Line Analysis', content: `Your heart line indicates a passionate and emotionally expressive nature. The length and curvature suggest a balance between emotional openness and thoughtful selectivity in relationships. Deep, unbroken lines point toward meaningful, lasting connections.`, order: 2 },
+        { title: 'Head Line Analysis', content: `The head line on your palm shows strong analytical abilities and clear thinking patterns. Its trajectory indicates a blend of logical reasoning and creative imagination. This suggests success in careers requiring both intellectual precision and innovative thinking.`, order: 3 },
+        { title: 'Life Line Analysis', content: `Your life line shows strong vitality and resilience. The depth and length indicate a life full of energy and enthusiasm. The curve around the Mount of Venus suggests warmth, generosity, and a zest for living that attracts positive experiences.`, order: 4 },
+        { title: 'Mount Analysis', content: `The mounts on your palm reveal key personality traits. Well-developed mounts indicate areas of strength: Jupiter for ambition, Apollo for creativity, and Venus for love and passion. The balance of your mounts suggests a well-rounded personality with multiple talents.`, order: 5 },
+        { title: 'Overall Reading & Guidance', content: `${name}, your overall palm reading suggests a life of achievement, meaningful relationships, and personal growth. The combination of your major lines, minor lines, and mount development points toward success through self-effort. Practicing mindfulness and staying true to your values will amplify the positive indications in your palm.`, order: 6 },
+      ],
+      ANNUAL: [
+        { title: 'Year Overview', content: `${name}, the year ahead brings a transformative blend of opportunities and growth. ${hasBirth ? `With your ${sign} Sun sign and ${moonSign} Moon sign` : 'The planetary transits'}, the major planetary transits this year activate key areas of your chart, bringing positive changes in career, relationships, and personal development. Jupiter's beneficial influence highlights expansion and prosperity.`, order: 1 },
+        { title: 'Quarter 1 Forecast (Jan-Mar)', content: `The first quarter sets a strong foundation for the year. Saturn's disciplined energy supports goal-setting and planning. Professional opportunities may arise through networking. Focus on health routines and building new habits during this period. Financial planning initiated now will yield rewards later.`, order: 2 },
+        { title: 'Quarter 2 Forecast (Apr-Jun)', content: `The second quarter brings dynamic energy with Mars activating your career sector. This is an excellent period for launching new projects and taking calculated risks. Relationships deepen as Venus transits favorably. Travel opportunities may arise, bringing both pleasure and business prospects.`, order: 3 },
+        { title: 'Quarter 3 Forecast (Jul-Sep)', content: `Mid-year brings introspection and consolidation. Mercury retrograde periods require careful communication. Focus on completing ongoing projects rather than starting new ones. Family matters take center stage, and property-related decisions are favored. Health improvements show results from earlier efforts.`, order: 4 },
+        { title: 'Quarter 4 Forecast (Oct-Dec)', content: `The final quarter brings the year's strongest results. Jupiter's transit supports financial growth and career advancement. Social connections bring unexpected opportunities. This is an excellent period for investments, celebrations, and long-term commitments. End the year with gratitude and forward planning.`, order: 5 },
+        { title: 'Annual Remedies & Lucky Periods', content: `To maximize this year's potential: perform Ganesha Puja at the year's start, wear gemstones suited to your Lagna after consultation, observe fasting on days ruled by your chart's weakest planet, and chant the Gayatri Mantra daily. Lucky months include those when Jupiter transits your Trikona houses. Special Muhurat periods will be particularly favorable for major decisions.`, order: 6 },
+      ],
     };
 
     return sections[type] || sections.LIFE;
@@ -268,14 +295,37 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
 
     if (!report) throw new NotFoundException('Report not found');
 
+    // Fetch user profile to regenerate sections if needed
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true },
+    });
+
+    const birthDetails = {
+      dateOfBirth: user?.dateOfBirth?.toISOString().split('T')[0] || '',
+      timeOfBirth: user?.timeOfBirth || '',
+      placeOfBirth: (user?.placeOfBirth as any)?.name || '',
+    };
+
+    const sections = await this.generateAIReportSections(report.type, birthDetails, user?.name || 'User', user?.gender);
+
+    const reportTitles: Record<string, string> = {
+      LIFE: 'Detailed Life Analysis Report',
+      CAREER: 'Career & Professional Outlook Report',
+      MARRIAGE: 'Marriage & Compatibility Report',
+      WEALTH: 'Wealth & Financial Forecast Report',
+      PALM: 'Palmistry Analysis Report',
+      ANNUAL: 'Annual Horoscope Report',
+    };
+
     return {
       id: report.id,
       userId: report.userId,
       type: report.type,
-      title: `${report.type} Report`,
+      title: reportTitles[report.type] || `${report.type} Report`,
       status: report.status.toLowerCase(),
-      summary: `Your ${report.type.toLowerCase()} report.`,
-      sections: [],
+      summary: sections[0]?.content?.substring(0, 200) + '...' || `Your ${report.type.toLowerCase()} report.`,
+      sections,
       pdfUrl: report.fileUrl,
       creditsCharged: Number(report.price),
       createdAt: report.createdAt.toISOString(),

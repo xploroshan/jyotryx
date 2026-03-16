@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
@@ -75,7 +75,7 @@ export interface GunaDetail {
 export interface HoroscopeResult {
   sign: string;
   date: string;
-  period: 'daily' | 'weekly' | 'monthly';
+  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
   prediction: string;
   luckyNumber: number;
   luckyColor: string;
@@ -130,6 +130,7 @@ export interface DoshaResult {
 @Injectable()
 export class AstrologyService {
   private readonly logger = new Logger(AstrologyService.name);
+  private openaiClient: any = null;
 
   constructor(
     private prisma: PrismaService,
@@ -137,18 +138,25 @@ export class AstrologyService {
     private userService: UserService,
   ) {}
 
+  private getOpenAIClient(): any | null {
+    if (this.openaiClient) return this.openaiClient;
+    const apiKey = this.configService.get<string>('openai.apiKey');
+    if (!apiKey) return null;
+    const OpenAI = require('openai');
+    this.openaiClient = new OpenAI({ apiKey });
+    return this.openaiClient;
+  }
+
   private async callOpenAI(
     systemPrompt: string,
     userPrompt: string,
     jsonMode: boolean = true,
     maxTokens: number = 1500,
   ): Promise<any | null> {
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    if (!apiKey) return null;
+    const openai = this.getOpenAIClient();
+    if (!openai) return null;
 
     try {
-      const OpenAI = require('openai');
-      const openai = new OpenAI({ apiKey });
       const completion = await openai.chat.completions.create({
         model: this.configService.get<string>('openai.model', 'gpt-4o'),
         messages: [
@@ -173,7 +181,10 @@ export class AstrologyService {
     this.logger.log(`Generating Kundli for user: ${userId}`);
 
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    await this.userService.deductCredits(userId, creditCost, 'Kundli generation');
+    const deducted = await this.userService.deductCredits(userId, creditCost, 'Kundli generation');
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
 
     const chartData = await this.generateAIKundli(birthDetails);
 
@@ -310,21 +321,23 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
 
     // Detect basic yogas
     const yogas: Yoga[] = [];
-    const jupiterHouse = planetaryPositions.find((p) => p.planet === 'Jupiter')!.house;
-    const moonHouse = planetaryPositions.find((p) => p.planet === 'Moon')!.house;
-    if ([1, 4, 7, 10].includes(((jupiterHouse - moonHouse + 12) % 12) + 1)) {
+    const findHouse = (name: string) => planetaryPositions.find((p) => p.planet === name)?.house;
+    const jupiterHouse = findHouse('Jupiter');
+    const moonHouse = findHouse('Moon');
+    const sunH = findHouse('Sun');
+    const mercuryH = findHouse('Mercury');
+    const venusH = findHouse('Venus');
+
+    if (jupiterHouse != null && moonHouse != null && [1, 4, 7, 10].includes(((jupiterHouse - moonHouse + 12) % 12) + 1)) {
       yogas.push({ name: 'Gaja Kesari Yoga', description: 'Jupiter in Kendra from Moon - bestows wisdom, prosperity, and fame', effect: 'benefic' });
     }
-    const sunH = planetaryPositions.find((p) => p.planet === 'Sun')!.house;
-    const mercuryH = planetaryPositions.find((p) => p.planet === 'Mercury')!.house;
-    if (sunH === mercuryH) {
+    if (sunH != null && mercuryH != null && sunH === mercuryH) {
       yogas.push({ name: 'Budhaditya Yoga', description: 'Sun-Mercury conjunction - grants sharp intellect and communication skills', effect: 'benefic' });
     }
-    const venusH = planetaryPositions.find((p) => p.planet === 'Venus')!.house;
-    if (venusH === 1 || venusH === 4 || venusH === 7) {
+    if (venusH != null && (venusH === 1 || venusH === 4 || venusH === 7)) {
       yogas.push({ name: 'Malavya Yoga', description: 'Venus in Kendra - bestows luxury, beauty, and artistic talents', effect: 'benefic' });
     }
-    if (jupiterHouse === 1 || jupiterHouse === 4 || jupiterHouse === 7 || jupiterHouse === 10) {
+    if (jupiterHouse != null && [1, 4, 7, 10].includes(jupiterHouse)) {
       yogas.push({ name: 'Hamsa Yoga', description: 'Jupiter in Kendra - bestows righteousness and spiritual wisdom', effect: 'benefic' });
     }
 
@@ -366,7 +379,10 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
     this.logger.log('Performing Kundli matching');
 
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    await this.userService.deductCredits(userId, creditCost, 'Kundli matching');
+    const deducted = await this.userService.deductCredits(userId, creditCost, 'Kundli matching');
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
 
     const aiResult = await this.callOpenAI(
       `You are an expert Vedic astrologer performing Ashtakoota Guna matching. Calculate the actual compatibility scores based on the birth details provided. Return a JSON object with:
@@ -435,26 +451,34 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     ];
   }
 
-  async getHoroscope(sign: string): Promise<HoroscopeResult> {
-    this.logger.log(`Fetching horoscope for: ${sign}`);
+  async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly'): Promise<HoroscopeResult> {
+    const activePeriod = period || 'daily';
+    this.logger.log(`Fetching ${activePeriod} horoscope for: ${sign}`);
     const today = new Date().toISOString().split('T')[0];
     const formattedSign = sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase();
 
+    const periodDescriptions: Record<string, string> = {
+      daily: `today's (${today})`,
+      weekly: `this week's (starting ${today})`,
+      monthly: `this month's (${new Date().toLocaleString('en', { month: 'long', year: 'numeric' })})`,
+      yearly: `this year's (${new Date().getFullYear()})`,
+    };
+
     const aiPrediction = await this.callOpenAI(
-      `You are a Vedic astrologer. Generate a daily horoscope prediction for the given zodiac sign. Return a JSON object with:
-- prediction: string (3-4 sentences, specific and positive, referencing current planetary transits)
+      `You are a Vedic astrologer. Generate a ${activePeriod} horoscope prediction for the given zodiac sign. Return a JSON object with:
+- prediction: string (${activePeriod === 'daily' ? '3-4' : '4-6'} sentences, specific and positive, referencing planetary transits)
 - luckyNumber: number (1-9)
 - luckyColor: string
 - mood: string (one word)
-- compatibility: string (most compatible sign today)`,
-      `Generate today's (${today}) Vedic horoscope for ${formattedSign}. Reference current planetary transits and provide specific, actionable guidance.`,
+- compatibility: string (most compatible sign)`,
+      `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Reference current planetary transits and provide specific, actionable guidance.`,
     );
 
     if (aiPrediction) {
       return {
         sign: formattedSign,
         date: today,
-        period: 'daily',
+        period: activePeriod,
         prediction: aiPrediction.prediction,
         luckyNumber: aiPrediction.luckyNumber,
         luckyColor: aiPrediction.luckyColor,
@@ -485,7 +509,7 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     return {
       sign: formattedSign,
       date: today,
-      period: 'daily',
+      period: activePeriod,
       prediction: predictions[seed],
       luckyNumber: ((dayOfYear + signIdx) % 9) + 1,
       luckyColor: colors[(dayOfYear + signIdx) % colors.length],
