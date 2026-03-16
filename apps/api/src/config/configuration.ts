@@ -1,16 +1,25 @@
+const isProduction = process.env.NODE_ENV === 'production';
+
+function requireInProduction(key: string, fallback: string): string {
+  const value = process.env[key];
+  if (!value && isProduction) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value || fallback;
+}
+
 export default () => ({
   port: parseInt(process.env.PORT || '4000', 10),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/jyotryx',
+    url: requireInProduction('DATABASE_URL', 'postgresql://localhost:5432/jyotryx'),
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'jyotryx-dev-secret-change-in-production',
+    secret: requireInProduction('JWT_SECRET', 'jyotryx-dev-secret-change-in-production'),
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
-    refreshSecret:
-      process.env.JWT_REFRESH_SECRET || 'jyotryx-refresh-secret-change-in-production',
+    refreshSecret: requireInProduction('JWT_REFRESH_SECRET', 'jyotryx-refresh-secret-change-in-production'),
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
 

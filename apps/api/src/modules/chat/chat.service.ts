@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import { OpenAIService } from '../../openai/openai.service';
 
 export interface ChatMessage {
   id: string;
@@ -30,22 +31,13 @@ export interface SendMessageDto {
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
-  private openaiClient: any = null;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private openaiService: OpenAIService,
   ) {}
-
-  private getOpenAIClient(): any | null {
-    if (this.openaiClient) return this.openaiClient;
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    if (!apiKey) return null;
-    const OpenAI = require('openai');
-    this.openaiClient = new OpenAI({ apiKey });
-    return this.openaiClient;
-  }
 
   async sendMessage(
     userId: string,
@@ -116,26 +108,39 @@ export class ChatService {
       },
     });
 
-    // Fetch updated session
-    const updatedSession = await this.prisma.chatSession.findUnique({
-      where: { id: dbSession.id },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
-    });
-
-    const session: ChatSession = {
-      id: updatedSession!.id,
-      userId: updatedSession!.userId,
-      title: updatedSession!.title,
-      category: updatedSession!.category,
-      messages: updatedSession!.messages.map((m: any) => ({
+    // Build session from data we already have (avoids extra DB query)
+    const allMessages = [
+      ...dbSession.messages.map((m: any) => ({
         id: m.id,
         sessionId: m.sessionId,
         role: m.role.toLowerCase() as 'user' | 'assistant',
         content: m.content,
         timestamp: m.createdAt.toISOString(),
       })),
-      createdAt: updatedSession!.createdAt.toISOString(),
-      updatedAt: updatedSession!.updatedAt.toISOString(),
+      {
+        id: 'user-msg-pending',
+        sessionId: dbSession.id,
+        role: 'user' as const,
+        content: dto.message,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: assistantMsg.id,
+        sessionId: assistantMsg.sessionId,
+        role: 'assistant' as const,
+        content: assistantMsg.content,
+        timestamp: assistantMsg.createdAt.toISOString(),
+      },
+    ];
+
+    const session: ChatSession = {
+      id: dbSession.id,
+      userId: dbSession.userId,
+      title: dbSession.title,
+      category: dbSession.category,
+      messages: allMessages,
+      createdAt: dbSession.createdAt.toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     const reply: ChatMessage = {
@@ -198,32 +203,23 @@ export class ChatService {
     history: { role: string; content: string }[],
     userProfile: any,
   ): Promise<string> {
-    const openai = this.getOpenAIClient();
+    const systemPrompt = this.getSystemPrompt(category, userProfile);
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history.slice(-10).map((m) => ({
+        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
+        content: m.content,
+      })),
+      { role: 'user' as const, content: message },
+    ];
 
-    if (openai) {
-      try {
-        const systemPrompt = this.getSystemPrompt(category, userProfile);
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...history.slice(-10).map((m) => ({
-            role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
-            content: m.content,
-          })),
-          { role: 'user' as const, content: message },
-        ];
+    const result = await this.openaiService.chatCompletion({
+      messages,
+      maxTokens: 800,
+      temperature: 0.7,
+    });
 
-        const completion = await openai.chat.completions.create({
-          model: this.configService.get<string>('openai.model', 'gpt-4o'),
-          messages,
-          max_tokens: 800,
-          temperature: 0.7,
-        });
-
-        return completion.choices[0]?.message?.content || 'I apologize, I could not generate a response. Please try again.';
-      } catch (error) {
-        this.logger.error('OpenAI API call failed, using fallback', error);
-      }
-    }
+    if (result) return result;
 
     // Fallback responses - personalized where possible
     return this.getFallbackResponse(category, userProfile);

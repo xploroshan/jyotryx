@@ -1,10 +1,10 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Install dependencies
+# Install all dependencies (needed for build)
 FROM base AS deps
-COPY package.json ./
-RUN npm install --production=false
+COPY package.json package-lock.json* ./
+RUN npm ci
 
 # Build
 FROM base AS build
@@ -13,11 +13,16 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
+# Production dependencies only
+FROM base AS prod-deps
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
 # Production
 FROM base AS production
 ENV NODE_ENV=production
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/package.json ./
 

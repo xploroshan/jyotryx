@@ -2,6 +2,8 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import { OpenAIService } from '../../openai/openai.service';
+import { MemoryCacheService } from '../../common/cache.service';
 
 export interface BirthDetails {
   dateOfBirth: string;
@@ -130,22 +132,14 @@ export interface DoshaResult {
 @Injectable()
 export class AstrologyService {
   private readonly logger = new Logger(AstrologyService.name);
-  private openaiClient: any = null;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private openaiService: OpenAIService,
+    private cacheService: MemoryCacheService,
   ) {}
-
-  private getOpenAIClient(): any | null {
-    if (this.openaiClient) return this.openaiClient;
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    if (!apiKey) return null;
-    const OpenAI = require('openai');
-    this.openaiClient = new OpenAI({ apiKey });
-    return this.openaiClient;
-  }
 
   private async callOpenAI(
     systemPrompt: string,
@@ -153,28 +147,15 @@ export class AstrologyService {
     jsonMode: boolean = true,
     maxTokens: number = 1500,
   ): Promise<any | null> {
-    const openai = this.getOpenAIClient();
-    if (!openai) return null;
-
-    try {
-      const completion = await openai.chat.completions.create({
-        model: this.configService.get<string>('openai.model', 'gpt-4o'),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.7,
-        ...(jsonMode && { response_format: { type: 'json_object' } }),
-      });
-
-      const content = completion.choices[0]?.message?.content;
-      if (!content) return null;
-      return jsonMode ? JSON.parse(content) : content;
-    } catch (error) {
-      this.logger.error('OpenAI API call failed', error);
-      return null;
-    }
+    return this.openaiService.chatCompletion({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      maxTokens,
+      temperature: 0.7,
+      jsonMode,
+    });
   }
 
   async generateKundli(userId: string, birthDetails: BirthDetails): Promise<KundliResult> {
@@ -453,8 +434,12 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
 
   async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly'): Promise<HoroscopeResult> {
     const activePeriod = period || 'daily';
-    this.logger.log(`Fetching ${activePeriod} horoscope for: ${sign}`);
     const today = new Date().toISOString().split('T')[0];
+    const cacheKey = `horoscope:${sign.toLowerCase()}:${activePeriod}:${today}`;
+    const cached = this.cacheService.get<HoroscopeResult>(cacheKey);
+    if (cached) return cached;
+
+    this.logger.log(`Fetching ${activePeriod} horoscope for: ${sign}`);
     const formattedSign = sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase();
 
     const periodDescriptions: Record<string, string> = {
@@ -475,7 +460,7 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     );
 
     if (aiPrediction) {
-      return {
+      const result: HoroscopeResult = {
         sign: formattedSign,
         date: today,
         period: activePeriod,
@@ -485,6 +470,8 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
         mood: aiPrediction.mood,
         compatibility: aiPrediction.compatibility,
       };
+      this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000); // 24h TTL
+      return result;
     }
 
     // Fallback: generate based on current date for variety
@@ -506,7 +493,7 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     const moods = ['Optimistic', 'Energetic', 'Reflective', 'Confident', 'Creative', 'Peaceful', 'Adventurous'];
     const signs = ['Aries', 'Leo', 'Sagittarius', 'Gemini', 'Libra', 'Aquarius', 'Taurus', 'Cancer', 'Virgo', 'Scorpio', 'Capricorn', 'Pisces'];
 
-    return {
+    const fallbackResult: HoroscopeResult = {
       sign: formattedSign,
       date: today,
       period: activePeriod,
@@ -516,11 +503,16 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
       mood: moods[seed],
       compatibility: signs[(signIdx + dayOfYear) % 12],
     };
+    this.cacheService.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000);
+    return fallbackResult;
   }
 
   async getPanchang(): Promise<PanchangResult> {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
+    const cacheKey = `panchang:${dateStr}`;
+    const cached = this.cacheService.get<PanchangResult>(cacheKey);
+    if (cached) return cached;
 
     const aiResult = await this.callOpenAI(
       `You are a Vedic Panchang calculator. Calculate today's Panchang details accurately. Return a JSON object with:
@@ -539,7 +531,9 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     );
 
     if (aiResult) {
-      return { date: dateStr, ...aiResult };
+      const result = { date: dateStr, ...aiResult };
+      this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
+      return result;
     }
 
     // Fallback: calculate based on current date for daily variety
