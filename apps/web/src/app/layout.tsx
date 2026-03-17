@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Jyotron — AI-Powered Vedic Astrology",
   description:
     "Instant, personalized Vedic astrology consultations powered by AI. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   keywords: [
     "astrology", "AI astrologer", "vedic astrology", "kundli", "horoscope",
     "palmistry", "kundli matching", "panchang", "muhurat", "jyotron",

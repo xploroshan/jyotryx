@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store";
+import { LogoMark } from "@/components/ui/Logo";
 
 const navLinks = [
   { href: "/chat", label: "AI Chat" },
@@ -25,12 +26,7 @@ export default function Navbar() {
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-md bg-primary-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-              </svg>
-            </div>
+            <LogoMark className="h-8 w-8" />
             <span className="text-lg font-semibold text-white tracking-tight">
               Jyotron
             </span>
