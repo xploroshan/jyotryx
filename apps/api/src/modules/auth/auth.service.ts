@@ -61,23 +61,26 @@ export class AuthService {
     // Initialize Firebase Admin SDK
     if (!admin.apps.length) {
       const serviceAccount = this.configService.get<string>('firebase.serviceAccountJson');
+      const projectId = this.configService.get<string>('firebase.projectId');
+
       if (serviceAccount) {
         try {
           admin.initializeApp({
             credential: admin.credential.cert(JSON.parse(serviceAccount)),
           });
-          this.logger.log('Firebase Admin SDK initialized');
+          this.logger.log('Firebase Admin SDK initialized with service account');
         } catch (error) {
-          this.logger.warn(`Firebase Admin SDK init failed: ${error}`);
+          this.logger.warn(`Firebase Admin SDK init with service account failed: ${error}`);
+        }
+      } else if (projectId) {
+        try {
+          admin.initializeApp({ projectId });
+          this.logger.log('Firebase Admin SDK initialized with project ID only');
+        } catch (error) {
+          this.logger.warn(`Firebase Admin SDK init with project ID failed: ${error}`);
         }
       } else {
-        const projectId = this.configService.get<string>('firebase.projectId');
-        if (projectId) {
-          admin.initializeApp({ projectId });
-          this.logger.log('Firebase Admin SDK initialized with project ID');
-        } else {
-          this.logger.warn('Firebase Admin SDK not configured - missing FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID');
-        }
+        this.logger.warn('Firebase Admin SDK not configured - set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID');
       }
     }
   }

@@ -12,15 +12,25 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:8081',
-      'https://jyotron-web.vercel.app',
-      'https://www.jyotron.com',
-      process.env.FRONTEND_URL,
-      process.env.CORS_ORIGIN,
-    ].filter(Boolean) as string[],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:8081',
+        'https://jyotron-web.vercel.app',
+        'https://www.jyotron.com',
+        process.env.FRONTEND_URL,
+        process.env.CORS_ORIGIN,
+      ].filter(Boolean) as string[];
+
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      // Allow exact matches
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow Vercel preview deployments
+      if (/\.vercel\.app$/.test(origin)) return callback(null, true);
+      callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
