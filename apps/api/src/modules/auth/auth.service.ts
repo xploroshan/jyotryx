@@ -270,28 +270,73 @@ export class AuthService {
   }
 
   async googleAuth(dto: GoogleAuthDto): Promise<AuthResponse> {
-    // TODO: Verify Google ID token with Google OAuth2 API
-    this.logger.warn('Google auth: using mock verification (implement Google OAuth2 verification)');
+    // Verify Google ID token via Google's tokeninfo endpoint
+    let googlePayload: { sub: string; email: string; name: string; picture?: string; email_verified?: string };
 
-    const email = 'google-user@example.com';
-    const name = 'Google User';
+    try {
+      const googleClientId = this.configService.get<string>('google.clientId');
+      const verifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(dto.idToken)}`;
+      const response = await fetch(verifyUrl);
 
+      if (!response.ok) {
+        throw new Error('Invalid Google token');
+      }
+
+      const payload = await response.json();
+
+      // Verify the token was issued for our client
+      if (googleClientId && payload.aud !== googleClientId) {
+        throw new Error('Token was not issued for this application');
+      }
+
+      if (payload.email_verified === 'false') {
+        throw new Error('Google email not verified');
+      }
+
+      googlePayload = {
+        sub: payload.sub,
+        email: payload.email,
+        name: payload.name || payload.email.split('@')[0],
+        picture: payload.picture,
+        email_verified: payload.email_verified,
+      };
+    } catch (error) {
+      this.logger.error(`Google token verification failed: ${error}`);
+      throw new UnauthorizedException('Invalid Google credentials. Please try again.');
+    }
+
+    // Find existing user by Google provider ID or email
     let user = await this.prisma.user.findFirst({
-      where: { provider: 'GOOGLE', providerId: dto.idToken.substring(0, 50) },
+      where: {
+        OR: [
+          { provider: 'GOOGLE', providerId: googlePayload.sub },
+          { email: googlePayload.email },
+        ],
+      },
     });
 
-    if (!user) {
+    if (user && user.provider !== 'GOOGLE') {
+      // Existing email user - link their Google account
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { provider: 'GOOGLE', providerId: googlePayload.sub },
+      });
+      this.logger.log(`Linked Google account to existing user: ${user.email}`);
+    } else if (!user) {
+      // Create new user
       user = await this.prisma.user.create({
         data: {
-          name,
-          email: `google_${Date.now()}@jyotron.com`,
+          name: googlePayload.name,
+          email: googlePayload.email,
           provider: 'GOOGLE',
-          providerId: dto.idToken.substring(0, 50),
+          providerId: googlePayload.sub,
           credits: this.configService.get<number>('credits.freeMonthly', 10),
         },
       });
+      this.logger.log(`New user created via Google: ${user.email}`);
     }
 
+    this.logger.log(`User logged in via Google: ${user.email}`);
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
