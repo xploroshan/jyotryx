@@ -1,25 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          prompt: (callback?: (notification: any) => void) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
-        };
-      };
-    };
-  }
-}
+import {
+  auth,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "@/lib/firebase";
+import type { ConfirmationResult } from "firebase/auth";
 
 function AuthPageContent() {
   const router = useRouter();
@@ -36,7 +30,6 @@ function AuthPageContent() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [devOtp, setDevOtp] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -45,74 +38,81 @@ function AuthPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const handleGoogleCredential = useCallback(async (response: any) => {
-    setGoogleLoading(true);
-    setError("");
-    try {
-      const res = await api.post<any>("/auth/google", { idToken: response.credential });
-      setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      router.push("/chat");
-    } catch (err: any) {
-      setError(err.message || "Google sign-in failed");
-    } finally {
-      setGoogleLoading(false);
-    }
+  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+
+  // Helper to send Firebase ID token to our backend
+  const authenticateWithBackend = useCallback(async (firebaseIdToken: string) => {
+    const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
+    setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+    router.push("/chat");
   }, [setAuth, router]);
 
-  useEffect(() => {
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!googleClientId) return;
+  const setupRecaptcha = useCallback(() => {
+    if (recaptchaVerifierRef.current) return;
+    if (!recaptchaContainerRef.current) return;
 
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      window.google?.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleCredential,
-      });
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, [handleGoogleCredential]);
-
-  const handleGoogleClick = () => {
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!googleClientId) {
-      setError("Google Sign-in is not configured. Please use Phone or Email to sign in.");
-      return;
-    }
-    if (window.google) {
-      window.google.accounts.id.prompt();
-    } else {
-      setError("Google Sign-in is loading. Please try again.");
-    }
-  };
+    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+      size: "invisible",
+    });
+  }, []);
 
   const handleSendOtp = async () => {
     if (phone.length < 10) { setError("Please enter a valid 10-digit phone number"); return; }
-    setLoading(true); setError(""); setDevOtp(null);
+    setLoading(true); setError("");
     try {
-      const res = await api.post<{ message: string; expiresIn: number; devOtp?: string }>("/auth/otp/send", { phone: `+91${phone}` });
+      setupRecaptcha();
+      const phoneNumber = `+91${phone}`;
+      const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current!);
+      confirmationResultRef.current = result;
       setOtpSent(true);
-      if (res.devOtp) { setDevOtp(res.devOtp); setOtp(res.devOtp); }
-    } catch (err: any) { setError(err.message || "Failed to send OTP"); }
-    finally { setLoading(false); }
+    } catch (err: any) {
+      // Reset recaptcha on error so it can be re-initialized
+      recaptchaVerifierRef.current = null;
+      if (err.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else if (err.code === "auth/invalid-phone-number") {
+        setError("Invalid phone number. Please check and try again.");
+      } else {
+        setError(err.message || "Failed to send OTP");
+      }
+    } finally { setLoading(false); }
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length < 4) { setError("Please enter the OTP"); return; }
+    if (otp.length < 6) { setError("Please enter the 6-digit OTP"); return; }
+    if (!confirmationResultRef.current) { setError("Please request OTP first"); return; }
     setLoading(true); setError("");
     try {
-      const res = await api.post<any>("/auth/otp/verify", { phone: `+91${phone}`, otp });
-      setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      router.push("/chat");
-    } catch (err: any) { setError(err.message || "OTP verification failed"); }
-    finally { setLoading(false); }
+      const credential = await confirmationResultRef.current.confirm(otp);
+      const idToken = await credential.user.getIdToken();
+      await authenticateWithBackend(idToken);
+    } catch (err: any) {
+      if (err.code === "auth/invalid-verification-code") {
+        setError("Invalid OTP. Please check and try again.");
+      } else {
+        setError(err.message || "OTP verification failed");
+      }
+    } finally { setLoading(false); }
+  };
+
+  const handleGoogleClick = async () => {
+    setGoogleLoading(true); setError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      await authenticateWithBackend(idToken);
+    } catch (err: any) {
+      if (err.code === "auth/popup-closed-by-user") {
+        // User closed popup, don't show error
+      } else if (err.code === "auth/cancelled-popup-request") {
+        // Duplicate popup, ignore
+      } else {
+        setError(err.message || "Google sign-in failed");
+      }
+    } finally { setGoogleLoading(false); }
   };
 
   const handleEmailAuth = async () => {
@@ -147,6 +147,9 @@ function AuthPageContent() {
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
+        {/* Invisible reCAPTCHA container */}
+        <div ref={recaptchaContainerRef} id="recaptcha-container" />
+
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
@@ -200,7 +203,7 @@ function AuthPageContent() {
           {/* Method Toggle */}
           <div className="flex gap-1.5 mb-4">
             <button
-              onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); setDevOtp(null); }}
+              onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); }}
               className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "phone" ? "bg-white/[0.08] text-white" : "text-white/30 hover:text-white/50"}`}
             >
               Phone (OTP)
@@ -239,14 +242,9 @@ function AuthPageContent() {
                     <label className="block text-xs text-white/40 mb-1.5">Enter OTP</label>
                     <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit OTP" maxLength={6}
                       className="w-full px-3 py-2.5 rounded-lg surface-input text-sm tracking-[0.3em] text-center" />
-                    {devOtp && (
-                      <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] text-center">
-                        Dev OTP: <span className="font-mono font-bold">{devOtp}</span>
-                      </div>
-                    )}
                     <div className="flex items-center justify-between mt-2">
                       <button onClick={handleSendOtp} disabled={loading} className="text-[11px] text-primary-400 hover:text-primary-300">Resend</button>
-                      <button onClick={() => { setOtpSent(false); setOtp(""); setDevOtp(null); }} className="text-[11px] text-white/30 hover:text-white/50">Change Number</button>
+                      <button onClick={() => { setOtpSent(false); setOtp(""); confirmationResultRef.current = null; }} className="text-[11px] text-white/30 hover:text-white/50">Change Number</button>
                     </div>
                   </div>
                 )}

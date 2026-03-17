@@ -18,6 +18,7 @@ import {
   GoogleAuthDto,
   RefreshTokenDto,
   ChangePasswordDto,
+  FirebaseAuthDto,
 } from './dto';
 import { Public } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -75,6 +76,16 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Google auth successful' })
   async googleAuth(@Body() dto: GoogleAuthDto): Promise<AuthResponse> {
     return this.authService.googleAuth(dto);
+  }
+
+  @Post('firebase')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Authenticate with Firebase ID token (Phone OTP or Google)' })
+  @ApiResponse({ status: 200, description: 'Firebase auth successful' })
+  @ApiResponse({ status: 401, description: 'Invalid Firebase token' })
+  async firebaseAuth(@Body() dto: FirebaseAuthDto): Promise<AuthResponse> {
+    return this.authService.firebaseAuth(dto);
   }
 
   @Post('refresh')

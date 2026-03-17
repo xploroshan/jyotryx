@@ -18,7 +18,9 @@ import {
   GoogleAuthDto,
   RefreshTokenDto,
   ChangePasswordDto,
+  FirebaseAuthDto,
 } from './dto';
+import * as admin from 'firebase-admin';
 
 export interface AuthTokens {
   accessToken: string;
@@ -55,7 +57,30 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    // Initialize Firebase Admin SDK
+    if (!admin.apps.length) {
+      const serviceAccount = this.configService.get<string>('firebase.serviceAccountJson');
+      if (serviceAccount) {
+        try {
+          admin.initializeApp({
+            credential: admin.credential.cert(JSON.parse(serviceAccount)),
+          });
+          this.logger.log('Firebase Admin SDK initialized');
+        } catch (error) {
+          this.logger.warn(`Firebase Admin SDK init failed: ${error}`);
+        }
+      } else {
+        const projectId = this.configService.get<string>('firebase.projectId');
+        if (projectId) {
+          admin.initializeApp({ projectId });
+          this.logger.log('Firebase Admin SDK initialized with project ID');
+        } else {
+          this.logger.warn('Firebase Admin SDK not configured - missing FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID');
+        }
+      }
+    }
+  }
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
     const existingUser = await this.prisma.user.findUnique({
@@ -337,6 +362,90 @@ export class AuthService {
     }
 
     this.logger.log(`User logged in via Google: ${user.email}`);
+    const tokens = await this.generateTokens(user.id, user.email, user.name);
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        credits: user.credits,
+        role: user.role,
+      },
+      tokens,
+    };
+  }
+
+  async firebaseAuth(dto: FirebaseAuthDto): Promise<AuthResponse> {
+    if (!admin.apps.length) {
+      throw new UnauthorizedException('Firebase is not configured on the server');
+    }
+
+    let decodedToken: admin.auth.DecodedIdToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(dto.idToken);
+    } catch (error) {
+      this.logger.error(`Firebase token verification failed: ${error}`);
+      throw new UnauthorizedException('Invalid Firebase token. Please try again.');
+    }
+
+    const uid = decodedToken.uid;
+    const phone_number = decodedToken.phone_number;
+    const email = decodedToken.email;
+    const firebaseName = (decodedToken as any).name as string | undefined;
+    const sign_in_provider = decodedToken.firebase?.sign_in_provider;
+
+    // Determine provider type
+    const isPhone = sign_in_provider === 'phone' || !!phone_number;
+    const isGoogle = sign_in_provider === 'google.com';
+
+    // Find existing user
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(phone_number ? [{ phone: phone_number }] : []),
+          ...(email ? [{ email }] : []),
+          { providerId: uid },
+        ],
+      },
+    });
+
+    if (user) {
+      // Update provider info if needed
+      const updates: any = {};
+      if (isGoogle && user.provider !== 'GOOGLE') {
+        updates.provider = 'GOOGLE';
+        updates.providerId = uid;
+      }
+      if (phone_number && !user.phone) {
+        updates.phone = phone_number;
+      }
+      if (Object.keys(updates).length > 0) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: updates,
+        });
+      }
+    } else {
+      // Create new user
+      const userEmail = email || (phone_number ? `${phone_number.replace(/\+/g, '')}@phone.jyotron.com` : `firebase_${uid}@jyotron.com`);
+      const userName = firebaseName || (phone_number ? 'User' : email?.split('@')[0] || 'User');
+
+      user = await this.prisma.user.create({
+        data: {
+          name: userName,
+          email: userEmail,
+          phone: phone_number || null,
+          provider: isGoogle ? 'GOOGLE' : 'PHONE',
+          providerId: uid,
+          credits: this.configService.get<number>('credits.freeMonthly', 10),
+        },
+      });
+      this.logger.log(`New user created via Firebase (${sign_in_provider}): ${user.email}`);
+    }
+
+    this.logger.log(`User logged in via Firebase: ${user.email}`);
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {

@@ -19,6 +19,7 @@ enum AuthProvider {
   LOCAL
   GOOGLE
   APPLE
+  PHONE
 }
 
 enum PlanType {
