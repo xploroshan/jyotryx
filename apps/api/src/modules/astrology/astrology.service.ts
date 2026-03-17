@@ -474,21 +474,52 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
       return result;
     }
 
-    // Fallback: generate based on current date for variety
+    // Fallback: generate based on current date and period for variety
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     const signIdx = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'].indexOf(sign.toLowerCase());
-    const seed = (dayOfYear + signIdx) % 7;
+    const periodOffset = { daily: 0, weekly: 1, monthly: 2, yearly: 3 }[activePeriod] || 0;
+    const seed = (dayOfYear + signIdx + periodOffset * 3) % 7;
 
-    const predictions = [
-      `Today brings positive energy for ${formattedSign}. The Moon's transit through your sector of creativity sparks new ideas. Financial matters look promising as Jupiter aspects your 2nd house. A social connection may lead to an unexpected opportunity.`,
-      `${formattedSign}, the planetary alignment today favors introspection and planning. Mercury's influence sharpens your communication skills. This is an excellent day for important conversations and negotiations. Trust your instincts in matters of the heart.`,
-      `A dynamic day awaits ${formattedSign} as Mars energizes your chart. Professional endeavors get a boost from the Sun's favorable position. Health and vitality are strong today. An old friend may reconnect with meaningful news.`,
-      `${formattedSign}, Venus blesses your relationships today. Creative pursuits are highly favored under the current Nakshatra. Financial caution is advised in the afternoon hours. Evening brings joy through family connections.`,
-      `The stars align favorably for ${formattedSign} today. Saturn's steady influence supports long-term goals and disciplined effort. A property or investment matter may reach a positive conclusion. Practice gratitude for the best results.`,
-      `${formattedSign}, today's Rahu transit brings unexpected twists that work in your favor. Technology and innovation sectors are highlighted. Your analytical skills are sharp - use them for important decisions. Romance blooms in the evening hours.`,
-      `A transformative day for ${formattedSign} as Ketu activates your spiritual sector. Deep insights come through meditation or quiet reflection. Career matters require patience but show promising long-term signs. Health benefits from outdoor activities.`,
-    ];
+    const periodPredictions: Record<string, string[]> = {
+      daily: [
+        `Today brings positive energy for ${formattedSign}. The Moon's transit through your sector of creativity sparks new ideas. Financial matters look promising as Jupiter aspects your 2nd house. A social connection may lead to an unexpected opportunity.`,
+        `${formattedSign}, the planetary alignment today favors introspection and planning. Mercury's influence sharpens your communication skills. This is an excellent day for important conversations and negotiations. Trust your instincts in matters of the heart.`,
+        `A dynamic day awaits ${formattedSign} as Mars energizes your chart. Professional endeavors get a boost from the Sun's favorable position. Health and vitality are strong today. An old friend may reconnect with meaningful news.`,
+        `${formattedSign}, Venus blesses your relationships today. Creative pursuits are highly favored under the current Nakshatra. Financial caution is advised in the afternoon hours. Evening brings joy through family connections.`,
+        `The stars align favorably for ${formattedSign} today. Saturn's steady influence supports long-term goals and disciplined effort. A property or investment matter may reach a positive conclusion. Practice gratitude for the best results.`,
+        `${formattedSign}, today's Rahu transit brings unexpected twists that work in your favor. Technology and innovation sectors are highlighted. Your analytical skills are sharp - use them for important decisions. Romance blooms in the evening hours.`,
+        `A transformative day for ${formattedSign} as Ketu activates your spiritual sector. Deep insights come through meditation or quiet reflection. Career matters require patience but show promising long-term signs. Health benefits from outdoor activities.`,
+      ],
+      weekly: [
+        `This week brings a surge of confidence for ${formattedSign}. The Sun-Jupiter conjunction early in the week opens doors for career advancement. Mid-week Mercury retrograde demands careful communication. The weekend favors romance and creative pursuits as Venus enters a harmonious aspect.`,
+        `${formattedSign}, a week of transformation awaits. Mars energizes your ambition sector from Monday through Wednesday. Thursday brings a financial opportunity worth exploring. The week closes with Saturn rewarding your recent discipline and patience with tangible results.`,
+        `A balanced week for ${formattedSign} with planetary support across multiple areas. Early week focuses on health and wellness as the Moon transits your 6th house. Mid-week highlights partnerships and collaboration. Weekend planetary shifts bring clarity to a long-standing personal matter.`,
+        `${formattedSign}, expect an eventful week as multiple planetary transits activate your chart. Professional recognition comes early in the week. Wednesday's lunar phase supports family decisions. The latter half emphasizes spiritual growth and learning new skills.`,
+        `This week's cosmic blueprint for ${formattedSign} emphasizes growth and expansion. Jupiter's benevolent gaze supports educational pursuits and travel plans. Rahu's mid-week influence brings exciting surprises in technology or innovation. Close the week by nurturing important relationships.`,
+        `${formattedSign}, the weekly stars favor bold moves and decisive action. The first half highlights financial planning and investment. A creative breakthrough arrives around mid-week courtesy of Venus-Neptune alignment. The weekend is ideal for rest, reflection, and recharging.`,
+        `A week of deep insights for ${formattedSign} as Ketu activates your wisdom sector. Early days favor completing pending projects. The mid-week lunar energy supports networking and social expansion. End the week with gratitude practices for amplified positive results.`,
+      ],
+      monthly: [
+        `This month holds powerful potential for ${formattedSign}. The first ten days are marked by Jupiter's expansion in your career house, bringing professional opportunities and recognition. Mid-month, Venus enters your relationship sector, deepening bonds and attracting new connections. The final week brings a financial breakthrough as Saturn's disciplined energy rewards your persistence. Focus on long-term planning for maximum benefit.`,
+        `${formattedSign}, a month of significant shifts awaits. Mars empowers your ambition during the opening weeks, making it ideal for launching projects. Around the 15th, Mercury's transit sharpens intellectual pursuits and communication. The month's latter half sees the Sun illuminating your health sector - prioritize wellness routines. A property or investment decision may finalize favorably before month's end.`,
+        `An enriching month for ${formattedSign} with cosmic energies supporting multiple life areas. The first week's lunar phases favor family harmony and domestic improvements. Weeks two and three highlight career momentum with planetary support from Jupiter and Sun. The final stretch brings romantic energy and creative inspiration as Venus makes a powerful aspect to your natal chart.`,
+        `${formattedSign}, this month's planetary dance creates a tapestry of opportunities. Early month Rahu energy brings unexpected but positive career developments. The mid-month full moon illuminates your financial sector, clarifying investment paths. The third week is ideal for travel and higher learning. Close the month by focusing on spiritual practices - Ketu's influence deepens your intuitive abilities.`,
+        `This month is transformative for ${formattedSign}. Saturn's steady hand guides your professional development through the first two weeks. A mid-month Venus-Jupiter conjunction brings joy to relationships and social life. The latter half activates your creative sector - artistic and innovative projects thrive. Health improves steadily, especially if you maintain consistent wellness habits.`,
+        `${formattedSign}, the month ahead balances action and reflection. Mercury's extended stay in your communication sector enhances negotiations and agreements in the first half. A mid-month Mars transit energizes your fitness and wellness goals. The final ten days are especially auspicious for financial decisions, as Jupiter aspects your wealth house with full force.`,
+        `A month of steady growth for ${formattedSign}. The opening days bring clarity to personal relationships through Moon's nurturing transit. By mid-month, Sun and Mars combine to boost your leadership qualities at work. The last week's planetary configuration is ideal for new beginnings - consider starting projects or routines you've been contemplating. Spiritual insights peak around the full moon.`,
+      ],
+      yearly: [
+        `${new Date().getFullYear()} is a landmark year for ${formattedSign}. Jupiter's extended transit through your chart brings expansive growth in career and finances during the first quarter. The mid-year Saturn shift deepens your commitment to long-term goals and relationships. A major professional milestone arrives around the third quarter. The year closes with Venus blessing your personal life, making the final months warm with love, creativity, and fulfillment. Prioritize health throughout and you'll close the year stronger than ever.`,
+        `${formattedSign}, this year brings a powerful cycle of reinvention. The first few months focus on laying foundations - career planning, skill development, and financial restructuring yield enormous returns later. A mid-year Jupiter transit opens international opportunities and higher education paths. Relationships undergo beautiful transformation in the second half as Venus and Rahu align to bring depth and excitement. The year's final quarter rewards patience with tangible success and recognition.`,
+        `A year of balance and abundance awaits ${formattedSign}. The first quarter's Mars energy drives professional ambition to new heights. Spring and early summer bring relationship deepening and possible travel opportunities. The mid-year planetary shift supports creative ventures and artistic expression. Autumn highlights financial growth and smart investments. The year concludes with Saturn's blessing on your spiritual evolution, bringing wisdom and inner peace alongside material success.`,
+        `${formattedSign}, ${new Date().getFullYear()} unfolds as a year of meaningful transitions. Career shifts in the first quarter align you with your true calling. Mid-year eclipses activate growth in relationships and self-understanding. The second half brings financial improvements through disciplined Saturn energy. Health and wellness peak when you establish consistent routines by mid-year. The closing months bring recognition, celebration, and seeds planted for an even more prosperous year ahead.`,
+        `This year's cosmic map for ${formattedSign} reveals extraordinary potential. Jupiter's transit in the first half expands your social circle and opens collaborative ventures. A mid-year Rahu shift brings exciting change in your daily routines and work environment. The third quarter is powerful for investments and financial growth. Love and family life flourish in the year's final stretch. Key advice: embrace change in the first half and consolidate gains in the second.`,
+        `${formattedSign}, the planetary alignments of ${new Date().getFullYear()} strongly favor personal evolution. Early months bring introspective energy - use it for planning and goal-setting. Spring activates career momentum with Sun and Mars supporting bold moves. The summer months highlight relationships and partnerships. An autumn Jupiter aspect brings travel or educational opportunities. The year's final phase emphasizes health, spiritual growth, and preparing for an exciting new cycle.`,
+        `A defining year for ${formattedSign} as major planetary shifts reshape multiple life areas. The first quarter builds professional momentum through Mercury and Sun transits. Mid-year brings a pivotal relationship development under Venus's guiding light. The third quarter's Saturn energy supports building lasting structures - in career, finances, and personal habits. The year ends with Ketu illuminating your spiritual path, offering profound insights that shape your direction for years to come.`,
+      ],
+    };
 
+    const predictions = periodPredictions[activePeriod] || periodPredictions.daily;
     const colors = ['Crimson Red', 'Royal Blue', 'Emerald Green', 'Golden Yellow', 'Deep Purple', 'Coral Orange', 'Silver White', 'Turquoise', 'Maroon'];
     const moods = ['Optimistic', 'Energetic', 'Reflective', 'Confident', 'Creative', 'Peaceful', 'Adventurous'];
     const signs = ['Aries', 'Leo', 'Sagittarius', 'Gemini', 'Libra', 'Aquarius', 'Taurus', 'Cancer', 'Virgo', 'Scorpio', 'Capricorn', 'Pisces'];
@@ -498,10 +529,10 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
       date: today,
       period: activePeriod,
       prediction: predictions[seed],
-      luckyNumber: ((dayOfYear + signIdx) % 9) + 1,
-      luckyColor: colors[(dayOfYear + signIdx) % colors.length],
-      mood: moods[seed],
-      compatibility: signs[(signIdx + dayOfYear) % 12],
+      luckyNumber: ((dayOfYear + signIdx + periodOffset) % 9) + 1,
+      luckyColor: colors[(dayOfYear + signIdx + periodOffset) % colors.length],
+      mood: moods[(seed + periodOffset) % moods.length],
+      compatibility: signs[(signIdx + dayOfYear + periodOffset) % 12],
     };
     this.cacheService.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000);
     return fallbackResult;
