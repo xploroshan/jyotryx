@@ -95,21 +95,13 @@ export default function ChatPage() {
           ))}
         </div>
 
-        {/* Credit Balance */}
-        <div className="surface-card p-3 mt-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] text-white/30">Credits</span>
-            <span className="text-xs font-semibold text-white">{user?.credits ?? 0}</span>
-          </div>
-          <div className="w-full h-1 bg-white/[0.04] rounded-full overflow-hidden">
-            <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${Math.min(100, ((user?.credits ?? 0) / 100) * 100)}%` }} />
-          </div>
-          {!isAuthenticated && (
-            <button onClick={() => router.push("/auth")} className="w-full mt-2 py-1.5 text-[11px] font-medium rounded-md bg-white/[0.04] text-primary-400 hover:bg-white/[0.08] transition-colors">
+        {!isAuthenticated && (
+          <div className="surface-card p-3 mt-3">
+            <button onClick={() => router.push("/auth")} className="w-full py-1.5 text-[11px] font-medium rounded-md bg-white/[0.04] text-primary-400 hover:bg-white/[0.08] transition-colors">
               Sign in to chat
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </aside>
 
       {/* Chat Area */}
@@ -122,7 +114,7 @@ export default function ChatPage() {
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />Online
             </span>
           </div>
-          <span className="text-[11px] text-white/20 border divider px-2 py-0.5 rounded-md">1 credit / question</span>
+          <span className="text-[11px] text-white/20 border divider px-2 py-0.5 rounded-md">Ask anything</span>
         </div>
 
         {/* Messages */}

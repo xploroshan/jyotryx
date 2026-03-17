@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 const defaultPlans = [
   {
     id: "free", name: "Free", price: 0, period: "",
-    features: ["3 credits on signup", "10 free credits per month", "Astrologer Chat", "Daily Horoscope", "Panchang Access"],
+    features: ["Limited consultations", "Astrologer Chat", "Daily Horoscope", "Panchang Access"],
     cta: "Get Started", popular: false,
   },
   {
@@ -23,19 +23,12 @@ const defaultPlans = [
   },
 ];
 
-const defaultCreditPacks = [
-  { credits: 25, price: 99, label: "Starter" },
-  { credits: 75, price: 249, label: "Popular" },
-  { credits: 200, price: 599, label: "Pro" },
-];
-
 export default function PricingPage() {
   const router = useRouter();
   const { isAuthenticated, accessToken } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [plans, setPlans] = useState(defaultPlans);
-  const [creditPacks, setCreditPacks] = useState(defaultCreditPacks);
 
   useEffect(() => {
     api.get<Record<string, string>>("/payments/pricing").then((settings) => {
@@ -46,11 +39,6 @@ export default function PricingPage() {
         if (p.id === "annual") return { ...p, price: annualPrice };
         return p;
       }));
-      setCreditPacks([
-        { credits: parseInt(settings["pricing.credits.starter.credits"]) || 25, price: parseInt(settings["pricing.credits.starter.price"]) || 99, label: "Starter" },
-        { credits: parseInt(settings["pricing.credits.popular.credits"]) || 75, price: parseInt(settings["pricing.credits.popular.price"]) || 249, label: "Popular" },
-        { credits: parseInt(settings["pricing.credits.pro.credits"]) || 200, price: parseInt(settings["pricing.credits.pro.price"]) || 599, label: "Pro" },
-      ]);
     }).catch(() => {});
   }, []);
 
@@ -62,16 +50,6 @@ export default function PricingPage() {
       const res = await api.post<{ subscriptionId: string; shortUrl?: string }>("/payments/subscribe", { plan: planId === "monthly" ? "MONTHLY" : "ANNUAL" }, { token: accessToken! });
       if (res.shortUrl) window.location.href = res.shortUrl;
     } catch (err: any) { setError(err.message || "Failed to create subscription."); }
-    finally { setLoading(null); }
-  };
-
-  const handleBuyCredits = async (credits: number, price: number) => {
-    if (!isAuthenticated) { router.push("/auth?mode=signup"); return; }
-    setLoading(`credits-${credits}`); setError("");
-    try {
-      const res = await api.post<{ orderId: string; amount: number }>("/payments/create-order", { amount: price, type: "CREDITS", metadata: { credits } }, { token: accessToken! });
-      alert(`Order created: ${res.orderId}. Razorpay checkout would open here.`);
-    } catch (err: any) { setError(err.message || "Failed to create order."); }
     finally { setLoading(null); }
   };
 
@@ -94,7 +72,7 @@ export default function PricingPage() {
       )}
 
       {/* Plans */}
-      <div className="grid md:grid-cols-3 gap-4 mb-16">
+      <div className="grid md:grid-cols-3 gap-4">
         {plans.map((plan) => (
           <div key={plan.id} className={`surface-card p-6 relative ${plan.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
             {plan.popular && (
@@ -132,50 +110,6 @@ export default function PricingPage() {
             </button>
           </div>
         ))}
-      </div>
-
-      {/* Credit Packs */}
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-white mb-1">
-          Credit <span className="text-gradient">packs</span>
-        </h2>
-        <p className="text-xs text-white/30">Pay as you go</p>
-      </div>
-
-      <div className="grid sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-10">
-        {creditPacks.map((pack) => (
-          <div key={pack.label} className="surface-card p-5 text-center">
-            <p className="text-[11px] text-white/25 mb-1">{pack.label}</p>
-            <p className="text-2xl font-bold text-white mb-0.5">{pack.credits}</p>
-            <p className="text-[11px] text-white/25 mb-3">credits</p>
-            <p className="text-sm font-semibold text-white mb-3">{fmt(pack.price)}</p>
-            <button
-              onClick={() => handleBuyCredits(pack.credits, pack.price)}
-              disabled={loading === `credits-${pack.credits}`}
-              className="w-full py-2 rounded-lg btn-secondary text-xs disabled:opacity-50"
-            >
-              {loading === `credits-${pack.credits}` ? "Processing..." : "Buy Now"}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Usage Info */}
-      <div className="surface-card p-5 max-w-2xl mx-auto">
-        <h3 className="text-sm font-semibold text-white mb-3">Credit Usage</h3>
-        <div className="grid sm:grid-cols-2 gap-2">
-          {[
-            { action: "Chat Question", cost: "1 credit" },
-            { action: "Kundli Generation", cost: "2 credits" },
-            { action: "Palmistry Analysis", cost: "3 credits" },
-            { action: "Report Generation", cost: "5 credits" },
-          ].map((item) => (
-            <div key={item.action} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.03]">
-              <span className="text-xs text-white/40">{item.action}</span>
-              <span className="text-xs font-medium text-accent-400">{item.cost}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

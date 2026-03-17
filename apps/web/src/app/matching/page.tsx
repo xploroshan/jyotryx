@@ -291,7 +291,7 @@ export default function MatchingPage() {
               <p className="text-white/60 leading-relaxed">{results.summary}</p>
               <div className="mt-4 pt-4 border-t divider">
                 <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400 hover:bg-white/[0.1] transition-all">
-                  Download Detailed Report (PDF) - 5 Credits
+                  Download Detailed Report (PDF)
                 </button>
               </div>
             </div>

@@ -260,7 +260,6 @@ export default function ProfilePage() {
               {([
                 { id: "profile" as const, label: "Birth Details" },
                 { id: "security" as const, label: "Security" },
-                { id: "credits" as const, label: "Credits" },
               ]).map((t) => (
                 <button key={t.id} onClick={() => { setActiveTab(t.id); setError(""); setSuccess(""); }}
                   className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === t.id ? "btn-primary" : "text-white/40 hover:text-white"}`}>
@@ -421,48 +420,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Credits Tab */}
-            {activeTab === "credits" && creditInfo && (
-              <div className="space-y-6">
-                <div className="surface-card p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Credit Balance</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-gradient">{creditInfo.available}</p>
-                      <p className="text-xs text-white/30 mt-1">Available</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-accent-400">{creditInfo.used}</p>
-                      <p className="text-xs text-white/30 mt-1">Used</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-white/40">{creditInfo.total}</p>
-                      <p className="text-xs text-white/30 mt-1">Total Earned</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 w-full h-2 bg-white/[0.03] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all"
-                      style={{ width: `${creditInfo.total > 0 ? (creditInfo.available / creditInfo.total) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-white/30 mt-3">
-                    Credits reset on {new Date(creditInfo.resetsAt).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="surface-card p-6">
-                  <h3 className="text-lg font-bold text-white mb-2">Need More Credits?</h3>
-                  <p className="text-sm text-white/40 mb-4">
-                    Purchase credit packs or upgrade to Premium for unlimited access.
-                  </p>
-                  <button onClick={() => router.push("/pricing")}
-                    className="px-6 py-3 rounded-xl btn-primary text-white font-medium  transition-all">
-                    View Plans & Pricing
-                  </button>
-                </div>
-              </div>
-            )}
           </>
         )}
       </div>

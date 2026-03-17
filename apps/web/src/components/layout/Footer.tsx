@@ -19,7 +19,7 @@ const footerLinks = {
   Company: [
     { label: "Profile", href: "/profile" },
     { label: "Sign In", href: "/auth?mode=login" },
-    { label: "Buy Credits", href: "/pricing" },
+    { label: "Pricing", href: "/pricing" },
   ],
 };
 

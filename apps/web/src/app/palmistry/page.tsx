@@ -310,7 +310,7 @@ export default function PalmistryPage() {
 
                 <div className="mt-6 pt-4 border-t border-white/[0.06]">
                   <button className="w-full py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400">
-                    Download Full Report (PDF) - 5 Credits
+                    Download Full Report (PDF)
                   </button>
                 </div>
               </div>
