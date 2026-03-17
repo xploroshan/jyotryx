@@ -1,5 +1,5 @@
 {
-  "name": "@jyotron/web",
+  "name": "@jyotryx/web",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
     "zustand": "^5.0.0",
     "react-hot-toast": "^2.5.0",
     "razorpay": "^2.9.0",
-    "@jyotron/shared": "*"
+    "@jyotryx/shared": "*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
