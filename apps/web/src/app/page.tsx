@@ -2,8 +2,8 @@ import Link from "next/link";
 
 const features = [
   {
-    title: "AI Astrologer Chat",
-    description: "Get instant career, love, health, and finance guidance from specialized AI astrologers trained on Vedic principles.",
+    title: "Astrologer Chat",
+    description: "Get instant career, love, health, and finance guidance from expert astrologers trained on Vedic principles.",
     href: "/chat",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -13,7 +13,7 @@ const features = [
   },
   {
     title: "Palmistry Reading",
-    description: "Upload your palm photo for AI-powered analysis of life, heart, head, and fate lines with detailed interpretations.",
+    description: "Upload your palm photo for detailed analysis of life, heart, head, and fate lines with expert interpretations.",
     href: "/palmistry",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -102,12 +102,12 @@ export default function HomePage() {
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border divider bg-white/[0.03] text-xs text-white/50 mb-8">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            AI-Powered Vedic Astrology Platform
+            Vedic Astrology Platform
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
             Your stars,{" "}
-            <span className="text-gradient">decoded by AI</span>
+            <span className="text-gradient">decoded by Jyotron</span>
           </h1>
 
           <p className="text-base sm:text-lg text-white/40 max-w-xl mx-auto mb-10 leading-relaxed">
@@ -116,7 +116,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
             <Link href="/chat" className="px-6 py-3 btn-primary rounded-xl text-sm">
-              Start AI Consultation
+              Start Consultation
             </Link>
             <Link href="/palmistry" className="px-6 py-3 btn-secondary rounded-xl text-sm">
               Try Palm Reading
@@ -144,7 +144,7 @@ export default function HomePage() {
               <span className="text-gradient">spiritual guidance</span>
             </h2>
             <p className="text-sm text-white/40 max-w-lg mx-auto">
-              Advanced AI trained on Vedic astrology, palmistry, and numerology.
+              Expert Vedic astrology, palmistry, and numerology guidance.
             </p>
           </div>
 
@@ -180,8 +180,8 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { step: "01", title: "Create your profile", desc: "Enter birth details — date, time, and place for accurate calculations." },
-              { step: "02", title: "Ask your question", desc: "Chat with AI astrologers or use Kundli, palmistry, and horoscope tools." },
-              { step: "03", title: "Get AI insights", desc: "Receive instant, personalized predictions and remedies based on Vedic principles." },
+              { step: "02", title: "Ask your question", desc: "Chat with expert astrologers or use Kundli, palmistry, and horoscope tools." },
+              { step: "03", title: "Get insights", desc: "Receive instant, personalized predictions and remedies based on Vedic principles." },
             ].map((item) => (
               <div key={item.step} className="surface-card p-6">
                 <div className="text-xs font-mono font-semibold text-primary-400 mb-3">{item.step}</div>
@@ -201,7 +201,7 @@ export default function HomePage() {
             <span className="text-gradient">cosmic path</span>?
           </h2>
           <p className="text-sm text-white/40 mb-8">
-            Join thousands getting daily AI-powered astrology insights. Start with 3 free consultations.
+            Join thousands getting daily astrology insights. Start with 3 free consultations.
           </p>
           <Link href="/auth?mode=signup" className="inline-block px-8 py-3 btn-primary rounded-xl text-sm">
             Get Started Free

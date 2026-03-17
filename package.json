@@ -2,7 +2,7 @@
   "name": "jyotryx",
   "version": "1.0.0",
   "private": true,
-  "description": "AI-Powered Astrology Platform - iOS | Android | Web",
+  "description": "Vedic Astrology Platform - iOS | Android | Web",
   "workspaces": [
     "apps/*",
     "packages/*"

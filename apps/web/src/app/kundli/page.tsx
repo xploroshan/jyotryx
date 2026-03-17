@@ -125,7 +125,7 @@ export default function KundliPage() {
             Kundli <span className="text-gradient">Generator</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Generate your complete Vedic birth chart with planetary positions, Dasha periods, Yogas, and detailed house analysis powered by AI.
+            Generate your complete Vedic birth chart with planetary positions, Dasha periods, Yogas, and detailed house analysis.
           </p>
         </div>
 
@@ -192,7 +192,7 @@ export default function KundliPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Generating Kundli with AI...
+                      Generating Kundli...
                     </span>
                   ) : (
                     "Generate Kundli"

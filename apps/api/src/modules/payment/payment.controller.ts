@@ -26,6 +26,14 @@ import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
+  @Get('pricing')
+  @Public()
+  @ApiOperation({ summary: 'Get public pricing configuration' })
+  @ApiResponse({ status: 200, description: 'Pricing config returned' })
+  async getPricing(): Promise<Record<string, string>> {
+    return this.paymentService.getPricingConfig();
+  }
+
   @Post('create-order')
   @ApiOperation({ summary: 'Create a Razorpay payment order' })
   @ApiResponse({ status: 201, description: 'Order created successfully' })

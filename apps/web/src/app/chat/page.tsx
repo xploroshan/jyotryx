@@ -33,7 +33,7 @@ export default function ChatPage() {
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState("career");
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Namaste! I am your AI Astrologer. I can help with career, relationships, finance, health, and more based on Vedic astrology. Select a topic and ask your question." },
+    { role: "assistant", content: "Namaste! I am your Vedic Astrologer. I can help with career, relationships, finance, health, and more based on Vedic astrology. Select a topic and ask your question." },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -82,7 +82,7 @@ export default function ChatPage() {
       {/* Sidebar */}
       <aside className={`fixed lg:relative z-20 w-56 h-full bg-surface-950 border-r divider p-3 flex flex-col transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="mb-4 px-1">
-          <h2 className="text-sm font-semibold text-white mb-0.5">AI Astrologer</h2>
+          <h2 className="text-sm font-semibold text-white mb-0.5">Vedic Astrologer</h2>
           <p className="text-[11px] text-white/30">Select a topic</p>
         </div>
 
@@ -175,7 +175,7 @@ export default function ChatPage() {
               </svg>
             </button>
           </div>
-          <p className="text-[10px] text-white/15 text-center mt-2">AI predictions are for guidance and entertainment purposes only.</p>
+          <p className="text-[10px] text-white/15 text-center mt-2">Predictions are for guidance and entertainment purposes only.</p>
         </div>
       </div>
     </div>

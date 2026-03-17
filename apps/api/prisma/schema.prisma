@@ -271,6 +271,14 @@ model CreditTransaction {
   @@map("credit_transactions")
 }
 
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
 model ActivityLog {
   id           String      @id @default(uuid()) @db.Uuid
   adminId      String      @db.Uuid

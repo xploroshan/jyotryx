@@ -280,6 +280,17 @@ export class PaymentService {
     }));
   }
 
+  async getPricingConfig(): Promise<Record<string, string>> {
+    const rows = await this.prisma.siteSetting.findMany({
+      where: { key: { startsWith: 'pricing.' } },
+    });
+    const result: Record<string, string> = {};
+    for (const row of rows) {
+      result[row.key] = row.value;
+    }
+    return result;
+  }
+
   private calculateCredits(amountINR: number): number {
     if (amountINR >= 699) return 100;
     if (amountINR >= 399) return 50;

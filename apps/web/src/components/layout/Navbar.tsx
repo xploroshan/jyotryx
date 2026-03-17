@@ -7,7 +7,7 @@ import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
 
 const navLinks = [
-  { href: "/chat", label: "AI Chat" },
+  { href: "/chat", label: "Consult" },
   { href: "/kundli", label: "Kundli" },
   { href: "/horoscope", label: "Horoscope" },
   { href: "/palmistry", label: "Palmistry" },
