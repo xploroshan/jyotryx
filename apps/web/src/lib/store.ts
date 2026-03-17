@@ -15,7 +15,6 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
-  _hasHydrated: boolean;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateCredits: (credits: number) => void;
   logout: () => void;
@@ -28,7 +27,6 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
-      _hasHydrated: false,
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isAuthenticated: true }),
       updateCredits: (credits) =>
@@ -45,11 +43,6 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'jyotron-auth',
-      onRehydrateStorage: () => {
-        return () => {
-          useAuthStore.setState({ _hasHydrated: true });
-        };
-      },
     },
   ),
 );

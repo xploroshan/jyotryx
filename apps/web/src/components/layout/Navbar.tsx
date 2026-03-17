@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
@@ -18,8 +18,12 @@ const navLinks = [
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout, _hasHydrated } = useAuthStore();
-  const showAuth = _hasHydrated && isAuthenticated;
+  const [mounted, setMounted] = useState(false);
+  const { user, isAuthenticated, logout } = useAuthStore();
+
+  // Only show auth-dependent UI after client-side hydration
+  useEffect(() => { setMounted(true); }, []);
+  const showAuth = mounted && isAuthenticated;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-lg border-b divider">
@@ -73,12 +77,16 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/auth?mode=login" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors">
-                  Log in
-                </Link>
-                <Link href="/auth?mode=signup" className="px-4 py-1.5 text-[13px] btn-primary rounded-lg">
-                  Get Started
-                </Link>
+                {mounted && (
+                  <>
+                    <Link href="/auth?mode=login" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors">
+                      Log in
+                    </Link>
+                    <Link href="/auth?mode=signup" className="px-4 py-1.5 text-[13px] btn-primary rounded-lg">
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -138,12 +146,16 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex gap-2 pt-1">
-                <Link href="/auth?mode=login" className="flex-1 text-center px-4 py-2.5 text-sm btn-secondary rounded-lg" onClick={() => setMobileMenuOpen(false)}>
-                  Log in
-                </Link>
-                <Link href="/auth?mode=signup" className="flex-1 text-center px-4 py-2.5 text-sm btn-primary rounded-lg" onClick={() => setMobileMenuOpen(false)}>
-                  Get Started
-                </Link>
+                {mounted && (
+                  <>
+                    <Link href="/auth?mode=login" className="flex-1 text-center px-4 py-2.5 text-sm btn-secondary rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                      Log in
+                    </Link>
+                    <Link href="/auth?mode=signup" className="flex-1 text-center px-4 py-2.5 text-sm btn-primary rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>
