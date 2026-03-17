@@ -63,7 +63,7 @@ export default function Navbar() {
                   Reports
                 </Link>
                 <Link href="/pricing" className="px-3 py-1.5 text-[13px] font-medium text-accent-400 hover:text-accent-300 transition-colors">
-                  {user?.credits} credits
+                  Pricing
                 </Link>
                 <Link href="/profile" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors">
                   {user?.name}
@@ -132,7 +132,7 @@ export default function Navbar() {
                   Reports
                 </Link>
                 <Link href="/pricing" className="block px-3 py-2.5 text-sm font-medium text-accent-400" onClick={() => setMobileMenuOpen(false)}>
-                  {user?.credits} credits
+                  Pricing
                 </Link>
                 <Link href="/profile" className="block px-3 py-2.5 text-sm text-white/60 hover:text-white" onClick={() => setMobileMenuOpen(false)}>
                   {user?.name}

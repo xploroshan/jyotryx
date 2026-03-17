@@ -65,7 +65,7 @@ export default function ReportsPage() {
       setReports((prev) => [res, ...prev]);
       setActiveView("history");
     } catch (err: any) {
-      setError(err.message || "Failed to generate report. You may need more credits.");
+      setError(err.message || "Failed to generate report.");
     } finally {
       setGenerating(null);
     }
@@ -95,14 +95,8 @@ export default function ReportsPage() {
             Your <span className="text-gradient">Reports</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Generate detailed astrology reports based on your birth chart. 5 credits per report.
+            Generate detailed astrology reports based on your birth chart.
           </p>
-        </div>
-
-        {/* Credit Info */}
-        <div className="surface-card p-4 mb-6 flex items-center justify-between">
-          <span className="text-sm text-white/40">Available Credits</span>
-          <span className="text-lg font-bold text-gradient">{user?.credits ?? 0}</span>
         </div>
 
         {/* Tabs */}
@@ -128,7 +122,6 @@ export default function ReportsPage() {
                 <h3 className="text-lg font-bold text-white mb-2">{rt.label}</h3>
                 <p className="text-sm text-white/40 mb-4">{rt.desc}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-accent-400">{rt.cost} credits</span>
                   <button
                     onClick={() => handleGenerate(rt.id)}
                     disabled={generating === rt.id}
@@ -171,7 +164,7 @@ export default function ReportsPage() {
                       </div>
                       <p className="text-sm text-white/40">{report.summary}</p>
                       <p className="text-xs text-white/20 mt-1">
-                        Generated {new Date(report.createdAt).toLocaleDateString()} | {report.creditsCharged} credits
+                        Generated {new Date(report.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     {report.pdfUrl && (
