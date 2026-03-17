@@ -9,27 +9,28 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@jyotryx/shared": "*",
+    "clsx": "^2.1.1",
+    "firebase": "^12.10.0",
+    "framer-motion": "^12.0.0",
+    "lucide-react": "^0.475.0",
     "next": "^15.2.0",
+    "razorpay": "^2.9.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.475.0",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.0",
-    "framer-motion": "^12.0.0",
-    "zustand": "^5.0.0",
     "react-hot-toast": "^2.5.0",
-    "razorpay": "^2.9.0",
-    "@jyotryx/shared": "*"
+    "tailwind-merge": "^3.0.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.7.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
-    "postcss": "^8.5.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.2.0"
+    "eslint-config-next": "^15.2.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
   }
 }

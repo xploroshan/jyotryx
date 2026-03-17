@@ -44,6 +44,11 @@ export default () => ({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   },
 
+  firebase: {
+    projectId: process.env.FIREBASE_PROJECT_ID || '',
+    serviceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '',
+  },
+
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
