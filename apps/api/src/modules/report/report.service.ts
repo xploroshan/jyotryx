@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import { OpenAIService } from '../../openai/openai.service';
 
 export interface GenerateReportDto {
   type: 'LIFE' | 'CAREER' | 'MARRIAGE' | 'WEALTH' | 'PALM' | 'ANNUAL';
@@ -35,22 +36,13 @@ export interface ReportSection {
 @Injectable()
 export class ReportService {
   private readonly logger = new Logger(ReportService.name);
-  private openaiClient: any = null;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private openaiService: OpenAIService,
   ) {}
-
-  private getOpenAIClient(): any | null {
-    if (this.openaiClient) return this.openaiClient;
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    if (!apiKey) return null;
-    const OpenAI = require('openai');
-    this.openaiClient = new OpenAI({ apiKey });
-    return this.openaiClient;
-  }
 
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
@@ -114,13 +106,11 @@ export class ReportService {
     name: string,
     gender?: string | null,
   ): Promise<ReportSection[]> {
-    const openai = this.getOpenAIClient();
-    if (!openai || !birthDetails.dateOfBirth) {
+    if (!birthDetails.dateOfBirth) {
       return this.getFallbackSections(type, birthDetails, name);
     }
 
     try {
-
       const sectionStructure = this.getSectionStructure(type);
       const prompt = `Generate a detailed Vedic astrology ${type.toLowerCase()} report for:
 Name: ${name}
@@ -138,23 +128,18 @@ Generate these sections: ${sectionStructure.map((s) => s.title).join(', ')}
 
 Be specific with planetary positions, Dasha periods, Yogas, and transit effects. Use Lahiri ayanamsa. Reference the person by name.`;
 
-      const completion = await openai.chat.completions.create({
-        model: this.configService.get<string>('openai.model', 'gpt-4o'),
+      const result = await this.openaiService.chatCompletion({
         messages: [
           { role: 'system', content: 'You are an expert Vedic astrologer creating detailed professional reports. Use accurate Jyotish terminology and provide actionable insights. Return valid JSON.' },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 3000,
+        maxTokens: 2000,
         temperature: 0.7,
-        response_format: { type: 'json_object' },
+        jsonMode: true,
       });
 
-      const content = completion.choices[0]?.message?.content;
-      if (content) {
-        const result = JSON.parse(content);
-        if (result.sections && Array.isArray(result.sections)) {
-          return result.sections;
-        }
+      if (result?.sections && Array.isArray(result.sections)) {
+        return result.sections;
       }
     } catch (error) {
       this.logger.error('OpenAI report generation failed, using fallback', error);

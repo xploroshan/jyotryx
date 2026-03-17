@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import { OpenAIService } from '../../openai/openai.service';
 
 export interface PalmistryAnalysis {
   id: string;
@@ -44,6 +45,7 @@ export class PalmistryService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private openaiService: OpenAIService,
   ) {}
 
   async analyzePalm(
@@ -60,16 +62,13 @@ export class PalmistryService {
     }
 
     let analysisData: any;
-    const apiKey = this.configService.get<string>('openai.apiKey');
+    const client = this.openaiService.getClient();
 
-    if (apiKey && imageBuffer) {
+    if (client && imageBuffer) {
       try {
-        const OpenAI = require('openai');
-        const openai = new OpenAI({ apiKey });
-
         const base64Image = imageBuffer.toString('base64');
-        const completion = await openai.chat.completions.create({
-          model: 'gpt-4o',
+        const completion = await client.chat.completions.create({
+          model: this.openaiService.getModel(),
           messages: [
             {
               role: 'system',
