@@ -187,7 +187,7 @@ export default function ProfilePage() {
   };
 
   const roleBadge = (role: string) =>
-    role === "ADMIN" ? "bg-red-500/20 text-red-400" : role === "PREMIUM" ? "bg-purple-500/20 text-purple-400" : "bg-white/5 text-gray-400";
+    role === "ADMIN" ? "bg-red-500/20 text-red-400" : role === "PREMIUM" ? "bg-purple-500/20 text-purple-400" : "bg-white/[0.03] text-white/40";
 
   const passwordStrength = (pw: string) => {
     let score = 0;
@@ -205,16 +205,15 @@ export default function ProfilePage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-mystic-900/10 via-gray-950 to-gray-950" />
-      <div className="absolute top-32 left-1/4 w-80 h-80 bg-mystic-500/8 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-surface-950" />
 
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-12">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-display font-bold mb-2">
+          <h1 className="text-4xl font-bold mb-2">
             My <span className="text-gradient">Profile</span>
           </h1>
-          <p className="text-gray-400 text-sm">Manage your account and birth details for accurate predictions</p>
+          <p className="text-white/40 text-sm">Manage your account and birth details for accurate predictions</p>
         </div>
 
         {loading && (
@@ -239,32 +238,32 @@ export default function ProfilePage() {
         {profile && !loading && (
           <>
             {/* Profile Header Card */}
-            <div className="glass-card p-6 mb-6 flex flex-col sm:flex-row items-center gap-4">
+            <div className="surface-card p-6 mb-6 flex flex-col sm:flex-row items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-mystic-500 flex items-center justify-center text-2xl font-bold text-white">
                 {profile.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
               <div className="text-center sm:text-left flex-1">
-                <h2 className="text-xl font-display font-bold text-white">{profile.name}</h2>
-                <p className="text-sm text-gray-400">{profile.email}</p>
+                <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+                <p className="text-sm text-white/40">{profile.email}</p>
                 <div className="flex items-center gap-2 mt-1 justify-center sm:justify-start">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleBadge(profile.role)}`}>{profile.role}</span>
-                  <span className="text-xs text-gray-500">Member since {new Date(profile.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-white/30">Member since {new Date(profile.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-              <button onClick={handleLogout} className="px-4 py-2 rounded-xl glass text-sm text-red-400 hover:bg-red-500/10 transition-all">
+              <button onClick={handleLogout} className="px-4 py-2 rounded-xl btn-secondary text-sm text-red-400 hover:bg-red-500/10 transition-all">
                 Logout
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-6 rounded-xl bg-white/5 p-1 w-fit">
+            <div className="flex gap-2 mb-6 rounded-xl bg-white/[0.03] p-1 w-fit">
               {([
                 { id: "profile" as const, label: "Birth Details" },
                 { id: "security" as const, label: "Security" },
                 { id: "credits" as const, label: "Credits" },
               ]).map((t) => (
                 <button key={t.id} onClick={() => { setActiveTab(t.id); setError(""); setSuccess(""); }}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === t.id ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === t.id ? "btn-primary" : "text-white/40 hover:text-white"}`}>
                   {t.label}
                 </button>
               ))}
@@ -272,38 +271,38 @@ export default function ProfilePage() {
 
             {/* Birth Details Tab */}
             {activeTab === "profile" && (
-              <div className="glass-card p-6">
-                <h3 className="text-lg font-display font-bold text-white mb-6">Birth Details</h3>
+              <div className="surface-card p-6">
+                <h3 className="text-lg font-bold text-white mb-6">Birth Details</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-2">Full Name</label>
+                    <label className="block text-xs text-white/30 mb-2">Full Name</label>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500" />
+                      className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-2">Phone Number</label>
+                    <label className="block text-xs text-white/30 mb-2">Phone Number</label>
                     <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 9876543210"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                      className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Date of Birth</label>
+                      <label className="block text-xs text-white/30 mb-2">Date of Birth</label>
                       <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500" />
+                        className="w-full px-4 py-3 rounded-xl surface-input" />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Time of Birth</label>
+                      <label className="block text-xs text-white/30 mb-2">Time of Birth</label>
                       <input type="time" value={tob} onChange={(e) => setTob(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500" />
+                        className="w-full px-4 py-3 rounded-xl surface-input" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-2">Place of Birth</label>
+                    <label className="block text-xs text-white/30 mb-2">Place of Birth</label>
                     <input type="text" value={pob} onChange={(e) => setPob(e.target.value)} placeholder="e.g. Mumbai, India"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                      className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <button onClick={handleSave} disabled={saving}
-                    className="mt-2 px-8 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-medium hover:from-primary-500 hover:to-mystic-500 transition-all disabled:opacity-50">
+                    className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
                     {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
@@ -313,11 +312,11 @@ export default function ProfilePage() {
             {/* Security Tab */}
             {activeTab === "security" && (
               <div className="space-y-6">
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-display font-bold text-white mb-2">
+                <div className="surface-card p-6">
+                  <h3 className="text-lg font-bold text-white mb-2">
                     {hasPassword ? "Change Password" : "Set Password"}
                   </h3>
-                  <p className="text-sm text-gray-400 mb-6">
+                  <p className="text-sm text-white/40 mb-6">
                     {hasPassword
                       ? "Update your password to keep your account secure."
                       : "You signed in via OTP/social login. Set a password to also log in with email."}
@@ -326,13 +325,13 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     {hasPassword && (
                       <div>
-                        <label className="block text-xs text-gray-500 mb-2">Current Password</label>
+                        <label className="block text-xs text-white/30 mb-2">Current Password</label>
                         <div className="relative">
                           <input type={showCurrentPw ? "text" : "password"} value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password"
-                            className="w-full px-4 py-3 pr-16 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                            className="w-full px-4 py-3 pr-16 rounded-xl surface-input" />
                           <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300">
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
                             {showCurrentPw ? "Hide" : "Show"}
                           </button>
                         </div>
@@ -340,13 +339,13 @@ export default function ProfilePage() {
                     )}
 
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">New Password</label>
+                      <label className="block text-xs text-white/30 mb-2">New Password</label>
                       <div className="relative">
                         <input type={showNewPw ? "text" : "password"} value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 8 chars, upper + lower + number"
-                          className="w-full px-4 py-3 pr-16 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                          className="w-full px-4 py-3 pr-16 rounded-xl surface-input" />
                         <button type="button" onClick={() => setShowNewPw(!showNewPw)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-300">
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
                           {showNewPw ? "Hide" : "Show"}
                         </button>
                       </div>
@@ -365,57 +364,57 @@ export default function ProfilePage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Confirm New Password</label>
+                      <label className="block text-xs text-white/30 mb-2">Confirm New Password</label>
                       <input type="password" value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password"
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500" />
+                        className="w-full px-4 py-3 rounded-xl surface-input" />
                       {confirmPassword && newPassword !== confirmPassword && (
                         <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
                       )}
                     </div>
 
                     <button onClick={handleChangePassword} disabled={changingPw}
-                      className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-medium hover:from-primary-500 hover:to-mystic-500 transition-all disabled:opacity-50">
+                      className="px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
                       {changingPw ? "Saving..." : hasPassword ? "Change Password" : "Set Password"}
                     </button>
                   </div>
                 </div>
 
                 {/* Account Info */}
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-display font-bold text-white mb-4">Account Security</h3>
+                <div className="surface-card p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Account Security</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
                         <p className="text-sm text-white">Password</p>
-                        <p className="text-xs text-gray-500">Authentication method</p>
+                        <p className="text-xs text-white/30">Authentication method</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${hasPassword ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
                         {hasPassword ? "Set" : "Not Set"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
                         <p className="text-sm text-white">Email</p>
-                        <p className="text-xs text-gray-500">{profile.email}</p>
+                        <p className="text-xs text-white/30">{profile.email}</p>
                       </div>
                       <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">Verified</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
                         <p className="text-sm text-white">Phone</p>
-                        <p className="text-xs text-gray-500">{profile.phone || "Not added"}</p>
+                        <p className="text-xs text-white/30">{profile.phone || "Not added"}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${profile.phone ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-gray-500"}`}>
+                      <span className={`text-xs px-2 py-1 rounded-full ${profile.phone ? "bg-emerald-500/20 text-emerald-400" : "bg-white/[0.03] text-white/30"}`}>
                         {profile.phone ? "Linked" : "Not Linked"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
                         <p className="text-sm text-white">Two-Factor Auth</p>
-                        <p className="text-xs text-gray-500">Extra security layer</p>
+                        <p className="text-xs text-white/30">Extra security layer</p>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-500">Coming Soon</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-white/[0.03] text-white/30">Coming Soon</span>
                     </div>
                   </div>
                 </div>
@@ -425,40 +424,40 @@ export default function ProfilePage() {
             {/* Credits Tab */}
             {activeTab === "credits" && creditInfo && (
               <div className="space-y-6">
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-display font-bold text-white mb-4">Credit Balance</h3>
+                <div className="surface-card p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Credit Balance</h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
                       <p className="text-3xl font-bold text-gradient">{creditInfo.available}</p>
-                      <p className="text-xs text-gray-500 mt-1">Available</p>
+                      <p className="text-xs text-white/30 mt-1">Available</p>
                     </div>
                     <div className="text-center">
                       <p className="text-3xl font-bold text-accent-400">{creditInfo.used}</p>
-                      <p className="text-xs text-gray-500 mt-1">Used</p>
+                      <p className="text-xs text-white/30 mt-1">Used</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-3xl font-bold text-gray-400">{creditInfo.total}</p>
-                      <p className="text-xs text-gray-500 mt-1">Total Earned</p>
+                      <p className="text-3xl font-bold text-white/40">{creditInfo.total}</p>
+                      <p className="text-xs text-white/30 mt-1">Total Earned</p>
                     </div>
                   </div>
-                  <div className="mt-4 w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="mt-4 w-full h-2 bg-white/[0.03] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all"
                       style={{ width: `${creditInfo.total > 0 ? (creditInfo.available / creditInfo.total) * 100 : 0}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="text-xs text-white/30 mt-3">
                     Credits reset on {new Date(creditInfo.resetsAt).toLocaleDateString()}
                   </p>
                 </div>
 
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-display font-bold text-white mb-2">Need More Credits?</h3>
-                  <p className="text-sm text-gray-400 mb-4">
+                <div className="surface-card p-6">
+                  <h3 className="text-lg font-bold text-white mb-2">Need More Credits?</h3>
+                  <p className="text-sm text-white/40 mb-4">
                     Purchase credit packs or upgrade to Premium for unlimited access.
                   </p>
                   <button onClick={() => router.push("/pricing")}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-medium hover:from-primary-500 hover:to-mystic-500 transition-all">
+                    className="px-6 py-3 rounded-xl btn-primary text-white font-medium  transition-all">
                     View Plans & Pricing
                   </button>
                 </div>

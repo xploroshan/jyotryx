@@ -111,21 +111,20 @@ export default function KundliPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-mystic-500/5 via-gray-950 to-gray-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-gray-950 to-gray-950" />
       <div className="absolute top-32 right-1/4 w-80 h-80 bg-mystic-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 left-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-gray-300 mb-4">
-            <span className="text-lg">🪐</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-white/60 mb-4">
             Vedic Birth Chart
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">
             Kundli <span className="text-gradient">Generator</span>
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <p className="text-white/40 max-w-xl mx-auto">
             Generate your complete Vedic birth chart with planetary positions, Dasha periods, Yogas, and detailed house analysis powered by AI.
           </p>
         </div>
@@ -133,8 +132,8 @@ export default function KundliPage() {
         {/* Birth Details Form */}
         {!kundli && (
           <div className="max-w-lg mx-auto">
-            <div className="glass-card p-8">
-              <h2 className="text-lg font-display font-bold text-white mb-6">Enter Birth Details</h2>
+            <div className="surface-card p-8">
+              <h2 className="text-lg font-bold text-white mb-6">Enter Birth Details</h2>
 
               {error && (
                 <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
@@ -142,50 +141,50 @@ export default function KundliPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Full Name</label>
+                  <label className="block text-sm text-white/40 mb-1.5">Full Name</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Enter your full name"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl surface-input"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Date of Birth</label>
+                    <label className="block text-sm text-white/40 mb-1.5">Date of Birth</label>
                     <input
                       type="date"
                       value={form.dob}
                       onChange={(e) => setForm({ ...form, dob: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500 transition-colors [color-scheme:dark]"
+                      className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Time of Birth</label>
+                    <label className="block text-sm text-white/40 mb-1.5">Time of Birth</label>
                     <input
                       type="time"
                       value={form.time}
                       onChange={(e) => setForm({ ...form, time: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500 transition-colors [color-scheme:dark]"
+                      className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Place of Birth</label>
+                  <label className="block text-sm text-white/40 mb-1.5">Place of Birth</label>
                   <input
                     type="text"
                     value={form.place}
                     onChange={(e) => setForm({ ...form, place: e.target.value })}
                     placeholder="Search city..."
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl surface-input"
                   />
-                  <p className="text-xs text-gray-600 mt-1">Enter your birth city name</p>
+                  <p className="text-xs text-white/20 mt-1">Enter your birth city name</p>
                 </div>
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !form.name || !form.dob || !form.time || !form.place}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-semibold hover:from-primary-500 hover:to-mystic-500 transition-all glow disabled:opacity-50"
+                  className="w-full py-3.5 rounded-xl btn-primary disabled:opacity-50"
                 >
                   {generating ? (
                     <span className="flex items-center justify-center gap-2">
@@ -208,13 +207,13 @@ export default function KundliPage() {
         {kundli && (
           <div>
             {/* Profile summary - actual data */}
-            <div className="glass-card p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="surface-card p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-white">{form.name}</h2>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-white/40">
                   {form.dob} at {form.time} &bull; {form.place}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-white/30 mt-1">
                   Ascendant: <span className="text-primary-400">{kundli.ascendant}</span> &bull;
                   Moon Sign: <span className="text-primary-400">{kundli.moonSign}</span> &bull;
                   Sun Sign: <span className="text-primary-400">{kundli.sunSign}</span> &bull;
@@ -223,22 +222,22 @@ export default function KundliPage() {
               </div>
               <button
                 onClick={() => { setKundli(null); setDoshas(null); setForm({ name: "", dob: "", time: "", place: "" }); setError(""); }}
-                className="px-4 py-2 rounded-xl glass text-sm text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+                className="px-4 py-2 rounded-xl btn-secondary text-sm"
               >
                 New Kundli
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 mb-6 rounded-xl bg-white/5 p-1 overflow-x-auto">
+            <div className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1 overflow-x-auto">
               {tabs.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
                   className={`flex-shrink-0 flex-1 py-2.5 px-3 rounded-lg text-xs font-medium transition-all ${
                     activeTab === t.id
-                      ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white"
-                      : "text-gray-400 hover:text-white"
+                      ? "btn-primary"
+                      : "text-white/40 hover:text-white"
                   }`}
                 >
                   {t.label}
@@ -248,8 +247,8 @@ export default function KundliPage() {
 
             {/* Tab Content */}
             {activeTab === "chart" && (
-              <div className="glass-card p-8 flex flex-col items-center">
-                <h3 className="text-lg font-display font-bold text-gradient mb-6">Rashi Chart (D1)</h3>
+              <div className="surface-card p-8 flex flex-col items-center">
+                <h3 className="text-lg font-bold text-gradient mb-6">Rashi Chart (D1)</h3>
                 <div className="relative w-80 h-80 sm:w-96 sm:h-96">
                   <svg viewBox="0 0 400 400" className="w-full h-full">
                     <rect x="10" y="10" width="380" height="380" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
@@ -277,32 +276,32 @@ export default function KundliPage() {
                     })}
                   </svg>
                 </div>
-                <p className="text-xs text-gray-500 mt-4">North Indian style birth chart based on your birth details.</p>
+                <p className="text-xs text-white/30 mt-4">North Indian style birth chart based on your birth details.</p>
               </div>
             )}
 
             {activeTab === "planets" && (
-              <div className="glass-card overflow-hidden">
+              <div className="surface-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase">Planet</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase">Sign</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase">House</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase">Degree</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase">Nakshatra</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-gray-400 uppercase">Status</th>
+                      <tr className="border-b divider">
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Planet</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Sign</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">House</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Degree</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Nakshatra</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {kundli.planetaryPositions?.map((p) => (
-                        <tr key={p.planet} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <tr key={p.planet} className="border-b border-white/[0.03] hover:bg-white/[0.03] transition-colors">
                           <td className="px-6 py-3 font-medium text-white">{p.planet}</td>
-                          <td className="px-6 py-3 text-gray-300">{p.sign}</td>
-                          <td className="px-6 py-3 text-gray-300">{p.house}</td>
-                          <td className="px-6 py-3 text-gray-400">{p.degree}&deg;</td>
-                          <td className="px-6 py-3 text-gray-400">{p.nakshatra}</td>
+                          <td className="px-6 py-3 text-white/60">{p.sign}</td>
+                          <td className="px-6 py-3 text-white/60">{p.house}</td>
+                          <td className="px-6 py-3 text-white/40">{p.degree}&deg;</td>
+                          <td className="px-6 py-3 text-white/40">{p.nakshatra}</td>
                           <td className="px-6 py-3">
                             <span className={`text-xs px-2 py-1 rounded-full ${
                               p.isRetrograde ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
@@ -321,7 +320,7 @@ export default function KundliPage() {
             {activeTab === "houses" && (
               <div className="space-y-4">
                 {kundli.houses?.map((h) => (
-                  <div key={h.house} className="glass-card p-5">
+                  <div key={h.house} className="surface-card p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
                       <h4 className="font-semibold text-white">House {h.house}</h4>
                       <div className="flex gap-2">
@@ -333,7 +332,7 @@ export default function KundliPage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-sm text-white/60">
                       {h.planets.length > 0
                         ? `${h.planets.join(", ")} ${h.planets.length === 1 ? "is" : "are"} placed in ${h.sign} in the ${h.house}${getOrdinal(h.house)} house.`
                         : `${h.sign} rules the ${h.house}${getOrdinal(h.house)} house with no planets placed here.`
@@ -345,13 +344,13 @@ export default function KundliPage() {
             )}
 
             {activeTab === "dasha" && (
-              <div className="glass-card p-6">
-                <h3 className="text-lg font-display font-bold text-gradient mb-4">Vimshottari Dasha</h3>
+              <div className="surface-card p-6">
+                <h3 className="text-lg font-bold text-gradient mb-4">Vimshottari Dasha</h3>
                 {kundli.dashas?.map((d, di) => (
                   <div key={di} className="mb-6">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-sm font-semibold text-white">Mahadasha: {d.planet}</span>
-                      <span className="text-xs text-gray-500">{d.startDate} to {d.endDate}</span>
+                      <span className="text-xs text-white/30">{d.startDate} to {d.endDate}</span>
                     </div>
                     {d.subPeriods && d.subPeriods.length > 0 && (
                       <div className="space-y-2 ml-4">
@@ -366,17 +365,17 @@ export default function KundliPage() {
                               key={si}
                               className={`flex items-center justify-between p-3 rounded-xl ${
                                 isActive
-                                  ? "bg-gradient-to-r from-primary-600/20 to-mystic-600/20 border border-primary-500/30"
+                                  ? "bg-primary-600/10 border border-primary-500/20"
                                   : isCompleted
-                                  ? "bg-white/3"
-                                  : "bg-white/5"
+                                  ? "bg-white/[0.02]"
+                                  : "bg-white/[0.03]"
                               }`}
                             >
-                              <span className={`text-sm ${isActive ? "text-white font-medium" : "text-gray-400"}`}>
+                              <span className={`text-sm ${isActive ? "text-white font-medium" : "text-white/40"}`}>
                                 {d.planet}-{s.planet}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">{s.startDate} - {s.endDate}</span>
+                                <span className="text-xs text-white/30">{s.startDate} - {s.endDate}</span>
                                 {isActive && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300">Current</span>
                                 )}
@@ -395,7 +394,7 @@ export default function KundliPage() {
               <div className="space-y-4">
                 {kundli.yogas && kundli.yogas.length > 0 ? (
                   kundli.yogas.map((y, i) => (
-                    <div key={i} className="glass-card p-5">
+                    <div key={i} className="surface-card p-5">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-white">{y.name}</h4>
                         <span className={`text-xs px-2 py-1 rounded-full ${
@@ -406,11 +405,11 @@ export default function KundliPage() {
                           {y.effect.charAt(0).toUpperCase() + y.effect.slice(1)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-300">{y.description}</p>
+                      <p className="text-sm text-white/60">{y.description}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="glass-card p-8 text-center text-gray-500">
+                  <div className="surface-card p-8 text-center text-white/30">
                     No significant yogas detected in your chart.
                   </div>
                 )}
@@ -421,7 +420,7 @@ export default function KundliPage() {
               <div className="space-y-4">
                 {doshas?.doshas ? (
                   doshas.doshas.map((d, i) => (
-                    <div key={i} className="glass-card p-5">
+                    <div key={i} className="surface-card p-5">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-white">{d.name}</h4>
                         <span className={`text-xs px-2 py-1 rounded-full ${
@@ -433,10 +432,10 @@ export default function KundliPage() {
                           {d.present ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : "Absent"}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-300 mb-2">{d.description}</p>
+                      <p className="text-sm text-white/60 mb-2">{d.description}</p>
                       {d.remedies && d.remedies.length > 0 && (
-                        <div className="p-3 rounded-lg bg-white/3">
-                          <p className="text-xs text-gray-400">
+                        <div className="p-3 rounded-lg bg-white/[0.03]">
+                          <p className="text-xs text-white/40">
                             <span className="text-primary-400 font-medium">Remedies:</span>{" "}
                             {d.remedies.join(". ")}
                           </p>
@@ -445,9 +444,9 @@ export default function KundliPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="glass-card p-8 text-center">
-                    <p className="text-gray-500">Dosha analysis is generated from your birth chart data.</p>
-                    <p className="text-xs text-gray-600 mt-2">Complete the Kundli generation to view Dosha analysis.</p>
+                  <div className="surface-card p-8 text-center">
+                    <p className="text-white/30">Dosha analysis is generated from your birth chart data.</p>
+                    <p className="text-xs text-white/20 mt-2">Complete the Kundli generation to view Dosha analysis.</p>
                   </div>
                 )}
               </div>

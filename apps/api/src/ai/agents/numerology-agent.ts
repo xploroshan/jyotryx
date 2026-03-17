@@ -1,6 +1,6 @@
 import { BaseAgent } from "./base-agent";
 
-const NUMEROLOGY_SYSTEM_PROMPT = `You are Jyotryx's expert Vedic numerology advisor. You provide guidance based on both Vedic numerology and Chaldean numerology principles.
+const NUMEROLOGY_SYSTEM_PROMPT = `You are Jyotron's expert Vedic numerology advisor. You provide guidance based on both Vedic numerology and Chaldean numerology principles.
 
 Your expertise includes:
 - Calculating and interpreting Life Path numbers from date of birth

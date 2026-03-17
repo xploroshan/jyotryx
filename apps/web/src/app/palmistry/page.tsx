@@ -107,25 +107,24 @@ export default function PalmistryPage() {
   ];
 
   const strengthColor = (s: string) =>
-    s === "Strong" ? "text-emerald-400" : s === "Moderate" ? "text-accent-400" : "text-gray-400";
+    s === "Strong" ? "text-emerald-400" : s === "Moderate" ? "text-accent-400" : "text-white/40";
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-accent-500/5 via-gray-950 to-gray-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-gray-950 to-gray-950" />
       <div className="absolute top-32 left-1/4 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-gray-300 mb-4">
-            <span className="text-lg">🤚</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-white/60 mb-4">
             AI-Powered Analysis
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">
             Palm <span className="text-gradient">Reading</span>
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <p className="text-white/40 max-w-xl mx-auto">
             Upload a clear photo of your palm and our AI will analyze your lines, mounts, and provide detailed personality insights.
           </p>
         </div>
@@ -138,8 +137,8 @@ export default function PalmistryPage() {
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
-              className={`glass-card p-8 flex flex-col items-center justify-center min-h-[400px] cursor-pointer transition-all ${
-                isDragging ? "border-primary-500 bg-primary-500/10" : "hover:bg-white/10"
+              className={`surface-card p-8 flex flex-col items-center justify-center min-h-[400px] cursor-pointer transition-all ${
+                isDragging ? "border-primary-500 bg-primary-500/10" : "hover:bg-white/[0.06]"
               }`}
             >
               <input
@@ -155,7 +154,7 @@ export default function PalmistryPage() {
                   <img src={image} alt="Palm" className="w-full max-h-[350px] object-contain rounded-xl" />
                   <button
                     onClick={(e) => { e.stopPropagation(); setImage(null); setAnalysis(null); }}
-                    className="absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-gray-300 hover:text-white"
+                    className="absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-white/60 hover:text-white"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -174,10 +173,10 @@ export default function PalmistryPage() {
                     </svg>
                   </div>
                   <p className="text-white font-semibold mb-2">Upload Palm Image</p>
-                  <p className="text-sm text-gray-400 text-center mb-4">
+                  <p className="text-sm text-white/40 text-center mb-4">
                     Drag and drop or click to upload a clear photo of your palm
                   </p>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] text-xs text-white/30">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -195,7 +194,7 @@ export default function PalmistryPage() {
               <button
                 onClick={handleAnalyze}
                 disabled={analyzing}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-semibold hover:from-primary-500 hover:to-mystic-500 transition-all glow disabled:opacity-50"
+                className="w-full py-4 rounded-xl btn-primary text-white font-semibold  transition-all disabled:opacity-50"
               >
                 {analyzing ? (
                   <span className="flex items-center justify-center gap-2">
@@ -212,9 +211,9 @@ export default function PalmistryPage() {
             )}
 
             {/* Tips */}
-            <div className="glass-card p-6">
+            <div className="surface-card p-6">
               <h3 className="text-sm font-semibold text-white mb-3">Tips for Best Results</h3>
-              <ul className="space-y-2 text-xs text-gray-400">
+              <ul className="space-y-2 text-xs text-white/40">
                 <li className="flex items-start gap-2">
                   <span className="text-primary-400 mt-0.5">1.</span>
                   Use your dominant hand (right if right-handed)
@@ -238,19 +237,19 @@ export default function PalmistryPage() {
           {/* Analysis Results */}
           <div>
             {analysis ? (
-              <div className="glass-card p-6">
-                <h2 className="text-xl font-display font-bold text-gradient mb-6">Palm Analysis Results</h2>
+              <div className="surface-card p-6">
+                <h2 className="text-lg font-bold text-gradient mb-6">Palm Analysis Results</h2>
 
                 {/* Tabs */}
-                <div className="flex gap-1 mb-6 rounded-xl bg-white/5 p-1">
+                <div className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1">
                   {tabs.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setActiveTab(t.id)}
                       className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
                         activeTab === t.id
-                          ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white"
-                          : "text-gray-400 hover:text-white"
+                          ? "btn-primary text-white"
+                          : "text-white/40 hover:text-white"
                       }`}
                     >
                       {t.label}
@@ -261,28 +260,28 @@ export default function PalmistryPage() {
                 <div className="space-y-4">
                   {activeTab === "major" &&
                     analysis.majorLines.map((line) => (
-                      <div key={line.name} className="p-4 rounded-xl bg-white/5">
+                      <div key={line.name} className="p-4 rounded-xl bg-white/[0.03]">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-white text-sm">{line.name}</h4>
                           <span className={`text-xs font-medium ${strengthColor(line.strength)}`}>
                             {line.strength}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-400 leading-relaxed">{line.description}</p>
+                        <p className="text-xs text-white/40 leading-relaxed">{line.description}</p>
                       </div>
                     ))}
 
                   {activeTab === "minor" &&
                     analysis.minorLines.map((line) => (
-                      <div key={line.name} className="p-4 rounded-xl bg-white/5">
+                      <div key={line.name} className="p-4 rounded-xl bg-white/[0.03]">
                         <h4 className="font-semibold text-white text-sm mb-2">{line.name}</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">{line.description}</p>
+                        <p className="text-xs text-white/40 leading-relaxed">{line.description}</p>
                       </div>
                     ))}
 
                   {activeTab === "mounts" &&
                     analysis.mounts.map((mount) => (
-                      <div key={mount.name} className="p-4 rounded-xl bg-white/5">
+                      <div key={mount.name} className="p-4 rounded-xl bg-white/[0.03]">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-white text-sm">{mount.name}</h4>
                           <span className={`text-xs font-medium ${
@@ -291,35 +290,34 @@ export default function PalmistryPage() {
                             {mount.prominence}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-400 leading-relaxed">{mount.description}</p>
+                        <p className="text-xs text-white/40 leading-relaxed">{mount.description}</p>
                       </div>
                     ))}
 
                   {activeTab === "personality" && (
                     <div className="space-y-3">
                       {analysis.personality.map((trait, i) => (
-                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/5">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-mystic-500 flex items-center justify-center text-xs font-bold text-white">
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03]">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold text-white">
                             {i + 1}
                           </span>
-                          <p className="text-sm text-gray-300">{trait}</p>
+                          <p className="text-sm text-white/60">{trait}</p>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <button className="w-full py-3 rounded-xl glass text-sm font-medium text-primary-400 hover:bg-white/10 transition-all">
+                <div className="mt-6 pt-4 border-t border-white/[0.06]">
+                  <button className="w-full py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400">
                     Download Full Report (PDF) - 5 Credits
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="glass-card p-12 flex flex-col items-center justify-center min-h-[400px] text-center">
-                <div className="text-6xl mb-4 opacity-30">🔮</div>
-                <h3 className="text-lg font-semibold text-gray-400 mb-2">Analysis Results</h3>
-                <p className="text-sm text-gray-600">
+              <div className="surface-card p-12 flex flex-col items-center justify-center min-h-[400px] text-center">
+                <h3 className="text-lg font-semibold text-white/40 mb-2">Analysis Results</h3>
+                <p className="text-sm text-white/20">
                   Upload a palm image and click analyze to see your detailed reading here.
                 </p>
               </div>
@@ -329,7 +327,7 @@ export default function PalmistryPage() {
 
         {/* Disclaimer */}
         <div className="mt-12 text-center">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-white/20">
             AI palm reading is for entertainment and self-reflection purposes only. Results are generated by AI analysis and should not be used as a substitute for professional advice.
           </p>
         </div>

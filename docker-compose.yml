@@ -3,25 +3,25 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: jyotryx-postgres
+    container_name: jyotron-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-jyotryx}
+      POSTGRES_USER: ${POSTGRES_USER:-jyotron}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: ${POSTGRES_DB:-jyotryx}
+      POSTGRES_DB: ${POSTGRES_DB:-jyotron}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jyotryx"]
+      test: ["CMD-SHELL", "pg_isready -U jyotron"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: jyotryx-redis
+    container_name: jyotron-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -38,16 +38,16 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: jyotryx-api
+    container_name: jyotron-api
     restart: unless-stopped
     ports:
       - "4000:4000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-jyotryx}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-jyotryx}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jyotron}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-jyotron}?schema=public
       REDIS_URL: redis://redis:6379
       NODE_ENV: production
       PORT: "4000"
-      CORS_ORIGIN: https://www.jyotryx.com
+      CORS_ORIGIN: https://www.jyotron.com
     env_file:
       - ./apps/api/.env
     depends_on:
@@ -60,25 +60,25 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-    container_name: jyotryx-web
+    container_name: jyotron-web
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://api.jyotryx.com/api
-      NEXT_PUBLIC_APP_URL: https://www.jyotryx.com
+      NEXT_PUBLIC_API_URL: https://api.jyotron.com/api
+      NEXT_PUBLIC_APP_URL: https://www.jyotron.com
       NODE_ENV: production
     depends_on:
       - api
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: jyotryx-pgadmin
+    container_name: jyotron-pgadmin
     restart: unless-stopped
     ports:
       - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@jyotryx.com}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@jyotron.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in .env}
     volumes:
       - pgadmin_data:/var/lib/pgadmin

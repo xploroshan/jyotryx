@@ -1,11 +1,11 @@
-# Jyotryx - AI-Powered Astrology Platform
+# Jyotron - AI-Powered Astrology Platform
 
-Jyotryx is an AI-powered astrology ecosystem delivering personalized consultations, palmistry readings, horoscope predictions, Kundli analysis, and spiritual guidance across iOS, Android, and Web platforms.
+Jyotron is an AI-powered astrology ecosystem delivering personalized consultations, palmistry readings, horoscope predictions, Kundli analysis, and spiritual guidance across iOS, Android, and Web platforms.
 
 ## Architecture
 
 ```
-jyotryx/
+jyotron/
 ├── apps/
 │   ├── web/          # Next.js 15 web application (TypeScript + Tailwind CSS v4)
 │   ├── api/          # NestJS backend with microservices
@@ -56,8 +56,8 @@ jyotryx/
 
 ```bash
 # Clone the repository
-git clone https://github.com/xploroshan/jyotryx.git
-cd jyotryx
+git clone https://github.com/xploroshan/jyotron.git
+cd jyotron
 
 # Start infrastructure (PostgreSQL + Redis)
 docker-compose up -d
@@ -114,4 +114,4 @@ Proprietary - All rights reserved.
 
 ## Disclaimer
 
-Jyotryx is for entertainment and spiritual guidance purposes only. Not a substitute for professional advice.
+Jyotron is for entertainment and spiritual guidance purposes only. Not a substitute for professional advice.

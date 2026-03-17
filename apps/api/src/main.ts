@@ -16,8 +16,8 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:8081',
-      'https://jyotryx-web.vercel.app',
-      'https://www.jyotryx.com',
+      'https://jyotron-web.vercel.app',
+      'https://www.jyotron.com',
       process.env.FRONTEND_URL,
       process.env.CORS_ORIGIN,
     ].filter(Boolean) as string[],
@@ -43,8 +43,8 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Jyotryx API')
-    .setDescription('Jyotryx Astrology App Backend API')
+    .setTitle('Jyotron API')
+    .setDescription('Jyotron Astrology App Backend API')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -77,7 +77,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 4000;
   await app.listen(port);
-  console.log(`Jyotryx API running on http://localhost:${port}`);
+  console.log(`Jyotron API running on http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
 

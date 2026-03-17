@@ -1,8 +1,8 @@
 {
-  "name": "@jyotryx/api",
+  "name": "@jyotron/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Jyotryx Astrology App - NestJS Backend API",
+  "description": "Jyotron Astrology App - NestJS Backend API",
   "scripts": {
     "build": "nest build",
     "start": "nest start",

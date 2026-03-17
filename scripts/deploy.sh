@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== Jyotryx Deployment Script ==="
+echo "=== Jyotron Deployment Script ==="
 echo ""
 
 # Check prerequisites
@@ -34,8 +34,8 @@ echo "PgAdmin: http://localhost:5050"
 echo ""
 echo "For Cloudflare Tunnel setup:"
 echo "  1. cloudflared tunnel login"
-echo "  2. cloudflared tunnel create jyotryx"
+echo "  2. cloudflared tunnel create jyotron"
 echo "  3. Update cloudflare-tunnel.yml with your tunnel ID"
-echo "  4. cloudflared tunnel route dns jyotryx www.jyotryx.com"
-echo "  5. cloudflared tunnel route dns jyotryx api.jyotryx.com"
-echo "  6. cloudflared tunnel --config cloudflare-tunnel.yml run jyotryx"
+echo "  4. cloudflared tunnel route dns jyotron www.jyotron.com"
+echo "  5. cloudflared tunnel route dns jyotron api.jyotron.com"
+echo "  6. cloudflared tunnel --config cloudflare-tunnel.yml run jyotron"

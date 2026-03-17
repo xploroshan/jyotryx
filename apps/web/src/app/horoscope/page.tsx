@@ -83,21 +83,21 @@ export default function HoroscopePage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-gray-950 to-gray-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-gray-950 to-gray-950" />
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-gray-300 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-white/60 mb-4">
             <span className="text-lg">{sign.symbol}</span>
             Vedic Horoscope
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">
             Your <span className="text-gradient">Horoscope</span>
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <p className="text-white/40 max-w-xl mx-auto">
             Personalized predictions based on Vedic astrology and current planetary transits.
           </p>
         </div>
@@ -110,12 +110,12 @@ export default function HoroscopePage() {
               onClick={() => setSelectedSign(z.id)}
               className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all ${
                 selectedSign === z.id
-                  ? "glass bg-white/10 border-primary-500/50"
-                  : "hover:bg-white/5"
+                  ? "surface-card bg-white/[0.06] border-primary-500/50"
+                  : "hover:bg-white/[0.03]"
               }`}
             >
               <span className="text-2xl mb-1">{z.symbol}</span>
-              <span className={`text-xs font-medium ${selectedSign === z.id ? "text-white" : "text-gray-400"}`}>
+              <span className={`text-xs font-medium ${selectedSign === z.id ? "text-white" : "text-white/40"}`}>
                 {z.name}
               </span>
             </button>
@@ -123,26 +123,26 @@ export default function HoroscopePage() {
         </div>
 
         {/* Selected Sign Info */}
-        <div className="glass-card p-6 mb-8 flex flex-col sm:flex-row items-center gap-4">
-          <div className="text-5xl">{sign.symbol}</div>
+        <div className="surface-card p-6 mb-8 flex flex-col sm:flex-row items-center gap-4">
+          <div className="text-4xl">{sign.symbol}</div>
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl font-display font-bold text-white">{sign.name}</h2>
+            <h2 className="text-xl font-bold text-white">{sign.name}</h2>
             <div className="flex flex-wrap gap-3 mt-1 justify-center sm:justify-start">
-              <span className="text-sm text-gray-400">{sign.date}</span>
+              <span className="text-sm text-white/40">{sign.date}</span>
               <span className={`text-sm font-medium ${elementColor(sign.element)}`}>{sign.element}</span>
             </div>
           </div>
           <div className="sm:ml-auto">
             {/* Period Tabs */}
-            <div className="flex gap-1 rounded-xl bg-white/5 p-1">
+            <div className="flex gap-1 rounded-xl bg-white/[0.03] p-1">
               {periods.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setSelectedPeriod(p.id)}
                   className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                     selectedPeriod === p.id
-                      ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white"
-                      : "text-gray-400 hover:text-white"
+                      ? "btn-primary text-white"
+                      : "text-white/40 hover:text-white"
                   }`}
                 >
                   {p.label}
@@ -169,7 +169,7 @@ export default function HoroscopePage() {
               <p className="text-red-400">{error}</p>
             </div>
             <br />
-            <button onClick={fetchHoroscope} className="mt-4 px-6 py-2 rounded-xl glass text-sm text-primary-400 hover:bg-white/10">
+            <button onClick={fetchHoroscope} className="mt-4 px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400">
               Retry
             </button>
           </div>
@@ -179,57 +179,54 @@ export default function HoroscopePage() {
         {horoscope && !loading && !error && (
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Overview */}
-            <div className="lg:col-span-2 glass-card p-6">
-              <h3 className="text-lg font-display font-bold text-gradient mb-4">
+            <div className="lg:col-span-2 surface-card p-6">
+              <h3 className="text-lg font-bold text-gradient mb-4">
                 {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Overview
               </h3>
-              <p className="text-gray-300 leading-relaxed">{horoscope.overview}</p>
+              <p className="text-white/60 leading-relaxed">{horoscope.overview}</p>
             </div>
 
             {/* Lucky */}
-            <div className="glass-card p-6">
-              <h3 className="text-lg font-display font-bold text-accent-400 mb-4">Lucky Factors</h3>
+            <div className="surface-card p-6">
+              <h3 className="text-lg font-bold text-accent-400 mb-4">Lucky Factors</h3>
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Lucky Numbers</p>
+                <div className="p-3 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-white/30 mb-1">Lucky Numbers</p>
                   <p className="text-white font-semibold">{horoscope.lucky.number}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Lucky Color</p>
+                <div className="p-3 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-white/30 mb-1">Lucky Color</p>
                   <p className="text-white font-semibold">{horoscope.lucky.color}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Auspicious Time</p>
+                <div className="p-3 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-white/30 mb-1">Auspicious Time</p>
                   <p className="text-white font-semibold">{horoscope.lucky.time}</p>
                 </div>
               </div>
             </div>
 
             {/* Love */}
-            <div className="glass-card p-6">
+            <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">💞</span>
-                <h3 className="font-display font-bold text-white">Love &amp; Relationships</h3>
+                <h3 className="font-bold text-white">Love &amp; Relationships</h3>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed">{horoscope.love}</p>
+              <p className="text-sm text-white/60 leading-relaxed">{horoscope.love}</p>
             </div>
 
             {/* Career */}
-            <div className="glass-card p-6">
+            <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">💼</span>
-                <h3 className="font-display font-bold text-white">Career &amp; Finance</h3>
+                <h3 className="font-bold text-white">Career &amp; Finance</h3>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed">{horoscope.career}</p>
+              <p className="text-sm text-white/60 leading-relaxed">{horoscope.career}</p>
             </div>
 
             {/* Health */}
-            <div className="glass-card p-6">
+            <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">🏥</span>
-                <h3 className="font-display font-bold text-white">Health &amp; Wellness</h3>
+                <h3 className="font-bold text-white">Health &amp; Wellness</h3>
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed">{horoscope.health}</p>
+              <p className="text-sm text-white/60 leading-relaxed">{horoscope.health}</p>
             </div>
           </div>
         )}

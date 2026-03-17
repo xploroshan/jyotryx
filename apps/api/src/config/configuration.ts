@@ -13,13 +13,13 @@ export default () => ({
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 
   database: {
-    url: requireInProduction('DATABASE_URL', 'postgresql://localhost:5432/jyotryx'),
+    url: requireInProduction('DATABASE_URL', 'postgresql://localhost:5432/jyotron'),
   },
 
   jwt: {
-    secret: requireInProduction('JWT_SECRET', 'jyotryx-dev-secret-change-in-production'),
+    secret: requireInProduction('JWT_SECRET', 'jyotron-dev-secret-change-in-production'),
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
-    refreshSecret: requireInProduction('JWT_REFRESH_SECRET', 'jyotryx-refresh-secret-change-in-production'),
+    refreshSecret: requireInProduction('JWT_REFRESH_SECRET', 'jyotron-refresh-secret-change-in-production'),
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
 

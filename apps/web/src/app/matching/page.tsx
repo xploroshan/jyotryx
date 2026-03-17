@@ -85,7 +85,7 @@ export default function MatchingPage() {
   };
 
   const inputClass =
-    "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors";
+    "w-full px-4 py-3 rounded-xl surface-input";
 
   const PersonFormComponent = ({
     label,
@@ -98,13 +98,13 @@ export default function MatchingPage() {
     setPerson: (p: PersonForm) => void;
     gradient: string;
   }) => (
-    <div className="glass-card p-6">
-      <h3 className={`text-lg font-display font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-5`}>
+    <div className="surface-card p-6">
+      <h3 className={`text-lg font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-5`}>
         {label}
       </h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Full Name</label>
+          <label className="block text-sm text-white/40 mb-1.5">Full Name</label>
           <input
             type="text"
             value={person.name}
@@ -115,7 +115,7 @@ export default function MatchingPage() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Date of Birth</label>
+            <label className="block text-sm text-white/40 mb-1.5">Date of Birth</label>
             <input
               type="date"
               value={person.dob}
@@ -124,7 +124,7 @@ export default function MatchingPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Time of Birth</label>
+            <label className="block text-sm text-white/40 mb-1.5">Time of Birth</label>
             <input
               type="time"
               value={person.time}
@@ -134,7 +134,7 @@ export default function MatchingPage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Place of Birth</label>
+          <label className="block text-sm text-white/40 mb-1.5">Place of Birth</label>
           <input
             type="text"
             value={person.place}
@@ -159,14 +159,14 @@ export default function MatchingPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-gray-300 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
             <span className="text-lg">💞</span>
             Ashtakoota Guna Milan
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             Kundli <span className="text-gradient">Matching</span>
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <p className="text-white/40 max-w-xl mx-auto">
             Check marriage compatibility with detailed Ashtakoota analysis, Manglik check, and AI-powered compatibility insights.
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function MatchingPage() {
           <button
             onClick={handleMatch}
             disabled={!isValid || loading}
-            className="px-10 py-4 rounded-xl bg-gradient-to-r from-pink-600 to-primary-600 text-white font-semibold text-lg hover:from-pink-500 hover:to-primary-500 transition-all glow disabled:opacity-50"
+            className="px-10 py-4 rounded-xl btn-primary text-lg disabled:opacity-50"
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -218,35 +218,35 @@ export default function MatchingPage() {
         {results && (
           <div className="space-y-6">
             {/* Score Overview */}
-            <div className="glass-card p-8 text-center">
-              <h2 className="text-2xl font-display font-bold text-gradient mb-6">Compatibility Results</h2>
+            <div className="surface-card p-8 text-center">
+              <h2 className="text-2xl font-bold text-gradient mb-6">Compatibility Results</h2>
               <div className="grid sm:grid-cols-3 gap-6 mb-8">
-                <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Ashtakoota Score</p>
+                <div className="p-4 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-white/30 mb-1">Ashtakoota Score</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>
-                    {results.totalScore}<span className="text-lg text-gray-500">/{results.maxScore}</span>
+                    {results.totalScore}<span className="text-lg text-white/30">/{results.maxScore}</span>
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Compatibility</p>
+                <div className="p-4 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-white/30 mb-1">Compatibility</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>{results.percentage}%</p>
                 </div>
-                <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Verdict</p>
+                <div className="p-4 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-white/30 mb-1">Verdict</p>
                   <p className="text-3xl font-bold text-emerald-400">{results.verdict}</p>
                 </div>
               </div>
 
               {/* Manglik Status */}
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
-                <div className="p-4 rounded-xl bg-white/5 flex items-center justify-between">
-                  <span className="text-sm text-gray-400">{personA.name || "Person A"} - Manglik</span>
+                <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
+                  <span className="text-sm text-white/40">{personA.name || "Person A"} - Manglik</span>
                   <span className={`text-sm font-semibold ${results.manglikA ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikA ? "Yes" : "No"}
                   </span>
                 </div>
-                <div className="p-4 rounded-xl bg-white/5 flex items-center justify-between">
-                  <span className="text-sm text-gray-400">{personB.name || "Person B"} - Manglik</span>
+                <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
+                  <span className="text-sm text-white/40">{personB.name || "Person B"} - Manglik</span>
                   <span className={`text-sm font-semibold ${results.manglikB ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikB ? "Yes (Mild)" : "No"}
                   </span>
@@ -255,23 +255,23 @@ export default function MatchingPage() {
             </div>
 
             {/* Koota Details */}
-            <div className="glass-card p-6">
-              <h3 className="text-lg font-display font-bold text-white mb-4">Ashtakoota Breakdown</h3>
+            <div className="surface-card p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Ashtakoota Breakdown</h3>
               <div className="space-y-3">
                 {results.koota.map((k) => {
                   const pct = (k.obtained / k.max) * 100;
                   return (
-                    <div key={k.name} className="p-4 rounded-xl bg-white/5">
+                    <div key={k.name} className="p-4 rounded-xl bg-white/[0.03]">
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <span className="font-medium text-white text-sm">{k.name}</span>
-                          <span className="text-xs text-gray-500 ml-2">{k.description}</span>
+                          <span className="text-xs text-white/30 ml-2">{k.description}</span>
                         </div>
                         <span className={`text-sm font-bold ${scoreColor(pct)}`}>
                           {k.obtained}/{k.max}
                         </span>
                       </div>
-                      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
                             pct >= 75 ? "bg-emerald-500" : pct >= 50 ? "bg-accent-500" : "bg-red-500"
@@ -286,11 +286,11 @@ export default function MatchingPage() {
             </div>
 
             {/* Summary */}
-            <div className="glass-card p-6">
-              <h3 className="text-lg font-display font-bold text-gradient mb-4">AI Analysis Summary</h3>
-              <p className="text-gray-300 leading-relaxed">{results.summary}</p>
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <button className="px-6 py-3 rounded-xl glass text-sm font-medium text-primary-400 hover:bg-white/10 transition-all">
+            <div className="surface-card p-6">
+              <h3 className="text-lg font-bold text-gradient mb-4">AI Analysis Summary</h3>
+              <p className="text-white/60 leading-relaxed">{results.summary}</p>
+              <div className="mt-4 pt-4 border-t divider">
+                <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400 hover:bg-white/[0.1] transition-all">
                   Download Detailed Report (PDF) - 5 Credits
                 </button>
               </div>
