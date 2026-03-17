@@ -18,7 +18,8 @@ const navLinks = [
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, _hasHydrated } = useAuthStore();
+  const showAuth = _hasHydrated && isAuthenticated;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-lg border-b divider">
@@ -47,7 +48,7 @@ export default function Navbar() {
 
           {/* Desktop Right */}
           <div className="hidden lg:flex items-center gap-2">
-            {isAuthenticated ? (
+            {showAuth ? (
               <>
                 {user?.role === "ADMIN" && (
                   <Link href="/admin" className="px-3 py-1.5 text-[13px] text-red-400 hover:text-red-300 transition-colors">
@@ -112,7 +113,7 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-3 mt-2 border-t divider">
-            {isAuthenticated ? (
+            {showAuth ? (
               <div className="space-y-1">
                 {user?.role === "ADMIN" && (
                   <Link href="/admin" className="block px-3 py-2.5 text-sm text-red-400" onClick={() => setMobileMenuOpen(false)}>
