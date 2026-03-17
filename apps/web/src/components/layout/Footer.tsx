@@ -3,7 +3,7 @@ import { LogoMark } from "@/components/ui/Logo";
 
 const footerLinks = {
   Features: [
-    { label: "AI Chat", href: "/chat" },
+    { label: "Consult", href: "/chat" },
     { label: "Palmistry", href: "/palmistry" },
     { label: "Kundli", href: "/kundli" },
     { label: "Matching", href: "/matching" },
@@ -35,7 +35,7 @@ export default function Footer() {
               <span className="text-lg font-semibold text-white tracking-tight">Jyotron</span>
             </div>
             <p className="text-sm text-white/40 leading-relaxed mb-4">
-              AI-powered Vedic astrology platform. Personalized insights, available 24/7.
+              Vedic astrology platform. Personalized insights, available 24/7.
             </p>
             <p className="text-xs text-white/25">
               For guidance and entertainment purposes.

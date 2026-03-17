@@ -109,7 +109,7 @@ interface ActivityLog {
   createdAt: string;
 }
 
-type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity";
+type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing";
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -714,6 +714,17 @@ export default function AdminPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
 
+  // Pricing state
+  const [pricingMonthly, setPricingMonthly] = useState("499");
+  const [pricingAnnual, setPricingAnnual] = useState("4999");
+  const [creditStarterCredits, setCreditStarterCredits] = useState("25");
+  const [creditStarterPrice, setCreditStarterPrice] = useState("99");
+  const [creditPopularCredits, setCreditPopularCredits] = useState("75");
+  const [creditPopularPrice, setCreditPopularPrice] = useState("249");
+  const [creditProCredits, setCreditProCredits] = useState("200");
+  const [creditProPrice, setCreditProPrice] = useState("599");
+  const [pricingSaving, setPricingSaving] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "ADMIN") {
       router.push("/auth");
@@ -726,6 +737,25 @@ export default function AdminPage() {
     if (!accessToken) return;
     if (activeTab === "analytics" || activeTab === "ai" || activeTab === "content" || activeTab === "activity") {
       setLoading(false);
+      return;
+    }
+    if (activeTab === "pricing") {
+      setLoading(true);
+      try {
+        const settings = await api.get<Record<string, string>>("/admin/settings?prefix=pricing.", { token: accessToken });
+        if (settings["pricing.monthly.price"]) setPricingMonthly(settings["pricing.monthly.price"]);
+        if (settings["pricing.annual.price"]) setPricingAnnual(settings["pricing.annual.price"]);
+        if (settings["pricing.credits.starter.credits"]) setCreditStarterCredits(settings["pricing.credits.starter.credits"]);
+        if (settings["pricing.credits.starter.price"]) setCreditStarterPrice(settings["pricing.credits.starter.price"]);
+        if (settings["pricing.credits.popular.credits"]) setCreditPopularCredits(settings["pricing.credits.popular.credits"]);
+        if (settings["pricing.credits.popular.price"]) setCreditPopularPrice(settings["pricing.credits.popular.price"]);
+        if (settings["pricing.credits.pro.credits"]) setCreditProCredits(settings["pricing.credits.pro.credits"]);
+        if (settings["pricing.credits.pro.price"]) setCreditProPrice(settings["pricing.credits.pro.price"]);
+      } catch (err: any) {
+        setError(err.message || "Failed to load pricing");
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     setLoading(true);
@@ -822,6 +852,7 @@ export default function AdminPage() {
     { id: "payments", label: "Payments", icon: "\uD83D\uDCB3" },
     { id: "chats", label: "Chats", icon: "\uD83D\uDCAC" },
     { id: "analytics", label: "Analytics", icon: "\uD83D\uDCC8" },
+    { id: "pricing", label: "Pricing", icon: "\uD83D\uDCB0" },
     { id: "ai", label: "AI Agents", icon: "\uD83E\uDD16" },
     { id: "content", label: "Content", icon: "\uD83D\uDCDD" },
   ];
@@ -976,7 +1007,7 @@ export default function AdminPage() {
                 <h3 className="text-lg font-bold text-white mb-4">Feature Usage Breakdown</h3>
                 <div className="surface-card p-6 mb-8">
                   {[
-                    { feature: "AI Chat", pct: 35, color: "from-blue-500 to-cyan-500" },
+                    { feature: "Chat", pct: 35, color: "from-blue-500 to-cyan-500" },
                     { feature: "Horoscope", pct: 25, color: "from-yellow-500 to-amber-500" },
                     { feature: "Kundli", pct: 15, color: "from-purple-500 to-violet-500" },
                     { feature: "Palmistry", pct: 10, color: "from-pink-500 to-rose-500" },
@@ -1174,6 +1205,92 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {/* Pricing Management */}
+            {activeTab === "pricing" && (
+              <div>
+                <h2 className="text-xl font-bold text-gradient mb-6">Pricing Management</h2>
+
+                {/* Subscription Plans */}
+                <h3 className="text-lg font-bold text-white mb-4">Subscription Plans</h3>
+                <div className="grid sm:grid-cols-2 gap-4 mb-8">
+                  <div className="surface-card p-6">
+                    <h4 className="font-bold text-white mb-4">Premium Monthly</h4>
+                    <label className="block text-xs text-white/30 mb-2">Price (INR)</label>
+                    <input type="number" value={pricingMonthly} onChange={(e) => setPricingMonthly(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm" />
+                  </div>
+                  <div className="surface-card p-6">
+                    <h4 className="font-bold text-white mb-4">Premium Annual</h4>
+                    <label className="block text-xs text-white/30 mb-2">Price (INR)</label>
+                    <input type="number" value={pricingAnnual} onChange={(e) => setPricingAnnual(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm" />
+                  </div>
+                </div>
+
+                {/* Credit Packs */}
+                <h3 className="text-lg font-bold text-white mb-4">Credit Packs</h3>
+                <div className="grid sm:grid-cols-3 gap-4 mb-8">
+                  <div className="surface-card p-6">
+                    <h4 className="font-bold text-white mb-4">Starter Pack</h4>
+                    <label className="block text-xs text-white/30 mb-2">Credits</label>
+                    <input type="number" value={creditStarterCredits} onChange={(e) => setCreditStarterCredits(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm mb-3" />
+                    <label className="block text-xs text-white/30 mb-2">Price (INR)</label>
+                    <input type="number" value={creditStarterPrice} onChange={(e) => setCreditStarterPrice(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm" />
+                  </div>
+                  <div className="surface-card p-6">
+                    <h4 className="font-bold text-white mb-4">Popular Pack</h4>
+                    <label className="block text-xs text-white/30 mb-2">Credits</label>
+                    <input type="number" value={creditPopularCredits} onChange={(e) => setCreditPopularCredits(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm mb-3" />
+                    <label className="block text-xs text-white/30 mb-2">Price (INR)</label>
+                    <input type="number" value={creditPopularPrice} onChange={(e) => setCreditPopularPrice(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm" />
+                  </div>
+                  <div className="surface-card p-6">
+                    <h4 className="font-bold text-white mb-4">Pro Pack</h4>
+                    <label className="block text-xs text-white/30 mb-2">Credits</label>
+                    <input type="number" value={creditProCredits} onChange={(e) => setCreditProCredits(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm mb-3" />
+                    <label className="block text-xs text-white/30 mb-2">Price (INR)</label>
+                    <input type="number" value={creditProPrice} onChange={(e) => setCreditProPrice(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm" />
+                  </div>
+                </div>
+
+                <button
+                  disabled={pricingSaving}
+                  onClick={async () => {
+                    setPricingSaving(true);
+                    setError("");
+                    try {
+                      await api.put("/admin/settings", {
+                        "pricing.monthly.price": pricingMonthly,
+                        "pricing.annual.price": pricingAnnual,
+                        "pricing.credits.starter.credits": creditStarterCredits,
+                        "pricing.credits.starter.price": creditStarterPrice,
+                        "pricing.credits.popular.credits": creditPopularCredits,
+                        "pricing.credits.popular.price": creditPopularPrice,
+                        "pricing.credits.pro.credits": creditProCredits,
+                        "pricing.credits.pro.price": creditProPrice,
+                      }, { token: accessToken! });
+                      setSuccess("Pricing updated successfully");
+                      setTimeout(() => setSuccess(""), 3000);
+                    } catch (err: any) {
+                      setError(err.message || "Failed to update pricing");
+                    } finally {
+                      setPricingSaving(false);
+                    }
+                  }}
+                  className="px-6 py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50"
+                >
+                  {pricingSaving ? "Saving..." : "Save Pricing"}
+                </button>
+                <p className="text-xs text-white/20 mt-3">Changes are applied immediately to the pricing page.</p>
               </div>
             )}
 

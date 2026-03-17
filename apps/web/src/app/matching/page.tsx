@@ -167,7 +167,7 @@ export default function MatchingPage() {
             Kundli <span className="text-gradient">Matching</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Check marriage compatibility with detailed Ashtakoota analysis, Manglik check, and AI-powered compatibility insights.
+            Check marriage compatibility with detailed Ashtakoota analysis, Manglik check, and expert compatibility insights.
           </p>
         </div>
 
@@ -287,7 +287,7 @@ export default function MatchingPage() {
 
             {/* Summary */}
             <div className="surface-card p-6">
-              <h3 className="text-lg font-bold text-gradient mb-4">AI Analysis Summary</h3>
+              <h3 className="text-lg font-bold text-gradient mb-4">Analysis Summary</h3>
               <p className="text-white/60 leading-relaxed">{results.summary}</p>
               <div className="mt-4 pt-4 border-t divider">
                 <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400 hover:bg-white/[0.1] transition-all">

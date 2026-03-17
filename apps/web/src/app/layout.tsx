@@ -4,28 +4,28 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Jyotron — AI-Powered Vedic Astrology",
+  title: "Jyotron — Vedic Astrology Platform",
   description:
-    "Instant, personalized Vedic astrology consultations powered by AI. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
+    "Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
   icons: {
     icon: "/favicon.svg",
   },
   keywords: [
-    "astrology", "AI astrologer", "vedic astrology", "kundli", "horoscope",
+    "astrology", "vedic astrology", "kundli", "horoscope",
     "palmistry", "kundli matching", "panchang", "muhurat", "jyotron",
   ],
   metadataBase: new URL("https://www.jyotron.com"),
   openGraph: {
-    title: "Jyotron — AI-Powered Vedic Astrology",
-    description: "Instant AI astrology consultations, palmistry, Kundli, and more.",
+    title: "Jyotron — Vedic Astrology Platform",
+    description: "Instant astrology consultations, palmistry, Kundli, and more.",
     type: "website",
     url: "https://www.jyotron.com",
     siteName: "Jyotron",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Jyotron — AI-Powered Vedic Astrology",
-    description: "Instant AI astrology consultations, palmistry, Kundli, and more.",
+    title: "Jyotron — Vedic Astrology Platform",
+    description: "Instant astrology consultations, palmistry, Kundli, and more.",
   },
 };
 

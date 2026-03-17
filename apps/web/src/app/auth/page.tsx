@@ -210,7 +210,7 @@ function AuthPageContent() {
             <LogoMark className="h-8 w-8" />
             <span className="text-lg font-semibold text-white">Jyotron</span>
           </Link>
-          <p className="text-sm text-white/40">AI-powered Vedic astrology</p>
+          <p className="text-sm text-white/40">Vedic astrology platform</p>
         </div>
 
         <div className="surface-card p-6">

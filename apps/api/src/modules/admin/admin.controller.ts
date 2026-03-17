@@ -111,6 +111,23 @@ export class AdminController {
     return this.adminService.undoActivity(logId, req.user.sub, req.user.email);
   }
 
+  @Get('settings')
+  @ApiOperation({ summary: 'Get site settings' })
+  @ApiResponse({ status: 200, description: 'Settings returned' })
+  async getSettings(@Query('prefix') prefix?: string): Promise<Record<string, string>> {
+    return this.adminService.getSettings(prefix);
+  }
+
+  @Put('settings')
+  @ApiOperation({ summary: 'Update site settings' })
+  @ApiResponse({ status: 200, description: 'Settings updated' })
+  async updateSettings(
+    @Body() dto: Record<string, string>,
+    @Request() req: any,
+  ): Promise<Record<string, string>> {
+    return this.adminService.updateSettings(dto, req.user.sub, req.user.email);
+  }
+
   @Post('subscriptions/:id/cancel')
   @ApiOperation({ summary: 'Cancel a user subscription' })
   @ApiResponse({ status: 200, description: 'Subscription cancelled' })

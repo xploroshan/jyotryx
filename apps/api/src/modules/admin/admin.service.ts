@@ -554,6 +554,37 @@ export class AdminService {
     return { success: true, message: `Successfully reverted ${log.action} on ${log.entityLabel}` };
   }
 
+  // ─── Site Settings ──────────────────────────────────────────────────────────
+
+  async getSettings(prefix?: string): Promise<Record<string, string>> {
+    const where = prefix ? { key: { startsWith: prefix } } : {};
+    const rows = await this.prisma.siteSetting.findMany({ where });
+    const result: Record<string, string> = {};
+    for (const row of rows) {
+      result[row.key] = row.value;
+    }
+    return result;
+  }
+
+  async updateSettings(
+    settings: Record<string, string>,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<Record<string, string>> {
+    const existing = await this.getSettings();
+
+    for (const [key, value] of Object.entries(settings)) {
+      await this.prisma.siteSetting.upsert({
+        where: { key },
+        update: { value: String(value) },
+        create: { key, value: String(value) },
+      });
+    }
+
+    this.logger.log(`Admin ${adminEmail} updated settings: ${JSON.stringify(Object.keys(settings))}`);
+    return this.getSettings();
+  }
+
   async cancelSubscription(
     subscriptionId: string,
     adminId: string,

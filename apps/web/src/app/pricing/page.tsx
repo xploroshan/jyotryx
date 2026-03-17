@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
 
-const plans = [
+const defaultPlans = [
   {
     id: "free", name: "Free", price: 0, period: "",
-    features: ["3 credits on signup", "10 free credits per month", "AI Astrologer Chat", "Daily Horoscope", "Panchang Access"],
+    features: ["3 credits on signup", "10 free credits per month", "Astrologer Chat", "Daily Horoscope", "Panchang Access"],
     cta: "Get Started", popular: false,
   },
   {
     id: "monthly", name: "Premium", price: 499, period: "/month",
-    features: ["Unlimited AI Chat", "Kundli Generation", "Kundli Matching", "Palmistry Analysis", "All Horoscopes", "Muhurat Finder", "Report Generation", "Priority Support"],
+    features: ["Unlimited Chat", "Kundli Generation", "Kundli Matching", "Palmistry Analysis", "All Horoscopes", "Muhurat Finder", "Report Generation", "Priority Support"],
     cta: "Subscribe", popular: true,
   },
   {
@@ -23,7 +23,7 @@ const plans = [
   },
 ];
 
-const creditPacks = [
+const defaultCreditPacks = [
   { credits: 25, price: 99, label: "Starter" },
   { credits: 75, price: 249, label: "Popular" },
   { credits: 200, price: 599, label: "Pro" },
@@ -34,6 +34,25 @@ export default function PricingPage() {
   const { isAuthenticated, accessToken } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [plans, setPlans] = useState(defaultPlans);
+  const [creditPacks, setCreditPacks] = useState(defaultCreditPacks);
+
+  useEffect(() => {
+    api.get<Record<string, string>>("/payments/pricing").then((settings) => {
+      const monthlyPrice = parseInt(settings["pricing.monthly.price"]) || 499;
+      const annualPrice = parseInt(settings["pricing.annual.price"]) || 4999;
+      setPlans((prev) => prev.map((p) => {
+        if (p.id === "monthly") return { ...p, price: monthlyPrice };
+        if (p.id === "annual") return { ...p, price: annualPrice };
+        return p;
+      }));
+      setCreditPacks([
+        { credits: parseInt(settings["pricing.credits.starter.credits"]) || 25, price: parseInt(settings["pricing.credits.starter.price"]) || 99, label: "Starter" },
+        { credits: parseInt(settings["pricing.credits.popular.credits"]) || 75, price: parseInt(settings["pricing.credits.popular.price"]) || 249, label: "Popular" },
+        { credits: parseInt(settings["pricing.credits.pro.credits"]) || 200, price: parseInt(settings["pricing.credits.pro.price"]) || 599, label: "Pro" },
+      ]);
+    }).catch(() => {});
+  }, []);
 
   const handleSubscribe = async (planId: string) => {
     if (!isAuthenticated) { router.push("/auth?mode=signup"); return; }
@@ -66,7 +85,7 @@ export default function PricingPage() {
           Simple, transparent <span className="text-gradient">pricing</span>
         </h1>
         <p className="text-sm text-white/40 max-w-md mx-auto">
-          Unlock unlimited access to AI-powered astrology insights.
+          Unlock unlimited access to Vedic astrology insights.
         </p>
       </div>
 
@@ -125,7 +144,7 @@ export default function PricingPage() {
 
       <div className="grid sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-10">
         {creditPacks.map((pack) => (
-          <div key={pack.credits} className="surface-card p-5 text-center">
+          <div key={pack.label} className="surface-card p-5 text-center">
             <p className="text-[11px] text-white/25 mb-1">{pack.label}</p>
             <p className="text-2xl font-bold text-white mb-0.5">{pack.credits}</p>
             <p className="text-[11px] text-white/25 mb-3">credits</p>
@@ -146,7 +165,7 @@ export default function PricingPage() {
         <h3 className="text-sm font-semibold text-white mb-3">Credit Usage</h3>
         <div className="grid sm:grid-cols-2 gap-2">
           {[
-            { action: "AI Chat Question", cost: "1 credit" },
+            { action: "Chat Question", cost: "1 credit" },
             { action: "Kundli Generation", cost: "2 credits" },
             { action: "Palmistry Analysis", cost: "3 credits" },
             { action: "Report Generation", cost: "5 credits" },
