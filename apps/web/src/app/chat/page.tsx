@@ -6,14 +6,14 @@ import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 
 const categories = [
-  { id: "career", label: "Career", icon: "\uD83D\uDCBC", color: "from-blue-500 to-cyan-500" },
-  { id: "relationship", label: "Relationships", icon: "\uD83D\uDC9E", color: "from-pink-500 to-rose-500" },
-  { id: "general", label: "General", icon: "\u2B50", color: "from-emerald-500 to-green-500" },
-  { id: "kundli", label: "Kundli", icon: "\uD83E\uDE90", color: "from-violet-500 to-purple-500" },
-  { id: "remedy", label: "Remedies", icon: "\uD83D\uDD2E", color: "from-amber-500 to-yellow-500" },
-  { id: "wealth", label: "Wealth", icon: "\uD83D\uDCB0", color: "from-emerald-500 to-teal-500" },
-  { id: "health", label: "Health", icon: "\uD83C\uDFE5", color: "from-red-500 to-orange-500" },
-  { id: "numerology", label: "Numerology", icon: "\uD83D\uDD22", color: "from-indigo-500 to-violet-500" },
+  { id: "career", label: "Career" },
+  { id: "relationship", label: "Relationships" },
+  { id: "general", label: "General" },
+  { id: "kundli", label: "Kundli" },
+  { id: "remedy", label: "Remedies" },
+  { id: "wealth", label: "Wealth" },
+  { id: "health", label: "Health" },
+  { id: "numerology", label: "Numerology" },
 ];
 
 const suggestedQuestions = [
@@ -33,7 +33,7 @@ export default function ChatPage() {
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState("career");
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Namaste! I am your AI Astrologer. I can help you with career guidance, relationship compatibility, financial predictions, and more based on Vedic astrology principles. Select a category and ask your question." },
+    { role: "assistant", content: "Namaste! I am your AI Astrologer. I can help with career, relationships, finance, health, and more based on Vedic astrology. Select a topic and ask your question." },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -48,11 +48,7 @@ export default function ChatPage() {
 
   const handleSend = async () => {
     if (!input.trim()) return;
-
-    if (!isAuthenticated) {
-      router.push("/auth");
-      return;
-    }
+    if (!isAuthenticated) { router.push("/auth"); return; }
 
     const userMsg: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMsg]);
@@ -62,101 +58,93 @@ export default function ChatPage() {
 
     try {
       const res = await api.post<any>("/chat/message", {
-        sessionId,
-        message: input,
-        category: selectedCategory,
+        sessionId, message: input, category: selectedCategory,
       }, { token: accessToken! });
-
       setSessionId(res.session.id);
-      const reply: Message = { role: "assistant", content: res.reply.content };
-      setMessages((prev) => [...prev, reply]);
+      setMessages((prev) => [...prev, { role: "assistant", content: res.reply.content }]);
     } catch (err: any) {
       setError(err.message || "Failed to send message");
-      const errorMsg: Message = { role: "assistant", content: "I apologize, there was an error processing your request. Please try again." };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "I apologize, there was an error processing your request. Please try again." }]);
     } finally {
       setIsTyping(false);
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-3.5rem)]">
       {/* Mobile sidebar toggle */}
-      <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden fixed top-20 left-4 z-30 p-2 rounded-xl glass">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+      <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden fixed top-[4.5rem] left-3 z-30 p-2 rounded-lg bg-surface-950 border divider">
+        <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
 
-      {/* Category Sidebar */}
-      <aside className={`fixed lg:relative z-20 w-64 h-full bg-gray-950/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none border-r border-white/10 p-4 flex flex-col transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
-        <div className="mb-6">
-          <h2 className="text-lg font-display font-bold text-gradient mb-1">AI Astrologer</h2>
-          <p className="text-xs text-gray-500">Select a topic to begin</p>
+      {/* Sidebar */}
+      <aside className={`fixed lg:relative z-20 w-56 h-full bg-surface-950 border-r divider p-3 flex flex-col transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+        <div className="mb-4 px-1">
+          <h2 className="text-sm font-semibold text-white mb-0.5">AI Astrologer</h2>
+          <p className="text-[11px] text-white/30">Select a topic</p>
         </div>
 
-        <div className="space-y-2 flex-1">
+        <div className="space-y-0.5 flex-1">
           {categories.map((cat) => (
             <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${selectedCategory === cat.id ? "glass bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
-              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br ${cat.color} text-base`}>{cat.icon}</span>
+              className={`w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors duration-150 ${selectedCategory === cat.id ? "bg-white/[0.08] text-white font-medium" : "text-white/40 hover:text-white/60 hover:bg-white/[0.03]"}`}>
               {cat.label}
             </button>
           ))}
         </div>
 
         {/* Credit Balance */}
-        <div className="glass-card p-4 mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">Credits Balance</span>
-            <span className="text-sm font-bold text-gradient">{user?.credits ?? 0}</span>
+        <div className="surface-card p-3 mt-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] text-white/30">Credits</span>
+            <span className="text-xs font-semibold text-white">{user?.credits ?? 0}</span>
           </div>
-          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full" style={{ width: `${Math.min(100, ((user?.credits ?? 0) / 100) * 100)}%` }} />
+          <div className="w-full h-1 bg-white/[0.04] rounded-full overflow-hidden">
+            <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${Math.min(100, ((user?.credits ?? 0) / 100) * 100)}%` }} />
           </div>
           {!isAuthenticated && (
-            <button onClick={() => router.push("/auth")} className="w-full mt-3 py-2 text-xs font-medium rounded-lg bg-white/5 text-primary-400 hover:bg-white/10 transition-all">
-              Sign In to Chat
+            <button onClick={() => router.push("/auth")} className="w-full mt-2 py-1.5 text-[11px] font-medium rounded-md bg-white/[0.04] text-primary-400 hover:bg-white/[0.08] transition-colors">
+              Sign in to chat
             </button>
           )}
         </div>
       </aside>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <span className="text-lg">{categories.find((c) => c.id === selectedCategory)?.icon}</span>
-            <div>
-              <h3 className="font-semibold text-white text-sm">{categories.find((c) => c.id === selectedCategory)?.label} Astrologer</h3>
-              <span className="flex items-center gap-1.5 text-xs text-emerald-400">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />Online
-              </span>
-            </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b divider">
+          <div>
+            <h3 className="font-medium text-white text-sm">{categories.find((c) => c.id === selectedCategory)?.label}</h3>
+            <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />Online
+            </span>
           </div>
-          <span className="text-xs text-gray-500 glass px-3 py-1 rounded-full">1 credit per question</span>
+          <span className="text-[11px] text-white/20 border divider px-2 py-0.5 rounded-md">1 credit / question</span>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3">
           {messages.length === 1 && (
-            <div className="mb-6">
-              <p className="text-sm text-gray-400 mb-3">Suggested questions:</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-4">
+              <p className="text-xs text-white/30 mb-2">Try asking:</p>
+              <div className="flex flex-wrap gap-1.5">
                 {suggestedQuestions.map((q) => (
-                  <button key={q} onClick={() => setInput(q)} className="px-3 py-2 rounded-xl glass text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-all">{q}</button>
+                  <button key={q} onClick={() => setInput(q)} className="px-3 py-1.5 rounded-lg border divider bg-white/[0.02] text-[11px] text-white/40 hover:text-white/60 hover:bg-white/[0.04] transition-colors">{q}</button>
                 ))}
               </div>
             </div>
           )}
 
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">{error}</div>
+            <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center">{error}</div>
           )}
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] sm:max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === "user" ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white rounded-br-sm" : "glass text-gray-200 rounded-bl-sm"}`}>
+              <div className={`max-w-[85%] sm:max-w-[70%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === "user" ? "bg-primary-600 text-white rounded-br-md" : "bg-white/[0.04] border divider text-white/70 rounded-bl-md"}`}>
                 {msg.content}
               </div>
             </div>
@@ -164,11 +152,11 @@ export default function ChatPage() {
 
           {isTyping && (
             <div className="flex justify-start">
-              <div className="glass px-4 py-3 rounded-2xl rounded-bl-sm">
-                <div className="flex gap-1.5">
-                  <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" />
-                  <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
-                  <span className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
+              <div className="bg-white/[0.04] border divider px-4 py-3 rounded-2xl rounded-bl-md">
+                <div className="flex gap-1">
+                  <span className="w-1.5 h-1.5 bg-white/30 rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
+                  <span className="w-1.5 h-1.5 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }} />
                 </div>
               </div>
             </div>
@@ -177,17 +165,17 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="px-4 sm:px-6 pb-4">
-          <div className="flex gap-2 items-end">
+        <div className="px-4 sm:px-6 pb-4 pt-2">
+          <div className="flex gap-2">
             <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()} placeholder="Ask your question..."
-              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 transition-colors" />
-            <button onClick={handleSend} disabled={isTyping} className="px-5 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-medium hover:from-primary-500 hover:to-mystic-500 transition-all disabled:opacity-50">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              className="flex-1 px-3.5 py-2.5 rounded-xl surface-input text-sm" />
+            <button onClick={handleSend} disabled={isTyping} className="px-4 py-2.5 rounded-xl btn-primary disabled:opacity-40">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
               </svg>
             </button>
           </div>
-          <p className="text-[10px] text-gray-600 text-center mt-2">AI predictions are for entertainment and guidance purposes only.</p>
+          <p className="text-[10px] text-white/15 text-center mt-2">AI predictions are for guidance and entertainment purposes only.</p>
         </div>
       </div>
     </div>

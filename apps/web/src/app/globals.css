@@ -1,64 +1,81 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #fdf4ff;
-  --color-primary-100: #fae8ff;
-  --color-primary-200: #f5d0fe;
-  --color-primary-300: #f0abfc;
-  --color-primary-400: #e879f9;
-  --color-primary-500: #d946ef;
-  --color-primary-600: #c026d3;
-  --color-primary-700: #a21caf;
-  --color-primary-800: #86198f;
-  --color-primary-900: #701a75;
+  /* Primary: Deep indigo-navy — authority, trust, depth */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
 
+  /* Accent: Warm amber/gold — celestial, premium, warmth */
   --color-accent-50: #fffbeb;
   --color-accent-100: #fef3c7;
   --color-accent-200: #fde68a;
   --color-accent-300: #fcd34d;
   --color-accent-400: #fbbf24;
   --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
 
-  --color-mystic-50: #eef2ff;
-  --color-mystic-100: #e0e7ff;
-  --color-mystic-200: #c7d2fe;
-  --color-mystic-300: #a5b4fc;
-  --color-mystic-400: #818cf8;
-  --color-mystic-500: #6366f1;
-  --color-mystic-600: #4f46e5;
-  --color-mystic-700: #4338ca;
-  --color-mystic-800: #3730a3;
-  --color-mystic-900: #312e81;
+  /* Surface: Cool slate tones for layering */
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
+  --color-surface-950: #020617;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
   body {
-    @apply bg-gray-950 text-gray-100 antialiased;
+    @apply bg-surface-950 text-surface-200 antialiased;
+  }
+
+  ::selection {
+    @apply bg-primary-600/30 text-white;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-400 via-accent-400 to-mystic-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent;
   }
 
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  .surface-card {
+    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl;
   }
 
-  .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  .surface-card-hover {
+    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200;
   }
 
-  .glow {
-    box-shadow: 0 0 40px rgba(217, 70, 239, 0.15),
-      0 0 80px rgba(99, 102, 241, 0.1);
+  .surface-input {
+    @apply bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/30 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-all duration-200;
   }
 
-  .glow-text {
-    text-shadow: 0 0 20px rgba(217, 70, 239, 0.5);
+  .btn-primary {
+    @apply bg-primary-600 text-white font-medium hover:bg-primary-500 active:bg-primary-700 transition-colors duration-150;
+  }
+
+  .btn-secondary {
+    @apply bg-white/[0.06] border border-white/[0.1] text-white font-medium hover:bg-white/[0.1] transition-colors duration-150;
+  }
+
+  .btn-accent {
+    @apply bg-accent-500 text-surface-950 font-medium hover:bg-accent-400 transition-colors duration-150;
+  }
+
+  .divider {
+    @apply border-white/[0.06];
   }
 }

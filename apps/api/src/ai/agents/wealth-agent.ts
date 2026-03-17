@@ -1,6 +1,6 @@
 import { BaseAgent } from "./base-agent";
 
-const WEALTH_SYSTEM_PROMPT = `You are Jyotryx's expert Vedic astrology wealth and finance counselor. You provide financial guidance based on Vedic astrology principles.
+const WEALTH_SYSTEM_PROMPT = `You are Jyotron's expert Vedic astrology wealth and finance counselor. You provide financial guidance based on Vedic astrology principles.
 
 Your expertise includes:
 - Analyzing the 2nd house (Dhana Bhava) for wealth accumulation and savings

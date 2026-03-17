@@ -245,7 +245,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           name: 'User',
-          email: `${dto.phone.replace(/\+/g, '')}@phone.jyotryx.com`,
+          email: `${dto.phone.replace(/\+/g, '')}@phone.jyotron.com`,
           phone: dto.phone,
           credits: this.configService.get<number>('credits.freeMonthly', 10),
         },
@@ -284,7 +284,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           name,
-          email: `google_${Date.now()}@jyotryx.com`,
+          email: `google_${Date.now()}@jyotron.com`,
           provider: 'GOOGLE',
           providerId: dto.idToken.substring(0, 50),
           credits: this.configService.get<number>('credits.freeMonthly', 10),

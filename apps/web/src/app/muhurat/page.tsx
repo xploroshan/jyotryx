@@ -81,21 +81,21 @@ export default function MuhuratPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-gray-300 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
             <span className="text-lg">📅</span>
             Auspicious Timing
           </div>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             <span className="text-gradient">Muhurat</span> Finder
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <p className="text-white/40 max-w-xl mx-auto">
             Find the most auspicious dates and times for important events based on Vedic astrology.
           </p>
         </div>
 
         {/* Purpose Selection */}
-        <div className="glass-card p-6 mb-6">
-          <h2 className="text-sm font-medium text-gray-400 mb-4">Select Purpose</h2>
+        <div className="surface-card p-6 mb-6">
+          <h2 className="text-sm font-medium text-white/40 mb-4">Select Purpose</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {purposes.map((p) => (
               <button
@@ -103,8 +103,8 @@ export default function MuhuratPage() {
                 onClick={() => setSelectedPurpose(p.id)}
                 className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   selectedPurpose === p.id
-                    ? "glass bg-white/10 text-white border-primary-500/50"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-white/[0.06] border border-white/[0.06] text-white border-primary-500/50"
+                    : "text-white/40 hover:text-white hover:bg-white/[0.03]"
                 }`}
               >
                 <span className="text-lg">{p.icon}</span>
@@ -115,34 +115,34 @@ export default function MuhuratPage() {
         </div>
 
         {/* Date Range & Location */}
-        <div className="glass-card p-6 mb-6">
+        <div className="surface-card p-6 mb-6">
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-2">From Date</label>
+              <label className="block text-xs text-white/30 mb-2">From Date</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500"
+                className="w-full px-4 py-3 rounded-xl surface-input"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-2">To Date</label>
+              <label className="block text-xs text-white/30 mb-2">To Date</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary-500"
+                className="w-full px-4 py-3 rounded-xl surface-input"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-2">Location</label>
+              <label className="block text-xs text-white/30 mb-2">Location</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Mumbai, India"
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500"
+                className="w-full px-4 py-3 rounded-xl surface-input"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function MuhuratPage() {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white font-medium hover:from-primary-500 hover:to-mystic-500 transition-all disabled:opacity-50"
+            className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50"
           >
             {loading ? "Finding Muhurat..." : "Find Auspicious Times"}
           </button>
@@ -165,22 +165,22 @@ export default function MuhuratPage() {
         {/* Results */}
         {result && (
           <div>
-            <h2 className="text-xl font-display font-bold text-gradient mb-4">
+            <h2 className="text-xl font-bold text-gradient mb-4">
               Auspicious Times for {purposes.find((p) => p.id === selectedPurpose)?.label}
             </h2>
 
             {result.auspiciousTimes.length === 0 ? (
-              <div className="glass-card p-8 text-center text-gray-500">
+              <div className="surface-card p-8 text-center text-white/30">
                 No auspicious times found in the selected date range. Try a wider range.
               </div>
             ) : (
               <div className="space-y-4">
                 {result.auspiciousTimes.map((time, i) => (
-                  <div key={i} className="glass-card p-6">
+                  <div key={i} className="surface-card p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <p className="text-lg font-display font-bold text-white">
+                          <p className="text-lg font-bold text-white">
                             {new Date(time.date).toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                           </p>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${qualityColor(time.quality)}`}>
@@ -190,7 +190,7 @@ export default function MuhuratPage() {
                         <p className="text-sm text-primary-400 font-medium mb-1">
                           {time.startTime} - {time.endTime}
                         </p>
-                        <p className="text-sm text-gray-400">{time.reason}</p>
+                        <p className="text-sm text-white/40">{time.reason}</p>
                       </div>
                     </div>
                   </div>

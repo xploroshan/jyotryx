@@ -7,13 +7,13 @@ async function main() {
   console.log('Seeding database...');
 
   // Create admin user
-  const adminPassword = await bcrypt.hash('admin@jyotryx2024', 10);
+  const adminPassword = await bcrypt.hash('admin@jyotron2024', 10);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@jyotryx.com' },
+    where: { email: 'admin@jyotron.com' },
     update: {},
     create: {
-      email: 'admin@jyotryx.com',
-      name: 'Jyotryx Admin',
+      email: 'admin@jyotron.com',
+      name: 'Jyotron Admin',
       passwordHash: adminPassword,
       role: Role.ADMIN,
       credits: 9999,
@@ -26,10 +26,10 @@ async function main() {
   // Create a demo user
   const demoPassword = await bcrypt.hash('demo@1234', 10);
   const demo = await prisma.user.upsert({
-    where: { email: 'demo@jyotryx.com' },
+    where: { email: 'demo@jyotron.com' },
     update: {},
     create: {
-      email: 'demo@jyotryx.com',
+      email: 'demo@jyotron.com',
       name: 'Demo User',
       passwordHash: demoPassword,
       role: Role.USER,

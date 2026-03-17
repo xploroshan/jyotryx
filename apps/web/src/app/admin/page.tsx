@@ -115,7 +115,7 @@ type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" |
 
 function Badge({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "danger" | "purple" | "blue" }) {
   const colors = {
-    default: "bg-white/5 text-gray-400",
+    default: "bg-white/[0.03] text-white/40",
     success: "bg-emerald-500/20 text-emerald-400",
     warning: "bg-amber-500/20 text-amber-400",
     danger: "bg-red-500/20 text-red-400",
@@ -189,32 +189,32 @@ function EditUserModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-card w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="surface-card w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-display font-bold text-white">Edit User</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">&times;</button>
+          <h3 className="text-lg font-bold text-white">Edit User</h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white text-xl">&times;</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Name</label>
+            <label className="block text-xs text-white/30 mb-1">Name</label>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-500" />
+              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Email</label>
+            <label className="block text-xs text-white/30 mb-1">Email</label>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-500" />
+              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Phone</label>
+              <label className="block text-xs text-white/30 mb-1">Phone</label>
               <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-500" />
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Gender</label>
+              <label className="block text-xs text-white/30 mb-1">Gender</label>
               <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm focus:outline-none focus:border-primary-500">
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm focus:outline-none focus:border-primary-500">
                 <option value="">Not set</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -224,24 +224,24 @@ function EditUserModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Role</label>
+              <label className="block text-xs text-white/30 mb-1">Role</label>
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm focus:outline-none focus:border-primary-500">
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm focus:outline-none focus:border-primary-500">
                 <option value="USER">User</option>
                 <option value="PREMIUM">Premium</option>
                 <option value="ADMIN">Admin</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Credits</label>
+              <label className="block text-xs text-white/30 mb-1">Credits</label>
               <input type="number" value={form.credits} onChange={(e) => setForm({ ...form, credits: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary-500" />
+                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Language</label>
+            <label className="block text-xs text-white/30 mb-1">Language</label>
             <select value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm focus:outline-none focus:border-primary-500">
+              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm focus:outline-none focus:border-primary-500">
               <option value="en">English</option>
               <option value="hi">Hindi</option>
               <option value="ta">Tamil</option>
@@ -253,10 +253,10 @@ function EditUserModal({
           </div>
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-mystic-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+              className="flex-1 py-2.5 rounded-xl btn-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
               {saving ? "Saving..." : "Save Changes"}
             </button>
-            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl glass text-sm text-gray-300 hover:bg-white/10">Cancel</button>
+            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl surface-card text-sm text-white/60 hover:bg-white/10">Cancel</button>
           </div>
         </form>
       </div>
@@ -301,7 +301,7 @@ function UserDetailPanel({
 
   if (loading) {
     return (
-      <div className="glass-card p-8 flex items-center justify-center">
+      <div className="surface-card p-8 flex items-center justify-center">
         <svg className="w-6 h-6 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -310,7 +310,7 @@ function UserDetailPanel({
     );
   }
 
-  if (!detail) return <div className="glass-card p-6 text-red-400 text-sm">Failed to load user details.</div>;
+  if (!detail) return <div className="surface-card p-6 text-red-400 text-sm">Failed to load user details.</div>;
 
   const detailTabs = [
     { id: "overview" as const, label: "Overview" },
@@ -322,22 +322,22 @@ function UserDetailPanel({
   ];
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="surface-card overflow-hidden">
       {/* Header */}
-      <div className="p-6 border-b border-white/10">
+      <div className="p-6 border-b border-white/[0.06]">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h3 className="text-xl font-display font-bold text-white">{detail.name}</h3>
+              <h3 className="text-xl font-bold text-white">{detail.name}</h3>
               {roleBadge(detail.role)}
             </div>
-            <p className="text-sm text-gray-400">{detail.email}</p>
-            {detail.phone && <p className="text-sm text-gray-500">{detail.phone}</p>}
+            <p className="text-sm text-white/40">{detail.email}</p>
+            {detail.phone && <p className="text-sm text-white/30">{detail.phone}</p>}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => onEdit(detail)} className="px-3 py-1.5 rounded-lg glass text-xs text-primary-400 hover:bg-white/10">Edit</button>
+            <button onClick={() => onEdit(detail)} className="px-3 py-1.5 rounded-lg surface-card text-xs text-primary-400 hover:bg-white/10">Edit</button>
             <button onClick={() => onDelete(detail.id)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-xs text-red-400 hover:bg-red-500/20">Delete</button>
-            <button onClick={onClose} className="px-3 py-1.5 rounded-lg glass text-xs text-gray-400 hover:bg-white/10">&times; Close</button>
+            <button onClick={onClose} className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/40 hover:bg-white/10">&times; Close</button>
           </div>
         </div>
 
@@ -354,7 +354,7 @@ function UserDetailPanel({
           ].map((s) => (
             <div key={s.label} className="text-center">
               <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-[10px] text-gray-500">{s.label}</p>
+              <p className="text-[10px] text-white/30">{s.label}</p>
             </div>
           ))}
         </div>
@@ -364,7 +364,7 @@ function UserDetailPanel({
       <div className="flex gap-1 px-4 pt-3 overflow-x-auto">
         {detailTabs.map((t) => (
           <button key={t.id} onClick={() => setDetailTab(t.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${detailTab === t.id ? "bg-primary-600/30 text-primary-400" : "text-gray-500 hover:text-gray-300"}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${detailTab === t.id ? "bg-primary-600/30 text-primary-400" : "text-white/30 hover:text-white/60"}`}>
             {t.label}
           </button>
         ))}
@@ -383,9 +383,9 @@ function UserDetailPanel({
               { label: "Joined", value: formatDateTime(detail.createdAt) },
               { label: "Last Updated", value: formatDateTime(detail.updatedAt) },
             ].map((item) => (
-              <div key={item.label} className="flex justify-between p-3 rounded-lg bg-white/5">
-                <span className="text-xs text-gray-500">{item.label}</span>
-                <span className="text-sm text-gray-300">{item.value}</span>
+              <div key={item.label} className="flex justify-between p-3 rounded-lg bg-white/[0.03]">
+                <span className="text-xs text-white/30">{item.label}</span>
+                <span className="text-sm text-white/60">{item.value}</span>
               </div>
             ))}
           </div>
@@ -394,16 +394,16 @@ function UserDetailPanel({
         {detailTab === "subscriptions" && (
           <div className="space-y-3">
             {detail.subscriptions.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-6">No subscriptions</p>
+              <p className="text-white/30 text-sm text-center py-6">No subscriptions</p>
             ) : (
               detail.subscriptions.map((sub) => (
-                <div key={sub.id} className="p-4 rounded-lg bg-white/5 flex items-center justify-between">
+                <div key={sub.id} className="p-4 rounded-lg bg-white/[0.03] flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-white">{sub.plan} Plan</span>
                       {statusBadge(sub.status)}
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-white/30">
                       {formatDate(sub.startDate)} {sub.endDate ? ` - ${formatDate(sub.endDate)}` : " - Ongoing"}
                     </p>
                   </div>
@@ -422,15 +422,15 @@ function UserDetailPanel({
         {detailTab === "payments" && (
           <div className="overflow-x-auto">
             {detail.recentPayments.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-6">No payments</p>
+              <p className="text-white/30 text-sm text-center py-6">No payments</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Amount</th>
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Status</th>
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Type</th>
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Date</th>
+                  <tr className="border-b border-white/[0.06]">
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Amount</th>
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Status</th>
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Type</th>
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -438,8 +438,8 @@ function UserDetailPanel({
                     <tr key={p.id} className="border-b border-white/5">
                       <td className="px-3 py-2 text-white">{formatCurrency(p.amount)}</td>
                       <td className="px-3 py-2">{statusBadge(p.status)}</td>
-                      <td className="px-3 py-2 text-gray-400">{p.type}</td>
-                      <td className="px-3 py-2 text-gray-500 text-xs">{formatDate(p.createdAt)}</td>
+                      <td className="px-3 py-2 text-white/40">{p.type}</td>
+                      <td className="px-3 py-2 text-white/30 text-xs">{formatDate(p.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -451,15 +451,15 @@ function UserDetailPanel({
         {detailTab === "chats" && (
           <div className="space-y-2">
             {detail.recentChats.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-6">No chat sessions</p>
+              <p className="text-white/30 text-sm text-center py-6">No chat sessions</p>
             ) : (
               detail.recentChats.map((c) => (
-                <div key={c.id} className="p-3 rounded-lg bg-white/5 flex items-center justify-between">
+                <div key={c.id} className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between">
                   <div>
                     <p className="text-sm text-white">{c.title}</p>
-                    <p className="text-xs text-gray-500">{c.category} &middot; {c.messageCount} messages</p>
+                    <p className="text-xs text-white/30">{c.category} &middot; {c.messageCount} messages</p>
                   </div>
-                  <span className="text-xs text-gray-500">{formatDate(c.updatedAt)}</span>
+                  <span className="text-xs text-white/30">{formatDate(c.updatedAt)}</span>
                 </div>
               ))
             )}
@@ -469,15 +469,15 @@ function UserDetailPanel({
         {detailTab === "credits" && (
           <div className="overflow-x-auto">
             {detail.creditTransactions.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-6">No credit transactions</p>
+              <p className="text-white/30 text-sm text-center py-6">No credit transactions</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Amount</th>
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Type</th>
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Description</th>
-                    <th className="text-left px-3 py-2 text-xs text-gray-500">Date</th>
+                  <tr className="border-b border-white/[0.06]">
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Amount</th>
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Type</th>
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Description</th>
+                    <th className="text-left px-3 py-2 text-xs text-white/30">Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -486,9 +486,9 @@ function UserDetailPanel({
                       <td className={`px-3 py-2 font-medium ${t.amount > 0 ? "text-emerald-400" : "text-red-400"}`}>
                         {t.amount > 0 ? "+" : ""}{t.amount}
                       </td>
-                      <td className="px-3 py-2 text-gray-400">{t.type.replace(/_/g, " ")}</td>
-                      <td className="px-3 py-2 text-gray-500 text-xs">{t.description || "-"}</td>
-                      <td className="px-3 py-2 text-gray-500 text-xs">{formatDateTime(t.createdAt)}</td>
+                      <td className="px-3 py-2 text-white/40">{t.type.replace(/_/g, " ")}</td>
+                      <td className="px-3 py-2 text-white/30 text-xs">{t.description || "-"}</td>
+                      <td className="px-3 py-2 text-white/30 text-xs">{formatDateTime(t.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -500,18 +500,18 @@ function UserDetailPanel({
         {detailTab === "reports" && (
           <div className="space-y-2">
             {detail.reports.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-6">No reports generated</p>
+              <p className="text-white/30 text-sm text-center py-6">No reports generated</p>
             ) : (
               detail.reports.map((r) => (
-                <div key={r.id} className="p-3 rounded-lg bg-white/5 flex items-center justify-between">
+                <div key={r.id} className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-white">{r.type} Report</span>
                       {statusBadge(r.status)}
                     </div>
-                    <p className="text-xs text-gray-500">{formatCurrency(r.price)}</p>
+                    <p className="text-xs text-white/30">{formatCurrency(r.price)}</p>
                   </div>
-                  <span className="text-xs text-gray-500">{formatDate(r.createdAt)}</span>
+                  <span className="text-xs text-white/30">{formatDate(r.createdAt)}</span>
                 </div>
               ))
             )}
@@ -590,13 +590,13 @@ function ActivityTab({ token }: { token: string }) {
       <div className="mt-2 space-y-1">
         {Array.from(allKeys).map((key) => (
           <div key={key} className="text-xs flex items-center gap-2">
-            <span className="text-gray-500 w-20 shrink-0">{key}:</span>
+            <span className="text-white/30 w-20 shrink-0">{key}:</span>
             {prev?.[key] !== undefined && (
               <span className="text-red-400 line-through">{String(prev[key])}</span>
             )}
             {next?.[key] !== undefined && (
               <>
-                <span className="text-gray-600">&rarr;</span>
+                <span className="text-white/20">&rarr;</span>
                 <span className="text-emerald-400">{String(next[key])}</span>
               </>
             )}
@@ -611,9 +611,9 @@ function ActivityTab({ token }: { token: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-display font-bold text-gradient">Activity Log</h2>
+        <h2 className="text-xl font-bold text-gradient">Activity Log</h2>
         <select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm">
+          className="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm">
           <option value="">All Actions</option>
           <option value="USER_UPDATE">User Updates</option>
           <option value="USER_DELETE">User Deletions</option>
@@ -629,7 +629,7 @@ function ActivityTab({ token }: { token: string }) {
         </div>
       )}
 
-      <p className="text-sm text-gray-500 mb-4">{total} total actions recorded</p>
+      <p className="text-sm text-white/30 mb-4">{total} total actions recorded</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -639,18 +639,18 @@ function ActivityTab({ token }: { token: string }) {
           </svg>
         </div>
       ) : logs.length === 0 ? (
-        <div className="glass-card p-8 text-center text-gray-500">
+        <div className="surface-card p-8 text-center text-white/30">
           <p className="text-lg mb-2">No activity logged yet</p>
           <p className="text-sm">Admin actions like user edits, deletions, and subscription changes will appear here.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {logs.map((log) => (
-            <div key={log.id} className={`glass-card p-4 ${log.undone ? "opacity-60" : ""}`}>
+            <div key={log.id} className={`surface-card p-4 ${log.undone ? "opacity-60" : ""}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${actionColors[log.action] || "text-gray-400 bg-white/5"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${actionColors[log.action] || "text-white/40 bg-white/[0.03]"}`}>
                       {actionLabels[log.action] || log.action}
                     </span>
                     {log.undone && <Badge variant="warning">UNDONE</Badge>}
@@ -658,7 +658,7 @@ function ActivityTab({ token }: { token: string }) {
                   <p className="text-sm text-white">
                     {log.entityType}: <span className="text-primary-400">{log.entityLabel || log.entityId}</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-white/30 mt-1">
                     by {log.adminEmail} &middot; {formatDateTime(log.createdAt)}
                     {log.undone && log.undoneAt && <span> &middot; Undone at {formatDateTime(log.undoneAt)}</span>}
                   </p>
@@ -683,10 +683,10 @@ function ActivityTab({ token }: { token: string }) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
-            className="px-3 py-1.5 rounded-lg glass text-xs text-gray-300 disabled:opacity-30">Prev</button>
-          <span className="text-sm text-gray-400">Page {page} of {totalPages}</span>
+            className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Prev</button>
+          <span className="text-sm text-white/40">Page {page} of {totalPages}</span>
           <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}
-            className="px-3 py-1.5 rounded-lg glass text-xs text-gray-300 disabled:opacity-30">Next</button>
+            className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Next</button>
         </div>
       )}
     </div>
@@ -850,24 +850,24 @@ export default function AdminPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-gray-950 to-gray-950" />
+      <div className="absolute inset-0 bg-surface-950" />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold text-gradient">Admin Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">Manage your Jyotryx platform</p>
+            <h1 className="text-3xl font-bold text-gradient">Admin Dashboard</h1>
+            <p className="text-white/40 text-sm mt-1">Manage your Jyotron platform</p>
           </div>
-          <div className="glass px-4 py-2 rounded-xl text-sm text-gray-300">
+          <div className="surface-card px-4 py-2 rounded-xl text-sm text-white/60">
             Logged in as <span className="text-primary-400 font-medium">{user?.name}</span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 rounded-xl bg-white/5 p-1 w-fit overflow-x-auto">
+        <div className="flex gap-2 mb-8 rounded-xl bg-white/[0.03] p-1 w-fit overflow-x-auto">
           {tabs.map((tab) => (
             <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedUserId(null); }}
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? "bg-gradient-to-r from-primary-600 to-mystic-600 text-white" : "text-gray-400 hover:text-white"}`}>
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? "btn-primary text-white" : "text-white/40 hover:text-white"}`}>
               <span>{tab.icon}</span> {tab.label}
             </button>
           ))}
@@ -918,9 +918,9 @@ export default function AdminPage() {
                     { label: "Payments", value: stats.totalPayments, color: "text-emerald-400", icon: "\uD83D\uDCB3" },
                     { label: "Active Subs", value: stats.activeSubscriptions, color: "text-cyan-400", icon: "\u2728" },
                   ].map((stat) => (
-                    <div key={stat.label} className="glass-card p-6">
+                    <div key={stat.label} className="surface-card p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs text-gray-500">{stat.label}</p>
+                        <p className="text-xs text-white/30">{stat.label}</p>
                         <span className="text-lg">{stat.icon}</span>
                       </div>
                       <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -928,23 +928,23 @@ export default function AdminPage() {
                   ))}
                 </div>
 
-                <h2 className="text-lg font-display font-bold text-white mb-4">Quick Actions</h2>
+                <h2 className="text-lg font-bold text-white mb-4">Quick Actions</h2>
                 <div className="grid sm:grid-cols-4 gap-4">
-                  <button onClick={() => setActiveTab("users")} className="glass-card p-4 text-left hover:bg-white/10 transition-all">
+                  <button onClick={() => setActiveTab("users")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
                     <p className="text-sm font-medium text-white">Manage Users</p>
-                    <p className="text-xs text-gray-500 mt-1">View, edit, delete users</p>
+                    <p className="text-xs text-white/30 mt-1">View, edit, delete users</p>
                   </button>
-                  <button onClick={() => setActiveTab("activity")} className="glass-card p-4 text-left hover:bg-white/10 transition-all">
+                  <button onClick={() => setActiveTab("activity")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
                     <p className="text-sm font-medium text-white">Activity Log</p>
-                    <p className="text-xs text-gray-500 mt-1">Track and undo changes</p>
+                    <p className="text-xs text-white/30 mt-1">Track and undo changes</p>
                   </button>
-                  <button onClick={() => setActiveTab("ai")} className="glass-card p-4 text-left hover:bg-white/10 transition-all">
+                  <button onClick={() => setActiveTab("ai")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
                     <p className="text-sm font-medium text-white">AI Agent Status</p>
-                    <p className="text-xs text-gray-500 mt-1">Monitor 8 active agents</p>
+                    <p className="text-xs text-white/30 mt-1">Monitor 8 active agents</p>
                   </button>
-                  <button onClick={() => setActiveTab("analytics")} className="glass-card p-4 text-left hover:bg-white/10 transition-all">
+                  <button onClick={() => setActiveTab("analytics")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
                     <p className="text-sm font-medium text-white">View Analytics</p>
-                    <p className="text-xs text-gray-500 mt-1">Platform usage metrics</p>
+                    <p className="text-xs text-white/30 mt-1">Platform usage metrics</p>
                   </button>
                 </div>
               </div>
@@ -953,7 +953,7 @@ export default function AdminPage() {
             {/* Analytics Tab */}
             {activeTab === "analytics" && (
               <div>
-                <h2 className="text-xl font-display font-bold text-gradient mb-6">Platform Analytics</h2>
+                <h2 className="text-xl font-bold text-gradient mb-6">Platform Analytics</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                   {[
                     { label: "Avg. Sessions/Day", value: "342", change: "+12%", positive: true },
@@ -963,8 +963,8 @@ export default function AdminPage() {
                     { label: "User Retention (7d)", value: "68%", change: "+3%", positive: true },
                     { label: "Conversion Rate", value: "4.2%", change: "-0.3%", positive: false },
                   ].map((m) => (
-                    <div key={m.label} className="glass-card p-5">
-                      <p className="text-xs text-gray-500 mb-1">{m.label}</p>
+                    <div key={m.label} className="surface-card p-5">
+                      <p className="text-xs text-white/30 mb-1">{m.label}</p>
                       <div className="flex items-end gap-2">
                         <p className="text-2xl font-bold text-white">{m.value}</p>
                         <span className={`text-xs font-medium mb-1 ${m.positive ? "text-emerald-400" : "text-red-400"}`}>{m.change}</span>
@@ -973,8 +973,8 @@ export default function AdminPage() {
                   ))}
                 </div>
 
-                <h3 className="text-lg font-display font-bold text-white mb-4">Feature Usage Breakdown</h3>
-                <div className="glass-card p-6 mb-8">
+                <h3 className="text-lg font-bold text-white mb-4">Feature Usage Breakdown</h3>
+                <div className="surface-card p-6 mb-8">
                   {[
                     { feature: "AI Chat", pct: 35, color: "from-blue-500 to-cyan-500" },
                     { feature: "Horoscope", pct: 25, color: "from-yellow-500 to-amber-500" },
@@ -985,8 +985,8 @@ export default function AdminPage() {
                     { feature: "Muhurat", pct: 3, color: "from-teal-500 to-cyan-500" },
                   ].map((f) => (
                     <div key={f.feature} className="flex items-center gap-4 mb-3 last:mb-0">
-                      <span className="text-sm text-gray-400 w-20">{f.feature}</span>
-                      <div className="flex-1 h-3 bg-white/5 rounded-full overflow-hidden">
+                      <span className="text-sm text-white/40 w-20">{f.feature}</span>
+                      <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden">
                         <div className={`h-full bg-gradient-to-r ${f.color} rounded-full transition-all`} style={{ width: `${f.pct}%` }} />
                       </div>
                       <span className="text-sm font-medium text-white w-10 text-right">{f.pct}%</span>
@@ -994,18 +994,18 @@ export default function AdminPage() {
                   ))}
                 </div>
 
-                <h3 className="text-lg font-display font-bold text-white mb-4">Revenue Trend (Last 7 Days)</h3>
-                <div className="glass-card p-6">
+                <h3 className="text-lg font-bold text-white mb-4">Revenue Trend (Last 7 Days)</h3>
+                <div className="surface-card p-6">
                   <div className="flex items-end gap-2 h-40">
                     {[4200, 3800, 5100, 4700, 6200, 5800, 7100].map((val, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1">
                         <div className="w-full bg-gradient-to-t from-primary-600 to-mystic-500 rounded-t-lg transition-all" style={{ height: `${(val / 7100) * 100}%` }} />
-                        <span className="text-[10px] text-gray-500">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</span>
+                        <span className="text-[10px] text-white/30">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-                    <span className="text-sm text-gray-400">Weekly Total</span>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
+                    <span className="text-sm text-white/40">Weekly Total</span>
                     <span className="text-lg font-bold text-gradient">{formatCurrency(36900)}</span>
                   </div>
                 </div>
@@ -1018,11 +1018,11 @@ export default function AdminPage() {
                 {/* Search bar */}
                 <div className="flex gap-4 mb-6">
                   <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, email, or phone..."
-                    className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-primary-500"
+                    className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/20 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20"
                     onKeyDown={(e) => { if (e.key === "Enter") { setUserPage(1); loadData(); } }} />
-                  <button onClick={() => { setUserPage(1); loadData(); }} className="px-5 py-2.5 rounded-xl glass text-sm text-primary-400 hover:bg-white/10">Search</button>
+                  <button onClick={() => { setUserPage(1); loadData(); }} className="px-5 py-2.5 rounded-xl surface-card text-sm text-primary-400 hover:bg-white/10">Search</button>
                 </div>
-                <p className="text-sm text-gray-500 mb-4">{userTotal} users total</p>
+                <p className="text-sm text-white/30 mb-4">{userTotal} users total</p>
 
                 {/* User detail panel (when selected) */}
                 {selectedUserId && (
@@ -1039,28 +1039,28 @@ export default function AdminPage() {
                 )}
 
                 {/* Users table */}
-                <div className="glass-card overflow-hidden">
+                <div className="surface-card overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-white/10">
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Name</th>
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Email</th>
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Role</th>
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Credits</th>
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Subscription</th>
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Joined</th>
-                          <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Actions</th>
+                        <tr className="border-b border-white/[0.06]">
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Name</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Email</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Role</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Credits</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Subscription</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Joined</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {users.map((u) => (
-                          <tr key={u.id} className={`border-b border-white/5 hover:bg-white/5 cursor-pointer ${selectedUserId === u.id ? "bg-primary-600/10" : ""}`}
+                          <tr key={u.id} className={`border-b border-white/5 hover:bg-white/[0.03] cursor-pointer ${selectedUserId === u.id ? "bg-primary-600/10" : ""}`}
                             onClick={() => setSelectedUserId(u.id === selectedUserId ? null : u.id)}>
                             <td className="px-4 py-3 text-white font-medium">{u.name}</td>
-                            <td className="px-4 py-3 text-gray-300">{u.email}</td>
+                            <td className="px-4 py-3 text-white/60">{u.email}</td>
                             <td className="px-4 py-3">{roleBadge(u.role)}</td>
-                            <td className="px-4 py-3 text-gray-300">{u.credits}</td>
+                            <td className="px-4 py-3 text-white/60">{u.credits}</td>
                             <td className="px-4 py-3">
                               {u.subscriptionPlan ? (
                                 <div className="flex items-center gap-1">
@@ -1068,14 +1068,14 @@ export default function AdminPage() {
                                   {u.subscriptionStatus && statusBadge(u.subscriptionStatus)}
                                 </div>
                               ) : (
-                                <span className="text-xs text-gray-600">Free</span>
+                                <span className="text-xs text-white/20">Free</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(u.createdAt)}</td>
+                            <td className="px-4 py-3 text-white/30 text-xs">{formatDate(u.createdAt)}</td>
                             <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-2">
                                 <select onChange={(e) => handleQuickRoleChange(u.id, e.target.value)} value={u.role}
-                                  className="text-xs px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                                  className="text-xs px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60">
                                   <option value="USER">User</option>
                                   <option value="PREMIUM">Premium</option>
                                   <option value="ADMIN">Admin</option>
@@ -1086,7 +1086,7 @@ export default function AdminPage() {
                           </tr>
                         ))}
                         {users.length === 0 && (
-                          <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No users found</td></tr>
+                          <tr><td colSpan={7} className="px-4 py-8 text-center text-white/30">No users found</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -1097,10 +1097,10 @@ export default function AdminPage() {
                 {userTotalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-4">
                     <button onClick={() => setUserPage(Math.max(1, userPage - 1))} disabled={userPage === 1}
-                      className="px-3 py-1.5 rounded-lg glass text-xs text-gray-300 disabled:opacity-30">Prev</button>
-                    <span className="text-sm text-gray-400">Page {userPage} of {userTotalPages}</span>
+                      className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Prev</button>
+                    <span className="text-sm text-white/40">Page {userPage} of {userTotalPages}</span>
                     <button onClick={() => setUserPage(Math.min(userTotalPages, userPage + 1))} disabled={userPage === userTotalPages}
-                      className="px-3 py-1.5 rounded-lg glass text-xs text-gray-300 disabled:opacity-30">Next</button>
+                      className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Next</button>
                   </div>
                 )}
               </div>
@@ -1113,30 +1113,30 @@ export default function AdminPage() {
 
             {/* Payments */}
             {activeTab === "payments" && (
-              <div className="glass-card overflow-hidden">
+              <div className="surface-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">User</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Amount</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Status</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Type</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Date</th>
+                      <tr className="border-b border-white/[0.06]">
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">User</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Amount</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Status</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Type</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Date</th>
                       </tr>
                     </thead>
                     <tbody>
                       {payments.map((p: any) => (
-                        <tr key={p.id} className="border-b border-white/5 hover:bg-white/5">
-                          <td className="px-4 py-3 text-white">{p.userName}<br /><span className="text-xs text-gray-500">{p.userEmail}</span></td>
-                          <td className="px-4 py-3 text-gray-300">{formatCurrency(p.amount)}</td>
+                        <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.03]">
+                          <td className="px-4 py-3 text-white">{p.userName}<br /><span className="text-xs text-white/30">{p.userEmail}</span></td>
+                          <td className="px-4 py-3 text-white/60">{formatCurrency(p.amount)}</td>
                           <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                          <td className="px-4 py-3 text-gray-400">{p.type}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(p.createdAt)}</td>
+                          <td className="px-4 py-3 text-white/40">{p.type}</td>
+                          <td className="px-4 py-3 text-white/30 text-xs">{formatDate(p.createdAt)}</td>
                         </tr>
                       ))}
                       {payments.length === 0 && (
-                        <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No payments yet</td></tr>
+                        <tr><td colSpan={5} className="px-4 py-8 text-center text-white/30">No payments yet</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1146,30 +1146,30 @@ export default function AdminPage() {
 
             {/* Chats */}
             {activeTab === "chats" && (
-              <div className="glass-card overflow-hidden">
+              <div className="surface-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">User</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Title</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Category</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Messages</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-400">Last Active</th>
+                      <tr className="border-b border-white/[0.06]">
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">User</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Title</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Category</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Messages</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Last Active</th>
                       </tr>
                     </thead>
                     <tbody>
                       {chats.map((c: any) => (
-                        <tr key={c.id} className="border-b border-white/5 hover:bg-white/5">
-                          <td className="px-4 py-3 text-white">{c.userName}<br /><span className="text-xs text-gray-500">{c.userEmail}</span></td>
-                          <td className="px-4 py-3 text-gray-300">{c.title}</td>
+                        <tr key={c.id} className="border-b border-white/5 hover:bg-white/[0.03]">
+                          <td className="px-4 py-3 text-white">{c.userName}<br /><span className="text-xs text-white/30">{c.userEmail}</span></td>
+                          <td className="px-4 py-3 text-white/60">{c.title}</td>
                           <td className="px-4 py-3"><Badge>{c.category}</Badge></td>
-                          <td className="px-4 py-3 text-gray-300">{c.messageCount}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(c.updatedAt)}</td>
+                          <td className="px-4 py-3 text-white/60">{c.messageCount}</td>
+                          <td className="px-4 py-3 text-white/30 text-xs">{formatDate(c.updatedAt)}</td>
                         </tr>
                       ))}
                       {chats.length === 0 && (
-                        <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">No chats yet</td></tr>
+                        <tr><td colSpan={5} className="px-4 py-8 text-center text-white/30">No chats yet</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1180,60 +1180,60 @@ export default function AdminPage() {
             {/* AI Agents Management */}
             {activeTab === "ai" && (
               <div>
-                <h2 className="text-xl font-display font-bold text-gradient mb-6">AI Agent Management</h2>
+                <h2 className="text-xl font-bold text-gradient mb-6">AI Agent Management</h2>
                 <div className="grid sm:grid-cols-2 gap-4 mb-8">
                   {aiAgents.map((agent) => (
-                    <div key={agent.name} className="glass-card p-5">
+                    <div key={agent.name} className="surface-card p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-display font-bold text-white">{agent.name}</h3>
+                        <h3 className="font-bold text-white">{agent.name}</h3>
                         <Badge variant="success">{agent.status}</Badge>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Category</span>
-                          <span className="text-gray-300">{agent.category}</span>
+                          <span className="text-white/30">Category</span>
+                          <span className="text-white/60">{agent.category}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Model</span>
-                          <span className="text-gray-300">{agent.model}</span>
+                          <span className="text-white/30">Model</span>
+                          <span className="text-white/60">{agent.model}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Total Queries</span>
-                          <span className="text-gray-300">{agent.queries}</span>
+                          <span className="text-white/30">Total Queries</span>
+                          <span className="text-white/60">{agent.queries}</span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <h3 className="text-lg font-display font-bold text-white mb-4">AI Configuration</h3>
-                <div className="glass-card p-6">
+                <h3 className="text-lg font-bold text-white mb-4">AI Configuration</h3>
+                <div className="surface-card p-6">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Default Model</label>
-                      <select className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm">
+                      <label className="block text-xs text-white/30 mb-2">Default Model</label>
+                      <select className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm">
                         <option>gpt-4o</option>
                         <option>gpt-4o-mini</option>
                         <option>gpt-4-turbo</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Temperature</label>
+                      <label className="block text-xs text-white/30 mb-2">Temperature</label>
                       <input type="number" defaultValue={0.7} min={0} max={2} step={0.1}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm" />
+                        className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Max Tokens</label>
+                      <label className="block text-xs text-white/30 mb-2">Max Tokens</label>
                       <input type="number" defaultValue={2048}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm" />
+                        className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-2">Chat History Depth</label>
+                      <label className="block text-xs text-white/30 mb-2">Chat History Depth</label>
                       <input type="number" defaultValue={10}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm" />
+                        className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm" />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600 mt-4">Changes to AI configuration require a server restart to take effect. Update via environment variables.</p>
+                  <p className="text-xs text-white/20 mt-4">Changes to AI configuration require a server restart to take effect. Update via environment variables.</p>
                 </div>
               </div>
             )}
@@ -1241,44 +1241,44 @@ export default function AdminPage() {
             {/* Content Management */}
             {activeTab === "content" && (
               <div>
-                <h2 className="text-xl font-display font-bold text-gradient mb-6">Content Management</h2>
+                <h2 className="text-xl font-bold text-gradient mb-6">Content Management</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {contentSections.map((section) => (
-                    <div key={section.title} className="glass-card p-5">
-                      <h3 className="font-display font-bold text-white mb-1">{section.title}</h3>
-                      <p className="text-xs text-gray-400 mb-3">{section.desc}</p>
-                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                    <div key={section.title} className="surface-card p-5">
+                      <h3 className="font-bold text-white mb-1">{section.title}</h3>
+                      <p className="text-xs text-white/40 mb-3">{section.desc}</p>
+                      <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
                         <div>
                           <p className="text-lg font-bold text-gradient">{section.items}</p>
-                          <p className="text-[10px] text-gray-500">items</p>
+                          <p className="text-[10px] text-white/30">items</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Last updated</p>
-                          <p className="text-xs text-gray-300">{section.lastUpdated}</p>
+                          <p className="text-xs text-white/30">Last updated</p>
+                          <p className="text-xs text-white/60">{section.lastUpdated}</p>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <h3 className="text-lg font-display font-bold text-white mt-8 mb-4">Content Actions</h3>
-                <div className="glass-card p-6">
+                <h3 className="text-lg font-bold text-white mt-8 mb-4">Content Actions</h3>
+                <div className="surface-card p-6">
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
                       <p className="text-sm font-medium text-white mb-1">Refresh Panchang Data</p>
-                      <p className="text-xs text-gray-500">Update today&apos;s Tithi, Nakshatra, and timings</p>
+                      <p className="text-xs text-white/30">Update today&apos;s Tithi, Nakshatra, and timings</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
                       <p className="text-sm font-medium text-white mb-1">Update Knowledge Base</p>
-                      <p className="text-xs text-gray-500">Re-index RAG documents for AI agents</p>
+                      <p className="text-xs text-white/30">Re-index RAG documents for AI agents</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
                       <p className="text-sm font-medium text-white mb-1">Generate Weekly Horoscopes</p>
-                      <p className="text-xs text-gray-500">Batch generate horoscopes for all 12 signs</p>
+                      <p className="text-xs text-white/30">Batch generate horoscopes for all 12 signs</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
                       <p className="text-sm font-medium text-white mb-1">Export User Reports</p>
-                      <p className="text-xs text-gray-500">Download CSV of all generated reports</p>
+                      <p className="text-xs text-white/30">Download CSV of all generated reports</p>
                     </div>
                   </div>
                 </div>
