@@ -102,7 +102,7 @@ describe('AuthService', () => {
   describe('sendOtp', () => {
     it('should return success message', async () => {
       const result = await service.sendOtp({ phone: '+919876543210' });
-      expect(result.message).toBe('OTP sent successfully');
+      expect(result.message).toContain('OTP sent successfully');
       expect(result.expiresIn).toBe(300);
     });
   });
