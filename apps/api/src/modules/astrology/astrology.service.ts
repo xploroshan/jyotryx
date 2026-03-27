@@ -79,6 +79,9 @@ export interface HoroscopeResult {
   date: string;
   period: 'daily' | 'weekly' | 'monthly' | 'yearly';
   prediction: string;
+  career: string;
+  health: string;
+  love: string;
   luckyNumber: number;
   luckyColor: string;
   mood: string;
@@ -450,13 +453,18 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     };
 
     const aiPrediction = await this.callOpenAI(
-      `You are a Vedic astrologer. Generate a ${activePeriod} horoscope prediction for the given zodiac sign. Return a JSON object with:
-- prediction: string (${activePeriod === 'daily' ? '3-4' : '4-6'} sentences, specific and positive, referencing planetary transits)
-- luckyNumber: number (1-9)
-- luckyColor: string
-- mood: string (one word)
-- compatibility: string (most compatible sign)`,
-      `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Reference current planetary transits and provide specific, actionable guidance.`,
+      `You are an expert Vedic astrologer with deep knowledge of planetary transits, Nakshatras, and Dasha periods. Generate a ${activePeriod} horoscope prediction for the given zodiac sign. Return a JSON object with:
+- prediction: string (${activePeriod === 'daily' ? '3-4' : '5-7'} sentences, specific overview referencing current planetary positions and transits relevant to this sign)
+- career: string (${activePeriod === 'daily' ? '2-3' : '3-5'} sentences about career and financial outlook, referencing specific planetary influences on the 2nd, 6th, 10th houses)
+- health: string (${activePeriod === 'daily' ? '2-3' : '3-5'} sentences about health and wellness, referencing planetary effects on the 6th and 8th houses, suggest specific remedies or practices)
+- love: string (${activePeriod === 'daily' ? '2-3' : '3-5'} sentences about love and relationships, referencing Venus, 7th house lord, and relationship dynamics)
+- luckyNumber: number (1-9, based on ruling planet numerology)
+- luckyColor: string (based on the sign's ruling planet)
+- mood: string (one word reflecting dominant planetary energy)
+- compatibility: string (most compatible sign based on current transits)
+
+Make each section unique and specific to the sign. Avoid generic advice. Reference actual Vedic concepts like Nakshatras, Dashas, and planetary lordships.`,
+      `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Consider the sign's ruling planet, current planetary transits, and Nakshatra influences. Provide specific, actionable guidance unique to this sign.`,
     );
 
     if (aiPrediction) {
@@ -465,6 +473,9 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
         date: today,
         period: activePeriod,
         prediction: aiPrediction.prediction,
+        career: aiPrediction.career || `${formattedSign}'s professional sector is influenced by favorable planetary transits. Focus on strategic decisions and networking opportunities.`,
+        health: aiPrediction.health || `${formattedSign} benefits from mindful practices aligned with your ruling planet's energy. Pay attention to your body's signals and maintain a balanced routine.`,
+        love: aiPrediction.love || `Relationship dynamics are enhanced by Venus's current transit. ${formattedSign} can expect meaningful connections and deeper emotional bonds.`,
         luckyNumber: aiPrediction.luckyNumber,
         luckyColor: aiPrediction.luckyColor,
         mood: aiPrediction.mood,
@@ -524,11 +535,63 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     const moods = ['Optimistic', 'Energetic', 'Reflective', 'Confident', 'Creative', 'Peaceful', 'Adventurous'];
     const signs = ['Aries', 'Leo', 'Sagittarius', 'Gemini', 'Libra', 'Aquarius', 'Taurus', 'Cancer', 'Virgo', 'Scorpio', 'Capricorn', 'Pisces'];
 
+    // Sign-specific ruling planets and elements for accurate predictions
+    const signData: Record<string, { ruler: string; element: string; house: string }> = {
+      aries: { ruler: 'Mars', element: 'Fire', house: '1st' },
+      taurus: { ruler: 'Venus', element: 'Earth', house: '2nd' },
+      gemini: { ruler: 'Mercury', element: 'Air', house: '3rd' },
+      cancer: { ruler: 'Moon', element: 'Water', house: '4th' },
+      leo: { ruler: 'Sun', element: 'Fire', house: '5th' },
+      virgo: { ruler: 'Mercury', element: 'Earth', house: '6th' },
+      libra: { ruler: 'Venus', element: 'Air', house: '7th' },
+      scorpio: { ruler: 'Mars', element: 'Water', house: '8th' },
+      sagittarius: { ruler: 'Jupiter', element: 'Fire', house: '9th' },
+      capricorn: { ruler: 'Saturn', element: 'Earth', house: '10th' },
+      aquarius: { ruler: 'Saturn', element: 'Air', house: '11th' },
+      pisces: { ruler: 'Jupiter', element: 'Water', house: '12th' },
+    };
+
+    const sd = signData[sign.toLowerCase()] || signData.aries;
+    const periodLabel = activePeriod === 'daily' ? 'today' : `this ${activePeriod.replace('ly', '')}`;
+
+    const careerPredictions: string[] = [
+      `${sd.ruler}'s influence on your 10th house strengthens professional authority ${periodLabel}. ${formattedSign} natives may find new avenues for financial growth as Jupiter aspects your 2nd house. Negotiations and business deals are favored — trust your instincts on major career decisions.`,
+      `The ${sd.element} energy of ${formattedSign} combines with Mercury's transit to sharpen your analytical skills at work ${periodLabel}. Financial discipline pays off as Saturn steadies your 2nd house. A promotion or recognition may be on the horizon through consistent effort.`,
+      `${formattedSign}, ${sd.ruler}'s conjunction with the Sun illuminates your career path ${periodLabel}. Investments made now, particularly in ${sd.element === 'Earth' ? 'real estate or gold' : sd.element === 'Fire' ? 'technology or startups' : sd.element === 'Water' ? 'healthcare or education' : 'communication or media'}, show promise. Avoid impulsive financial decisions during Rahu Kaal hours.`,
+      `Professional networking yields unexpected rewards for ${formattedSign} ${periodLabel}. ${sd.ruler}'s trine to Jupiter expands your earning potential through collaborative ventures. The 6th house planetary transit supports overcoming workplace challenges with ease.`,
+      `${formattedSign}'s ruling planet ${sd.ruler} empowers your career sector with renewed ambition ${periodLabel}. Financial planning and budgeting are strongly supported by Saturn's disciplined gaze on your wealth house. A mentor or senior colleague may offer valuable guidance.`,
+      `Creative approaches to work challenges bring success for ${formattedSign} ${periodLabel}. Venus's aspect on your 10th house adds charm to professional interactions. Income from multiple sources is indicated — explore freelance or side opportunities.`,
+      `${sd.ruler}'s transit through your career house marks a period of steady professional growth for ${formattedSign} ${periodLabel}. The Nakshatra energy supports strategic thinking and long-term financial planning. Avoid lending money during this transit.`,
+    ];
+
+    const healthPredictions: string[] = [
+      `${formattedSign}'s vitality is governed by ${sd.ruler} ${periodLabel}, which strengthens your overall constitution. ${sd.element === 'Fire' ? 'Cooling pranayama like Sheetali and light cardio' : sd.element === 'Earth' ? 'Grounding yoga asanas like Tadasana and nature walks' : sd.element === 'Water' ? 'Swimming or gentle stretching with deep breathing' : 'Breathing exercises like Anulom Vilom and brisk walking'} are especially beneficial. Stay hydrated and avoid heavy meals during the afternoon hours.`,
+      `The Moon's transit affects your 6th house of health ${periodLabel}, ${formattedSign}. ${sd.element === 'Fire' ? 'Guard against acidity and inflammation — include cooling foods like cucumber and coconut water' : sd.element === 'Earth' ? 'Digestive health needs attention — favor warm, cooked foods and ginger tea' : sd.element === 'Water' ? 'Emotional well-being is key — practice meditation and limit caffeine intake' : 'Respiratory health is highlighted — practice deep breathing and avoid cold beverages'}. An evening walk under the stars aligns your energy with beneficial planetary vibrations.`,
+      `${sd.ruler}'s energy pattern suggests focusing on ${sd.element === 'Fire' ? 'managing body heat and stress through meditation' : sd.element === 'Earth' ? 'strengthening bones and joints through gentle exercise' : sd.element === 'Water' ? 'kidney and lymphatic health through adequate water intake' : 'nervous system balance through regular sleep patterns'} ${periodLabel}. ${formattedSign} natives benefit from chanting the ${sd.ruler === 'Mars' ? 'Mangal' : sd.ruler === 'Venus' ? 'Shukra' : sd.ruler === 'Mercury' ? 'Budha' : sd.ruler === 'Moon' ? 'Chandra' : sd.ruler === 'Sun' ? 'Surya' : sd.ruler === 'Jupiter' ? 'Guru' : 'Shani'} mantra for enhanced vitality.`,
+      `Physical energy levels are strong for ${formattedSign} ${periodLabel} thanks to ${sd.ruler}'s favorable transit. ${sd.element === 'Fire' ? 'Channel this energy into vigorous exercise but avoid overexertion in the heat' : sd.element === 'Earth' ? 'Steady, consistent workouts yield the best results — try weight training or hiking' : sd.element === 'Water' ? 'Water-based activities and yoga are ideal for balancing your constitution' : 'Group activities and outdoor sports align well with your elemental energy'}. Include turmeric milk before bed for restorative sleep.`,
+      `${formattedSign}, pay special attention to ${sd.element === 'Fire' ? 'head, eyes, and blood pressure' : sd.element === 'Earth' ? 'throat, skin, and digestive system' : sd.element === 'Water' ? 'chest, stomach, and emotional balance' : 'lungs, nervous system, and mental clarity'} ${periodLabel}. ${sd.ruler}'s aspect on your 8th house suggests building immunity through Ayurvedic herbs like Ashwagandha and Tulsi. Morning sun exposure for 15 minutes aligns your circadian rhythm.`,
+      `Wellness and self-care are highlighted for ${formattedSign} ${periodLabel}. The current Nakshatra supports detox and cleansing routines. ${sd.element === 'Fire' ? 'Avoid spicy foods and practice Shitali pranayama for cooling' : sd.element === 'Earth' ? 'Include more fiber and green vegetables in your diet' : sd.element === 'Water' ? 'Reduce salt intake and practice Jal Neti for sinus health' : 'Practice alternate nostril breathing for mental clarity'}. Rest and recovery are as important as activity.`,
+      `${sd.ruler} governs ${formattedSign}'s constitution ${periodLabel}, suggesting a focus on preventive health. Regular meal times and early sleep patterns amplify your natural vitality. ${sd.element === 'Fire' ? 'Aloe vera juice and pomegranate support your fiery metabolism' : sd.element === 'Earth' ? 'Root vegetables and whole grains nourish your earthly constitution' : sd.element === 'Water' ? 'Coconut water and fresh fruits support your fluid balance' : 'Light salads and herbal teas harmonize your airy nature'}. Avoid stress-inducing situations where possible.`,
+    ];
+
+    const lovePredictions: string[] = [
+      `Venus's influence on ${formattedSign}'s 7th house enhances romantic energy ${periodLabel}. ${sd.ruler}'s harmonious aspect brings warmth to existing relationships and magnetism for new connections. Communication with your partner flows naturally — express your feelings openly.`,
+      `${formattedSign}, the Moon's transit through your relationship sector deepens emotional bonds ${periodLabel}. ${sd.element === 'Fire' ? 'Your passionate nature attracts admirers — channel this energy into meaningful connections' : sd.element === 'Earth' ? 'Stability and loyalty define your romantic interactions — small gestures of love matter most' : sd.element === 'Water' ? 'Your intuitive understanding of your partner strengthens the bond — trust your emotional intelligence' : 'Intellectual conversations spark romance — share your ideas and listen actively'}. Singles may encounter someone through ${sd.element === 'Fire' ? 'social events or sports activities' : sd.element === 'Earth' ? 'work or community gatherings' : sd.element === 'Water' ? 'spiritual or artistic circles' : 'online platforms or intellectual forums'}.`,
+      `${sd.ruler}'s conjunction with Venus creates a potent romantic period for ${formattedSign} ${periodLabel}. Existing couples benefit from planning quality time together. The Nakshatra influence supports heartfelt conversations and resolving any lingering misunderstandings. Family relationships also experience harmony.`,
+      `Relationship dynamics are evolving positively for ${formattedSign} ${periodLabel}. Jupiter's benevolent gaze on your 7th house expands your capacity for love and understanding. ${sd.element === 'Fire' ? 'Surprise your partner with a spontaneous gesture' : sd.element === 'Earth' ? 'Create a comfortable, nurturing environment for your loved ones' : sd.element === 'Water' ? 'Share your dreams and innermost feelings with your partner' : 'Engage in stimulating activities together to strengthen your bond'}.`,
+      `${formattedSign}, your natural ${sd.element === 'Fire' ? 'passion and enthusiasm' : sd.element === 'Earth' ? 'devotion and reliability' : sd.element === 'Water' ? 'empathy and emotional depth' : 'wit and adaptability'} is amplified ${periodLabel} by ${sd.ruler}'s favorable position. This is an excellent time for deepening commitments or taking relationships to the next level. Trust the cosmic timing for matters of the heart.`,
+      `Love and harmony surround ${formattedSign} ${periodLabel} as Venus transits your Nakshatra. Past misunderstandings clear naturally — approach relationships with forgiveness and openness. ${sd.element === 'Fire' ? 'Your charisma is at its peak — use it to inspire your loved ones' : sd.element === 'Earth' ? 'Show love through acts of service and practical support' : sd.element === 'Water' ? 'Emotional vulnerability becomes your strength in relationships' : 'Your ability to see both sides helps resolve relationship tensions'}.`,
+      `${formattedSign}'s love life receives a cosmic boost ${periodLabel} from the ${sd.ruler}-Venus alignment. Married couples find renewed appreciation for each other. Singles should pay attention to connections that feel karmic or destined — Rahu's North Node influence suggests fated encounters. Family bonds strengthen through shared meals and celebrations.`,
+    ];
+
     const fallbackResult: HoroscopeResult = {
       sign: formattedSign,
       date: today,
       period: activePeriod,
       prediction: predictions[seed],
+      career: careerPredictions[seed],
+      health: healthPredictions[seed],
+      love: lovePredictions[seed],
       luckyNumber: ((dayOfYear + signIdx + periodOffset) % 9) + 1,
       luckyColor: colors[(dayOfYear + signIdx + periodOffset) % colors.length],
       mood: moods[(seed + periodOffset) % moods.length],

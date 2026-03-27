@@ -42,11 +42,21 @@ export class OpenAIService implements OnModuleInit {
         max_tokens: options.maxTokens ?? 1500,
         temperature: options.temperature ?? 0.7,
         ...(options.jsonMode && { response_format: { type: 'json_object' } }),
+        timeout: 30000,
       });
 
       const content = completion.choices[0]?.message?.content;
       if (!content) return null;
-      return options.jsonMode ? JSON.parse(content) : content;
+
+      if (options.jsonMode) {
+        try {
+          return JSON.parse(content);
+        } catch (parseError) {
+          this.logger.error('Failed to parse OpenAI JSON response', parseError);
+          return null;
+        }
+      }
+      return content;
     } catch (error) {
       this.logger.error('OpenAI API call failed', error);
       return null;

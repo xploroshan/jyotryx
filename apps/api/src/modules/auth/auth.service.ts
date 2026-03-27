@@ -212,12 +212,15 @@ export class AuthService {
     return { message: 'Password set successfully' };
   }
 
-  async sendOtp(dto: SendOtpDto): Promise<{ message: string; expiresIn: number; devOtp?: string }> {
+  async sendOtp(dto: SendOtpDto): Promise<{ message: string; expiresIn: number }> {
     // Rate limit OTP sends
     const existing = otpStore.get(dto.phone);
     if (existing && new Date() < new Date(existing.expiresAt.getTime() - 4 * 60 * 1000)) {
       throw new BadRequestException('Please wait before requesting a new OTP');
     }
+
+    // Periodic cleanup of expired OTPs to prevent memory leaks
+    this.cleanupExpiredOtps();
 
     const otpLength = this.configService.get<number>('otp.length', 6);
     const expiresInMinutes = this.configService.get<number>('otp.expiresInMinutes', 5);
@@ -232,17 +235,11 @@ export class AuthService {
     });
 
     // TODO: Integrate with SMS provider (Twilio, MSG91, etc.)
-    // For now, return OTP in response for development/testing
-    this.logger.log(`OTP sent to ${dto.phone}: ${otp}`);
-
-    const isDev = !this.configService.get<string>('razorpay.keyId');
+    this.logger.log(`OTP generated for ${dto.phone}`);
 
     return {
-      message: isDev
-        ? `OTP sent successfully (Dev Mode: ${otp})`
-        : 'OTP sent successfully',
+      message: 'OTP sent successfully',
       expiresIn: expiresInMinutes * 60,
-      ...(isDev && { devOtp: otp }),
     };
   }
 
@@ -486,6 +483,21 @@ export class AuthService {
       select: { passwordHash: true },
     });
     return { hasPassword: !!user?.passwordHash };
+  }
+
+  private cleanupExpiredOtps(): void {
+    const now = Date.now();
+    for (const [phone, entry] of otpStore.entries()) {
+      if (now > entry.expiresAt.getTime()) {
+        otpStore.delete(phone);
+      }
+    }
+    // Also clean up expired lockouts
+    for (const [email, entry] of loginAttempts.entries()) {
+      if (entry.lockedUntil && now > entry.lockedUntil.getTime()) {
+        loginAttempts.delete(email);
+      }
+    }
   }
 
   private checkLoginAttempts(email: string): void {

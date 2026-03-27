@@ -56,14 +56,14 @@ export default function HoroscopePage() {
       if (!res.ok) throw new Error("Failed to fetch horoscope");
       const data = await res.json();
 
-      const periodLabel = selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1);
+      const periodLabel = selectedPeriod === "daily" ? "today" : `this ${selectedPeriod.replace("ly", "")}`;
 
       // Map API response to our display format
       setHoroscope({
         overview: data.prediction || "Horoscope data is currently unavailable. Please try again later.",
-        love: `Compatibility with ${data.compatibility || "Leo"} is highlighted. ${data.mood || "Optimistic"} energy surrounds your relationships ${selectedPeriod === "daily" ? "today" : `this ${selectedPeriod.replace("ly", "")}`}.`,
-        career: `Professional energy is ${data.mood?.toLowerCase() || "positive"} ${selectedPeriod === "daily" ? "today" : `this ${selectedPeriod.replace("ly", "")}`}. Focus on opportunities and remain open to collaboration.`,
-        health: `Pay attention to your energy levels and maintain a balanced routine. Mindfulness practices are especially beneficial ${selectedPeriod === "daily" ? "today" : "during this period"}.`,
+        love: data.love || `Compatibility with ${data.compatibility || "Leo"} is highlighted ${periodLabel}. Relationship dynamics are influenced by Venus's current transit, bringing warmth and deeper connections.`,
+        career: data.career || `Professional energy is ${data.mood?.toLowerCase() || "positive"} ${periodLabel}. Planetary transits support strategic decisions and career growth.`,
+        health: data.health || `Your vitality is supported by favorable planetary alignments ${periodLabel}. Maintain a balanced routine and incorporate mindfulness practices for optimal well-being.`,
         lucky: {
           number: String(data.luckyNumber || "7"),
           color: data.luckyColor || "Purple",

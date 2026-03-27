@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
 import { OpenAIModule } from './openai/openai.module';
@@ -12,6 +14,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { ReportModule } from './modules/report/report.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { KnowledgeModule } from './knowledge/knowledge.module';
 
 @Module({
   imports: [
@@ -19,6 +22,10 @@ import { AdminModule } from './modules/admin/admin.module';
       isGlobal: true,
       load: [configuration],
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 60,
+    }]),
     PrismaModule,
     OpenAIModule,
     AuthModule,
@@ -30,6 +37,13 @@ import { AdminModule } from './modules/admin/admin.module';
     ReportModule,
     NotificationModule,
     AdminModule,
+    KnowledgeModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

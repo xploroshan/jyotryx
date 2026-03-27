@@ -298,3 +298,21 @@ model ActivityLog {
   @@index([createdAt])
   @@map("activity_logs")
 }
+
+// ─── Knowledge Base ─────────────────────────────────────────────────────────
+
+model KnowledgeDocument {
+  id         String   @id @default(uuid()) @db.Uuid
+  text       String   /// The chunk of text content
+  category   String   /// e.g. "kundli", "horoscope", "dosha", "remedy", "matching", "panchang", "numerology", "palmistry", "general"
+  topic      String?  /// Sub-topic e.g. "mars_in_7th_house", "mangal_dosha"
+  source     String?  /// Book name or source reference
+  embedding  Json?    /// Float[] vector stored as JSON (text-embedding-3-small: 1536 dims)
+  keywords   String[] /// Extracted keywords for fast text search
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+  @@index([category, topic])
+  @@map("knowledge_documents")
+}
