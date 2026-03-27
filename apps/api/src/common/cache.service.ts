@@ -5,6 +5,8 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+const MAX_CACHE_SIZE = 500;
+
 @Injectable()
 export class MemoryCacheService {
   private cache = new Map<string, CacheEntry>();
@@ -20,6 +22,13 @@ export class MemoryCacheService {
   }
 
   set(key: string, value: any, ttlMs: number): void {
+    // Evict oldest entries if at capacity
+    if (this.cache.size >= MAX_CACHE_SIZE) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
+    }
     this.cache.set(key, { value, expiresAt: Date.now() + ttlMs });
   }
 

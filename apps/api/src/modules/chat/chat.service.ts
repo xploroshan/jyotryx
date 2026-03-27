@@ -173,7 +173,7 @@ export class ChatService {
   async getSession(userId: string, sessionId: string): Promise<ChatSession> {
     const session = await this.prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      include: { messages: { orderBy: { createdAt: 'asc' }, take: 200 } },
     });
 
     if (!session) {

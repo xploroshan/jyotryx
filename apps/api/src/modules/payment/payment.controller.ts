@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Headers,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -73,8 +74,9 @@ export class PaymentController {
   @ApiResponse({ status: 200, description: 'Webhook received' })
   async handleWebhook(
     @Body() payload: Record<string, any>,
+    @Headers('x-razorpay-signature') signature?: string,
   ): Promise<{ received: boolean }> {
-    return this.paymentService.handleWebhook(payload);
+    return this.paymentService.handleWebhook(payload, signature);
   }
 
   @Get('history')

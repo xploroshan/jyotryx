@@ -141,9 +141,9 @@ export class PaymentService {
       }
     }
 
-    // Update payment in DB
+    // Update payment in DB — validate ownership
     const payment = await this.prisma.payment.findFirst({
-      where: { razorpayOrderId: dto.razorpayOrderId },
+      where: { razorpayOrderId: dto.razorpayOrderId, userId },
     });
 
     if (payment) {
@@ -195,22 +195,23 @@ export class PaymentService {
       subscriptionId = `sub_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
-    // Persist subscription
+    // Persist subscription and upgrade role atomically
     const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await this.prisma.subscription.create({
-      data: {
-        userId,
-        plan: dto.planId.includes('annual') ? 'ANNUAL' : 'MONTHLY',
-        status: 'ACTIVE',
-        razorpaySubscriptionId: subscriptionId,
-        endDate,
-      },
-    });
+    await this.prisma.$transaction(async (tx: any) => {
+      await tx.subscription.create({
+        data: {
+          userId,
+          plan: dto.planId.includes('annual') ? 'ANNUAL' : 'MONTHLY',
+          status: 'ACTIVE',
+          razorpaySubscriptionId: subscriptionId,
+          endDate,
+        },
+      });
 
-    // Upgrade user role
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { role: 'PREMIUM' },
+      await tx.user.update({
+        where: { id: userId },
+        data: { role: 'PREMIUM' },
+      });
     });
 
     return {
@@ -222,41 +223,85 @@ export class PaymentService {
     };
   }
 
-  async handleWebhook(payload: Record<string, any>): Promise<{ received: boolean }> {
+  async handleWebhook(payload: Record<string, any>, signatureHeader?: string): Promise<{ received: boolean }> {
+    // Verify webhook signature if secret is configured
+    const webhookSecret = this.configService.get<string>('razorpay.webhookSecret') ||
+                          this.configService.get<string>('razorpay.keySecret');
+    if (webhookSecret && signatureHeader) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(payload))
+        .digest('hex');
+
+      if (expectedSignature !== signatureHeader) {
+        this.logger.warn('Webhook signature verification failed');
+        throw new BadRequestException('Invalid webhook signature');
+      }
+    } else if (webhookSecret && !signatureHeader) {
+      this.logger.warn('Webhook received without signature header');
+    }
+
     this.logger.log(`Webhook received: ${payload?.event || 'unknown event'}`);
 
     const event = payload?.event;
     const paymentEntity = payload?.payload?.payment?.entity;
 
-    switch (event) {
-      case 'payment.captured':
-        if (paymentEntity?.order_id) {
-          await this.prisma.payment.updateMany({
-            where: { razorpayOrderId: paymentEntity.order_id },
-            data: { status: 'SUCCESS', razorpayPaymentId: paymentEntity.id },
-          });
+    try {
+      switch (event) {
+        case 'payment.captured':
+          if (paymentEntity?.order_id) {
+            await this.prisma.$transaction(async (tx: any) => {
+              const payment = await tx.payment.findFirst({
+                where: { razorpayOrderId: paymentEntity.order_id },
+              });
+              if (payment && payment.status !== 'SUCCESS') {
+                await tx.payment.update({
+                  where: { id: payment.id },
+                  data: { status: 'SUCCESS', razorpayPaymentId: paymentEntity.id },
+                });
+                // Add credits atomically within the same transaction
+                const creditsToAdd = this.calculateCredits(Number(payment.amount));
+                await tx.user.update({
+                  where: { id: payment.userId },
+                  data: { credits: { increment: creditsToAdd } },
+                });
+                await tx.creditTransaction.create({
+                  data: {
+                    userId: payment.userId,
+                    amount: creditsToAdd,
+                    type: 'PURCHASE',
+                    description: `Webhook: purchased ${creditsToAdd} credits`,
+                  },
+                });
+              }
+            });
+          }
+          break;
+        case 'payment.failed':
+          if (paymentEntity?.order_id) {
+            await this.prisma.payment.updateMany({
+              where: { razorpayOrderId: paymentEntity.order_id },
+              data: { status: 'FAILED' },
+            });
+          }
+          break;
+        case 'subscription.charged':
+          this.logger.log('Subscription charge successful');
+          break;
+        case 'subscription.cancelled': {
+          const subEntity = payload?.payload?.subscription?.entity;
+          if (subEntity?.id) {
+            await this.prisma.subscription.updateMany({
+              where: { razorpaySubscriptionId: subEntity.id },
+              data: { status: 'CANCELLED' },
+            });
+          }
+          break;
         }
-        break;
-      case 'payment.failed':
-        if (paymentEntity?.order_id) {
-          await this.prisma.payment.updateMany({
-            where: { razorpayOrderId: paymentEntity.order_id },
-            data: { status: 'FAILED' },
-          });
-        }
-        break;
-      case 'subscription.charged':
-        this.logger.log('Subscription charge successful');
-        break;
-      case 'subscription.cancelled':
-        const subEntity = payload?.payload?.subscription?.entity;
-        if (subEntity?.id) {
-          await this.prisma.subscription.updateMany({
-            where: { razorpaySubscriptionId: subEntity.id },
-            data: { status: 'CANCELLED' },
-          });
-        }
-        break;
+      }
+    } catch (error) {
+      this.logger.error(`Webhook processing failed for event ${event}`, error);
+      throw new InternalServerErrorException('Webhook processing failed');
     }
 
     return { received: true };

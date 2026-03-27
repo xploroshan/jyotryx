@@ -57,7 +57,6 @@ export class KnowledgeService {
         category: true,
         topic: true,
         source: true,
-        embedding: true,
         keywords: true,
       },
     });
@@ -108,9 +107,10 @@ export class KnowledgeService {
   /**
    * Search by category and topic for direct knowledge lookups (no LLM needed).
    */
-  async getByTopic(category: string, topic: string): Promise<KBSearchResult[]> {
+  async getByTopic(category: string, topic: string, limit: number = 50): Promise<KBSearchResult[]> {
     const docs = await this.prisma.knowledgeDocument.findMany({
       where: { category, topic },
+      take: limit,
       select: {
         id: true,
         text: true,
@@ -129,9 +129,10 @@ export class KnowledgeService {
   /**
    * Get all documents in a category.
    */
-  async getByCategory(category: string): Promise<KBSearchResult[]> {
+  async getByCategory(category: string, limit: number = 100): Promise<KBSearchResult[]> {
     const docs = await this.prisma.knowledgeDocument.findMany({
       where: { category },
+      take: limit,
       select: {
         id: true,
         text: true,
