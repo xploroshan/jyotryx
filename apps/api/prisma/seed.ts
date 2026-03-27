@@ -1,7 +1,75 @@
 import { PrismaClient, Role, AuthProvider } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { PLANET_DATA } from '../src/knowledge/seed-data/planets';
+import { SIGN_DATA } from '../src/knowledge/seed-data/signs';
+import { HOUSE_DATA } from '../src/knowledge/seed-data/houses';
+import { NAKSHATRA_DATA } from '../src/knowledge/seed-data/nakshatras';
+import { YOGA_DATA } from '../src/knowledge/seed-data/yogas';
+import { DOSHA_DATA } from '../src/knowledge/seed-data/doshas';
+import { MATCHING_DATA } from '../src/knowledge/seed-data/matching';
+import { REMEDY_DATA } from '../src/knowledge/seed-data/remedies';
 
 const prisma = new PrismaClient();
+
+const STOP_WORDS = new Set([
+  'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+  'could', 'should', 'may', 'might', 'shall', 'can', 'a', 'an',
+  'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of',
+  'with', 'by', 'from', 'this', 'that', 'these', 'those', 'it',
+  'its', 'they', 'them', 'their', 'we', 'our', 'you', 'your',
+  'he', 'she', 'his', 'her', 'not', 'no', 'nor', 'if', 'then',
+  'than', 'when', 'where', 'which', 'who', 'whom', 'how', 'what',
+  'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other',
+  'some', 'such', 'only', 'very', 'also', 'just', 'about',
+]);
+
+function extractKeywords(text: string): string[] {
+  const words = text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+  return [...new Set(words)].slice(0, 30);
+}
+
+async function seedKnowledge() {
+  const existingCount = await prisma.knowledgeDocument.count();
+  if (existingCount > 0) {
+    console.log(`Knowledge base already has ${existingCount} documents, skipping seed.`);
+    return;
+  }
+
+  const allData = [
+    ...PLANET_DATA,
+    ...SIGN_DATA,
+    ...HOUSE_DATA,
+    ...NAKSHATRA_DATA,
+    ...YOGA_DATA,
+    ...DOSHA_DATA,
+    ...MATCHING_DATA,
+    ...REMEDY_DATA,
+  ];
+
+  console.log(`Seeding ${allData.length} knowledge documents...`);
+
+  const batchSize = 50;
+  let count = 0;
+  for (let i = 0; i < allData.length; i += batchSize) {
+    const batch = allData.slice(i, i + batchSize);
+    const data = batch.map((item) => ({
+      text: item.text,
+      category: item.category,
+      topic: item.topic,
+      source: item.source,
+      keywords: extractKeywords(item.text),
+    }));
+    const result = await prisma.knowledgeDocument.createMany({ data });
+    count += result.count;
+  }
+
+  console.log(`Knowledge base seeded with ${count} documents.`);
+}
 
 async function main() {
   console.log('Seeding database...');
@@ -39,6 +107,9 @@ async function main() {
     },
   });
   console.log(`Demo user created: ${demo.email} (${demo.id})`);
+
+  // Seed knowledge base
+  await seedKnowledge();
 
   console.log('Seeding complete.');
 }
