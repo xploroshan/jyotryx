@@ -8,6 +8,10 @@ import { YOGA_DATA } from '../src/knowledge/seed-data/yogas';
 import { DOSHA_DATA } from '../src/knowledge/seed-data/doshas';
 import { MATCHING_DATA } from '../src/knowledge/seed-data/matching';
 import { REMEDY_DATA } from '../src/knowledge/seed-data/remedies';
+import { PANCHANG_DATA } from '../src/knowledge/seed-data/panchang';
+import { PALMISTRY_DATA } from '../src/knowledge/seed-data/palmistry';
+import { MUHURAT_DATA } from '../src/knowledge/seed-data/muhurat';
+import { DIVISIONAL_CHART_DATA } from '../src/knowledge/seed-data/divisional-charts';
 
 const prisma = new PrismaClient();
 
@@ -49,6 +53,10 @@ async function seedKnowledge() {
     ...DOSHA_DATA,
     ...MATCHING_DATA,
     ...REMEDY_DATA,
+    ...PANCHANG_DATA,
+    ...PALMISTRY_DATA,
+    ...MUHURAT_DATA,
+    ...DIVISIONAL_CHART_DATA,
   ];
 
   console.log(`Seeding ${allData.length} knowledge documents...`);

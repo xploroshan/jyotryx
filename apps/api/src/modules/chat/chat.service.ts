@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
+import { KnowledgeService } from '../../knowledge/knowledge.service';
 
 export interface ChatMessage {
   id: string;
@@ -37,6 +38,7 @@ export class ChatService {
     private configService: ConfigService,
     private userService: UserService,
     private openaiService: OpenAIService,
+    private knowledgeService: KnowledgeService,
   ) {}
 
   async sendMessage(
@@ -203,9 +205,18 @@ export class ChatService {
     history: { role: string; content: string }[],
     userProfile: any,
   ): Promise<string> {
+    // Fetch relevant knowledge base context for RAG
+    const kbCategory = this.mapCategoryToKB(category);
+    const kbResults = await this.knowledgeService.search(message, kbCategory, 5);
+    const kbContext = this.knowledgeService.assembleContext(kbResults);
+
     const systemPrompt = this.getSystemPrompt(category, userProfile);
+    const enrichedPrompt = kbContext
+      ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
+      : systemPrompt;
+
     const messages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: enrichedPrompt },
       ...history.slice(-10).map((m) => ({
         role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
         content: m.content,
@@ -221,7 +232,38 @@ export class ChatService {
 
     if (result) return result;
 
-    // Fallback responses - personalized where possible
+    // Fallback: assemble response from knowledge base
+    return this.getKBFallbackResponse(message, category, userProfile);
+  }
+
+  private mapCategoryToKB(category: string): string | undefined {
+    const map: Record<string, string> = {
+      kundli: 'planets',
+      career: 'houses',
+      relationship: 'matching',
+      remedy: 'remedies',
+      health: 'doshas',
+      numerology: 'nakshatras',
+      wealth: 'yogas',
+    };
+    return map[category];
+  }
+
+  private async getKBFallbackResponse(message: string, category: string, userProfile: any): Promise<string> {
+    // Try to build a response from KB data
+    const kbCategory = this.mapCategoryToKB(category);
+    const results = kbCategory
+      ? await this.knowledgeService.search(message, kbCategory, 3)
+      : await this.knowledgeService.search(message, undefined, 3);
+
+    if (results.length > 0) {
+      const userName = userProfile?.name || '';
+      const greeting = userName ? `${userName}, based on Vedic wisdom:\n\n` : 'Based on Vedic wisdom:\n\n';
+      const content = results.map((r) => r.text).join('\n\n');
+      return `${greeting}${content}\n\n*Note: For personalized readings, please ensure your birth details are updated in your profile. This guidance is for informational purposes.*`;
+    }
+
+    // Final fallback: hardcoded response
     return this.getFallbackResponse(category, userProfile);
   }
 

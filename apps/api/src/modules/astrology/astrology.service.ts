@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
+import { KnowledgeService } from '../../knowledge/knowledge.service';
 
 export interface BirthDetails {
   dateOfBirth: string;
@@ -142,6 +143,7 @@ export class AstrologyService {
     private userService: UserService,
     private openaiService: OpenAIService,
     private cacheService: MemoryCacheService,
+    private knowledgeService: KnowledgeService,
   ) {}
 
   private async callOpenAI(
@@ -197,6 +199,15 @@ export class AstrologyService {
   }
 
   private async generateAIKundli(birthDetails: BirthDetails): Promise<any> {
+    // Enrich with KB context about planets, houses, yogas, nakshatras
+    const [planetKB, houseKB, yogaKB] = await Promise.all([
+      this.knowledgeService.getByCategory('planets', 10),
+      this.knowledgeService.getByCategory('houses', 5),
+      this.knowledgeService.getByCategory('yogas', 5),
+    ]);
+    const kbContext = this.knowledgeService.assembleContext([...planetKB, ...houseKB, ...yogaKB]);
+    const kbSection = kbContext ? `\n\nReference Knowledge:\n${kbContext}` : '';
+
     const systemPrompt = `You are an expert Vedic astrologer with deep knowledge of Jyotish Shastra. Given birth details, calculate an accurate Vedic birth chart (Kundli). Return a JSON object with these exact keys:
 - ascendant: string (the rising sign based on time and place of birth)
 - moonSign: string (Rashi based on Moon's position)
@@ -207,7 +218,7 @@ export class AstrologyService {
 - dashas: array with current Mahadasha and sub-periods { planet: string, startDate: string, endDate: string, subPeriods: [{planet, startDate, endDate}] }
 - yogas: array of detected yogas { name: string, description: string, effect: "benefic"|"malefic"|"neutral" }
 
-Use the Lahiri ayanamsa for sidereal calculations. Be astronomically accurate based on the given date, time, and place.`;
+Use the Lahiri ayanamsa for sidereal calculations. Be astronomically accurate based on the given date, time, and place.${kbSection}`;
 
     const userPrompt = `Calculate the Vedic birth chart for:
 - Date of Birth: ${birthDetails.dateOfBirth}
@@ -368,6 +379,11 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
       throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
     }
 
+    // Enrich with matching KB context
+    const matchingKB = await this.knowledgeService.getByCategory('matching', 10);
+    const matchKBContext = this.knowledgeService.assembleContext(matchingKB);
+    const matchKBSection = matchKBContext ? `\n\nReference Knowledge:\n${matchKBContext}` : '';
+
     const aiResult = await this.callOpenAI(
       `You are an expert Vedic astrologer performing Ashtakoota Guna matching. Calculate the actual compatibility scores based on the birth details provided. Return a JSON object with:
 - gunaDetails: array of 8 objects { guna: string, maxPoints: number, obtainedPoints: number, description: string } for Varna(1), Vashya(2), Tara(3), Yoni(4), Graha Maitri(5), Gana(6), Bhakoot(7), Nadi(8)
@@ -375,7 +391,7 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
 - compatibility: string ("Excellent" if >= 25, "Very Good" if >= 21, "Good" if >= 18, "Average" if >= 14, "Below Average" if < 14)
 - recommendation: string (detailed compatibility analysis in 2-3 sentences)
 
-Calculate scores based on actual Vedic astrology rules using the Moon signs and Nakshatras derived from the birth dates.`,
+Calculate scores based on actual Vedic astrology rules using the Moon signs and Nakshatras derived from the birth dates.${matchKBSection}`,
       `Partner 1: DOB ${partner1.dateOfBirth}, Time ${partner1.timeOfBirth}, Place ${partner1.placeOfBirth}
 Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${partner2.placeOfBirth}`,
     );
@@ -445,6 +461,11 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
     this.logger.log(`Fetching ${activePeriod} horoscope for: ${sign}`);
     const formattedSign = sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase();
 
+    // Enrich with sign-specific KB context
+    const signKB = await this.knowledgeService.search(formattedSign, 'signs', 3);
+    const signKBContext = this.knowledgeService.assembleContext(signKB);
+    const signKBSection = signKBContext ? `\n\nReference Knowledge about ${formattedSign}:\n${signKBContext}` : '';
+
     const periodDescriptions: Record<string, string> = {
       daily: `today's (${today})`,
       weekly: `this week's (starting ${today})`,
@@ -463,7 +484,7 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
 - mood: string (one word reflecting dominant planetary energy)
 - compatibility: string (most compatible sign based on current transits)
 
-Make each section unique and specific to the sign. Avoid generic advice. Reference actual Vedic concepts like Nakshatras, Dashas, and planetary lordships.`,
+Make each section unique and specific to the sign. Avoid generic advice. Reference actual Vedic concepts like Nakshatras, Dashas, and planetary lordships.${signKBSection}`,
       `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Consider the sign's ruling planet, current planetary transits, and Nakshatra influences. Provide specific, actionable guidance unique to this sign.`,
     );
 
@@ -608,6 +629,11 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
     const cached = this.cacheService.get<PanchangResult>(cacheKey);
     if (cached) return cached;
 
+    // Enrich with panchang KB context
+    const panchangKB = await this.knowledgeService.getByCategory('panchang', 10);
+    const panchangKBContext = this.knowledgeService.assembleContext(panchangKB);
+    const panchangKBSection = panchangKBContext ? `\n\nReference Knowledge:\n${panchangKBContext}` : '';
+
     const aiResult = await this.callOpenAI(
       `You are a Vedic Panchang calculator. Calculate today's Panchang details accurately. Return a JSON object with:
 - tithi: string (current Tithi name with Paksha, e.g. "Shukla Dashami")
@@ -620,7 +646,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
 - moonrise: string
 - rahukaal: string (Rahu Kaal time range)
 - gulikakaal: string (Gulika Kaal time range)
-- yamakantaka: string (Yama Kantaka time range)`,
+- yamakantaka: string (Yama Kantaka time range)${panchangKBSection}`,
       `Calculate the Panchang for today: ${dateStr} for location: New Delhi, India (28.6139°N, 77.2090°E). Use the Vedic Hindu calendar with Lahiri ayanamsa.`,
     );
 
@@ -666,11 +692,16 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
   }
 
   async getMuhurat(dto: MuhuratRequest): Promise<MuhuratResult> {
+    // Enrich with muhurat KB context for the specific purpose
+    const muhuratKB = await this.knowledgeService.search(dto.purpose, 'muhurat', 5);
+    const muhuratKBContext = this.knowledgeService.assembleContext(muhuratKB);
+    const muhuratKBSection = muhuratKBContext ? `\n\nReference Knowledge:\n${muhuratKBContext}` : '';
+
     const aiResult = await this.callOpenAI(
       `You are a Vedic Muhurat specialist. Calculate auspicious times for the given purpose. Return a JSON object with:
 - auspiciousTimes: array of 3-5 objects { date: string (YYYY-MM-DD), startTime: string, endTime: string, quality: "excellent"|"good"|"average", reason: string (explain why this time is auspicious, reference Tithi, Nakshatra, planetary positions) }
 
-Consider Rahu Kaal, Gulika Kaal, and other inauspicious periods. Factor in the specific purpose to recommend the most suitable Muhurat.`,
+Consider Rahu Kaal, Gulika Kaal, and other inauspicious periods. Factor in the specific purpose to recommend the most suitable Muhurat.${muhuratKBSection}`,
       `Find auspicious Muhurat for: ${dto.purpose}
 Location: ${dto.location}
 Date range: ${dto.fromDate} to ${dto.toDate}`,
@@ -722,11 +753,16 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       ? `DOB: ${user.dateOfBirth.toISOString().split('T')[0]}, Time: ${user.timeOfBirth || 'unknown'}, Place: ${(user.placeOfBirth as any)?.name || 'unknown'}`
       : 'Birth details not available';
 
+    // Enrich with dosha KB context
+    const doshaKB = await this.knowledgeService.getByCategory('doshas', 10);
+    const doshaKBContext = this.knowledgeService.assembleContext(doshaKB);
+    const doshaKBSection = doshaKBContext ? `\n\nReference Knowledge:\n${doshaKBContext}` : '';
+
     const aiResult = await this.callOpenAI(
       `You are a Vedic astrologer specializing in Dosha analysis. Analyze the birth chart for common Doshas. Return a JSON object with:
 - doshas: array of objects { name: string, present: boolean, severity: "none"|"mild"|"moderate"|"severe", description: string, remedies: string[] }
 
-Analyze for: Mangal Dosha (Manglik), Kaal Sarp Dosha, Pitra Dosha, Shani Dosha, and Nadi Dosha. Base your analysis on the planetary positions derived from the birth details.`,
+Analyze for: Mangal Dosha (Manglik), Kaal Sarp Dosha, Pitra Dosha, Shani Dosha, and Nadi Dosha. Base your analysis on the planetary positions derived from the birth details.${doshaKBSection}`,
       `Analyze Doshas for person with: ${birthInfo}`,
     );
 

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
+import { KnowledgeService } from '../../knowledge/knowledge.service';
 
 export interface GenerateReportDto {
   type: 'LIFE' | 'CAREER' | 'MARRIAGE' | 'WEALTH' | 'PALM' | 'ANNUAL';
@@ -42,6 +43,7 @@ export class ReportService {
     private configService: ConfigService,
     private userService: UserService,
     private openaiService: OpenAIService,
+    private knowledgeService: KnowledgeService,
   ) {}
 
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
@@ -111,6 +113,12 @@ export class ReportService {
     }
 
     try {
+      // Fetch relevant KB context based on report type
+      const kbCategory = this.mapReportTypeToKB(type);
+      const kbResults = await this.knowledgeService.getByCategory(kbCategory, 10);
+      const kbContext = this.knowledgeService.assembleContext(kbResults);
+      const kbSection = kbContext ? `\n\nReference Knowledge (use this to ground your analysis):\n${kbContext}` : '';
+
       const sectionStructure = this.getSectionStructure(type);
       const prompt = `Generate a detailed Vedic astrology ${type.toLowerCase()} report for:
 Name: ${name}
@@ -126,7 +134,7 @@ Return a JSON object with key "sections" containing an array of objects, each wi
 
 Generate these sections: ${sectionStructure.map((s) => s.title).join(', ')}
 
-Be specific with planetary positions, Dasha periods, Yogas, and transit effects. Use Lahiri ayanamsa. Reference the person by name.`;
+Be specific with planetary positions, Dasha periods, Yogas, and transit effects. Use Lahiri ayanamsa. Reference the person by name.${kbSection}`;
 
       const result = await this.openaiService.chatCompletion({
         messages: [
@@ -146,6 +154,18 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
     }
 
     return this.getFallbackSections(type, birthDetails, name);
+  }
+
+  private mapReportTypeToKB(type: string): string {
+    const map: Record<string, string> = {
+      LIFE: 'planets',
+      CAREER: 'houses',
+      MARRIAGE: 'matching',
+      WEALTH: 'yogas',
+      PALM: 'palmistry',
+      ANNUAL: 'signs',
+    };
+    return map[type] || 'planets';
   }
 
   private getSectionStructure(type: string): { title: string }[] {
