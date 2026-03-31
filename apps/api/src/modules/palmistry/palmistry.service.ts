@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
+import { KnowledgeService } from '../../knowledge/knowledge.service';
 
 export interface PalmistryAnalysis {
   id: string;
@@ -46,6 +47,7 @@ export class PalmistryService {
     private configService: ConfigService,
     private userService: UserService,
     private openaiService: OpenAIService,
+    private knowledgeService: KnowledgeService,
   ) {}
 
   async analyzePalm(
@@ -64,6 +66,11 @@ export class PalmistryService {
     let analysisData: any;
     const client = this.openaiService.getClient();
 
+    // Fetch palmistry KB context for enriched readings
+    const palmKB = await this.knowledgeService.getByCategory('palmistry', 15);
+    const palmKBContext = this.knowledgeService.assembleContext(palmKB);
+    const palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
+
     if (client && imageBuffer) {
       try {
         const base64Image = imageBuffer.toString('base64');
@@ -72,7 +79,7 @@ export class PalmistryService {
           messages: [
             {
               role: 'system',
-              content: 'You are an expert palmist. Analyze the palm image and provide a detailed reading. Return a JSON object with keys: lines (array with name, description, strength, interpretation), mounts (array with name, prominence, interpretation), fingerAnalysis (array with finger, length, interpretation), overallReading (string), healthInsights (string), careerInsights (string), relationshipInsights (string).',
+              content: `You are an expert palmist. Analyze the palm image and provide a detailed reading. Return a JSON object with keys: lines (array with name, description, strength, interpretation), mounts (array with name, prominence, interpretation), fingerAnalysis (array with finger, length, interpretation), overallReading (string), healthInsights (string), careerInsights (string), relationshipInsights (string).${palmKBSection}`,
             },
             {
               role: 'user',
@@ -96,7 +103,7 @@ export class PalmistryService {
     }
 
     if (!analysisData) {
-      analysisData = this.getFallbackAnalysis();
+      analysisData = await this.getKBEnrichedFallback();
     }
 
     // Save to database
@@ -114,6 +121,26 @@ export class PalmistryService {
       ...analysisData,
       createdAt: reading.createdAt.toISOString(),
     };
+  }
+
+  private async getKBEnrichedFallback() {
+    const fallback = this.getFallbackAnalysis();
+
+    // Enrich fallback with KB data for more detailed interpretations
+    const [linesKB, mountsKB, fingersKB] = await Promise.all([
+      this.knowledgeService.search('palm lines heart head life fate', 'palmistry', 3),
+      this.knowledgeService.search('mounts jupiter venus apollo', 'palmistry', 2),
+      this.knowledgeService.search('fingers thumb hand shape', 'palmistry', 2),
+    ]);
+
+    if (linesKB.length > 0) {
+      fallback.overallReading += '\n\n' + linesKB.map((r) => r.text).join(' ').substring(0, 300);
+    }
+    if (mountsKB.length > 0) {
+      fallback.careerInsights += ' ' + mountsKB[0].text.substring(0, 150);
+    }
+
+    return fallback;
   }
 
   private getFallbackAnalysis() {
