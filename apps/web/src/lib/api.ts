@@ -54,20 +54,33 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
     ...(options.headers as Record<string, string>),
   };
 
-  let response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...fetchOptions,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch (err) {
+    throw new Error(
+      "Unable to connect to the server. Please check your internet connection and try again."
+    );
+  }
 
   // Auto-refresh on 401
   if (response.status === 401 && !token) {
     const newToken = await tryRefreshToken();
     if (newToken) {
       headers["Authorization"] = `Bearer ${newToken}`;
-      response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...fetchOptions,
-        headers,
-      });
+      try {
+        response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...fetchOptions,
+          headers,
+        });
+      } catch (err) {
+        throw new Error(
+          "Unable to connect to the server. Please check your internet connection and try again."
+        );
+      }
     }
   }
 
@@ -97,11 +110,18 @@ export const api = {
     const headers: Record<string, string> = {};
     if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "POST",
-      headers,
-      body: formData,
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+    } catch (err) {
+      throw new Error(
+        "Unable to connect to the server. Please check your internet connection and try again."
+      );
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: "Upload failed" }));

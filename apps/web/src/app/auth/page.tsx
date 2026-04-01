@@ -58,9 +58,13 @@ function AuthPageContent() {
   }, []);
 
   const authenticateWithBackend = useCallback(async (firebaseIdToken: string) => {
-    const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
-    setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-    router.push("/chat");
+    try {
+      const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
+      setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+      router.push("/chat");
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to authenticate with server. Please try again.");
+    }
   }, [setAuth, router]);
 
   const setupRecaptcha = useCallback(() => {
@@ -125,7 +129,7 @@ function AuthPageContent() {
         setOtp("");
         confirmationResultRef.current = null;
       } else {
-        setError(err.message || "OTP verification failed");
+        setError(err.message || "OTP verification failed. Please try again.");
       }
     } finally { setLoading(false); }
   };
@@ -140,8 +144,10 @@ function AuthPageContent() {
     } catch (err: any) {
       if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
         // User closed popup, don't show error
+      } else if (err.code === "auth/popup-blocked") {
+        setError("Popup was blocked by your browser. Please allow popups and try again.");
       } else {
-        setError(err.message || "Google sign-in failed");
+        setError(err.message || "Google sign-in failed. Please try again.");
       }
     } finally { setGoogleLoading(false); }
   };

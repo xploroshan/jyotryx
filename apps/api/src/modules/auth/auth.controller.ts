@@ -7,6 +7,7 @@ import {
   HttpStatus,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService, AuthResponse, AuthTokens } from './auth.service';
@@ -123,7 +124,7 @@ export class AuthController {
     @Request() req: any,
   ): Promise<{ message: string }> {
     if (!body.password || body.password.length < 8) {
-      throw new Error('Password must be at least 8 characters');
+      throw new BadRequestException('Password must be at least 8 characters');
     }
     return this.authService.setPassword(req.user.sub, body.password);
   }
