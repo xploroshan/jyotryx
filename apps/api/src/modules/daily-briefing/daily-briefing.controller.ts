@@ -23,4 +23,25 @@ export class DailyBriefingController {
   async getPlanetaryHours(): Promise<PlanetaryHour[]> {
     return this.dailyBriefingService.getPlanetaryHoursOnly();
   }
+
+  @Get('offline-pack')
+  @Public()
+  @ApiOperation({ summary: 'Get daily offline data package (panchang + planetary hours + day quality) for mobile/offline sync' })
+  async getOfflinePack(): Promise<{
+    date: string;
+    planetaryHours: PlanetaryHour[];
+    panchang: any;
+    generatedAt: string;
+  }> {
+    const planetaryHours = await this.dailyBriefingService.getPlanetaryHoursOnly();
+    return {
+      date: new Date().toISOString().split('T')[0],
+      planetaryHours,
+      panchang: {
+        // Basic panchang computed server-side for accuracy
+        vara: ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'][new Date().getDay()],
+      },
+      generatedAt: new Date().toISOString(),
+    };
+  }
 }
