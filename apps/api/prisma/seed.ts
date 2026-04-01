@@ -12,6 +12,11 @@ import { PANCHANG_DATA } from '../src/knowledge/seed-data/panchang';
 import { PALMISTRY_DATA } from '../src/knowledge/seed-data/palmistry';
 import { MUHURAT_DATA } from '../src/knowledge/seed-data/muhurat';
 import { DIVISIONAL_CHART_DATA } from '../src/knowledge/seed-data/divisional-charts';
+import { NUMEROLOGY_DATA } from '../src/knowledge/seed-data/numerology';
+import { HOROSCOPE_DAILY_DATA } from '../src/knowledge/seed-data/horoscope-daily';
+import { CAREER_PROFESSION_DATA } from '../src/knowledge/seed-data/career-profession';
+import { TRANSIT_DASHA_DATA } from '../src/knowledge/seed-data/transits-dasha';
+import { HEALTH_ASTROLOGY_DATA } from '../src/knowledge/seed-data/health-astrology';
 
 const prisma = new PrismaClient();
 
@@ -57,6 +62,11 @@ async function seedKnowledge() {
     ...PALMISTRY_DATA,
     ...MUHURAT_DATA,
     ...DIVISIONAL_CHART_DATA,
+    ...NUMEROLOGY_DATA,
+    ...HOROSCOPE_DAILY_DATA,
+    ...CAREER_PROFESSION_DATA,
+    ...TRANSIT_DASHA_DATA,
+    ...HEALTH_ASTROLOGY_DATA,
   ];
 
   console.log(`Seeding ${allData.length} knowledge documents...`);

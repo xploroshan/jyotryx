@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
   },
+  manifest: "/manifest.json",
   keywords: [
     "astrology", "vedic astrology", "kundli", "horoscope",
     "palmistry", "kundli matching", "panchang", "muhurat", "jyotron",

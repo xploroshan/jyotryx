@@ -15,6 +15,19 @@ enum Role {
   ADMIN
 }
 
+enum Profession {
+  SOFTWARE
+  SALES
+  MARKETING
+  FINANCE
+  STUDENT
+  BUSINESS
+  HEALTHCARE
+  CREATIVE
+  GOVERNMENT
+  OTHER
+}
+
 enum AuthProvider {
   LOCAL
   GOOGLE
@@ -95,6 +108,7 @@ model User {
   timeOfBirth       String?
   placeOfBirth      Json?     /// { lat: number, lng: number, name: string }
   gender            String?
+  profession        Profession?
   profilePhoto      String?
   preferredLanguage String    @default("en")
   role              Role      @default(USER)

@@ -9,6 +9,8 @@ export interface UserProfile {
   dateOfBirth?: string | null;
   timeOfBirth?: string | null;
   placeOfBirth?: any;
+  gender?: string | null;
+  profession?: string | null;
   profilePhoto?: string | null;
   credits: number;
   role: string;
@@ -21,6 +23,8 @@ export interface UpdateProfileDto {
   dateOfBirth?: string;
   timeOfBirth?: string;
   placeOfBirth?: string;
+  gender?: string;
+  profession?: string;
   profilePhoto?: string;
 }
 
@@ -50,6 +54,8 @@ export class UserService {
       dateOfBirth: user.dateOfBirth?.toISOString() ?? null,
       timeOfBirth: user.timeOfBirth,
       placeOfBirth: user.placeOfBirth,
+      gender: user.gender,
+      profession: user.profession,
       profilePhoto: user.profilePhoto,
       credits: user.credits,
       role: user.role,
@@ -66,6 +72,8 @@ export class UserService {
         ...(dto.dateOfBirth && { dateOfBirth: new Date(dto.dateOfBirth) }),
         ...(dto.timeOfBirth && { timeOfBirth: dto.timeOfBirth }),
         ...(dto.placeOfBirth && { placeOfBirth: { name: dto.placeOfBirth } }),
+        ...(dto.gender && { gender: dto.gender }),
+        ...(dto.profession && { profession: dto.profession as any }),
         ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
       },
     });
@@ -78,6 +86,8 @@ export class UserService {
       dateOfBirth: user.dateOfBirth?.toISOString() ?? null,
       timeOfBirth: user.timeOfBirth,
       placeOfBirth: user.placeOfBirth,
+      gender: user.gender,
+      profession: user.profession,
       profilePhoto: user.profilePhoto,
       credits: user.credits,
       role: user.role,

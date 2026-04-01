@@ -5,7 +5,9 @@ import { AstrologyService } from '../src/modules/astrology/astrology.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
+import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { MemoryCacheService } from '../src/common/cache.service';
+import { mockKnowledgeService } from './helpers/mocks';
 
 describe('AstrologyService', () => {
   let service: AstrologyService;
@@ -91,6 +93,7 @@ describe('AstrologyService', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: openaiService },
         { provide: MemoryCacheService, useValue: cacheService },
+        { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
 

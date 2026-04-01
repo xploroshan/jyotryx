@@ -15,6 +15,8 @@ import { ReportModule } from './modules/report/report.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
+import { DailyBriefingModule } from './modules/daily-briefing/daily-briefing.module';
+import { NumerologyModule } from './modules/numerology/numerology.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
     NotificationModule,
     AdminModule,
     KnowledgeModule,
+    DailyBriefingModule,
+    NumerologyModule,
   ],
   providers: [
     {

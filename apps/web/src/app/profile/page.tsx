@@ -13,6 +13,8 @@ interface UserProfile {
   dateOfBirth?: string | null;
   timeOfBirth?: string | null;
   placeOfBirth?: any;
+  gender?: string | null;
+  profession?: string | null;
   profilePhoto?: string | null;
   credits: number;
   role: string;
@@ -44,6 +46,8 @@ export default function ProfilePage() {
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
   const [pob, setPob] = useState("");
+  const [gender, setGender] = useState("");
+  const [profession, setProfession] = useState("");
 
   // Security form
   const [hasPassword, setHasPassword] = useState(true);
@@ -79,6 +83,8 @@ export default function ProfilePage() {
       setDob(profileData.dateOfBirth ? profileData.dateOfBirth.split("T")[0] : "");
       setTob(profileData.timeOfBirth || "");
       setPob(typeof profileData.placeOfBirth === "object" ? profileData.placeOfBirth?.name || "" : profileData.placeOfBirth || "");
+      setGender(profileData.gender || "");
+      setProfession(profileData.profession || "");
       updateCredits(profileData.credits);
     } catch (err: any) {
       setError(err.message || "Failed to load profile");
@@ -100,6 +106,8 @@ export default function ProfilePage() {
           dateOfBirth: dob || undefined,
           timeOfBirth: tob || undefined,
           placeOfBirth: pob || undefined,
+          gender: gender || undefined,
+          profession: profession || undefined,
         },
         { token: accessToken! }
       );
@@ -299,6 +307,35 @@ export default function ProfilePage() {
                     <label className="block text-xs text-white/30 mb-2">Place of Birth</label>
                     <input type="text" value={pob} onChange={(e) => setPob(e.target.value)} placeholder="e.g. Mumbai, India"
                       className="w-full px-4 py-3 rounded-xl surface-input" />
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-white/30 mb-2">Gender</label>
+                      <select value={gender} onChange={(e) => setGender(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl surface-input">
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-white/30 mb-2">Profession</label>
+                      <select value={profession} onChange={(e) => setProfession(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl surface-input">
+                        <option value="">Select profession</option>
+                        <option value="SOFTWARE">IT / Software Engineer</option>
+                        <option value="SALES">Sales Professional</option>
+                        <option value="MARKETING">Marketing Professional</option>
+                        <option value="FINANCE">Finance / Stock Market</option>
+                        <option value="STUDENT">Student / Job Seeker</option>
+                        <option value="BUSINESS">Business Owner</option>
+                        <option value="HEALTHCARE">Healthcare Professional</option>
+                        <option value="CREATIVE">Creative / Artist</option>
+                        <option value="GOVERNMENT">Government / Public Sector</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                    </div>
                   </div>
                   <button onClick={handleSave} disabled={saving}
                     className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
