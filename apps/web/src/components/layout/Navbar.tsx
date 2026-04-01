@@ -67,7 +67,7 @@ export default function Navbar() {
                 <Link href="/pricing" className="px-3 py-1.5 text-[13px] font-medium text-accent-400 hover:text-accent-300 transition-colors">
                   Pricing
                 </Link>
-                <Link href="/profile" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors">
+                <Link href="/profile" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors max-w-[10ch] truncate" title={user?.name}>
                   {user?.name}
                 </Link>
                 <button
