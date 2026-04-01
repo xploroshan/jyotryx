@@ -7,10 +7,12 @@ import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
 
 const navLinks = [
+  { href: "/my-day", label: "My Day" },
   { href: "/chat", label: "Consult" },
   { href: "/kundli", label: "Kundli" },
   { href: "/horoscope", label: "Horoscope" },
   { href: "/palmistry", label: "Palmistry" },
+  { href: "/numerology", label: "Numerology" },
   { href: "/matching", label: "Matching" },
   { href: "/panchang", label: "Panchang" },
   { href: "/muhurat", label: "Muhurat" },
