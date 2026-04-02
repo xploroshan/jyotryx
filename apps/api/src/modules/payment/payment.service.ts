@@ -75,8 +75,32 @@ export class PaymentService {
     }
   }
 
+  private getExpectedPrice(productId: string): number | null {
+    const prices: Record<string, number> = {
+      'credits_10': 9900,    // 99 INR in paise
+      'credits_50': 39900,   // 399 INR
+      'credits_100': 69900,  // 699 INR
+      'report_life': 59900,
+      'report_career': 59900,
+      'report_marriage': 59900,
+      'report_wealth': 59900,
+      'report_palm': 19900,
+      'report_annual': 99900,
+      'palm_reading': 19900,
+    };
+    return prices[productId] ?? null;
+  }
+
   async createOrder(userId: string, dto: CreateOrderDto): Promise<RazorpayOrder> {
     this.logger.log(`Creating order for user: ${userId}, amount: ${dto.amount}`);
+
+    // Validate amount against expected price for the product
+    if (dto.productId) {
+      const expectedPrice = this.getExpectedPrice(dto.productId);
+      if (expectedPrice !== null && dto.amount !== expectedPrice) {
+        throw new BadRequestException(`Invalid amount for product ${dto.productId}. Expected ${expectedPrice}, got ${dto.amount}`);
+      }
+    }
 
     let orderId: string;
     let orderAmount = dto.amount;
@@ -128,7 +152,8 @@ export class PaymentService {
   async verifyPayment(userId: string, dto: VerifyPaymentDto): Promise<PaymentVerificationResult> {
     this.logger.log(`Verifying payment for user: ${userId}, order: ${dto.razorpayOrderId}`);
 
-    const webhookSecret = this.configService.get<string>('razorpay.keySecret');
+    const webhookSecret = this.configService.get<string>('razorpay.webhookSecret')
+                       || this.configService.get<string>('razorpay.keySecret');
 
     if (webhookSecret) {
       const expectedSignature = crypto

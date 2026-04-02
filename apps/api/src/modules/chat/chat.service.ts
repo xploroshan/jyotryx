@@ -23,11 +23,7 @@ export interface ChatSession {
   updatedAt: string;
 }
 
-export interface SendMessageDto {
-  sessionId?: string;
-  message: string;
-  category?: 'general' | 'kundli' | 'career' | 'relationship' | 'remedy' | 'wealth' | 'health' | 'numerology';
-}
+import { SendMessageDto } from './dto/send-message.dto';
 
 @Injectable()
 export class ChatService {
@@ -93,13 +89,20 @@ export class ChatService {
       },
     });
 
-    // Generate AI response
-    const aiReply = await this.generateAIResponse(
-      dto.message,
-      dbSession.category,
-      dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
-      userProfile,
-    );
+    // Generate AI response (refund credit if AI fails entirely)
+    let aiReply: string;
+    try {
+      aiReply = await this.generateAIResponse(
+        dto.message,
+        dbSession.category,
+        dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
+        userProfile,
+      );
+    } catch (error) {
+      this.logger.error('AI response generation failed, refunding credit', error);
+      await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: AI response failed');
+      throw new BadRequestException('Unable to generate a response. Your credit has been refunded. Please try again.');
+    }
 
     // Save assistant message
     const assistantMsg = await this.prisma.chatMessage.create({

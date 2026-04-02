@@ -5,9 +5,11 @@ import {
   Body,
   Param,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ChatService, ChatSession, ChatMessage, SendMessageDto } from './chat.service';
+import { ChatService, ChatSession, ChatMessage } from './chat.service';
+import { SendMessageDto } from './dto/send-message.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload } from '../../common/decorators/current-user.decorator';
 
@@ -44,7 +46,7 @@ export class ChatController {
   @ApiResponse({ status: 404, description: 'Session not found' })
   async getSession(
     @CurrentUser() user: JwtPayload,
-    @Param('id') sessionId: string,
+    @Param('id', ParseUUIDPipe) sessionId: string,
   ): Promise<ChatSession> {
     return this.chatService.getSession(user.sub, sessionId);
   }

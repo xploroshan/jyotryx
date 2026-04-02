@@ -225,7 +225,6 @@ export class DailyBriefingService {
 
     // Lucky attributes
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-    const colors = ['Red', 'White', 'Orange', 'Green', 'Yellow', 'Pink', 'Blue', 'Purple', 'Gold'];
     const luckyColor = this.getPlanetColor(dayRuler);
     const luckyNumber = ((dayOfYear + dayOfWeek) % 9) + 1;
     const luckyTime = currentHora ? `${currentHora.startTime} - ${currentHora.endTime}` : '10:00 AM - 11:30 AM';

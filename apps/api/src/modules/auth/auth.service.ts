@@ -9,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   RegisterDto,
@@ -226,7 +227,7 @@ export class AuthService {
     const expiresInMinutes = this.configService.get<number>('otp.expiresInMinutes', 5);
 
     const otp = Array.from({ length: otpLength }, () =>
-      Math.floor(Math.random() * 10),
+      crypto.randomInt(0, 10),
     ).join('');
 
     otpStore.set(dto.phone, {

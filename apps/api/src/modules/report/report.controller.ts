@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ReportService, ReportResponse, GenerateReportDto } from './report.service';
@@ -35,7 +36,7 @@ export class ReportController {
   @ApiResponse({ status: 404, description: 'Report not found' })
   async getReport(
     @CurrentUser() user: JwtPayload,
-    @Param('id') reportId: string,
+    @Param('id', ParseUUIDPipe) reportId: string,
   ): Promise<ReportResponse> {
     return this.reportService.getReport(user.sub, reportId);
   }

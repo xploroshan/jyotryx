@@ -117,13 +117,13 @@ export class UserService {
 
   async deductCredits(userId: string, amount: number, description: string): Promise<boolean> {
     return await this.prisma.$transaction(async (tx: any) => {
-      const user = await tx.user.findUnique({ where: { id: userId } });
-      if (!user || user.credits < amount) return false;
-
-      await tx.user.update({
-        where: { id: userId },
+      // Atomic decrement with a WHERE guard to prevent negative credits
+      const result = await tx.user.updateMany({
+        where: { id: userId, credits: { gte: amount } },
         data: { credits: { decrement: amount } },
       });
+
+      if (result.count === 0) return false;
 
       await tx.creditTransaction.create({
         data: {
