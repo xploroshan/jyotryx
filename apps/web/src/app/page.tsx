@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/store";
 
 const features = [
   {
@@ -111,6 +116,15 @@ const stats = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/my-day");
+    }
+  }, [isAuthenticated, router]);
+
   return (
     <div>
       {/* Hero */}
