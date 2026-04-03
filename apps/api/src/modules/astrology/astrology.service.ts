@@ -506,20 +506,82 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
   }
 
   private calculateGunaScores(p1: BirthDetails, p2: BirthDetails): GunaDetail[] {
-    const d1 = new Date(p1.dateOfBirth);
-    const d2 = new Date(p2.dateOfBirth);
-    const diff = Math.abs(d1.getTime() - d2.getTime());
-    const seed = (d1.getDate() + d2.getDate() + d1.getMonth() + d2.getMonth()) % 10;
+    // Compute approximate Moon signs and Nakshatras for both partners using mean lunar longitude
+    const getMoonData = (bd: BirthDetails) => {
+      const date = new Date(bd.dateOfBirth);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear();
+      const a = Math.floor((14 - month) / 12);
+      const y = year + 4800 - a;
+      const m = month + 12 * a - 3;
+      const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+      const T = (jd - 2451545.0) / 36525.0;
+      const moonLong = (218.3165 + 481267.8813 * T) % 360;
+      const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
+      const moonSid = ((moonLong - ayanamsa) % 360 + 360) % 360;
+      const signIdx = Math.floor(moonSid / 30) % 12;
+      const nakIdx = Math.floor(moonSid / (360 / 27)) % 27;
+      return { signIdx, nakIdx };
+    };
+
+    const m1 = getMoonData(p1);
+    const m2 = getMoonData(p2);
+
+    // Varna (1 pt): Based on sign's Varna classification
+    // Brahmin(Cancer,Scorpio,Pisces), Kshatriya(Aries,Leo,Sag), Vaishya(Taurus,Virgo,Cap), Shudra(Gemini,Libra,Aquarius)
+    const varnaMap = [1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0]; // Aries=Kshatriya(1), Taurus=Vaishya(2), etc.
+    const v1 = varnaMap[m1.signIdx];
+    const v2 = varnaMap[m2.signIdx];
+    const varnaScore = v1 >= v2 ? 1 : 0;
+
+    // Vashya (2 pts): Based on sign's Vashya group compatibility
+    const vashyaGroups = [0, 1, 2, 3, 0, 2, 1, 3, 0, 1, 2, 3]; // Simplified grouping
+    const vashyaScore = vashyaGroups[m1.signIdx] === vashyaGroups[m2.signIdx] ? 2 : Math.abs(vashyaGroups[m1.signIdx] - vashyaGroups[m2.signIdx]) <= 1 ? 1 : 0;
+
+    // Tara (3 pts): Count nakshatras from bride to groom, divide by 9, check remainder
+    const taraDiff = ((m2.nakIdx - m1.nakIdx + 27) % 27);
+    const taraRemainder = taraDiff % 9;
+    const auspiciousTara = [1, 2, 4, 6, 8]; // 2nd, 3rd, 5th, 7th, 9th are favorable
+    const taraScore = auspiciousTara.includes(taraRemainder) ? 3 : taraRemainder === 0 ? 1 : 0;
+
+    // Yoni (4 pts): Based on nakshatra's animal symbol compatibility
+    const yoniAnimals = [0, 0, 1, 2, 2, 3, 4, 1, 4, 5, 5, 6, 6, 7, 6, 7, 7, 3, 3, 8, 8, 8, 0, 0, 0, 6, 0]; // Simplified animal groups
+    const yoniMatch = yoniAnimals[m1.nakIdx] === yoniAnimals[m2.nakIdx];
+    const yoniScore = yoniMatch ? 4 : Math.abs(yoniAnimals[m1.nakIdx] - yoniAnimals[m2.nakIdx]) <= 2 ? 2 : 1;
+
+    // Graha Maitri (5 pts): Based on Moon sign lords friendship
+    const signLords = [4, 6, 5, 1, 0, 5, 6, 4, 3, 2, 2, 3]; // Mars,Venus,Mercury,Moon,Sun,Mercury,Venus,Mars,Jupiter,Saturn,Saturn,Jupiter
+    const lord1 = signLords[m1.signIdx];
+    const lord2 = signLords[m2.signIdx];
+    const graha = lord1 === lord2 ? 5 : Math.abs(lord1 - lord2) <= 1 ? 4 : Math.abs(lord1 - lord2) <= 2 ? 3 : 0;
+
+    // Gana (6 pts): Deva, Manushya, Rakshasa based on nakshatra
+    const ganaMap = [0, 2, 1, 0, 0, 2, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0]; // 0=Deva, 1=Manushya, 2=Rakshasa
+    const g1 = ganaMap[m1.nakIdx];
+    const g2 = ganaMap[m2.nakIdx];
+    const ganaScore = g1 === g2 ? 6 : (g1 === 0 && g2 === 1) || (g1 === 1 && g2 === 0) ? 3 : 0;
+
+    // Bhakoot (7 pts): Based on relative sign positions (2-12, 6-8, 5-9 are inauspicious)
+    const signDiff = ((m2.signIdx - m1.signIdx + 12) % 12) + 1;
+    const badBhakoot = [2, 6, 8, 12].includes(signDiff) || [2, 6, 8, 12].includes(13 - signDiff);
+    const bhakootScore = badBhakoot ? 0 : 7;
+
+    // Nadi (8 pts): Based on nakshatra's Nadi (Aadi, Madhya, Antya)
+    const nadiMap = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2];
+    const n1 = nadiMap[m1.nakIdx];
+    const n2 = nadiMap[m2.nakIdx];
+    const nadiScore = n1 !== n2 ? 8 : 0; // Same Nadi = 0 (Nadi Dosha)
 
     return [
-      { guna: 'Varna', maxPoints: 1, obtainedPoints: seed % 2 === 0 ? 1 : 0, description: 'Spiritual compatibility and ego levels' },
-      { guna: 'Vashya', maxPoints: 2, obtainedPoints: Math.min(2, 1 + (seed % 2)), description: 'Mutual attraction and dominance' },
-      { guna: 'Tara', maxPoints: 3, obtainedPoints: Math.min(3, 1 + (seed % 3)), description: 'Birth star compatibility and destiny' },
-      { guna: 'Yoni', maxPoints: 4, obtainedPoints: Math.min(4, 2 + (seed % 3)), description: 'Sexual and physical compatibility' },
-      { guna: 'Graha Maitri', maxPoints: 5, obtainedPoints: Math.min(5, 2 + (seed % 4)), description: 'Planetary friendship and mental compatibility' },
-      { guna: 'Gana', maxPoints: 6, obtainedPoints: Math.min(6, 3 + (seed % 4)), description: 'Temperament and behavior compatibility' },
-      { guna: 'Bhakoot', maxPoints: 7, obtainedPoints: Math.min(7, 4 + (seed % 4)), description: 'Emotional compatibility and financial prosperity' },
-      { guna: 'Nadi', maxPoints: 8, obtainedPoints: diff > 86400000 * 365 ? Math.min(8, 4 + (seed % 5)) : Math.min(8, 2 + (seed % 4)), description: 'Health compatibility and genetic factors' },
+      { guna: 'Varna', maxPoints: 1, obtainedPoints: varnaScore, description: 'Spiritual compatibility and ego levels' },
+      { guna: 'Vashya', maxPoints: 2, obtainedPoints: vashyaScore, description: 'Mutual attraction and dominance' },
+      { guna: 'Tara', maxPoints: 3, obtainedPoints: taraScore, description: 'Birth star compatibility and destiny' },
+      { guna: 'Yoni', maxPoints: 4, obtainedPoints: yoniScore, description: 'Sexual and physical compatibility' },
+      { guna: 'Graha Maitri', maxPoints: 5, obtainedPoints: graha, description: 'Planetary friendship and mental compatibility' },
+      { guna: 'Gana', maxPoints: 6, obtainedPoints: ganaScore, description: 'Temperament and behavior compatibility' },
+      { guna: 'Bhakoot', maxPoints: 7, obtainedPoints: bhakootScore, description: 'Emotional compatibility and financial prosperity' },
+      { guna: 'Nadi', maxPoints: 8, obtainedPoints: nadiScore, description: 'Health compatibility and genetic factors' },
     ];
   }
 
@@ -728,21 +790,65 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
       return result;
     }
 
-    // Fallback: calculate based on current date for daily variety
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    // Fallback: compute Panchang from astronomical formulas
     const dayNames = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
     const tithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
     const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
     const yogas = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
     const karanas = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja', 'Vanija', 'Vishti', 'Shakuni', 'Chatushpada', 'Nagava', 'Kimstughna'];
 
-    // Tithi changes roughly every ~24 hours
-    const tithiIdx = dayOfYear % 30;
+    // Julian Day for astronomical computation
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+    const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+    const T = (jd - 2451545.0) / 36525.0;
+
+    // Mean Sun and Moon longitudes
+    const sunLong = (280.46646 + 36000.76983 * T) % 360;
+    const moonLong = (218.3165 + 481267.8813 * T) % 360;
+
+    // Tithi: based on Moon-Sun elongation (each tithi = 12°)
+    const elongation = ((moonLong - sunLong) % 360 + 360) % 360;
+    const tithiIdx = Math.floor(elongation / 12) % 30;
     const paksha = tithiIdx < 15 ? 'Shukla' : 'Krishna';
     const tithiName = tithis[tithiIdx % 15];
 
-    // Nakshatra changes roughly every ~27.3 hours
-    const nakIdx = Math.floor(dayOfYear * 0.98) % 27;
+    // Nakshatra: based on Moon's sidereal longitude (Lahiri ayanamsa)
+    const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
+    const moonSidereal = ((moonLong - ayanamsa) % 360 + 360) % 360;
+    const nakIdx = Math.floor(moonSidereal / (360 / 27)) % 27;
+
+    // Yoga: Sun + Moon sidereal longitudes / 13.333°
+    const sunSidereal = ((sunLong - ayanamsa) % 360 + 360) % 360;
+    const yogaAngle = ((moonSidereal + sunSidereal) % 360 + 360) % 360;
+    const yogaIdx = Math.floor(yogaAngle / (360 / 27)) % 27;
+
+    // Karana: half of tithi
+    const karanaIdx = (tithiIdx * 2) % 11;
+
+    // Approximate sunrise/sunset for Delhi (28.6°N) with seasonal variation
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    const declination = 23.45 * Math.sin(2 * Math.PI * (284 + dayOfYear) / 365);
+    const latRad = 28.6139 * Math.PI / 180;
+    const decRad = declination * Math.PI / 180;
+    const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(decRad)) * 180 / Math.PI;
+    const sunriseHour = 12 - hourAngle / 15 + 5.5 / 15; // IST offset approximation
+    const sunsetHour = 12 + hourAngle / 15 + 5.5 / 15;
+    const formatHour = (h: number) => {
+      const hr = Math.floor(h);
+      const min = Math.round((h - hr) * 60);
+      const period = hr >= 12 ? 'PM' : 'AM';
+      const hr12 = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
+      return `${hr12.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
+    };
+
+    // Moonrise: roughly 50 minutes later each day from a base
+    const moonriseBase = 6.0 + (tithiIdx * 50) / 60; // starts near sunrise at new moon
+    const moonriseHour = ((moonriseBase + 5.5 / 15) % 24 + 24) % 24;
 
     // Rahu Kaal varies by day of week
     const rahuKaals = ['04:30 PM - 06:00 PM', '07:30 AM - 09:00 AM', '03:00 PM - 04:30 PM', '12:00 PM - 01:30 PM', '01:30 PM - 03:00 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM'];
@@ -751,12 +857,12 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
       date: dateStr,
       tithi: `${paksha} ${tithiName}`,
       nakshatra: nakshatras[nakIdx],
-      yoga: yogas[dayOfYear % 27],
-      karana: karanas[dayOfYear % 11],
+      yoga: yogas[yogaIdx],
+      karana: karanas[karanaIdx],
       vara: dayNames[today.getDay()],
-      sunrise: '06:15 AM',
-      sunset: '06:42 PM',
-      moonrise: `${((dayOfYear % 12) + 5).toString().padStart(2, '0')}:${(dayOfYear % 60).toString().padStart(2, '0')} ${dayOfYear % 2 === 0 ? 'AM' : 'PM'}`,
+      sunrise: formatHour(sunriseHour),
+      sunset: formatHour(sunsetHour),
+      moonrise: formatHour(moonriseHour),
       rahukaal: rahuKaals[today.getDay()],
       gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][today.getDay()],
       yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][today.getDay()],

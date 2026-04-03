@@ -365,20 +365,45 @@ export class DailyBriefingService {
   }
 
   private getBasicPanchang(today: Date) {
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
     const dayNames = ['Ravivaar (Sunday)', 'Somvaar (Monday)', 'Mangalvaar (Tuesday)', 'Budhvaar (Wednesday)', 'Guruvaar (Thursday)', 'Shukravaar (Friday)', 'Shanivaar (Saturday)'];
     const tithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
     const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
     const yogas = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
     const rahuKaals = ['4:30 PM - 6:00 PM', '7:30 AM - 9:00 AM', '3:00 PM - 4:30 PM', '12:00 PM - 1:30 PM', '1:30 PM - 3:00 PM', '10:30 AM - 12:00 PM', '9:00 AM - 10:30 AM'];
 
-    const tithiIdx = dayOfYear % 30;
+    // Compute Julian Day for astronomical calculations
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+    const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+    const T = (jd - 2451545.0) / 36525.0;
+
+    // Mean Sun and Moon longitudes
+    const sunLong = (280.46646 + 36000.76983 * T) % 360;
+    const moonLong = (218.3165 + 481267.8813 * T) % 360;
+    const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
+
+    // Tithi from Moon-Sun elongation (12° per tithi)
+    const elongation = ((moonLong - sunLong) % 360 + 360) % 360;
+    const tithiIdx = Math.floor(elongation / 12) % 30;
     const paksha = tithiIdx < 15 ? 'Shukla' : 'Krishna';
+
+    // Nakshatra from Moon's sidereal longitude
+    const moonSidereal = ((moonLong - ayanamsa) % 360 + 360) % 360;
+    const nakIdx = Math.floor(moonSidereal / (360 / 27)) % 27;
+
+    // Yoga from sum of sidereal Sun + Moon
+    const sunSidereal = ((sunLong - ayanamsa) % 360 + 360) % 360;
+    const yogaAngle = ((moonSidereal + sunSidereal) % 360 + 360) % 360;
+    const yogaIdx = Math.floor(yogaAngle / (360 / 27)) % 27;
 
     return {
       tithi: `${paksha} ${tithis[tithiIdx % 15]}`,
-      nakshatra: nakshatras[Math.floor(dayOfYear * 0.98) % 27],
-      yoga: yogas[dayOfYear % 27],
+      nakshatra: nakshatras[nakIdx],
+      yoga: yogas[yogaIdx],
       vara: dayNames[today.getDay()],
       rahukaal: rahuKaals[today.getDay()],
     };

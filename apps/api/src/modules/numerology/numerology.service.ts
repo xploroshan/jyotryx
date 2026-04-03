@@ -288,10 +288,6 @@ export class NumerologyService {
   }
 
   private reduceToSingle(num: number): number {
-    while (num > 9 && num !== 11 && num !== 22) {
-      num = num.toString().split('').reduce((s, d) => s + parseInt(d, 10), 0);
-    }
-    // For simplicity, reduce master numbers too
     while (num > 9) {
       num = num.toString().split('').reduce((s, d) => s + parseInt(d, 10), 0);
     }
