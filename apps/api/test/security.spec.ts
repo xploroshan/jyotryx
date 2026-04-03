@@ -404,8 +404,7 @@ describe('Security: Data Isolation', () => {
     prisma.$transaction.mockImplementation(async (cb: any) => {
       return cb({
         user: {
-          findUnique: jest.fn().mockResolvedValue({ id: 'u1', credits: 10 }),
-          update: jest.fn(),
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
         creditTransaction: { create: jest.fn() },
       });
@@ -420,8 +419,7 @@ describe('Security: Data Isolation', () => {
     prisma.$transaction.mockImplementation(async (cb: any) => {
       return cb({
         user: {
-          findUnique: jest.fn().mockResolvedValue({ id: 'u1', credits: 1 }),
-          update: jest.fn(),
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
         },
         creditTransaction: { create: jest.fn() },
       });

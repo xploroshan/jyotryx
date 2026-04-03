@@ -12,7 +12,7 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { JwtService } from '@nestjs/jwt';
-import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import {
   mockPrismaService,
   mockOpenAIService,

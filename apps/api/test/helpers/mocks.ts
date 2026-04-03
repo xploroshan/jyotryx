@@ -65,7 +65,7 @@ export const mockPrismaService = () => ({
     aggregate: jest.fn().mockResolvedValue({ _sum: { amount: -5 } }),
   },
   $transaction: jest.fn((fn: any) => fn({
-    user: { findUnique: jest.fn().mockResolvedValue({ id: 'test-uuid', credits: 20 }), update: jest.fn() },
+    user: { findUnique: jest.fn().mockResolvedValue({ id: 'test-uuid', credits: 20 }), update: jest.fn(), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
     creditTransaction: { create: jest.fn() },
   })),
 });

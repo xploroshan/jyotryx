@@ -79,7 +79,7 @@ export class KnowledgeService {
         },
       });
 
-      return textResults.map((doc) => ({
+      return textResults.map((doc: any) => ({
         id: doc.id,
         text: doc.text,
         category: doc.category,
@@ -90,7 +90,7 @@ export class KnowledgeService {
     }
 
     // Step 2: Score by keyword overlap
-    const scored = candidates.map((doc) => ({
+    const scored = candidates.map((doc: any) => ({
       id: doc.id,
       text: doc.text,
       category: doc.category,
@@ -100,7 +100,7 @@ export class KnowledgeService {
     }));
 
     // Sort by score and return top K
-    scored.sort((a, b) => b.score - a.score);
+    scored.sort((a: any, b: any) => b.score - a.score);
     return scored.slice(0, topK);
   }
 
@@ -120,7 +120,7 @@ export class KnowledgeService {
       },
     });
 
-    return docs.map((doc) => ({
+    return docs.map((doc: any) => ({
       ...doc,
       score: 1.0,
     }));
@@ -142,7 +142,7 @@ export class KnowledgeService {
       },
     });
 
-    return docs.map((doc) => ({
+    return docs.map((doc: any) => ({
       ...doc,
       score: 1.0,
     }));
