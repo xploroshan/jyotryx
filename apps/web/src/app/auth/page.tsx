@@ -20,13 +20,18 @@ function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [tab, setTab] = useState<"login" | "signup">("login");
 
   useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/my-day");
+      return;
+    }
     const mode = searchParams.get("mode");
     if (mode === "signup") setTab("signup");
     else if (mode === "login") setTab("login");
-  }, [searchParams]);
+  }, [searchParams, isAuthenticated, router]);
 
   const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
@@ -61,7 +66,7 @@ function AuthPageContent() {
     try {
       const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      router.push("/chat");
+      router.push("/my-day");
     } catch (err: any) {
       throw new Error(err.message || "Failed to authenticate with server. Please try again.");
     }
@@ -162,7 +167,7 @@ function AuthPageContent() {
       const body = tab === "login" ? { email, password } : { name, email, password };
       const res = await api.post<any>(endpoint, body);
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      router.push("/chat");
+      router.push("/my-day");
     } catch (err: any) { setError(err.message || "Authentication failed"); }
     finally { setLoading(false); }
   };
