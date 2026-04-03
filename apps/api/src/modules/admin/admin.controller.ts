@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
   Request,
+  BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService, DashboardStats, UserListItem, UserDetail, AdminUserUpdate } from './admin.service';
@@ -47,7 +49,7 @@ export class AdminController {
   @Get('users/:id')
   @ApiOperation({ summary: 'Get detailed user information' })
   @ApiResponse({ status: 200, description: 'User detail returned' })
-  async getUserDetail(@Param('id') userId: string): Promise<UserDetail> {
+  async getUserDetail(@Param('id', ParseUUIDPipe) userId: string): Promise<UserDetail> {
     return this.adminService.getUserDetail(userId);
   }
 
@@ -55,7 +57,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Update user details' })
   @ApiResponse({ status: 200, description: 'User updated' })
   async updateUser(
-    @Param('id') userId: string,
+    @Param('id', ParseUUIDPipe) userId: string,
     @Body() dto: AdminUserUpdate,
     @Request() req: any,
   ): Promise<UserListItem> {
@@ -66,7 +68,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Delete a user' })
   @ApiResponse({ status: 200, description: 'User deleted' })
   async deleteUser(
-    @Param('id') userId: string,
+    @Param('id', ParseUUIDPipe) userId: string,
     @Request() req: any,
   ): Promise<{ deleted: boolean }> {
     return this.adminService.deleteUser(userId, req.user.sub, req.user.email);
@@ -105,7 +107,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Undo an admin action' })
   @ApiResponse({ status: 200, description: 'Action undone successfully' })
   async undoActivity(
-    @Param('id') logId: string,
+    @Param('id', ParseUUIDPipe) logId: string,
     @Request() req: any,
   ) {
     return this.adminService.undoActivity(logId, req.user.sub, req.user.email);
@@ -125,6 +127,13 @@ export class AdminController {
     @Body() dto: Record<string, string>,
     @Request() req: any,
   ): Promise<Record<string, string>> {
+    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.'];
+    const invalidKeys = Object.keys(dto).filter(
+      (key) => !ALLOWED_PREFIXES.some((prefix) => key.startsWith(prefix)),
+    );
+    if (invalidKeys.length > 0) {
+      throw new BadRequestException(`Invalid setting keys: ${invalidKeys.join(', ')}. Allowed prefixes: ${ALLOWED_PREFIXES.join(', ')}`);
+    }
     return this.adminService.updateSettings(dto, req.user.sub, req.user.email);
   }
 
@@ -132,7 +141,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Cancel a user subscription' })
   @ApiResponse({ status: 200, description: 'Subscription cancelled' })
   async cancelSubscription(
-    @Param('id') subscriptionId: string,
+    @Param('id', ParseUUIDPipe) subscriptionId: string,
     @Request() req: any,
   ) {
     return this.adminService.cancelSubscription(subscriptionId, req.user.sub, req.user.email);

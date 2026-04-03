@@ -92,8 +92,7 @@ describe('UserService', () => {
       prisma.$transaction.mockImplementation(async (cb: any) => {
         return cb({
           user: {
-            findUnique: jest.fn().mockResolvedValue(mockUser),
-            update: jest.fn(),
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           },
           creditTransaction: { create: jest.fn() },
         });

@@ -475,9 +475,12 @@ describe('Stability: Transaction Atomicity', () => {
     prisma.$transaction.mockImplementation(async (cb: any) => {
       return cb({
         user: {
-          findUnique: jest.fn().mockResolvedValue({ id: 'u1', credits }),
-          update: jest.fn().mockImplementation(({ data }: any) => {
-            credits += data.credits.decrement ? -data.credits.decrement : 0;
+          updateMany: jest.fn().mockImplementation(({ where, data }: any) => {
+            if (credits >= where.credits.gte) {
+              credits -= data.credits.decrement;
+              return { count: 1 };
+            }
+            return { count: 0 };
           }),
         },
         creditTransaction: { create: jest.fn() },

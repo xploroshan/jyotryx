@@ -982,22 +982,17 @@ describe('Auth: Controller', () => {
       expect(authService.setPassword).toHaveBeenCalledWith('user-1', 'NewPass123!');
     });
 
-    it('should throw BadRequestException for password shorter than 8 chars', async () => {
-      await expect(
-        controller.setPassword(
-          { password: 'short' },
-          { user: { sub: 'user-1' } },
-        ),
-      ).rejects.toThrow();
-    });
+    it('should pass password to service (validation is handled by DTO/ValidationPipe)', async () => {
+      // Note: Short/empty password validation is now enforced by SetPasswordDto
+      // via class-validator decorators + NestJS ValidationPipe, not by the controller.
+      // The DTO validation is tested in security-comprehensive.spec.ts.
+      authService.setPassword = jest.fn().mockResolvedValue({ message: 'Password set' });
 
-    it('should throw BadRequestException for empty password', async () => {
-      await expect(
-        controller.setPassword(
-          { password: '' },
-          { user: { sub: 'user-1' } },
-        ),
-      ).rejects.toThrow();
+      const result = await controller.setPassword(
+        { password: 'ValidPass1' },
+        { user: { sub: 'user-1' } },
+      );
+      expect(result.message).toBe('Password set');
     });
   });
 

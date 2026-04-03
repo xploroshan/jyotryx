@@ -7,9 +7,9 @@ import {
   HttpStatus,
   UseGuards,
   Request,
-  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthResponse, AuthTokens } from './auth.service';
 import {
   RegisterDto,
@@ -19,6 +19,7 @@ import {
   GoogleAuthDto,
   RefreshTokenDto,
   ChangePasswordDto,
+  SetPasswordDto,
   FirebaseAuthDto,
 } from './dto';
 import { Public } from '../../common/decorators/current-user.decorator';
@@ -31,6 +32,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'User already exists' })
@@ -40,6 +42,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
@@ -51,6 +54,7 @@ export class AuthController {
 
   @Post('otp/send')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send OTP to phone number' })
   @ApiResponse({ status: 200, description: 'OTP sent successfully' })
@@ -62,6 +66,7 @@ export class AuthController {
 
   @Post('otp/verify')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify OTP and authenticate' })
   @ApiResponse({ status: 200, description: 'OTP verified, user authenticated' })
@@ -120,13 +125,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Set password for OTP/social login users' })
   @ApiResponse({ status: 200, description: 'Password set successfully' })
   async setPassword(
-    @Body() body: { password: string },
+    @Body() dto: SetPasswordDto,
     @Request() req: any,
   ): Promise<{ message: string }> {
-    if (!body.password || body.password.length < 8) {
-      throw new BadRequestException('Password must be at least 8 characters');
-    }
-    return this.authService.setPassword(req.user.sub, body.password);
+    return this.authService.setPassword(req.user.sub, dto.password);
   }
 
   @Get('status')

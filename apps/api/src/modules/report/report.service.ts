@@ -84,6 +84,8 @@ export class ReportService {
         type: dto.type,
         status: 'READY',
         price: creditCost,
+        // Store generated sections so we don't regenerate on every view
+        fileUrl: JSON.stringify({ sections }),
       },
     });
 
@@ -100,6 +102,19 @@ export class ReportService {
       createdAt: report.createdAt.toISOString(),
       completedAt: new Date().toISOString(),
     };
+  }
+
+  private async regenerateSections(userId: string, type: string): Promise<ReportSection[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true },
+    });
+    const birthDetails = {
+      dateOfBirth: user?.dateOfBirth?.toISOString().split('T')[0] || '',
+      timeOfBirth: user?.timeOfBirth || '',
+      placeOfBirth: (user?.placeOfBirth as any)?.name || '',
+    };
+    return this.generateAIReportSections(type, birthDetails, user?.name || 'User', user?.gender);
   }
 
   private async generateAIReportSections(
@@ -300,19 +315,18 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
 
     if (!report) throw new NotFoundException('Report not found');
 
-    // Fetch user profile to regenerate sections if needed
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true },
-    });
-
-    const birthDetails = {
-      dateOfBirth: user?.dateOfBirth?.toISOString().split('T')[0] || '',
-      timeOfBirth: user?.timeOfBirth || '',
-      placeOfBirth: (user?.placeOfBirth as any)?.name || '',
-    };
-
-    const sections = await this.generateAIReportSections(report.type, birthDetails, user?.name || 'User', user?.gender);
+    // Use stored sections if available, otherwise regenerate (legacy reports)
+    let sections: ReportSection[];
+    if (report.fileUrl && report.fileUrl.startsWith('{')) {
+      try {
+        const stored = JSON.parse(report.fileUrl);
+        sections = stored.sections;
+      } catch {
+        sections = await this.regenerateSections(userId, report.type);
+      }
+    } else {
+      sections = await this.regenerateSections(userId, report.type);
+    }
 
     const reportTitles: Record<string, string> = {
       LIFE: 'Detailed Life Analysis Report',
