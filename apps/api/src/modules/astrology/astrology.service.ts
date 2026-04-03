@@ -151,6 +151,7 @@ export class AstrologyService {
     userPrompt: string,
     jsonMode: boolean = true,
     maxTokens: number = 1500,
+    temperature: number = 0.7,
   ): Promise<any | null> {
     return this.openaiService.chatCompletion({
       messages: [
@@ -158,7 +159,7 @@ export class AstrologyService {
         { role: 'user', content: userPrompt },
       ],
       maxTokens,
-      temperature: 0.7,
+      temperature,
       jsonMode,
     });
   }
@@ -208,26 +209,42 @@ export class AstrologyService {
     const kbContext = this.knowledgeService.assembleContext([...planetKB, ...houseKB, ...yogaKB]);
     const kbSection = kbContext ? `\n\nReference Knowledge:\n${kbContext}` : '';
 
-    const systemPrompt = `You are an expert Vedic astrologer with deep knowledge of Jyotish Shastra. Given birth details, calculate an accurate Vedic birth chart (Kundli). Return a JSON object with these exact keys:
-- ascendant: string (the rising sign based on time and place of birth)
-- moonSign: string (Rashi based on Moon's position)
-- sunSign: string (based on Vedic sidereal zodiac, NOT Western)
-- nakshatra: string (birth nakshatra based on Moon's position)
+    const systemPrompt = `You are an expert Vedic astrologer and astronomer with deep knowledge of Jyotish Shastra and astronomical ephemeris data. Given birth details, calculate an accurate Vedic birth chart (Kundli).
+
+CRITICAL CALCULATION RULES:
+1. Use the Lahiri ayanamsa (approximately 24°07' for 2024, subtract ~50.3" per year going backward) to convert tropical to sidereal positions.
+2. Calculate the ACTUAL astronomical positions of all 9 Vedic planets (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu) for the given date.
+3. Calculate the Ascendant (Lagna) based on the LOCAL SIDEREAL TIME at the birth location, using the latitude and longitude provided.
+4. Rahu and Ketu are always exactly 180° apart. Rahu's mean motion is approximately 19°20' per year retrograde.
+5. Jupiter takes ~12 years per zodiac cycle (~1 sign/year). Saturn takes ~29.5 years (~2.5 years/sign).
+6. Mercury is always within ~28° of the Sun. Venus is always within ~47° of the Sun.
+7. Each sign spans exactly 30°. Each nakshatra spans exactly 13°20'.
+8. Retrograde status: Check if the planet's geocentric longitude is decreasing (Mars retrogrades ~72 days every ~2 years, Jupiter ~120 days/year, Saturn ~138 days/year). Rahu/Ketu are always retrograde.
+9. The 27 nakshatras start from 0° Aries: Ashwini (0°-13°20'), Bharani (13°20'-26°40'), etc.
+10. Vimshottari Dasha: Calculate based on Moon's nakshatra position. The nakshatra lord determines the starting Mahadasha, and the balance is proportional to the remaining degrees in the nakshatra.
+
+Return a JSON object with these exact keys:
+- ascendant: string (the rising sign)
+- moonSign: string (Rashi based on Moon's sidereal position)
+- sunSign: string (based on Vedic sidereal zodiac, NOT Western tropical)
+- nakshatra: string (birth nakshatra based on Moon's exact sidereal position)
 - houses: array of 12 objects with { house: number, sign: string, planets: string[] }
-- planetaryPositions: array of 9 objects (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu) with { planet: string, sign: string, house: number, degree: number, isRetrograde: boolean, nakshatra: string }
+- planetaryPositions: array of 9 objects with { planet: string, sign: string, house: number, degree: number, isRetrograde: boolean, nakshatra: string }
 - dashas: array with current Mahadasha and sub-periods { planet: string, startDate: string, endDate: string, subPeriods: [{planet, startDate, endDate}] }
 - yogas: array of detected yogas { name: string, description: string, effect: "benefic"|"malefic"|"neutral" }
 
-Use the Lahiri ayanamsa for sidereal calculations. Be astronomically accurate based on the given date, time, and place.${kbSection}`;
+The degree field should be the degree WITHIN the sign (0-30). Be as astronomically precise as possible.${kbSection}`;
 
-    const userPrompt = `Calculate the Vedic birth chart for:
+    const userPrompt = `Calculate the Vedic birth chart (Kundli) for:
 - Date of Birth: ${birthDetails.dateOfBirth}
 - Time of Birth: ${birthDetails.timeOfBirth}
 - Place of Birth: ${birthDetails.placeOfBirth}
-${birthDetails.latitude ? `- Latitude: ${birthDetails.latitude}` : ''}
-${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
+${birthDetails.latitude ? `- Latitude: ${birthDetails.latitude}°` : ''}
+${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}°` : ''}
 
-    const aiResult = await this.callOpenAI(systemPrompt, userPrompt, true, 2000);
+Please calculate the exact sidereal planetary longitudes for this date using Lahiri ayanamsa, then determine the ascendant from the local sidereal time at the given coordinates. Cross-check that Mercury is within 28° of the Sun and Venus within 47° of the Sun.`;
+
+    const aiResult = await this.callOpenAI(systemPrompt, userPrompt, true, 2000, 0.1);
 
     if (aiResult) return aiResult;
 
@@ -236,81 +253,135 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
   }
 
   private calculateChartFromBirthDetails(bd: BirthDetails): any {
-    // Derive signs from birth date for a more personalized fallback
     const date = new Date(bd.dateOfBirth);
     const month = date.getMonth() + 1;
     const day = date.getDate();
+    const year = date.getFullYear();
 
-    // Vedic sun sign (approximate, shifted ~23 days from Western)
-    const vedicSigns = ['Capricorn', 'Aquarius', 'Pisces', 'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius'];
-    const siderealOffset = [
-      [1, 14, 'Sagittarius'], [1, 31, 'Capricorn'],
-      [2, 12, 'Capricorn'], [2, 29, 'Aquarius'],
-      [3, 14, 'Aquarius'], [3, 31, 'Pisces'],
-      [4, 13, 'Pisces'], [4, 30, 'Aries'],
-      [5, 14, 'Aries'], [5, 31, 'Taurus'],
-      [6, 14, 'Taurus'], [6, 30, 'Gemini'],
-      [7, 16, 'Gemini'], [7, 31, 'Cancer'],
-      [8, 16, 'Cancer'], [8, 31, 'Leo'],
-      [9, 16, 'Leo'], [9, 30, 'Virgo'],
-      [10, 16, 'Virgo'], [10, 31, 'Libra'],
-      [11, 15, 'Libra'], [11, 30, 'Scorpio'],
-      [12, 15, 'Scorpio'], [12, 31, 'Sagittarius'],
-    ] as [number, number, string][];
+    // Julian Day Number for astronomical calculations
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+    const jdn = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
 
-    let sunSign = 'Aries';
-    for (const [m, d, sign] of siderealOffset) {
-      if (month === m && day <= d) { sunSign = sign; break; }
-      if (month < m) { sunSign = sign; break; }
-    }
-
-    // Derive ascendant from time of birth
-    const allSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
     const timeParts = bd.timeOfBirth?.split(':') || ['6', '0'];
     const hour = parseInt(timeParts[0], 10);
-    const sunSignIdx = allSigns.indexOf(sunSign);
-    const ascIdx = (sunSignIdx + Math.floor((hour + 6) / 2)) % 12;
+    const minute = parseInt(timeParts[1], 10) || 0;
+    const hourDecimal = hour + minute / 60;
+    const jd = jdn + (hourDecimal - 12) / 24;
+
+    // Days since J2000.0 epoch (Jan 1, 2000 12:00 TT)
+    const T = (jd - 2451545.0) / 36525.0;
+
+    // Lahiri ayanamsa (approximate): 23°51' in 2000, precession ~50.29"/year
+    const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
+
+    // Mean Sun longitude (tropical)
+    const sunLongTropical = (280.46646 + 36000.76983 * T + 0.0003032 * T * T) % 360;
+    const sunLongSidereal = ((sunLongTropical - ayanamsa) % 360 + 360) % 360;
+
+    // Mean Moon longitude (tropical) - more precise formula
+    const moonLongTropical = (218.3165 + 481267.8813 * T) % 360;
+    const moonLongSidereal = ((moonLongTropical - ayanamsa) % 360 + 360) % 360;
+
+    // Planetary mean longitudes (tropical, simplified)
+    const marsLongT = (355.433 + 19140.2993 * T) % 360;
+    const mercuryLongT = (252.251 + 149472.6746 * T) % 360;
+    const jupiterLongT = (34.351 + 3034.9057 * T) % 360;
+    const venusLongT = (181.979 + 58517.8149 * T) % 360;
+    const saturnLongT = (50.077 + 1222.1138 * T) % 360;
+
+    // Rahu mean longitude (always retrograde)
+    const rahuLongT = (125.045 - 1934.1363 * T) % 360;
+
+    // Convert all to sidereal
+    const toSidereal = (tropical: number) => ((tropical - ayanamsa) % 360 + 360) % 360;
+
+    const allSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+
+    const signFromLong = (lng: number) => allSigns[Math.floor(lng / 30) % 12];
+    const degreeInSign = (lng: number) => parseFloat((lng % 30).toFixed(1));
+    const signIdx = (lng: number) => Math.floor(lng / 30) % 12;
+
+    const sunSid = toSidereal(sunLongTropical);
+    const moonSid = moonLongSidereal;
+    const marsSid = toSidereal(marsLongT);
+    const mercSid = toSidereal(mercuryLongT);
+    const jupSid = toSidereal(jupiterLongT);
+    const venSid = toSidereal(venusLongT);
+    const satSid = toSidereal(saturnLongT);
+    const rahuSid = toSidereal(rahuLongT);
+    const ketuSid = (rahuSid + 180) % 360;
+
+    const sunSign = signFromLong(sunSid);
+    const moonSign = signFromLong(moonSid);
+
+    // Calculate ascendant using Local Sidereal Time
+    const lat = bd.latitude || 28.6139; // Default to Delhi
+    const lng = bd.longitude || 77.2090;
+    // Greenwich Mean Sidereal Time
+    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360;
+    const lst = ((gmst + lng) % 360 + 360) % 360;
+    // Ascendant formula (simplified)
+    const lstRad = lst * Math.PI / 180;
+    const latRad = lat * Math.PI / 180;
+    const obliquity = 23.4393 * Math.PI / 180;
+    const ascTropical = Math.atan2(
+      Math.cos(lstRad),
+      -(Math.sin(obliquity) * Math.tan(latRad) + Math.cos(obliquity) * Math.sin(lstRad))
+    ) * 180 / Math.PI;
+    const ascSidereal = ((ascTropical - ayanamsa) % 360 + 360) % 360;
+    const ascIdx = signIdx(ascSidereal);
     const ascendant = allSigns[ascIdx];
 
-    // Moon sign from day of month
-    const moonIdx = (sunSignIdx + Math.floor(day / 2.5)) % 12;
-    const moonSign = allSigns[moonIdx];
-
-    // Nakshatras based on moon
+    // Nakshatras (each 13°20' = 13.333°)
     const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
-    const nakIdx = (moonIdx * 2 + Math.floor(day / 4)) % 27;
-    const nakshatra = nakshatras[nakIdx];
+    const nakshatraFromLong = (lng: number) => nakshatras[Math.floor(lng / (360 / 27)) % 27];
+    const nakshatra = nakshatraFromLong(moonSid);
 
-    // Build houses starting from ascendant
+    // Build houses starting from ascendant (Equal House system)
     const houses = Array.from({ length: 12 }, (_, i) => ({
       house: i + 1,
       sign: allSigns[(ascIdx + i) % 12],
       planets: [] as string[],
     }));
 
-    // Place planets in houses based on birth data
-    const planets = [
-      { planet: 'Sun', signIdx: sunSignIdx },
-      { planet: 'Moon', signIdx: moonIdx },
-      { planet: 'Mars', signIdx: (sunSignIdx + 2 + (day % 5)) % 12 },
-      { planet: 'Mercury', signIdx: (sunSignIdx + (day % 3)) % 12 },
-      { planet: 'Jupiter', signIdx: (sunSignIdx + 4 + (date.getFullYear() % 12)) % 12 },
-      { planet: 'Venus', signIdx: (sunSignIdx + 1 + (day % 4)) % 12 },
-      { planet: 'Saturn', signIdx: (sunSignIdx + 6 + Math.floor(date.getFullYear() / 3) % 12) % 12 },
-      { planet: 'Rahu', signIdx: (moonIdx + 6) % 12 },
-      { planet: 'Ketu', signIdx: moonIdx },
+    // Planet data with sidereal longitudes
+    const planetData = [
+      { planet: 'Sun', sid: sunSid },
+      { planet: 'Moon', sid: moonSid },
+      { planet: 'Mars', sid: marsSid },
+      { planet: 'Mercury', sid: mercSid },
+      { planet: 'Jupiter', sid: jupSid },
+      { planet: 'Venus', sid: venSid },
+      { planet: 'Saturn', sid: satSid },
+      { planet: 'Rahu', sid: rahuSid },
+      { planet: 'Ketu', sid: ketuSid },
     ];
 
-    const planetaryPositions = planets.map((p) => {
-      const houseNum = ((p.signIdx - ascIdx + 12) % 12) + 1;
+    // Retrograde check: approximate based on angular difference from Sun
+    const isRetrograde = (planet: string, sid: number): boolean => {
+      if (planet === 'Rahu' || planet === 'Ketu') return true;
+      if (planet === 'Sun' || planet === 'Moon') return false;
+      // Superior planets are retrograde when roughly opposite the Sun
+      const diff = ((sid - sunSid + 360) % 360);
+      if (['Mars', 'Jupiter', 'Saturn'].includes(planet)) {
+        return diff > 120 && diff < 240;
+      }
+      return false; // Mercury/Venus retrograde detection needs more data
+    };
+
+    const planetaryPositions = planetData.map((p) => {
+      const pSignIdx = signIdx(p.sid);
+      const houseNum = ((pSignIdx - ascIdx + 12) % 12) + 1;
       houses[houseNum - 1].planets.push(p.planet);
       return {
         planet: p.planet,
-        sign: allSigns[p.signIdx],
+        sign: signFromLong(p.sid),
         house: houseNum,
-        degree: parseFloat(((day * 30 / 31) + (hour || 0) * 0.5).toFixed(1)),
-        isRetrograde: ['Saturn', 'Rahu', 'Ketu'].includes(p.planet) && day % 3 === 0,
-        nakshatra: nakshatras[(p.signIdx * 2 + Math.floor(day / 5)) % 27],
+        degree: degreeInSign(p.sid),
+        isRetrograde: isRetrograde(p.planet, p.sid),
+        nakshatra: nakshatraFromLong(p.sid),
       };
     });
 
@@ -336,11 +407,11 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
       yogas.push({ name: 'Hamsa Yoga', description: 'Jupiter in Kendra - bestows righteousness and spiritual wisdom', effect: 'benefic' });
     }
 
-    // Dashas based on nakshatra ruler
+    // Dashas based on nakshatra ruler (Vimshottari Dasha)
     const dashaLords = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'];
     const dashaYears = [7, 20, 6, 10, 7, 18, 16, 19, 17];
-    const startIdx = nakIdx % 9;
-    const year = date.getFullYear();
+    const moonNakIdx = Math.floor(moonSid / (360 / 27)) % 27;
+    const startIdx = moonNakIdx % 9;
     let currentYear = year;
     const dashas = Array.from({ length: 3 }, (_, i) => {
       const idx = (startIdx + i) % 9;
@@ -394,6 +465,7 @@ ${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}` : ''}`;
 Calculate scores based on actual Vedic astrology rules using the Moon signs and Nakshatras derived from the birth dates.${matchKBSection}`,
       `Partner 1: DOB ${partner1.dateOfBirth}, Time ${partner1.timeOfBirth}, Place ${partner1.placeOfBirth}
 Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${partner2.placeOfBirth}`,
+      true, 1500, 0.2,
     );
 
     let gunaDetails: GunaDetail[];
