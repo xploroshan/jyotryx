@@ -2,19 +2,20 @@
 
 import React, { useState } from "react";
 
+// Vedic sidereal zodiac dates (Lahiri ayanamsa, approximate)
 const zodiacSigns = [
-  { id: "aries", name: "Aries", symbol: "\u2648", date: "Mar 21 - Apr 19", element: "Fire" },
-  { id: "taurus", name: "Taurus", symbol: "\u2649", date: "Apr 20 - May 20", element: "Earth" },
-  { id: "gemini", name: "Gemini", symbol: "\u264A", date: "May 21 - Jun 20", element: "Air" },
-  { id: "cancer", name: "Cancer", symbol: "\u264B", date: "Jun 21 - Jul 22", element: "Water" },
-  { id: "leo", name: "Leo", symbol: "\u264C", date: "Jul 23 - Aug 22", element: "Fire" },
-  { id: "virgo", name: "Virgo", symbol: "\u264D", date: "Aug 23 - Sep 22", element: "Earth" },
-  { id: "libra", name: "Libra", symbol: "\u264E", date: "Sep 23 - Oct 22", element: "Air" },
-  { id: "scorpio", name: "Scorpio", symbol: "\u264F", date: "Oct 23 - Nov 21", element: "Water" },
-  { id: "sagittarius", name: "Sagittarius", symbol: "\u2650", date: "Nov 22 - Dec 21", element: "Fire" },
-  { id: "capricorn", name: "Capricorn", symbol: "\u2651", date: "Dec 22 - Jan 19", element: "Earth" },
-  { id: "aquarius", name: "Aquarius", symbol: "\u2652", date: "Jan 20 - Feb 18", element: "Air" },
-  { id: "pisces", name: "Pisces", symbol: "\u2653", date: "Feb 19 - Mar 20", element: "Water" },
+  { id: "aries", name: "Aries", symbol: "\u2648", date: "Apr 14 - May 14", element: "Fire" },
+  { id: "taurus", name: "Taurus", symbol: "\u2649", date: "May 15 - Jun 14", element: "Earth" },
+  { id: "gemini", name: "Gemini", symbol: "\u264A", date: "Jun 15 - Jul 16", element: "Air" },
+  { id: "cancer", name: "Cancer", symbol: "\u264B", date: "Jul 17 - Aug 16", element: "Water" },
+  { id: "leo", name: "Leo", symbol: "\u264C", date: "Aug 17 - Sep 16", element: "Fire" },
+  { id: "virgo", name: "Virgo", symbol: "\u264D", date: "Sep 17 - Oct 16", element: "Earth" },
+  { id: "libra", name: "Libra", symbol: "\u264E", date: "Oct 17 - Nov 15", element: "Air" },
+  { id: "scorpio", name: "Scorpio", symbol: "\u264F", date: "Nov 16 - Dec 15", element: "Water" },
+  { id: "sagittarius", name: "Sagittarius", symbol: "\u2650", date: "Dec 16 - Jan 13", element: "Fire" },
+  { id: "capricorn", name: "Capricorn", symbol: "\u2651", date: "Jan 14 - Feb 12", element: "Earth" },
+  { id: "aquarius", name: "Aquarius", symbol: "\u2652", date: "Feb 13 - Mar 14", element: "Air" },
+  { id: "pisces", name: "Pisces", symbol: "\u2653", date: "Mar 15 - Apr 13", element: "Water" },
 ];
 
 const periods = [

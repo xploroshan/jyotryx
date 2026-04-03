@@ -40,15 +40,18 @@ const mockAnalysis: AnalysisResult = {
 
 export default function PalmistryPage() {
   const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState("major");
   const [error, setError] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
+    setImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setImage(e.target?.result as string);
@@ -64,36 +67,69 @@ export default function PalmistryPage() {
   };
 
   const handleAnalyze = async () => {
+    if (!imageFile) {
+      setError("Please upload a palm image first.");
+      return;
+    }
     setAnalyzing(true);
     setError("");
     try {
       const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
-      if (token && fileRef.current?.files?.[0]) {
-        const { api } = await import("@/lib/api");
-        const formData = new FormData();
-        formData.append("image", fileRef.current.files[0]);
-        const result = await api.upload<any>("/palmistry/analyze", formData, token);
-        if (result?.majorLines || result?.lines || result?.analysis) {
-          // Map API response to our display format
-          const mapped: AnalysisResult = {
-            majorLines: result.majorLines || result.lines?.major || mockAnalysis.majorLines,
-            minorLines: result.minorLines || result.lines?.minor || mockAnalysis.minorLines,
-            mounts: result.mounts || mockAnalysis.mounts,
-            personality: result.personality || result.traits || mockAnalysis.personality,
-          };
-          setAnalysis(mapped);
-          return;
-        }
-      } else if (!token) {
+      if (!token) {
         setError("Please log in to analyze your palm.");
+        setAnalyzing(false);
         return;
       }
-      // Fallback for demo purposes
-      setAnalysis(mockAnalysis);
+      const { api } = await import("@/lib/api");
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      const result = await api.upload<any>("/palmistry/analyze", formData, token);
+      if (result) {
+        // Map API response (lines[], mounts[], fingerAnalysis[]) to display format
+        const lines = result.lines || [];
+        const majorLineNames = ["Heart Line", "Head Line", "Life Line", "Fate Line", "Sun Line"];
+        const majorLines = lines
+          .filter((l: any) => majorLineNames.some((n) => l.name?.includes(n.split(" ")[0])))
+          .map((l: any) => ({
+            name: l.name,
+            description: l.interpretation || l.description,
+            strength: l.strength === "strong" ? "Strong" : l.strength === "moderate" ? "Moderate" : "Weak",
+          }));
+        const minorLines = lines
+          .filter((l: any) => !majorLineNames.some((n) => l.name?.includes(n.split(" ")[0])))
+          .map((l: any) => ({
+            name: l.name,
+            description: l.interpretation || l.description,
+          }));
+
+        const mounts = (result.mounts || []).map((mt: any) => ({
+          name: mt.name,
+          description: mt.interpretation || mt.description,
+          prominence: mt.prominence === "elevated" ? "High" : mt.prominence === "flat" ? "Low" : "Medium",
+        }));
+
+        const personality: string[] = [];
+        if (result.overallReading) personality.push(result.overallReading);
+        if (result.healthInsights) personality.push(result.healthInsights);
+        if (result.careerInsights) personality.push(result.careerInsights);
+        if (result.relationshipInsights) personality.push(result.relationshipInsights);
+        (result.fingerAnalysis || []).forEach((f: any) => {
+          if (f.interpretation) personality.push(`${f.finger}: ${f.interpretation}`);
+        });
+
+        const mapped: AnalysisResult = {
+          majorLines: majorLines.length > 0 ? majorLines : mockAnalysis.majorLines,
+          minorLines: minorLines.length > 0 ? minorLines : mockAnalysis.minorLines,
+          mounts: mounts.length > 0 ? mounts : mockAnalysis.mounts,
+          personality: personality.length > 0 ? personality : mockAnalysis.personality,
+        };
+        setAnalysis(mapped);
+      } else {
+        setAnalysis(mockAnalysis);
+      }
     } catch (err: any) {
-      setError(err.message || "Analysis failed. Showing sample results.");
-      setAnalysis(mockAnalysis);
+      setError(err.message || "Analysis failed. Please try again.");
     } finally {
       setAnalyzing(false);
     }
@@ -132,6 +168,36 @@ export default function PalmistryPage() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Upload Area */}
           <div className="space-y-6">
+            {/* Gender Selection */}
+            <div className="surface-card p-4">
+              <h3 className="text-sm font-semibold text-white mb-3">Select Your Gender</h3>
+              <p className="text-xs text-white/40 mb-3">
+                In Vedic palmistry, {gender === "male" ? "males read the right palm (active hand)" : gender === "female" ? "females read the left palm (receptive hand)" : "the palm to read depends on your gender"}.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setGender("male")}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    gender === "male"
+                      ? "btn-primary text-white"
+                      : "bg-white/[0.03] text-white/40 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  Male — Right Palm
+                </button>
+                <button
+                  onClick={() => setGender("female")}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    gender === "female"
+                      ? "btn-primary text-white"
+                      : "bg-white/[0.03] text-white/40 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  Female — Left Palm
+                </button>
+              </div>
+            </div>
+
             <div
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
@@ -153,7 +219,7 @@ export default function PalmistryPage() {
                 <div className="relative w-full">
                   <img src={image} alt="Palm" className="w-full max-h-[350px] object-contain rounded-xl" />
                   <button
-                    onClick={(e) => { e.stopPropagation(); setImage(null); setAnalysis(null); }}
+                    onClick={(e) => { e.stopPropagation(); setImage(null); setImageFile(null); setAnalysis(null); }}
                     className="absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-white/60 hover:text-white"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,9 +238,13 @@ export default function PalmistryPage() {
                       <path d="M55 55 L55 100" strokeWidth="1.5" strokeDasharray="4 2" className="text-mystic-400" />
                     </svg>
                   </div>
-                  <p className="text-white font-semibold mb-2">Upload Palm Image</p>
+                  <p className="text-white font-semibold mb-2">
+                    Upload {gender === "male" ? "Right" : gender === "female" ? "Left" : "Your"} Palm Image
+                  </p>
                   <p className="text-sm text-white/40 text-center mb-4">
-                    Drag and drop or click to upload a clear photo of your palm
+                    {gender
+                      ? `Drag and drop or click to upload a clear photo of your ${gender === "male" ? "right" : "left"} palm`
+                      : "Please select your gender above, then upload a photo of the recommended palm"}
                   </p>
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] text-xs text-white/30">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,7 +286,7 @@ export default function PalmistryPage() {
               <ul className="space-y-2 text-xs text-white/40">
                 <li className="flex items-start gap-2">
                   <span className="text-primary-400 mt-0.5">1.</span>
-                  Use your dominant hand (right if right-handed)
+                  {gender === "male" ? "Use your right palm (active hand in Vedic palmistry)" : gender === "female" ? "Use your left palm (receptive hand in Vedic palmistry)" : "Select your gender to know which palm to use"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-400 mt-0.5">2.</span>
