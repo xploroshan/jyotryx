@@ -326,4 +326,52 @@ describe('Palmistry E2E (HTTP)', () => {
       expect(typeof body.relationshipInsights).toBe('string');
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOKEN EXPIRY SCENARIO (Documents the root cause of the user's bug)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('Token Expiry Scenario (Root Cause)', () => {
+    it('should reject expired access token — client must refresh before retrying', async () => {
+      // This test documents the exact scenario the user encounters:
+      // 1. User logs in, gets accessToken (expiresIn: '1d')
+      // 2. Token expires after 1 day
+      // 3. Palmistry upload sends expired token
+      // 4. Server returns 401 "Invalid or expired token"
+      // 5. Client MUST call /auth/refresh to get a new accessToken, then retry
+      //
+      // The bug was: api.upload() did NOT auto-refresh on 401, unlike api.get/post.
+      // This has been fixed in apps/web/src/lib/api.ts.
+
+      const expiredToken = signToken(VALID_PAYLOAD, { expiresIn: '0s' });
+      await new Promise((r) => setTimeout(r, 50));
+
+      // Step 1: Expired token is rejected
+      const failRes = await request(app.getHttpServer())
+        .post('/palmistry/analyze')
+        .set('Authorization', `Bearer ${expiredToken}`)
+        .expect(401);
+      expect(failRes.body.message).toMatch(/Invalid or expired token/);
+
+      // Step 2: Fresh token works
+      const freshToken = signToken();
+      const successRes = await request(app.getHttpServer())
+        .post('/palmistry/analyze')
+        .set('Authorization', `Bearer ${freshToken}`)
+        .expect(201);
+      expect(successRes.body.id).toBeTruthy();
+    });
+
+    it('should accept a token signed with the correct secret even near expiry', async () => {
+      // Token that expires in 5 seconds — still valid right now
+      const token = signToken(VALID_PAYLOAD, { expiresIn: '5s' });
+
+      const res = await request(app.getHttpServer())
+        .post('/palmistry/analyze')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201);
+
+      expect(res.body.userId).toBe('test-uuid');
+    });
+  });
 });

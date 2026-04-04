@@ -123,6 +123,25 @@ export const api = {
       );
     }
 
+    // Auto-refresh on 401 (expired access token)
+    if (response.status === 401) {
+      const newToken = await tryRefreshToken();
+      if (newToken) {
+        headers["Authorization"] = `Bearer ${newToken}`;
+        try {
+          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers,
+            body: formData,
+          });
+        } catch (err) {
+          throw new Error(
+            "Unable to connect to the server. Please check your internet connection and try again."
+          );
+        }
+      }
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: "Upload failed" }));
       throw new Error(error.message || `API Error: ${response.status}`);
