@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
+import PalmDiagram from "@/components/palmistry/PalmDiagram";
 
 interface AnalysisResult {
   majorLines: { name: string; description: string; strength: string }[];
@@ -47,7 +48,21 @@ export default function PalmistryPage() {
   const [activeTab, setActiveTab] = useState("major");
   const [error, setError] = useState("");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFeatureSelect = useCallback(
+    (feature: { type: "line" | "mount"; name: string }) => {
+      setSelectedFeature(feature.name);
+      if (feature.type === "mount") {
+        setActiveTab("mounts");
+      } else {
+        const majorNames = ["Heart Line", "Head Line", "Life Line", "Fate Line", "Sun Line"];
+        setActiveTab(majorNames.includes(feature.name) ? "major" : "minor");
+      }
+    },
+    [],
+  );
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -229,14 +244,9 @@ export default function PalmistryPage() {
                 </div>
               ) : (
                 <>
-                  {/* Hand outline guide */}
-                  <div className="relative w-40 h-52 mb-6 opacity-30">
-                    <svg viewBox="0 0 120 160" fill="none" stroke="currentColor" className="w-full h-full text-primary-400">
-                      <path d="M60 155 C25 155 15 120 15 95 L15 70 C15 65 20 60 25 60 C30 60 35 65 35 70 L35 55 C35 50 40 45 45 45 C50 45 55 50 55 55 L55 40 C55 35 60 30 65 30 C70 30 75 35 75 40 L75 50 C75 45 80 40 85 40 C90 40 95 45 95 50 L95 90 C95 90 105 80 110 85 C115 90 105 100 100 110 C95 120 95 155 60 155Z" strokeWidth="2" />
-                      <path d="M35 80 Q50 95 75 80" strokeWidth="1.5" strokeDasharray="4 2" className="text-accent-400" />
-                      <path d="M35 90 Q55 75 85 90" strokeWidth="1.5" strokeDasharray="4 2" className="text-primary-400" />
-                      <path d="M55 55 L55 100" strokeWidth="1.5" strokeDasharray="4 2" className="text-mystic-400" />
-                    </svg>
+                  {/* Hand wireframe guide */}
+                  <div className="w-48 mb-4">
+                    <PalmDiagram analysis={null} />
                   </div>
                   <p className="text-white font-semibold mb-2">
                     Upload {gender === "male" ? "Right" : gender === "female" ? "Left" : "Your"} Palm Image
@@ -308,7 +318,16 @@ export default function PalmistryPage() {
           <div>
             {analysis ? (
               <div className="surface-card p-6">
-                <h2 className="text-lg font-bold text-gradient mb-6">Palm Analysis Results</h2>
+                <h2 className="text-lg font-bold text-gradient mb-4">Palm Analysis Results</h2>
+
+                {/* Interactive Hand Diagram */}
+                <div className="mb-6 p-4 rounded-xl bg-white/[0.02]">
+                  <PalmDiagram
+                    analysis={analysis}
+                    onFeatureSelect={handleFeatureSelect}
+                    selectedFeature={selectedFeature}
+                  />
+                </div>
 
                 {/* Tabs */}
                 <div className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1">
@@ -330,7 +349,15 @@ export default function PalmistryPage() {
                 <div className="space-y-4">
                   {activeTab === "major" &&
                     analysis.majorLines.map((line) => (
-                      <div key={line.name} className="p-4 rounded-xl bg-white/[0.03]">
+                      <div
+                        key={line.name}
+                        className={`p-4 rounded-xl transition-all cursor-pointer ${
+                          selectedFeature === line.name
+                            ? "bg-white/[0.08] ring-1 ring-primary-500/30"
+                            : "bg-white/[0.03] hover:bg-white/[0.05]"
+                        }`}
+                        onClick={() => setSelectedFeature(selectedFeature === line.name ? null : line.name)}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-white text-sm">{line.name}</h4>
                           <span className={`text-xs font-medium ${strengthColor(line.strength)}`}>
@@ -351,7 +378,15 @@ export default function PalmistryPage() {
 
                   {activeTab === "mounts" &&
                     analysis.mounts.map((mount) => (
-                      <div key={mount.name} className="p-4 rounded-xl bg-white/[0.03]">
+                      <div
+                        key={mount.name}
+                        className={`p-4 rounded-xl transition-all cursor-pointer ${
+                          selectedFeature === mount.name
+                            ? "bg-white/[0.08] ring-1 ring-purple-500/30"
+                            : "bg-white/[0.03] hover:bg-white/[0.05]"
+                        }`}
+                        onClick={() => setSelectedFeature(selectedFeature === mount.name ? null : mount.name)}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-white text-sm">{mount.name}</h4>
                           <span className={`text-xs font-medium ${
