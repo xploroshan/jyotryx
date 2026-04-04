@@ -75,7 +75,7 @@ export class PalmistryService {
       try {
         const base64Image = imageBuffer.toString('base64');
         const completion = await client.chat.completions.create({
-          model: this.openaiService.getModel(),
+          model: this.openaiService.getModelForFeature('vision'),
           messages: [
             {
               role: 'system',

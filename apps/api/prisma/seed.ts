@@ -17,6 +17,8 @@ import { HOROSCOPE_DAILY_DATA } from '../src/knowledge/seed-data/horoscope-daily
 import { CAREER_PROFESSION_DATA } from '../src/knowledge/seed-data/career-profession';
 import { TRANSIT_DASHA_DATA } from '../src/knowledge/seed-data/transits-dasha';
 import { HEALTH_ASTROLOGY_DATA } from '../src/knowledge/seed-data/health-astrology';
+import { ASHTAKVARGA_DATA } from '../src/knowledge/seed-data/ashtakvarga';
+import { SHADBALA_DATA } from '../src/knowledge/seed-data/shadbala';
 
 const prisma = new PrismaClient();
 
@@ -67,6 +69,8 @@ async function seedKnowledge() {
     ...CAREER_PROFESSION_DATA,
     ...TRANSIT_DASHA_DATA,
     ...HEALTH_ASTROLOGY_DATA,
+    ...ASHTAKVARGA_DATA,
+    ...SHADBALA_DATA,
   ];
 
   console.log(`Seeding ${allData.length} knowledge documents...`);
