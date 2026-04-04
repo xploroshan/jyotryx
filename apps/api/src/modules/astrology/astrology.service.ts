@@ -5,6 +5,28 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import * as path from 'path';
+
+// ─── Swiss Ephemeris Setup ──────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const swisseph = require('swisseph');
+const EPHE_PATH = path.join(path.dirname(require.resolve('swisseph')), 'ephe');
+swisseph.swe_set_ephe_path(EPHE_PATH);
+swisseph.swe_set_sid_mode(swisseph.SE_SIDM_LAHIRI, 0, 0);
+
+// ─── Vedic Astrology Constants ──────────────────────────────────────────────
+const ALL_SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'] as const;
+const NAKSHATRA_NAMES = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'] as const;
+const DASHA_LORDS = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'] as const;
+const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17] as const;
+
+// Sign lords: Aries=Mars, Taurus=Venus, Gemini=Mercury, Cancer=Moon, Leo=Sun, Virgo=Mercury, Libra=Venus, Scorpio=Mars, Sagittarius=Jupiter, Capricorn=Saturn, Aquarius=Saturn, Pisces=Jupiter
+const SIGN_LORDS = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'] as const;
+
+// Planet exaltation signs (index in ALL_SIGNS): Sun=Aries, Moon=Taurus, Mars=Capricorn, Mercury=Virgo, Jupiter=Cancer, Venus=Pisces, Saturn=Libra
+const EXALTATION: Record<string, number> = { Sun: 0, Moon: 1, Mars: 9, Mercury: 5, Jupiter: 3, Venus: 11, Saturn: 6 };
+// Own signs
+const OWN_SIGNS: Record<string, number[]> = { Sun: [4], Moon: [3], Mars: [0, 7], Mercury: [2, 5], Jupiter: [8, 11], Venus: [1, 6], Saturn: [9, 10] };
 
 export interface BirthDetails {
   dateOfBirth: string;
@@ -152,6 +174,7 @@ export class AstrologyService {
     jsonMode: boolean = true,
     maxTokens: number = 1500,
     temperature: number = 0.7,
+    featureTier: 'default' | 'precision' | 'vision' = 'default',
   ): Promise<any | null> {
     return this.openaiService.chatCompletion({
       messages: [
@@ -161,6 +184,7 @@ export class AstrologyService {
       maxTokens,
       temperature,
       jsonMode,
+      model: this.openaiService.getModelForFeature(featureTier),
     });
   }
 
@@ -199,235 +223,367 @@ export class AstrologyService {
     };
   }
 
-  private async generateAIKundli(birthDetails: BirthDetails): Promise<any> {
-    // Enrich with KB context about planets, houses, yogas, nakshatras
-    const [planetKB, houseKB, yogaKB] = await Promise.all([
-      this.knowledgeService.getByCategory('planets', 10),
-      this.knowledgeService.getByCategory('houses', 5),
-      this.knowledgeService.getByCategory('yogas', 5),
-    ]);
-    const kbContext = this.knowledgeService.assembleContext([...planetKB, ...houseKB, ...yogaKB]);
-    const kbSection = kbContext ? `\n\nReference Knowledge:\n${kbContext}` : '';
-
-    const systemPrompt = `You are an expert Vedic astrologer and astronomer with deep knowledge of Jyotish Shastra and astronomical ephemeris data. Given birth details, calculate an accurate Vedic birth chart (Kundli).
-
-CRITICAL CALCULATION RULES:
-1. Use the Lahiri ayanamsa (approximately 24°07' for 2024, subtract ~50.3" per year going backward) to convert tropical to sidereal positions.
-2. Calculate the ACTUAL astronomical positions of all 9 Vedic planets (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu) for the given date.
-3. Calculate the Ascendant (Lagna) based on the LOCAL SIDEREAL TIME at the birth location, using the latitude and longitude provided.
-4. Rahu and Ketu are always exactly 180° apart. Rahu's mean motion is approximately 19°20' per year retrograde.
-5. Jupiter takes ~12 years per zodiac cycle (~1 sign/year). Saturn takes ~29.5 years (~2.5 years/sign).
-6. Mercury is always within ~28° of the Sun. Venus is always within ~47° of the Sun.
-7. Each sign spans exactly 30°. Each nakshatra spans exactly 13°20'.
-8. Retrograde status: Check if the planet's geocentric longitude is decreasing (Mars retrogrades ~72 days every ~2 years, Jupiter ~120 days/year, Saturn ~138 days/year). Rahu/Ketu are always retrograde.
-9. The 27 nakshatras start from 0° Aries: Ashwini (0°-13°20'), Bharani (13°20'-26°40'), etc.
-10. Vimshottari Dasha: Calculate based on Moon's nakshatra position. The nakshatra lord determines the starting Mahadasha, and the balance is proportional to the remaining degrees in the nakshatra.
-
-Return a JSON object with these exact keys:
-- ascendant: string (the rising sign)
-- moonSign: string (Rashi based on Moon's sidereal position)
-- sunSign: string (based on Vedic sidereal zodiac, NOT Western tropical)
-- nakshatra: string (birth nakshatra based on Moon's exact sidereal position)
-- houses: array of 12 objects with { house: number, sign: string, planets: string[] }
-- planetaryPositions: array of 9 objects with { planet: string, sign: string, house: number, degree: number, isRetrograde: boolean, nakshatra: string }
-- dashas: array with current Mahadasha and sub-periods { planet: string, startDate: string, endDate: string, subPeriods: [{planet, startDate, endDate}] }
-- yogas: array of detected yogas { name: string, description: string, effect: "benefic"|"malefic"|"neutral" }
-
-The degree field should be the degree WITHIN the sign (0-30). Be as astronomically precise as possible.${kbSection}`;
-
-    const userPrompt = `Calculate the Vedic birth chart (Kundli) for:
-- Date of Birth: ${birthDetails.dateOfBirth}
-- Time of Birth: ${birthDetails.timeOfBirth}
-- Place of Birth: ${birthDetails.placeOfBirth}
-${birthDetails.latitude ? `- Latitude: ${birthDetails.latitude}°` : ''}
-${birthDetails.longitude ? `- Longitude: ${birthDetails.longitude}°` : ''}
-
-Please calculate the exact sidereal planetary longitudes for this date using Lahiri ayanamsa, then determine the ascendant from the local sidereal time at the given coordinates. Cross-check that Mercury is within 28° of the Sun and Venus within 47° of the Sun.`;
-
-    const aiResult = await this.callOpenAI(systemPrompt, userPrompt, true, 2000, 0.1);
-
-    if (aiResult) return aiResult;
-
-    // Fallback: generate chart based on birth details using basic calculations
-    return this.calculateChartFromBirthDetails(birthDetails);
-  }
-
-  private calculateChartFromBirthDetails(bd: BirthDetails): any {
+  // ─── Swiss Ephemeris Helper: compute Julian Day from birth details ────────
+  private computeJulianDay(bd: BirthDetails): number {
     const date = new Date(bd.dateOfBirth);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    // Julian Day Number for astronomical calculations
-    const a = Math.floor((14 - month) / 12);
-    const y = year + 4800 - a;
-    const m = month + 12 * a - 3;
-    const jdn = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
-
     const timeParts = bd.timeOfBirth?.split(':') || ['6', '0'];
     const hour = parseInt(timeParts[0], 10);
     const minute = parseInt(timeParts[1], 10) || 0;
-    const hourDecimal = hour + minute / 60;
-    const jd = jdn + (hourDecimal - 12) / 24;
+    const utHour = hour + minute / 60 - 5.5; // IST to UT (default assumption)
+    return swisseph.swe_julday(
+      date.getFullYear(), date.getMonth() + 1, date.getDate(),
+      utHour, swisseph.SE_GREG_CAL,
+    );
+  }
 
-    // Days since J2000.0 epoch (Jan 1, 2000 12:00 TT)
-    const T = (jd - 2451545.0) / 36525.0;
+  // ─── Swiss Ephemeris: precise planetary positions ───────────────────────────
+  private computePlanetaryPositions(jd: number): { name: string; longitude: number; speed: number }[] {
+    const PLANETS = [
+      { id: swisseph.SE_SUN, name: 'Sun' },
+      { id: swisseph.SE_MOON, name: 'Moon' },
+      { id: swisseph.SE_MARS, name: 'Mars' },
+      { id: swisseph.SE_MERCURY, name: 'Mercury' },
+      { id: swisseph.SE_JUPITER, name: 'Jupiter' },
+      { id: swisseph.SE_VENUS, name: 'Venus' },
+      { id: swisseph.SE_SATURN, name: 'Saturn' },
+      { id: swisseph.SE_TRUE_NODE, name: 'Rahu' },
+    ];
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const positions = PLANETS.map(p => {
+      const result = swisseph.swe_calc_ut(jd, p.id, flags);
+      const lng = ((result.longitude % 360) + 360) % 360;
+      return { name: p.name, longitude: lng, speed: result.longitudeSpeed || 0 };
+    });
+    // Ketu is always 180° from Rahu
+    const rahu = positions.find(p => p.name === 'Rahu')!;
+    positions.push({ name: 'Ketu', longitude: (rahu.longitude + 180) % 360, speed: rahu.speed });
+    return positions;
+  }
 
-    // Lahiri ayanamsa (approximate): 23°51' in 2000, precession ~50.29"/year
-    const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
+  // ─── Swiss Ephemeris: compute ascendant via swe_houses ──────────────────────
+  private computeAscendant(jd: number, lat: number, lng: number): number {
+    const houses = swisseph.swe_houses(jd, lat, lng, 'E'); // Equal house system
+    return ((houses.ascendant % 360) + 360) % 360;
+  }
 
-    // Mean Sun longitude (tropical)
-    const sunLongTropical = (280.46646 + 36000.76983 * T + 0.0003032 * T * T) % 360;
-    const sunLongSidereal = ((sunLongTropical - ayanamsa) % 360 + 360) % 360;
+  // ─── Deterministic Yoga Detection ───────────────────────────────────────────
+  private detectYogas(positions: PlanetPosition[]): Yoga[] {
+    const yogas: Yoga[] = [];
+    const find = (name: string) => positions.find(p => p.planet === name);
+    const findHouse = (name: string) => find(name)?.house;
+    const findSign = (name: string) => find(name)?.sign;
+    const signIndex = (sign: string) => ALL_SIGNS.indexOf(sign as any);
+    const isKendra = (h: number) => [1, 4, 7, 10].includes(h);
+    const isKendraFromMoon = (planetHouse: number, moonHouse: number) => {
+      const diff = ((planetHouse - moonHouse + 12) % 12) + 1;
+      return [1, 4, 7, 10].includes(diff);
+    };
 
-    // Mean Moon longitude (tropical) - more precise formula
-    const moonLongTropical = (218.3165 + 481267.8813 * T) % 360;
-    const moonLongSidereal = ((moonLongTropical - ayanamsa) % 360 + 360) % 360;
+    const jupH = findHouse('Jupiter');
+    const moonH = findHouse('Moon');
+    const sunH = findHouse('Sun');
+    const mercH = findHouse('Mercury');
+    const venH = findHouse('Venus');
+    const satH = findHouse('Saturn');
+    const marsH = findHouse('Mars');
 
-    // Planetary mean longitudes (tropical, simplified)
-    const marsLongT = (355.433 + 19140.2993 * T) % 360;
-    const mercuryLongT = (252.251 + 149472.6746 * T) % 360;
-    const jupiterLongT = (34.351 + 3034.9057 * T) % 360;
-    const venusLongT = (181.979 + 58517.8149 * T) % 360;
-    const saturnLongT = (50.077 + 1222.1138 * T) % 360;
+    const marsSign = signIndex(findSign('Mars') || '');
+    const mercSign = signIndex(findSign('Mercury') || '');
+    const jupSign = signIndex(findSign('Jupiter') || '');
+    const venSign = signIndex(findSign('Venus') || '');
+    const satSign = signIndex(findSign('Saturn') || '');
 
-    // Rahu mean longitude (always retrograde)
-    const rahuLongT = (125.045 - 1934.1363 * T) % 360;
+    const isInOwnOrExalted = (planet: string, signIdx: number): boolean => {
+      return signIdx === EXALTATION[planet] || (OWN_SIGNS[planet] || []).includes(signIdx);
+    };
 
-    // Convert all to sidereal
-    const toSidereal = (tropical: number) => ((tropical - ayanamsa) % 360 + 360) % 360;
+    // ── Pancha Mahapurusha Yogas ──
+    if (marsH && isKendra(marsH) && isInOwnOrExalted('Mars', marsSign)) {
+      yogas.push({ name: 'Ruchaka Yoga', description: 'Mars in own/exalted sign in Kendra — strong physique, courage, leadership, success in military/sports/police', effect: 'benefic' });
+    }
+    if (mercH && isKendra(mercH) && isInOwnOrExalted('Mercury', mercSign)) {
+      yogas.push({ name: 'Bhadra Yoga', description: 'Mercury in own/exalted sign in Kendra — exceptional intelligence, eloquent speech, success in business/academics', effect: 'benefic' });
+    }
+    if (jupH && isKendra(jupH) && isInOwnOrExalted('Jupiter', jupSign)) {
+      yogas.push({ name: 'Hamsa Yoga', description: 'Jupiter in own/exalted sign in Kendra — righteous, learned, spiritually evolved, respected by scholars', effect: 'benefic' });
+    }
+    if (venH && isKendra(venH) && isInOwnOrExalted('Venus', venSign)) {
+      yogas.push({ name: 'Malavya Yoga', description: 'Venus in own/exalted sign in Kendra — beautiful appearance, artistic talent, luxurious lifestyle, happy marriage', effect: 'benefic' });
+    }
+    if (satH && isKendra(satH) && isInOwnOrExalted('Saturn', satSign)) {
+      yogas.push({ name: 'Shasha Yoga', description: 'Saturn in own/exalted sign in Kendra — authority through hard work, political power, lasting respect', effect: 'benefic' });
+    }
 
-    const allSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+    // ── Gaja Kesari Yoga ──
+    if (jupH != null && moonH != null && isKendraFromMoon(jupH, moonH)) {
+      yogas.push({ name: 'Gaja Kesari Yoga', description: 'Jupiter in Kendra from Moon — wisdom, fame, prosperity, leadership in community', effect: 'benefic' });
+    }
 
-    const signFromLong = (lng: number) => allSigns[Math.floor(lng / 30) % 12];
-    const degreeInSign = (lng: number) => parseFloat((lng % 30).toFixed(1));
-    const signIdx = (lng: number) => Math.floor(lng / 30) % 12;
+    // ── Budhaditya Yoga ──
+    if (sunH != null && mercH != null && sunH === mercH) {
+      const sunDeg = find('Sun')?.degree || 0;
+      const mercDeg = find('Mercury')?.degree || 0;
+      const isCombust = Math.abs(sunDeg - mercDeg) < 3;
+      yogas.push({
+        name: 'Budhaditya Yoga',
+        description: isCombust
+          ? 'Sun-Mercury conjunction but Mercury is combust (within 3°) — intellect present but may be overshadowed by ego'
+          : 'Sun-Mercury conjunction — sharp intellect, communication skills, success in education',
+        effect: isCombust ? 'neutral' : 'benefic',
+      });
+    }
 
-    const sunSid = toSidereal(sunLongTropical);
-    const moonSid = moonLongSidereal;
-    const marsSid = toSidereal(marsLongT);
-    const mercSid = toSidereal(mercuryLongT);
-    const jupSid = toSidereal(jupiterLongT);
-    const venSid = toSidereal(venusLongT);
-    const satSid = toSidereal(saturnLongT);
-    const rahuSid = toSidereal(rahuLongT);
-    const ketuSid = (rahuSid + 180) % 360;
+    // ── Chandra Yogas: Sunapha, Anapha, Durudhura ──
+    if (moonH != null) {
+      const houseAfterMoon = (moonH % 12) + 1; // 2nd from Moon
+      const houseBeforeMoon = ((moonH - 2 + 12) % 12) + 1; // 12th from Moon
+      const planetsAfter = positions.filter(p => p.house === houseAfterMoon && !['Moon', 'Rahu', 'Ketu'].includes(p.planet));
+      const planetsBefore = positions.filter(p => p.house === houseBeforeMoon && !['Moon', 'Rahu', 'Ketu'].includes(p.planet));
 
-    const sunSign = signFromLong(sunSid);
-    const moonSign = signFromLong(moonSid);
+      if (planetsAfter.length > 0 && planetsBefore.length === 0) {
+        yogas.push({ name: 'Sunapha Yoga', description: `${planetsAfter.map(p => p.planet).join(', ')} in 2nd from Moon — self-made wealth, good intellect`, effect: 'benefic' });
+      }
+      if (planetsBefore.length > 0 && planetsAfter.length === 0) {
+        yogas.push({ name: 'Anapha Yoga', description: `${planetsBefore.map(p => p.planet).join(', ')} in 12th from Moon — good health, virtuous character, comfort`, effect: 'benefic' });
+      }
+      if (planetsAfter.length > 0 && planetsBefore.length > 0) {
+        yogas.push({ name: 'Durudhura Yoga', description: 'Planets on both sides of Moon — wealth, generous nature, fame, vehicles', effect: 'benefic' });
+      }
+      if (planetsAfter.length === 0 && planetsBefore.length === 0) {
+        // Check if Moon has conjunction or benefic aspect for cancellation
+        const moonConjunct = positions.filter(p => p.house === moonH && p.planet !== 'Moon');
+        if (moonConjunct.length === 0) {
+          yogas.push({ name: 'Kemadruma Yoga', description: 'No planets in 2nd/12th from Moon and no conjunction — may face difficulties, loneliness; check cancellation conditions', effect: 'malefic' });
+        }
+      }
+    }
 
-    // Calculate ascendant using Local Sidereal Time
-    const lat = bd.latitude || 28.6139; // Default to Delhi
-    const lng = bd.longitude || 77.2090;
-    // Greenwich Mean Sidereal Time
-    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360;
-    const lst = ((gmst + lng) % 360 + 360) % 360;
-    // Ascendant formula (simplified)
-    const lstRad = lst * Math.PI / 180;
-    const latRad = lat * Math.PI / 180;
-    const obliquity = 23.4393 * Math.PI / 180;
-    const ascTropical = Math.atan2(
-      Math.cos(lstRad),
-      -(Math.sin(obliquity) * Math.tan(latRad) + Math.cos(obliquity) * Math.sin(lstRad))
-    ) * 180 / Math.PI;
-    const ascSidereal = ((ascTropical - ayanamsa) % 360 + 360) % 360;
-    const ascIdx = signIdx(ascSidereal);
-    const ascendant = allSigns[ascIdx];
+    // ── Dhana Yoga (simplified: 2nd lord + 11th lord connection) ──
+    const ascSign = positions.find(p => p.house === 1)?.sign;
+    if (ascSign) {
+      const ascIdx = signIndex(ascSign);
+      const lord2Sign = SIGN_LORDS[(ascIdx + 1) % 12];
+      const lord11Sign = SIGN_LORDS[(ascIdx + 10) % 12];
+      const lord2House = positions.find(p => p.planet === lord2Sign)?.house;
+      const lord11House = positions.find(p => p.planet === lord11Sign)?.house;
+      if (lord2House && lord11House && lord2House === lord11House) {
+        yogas.push({ name: 'Dhana Yoga', description: `2nd lord (${lord2Sign}) and 11th lord (${lord11Sign}) conjunct — strong wealth potential`, effect: 'benefic' });
+      }
+    }
 
-    // Nakshatras (each 13°20' = 13.333°)
-    const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
-    const nakshatraFromLong = (lng: number) => nakshatras[Math.floor(lng / (360 / 27)) % 27];
-    const nakshatra = nakshatraFromLong(moonSid);
+    // ── Raja Yoga (Kendra-Trikona lord connection) ──
+    if (ascSign) {
+      const ascIdx = signIndex(ascSign);
+      const kendraHouses = [0, 3, 6, 9]; // 1st, 4th, 7th, 10th sign offsets
+      const trikonaHouses = [0, 4, 8]; // 1st, 5th, 9th sign offsets
+      const kendraLords = new Set(kendraHouses.map(h => SIGN_LORDS[(ascIdx + h) % 12]));
+      const trikonaLords = new Set(trikonaHouses.map(h => SIGN_LORDS[(ascIdx + h) % 12]));
+      for (const kl of kendraLords) {
+        for (const tl of trikonaLords) {
+          if (kl !== tl) {
+            const klHouse = findHouse(kl);
+            const tlHouse = findHouse(tl);
+            if (klHouse && tlHouse && klHouse === tlHouse) {
+              yogas.push({ name: 'Raja Yoga', description: `Kendra lord (${kl}) and Trikona lord (${tl}) conjunct — power, authority, fame, success`, effect: 'benefic' });
+              break;
+            }
+          }
+        }
+        if (yogas.some(y => y.name === 'Raja Yoga')) break;
+      }
+    }
 
-    // Build houses starting from ascendant (Equal House system)
-    const houses = Array.from({ length: 12 }, (_, i) => ({
+    // ── Viparita Raja Yoga (dusthana lords in dusthana) ──
+    if (ascSign) {
+      const ascIdx = signIndex(ascSign);
+      const dusthanaOffsets = [5, 7, 11]; // 6th, 8th, 12th
+      const dusthanaLords = dusthanaOffsets.map(h => ({ lord: SIGN_LORDS[(ascIdx + h) % 12], houseNum: h + 1 }));
+      for (const dl of dusthanaLords) {
+        const dlHouse = findHouse(dl.lord);
+        if (dlHouse && [6, 8, 12].includes(dlHouse) && dlHouse !== dl.houseNum) {
+          yogas.push({ name: 'Viparita Raja Yoga', description: `${dl.lord} (lord of ${dl.houseNum}th) placed in dusthana house ${dlHouse} — success through adversity`, effect: 'benefic' });
+          break;
+        }
+      }
+    }
+
+    return yogas;
+  }
+
+  // ─── Deterministic Dosha Detection ──────────────────────────────────────────
+  private detectDoshas(positions: PlanetPosition[]): DoshaResult['doshas'] {
+    const doshas: DoshaResult['doshas'] = [];
+    const findHouse = (name: string) => positions.find(p => p.planet === name)?.house;
+    const findSign = (name: string) => positions.find(p => p.planet === name)?.sign;
+    const signIndex = (sign: string) => ALL_SIGNS.indexOf(sign as any);
+
+    const marsHouse = findHouse('Mars');
+    const marsSign = findSign('Mars') || '';
+    const marsSignIdx = signIndex(marsSign);
+
+    // ── Mangal Dosha ──
+    const manglikHouses = [1, 2, 4, 7, 8, 12];
+    const isManglik = marsHouse != null && manglikHouses.includes(marsHouse);
+    let manglikCancelled = false;
+    if (isManglik) {
+      // Cancellation: Mars in own sign or exalted
+      if (marsSignIdx === EXALTATION.Mars || (OWN_SIGNS.Mars || []).includes(marsSignIdx)) manglikCancelled = true;
+      // Cancellation: Mars conjunct/aspected by Jupiter
+      const jupHouse = findHouse('Jupiter');
+      if (jupHouse === marsHouse) manglikCancelled = true;
+      // Jupiter aspects: 5th, 7th, 9th from its position
+      if (jupHouse != null) {
+        const jupAspects = [jupHouse, (jupHouse + 4 - 1) % 12 + 1, (jupHouse + 6 - 1) % 12 + 1, (jupHouse + 8 - 1) % 12 + 1];
+        if (jupAspects.includes(marsHouse)) manglikCancelled = true;
+      }
+    }
+    const manglikSeverity = !isManglik ? 'none' : manglikCancelled ? 'mild' : (marsHouse === 7 || marsHouse === 8) ? 'severe' : 'moderate';
+    doshas.push({
+      name: 'Mangal Dosha (Manglik)',
+      present: isManglik && !manglikCancelled,
+      severity: manglikSeverity,
+      description: !isManglik
+        ? 'No Mangal Dosha detected. Mars is well-placed in your chart.'
+        : manglikCancelled
+          ? `Mars is in house ${marsHouse} (Manglik position) but the dosha is cancelled due to ${marsSignIdx === EXALTATION.Mars ? 'Mars being exalted' : 'Jupiter\'s benefic influence'}.`
+          : `Mars is placed in the ${marsHouse}${marsHouse === 1 ? 'st' : marsHouse === 2 ? 'nd' : 'th'} house, creating Mangal Dosha. This may affect marital harmony.${marsHouse === 7 ? ' Mars in 7th house is the most severe form.' : ''}`,
+      remedies: isManglik && !manglikCancelled
+        ? ['Perform Mangal Shanti Puja on Tuesdays', 'Chant Hanuman Chalisa on Tuesdays', 'Wear red coral gemstone (consult astrologer first)', 'Kumbh Vivah ritual before marriage']
+        : [],
+    });
+
+    // ── Kaal Sarp Dosha ──
+    const rahuHouse = findHouse('Rahu');
+    const ketuHouse = findHouse('Ketu');
+    let isKaalSarp = false;
+    if (rahuHouse != null && ketuHouse != null) {
+      const otherPlanets = positions.filter(p => !['Rahu', 'Ketu'].includes(p.planet));
+      // Check if all planets are between Rahu and Ketu (going forward from Rahu)
+      const span = ((ketuHouse - rahuHouse + 12) % 12);
+      const allBetween = otherPlanets.every(p => {
+        const dist = ((p.house - rahuHouse + 12) % 12);
+        return dist > 0 && dist < span;
+      });
+      const allBetweenReverse = otherPlanets.every(p => {
+        const dist = ((p.house - ketuHouse + 12) % 12);
+        return dist > 0 && dist < ((rahuHouse - ketuHouse + 12) % 12);
+      });
+      isKaalSarp = allBetween || allBetweenReverse;
+    }
+    doshas.push({
+      name: 'Kaal Sarp Dosha',
+      present: isKaalSarp,
+      severity: isKaalSarp ? 'moderate' : 'none',
+      description: isKaalSarp
+        ? `All planets are hemmed between Rahu (house ${rahuHouse}) and Ketu (house ${ketuHouse}), forming Kaal Sarp Dosha. This may cause sudden ups and downs in life. The dosha weakens after age 33.`
+        : 'No Kaal Sarp Dosha present. Planets are well-distributed across the chart.',
+      remedies: isKaalSarp
+        ? ['Perform Kaal Sarp Dosha Nivaran Puja at Trimbakeshwar', 'Chant Rahu Beej Mantra on Saturdays', 'Donate black sesame seeds on Saturdays', 'Worship Lord Shiva with Abhishekam on Mondays']
+        : [],
+    });
+
+    // ── Pitra Dosha ──
+    const sunHouse = findHouse('Sun');
+    const sunRahuConjunct = sunHouse != null && rahuHouse != null && sunHouse === rahuHouse;
+    doshas.push({
+      name: 'Pitra Dosha',
+      present: sunRahuConjunct,
+      severity: sunRahuConjunct ? 'mild' : 'none',
+      description: sunRahuConjunct
+        ? `Sun-Rahu conjunction in house ${sunHouse} indicates ancestral karmic debt. This may affect family harmony and career growth.`
+        : 'No significant Pitra Dosha detected in your chart.',
+      remedies: sunRahuConjunct
+        ? ['Perform Pitra Shanti Puja on Amavasya', 'Offer Tarpan for ancestors during Pitru Paksha', 'Donate food to Brahmins on Saturdays', 'Plant a Peepal tree and water it regularly']
+        : [],
+    });
+
+    return doshas;
+  }
+
+  // ─── Primary Kundli generation using Swiss Ephemeris (deterministic) ────────
+  private generateSwissEphKundli(birthDetails: BirthDetails): any {
+    const jd = this.computeJulianDay(birthDetails);
+    const lat = birthDetails.latitude || 28.6139;
+    const lng = birthDetails.longitude || 77.2090;
+
+    // 1. Compute precise planetary positions via Swiss Ephemeris
+    const rawPositions = this.computePlanetaryPositions(jd);
+
+    // 2. Compute ascendant
+    const ascLongitude = this.computeAscendant(jd, lat, lng);
+    const ascIdx = Math.floor(ascLongitude / 30) % 12;
+    const ascendant = ALL_SIGNS[ascIdx];
+
+    // 3. Build houses (Equal House system from ascendant)
+    const houses: HousePlacement[] = Array.from({ length: 12 }, (_, i) => ({
       house: i + 1,
-      sign: allSigns[(ascIdx + i) % 12],
+      sign: ALL_SIGNS[(ascIdx + i) % 12],
       planets: [] as string[],
     }));
 
-    // Planet data with sidereal longitudes
-    const planetData = [
-      { planet: 'Sun', sid: sunSid },
-      { planet: 'Moon', sid: moonSid },
-      { planet: 'Mars', sid: marsSid },
-      { planet: 'Mercury', sid: mercSid },
-      { planet: 'Jupiter', sid: jupSid },
-      { planet: 'Venus', sid: venSid },
-      { planet: 'Saturn', sid: satSid },
-      { planet: 'Rahu', sid: rahuSid },
-      { planet: 'Ketu', sid: ketuSid },
-    ];
-
-    // Retrograde check: approximate based on angular difference from Sun
-    const isRetrograde = (planet: string, sid: number): boolean => {
-      if (planet === 'Rahu' || planet === 'Ketu') return true;
-      if (planet === 'Sun' || planet === 'Moon') return false;
-      // Superior planets are retrograde when roughly opposite the Sun
-      const diff = ((sid - sunSid + 360) % 360);
-      if (['Mars', 'Jupiter', 'Saturn'].includes(planet)) {
-        return diff > 120 && diff < 240;
-      }
-      return false; // Mercury/Venus retrograde detection needs more data
-    };
-
-    const planetaryPositions = planetData.map((p) => {
-      const pSignIdx = signIdx(p.sid);
-      const houseNum = ((pSignIdx - ascIdx + 12) % 12) + 1;
-      houses[houseNum - 1].planets.push(p.planet);
+    // 4. Map planets to positions
+    const planetaryPositions: PlanetPosition[] = rawPositions.map(p => {
+      const signIdx = Math.floor(p.longitude / 30) % 12;
+      const houseNum = ((signIdx - ascIdx + 12) % 12) + 1;
+      houses[houseNum - 1].planets.push(p.name);
+      const nakIdx = Math.floor(p.longitude / (360 / 27)) % 27;
       return {
-        planet: p.planet,
-        sign: signFromLong(p.sid),
+        planet: p.name,
+        sign: ALL_SIGNS[signIdx],
         house: houseNum,
-        degree: degreeInSign(p.sid),
-        isRetrograde: isRetrograde(p.planet, p.sid),
-        nakshatra: nakshatraFromLong(p.sid),
+        degree: parseFloat((p.longitude % 30).toFixed(2)),
+        isRetrograde: p.name === 'Rahu' || p.name === 'Ketu' ? true : p.speed < 0,
+        nakshatra: NAKSHATRA_NAMES[nakIdx],
       };
     });
 
-    // Detect basic yogas
-    const yogas: Yoga[] = [];
-    const findHouse = (name: string) => planetaryPositions.find((p) => p.planet === name)?.house;
-    const jupiterHouse = findHouse('Jupiter');
-    const moonHouse = findHouse('Moon');
-    const sunH = findHouse('Sun');
-    const mercuryH = findHouse('Mercury');
-    const venusH = findHouse('Venus');
+    // 5. Moon data for nakshatra and dasha
+    const moon = rawPositions.find(p => p.name === 'Moon')!;
+    const moonNakIdx = Math.floor(moon.longitude / (360 / 27)) % 27;
+    const nakshatra = NAKSHATRA_NAMES[moonNakIdx];
+    const moonSign = ALL_SIGNS[Math.floor(moon.longitude / 30) % 12];
 
-    if (jupiterHouse != null && moonHouse != null && [1, 4, 7, 10].includes(((jupiterHouse - moonHouse + 12) % 12) + 1)) {
-      yogas.push({ name: 'Gaja Kesari Yoga', description: 'Jupiter in Kendra from Moon - bestows wisdom, prosperity, and fame', effect: 'benefic' });
-    }
-    if (sunH != null && mercuryH != null && sunH === mercuryH) {
-      yogas.push({ name: 'Budhaditya Yoga', description: 'Sun-Mercury conjunction - grants sharp intellect and communication skills', effect: 'benefic' });
-    }
-    if (venusH != null && (venusH === 1 || venusH === 4 || venusH === 7)) {
-      yogas.push({ name: 'Malavya Yoga', description: 'Venus in Kendra - bestows luxury, beauty, and artistic talents', effect: 'benefic' });
-    }
-    if (jupiterHouse != null && [1, 4, 7, 10].includes(jupiterHouse)) {
-      yogas.push({ name: 'Hamsa Yoga', description: 'Jupiter in Kendra - bestows righteousness and spiritual wisdom', effect: 'benefic' });
-    }
+    const sun = rawPositions.find(p => p.name === 'Sun')!;
+    const sunSign = ALL_SIGNS[Math.floor(sun.longitude / 30) % 12];
 
-    // Dashas based on nakshatra ruler (Vimshottari Dasha)
-    const dashaLords = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'];
-    const dashaYears = [7, 20, 6, 10, 7, 18, 16, 19, 17];
-    const moonNakIdx = Math.floor(moonSid / (360 / 27)) % 27;
+    // 6. Vimshottari Dasha calculation
+    const date = new Date(birthDetails.dateOfBirth);
+    const year = date.getFullYear();
+    const nakshatraSpan = 360 / 27; // 13.333°
+    const posInNak = moon.longitude % nakshatraSpan;
+    const fractionElapsed = posInNak / nakshatraSpan;
     const startIdx = moonNakIdx % 9;
-    let currentYear = year;
-    const dashas = Array.from({ length: 3 }, (_, i) => {
+    const firstDashaBalance = DASHA_YEARS[startIdx] * (1 - fractionElapsed);
+
+    const dashas: DashaPeriod[] = [];
+    let dashaStartYear = year - (DASHA_YEARS[startIdx] - firstDashaBalance);
+    for (let i = 0; i < 9; i++) {
       const idx = (startIdx + i) % 9;
-      const start = `${currentYear}-01-01`;
-      currentYear += dashaYears[idx];
-      return {
-        planet: dashaLords[idx],
-        startDate: start,
-        endDate: `${currentYear}-01-01`,
-        subPeriods: dashaLords.slice(0, 3).map((sp, si) => ({
-          planet: sp,
-          startDate: `${parseInt(start) + si}-06-01`,
-          endDate: `${parseInt(start) + si + 1}-06-01`,
-        })),
-      };
-    });
+      const years = i === 0 ? firstDashaBalance : DASHA_YEARS[idx];
+      const startDate = `${Math.round(dashaStartYear)}-01-01`;
+      dashaStartYear += years;
+      const endDate = `${Math.round(dashaStartYear)}-01-01`;
+
+      // Sub-periods (Antardashas)
+      const subPeriods: DashaPeriod[] = [];
+      let subStart = parseFloat(startDate.split('-')[0]);
+      for (let j = 0; j < 9; j++) {
+        const subIdx = (idx + j) % 9;
+        const subYears = (DASHA_YEARS[idx] * DASHA_YEARS[subIdx]) / 120;
+        const actualSubYears = i === 0 && j === 0 ? subYears * (1 - fractionElapsed) : subYears;
+        subPeriods.push({
+          planet: DASHA_LORDS[subIdx],
+          startDate: `${Math.round(subStart)}-01-01`,
+          endDate: `${Math.round(subStart + actualSubYears)}-01-01`,
+        });
+        subStart += actualSubYears;
+      }
+
+      dashas.push({ planet: DASHA_LORDS[idx], startDate, endDate, subPeriods });
+    }
+
+    // 7. Deterministic yoga detection
+    const yogas = this.detectYogas(planetaryPositions);
 
     return {
       ascendant,
@@ -441,6 +597,23 @@ Please calculate the exact sidereal planetary longitudes for this date using Lah
     };
   }
 
+  private async generateAIKundli(birthDetails: BirthDetails): Promise<any> {
+    // PRIMARY: Use Swiss Ephemeris for precise deterministic calculations
+    return this.generateSwissEphKundli(birthDetails);
+  }
+
+  // ─── Swiss Ephemeris: get Moon data for matching ─────────────────────────────
+  private getMoonDataFromSwissEph(bd: BirthDetails): { signIdx: number; nakIdx: number } {
+    const jd = this.computeJulianDay(bd);
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const result = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags);
+    const lng = ((result.longitude % 360) + 360) % 360;
+    return {
+      signIdx: Math.floor(lng / 30) % 12,
+      nakIdx: Math.floor(lng / (360 / 27)) % 27,
+    };
+  }
+
   async getMatching(userId: string, partner1: BirthDetails, partner2: BirthDetails): Promise<MatchingResult> {
     this.logger.log('Performing Kundli matching');
 
@@ -450,41 +623,11 @@ Please calculate the exact sidereal planetary longitudes for this date using Lah
       throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
     }
 
-    // Enrich with matching KB context
-    const matchingKB = await this.knowledgeService.getByCategory('matching', 10);
-    const matchKBContext = this.knowledgeService.assembleContext(matchingKB);
-    const matchKBSection = matchKBContext ? `\n\nReference Knowledge:\n${matchKBContext}` : '';
-
-    const aiResult = await this.callOpenAI(
-      `You are an expert Vedic astrologer performing Ashtakoota Guna matching. Calculate the actual compatibility scores based on the birth details provided. Return a JSON object with:
-- gunaDetails: array of 8 objects { guna: string, maxPoints: number, obtainedPoints: number, description: string } for Varna(1), Vashya(2), Tara(3), Yoni(4), Graha Maitri(5), Gana(6), Bhakoot(7), Nadi(8)
-- totalScore: number (sum of obtained points)
-- compatibility: string ("Excellent" if >= 25, "Very Good" if >= 21, "Good" if >= 18, "Average" if >= 14, "Below Average" if < 14)
-- recommendation: string (detailed compatibility analysis in 2-3 sentences)
-
-Calculate scores based on actual Vedic astrology rules using the Moon signs and Nakshatras derived from the birth dates.${matchKBSection}`,
-      `Partner 1: DOB ${partner1.dateOfBirth}, Time ${partner1.timeOfBirth}, Place ${partner1.placeOfBirth}
-Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${partner2.placeOfBirth}`,
-      true, 1500, 0.2,
-    );
-
-    let gunaDetails: GunaDetail[];
-    let totalScore: number;
-    let compatibility: string;
-    let recommendation: string;
-
-    if (aiResult?.gunaDetails) {
-      gunaDetails = aiResult.gunaDetails;
-      totalScore = aiResult.totalScore ?? gunaDetails.reduce((s, g) => s + g.obtainedPoints, 0);
-      compatibility = aiResult.compatibility ?? (totalScore >= 24 ? 'Very Good' : totalScore >= 18 ? 'Good' : 'Average');
-      recommendation = aiResult.recommendation ?? '';
-    } else {
-      // Fallback: calculate basic scores from birth details
-      gunaDetails = this.calculateGunaScores(partner1, partner2);
-      totalScore = gunaDetails.reduce((s, g) => s + g.obtainedPoints, 0);
-      compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
-      recommendation = `The match score of ${totalScore}/36 indicates ${compatibility.toLowerCase()} compatibility. ${totalScore >= 18 ? 'The couple shares promising foundations for a harmonious relationship.' : 'Remedial measures may be recommended for a balanced relationship.'}`;
-    }
+    // PRIMARY: Deterministic Guna matching using Swiss Ephemeris for Moon positions
+    const gunaDetails = this.calculateGunaScores(partner1, partner2);
+    const totalScore = gunaDetails.reduce((s, g) => s + g.obtainedPoints, 0);
+    const compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
+    const recommendation = `The match score of ${totalScore}/36 indicates ${compatibility.toLowerCase()} compatibility. ${totalScore >= 18 ? 'The couple shares promising foundations for a harmonious relationship.' : 'Remedial measures may be recommended for a balanced relationship.'}`;
 
     const result = await this.prisma.matchingResult.create({
       data: {
@@ -506,27 +649,9 @@ Partner 2: DOB ${partner2.dateOfBirth}, Time ${partner2.timeOfBirth}, Place ${pa
   }
 
   private calculateGunaScores(p1: BirthDetails, p2: BirthDetails): GunaDetail[] {
-    // Compute approximate Moon signs and Nakshatras for both partners using mean lunar longitude
-    const getMoonData = (bd: BirthDetails) => {
-      const date = new Date(bd.dateOfBirth);
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const year = date.getFullYear();
-      const a = Math.floor((14 - month) / 12);
-      const y = year + 4800 - a;
-      const m = month + 12 * a - 3;
-      const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
-      const T = (jd - 2451545.0) / 36525.0;
-      const moonLong = (218.3165 + 481267.8813 * T) % 360;
-      const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
-      const moonSid = ((moonLong - ayanamsa) % 360 + 360) % 360;
-      const signIdx = Math.floor(moonSid / 30) % 12;
-      const nakIdx = Math.floor(moonSid / (360 / 27)) % 27;
-      return { signIdx, nakIdx };
-    };
-
-    const m1 = getMoonData(p1);
-    const m2 = getMoonData(p2);
+    // Use Swiss Ephemeris for precise Moon positions
+    const m1 = this.getMoonDataFromSwissEph(p1);
+    const m2 = this.getMoonDataFromSwissEph(p2);
 
     // Varna (1 pt): Based on sign's Varna classification
     // Brahmin(Cancer,Scorpio,Pisces), Kshatriya(Aries,Leo,Sag), Vaishya(Taurus,Virgo,Cap), Shudra(Gemini,Libra,Aquarius)
@@ -790,75 +915,68 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
       return result;
     }
 
-    // Fallback: compute Panchang from astronomical formulas
+    // Fallback: compute Panchang using Swiss Ephemeris for precision
     const dayNames = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
-    const tithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
-    const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
-    const yogas = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
-    const karanas = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja', 'Vanija', 'Vishti', 'Shakuni', 'Chatushpada', 'Nagava', 'Kimstughna'];
+    const tithiNames = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
+    const yogaNames = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
+    const karanaNames = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja', 'Vanija', 'Vishti', 'Shakuni', 'Chatushpada', 'Nagava', 'Kimstughna'];
 
-    // Julian Day for astronomical computation
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-    const a = Math.floor((14 - month) / 12);
-    const y = year + 4800 - a;
-    const m = month + 12 * a - 3;
-    const jd = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
-    const T = (jd - 2451545.0) / 36525.0;
+    // Swiss Ephemeris: compute Sun & Moon tropical longitudes at ~6:00 IST (0:30 UT)
+    const jd = swisseph.swe_julday(today.getFullYear(), today.getMonth() + 1, today.getDate(), 0.5, swisseph.SE_GREG_CAL);
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const sunResult = swisseph.swe_calc_ut(jd, swisseph.SE_SUN, flags);
+    const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags);
+    const sunSid = ((sunResult.longitude % 360) + 360) % 360;
+    const moonSid = ((moonResult.longitude % 360) + 360) % 360;
 
-    // Mean Sun and Moon longitudes
-    const sunLong = (280.46646 + 36000.76983 * T) % 360;
-    const moonLong = (218.3165 + 481267.8813 * T) % 360;
-
-    // Tithi: based on Moon-Sun elongation (each tithi = 12°)
-    const elongation = ((moonLong - sunLong) % 360 + 360) % 360;
+    // For tithi we need tropical elongation (Moon - Sun)
+    const sunTropical = swisseph.swe_calc_ut(jd, swisseph.SE_SUN, swisseph.SEFLG_SPEED);
+    const moonTropical = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, swisseph.SEFLG_SPEED);
+    const elongation = ((moonTropical.longitude - sunTropical.longitude) % 360 + 360) % 360;
     const tithiIdx = Math.floor(elongation / 12) % 30;
     const paksha = tithiIdx < 15 ? 'Shukla' : 'Krishna';
-    const tithiName = tithis[tithiIdx % 15];
+    const tithiName = tithiNames[tithiIdx % 15];
 
-    // Nakshatra: based on Moon's sidereal longitude (Lahiri ayanamsa)
-    const ayanamsa = 23.85 + (T * 36525 * 50.29) / 3600;
-    const moonSidereal = ((moonLong - ayanamsa) % 360 + 360) % 360;
-    const nakIdx = Math.floor(moonSidereal / (360 / 27)) % 27;
+    // Nakshatra from Moon's sidereal longitude
+    const nakIdx = Math.floor(moonSid / (360 / 27)) % 27;
 
-    // Yoga: Sun + Moon sidereal longitudes / 13.333°
-    const sunSidereal = ((sunLong - ayanamsa) % 360 + 360) % 360;
-    const yogaAngle = ((moonSidereal + sunSidereal) % 360 + 360) % 360;
+    // Yoga: (Sun sidereal + Moon sidereal) / 13.333°
+    const yogaAngle = ((moonSid + sunSid) % 360 + 360) % 360;
     const yogaIdx = Math.floor(yogaAngle / (360 / 27)) % 27;
 
     // Karana: half of tithi
     const karanaIdx = (tithiIdx * 2) % 11;
 
-    // Approximate sunrise/sunset for Delhi (28.6°N) with seasonal variation
+    // Sunrise/sunset using astronomical formula (Swiss Eph swe_rise_trans is unreliable in this binding)
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
     const declination = 23.45 * Math.sin(2 * Math.PI * (284 + dayOfYear) / 365);
     const latRad = 28.6139 * Math.PI / 180;
     const decRad = declination * Math.PI / 180;
     const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(decRad)) * 180 / Math.PI;
-    const sunriseHour = 12 - hourAngle / 15 + 5.5 / 15; // IST offset approximation
-    const sunsetHour = 12 + hourAngle / 15 + 5.5 / 15;
+    const solarNoon = 12 + (77.2090 - 82.5) / 15; // IST meridian = 82.5°E
+    const sunriseHour = solarNoon - hourAngle / 15;
+    const sunsetHour = solarNoon + hourAngle / 15;
     const formatHour = (h: number) => {
-      const hr = Math.floor(h);
-      const min = Math.round((h - hr) * 60);
+      const hr = Math.floor(((h % 24) + 24) % 24);
+      const min = Math.round((h - Math.floor(h)) * 60);
       const period = hr >= 12 ? 'PM' : 'AM';
       const hr12 = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
-      return `${hr12.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
+      return `${hr12.toString().padStart(2, '0')}:${Math.abs(min).toString().padStart(2, '0')} ${period}`;
     };
 
-    // Moonrise: roughly 50 minutes later each day from a base
-    const moonriseBase = 6.0 + (tithiIdx * 50) / 60; // starts near sunrise at new moon
-    const moonriseHour = ((moonriseBase + 5.5 / 15) % 24 + 24) % 24;
+    // Moonrise approximation
+    const moonriseBase = 6.0 + (tithiIdx * 50) / 60;
+    const moonriseHour = ((moonriseBase + (77.2090 - 82.5) / 15) % 24 + 24) % 24;
 
     // Rahu Kaal varies by day of week
     const rahuKaals = ['04:30 PM - 06:00 PM', '07:30 AM - 09:00 AM', '03:00 PM - 04:30 PM', '12:00 PM - 01:30 PM', '01:30 PM - 03:00 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM'];
 
-    return {
+    const result: PanchangResult = {
       date: dateStr,
       tithi: `${paksha} ${tithiName}`,
-      nakshatra: nakshatras[nakIdx],
-      yoga: yogas[yogaIdx],
-      karana: karanas[karanaIdx],
+      nakshatra: NAKSHATRA_NAMES[nakIdx],
+      yoga: yogaNames[yogaIdx],
+      karana: karanaNames[karanaIdx],
       vara: dayNames[today.getDay()],
       sunrise: formatHour(sunriseHour),
       sunset: formatHour(sunsetHour),
@@ -867,6 +985,8 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
       gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][today.getDay()],
       yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][today.getDay()],
     };
+    this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
+    return result;
   }
 
   async getMuhurat(dto: MuhuratRequest): Promise<MuhuratResult> {
@@ -921,68 +1041,33 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
   }
 
   async getDosha(userId: string): Promise<DoshaResult> {
-    // Fetch user's birth details for personalized analysis
+    // Fetch user's birth details for deterministic analysis
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { dateOfBirth: true, timeOfBirth: true, placeOfBirth: true },
     });
 
-    const birthInfo = user?.dateOfBirth
-      ? `DOB: ${user.dateOfBirth.toISOString().split('T')[0]}, Time: ${user.timeOfBirth || 'unknown'}, Place: ${(user.placeOfBirth as any)?.name || 'unknown'}`
-      : 'Birth details not available';
-
-    // Enrich with dosha KB context
-    const doshaKB = await this.knowledgeService.getByCategory('doshas', 10);
-    const doshaKBContext = this.knowledgeService.assembleContext(doshaKB);
-    const doshaKBSection = doshaKBContext ? `\n\nReference Knowledge:\n${doshaKBContext}` : '';
-
-    const aiResult = await this.callOpenAI(
-      `You are a Vedic astrologer specializing in Dosha analysis. Analyze the birth chart for common Doshas. Return a JSON object with:
-- doshas: array of objects { name: string, present: boolean, severity: "none"|"mild"|"moderate"|"severe", description: string, remedies: string[] }
-
-Analyze for: Mangal Dosha (Manglik), Kaal Sarp Dosha, Pitra Dosha, Shani Dosha, and Nadi Dosha. Base your analysis on the planetary positions derived from the birth details.${doshaKBSection}`,
-      `Analyze Doshas for person with: ${birthInfo}`,
-    );
-
-    if (aiResult?.doshas) {
-      return { userId, doshas: aiResult.doshas };
+    if (user?.dateOfBirth) {
+      // PRIMARY: Deterministic dosha detection using Swiss Ephemeris
+      const birthDetails: BirthDetails = {
+        dateOfBirth: user.dateOfBirth.toISOString().split('T')[0],
+        timeOfBirth: user.timeOfBirth || '06:00',
+        placeOfBirth: (user.placeOfBirth as any)?.name || 'Delhi',
+        latitude: (user.placeOfBirth as any)?.lat,
+        longitude: (user.placeOfBirth as any)?.lng,
+      };
+      const chart = this.generateSwissEphKundli(birthDetails);
+      const doshas = this.detectDoshas(chart.planetaryPositions);
+      return { userId, doshas };
     }
 
-    // Fallback based on user's birth data
-    const dob = user?.dateOfBirth ? new Date(user.dateOfBirth) : new Date();
-    const day = dob.getDate();
-    const month = dob.getMonth();
-
+    // No birth details available — return empty analysis
     return {
       userId,
       doshas: [
-        {
-          name: 'Mangal Dosha (Manglik)',
-          present: day % 3 === 0,
-          severity: day % 3 === 0 ? (day % 6 === 0 ? 'moderate' : 'mild') : 'none',
-          description: day % 3 === 0
-            ? 'Mars is placed in a Kendra house, creating Mangal Dosha that may affect marital harmony. The severity is reduced by Jupiter\'s aspect.'
-            : 'No Mangal Dosha detected in your birth chart. Mars is well-placed.',
-          remedies: day % 3 === 0 ? ['Perform Mangal Shanti Puja', 'Chant Hanuman Chalisa on Tuesdays', 'Wear a red coral gemstone (consult astrologer first)', 'Fasting on Tuesdays can reduce the dosha effect'] : [],
-        },
-        {
-          name: 'Kaal Sarp Dosha',
-          present: month % 4 === 0,
-          severity: month % 4 === 0 ? 'moderate' : 'none',
-          description: month % 4 === 0
-            ? 'All planets are hemmed between Rahu and Ketu, forming Kaal Sarp Dosha. This may cause sudden ups and downs in life.'
-            : 'No Kaal Sarp Dosha present. Planets are well-distributed across the chart.',
-          remedies: month % 4 === 0 ? ['Perform Kaal Sarp Dosha Nivaran Puja at Trimbakeshwar', 'Chant Rahu Beej Mantra on Saturdays', 'Donate black sesame seeds and mustard oil on Saturdays', 'Worship Lord Shiva with Abhishekam on Mondays'] : [],
-        },
-        {
-          name: 'Pitra Dosha',
-          present: (day + month) % 5 === 0,
-          severity: (day + month) % 5 === 0 ? 'mild' : 'none',
-          description: (day + month) % 5 === 0
-            ? 'Sun-Rahu conjunction indicates ancestral karmic debt that may affect family harmony and career growth.'
-            : 'No significant Pitra Dosha detected in your chart.',
-          remedies: (day + month) % 5 === 0 ? ['Perform Pitra Shanti Puja on Amavasya', 'Offer Tarpan for ancestors during Pitru Paksha', 'Donate food to Brahmins on Saturdays', 'Plant a Peepal tree and water it regularly'] : [],
-        },
+        { name: 'Mangal Dosha (Manglik)', present: false, severity: 'none', description: 'Birth details required for accurate Mangal Dosha analysis. Please update your profile.', remedies: [] },
+        { name: 'Kaal Sarp Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Kaal Sarp Dosha analysis. Please update your profile.', remedies: [] },
+        { name: 'Pitra Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Pitra Dosha analysis. Please update your profile.', remedies: [] },
       ],
     };
   }

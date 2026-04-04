@@ -31,7 +31,9 @@ export default () => ({
 
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
-    model: process.env.OPENAI_MODEL || 'gpt-4o',
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    modelPrecision: process.env.OPENAI_MODEL_PRECISION || 'gpt-4o',
+    modelVision: process.env.OPENAI_MODEL_VISION || 'gpt-4o-mini',
   },
 
   otp: {

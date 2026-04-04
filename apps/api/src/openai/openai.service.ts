@@ -24,7 +24,18 @@ export class OpenAIService implements OnModuleInit {
   }
 
   getModel(): string {
-    return this.configService.get<string>('openai.model', 'gpt-4o');
+    return this.configService.get<string>('openai.model', 'gpt-4o-mini');
+  }
+
+  getModelForFeature(feature: 'default' | 'precision' | 'vision'): string {
+    switch (feature) {
+      case 'precision':
+        return this.configService.get<string>('openai.modelPrecision', 'gpt-4o');
+      case 'vision':
+        return this.configService.get<string>('openai.modelVision', 'gpt-4o-mini');
+      default:
+        return this.getModel();
+    }
   }
 
   async chatCompletion(options: {
@@ -32,12 +43,13 @@ export class OpenAIService implements OnModuleInit {
     maxTokens?: number;
     temperature?: number;
     jsonMode?: boolean;
+    model?: string;
   }): Promise<any | null> {
     if (!this.client) return null;
 
     try {
       const completion = await this.client.chat.completions.create({
-        model: this.getModel(),
+        model: options.model || this.getModel(),
         messages: options.messages,
         max_tokens: options.maxTokens ?? 1500,
         temperature: options.temperature ?? 0.7,
