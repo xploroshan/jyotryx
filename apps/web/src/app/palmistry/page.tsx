@@ -90,8 +90,7 @@ export default function PalmistryPage() {
     setError("");
     try {
       const { useAuthStore } = await import("@/lib/store");
-      const token = useAuthStore.getState().accessToken;
-      if (!token) {
+      if (!useAuthStore.getState().accessToken) {
         setError("Please log in to analyze your palm.");
         setAnalyzing(false);
         return;
@@ -99,7 +98,7 @@ export default function PalmistryPage() {
       const { api } = await import("@/lib/api");
       const formData = new FormData();
       formData.append("image", imageFile);
-      const result = await api.upload<any>("/palmistry/analyze", formData, token);
+      const result = await api.upload<any>("/palmistry/analyze", formData);
       if (result) {
         // Map API response (lines[], mounts[], fingerAnalysis[]) to display format
         const lines = result.lines || [];
