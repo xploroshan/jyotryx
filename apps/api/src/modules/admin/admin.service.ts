@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface DashboardStats {
@@ -421,7 +421,7 @@ export class AdminService {
           gender: user.gender,
           preferredLanguage: user.preferredLanguage,
         },
-        newData: Prisma.JsonNull,
+        newData: undefined,
       },
     });
 
