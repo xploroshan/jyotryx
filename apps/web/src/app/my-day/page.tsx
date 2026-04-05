@@ -256,7 +256,7 @@ export default function MyDayPage() {
                     {briefing.currentHora.planet}
                   </p>
                   <p className="text-xs text-white/30 mt-0.5">
-                    {briefing.currentHora.startTime} \u2013 {briefing.currentHora.endTime}
+                    {briefing.currentHora.startTime} – {briefing.currentHora.endTime}
                   </p>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function MyDayPage() {
                   </div>
                   <span className={`text-sm font-medium w-16 ${pi.color}`}>{hour.planet}</span>
                   <span className="text-xs text-white/25 w-28 tabular-nums">
-                    {hour.startTime} \u2013 {hour.endTime}
+                    {hour.startTime} – {hour.endTime}
                   </span>
                   <span className="text-xs text-white/40 flex-1 hidden sm:block">
                     {hour.activities.slice(0, 2).join(", ")}
