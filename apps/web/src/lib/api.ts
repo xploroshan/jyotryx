@@ -66,8 +66,8 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
     );
   }
 
-  // Auto-refresh on 401
-  if (response.status === 401 && !token) {
+  // Auto-refresh on 401 (expired access token)
+  if (response.status === 401) {
     const newToken = await tryRefreshToken();
     if (newToken) {
       headers["Authorization"] = `Bearer ${newToken}`;
