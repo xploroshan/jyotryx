@@ -66,6 +66,7 @@ describe('AstrologyService', () => {
       chatCompletion: jest.fn().mockResolvedValue(null),
       getClient: jest.fn().mockReturnValue(null),
       getModel: jest.fn().mockReturnValue('gpt-4o'),
+      getModelForFeature: jest.fn().mockReturnValue('gpt-4o'),
     };
 
     cacheService = {
