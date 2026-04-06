@@ -172,31 +172,38 @@ export class PaymentService {
     });
 
     if (payment) {
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: 'SUCCESS',
-          razorpayPaymentId: dto.razorpayPaymentId,
-        },
-      });
+      // Only add credits if payment hasn't already been processed (prevents double credit from webhook + verify)
+      if (payment.status !== 'SUCCESS') {
+        await this.prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: 'SUCCESS',
+            razorpayPaymentId: dto.razorpayPaymentId,
+          },
+        });
 
-      // Add credits based on the amount paid
-      const creditsToAdd = this.calculateCredits(Number(payment.amount));
-      await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
+        const creditsToAdd = this.calculateCredits(Number(payment.amount));
+        await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
 
+        return {
+          verified: true,
+          paymentId: dto.razorpayPaymentId,
+          orderId: dto.razorpayOrderId,
+          creditsAdded: creditsToAdd,
+        };
+      }
+
+      // Already processed (likely by webhook) — return success without adding credits again
       return {
         verified: true,
         paymentId: dto.razorpayPaymentId,
         orderId: dto.razorpayOrderId,
-        creditsAdded: creditsToAdd,
+        creditsAdded: 0,
       };
     }
 
-    return {
-      verified: true,
-      paymentId: dto.razorpayPaymentId,
-      orderId: dto.razorpayOrderId,
-    };
+    // No matching payment record found
+    throw new BadRequestException('Payment record not found for this order');
   }
 
   async createSubscription(userId: string, dto: CreateSubscriptionDto): Promise<SubscriptionResult> {
@@ -221,12 +228,13 @@ export class PaymentService {
     }
 
     // Persist subscription and upgrade role atomically
-    const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const isAnnual = dto.planId.includes('annual');
+    const endDate = new Date(Date.now() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
     await this.prisma.$transaction(async (tx: any) => {
       await tx.subscription.create({
         data: {
           userId,
-          plan: dto.planId.includes('annual') ? 'ANNUAL' : 'MONTHLY',
+          plan: isAnnual ? 'ANNUAL' : 'MONTHLY',
           status: 'ACTIVE',
           razorpaySubscriptionId: subscriptionId,
           endDate,
@@ -263,7 +271,8 @@ export class PaymentService {
         throw new BadRequestException('Invalid webhook signature');
       }
     } else if (webhookSecret && !signatureHeader) {
-      this.logger.warn('Webhook received without signature header');
+      this.logger.warn('Webhook received without signature header - rejecting');
+      throw new BadRequestException('Missing webhook signature');
     }
 
     this.logger.log(`Webhook received: ${payload?.event || 'unknown event'}`);

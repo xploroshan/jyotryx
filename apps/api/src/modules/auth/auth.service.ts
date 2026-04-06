@@ -239,6 +239,12 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('User not found');
 
+    if (user.passwordHash) {
+      throw new BadRequestException(
+        'Password already set. Use the change password feature instead.',
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await this.prisma.user.update({
       where: { id: userId },
@@ -290,7 +296,7 @@ export class AuthService {
     // Generate password reset link via Firebase Admin SDK
     try {
       const resetLink = await admin.auth().generatePasswordResetLink(email);
-      this.logger.log(`Password reset link generated for: ${email} - ${resetLink}`);
+      this.logger.log(`Password reset link generated for: ${email}`);
       // In production, you would send this via an email service
       // For now, Firebase will send its default reset email
     } catch (error: any) {

@@ -671,18 +671,17 @@ describe('Auth: Set Password', () => {
     expect(result.message).toContain('Password set successfully');
   });
 
-  it('should overwrite existing password (allow re-set)', async () => {
+  it('should reject setting password when one already exists', async () => {
     const existingHash = await bcrypt.hash('OldPass123!', 12);
     prisma.user.findUnique.mockResolvedValue({
       id: 'user-overwrite',
       email: 'overwrite@example.com',
       passwordHash: existingHash,
     });
-    prisma.user.update.mockResolvedValue({});
 
-    const result = await service.setPassword('user-overwrite', 'BrandNew456!');
-
-    expect(result.message).toContain('Password set successfully');
+    await expect(
+      service.setPassword('user-overwrite', 'BrandNew456!'),
+    ).rejects.toThrow('Password already set');
   });
 
   it('should reject set password for non-existent user', async () => {
@@ -1007,22 +1006,18 @@ describe('Auth: Controller', () => {
   });
 });
 
-// ─── FORGOT PASSWORD (Firebase sendPasswordResetEmail) ──────────────────────
-// Note: Forgot password uses Firebase client-side (sendPasswordResetEmail).
-// The backend does NOT have a forgot password endpoint - it's handled entirely
-// by Firebase Auth. We test the controller/service boundary to ensure no
-// server-side forgot password endpoint is accidentally exposed.
+// ─── FORGOT PASSWORD ──────────────────────
+// The backend has a forgot-password endpoint that ensures the user exists in
+// Firebase Auth before the client calls sendPasswordResetEmail.
 
-describe('Auth: Forgot Password (Firebase client-side)', () => {
-  it('should NOT have a forgot-password endpoint on AuthController', () => {
+describe('Auth: Forgot Password', () => {
+  it('should have a forgot-password endpoint on AuthController', () => {
     const controllerPrototype = AuthController.prototype;
     const methods = Object.getOwnPropertyNames(controllerPrototype).filter(
       (m) => m !== 'constructor',
     );
 
-    // Verify no forgot-password method exists (it's client-side Firebase only)
-    expect(methods).not.toContain('forgotPassword');
-    expect(methods).not.toContain('resetPassword');
+    expect(methods).toContain('forgotPassword');
   });
 
   it('should have all expected auth endpoints', () => {
@@ -1038,6 +1033,7 @@ describe('Auth: Forgot Password (Firebase client-side)', () => {
     expect(methods).toContain('googleAuth');
     expect(methods).toContain('firebaseAuth');
     expect(methods).toContain('refreshToken');
+    expect(methods).toContain('forgotPassword');
     expect(methods).toContain('changePassword');
     expect(methods).toContain('setPassword');
     expect(methods).toContain('getStatus');

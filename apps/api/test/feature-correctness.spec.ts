@@ -191,9 +191,9 @@ describe('Numerology Service — Mathematical Correctness', () => {
     });
 
     it('should compute correct destiny number for "zara" using Chaldean values', async () => {
-      // Chaldean: z=7, a=1, r=2, a=1 → sum=11 → 1+1=2
+      // Chaldean: z=7, a=1, r=2, a=1 → sum=11 → master number preserved
       const result = await service.analyzeName('zara');
-      expect(result.destinyNumber).toBe(2);
+      expect(result.destinyNumber).toBe(11);
     });
 
     it('should reduce multi-digit sums correctly (28→10→1)', async () => {
@@ -258,9 +258,9 @@ describe('Numerology Service — Mathematical Correctness', () => {
       expect(result.rulingPlanet).toBe('Rahu');
     });
 
-    it('should assign Moon as ruling planet for destiny number 2', async () => {
-      const result = await service.analyzeName('zara'); // destiny=2
-      expect(result.rulingPlanet).toBe('Moon');
+    it('should assign Moon (Master) as ruling planet for master number 11', async () => {
+      const result = await service.analyzeName('zara'); // destiny=11 (master number)
+      expect(result.rulingPlanet).toBe('Moon (Master)');
     });
   });
 

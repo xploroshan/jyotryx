@@ -64,8 +64,13 @@ export class AstrologyController {
   @Public()
   @ApiOperation({ summary: 'Get today\'s Panchang (Hindu calendar details)' })
   @ApiResponse({ status: 200, description: 'Panchang details returned' })
-  async getPanchang(): Promise<PanchangResult> {
-    return this.astrologyService.getPanchang();
+  async getPanchang(
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+  ): Promise<PanchangResult> {
+    const latitude = lat ? parseFloat(lat) : undefined;
+    const longitude = lng ? parseFloat(lng) : undefined;
+    return this.astrologyService.getPanchang(latitude, longitude);
   }
 
   @Post('muhurat')
