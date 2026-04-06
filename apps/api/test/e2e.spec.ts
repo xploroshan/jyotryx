@@ -767,6 +767,7 @@ describe('E2E: Webhook Processing', () => {
   });
 
   it('should handle payment.failed webhook', async () => {
+    const webhookSecret = 'test-webhook-secret';
     const payload = {
       event: 'payment.failed',
       payload: {
@@ -776,7 +777,12 @@ describe('E2E: Webhook Processing', () => {
       },
     };
 
-    const result = await paymentService.handleWebhook(payload);
+    const signature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(JSON.stringify(payload))
+      .digest('hex');
+
+    const result = await paymentService.handleWebhook(payload, signature);
     expect(result.received).toBe(true);
     expect(prisma.payment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({

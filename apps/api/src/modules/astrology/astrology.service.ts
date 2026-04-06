@@ -229,7 +229,9 @@ export class AstrologyService {
     const timeParts = bd.timeOfBirth?.split(':') || ['6', '0'];
     const hour = parseInt(timeParts[0], 10);
     const minute = parseInt(timeParts[1], 10) || 0;
-    const utHour = hour + minute / 60 - 5.5; // IST to UT (default assumption)
+    // Derive timezone offset from longitude if available, otherwise default to IST (+5:30)
+    const tzOffset = bd.longitude != null ? bd.longitude / 15 : 5.5;
+    const utHour = hour + minute / 60 - tzOffset;
     return swisseph.swe_julday(
       date.getFullYear(), date.getMonth() + 1, date.getDate(),
       utHour, swisseph.SE_GREG_CAL,
@@ -660,9 +662,21 @@ export class AstrologyService {
     const v2 = varnaMap[m2.signIdx];
     const varnaScore = v1 >= v2 ? 1 : 0;
 
-    // Vashya (2 pts): Based on sign's Vashya group compatibility
-    const vashyaGroups = [0, 1, 2, 3, 0, 2, 1, 3, 0, 1, 2, 3]; // Simplified grouping
-    const vashyaScore = vashyaGroups[m1.signIdx] === vashyaGroups[m2.signIdx] ? 2 : Math.abs(vashyaGroups[m1.signIdx] - vashyaGroups[m2.signIdx]) <= 1 ? 1 : 0;
+    // Vashya (2 pts): Traditional 5-category system
+    // 0=Chatushpada(quadruped), 1=Manava(human), 2=Jalachara(water), 3=Vanachara(wild), 4=Keeta(insect)
+    // Aries=Chatush, Taurus=Chatush, Gemini=Manava, Cancer=Jalachara, Leo=Vanachara, Virgo=Manava,
+    // Libra=Manava, Scorpio=Keeta, Sag=half-Chatush/half-Manava(1), Cap=half-Jalachara/half-Chatush(0), Aquarius=Manava, Pisces=Jalachara
+    const vashyaGroups = [0, 0, 1, 2, 3, 1, 1, 4, 1, 0, 1, 2];
+    // Compatibility: same=2, Manava controls all except Vanachara=1, others partial
+    const vashyaCompat: Record<string, number> = {
+      '0-0': 2, '1-1': 2, '2-2': 2, '3-3': 2, '4-4': 2,
+      '1-0': 1, '0-1': 1, '1-2': 1, '2-1': 1, '1-4': 1, '4-1': 1,
+      '0-2': 1, '2-0': 1, '0-3': 0, '3-0': 0, '0-4': 0, '4-0': 0,
+      '1-3': 0, '3-1': 1, '2-3': 0, '3-2': 0, '2-4': 1, '4-2': 1,
+      '3-4': 0, '4-3': 0,
+    };
+    const vashyaKey = `${vashyaGroups[m1.signIdx]}-${vashyaGroups[m2.signIdx]}`;
+    const vashyaScore = vashyaCompat[vashyaKey] ?? 0;
 
     // Tara (3 pts): Count nakshatras from bride to groom, divide by 9, check remainder
     const taraDiff = ((m2.nakIdx - m1.nakIdx + 27) % 27);
@@ -670,19 +684,42 @@ export class AstrologyService {
     const auspiciousTara = [1, 2, 4, 6, 8]; // 2nd, 3rd, 5th, 7th, 9th are favorable
     const taraScore = auspiciousTara.includes(taraRemainder) ? 3 : taraRemainder === 0 ? 1 : 0;
 
-    // Yoni (4 pts): Based on nakshatra's animal symbol compatibility
-    const yoniAnimals = [0, 0, 1, 2, 2, 3, 4, 1, 4, 5, 5, 6, 6, 7, 6, 7, 7, 3, 3, 8, 8, 8, 0, 0, 0, 6, 0]; // Simplified animal groups
-    const yoniMatch = yoniAnimals[m1.nakIdx] === yoniAnimals[m2.nakIdx];
-    const yoniScore = yoniMatch ? 4 : Math.abs(yoniAnimals[m1.nakIdx] - yoniAnimals[m2.nakIdx]) <= 2 ? 2 : 1;
+    // Yoni (4 pts): Traditional 14-animal system based on nakshatra
+    // 0=Horse, 1=Elephant, 2=Sheep, 3=Serpent, 4=Dog, 5=Cat, 6=Rat, 7=Cow, 8=Buffalo, 9=Tiger, 10=Deer, 11=Monkey, 12=Mongoose, 13=Lion
+    const yoniAnimals = [0, 1, 2, 5, 3, 6, 4, 2, 5, 7, 8, 9, 10, 11, 7, 8, 12, 13, 0, 1, 13, 10, 11, 3, 6, 12, 1];
+    // Enemy pairs: Horse-Buffalo, Elephant-Lion, Sheep-Monkey, Serpent-Mongoose, Dog-Deer, Cat-Rat, Cow-Tiger
+    const yoniEnemies: Record<number, number> = { 0: 8, 8: 0, 1: 13, 13: 1, 2: 11, 11: 2, 3: 12, 12: 3, 4: 10, 10: 4, 5: 6, 6: 5, 7: 9, 9: 7 };
+    const y1 = yoniAnimals[m1.nakIdx];
+    const y2 = yoniAnimals[m2.nakIdx];
+    const yoniScore = y1 === y2 ? 4 : yoniEnemies[y1] === y2 ? 0 : 2;
 
-    // Graha Maitri (5 pts): Based on Moon sign lords friendship
-    const signLords = [4, 6, 5, 1, 0, 5, 6, 4, 3, 2, 2, 3]; // Mars,Venus,Mercury,Moon,Sun,Mercury,Venus,Mars,Jupiter,Saturn,Saturn,Jupiter
+    // Graha Maitri (5 pts): Based on Moon sign lords with traditional friendship table
+    // Lords: 0=Sun, 1=Moon, 2=Mars, 3=Mercury, 4=Jupiter, 5=Venus, 6=Saturn
+    const signLords = [2, 5, 3, 1, 0, 3, 5, 2, 4, 6, 6, 4]; // Aries=Mars, Taurus=Venus, etc.
     const lord1 = signLords[m1.signIdx];
     const lord2 = signLords[m2.signIdx];
-    const graha = lord1 === lord2 ? 5 : Math.abs(lord1 - lord2) <= 1 ? 4 : Math.abs(lord1 - lord2) <= 2 ? 3 : 0;
+    // Friendship matrix: 2=best friend, 1=friend, 0=neutral, -1=enemy, -2=bitter enemy
+    const friendshipTable: Record<string, number> = {
+      '0-1': 1, '0-2': 1, '0-4': 1, '0-3': -1, '0-5': -1, '0-6': -1,
+      '1-0': 1, '1-3': 1, '1-2': 0, '1-4': 0, '1-5': 0, '1-6': 0,
+      '2-0': 1, '2-1': 1, '2-4': 1, '2-3': -1, '2-5': 0, '2-6': 0,
+      '3-0': -1, '3-5': 1, '3-1': 0, '3-2': 0, '3-4': 0, '3-6': 0,
+      '4-0': 1, '4-1': 1, '4-2': 1, '4-3': -1, '4-5': -1, '4-6': 0,
+      '5-3': 1, '5-6': 1, '5-0': -1, '5-1': 0, '5-2': 0, '5-4': 0,
+      '6-3': 1, '6-5': 1, '6-0': -1, '6-1': -1, '6-2': -1, '6-4': 0,
+    };
+    const fKey = `${lord1}-${lord2}`;
+    const f1 = lord1 === lord2 ? 2 : (friendshipTable[fKey] ?? 0);
+    const f2 = lord1 === lord2 ? 2 : (friendshipTable[`${lord2}-${lord1}`] ?? 0);
+    const combinedFriendship = f1 + f2; // Range: -4 to 4
+    const graha = combinedFriendship >= 3 ? 5 : combinedFriendship >= 1 ? 4 : combinedFriendship === 0 ? 3 : combinedFriendship >= -2 ? 1 : 0;
 
-    // Gana (6 pts): Deva, Manushya, Rakshasa based on nakshatra
-    const ganaMap = [0, 2, 1, 0, 0, 2, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0]; // 0=Deva, 1=Manushya, 2=Rakshasa
+    // Gana (6 pts): Deva, Manushya, Rakshasa based on nakshatra (standard mapping)
+    // 0=Deva, 1=Manushya, 2=Rakshasa
+    // Ashwini=D, Bharani=M, Krittika=R, Rohini=M, Mrig=D, Ardra=M, Punarvasu=D, Pushya=D, Ashlesha=R,
+    // Magha=R, PPhalguni=M, UPhalguni=M, Hasta=D, Chitra=R, Swati=D, Vishakha=R, Anuradha=D, Jyeshtha=R,
+    // Mula=R, PAshad=M, UAshad=M, Shravan=D, Dhanishta=R, Shatab=R, PBhadra=M, UBhadra=M, Revati=D
+    const ganaMap = [0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0];
     const g1 = ganaMap[m1.nakIdx];
     const g2 = ganaMap[m2.nakIdx];
     const ganaScore = g1 === g2 ? 6 : (g1 === 0 && g2 === 1) || (g1 === 1 && g2 === 0) ? 3 : 0;
@@ -881,10 +918,14 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
     return fallbackResult;
   }
 
-  async getPanchang(): Promise<PanchangResult> {
+  async getPanchang(lat?: number, lng?: number): Promise<PanchangResult> {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
-    const cacheKey = `panchang:${dateStr}`;
+    // Default to Delhi if no location provided
+    const pLat = lat ?? 28.6139;
+    const pLng = lng ?? 77.2090;
+    const locationLabel = (lat != null && lng != null) ? `${pLat.toFixed(4)}°N, ${pLng.toFixed(4)}°E` : 'New Delhi, India (28.6139°N, 77.2090°E)';
+    const cacheKey = `panchang:${dateStr}:${pLat.toFixed(2)}:${pLng.toFixed(2)}`;
     const cached = this.cacheService.get<PanchangResult>(cacheKey);
     if (cached) return cached;
 
@@ -906,7 +947,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
 - rahukaal: string (Rahu Kaal time range)
 - gulikakaal: string (Gulika Kaal time range)
 - yamakantaka: string (Yama Kantaka time range)${panchangKBSection}`,
-      `Calculate the Panchang for today: ${dateStr} for location: New Delhi, India (28.6139°N, 77.2090°E). Use the Vedic Hindu calendar with Lahiri ayanamsa.`,
+      `Calculate the Panchang for today: ${dateStr} for location: ${locationLabel}. Use the Vedic Hindu calendar with Lahiri ayanamsa.`,
     );
 
     if (aiResult) {
@@ -950,10 +991,10 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
     // Sunrise/sunset using astronomical formula (Swiss Eph swe_rise_trans is unreliable in this binding)
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
     const declination = 23.45 * Math.sin(2 * Math.PI * (284 + dayOfYear) / 365);
-    const latRad = 28.6139 * Math.PI / 180;
+    const latRad = pLat * Math.PI / 180;
     const decRad = declination * Math.PI / 180;
     const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(decRad)) * 180 / Math.PI;
-    const solarNoon = 12 + (77.2090 - 82.5) / 15; // IST meridian = 82.5°E
+    const solarNoon = 12 + (pLng - 82.5) / 15; // IST meridian = 82.5°E
     const sunriseHour = solarNoon - hourAngle / 15;
     const sunsetHour = solarNoon + hourAngle / 15;
     const formatHour = (h: number) => {
@@ -966,7 +1007,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
 
     // Moonrise approximation
     const moonriseBase = 6.0 + (tithiIdx * 50) / 60;
-    const moonriseHour = ((moonriseBase + (77.2090 - 82.5) / 15) % 24 + 24) % 24;
+    const moonriseHour = ((moonriseBase + (pLng - 82.5) / 15) % 24 + 24) % 24;
 
     // Rahu Kaal varies by day of week
     const rahuKaals = ['04:30 PM - 06:00 PM', '07:30 AM - 09:00 AM', '03:00 PM - 04:30 PM', '12:00 PM - 01:30 PM', '01:30 PM - 03:00 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM'];

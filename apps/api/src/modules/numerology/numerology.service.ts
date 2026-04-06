@@ -132,6 +132,30 @@ const NUMBER_MEANINGS: Record<number, { planet: string; meaning: string; strengt
     colors: ['Red', 'Crimson', 'Scarlet'],
     days: ['Tuesday'],
   },
+  11: {
+    planet: 'Moon (Master)',
+    meaning: 'Master intuition, spiritual illumination, and visionary leadership. The number of enlightened teachers and healers.',
+    strengths: ['Visionary insight', 'Spiritual teacher', 'Inspirational leader', 'Heightened intuition'],
+    cautions: ['Avoid nervous tension', 'Ground your visions in reality', 'Don\'t fear your own power'],
+    colors: ['Silver', 'White', 'Pale Gold'],
+    days: ['Monday'],
+  },
+  22: {
+    planet: 'Rahu (Master)',
+    meaning: 'Master builder, turning dreams into reality, and large-scale achievement. The number of architects and visionaries.',
+    strengths: ['Master organizer', 'Practical visionary', 'Large-scale thinker', 'Disciplined creator'],
+    cautions: ['Avoid overwhelming yourself', 'Delegate responsibilities', 'Balance ambition with patience'],
+    colors: ['Dark Gold', 'Coral', 'Cream'],
+    days: ['Saturday', 'Sunday'],
+  },
+  33: {
+    planet: 'Jupiter (Master)',
+    meaning: 'Master teacher, selfless service, and cosmic compassion. The number of spiritual healers and uplifters.',
+    strengths: ['Selfless service', 'Cosmic healer', 'Inspiring mentor', 'Unconditional love'],
+    cautions: ['Avoid martyrdom', 'Care for yourself too', 'Set healthy boundaries'],
+    colors: ['Indigo', 'Rose', 'Deep Purple'],
+    days: ['Thursday'],
+  },
 };
 
 const BUSINESS_SECTORS: Record<number, { suitable: string[]; avoid: string[] }> = {
@@ -158,6 +182,11 @@ export class NumerologyService {
   async analyzeName(name: string): Promise<NameAnalysisResult> {
     const cleanName = name.toLowerCase().replace(/[^a-z]/g, '');
     if (cleanName.length === 0) {
+      // Non-Latin names: transliterate to closest Latin equivalent for analysis
+      const transliterated = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+      if (transliterated.length > 0) {
+        return this.analyzeName(transliterated);
+      }
       return this.getDefaultNameResult(name);
     }
 
@@ -287,8 +316,9 @@ export class NumerologyService {
     return text.split('').filter((ch) => !VOWELS.has(ch) && PYTHAGOREAN_VALUES[ch]).reduce((sum, ch) => sum + (PYTHAGOREAN_VALUES[ch] || 0), 0);
   }
 
-  private reduceToSingle(num: number): number {
+  private reduceToSingle(num: number, preserveMaster = true): number {
     while (num > 9) {
+      if (preserveMaster && (num === 11 || num === 22 || num === 33)) break;
       num = num.toString().split('').reduce((s, d) => s + parseInt(d, 10), 0);
     }
     return num || 1;

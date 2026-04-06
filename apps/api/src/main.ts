@@ -55,33 +55,35 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Swagger documentation
-  const config = new DocumentBuilder()
-    .setTitle('Jyotron API')
-    .setDescription('Jyotron Astrology App Backend API')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addTag('Auth', 'Authentication endpoints')
-    .addTag('Users', 'User management endpoints')
-    .addTag('Chat', 'AI Chat endpoints')
-    .addTag('Astrology', 'Astrology feature endpoints')
-    .addTag('Palmistry', 'Palmistry analysis endpoints')
-    .addTag('Payments', 'Payment and subscription endpoints')
-    .addTag('Reports', 'Report generation endpoints')
-    .build();
+  // Swagger documentation (disabled in production)
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Jyotron API')
+      .setDescription('Jyotron Astrology App Backend API')
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'JWT-auth',
+      )
+      .addTag('Auth', 'Authentication endpoints')
+      .addTag('Users', 'User management endpoints')
+      .addTag('Chat', 'AI Chat endpoints')
+      .addTag('Astrology', 'Astrology feature endpoints')
+      .addTag('Palmistry', 'Palmistry analysis endpoints')
+      .addTag('Payments', 'Payment and subscription endpoints')
+      .addTag('Reports', 'Report generation endpoints')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   // Health check endpoint
   const httpAdapter = app.getHttpAdapter();

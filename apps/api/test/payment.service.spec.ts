@@ -61,7 +61,8 @@ describe('PaymentService', () => {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config: Record<string, any> = {
                 'razorpay.keyId': 'rzp_test_key',
-                'razorpay.keySecret': 'rzp_test_secret',
+                'razorpay.keySecret': null,
+                'razorpay.webhookSecret': null,
                 'frontend.url': 'http://localhost:3000',
               };
               return config[key] ?? defaultValue;

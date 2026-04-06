@@ -671,18 +671,17 @@ describe('Auth: Set Password', () => {
     expect(result.message).toContain('Password set successfully');
   });
 
-  it('should overwrite existing password (allow re-set)', async () => {
+  it('should reject setting password when one already exists', async () => {
     const existingHash = await bcrypt.hash('OldPass123!', 12);
     prisma.user.findUnique.mockResolvedValue({
       id: 'user-overwrite',
       email: 'overwrite@example.com',
       passwordHash: existingHash,
     });
-    prisma.user.update.mockResolvedValue({});
 
-    const result = await service.setPassword('user-overwrite', 'BrandNew456!');
-
-    expect(result.message).toContain('Password set successfully');
+    await expect(
+      service.setPassword('user-overwrite', 'BrandNew456!'),
+    ).rejects.toThrow('Password already set');
   });
 
   it('should reject set password for non-existent user', async () => {
