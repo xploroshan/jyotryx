@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary: Deep indigo-navy — authority, trust, depth */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  /* Primary: Sacred Saffron-Orange — devotion, purity, spiritual fire */
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f97316;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
 
-  /* Accent: Warm amber/gold — celestial, premium, warmth */
-  --color-accent-50: #fffbeb;
-  --color-accent-100: #fef3c7;
-  --color-accent-200: #fde68a;
-  --color-accent-300: #fcd34d;
-  --color-accent-400: #fbbf24;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
-  --color-accent-700: #b45309;
+  /* Accent: Temple Gold — prosperity, divine light, auspiciousness */
+  --color-accent-50: #fefce8;
+  --color-accent-100: #fef9c3;
+  --color-accent-200: #fef08a;
+  --color-accent-300: #fde047;
+  --color-accent-400: #facc15;
+  --color-accent-500: #eab308;
+  --color-accent-600: #ca8a04;
+  --color-accent-700: #a16207;
 
-  /* Surface: Cool slate tones for layering */
-  --color-surface-50: #f8fafc;
-  --color-surface-100: #f1f5f9;
-  --color-surface-200: #e2e8f0;
-  --color-surface-700: #334155;
-  --color-surface-800: #1e293b;
-  --color-surface-900: #0f172a;
-  --color-surface-950: #020617;
+  /* Surface: Warm maroon-dark — sacred earth, temple interiors */
+  --color-surface-50: #fdf4f3;
+  --color-surface-100: #fce8e6;
+  --color-surface-200: #f5d0cc;
+  --color-surface-700: #3e2723;
+  --color-surface-800: #2a1810;
+  --color-surface-900: #1a0e09;
+  --color-surface-950: #0d0705;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -48,34 +48,34 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent;
   }
 
   .surface-card {
-    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl;
+    @apply bg-white/[0.04] border border-primary-900/30 rounded-2xl;
   }
 
   .surface-card-hover {
-    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200;
+    @apply bg-white/[0.04] border border-primary-900/30 rounded-2xl hover:bg-white/[0.07] hover:border-primary-700/40 transition-all duration-200;
   }
 
   .surface-input {
-    @apply bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/30 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-all duration-200;
+    @apply bg-white/[0.05] border border-primary-900/30 text-white placeholder-white/30 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-all duration-200;
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white font-medium hover:bg-primary-500 active:bg-primary-700 transition-colors duration-150;
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 text-white font-medium hover:from-primary-500 hover:to-primary-400 active:from-primary-700 active:to-primary-600 transition-all duration-150;
   }
 
   .btn-secondary {
-    @apply bg-white/[0.06] border border-white/[0.1] text-white font-medium hover:bg-white/[0.1] transition-colors duration-150;
+    @apply bg-white/[0.06] border border-primary-900/30 text-white font-medium hover:bg-white/[0.1] transition-colors duration-150;
   }
 
   .btn-accent {
-    @apply bg-accent-500 text-surface-950 font-medium hover:bg-accent-400 transition-colors duration-150;
+    @apply bg-gradient-to-r from-accent-500 to-accent-400 text-surface-950 font-medium hover:from-accent-400 hover:to-accent-300 transition-all duration-150;
   }
 
   .divider {
-    @apply border-white/[0.06];
+    @apply border-primary-900/20;
   }
 }

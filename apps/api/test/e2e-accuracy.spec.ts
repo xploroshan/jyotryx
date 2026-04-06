@@ -1262,9 +1262,9 @@ describe('9. AstrologyService Integration', () => {
     });
   });
 
-  it('getDosha returns 3 doshas with valid structure', async () => {
+  it('getDosha returns 4 doshas with valid structure', async () => {
     const result = await service.getDosha('u1');
-    expect(result.doshas.length).toBe(3);
+    expect(result.doshas.length).toBe(4);
     result.doshas.forEach((d: any) => {
       expect(typeof d.present).toBe('boolean');
       expect(['none', 'mild', 'moderate', 'severe']).toContain(d.severity);

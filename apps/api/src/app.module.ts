@@ -17,6 +17,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { DailyBriefingModule } from './modules/daily-briefing/daily-briefing.module';
 import { NumerologyModule } from './modules/numerology/numerology.module';
+import { TarotModule } from './modules/tarot/tarot.module';
+import { VastuModule } from './modules/vastu/vastu.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { NumerologyModule } from './modules/numerology/numerology.module';
     KnowledgeModule,
     DailyBriefingModule,
     NumerologyModule,
+    TarotModule,
+    VastuModule,
   ],
   providers: [
     {
