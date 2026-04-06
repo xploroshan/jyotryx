@@ -31,12 +31,18 @@ if (fs.existsSync(initSqlPath)) {
 // Run any remaining pending migrations
 run('npx prisma migrate deploy', 'Prisma migrate deploy', 60000);
 
-// 2. Seed (non-critical, use compiled JS with a 15s timeout)
+// 2. Seed admin/demo users via SQL (reliable, no compiled seed dependency)
+const seedSqlPath = path.resolve(__dirname, '../prisma/seed-users.sql');
+if (fs.existsSync(seedSqlPath)) {
+  run(`npx prisma db execute --file ${seedSqlPath}`, 'Seed admin and demo users', 15000);
+}
+
+// Also try compiled seed for knowledge base data (non-critical)
 const seedPath = path.resolve(__dirname, '../dist/prisma/seed.js');
 if (fs.existsSync(seedPath)) {
-  run(`node ${seedPath}`, 'Database seed', 15000);
+  run(`node ${seedPath}`, 'Database seed (knowledge base)', 30000);
 } else {
-  console.log('[startup] Compiled seed not found, skipping seed.');
+  console.log('[startup] Compiled seed not found, skipping knowledge seed.');
 }
 
 // 3. Start the API server (critical - must bind to PORT)
