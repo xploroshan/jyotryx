@@ -7,37 +7,38 @@ interface AnalysisResult {
   majorLines: { name: string; description: string; strength: string }[];
   minorLines: { name: string; description: string }[];
   mounts: { name: string; description: string; prominence: string }[];
-  personality: string[];
+  insights: { label: string; text: string }[];
+  fingerAnalysis: { finger: string; interpretation: string }[];
 }
 
-const mockAnalysis: AnalysisResult = {
-  majorLines: [
-    { name: "Life Line", description: "Long and deep, indicating strong vitality and a life full of energy. Curves widely around the thumb mount suggesting enthusiasm and zest for life.", strength: "Strong" },
-    { name: "Heart Line", description: "Starts below the index finger, indicating a selective and thoughtful approach to love. Slight curve suggests a balance between emotion and reason.", strength: "Moderate" },
-    { name: "Head Line", description: "Long and straight, indicating clear thinking and analytical abilities. Slight slope toward the Mount of Moon shows creative intelligence.", strength: "Strong" },
-    { name: "Fate Line", description: "Prominent and begins from the base of the palm, suggesting a strong sense of purpose and self-made success from an early age.", strength: "Strong" },
-  ],
-  minorLines: [
-    { name: "Sun Line", description: "Present alongside the fate line, indicating success, fame, and recognition in your chosen field." },
-    { name: "Mercury Line", description: "Faintly visible, suggesting decent communication skills and business acumen." },
-    { name: "Marriage Line", description: "One prominent line indicating a significant, lasting relationship. Positioned high on the mount suggesting marriage in the late twenties." },
-    { name: "Bracelet Lines", description: "Three clear rascette lines visible, traditionally indicating a long and healthy life of approximately 70-80+ years." },
-  ],
-  mounts: [
-    { name: "Mount of Jupiter", description: "Well-developed, showing ambition, leadership qualities, and a desire for knowledge.", prominence: "High" },
-    { name: "Mount of Saturn", description: "Moderately developed, indicating a balanced approach to responsibility and discipline.", prominence: "Medium" },
-    { name: "Mount of Apollo", description: "Prominent, suggesting artistic talent, creativity, and a charismatic personality.", prominence: "High" },
-    { name: "Mount of Venus", description: "Full and well-padded, indicating warmth, love, and a passionate nature.", prominence: "High" },
-  ],
-  personality: [
-    "Natural leader with strong ambition and drive",
-    "Creative thinker with analytical problem-solving abilities",
-    "Warm and passionate in relationships, loyal partner",
-    "Strong vitality with excellent physical constitution",
-    "Destined for recognition and success through self-effort",
-    "Good communication skills suited for public-facing roles",
-  ],
-};
+const MAJOR_LINE_NAMES = ["Heart Line", "Head Line", "Life Line", "Fate Line", "Sun Line"];
+
+function normalizeName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function isMajorLine(lineName: string): boolean {
+  const normalized = normalizeName(lineName);
+  return MAJOR_LINE_NAMES.some((major) => {
+    const majorNorm = normalizeName(major);
+    const keyword = majorNorm.split(" ")[0]; // "heart", "head", "life", "fate", "sun"
+    return normalized === majorNorm || normalized.includes(keyword);
+  });
+}
+
+function normalizeStrength(s: string): string {
+  const lower = (s || "").toLowerCase();
+  if (lower === "strong" || lower === "prominent" || lower === "deep") return "Strong";
+  if (lower === "moderate" || lower === "medium" || lower === "normal" || lower === "average") return "Moderate";
+  return "Weak";
+}
+
+function normalizeProminence(p: string): string {
+  const lower = (p || "").toLowerCase();
+  if (lower === "elevated" || lower === "high" || lower === "prominent") return "High";
+  if (lower === "flat" || lower === "low" || lower === "underdeveloped") return "Low";
+  return "Medium";
+}
 
 export default function PalmistryPage() {
   const [image, setImage] = useState<string | null>(null);
@@ -100,47 +101,41 @@ export default function PalmistryPage() {
       formData.append("image", imageFile);
       const result = await api.upload<any>("/palmistry/analyze", formData);
       if (result) {
-        // Map API response (lines[], mounts[], fingerAnalysis[]) to display format
+        // Map API response to display format
         const lines = result.lines || [];
-        const majorLineNames = ["Heart Line", "Head Line", "Life Line", "Fate Line", "Sun Line"];
         const majorLines = lines
-          .filter((l: any) => majorLineNames.some((n) => l.name?.includes(n.split(" ")[0])))
+          .filter((l: any) => isMajorLine(l.name || ""))
           .map((l: any) => ({
             name: l.name,
-            description: l.interpretation || l.description,
-            strength: l.strength === "strong" ? "Strong" : l.strength === "moderate" ? "Moderate" : "Weak",
+            description: l.interpretation || l.description || "",
+            strength: normalizeStrength(l.strength),
           }));
         const minorLines = lines
-          .filter((l: any) => !majorLineNames.some((n) => l.name?.includes(n.split(" ")[0])))
+          .filter((l: any) => !isMajorLine(l.name || ""))
           .map((l: any) => ({
             name: l.name,
-            description: l.interpretation || l.description,
+            description: l.interpretation || l.description || "",
           }));
 
         const mounts = (result.mounts || []).map((mt: any) => ({
           name: mt.name,
-          description: mt.interpretation || mt.description,
-          prominence: mt.prominence === "elevated" ? "High" : mt.prominence === "flat" ? "Low" : "Medium",
+          description: mt.interpretation || mt.description || "",
+          prominence: normalizeProminence(mt.prominence),
         }));
 
-        const personality: string[] = [];
-        if (result.overallReading) personality.push(result.overallReading);
-        if (result.healthInsights) personality.push(result.healthInsights);
-        if (result.careerInsights) personality.push(result.careerInsights);
-        if (result.relationshipInsights) personality.push(result.relationshipInsights);
-        (result.fingerAnalysis || []).forEach((f: any) => {
-          if (f.interpretation) personality.push(`${f.finger}: ${f.interpretation}`);
-        });
+        const insights: { label: string; text: string }[] = [];
+        if (result.overallReading) insights.push({ label: "Overall Reading", text: result.overallReading });
+        if (result.healthInsights) insights.push({ label: "Health", text: result.healthInsights });
+        if (result.careerInsights) insights.push({ label: "Career", text: result.careerInsights });
+        if (result.relationshipInsights) insights.push({ label: "Relationships", text: result.relationshipInsights });
 
-        const mapped: AnalysisResult = {
-          majorLines: majorLines.length > 0 ? majorLines : mockAnalysis.majorLines,
-          minorLines: minorLines.length > 0 ? minorLines : mockAnalysis.minorLines,
-          mounts: mounts.length > 0 ? mounts : mockAnalysis.mounts,
-          personality: personality.length > 0 ? personality : mockAnalysis.personality,
-        };
-        setAnalysis(mapped);
+        const fingerAnalysis = (result.fingerAnalysis || [])
+          .filter((f: any) => f.interpretation)
+          .map((f: any) => ({ finger: f.finger, interpretation: f.interpretation }));
+
+        setAnalysis({ majorLines, minorLines, mounts, insights, fingerAnalysis });
       } else {
-        setAnalysis(mockAnalysis);
+        setError("No analysis results received. Please try again.");
       }
     } catch (err: any) {
       setError(err.message || "Analysis failed. Please try again.");
@@ -153,7 +148,7 @@ export default function PalmistryPage() {
     { id: "major", label: "Major Lines" },
     { id: "minor", label: "Minor Lines" },
     { id: "mounts", label: "Mounts" },
-    { id: "personality", label: "Personality" },
+    { id: "insights", label: "Insights" },
   ];
 
   const strengthColor = (s: string) =>
@@ -367,13 +362,18 @@ export default function PalmistryPage() {
                       </div>
                     ))}
 
-                  {activeTab === "minor" &&
-                    analysis.minorLines.map((line) => (
-                      <div key={line.name} className="p-4 rounded-xl bg-white/[0.03]">
-                        <h4 className="font-semibold text-white text-sm mb-2">{line.name}</h4>
-                        <p className="text-xs text-white/40 leading-relaxed">{line.description}</p>
-                      </div>
-                    ))}
+                  {activeTab === "minor" && (
+                    analysis.minorLines.length > 0 ? (
+                      analysis.minorLines.map((line) => (
+                        <div key={line.name} className="p-4 rounded-xl bg-white/[0.03]">
+                          <h4 className="font-semibold text-white text-sm mb-2">{line.name}</h4>
+                          <p className="text-xs text-white/40 leading-relaxed">{line.description}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-white/30 text-center py-4">No minor lines detected in this reading.</p>
+                    )
+                  )}
 
                   {activeTab === "mounts" &&
                     analysis.mounts.map((mount) => (
@@ -398,16 +398,31 @@ export default function PalmistryPage() {
                       </div>
                     ))}
 
-                  {activeTab === "personality" && (
-                    <div className="space-y-3">
-                      {analysis.personality.map((trait, i) => (
-                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03]">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-600 flex items-center justify-center text-xs font-bold text-white">
-                            {i + 1}
-                          </span>
-                          <p className="text-sm text-white/60">{trait}</p>
+                  {activeTab === "insights" && (
+                    <div className="space-y-4">
+                      {analysis.insights.length > 0 ? (
+                        analysis.insights.map((insight, i) => (
+                          <div key={i} className="p-4 rounded-xl bg-white/[0.03]">
+                            <h4 className="font-semibold text-white text-sm mb-2">{insight.label}</h4>
+                            <p className="text-xs text-white/40 leading-relaxed">{insight.text}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-white/30 text-center py-4">No detailed insights available for this reading.</p>
+                      )}
+                      {analysis.fingerAnalysis.length > 0 && (
+                        <div className="p-4 rounded-xl bg-white/[0.03]">
+                          <h4 className="font-semibold text-white text-sm mb-3">Finger Analysis</h4>
+                          <div className="space-y-2">
+                            {analysis.fingerAnalysis.map((f, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="text-primary-400 text-xs font-medium min-w-[80px]">{f.finger}</span>
+                                <p className="text-xs text-white/40">{f.interpretation}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>

@@ -126,7 +126,7 @@ describe('Palmistry Page: Rendering', () => {
     expect(screen.getByText('Major Lines')).toBeDefined();
     expect(screen.getByText('Minor Lines')).toBeDefined();
     expect(screen.getByText('Mounts')).toBeDefined();
-    expect(screen.getByText('Personality')).toBeDefined();
+    expect(screen.getByText('Insights')).toBeDefined();
 
     // Check major line names
     expect(screen.getByText('Heart Line')).toBeDefined();
