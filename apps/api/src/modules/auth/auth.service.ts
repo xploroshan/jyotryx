@@ -66,12 +66,31 @@ export class AuthService {
 
       if (serviceAccount) {
         try {
+          // Strip surrounding quotes if Render double-wraps the value
+          let cleanJson = serviceAccount.trim();
+          if (cleanJson.startsWith("'") && cleanJson.endsWith("'")) {
+            cleanJson = cleanJson.slice(1, -1);
+          }
+          if (cleanJson.startsWith('"') && cleanJson.endsWith('"') && cleanJson[1] === '{') {
+            cleanJson = cleanJson.slice(1, -1);
+          }
+          const parsed = JSON.parse(cleanJson);
           admin.initializeApp({
-            credential: admin.credential.cert(JSON.parse(serviceAccount)),
+            credential: admin.credential.cert(parsed),
           });
           this.logger.log('Firebase Admin SDK initialized with service account');
         } catch (error) {
           this.logger.warn(`Firebase Admin SDK init with service account failed: ${error}`);
+          this.logger.warn('Hint: FIREBASE_SERVICE_ACCOUNT_JSON must be valid single-line JSON. Check for extra quotes or escape characters.');
+          // Fall back to project ID if available
+          if (projectId) {
+            try {
+              admin.initializeApp({ projectId });
+              this.logger.log('Firebase Admin SDK fallback: initialized with project ID only');
+            } catch (fallbackError) {
+              this.logger.warn(`Firebase Admin SDK fallback also failed: ${fallbackError}`);
+            }
+          }
         }
       } else if (projectId) {
         try {
