@@ -21,6 +21,7 @@ async function bootstrap() {
     'http://localhost:5173',
     'http://localhost:8081',
     'https://jyotron-web.vercel.app',
+    'https://jyotryx-web.vercel.app',
     'https://www.jyotron.com',
     'https://jyotron.com',
     process.env.FRONTEND_URL,
