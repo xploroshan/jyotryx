@@ -4,7 +4,7 @@
   "private": true,
   "description": "Jyotryx Astrology App - NestJS Backend API",
   "scripts": {
-    "build": "nest build && npx tsc prisma/seed.ts --outDir dist/prisma --target es2016 --esModuleInterop --resolveJsonModule --skipLibCheck 2>/dev/null || true",
+    "build": "nest build && npx tsc prisma/seed.ts --outDir dist/prisma --target es2016 --module commonjs --moduleResolution node --esModuleInterop --resolveJsonModule --skipLibCheck 2>/dev/null || true",
     "start": "node scripts/startup.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
