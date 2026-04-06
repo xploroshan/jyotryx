@@ -484,6 +484,24 @@ export class AstrologyService {
         : [],
     });
 
+    // ── Nadi Dosha ──
+    // Nadi (pulse type) based on nakshatra: cyclic Aadi(0), Madhya(1), Antya(2)
+    const moonPos = positions.find(p => p.planet === 'Moon');
+    if (moonPos) {
+      const moonLng = moonPos.degree + (ALL_SIGNS.indexOf(moonPos.sign as any) * 30);
+      const moonNakIdx = Math.floor(((moonLng % 360 + 360) % 360) / (360 / 27)) % 27;
+      const nadiTypes = ['Aadi (Vata)', 'Madhya (Pitta)', 'Antya (Kapha)'];
+      const nadiIdx = moonNakIdx % 3;
+      const nadiType = nadiTypes[nadiIdx];
+      doshas.push({
+        name: 'Nadi Dosha',
+        present: false, // Standalone detection — presence determined during matching
+        severity: 'none',
+        description: `Your Nadi type is ${nadiType}, derived from Moon nakshatra. Nadi Dosha occurs when both partners share the same Nadi type in matching.`,
+        remedies: [],
+      });
+    }
+
     // ── Pitra Dosha ──
     const sunHouse = findHouse('Sun');
     const sunRahuConjunct = sunHouse != null && rahuHouse != null && sunHouse === rahuHouse;
@@ -566,17 +584,34 @@ export class AstrologyService {
       dashaStartYear += years;
       const endDate = `${Math.round(dashaStartYear)}-01-01`;
 
-      // Sub-periods (Antardashas)
+      // Sub-periods (Antardashas) with Pratyantardashas
       const subPeriods: DashaPeriod[] = [];
       let subStart = parseFloat(startDate.split('-')[0]);
       for (let j = 0; j < 9; j++) {
         const subIdx = (idx + j) % 9;
         const subYears = (DASHA_YEARS[idx] * DASHA_YEARS[subIdx]) / 120;
         const actualSubYears = i === 0 && j === 0 ? subYears * (1 - fractionElapsed) : subYears;
+
+        // Pratyantardashas (3rd level)
+        const pratyPeriods: DashaPeriod[] = [];
+        let pratyStart = subStart;
+        for (let k = 0; k < 9; k++) {
+          const pratyIdx = (subIdx + k) % 9;
+          const pratyYears = (DASHA_YEARS[idx] * DASHA_YEARS[subIdx] * DASHA_YEARS[pratyIdx]) / (120 * 120);
+          const actualPratyYears = i === 0 && j === 0 && k === 0 ? pratyYears * (1 - fractionElapsed) : pratyYears;
+          pratyPeriods.push({
+            planet: DASHA_LORDS[pratyIdx],
+            startDate: `${Math.round(pratyStart)}-01-01`,
+            endDate: `${Math.round(pratyStart + actualPratyYears)}-01-01`,
+          });
+          pratyStart += actualPratyYears;
+        }
+
         subPeriods.push({
           planet: DASHA_LORDS[subIdx],
           startDate: `${Math.round(subStart)}-01-01`,
           endDate: `${Math.round(subStart + actualSubYears)}-01-01`,
+          subPeriods: pratyPeriods,
         });
         subStart += actualSubYears;
       }
@@ -631,6 +666,14 @@ export class AstrologyService {
     const compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
     const recommendation = `The match score of ${totalScore}/36 indicates ${compatibility.toLowerCase()} compatibility. ${totalScore >= 18 ? 'The couple shares promising foundations for a harmonious relationship.' : 'Remedial measures may be recommended for a balanced relationship.'}`;
 
+    // Detect Manglik status for each partner
+    const chart1 = this.generateSwissEphKundli(partner1);
+    const chart2 = this.generateSwissEphKundli(partner2);
+    const doshas1 = this.detectDoshas(chart1.planetaryPositions);
+    const doshas2 = this.detectDoshas(chart2.planetaryPositions);
+    const manglikA = doshas1.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
+    const manglikB = doshas2.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
+
     const result = await this.prisma.matchingResult.create({
       data: {
         userId,
@@ -643,7 +686,9 @@ export class AstrologyService {
         personBTime: partner2.timeOfBirth,
         personBPlace: { name: partner2.placeOfBirth, lat: partner2.latitude || 0, lng: partner2.longitude || 0 },
         gunaScore: totalScore,
-        resultData: JSON.parse(JSON.stringify({ gunaDetails, compatibility, recommendation })),
+        manglikA,
+        manglikB,
+        resultData: JSON.parse(JSON.stringify({ gunaDetails, compatibility, recommendation, manglikA, manglikB })),
       },
     });
 
@@ -1111,5 +1156,265 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
         { name: 'Pitra Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Pitra Dosha analysis. Please update your profile.', remedies: [] },
       ],
     };
+  }
+
+  // ─── Sade Sati Detection ─────────────────────────────────────────────────────
+  detectSadeSati(natalMoonLongitude: number): { active: boolean; phase: string; description: string } {
+    // Get current Saturn position
+    const now = new Date();
+    const jdNow = swisseph.swe_julday(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours() + now.getUTCMinutes() / 60, swisseph.SE_GREG_CAL);
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const satResult = swisseph.swe_calc_ut(jdNow, swisseph.SE_SATURN, flags);
+    const satLng = ((satResult.longitude % 360) + 360) % 360;
+
+    const moonSign = Math.floor(natalMoonLongitude / 30);
+    const satSign = Math.floor(satLng / 30);
+
+    const diff = ((satSign - moonSign + 12) % 12);
+
+    if (diff === 11) {
+      return { active: true, phase: 'Rising (Ascending)', description: `Saturn is transiting the 12th house from your Moon sign, beginning the Sade Sati period. You may experience increased responsibilities, introspection, and gradual changes. This phase lasts approximately 2.5 years.` };
+    } else if (diff === 0) {
+      return { active: true, phase: 'Peak', description: `Saturn is transiting over your natal Moon sign — the peak phase of Sade Sati. This is the most intense period, bringing transformation, emotional challenges, and karmic lessons. Patience and discipline are key.` };
+    } else if (diff === 1) {
+      return { active: true, phase: 'Setting (Descending)', description: `Saturn is transiting the 2nd house from your Moon sign, the final phase of Sade Sati. Financial pressures may ease, and lessons learned during this period begin to integrate. Relief is approaching.` };
+    }
+
+    return { active: false, phase: 'Not Active', description: 'Sade Sati is not currently active for your chart. Saturn is well-placed relative to your Moon sign.' };
+  }
+
+  async getSadeSati(userId: string): Promise<{ userId: string; sadeSati: { active: boolean; phase: string; description: string } }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { dateOfBirth: true, timeOfBirth: true, placeOfBirth: true },
+    });
+
+    if (!user?.dateOfBirth) {
+      return { userId, sadeSati: { active: false, phase: 'Unknown', description: 'Birth details required for Sade Sati analysis.' } };
+    }
+
+    const bd: BirthDetails = {
+      dateOfBirth: user.dateOfBirth.toISOString().split('T')[0],
+      timeOfBirth: user.timeOfBirth || '06:00',
+      placeOfBirth: (user.placeOfBirth as any)?.name || 'Delhi',
+      latitude: (user.placeOfBirth as any)?.lat,
+      longitude: (user.placeOfBirth as any)?.lng,
+    };
+
+    const jd = this.computeJulianDay(bd);
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags);
+    const moonLng = ((moonResult.longitude % 360) + 360) % 360;
+
+    return { userId, sadeSati: this.detectSadeSati(moonLng) };
+  }
+
+  // ─── Divisional Charts ───────────────────────────────────────────────────────
+  computeDivisionalChart(planetLongitudes: { planet: string; longitude: number }[], divisor: number): { planet: string; sign: string; degree: number }[] {
+    return planetLongitudes.map(({ planet, longitude }) => {
+      const lng = ((longitude % 360) + 360) % 360;
+      const signIdx = Math.floor(lng / 30);
+
+      if (divisor === 9) {
+        // D9 Navamsa: Each navamsa = 3°20' = 3.333°
+        const posInSign = lng % 30;
+        const navamsaIdx = Math.floor(posInSign / (30 / 9));
+        // Navamsa starts from the element's first sign:
+        // Fire signs (0,4,8) start from Aries(0), Earth(1,5,9) from Cap(9), Air(2,6,10) from Libra(6), Water(3,7,11) from Cancer(3)
+        const elementStarts = [0, 9, 6, 3]; // Fire, Earth, Air, Water
+        const element = signIdx % 4;
+        const navamsaSign = (elementStarts[element] + navamsaIdx) % 12;
+        return { planet, sign: ALL_SIGNS[navamsaSign], degree: parseFloat((posInSign % (30 / 9) * 9).toFixed(2)) };
+      } else if (divisor === 10) {
+        // D10 Dashamsha: Each dashamsha = 3°
+        const posInSign = lng % 30;
+        const dashamshaIdx = Math.floor(posInSign / 3);
+        // Odd signs start from same sign, Even signs start from 9th sign
+        const startSign = signIdx % 2 === 0 ? signIdx : (signIdx + 8) % 12;
+        const dashamshaSign = (startSign + dashamshaIdx) % 12;
+        return { planet, sign: ALL_SIGNS[dashamshaSign], degree: parseFloat((posInSign % 3 * 10).toFixed(2)) };
+      } else {
+        // Generic divisional chart
+        const posInSign = lng % 30;
+        const divIdx = Math.floor(posInSign / (30 / divisor));
+        const divSign = (signIdx * divisor + divIdx) % 12;
+        return { planet, sign: ALL_SIGNS[divSign], degree: parseFloat((posInSign % (30 / divisor) * divisor).toFixed(2)) };
+      }
+    });
+  }
+
+  async getDivisionalChart(userId: string, birthDetails: BirthDetails, type: string): Promise<any> {
+    const creditCost = this.configService.get<number>('credits.kundliCost', 2);
+    const deducted = await this.userService.deductCredits(userId, creditCost, `Divisional chart D${type}`);
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits.');
+    }
+
+    const divisorMap: Record<string, number> = { '9': 9, '10': 10, 'navamsa': 9, 'dashamsha': 10 };
+    const divisor = divisorMap[type.toLowerCase()] || parseInt(type, 10);
+    if (!divisor || divisor < 2 || divisor > 60) {
+      throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
+    }
+
+    const chart = this.generateSwissEphKundli(birthDetails);
+    const planetLongitudes = chart.planetaryPositions.map((p: PlanetPosition) => ({
+      planet: p.planet,
+      longitude: ALL_SIGNS.indexOf(p.sign as any) * 30 + p.degree,
+    }));
+
+    const divisionalPositions = this.computeDivisionalChart(planetLongitudes, divisor);
+
+    return {
+      type: `D${divisor}`,
+      divisor,
+      birthDetails,
+      positions: divisionalPositions,
+      rasiBhava: chart.planetaryPositions,
+    };
+  }
+
+  // ─── KP Astrology ────────────────────────────────────────────────────────────
+  async generateKPChart(userId: string, birthDetails: BirthDetails): Promise<any> {
+    const creditCost = this.configService.get<number>('credits.kundliCost', 2);
+    const deducted = await this.userService.deductCredits(userId, creditCost, 'KP chart generation');
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits.');
+    }
+
+    const jd = this.computeJulianDay(birthDetails);
+    const lat = birthDetails.latitude || 28.6139;
+    const lng = birthDetails.longitude || 77.2090;
+
+    // Placidus house cusps for KP system
+    const houseResult = swisseph.swe_houses(jd, lat, lng, 'P');
+    const cusps = houseResult.house || houseResult.cusps || [];
+    const ascmc = houseResult.ascmc || [];
+
+    // KP Sub-lord determination: 249 sub-divisions of the zodiac
+    // Each nakshatra lord is a star-lord; sub-lord is derived from Vimshottari proportion within each nakshatra
+    const nakshatraSpan = 360 / 27; // 13.333°
+    const subLordTable = this.buildKPSubLordTable();
+
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const planets = [
+      { id: swisseph.SE_SUN, name: 'Sun' },
+      { id: swisseph.SE_MOON, name: 'Moon' },
+      { id: swisseph.SE_MARS, name: 'Mars' },
+      { id: swisseph.SE_MERCURY, name: 'Mercury' },
+      { id: swisseph.SE_JUPITER, name: 'Jupiter' },
+      { id: swisseph.SE_VENUS, name: 'Venus' },
+      { id: swisseph.SE_SATURN, name: 'Saturn' },
+      { id: swisseph.SE_MEAN_NODE, name: 'Rahu' },
+    ];
+
+    const planetPositions = planets.map(p => {
+      const result = swisseph.swe_calc_ut(jd, p.id, flags);
+      let pLng = ((result.longitude % 360) + 360) % 360;
+      const nakIdx = Math.floor(pLng / nakshatraSpan) % 27;
+      const starLord = DASHA_LORDS[nakIdx % 9];
+      const subLord = this.getKPSubLord(pLng, subLordTable);
+      const signIdx = Math.floor(pLng / 30) % 12;
+
+      return {
+        planet: p.name,
+        longitude: parseFloat(pLng.toFixed(4)),
+        sign: ALL_SIGNS[signIdx],
+        nakshatra: NAKSHATRA_NAMES[nakIdx],
+        starLord,
+        subLord,
+        degree: parseFloat((pLng % 30).toFixed(4)),
+      };
+    });
+
+    // Add Ketu as 180° from Rahu
+    const rahu = planetPositions.find(p => p.planet === 'Rahu')!;
+    const ketuLng = (rahu.longitude + 180) % 360;
+    const ketuNakIdx = Math.floor(ketuLng / nakshatraSpan) % 27;
+    planetPositions.push({
+      planet: 'Ketu',
+      longitude: parseFloat(ketuLng.toFixed(4)),
+      sign: ALL_SIGNS[Math.floor(ketuLng / 30) % 12],
+      nakshatra: NAKSHATRA_NAMES[ketuNakIdx],
+      starLord: DASHA_LORDS[ketuNakIdx % 9],
+      subLord: this.getKPSubLord(ketuLng, subLordTable),
+      degree: parseFloat((ketuLng % 30).toFixed(4)),
+    });
+
+    // Cusp analysis with sub-lords
+    const cuspAnalysis = [];
+    for (let i = 1; i <= 12; i++) {
+      const cuspLng = cusps[i] ? ((cusps[i] % 360 + 360) % 360) : ((i - 1) * 30);
+      // Apply ayanamsa for sidereal
+      const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
+      const sidCusp = ((cuspLng - ayanamsa + 360) % 360);
+      const cuspNakIdx = Math.floor(sidCusp / nakshatraSpan) % 27;
+      cuspAnalysis.push({
+        cusp: i,
+        longitude: parseFloat(sidCusp.toFixed(4)),
+        sign: ALL_SIGNS[Math.floor(sidCusp / 30) % 12],
+        nakshatra: NAKSHATRA_NAMES[cuspNakIdx],
+        starLord: DASHA_LORDS[cuspNakIdx % 9],
+        subLord: this.getKPSubLord(sidCusp, subLordTable),
+      });
+    }
+
+    // Significators: planets signify houses through star-lord and sub-lord connections
+    const significators: Record<number, string[]> = {};
+    for (let h = 1; h <= 12; h++) significators[h] = [];
+    for (const pp of planetPositions) {
+      // A planet signifies a house if its star-lord owns that house
+      for (let h = 0; h < 12; h++) {
+        if (SIGN_LORDS[h] === pp.starLord) {
+          const houseNum = h + 1;
+          if (!significators[houseNum].includes(pp.planet)) {
+            significators[houseNum].push(pp.planet);
+          }
+        }
+      }
+    }
+
+    return {
+      system: 'KP (Krishnamurti Paddhati)',
+      birthDetails,
+      cusps: cuspAnalysis,
+      planets: planetPositions,
+      significators,
+    };
+  }
+
+  private buildKPSubLordTable(): { start: number; end: number; lord: string }[] {
+    // Build 249 sub-divisions based on Vimshottari dasha proportions within each nakshatra
+    const table: { start: number; end: number; lord: string }[] = [];
+    const nakshatraSpan = 360 / 27;
+    const totalDashaYears = 120;
+
+    for (let nak = 0; nak < 27; nak++) {
+      const nakStart = nak * nakshatraSpan;
+      const nakLordIdx = nak % 9;
+      let offset = nakStart;
+
+      for (let i = 0; i < 9; i++) {
+        const subIdx = (nakLordIdx + i) % 9;
+        const subSpan = nakshatraSpan * (DASHA_YEARS[subIdx] / totalDashaYears);
+        table.push({
+          start: parseFloat(offset.toFixed(6)),
+          end: parseFloat((offset + subSpan).toFixed(6)),
+          lord: DASHA_LORDS[subIdx] as string,
+        });
+        offset += subSpan;
+      }
+    }
+
+    return table;
+  }
+
+  private getKPSubLord(longitude: number, table: { start: number; end: number; lord: string }[]): string {
+    const lng = ((longitude % 360) + 360) % 360;
+    for (const entry of table) {
+      if (lng >= entry.start && lng < entry.end) {
+        return entry.lord;
+      }
+    }
+    return 'Ketu'; // fallback
   }
 }

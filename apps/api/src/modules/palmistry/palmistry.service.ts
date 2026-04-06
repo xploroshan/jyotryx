@@ -110,7 +110,7 @@ export class PalmistryService {
     const reading = await this.prisma.palmistryReading.create({
       data: {
         userId,
-        imageUrl: imageBuffer ? 'uploaded' : '',
+        imageUrl: imageBuffer ? `data:${imageMimeType || 'image/jpeg'};base64,${imageBuffer.toString('base64')}` : '',
         analysisData,
       },
     });

@@ -118,6 +118,8 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  lastCreditReset    DateTime?
+
   subscriptions      Subscription[]
   chatSessions       ChatSession[]
   kundliCharts       KundliChart[]
@@ -126,6 +128,8 @@ model User {
   payments           Payment[]
   reports            Report[]
   creditTransactions CreditTransaction[]
+  notifications      Notification[]
+  tarotReadings      TarotReading[]
 
   @@index([email])
   @@index([phone])
@@ -311,6 +315,41 @@ model ActivityLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("activity_logs")
+}
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  title     String
+  body      String
+  type      String   @default("general") /// e.g. "general", "credit", "horoscope", "promo"
+  read      Boolean  @default(false)
+  data      Json?    /// Optional metadata
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ─── Tarot ──────────────────────────────────────────────────────────────────
+
+model TarotReading {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  spread         String   /// "single", "three-card", "celtic-cross"
+  cards          Json     /// Array of drawn cards with positions
+  interpretation Json     /// AI or deterministic interpretation
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("tarot_readings")
 }
 
 // ─── Knowledge Base ─────────────────────────────────────────────────────────

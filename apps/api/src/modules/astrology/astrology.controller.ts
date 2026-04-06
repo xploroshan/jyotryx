@@ -86,4 +86,32 @@ export class AstrologyController {
   async getDosha(@CurrentUser() user: JwtPayload): Promise<DoshaResult> {
     return this.astrologyService.getDosha(user.sub);
   }
+
+  @Get('sade-sati')
+  @ApiOperation({ summary: 'Get Sade Sati analysis for current user' })
+  @ApiResponse({ status: 200, description: 'Sade Sati analysis returned' })
+  async getSadeSati(@CurrentUser() user: JwtPayload) {
+    return this.astrologyService.getSadeSati(user.sub);
+  }
+
+  @Post('divisional/:type')
+  @ApiOperation({ summary: 'Generate divisional chart (D9 Navamsa, D10 Dashamsha, etc.)' })
+  @ApiResponse({ status: 201, description: 'Divisional chart generated' })
+  async getDivisionalChart(
+    @CurrentUser() user: JwtPayload,
+    @Param('type') type: string,
+    @Body() birthDetails: BirthDetails,
+  ) {
+    return this.astrologyService.getDivisionalChart(user.sub, birthDetails, type);
+  }
+
+  @Post('kp-chart')
+  @ApiOperation({ summary: 'Generate KP (Krishnamurti Paddhati) chart' })
+  @ApiResponse({ status: 201, description: 'KP chart generated' })
+  async generateKPChart(
+    @CurrentUser() user: JwtPayload,
+    @Body() birthDetails: BirthDetails,
+  ) {
+    return this.astrologyService.generateKPChart(user.sub, birthDetails);
+  }
 }

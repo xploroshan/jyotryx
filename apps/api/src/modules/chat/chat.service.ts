@@ -69,7 +69,7 @@ export class ChatService {
     }
 
     // Save user message
-    await this.prisma.chatMessage.create({
+    const userMsg = await this.prisma.chatMessage.create({
       data: {
         sessionId: dbSession.id,
         role: 'USER',
@@ -123,7 +123,7 @@ export class ChatService {
         timestamp: m.createdAt.toISOString(),
       })),
       {
-        id: 'user-msg-pending',
+        id: userMsg.id,
         sessionId: dbSession.id,
         role: 'user' as const,
         content: dto.message,

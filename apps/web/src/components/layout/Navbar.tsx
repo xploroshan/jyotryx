@@ -13,9 +13,10 @@ const navLinks = [
   { href: "/horoscope", label: "Horoscope" },
   { href: "/palmistry", label: "Palmistry" },
   { href: "/numerology", label: "Numerology" },
+  { href: "/tarot", label: "Tarot" },
   { href: "/matching", label: "Matching" },
+  { href: "/vastu", label: "Vastu" },
   { href: "/panchang", label: "Panchang" },
-  { href: "/muhurat", label: "Muhurat" },
 ];
 
 export default function Navbar() {

@@ -106,12 +106,24 @@ export class UserService {
 
     const used = Math.abs(totalDeducted._sum.amount ?? 0);
 
+    // Compute resetsAt as first-of-next-month based on lastCreditReset
+    const resetBase = (user as any).lastCreditReset ? new Date((user as any).lastCreditReset) : user.createdAt;
+    const resetsAt = new Date(resetBase);
+    resetsAt.setMonth(resetsAt.getMonth() + 1);
+    resetsAt.setDate(1);
+    resetsAt.setHours(0, 0, 0, 0);
+    // If resetsAt is in the past, advance to next month from now
+    if (resetsAt.getTime() < Date.now()) {
+      const now = new Date();
+      resetsAt.setFullYear(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+
     return {
       available: user.credits,
       used,
       total: user.credits + used,
       role: user.role,
-      resetsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      resetsAt: resetsAt.toISOString(),
     };
   }
 
