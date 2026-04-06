@@ -6,3 +6,4 @@ export { RefreshTokenDto } from './refresh-token.dto';
 export { ChangePasswordDto } from './change-password.dto';
 export { SetPasswordDto } from './set-password.dto';
 export { FirebaseAuthDto } from './firebase-auth.dto';
+export { ForgotPasswordDto } from './forgot-password.dto';

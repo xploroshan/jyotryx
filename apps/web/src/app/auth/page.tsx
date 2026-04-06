@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
+  signInWithEmailAndPassword,
 } from "@/lib/firebase";
 import type { ConfirmationResult } from "firebase/auth";
 
@@ -168,7 +169,21 @@ function AuthPageContent() {
       const res = await api.post<any>(endpoint, body);
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       router.push("/my-day");
-    } catch (err: any) { setError(err.message || "Authentication failed"); }
+    } catch (err: any) {
+      // If backend login fails, try Firebase auth as fallback
+      // (handles case where user reset password via Firebase)
+      if (tab === "login") {
+        try {
+          const credential = await signInWithEmailAndPassword(auth, email, password);
+          const idToken = await credential.user.getIdToken();
+          await authenticateWithBackend(idToken);
+          return;
+        } catch {
+          // Firebase fallback also failed, show original error
+        }
+      }
+      setError(err.message || "Authentication failed");
+    }
     finally { setLoading(false); }
   };
 
@@ -176,6 +191,9 @@ function AuthPageContent() {
     if (!resetEmail) { setError("Please enter your email address"); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
+      // First, tell the backend to ensure user exists in Firebase Auth
+      await api.post("/auth/forgot-password", { email: resetEmail });
+      // Then send the password reset email via Firebase client SDK
       await sendPasswordResetEmail(auth, resetEmail);
       setSuccess("Password reset email sent! Check your inbox.");
       setTimeout(() => {
@@ -190,7 +208,7 @@ function AuthPageContent() {
       } else if (err.code === "auth/too-many-requests") {
         setError("Too many requests. Please try again later.");
       } else {
-        setError(err.message || "Failed to send reset email");
+        setError(err.message || "Failed to send reset email. Please try again.");
       }
     } finally { setLoading(false); }
   };

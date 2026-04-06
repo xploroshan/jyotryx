@@ -21,6 +21,7 @@ import {
   ChangePasswordDto,
   SetPasswordDto,
   FirebaseAuthDto,
+  ForgotPasswordDto,
 } from './dto';
 import { Public } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -102,6 +103,16 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   async refreshToken(@Body() dto: RefreshTokenDto): Promise<AuthTokens> {
     return this.authService.refreshToken(dto);
+  }
+
+  @Post('forgot-password')
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request password reset email' })
+  @ApiResponse({ status: 200, description: 'Reset email sent if account exists' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    return this.authService.forgotPassword(dto.email);
   }
 
   @Post('change-password')
