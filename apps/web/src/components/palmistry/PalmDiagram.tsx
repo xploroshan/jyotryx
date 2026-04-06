@@ -18,7 +18,8 @@ interface AnalysisResult {
   majorLines: LineData[];
   minorLines: { name: string; description: string }[];
   mounts: MountData[];
-  personality: string[];
+  insights: { label: string; text: string }[];
+  fingerAnalysis: { finger: string; interpretation: string }[];
 }
 
 interface PalmDiagramProps {
