@@ -1,14 +1,14 @@
 import { defineConfig } from 'vitest/config';
-import { transformWithOxc } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
 /**
  * Custom plugin to ensure JSX is transformed for SSR/test environments.
  *
- * Vite 8's ssrTransformScript calls rolldown's parseAstAsync with
- * lang:"js" by default, which cannot parse JSX. This plugin explicitly
- * transforms .tsx/.jsx files via OXC before the SSR transform sees them.
+ * Vite 8 uses rolldown whose parseAstAsync defaults to lang:"js", which
+ * cannot parse JSX. The built-in vite:oxc plugin should handle this but
+ * does not run in vitest's SSR transform pipeline. This plugin explicitly
+ * transforms .tsx/.jsx files via OXC so the SSR transform receives valid JS.
  */
 function jsxFixPlugin() {
   return {
@@ -16,10 +16,12 @@ function jsxFixPlugin() {
     enforce: 'pre' as const,
     transform(code: string, id: string) {
       if (/\.[jt]sx($|\?)/.test(id)) {
-        return transformWithOxc(code, id, {
-          jsx: { runtime: 'automatic' },
-          sourcemap: true,
-        });
+        return import('vite').then(({ transformWithOxc }) =>
+          transformWithOxc(code, id, {
+            jsx: { runtime: 'automatic' },
+            sourcemap: true,
+          })
+        );
       }
     },
   };
