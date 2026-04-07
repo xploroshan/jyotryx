@@ -177,5 +177,15 @@ export const hi: TranslationKeys = {
   language: {
     en: 'English',
     hi: 'हिन्दी',
+    ta: 'தமிழ்',
+    te: 'తెలుగు',
+    bn: 'বাংলা',
+    mr: 'मराठी',
+    gu: 'ગુજરાતી',
+    kn: 'ಕನ್ನಡ',
+    ml: 'മലയാളം',
+    pa: 'ਪੰਜਾਬੀ',
+    or: 'ଓଡ଼ିଆ',
+    as: 'অসমীয়া',
   },
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
@@ -10,16 +10,23 @@ import { useTranslation } from "@/i18n";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const { t } = useTranslation();
+  const moreRef = useRef<HTMLDivElement>(null);
 
-  const navLinks = [
+  // Primary links shown directly in navbar
+  const primaryLinks = [
     { href: "/my-day", label: t.nav.myDay },
     { href: "/chat", label: t.nav.consult },
     { href: "/kundli", label: t.nav.kundli },
     { href: "/horoscope", label: t.nav.horoscope },
     { href: "/palmistry", label: t.nav.palmistry },
+  ];
+
+  // Secondary links in "More" dropdown
+  const moreLinks = [
     { href: "/numerology", label: t.nav.numerology },
     { href: "/tarot", label: t.nav.tarot },
     { href: "/matching", label: t.nav.matching },
@@ -27,8 +34,19 @@ export default function Navbar() {
     { href: "/panchang", label: t.nav.panchang },
   ];
 
-  // Only show auth-dependent UI after client-side hydration
+  const allLinks = [...primaryLinks, ...moreLinks];
+
   useEffect(() => { setMounted(true); }, []);
+
+  // Close "More" dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const showAuth = mounted && isAuthenticated;
 
   return (
@@ -36,7 +54,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <LogoMark className="h-8 w-8" />
             <span className="text-lg font-semibold text-white tracking-tight">
               Jyotron
@@ -45,7 +63,7 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-0.5">
-            {navLinks.map((link) => (
+            {primaryLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -54,6 +72,33 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* More dropdown */}
+            <div className="relative" ref={moreRef}>
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className="flex items-center gap-1 px-3 py-1.5 text-[13px] text-white/60 hover:text-white rounded-md hover:bg-white/[0.06] transition-colors duration-150"
+              >
+                More
+                <svg className={`w-3 h-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              {moreOpen && (
+                <div className="absolute left-0 top-full mt-1.5 w-44 rounded-xl border divider bg-surface-900 shadow-xl shadow-black/30 py-1.5 z-50">
+                  {moreLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMoreOpen(false)}
+                      className="block px-3.5 py-2 text-sm text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Desktop Right */}
@@ -120,7 +165,7 @@ export default function Navbar() {
       {/* Mobile Menu */}
       <div className={cn("lg:hidden", mobileMenuOpen ? "block" : "hidden")}>
         <div className="bg-surface-950 border-t divider px-4 py-3 space-y-1">
-          {navLinks.map((link) => (
+          {allLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
