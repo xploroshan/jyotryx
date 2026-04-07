@@ -5,24 +5,27 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
-
-const navLinks = [
-  { href: "/my-day", label: "My Day" },
-  { href: "/chat", label: "Consult" },
-  { href: "/kundli", label: "Kundli" },
-  { href: "/horoscope", label: "Horoscope" },
-  { href: "/palmistry", label: "Palmistry" },
-  { href: "/numerology", label: "Numerology" },
-  { href: "/tarot", label: "Tarot" },
-  { href: "/matching", label: "Matching" },
-  { href: "/vastu", label: "Vastu" },
-  { href: "/panchang", label: "Panchang" },
-];
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { useTranslation } from "@/i18n";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { t } = useTranslation();
+
+  const navLinks = [
+    { href: "/my-day", label: t.nav.myDay },
+    { href: "/chat", label: t.nav.consult },
+    { href: "/kundli", label: t.nav.kundli },
+    { href: "/horoscope", label: t.nav.horoscope },
+    { href: "/palmistry", label: t.nav.palmistry },
+    { href: "/numerology", label: t.nav.numerology },
+    { href: "/tarot", label: t.nav.tarot },
+    { href: "/matching", label: t.nav.matching },
+    { href: "/vastu", label: t.nav.vastu },
+    { href: "/panchang", label: t.nav.panchang },
+  ];
 
   // Only show auth-dependent UI after client-side hydration
   useEffect(() => { setMounted(true); }, []);
@@ -55,18 +58,19 @@ export default function Navbar() {
 
           {/* Desktop Right */}
           <div className="hidden lg:flex items-center gap-2">
+            <LanguageSwitcher />
             {showAuth ? (
               <>
                 {user?.role === "ADMIN" && (
                   <Link href="/admin" className="px-3 py-1.5 text-[13px] text-red-400 hover:text-red-300 transition-colors">
-                    Admin
+                    {t.common.admin}
                   </Link>
                 )}
                 <Link href="/reports" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors">
-                  Reports
+                  {t.common.reports}
                 </Link>
                 <Link href="/pricing" className="px-3 py-1.5 text-[13px] font-medium text-accent-400 hover:text-accent-300 transition-colors">
-                  Pricing
+                  {t.common.pricing}
                 </Link>
                 <Link href="/profile" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors max-w-[10ch] truncate" title={user?.name}>
                   {user?.name}
@@ -75,7 +79,7 @@ export default function Navbar() {
                   onClick={logout}
                   className="px-3 py-1.5 text-[13px] text-white/40 hover:text-white transition-colors"
                 >
-                  Log out
+                  {t.common.logout}
                 </button>
               </>
             ) : (
@@ -83,10 +87,10 @@ export default function Navbar() {
                 {mounted && (
                   <>
                     <Link href="/auth?mode=login" className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors">
-                      Log in
+                      {t.common.login}
                     </Link>
                     <Link href="/auth?mode=signup" className="px-4 py-1.5 text-[13px] btn-primary rounded-lg">
-                      Get Started
+                      {t.common.signup}
                     </Link>
                   </>
                 )}
@@ -95,18 +99,21 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Hamburger */}
-          <button
-            className="lg:hidden p-2 -mr-2 text-white/60 hover:text-white"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <LanguageSwitcher />
+            <button
+              className="p-2 -mr-2 text-white/60 hover:text-white"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -128,14 +135,14 @@ export default function Navbar() {
               <div className="space-y-1">
                 {user?.role === "ADMIN" && (
                   <Link href="/admin" className="block px-3 py-2.5 text-sm text-red-400" onClick={() => setMobileMenuOpen(false)}>
-                    Admin Panel
+                    {t.common.admin}
                   </Link>
                 )}
                 <Link href="/reports" className="block px-3 py-2.5 text-sm text-white/60 hover:text-white" onClick={() => setMobileMenuOpen(false)}>
-                  Reports
+                  {t.common.reports}
                 </Link>
                 <Link href="/pricing" className="block px-3 py-2.5 text-sm font-medium text-accent-400" onClick={() => setMobileMenuOpen(false)}>
-                  Pricing
+                  {t.common.pricing}
                 </Link>
                 <Link href="/profile" className="block px-3 py-2.5 text-sm text-white/60 hover:text-white" onClick={() => setMobileMenuOpen(false)}>
                   {user?.name}
@@ -144,7 +151,7 @@ export default function Navbar() {
                   onClick={() => { logout(); setMobileMenuOpen(false); }}
                   className="w-full text-left px-3 py-2.5 text-sm text-white/40 hover:text-white"
                 >
-                  Log out
+                  {t.common.logout}
                 </button>
               </div>
             ) : (
@@ -152,10 +159,10 @@ export default function Navbar() {
                 {mounted && (
                   <>
                     <Link href="/auth?mode=login" className="flex-1 text-center px-4 py-2.5 text-sm btn-secondary rounded-lg" onClick={() => setMobileMenuOpen(false)}>
-                      Log in
+                      {t.common.login}
                     </Link>
                     <Link href="/auth?mode=signup" className="flex-1 text-center px-4 py-2.5 text-sm btn-primary rounded-lg" onClick={() => setMobileMenuOpen(false)}>
-                      Get Started
+                      {t.common.signup}
                     </Link>
                   </>
                 )}

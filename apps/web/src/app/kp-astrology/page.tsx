@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { api } from "@/lib/api";
+import { useTranslation } from "@/i18n";
 
 interface KPResult {
   system: string;
@@ -11,13 +12,14 @@ interface KPResult {
 }
 
 export default function KPAstrologyPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ dateOfBirth: "", timeOfBirth: "", placeOfBirth: "", latitude: "", longitude: "" });
   const [result, setResult] = useState<KPResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const generate = async () => {
-    if (!form.dateOfBirth || !form.timeOfBirth || !form.placeOfBirth) { setError("Please fill all fields"); return; }
+    if (!form.dateOfBirth || !form.timeOfBirth || !form.placeOfBirth) { setError(t.form.fillAllFields); return; }
     setLoading(true); setError(""); setResult(null);
     try {
       const data = await api.post<KPResult>("/astrology/kp-chart", {
@@ -31,36 +33,36 @@ export default function KPAstrologyPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-white mb-2">KP Astrology</h1>
-      <p className="text-white/40 mb-8">Krishnamurti Paddhati system with Placidus cusps and sub-lord analysis</p>
+      <h1 className="text-3xl font-bold text-white mb-2">{t.kp.title}</h1>
+      <p className="text-white/40 mb-8">{t.kp.description}</p>
 
       <div className="surface-card p-6 mb-6">
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-sm text-white/60 mb-1 block">Date of Birth</label>
+            <label className="text-sm text-white/60 mb-1 block">{t.form.dateOfBirth}</label>
             <input type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div>
-            <label className="text-sm text-white/60 mb-1 block">Time of Birth</label>
+            <label className="text-sm text-white/60 mb-1 block">{t.form.timeOfBirth}</label>
             <input type="time" value={form.timeOfBirth} onChange={(e) => setForm({ ...form, timeOfBirth: e.target.value })} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div>
-            <label className="text-sm text-white/60 mb-1 block">Place of Birth</label>
-            <input type="text" value={form.placeOfBirth} onChange={(e) => setForm({ ...form, placeOfBirth: e.target.value })} placeholder="City, Country" className="w-full px-4 py-3 rounded-xl surface-input" />
+            <label className="text-sm text-white/60 mb-1 block">{t.form.placeOfBirth}</label>
+            <input type="text" value={form.placeOfBirth} onChange={(e) => setForm({ ...form, placeOfBirth: e.target.value })} placeholder={t.form.placePlaceholder} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-sm text-white/60 mb-1 block">Latitude</label>
+              <label className="text-sm text-white/60 mb-1 block">{t.form.latitude}</label>
               <input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="28.61" className="w-full px-4 py-3 rounded-xl surface-input" />
             </div>
             <div>
-              <label className="text-sm text-white/60 mb-1 block">Longitude</label>
+              <label className="text-sm text-white/60 mb-1 block">{t.form.longitude}</label>
               <input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="77.20" className="w-full px-4 py-3 rounded-xl surface-input" />
             </div>
           </div>
         </div>
         <button onClick={generate} disabled={loading} className="w-full py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50">
-          {loading ? "Generating..." : "Generate KP Chart"}
+          {loading ? t.kp.generating : t.kp.generateChart}
         </button>
       </div>
 
@@ -69,7 +71,7 @@ export default function KPAstrologyPage() {
       {result && (
         <div className="space-y-6">
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Cusp Table</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t.kp.cuspTable}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="text-white/40 border-b border-white/[0.06]">
@@ -92,7 +94,7 @@ export default function KPAstrologyPage() {
           </div>
 
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Planet Positions</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t.kp.planetPositions}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="text-white/40 border-b border-white/[0.06]">
@@ -115,7 +117,7 @@ export default function KPAstrologyPage() {
           </div>
 
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">House Significators</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">{t.kp.houseSignificators}</h3>
             <div className="grid sm:grid-cols-3 gap-3">
               {Object.entries(result.significators).map(([house, planets]) => (
                 <div key={house} className="bg-white/[0.03] rounded-lg p-3">
