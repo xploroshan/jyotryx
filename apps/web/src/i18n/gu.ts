@@ -509,14 +509,14 @@ export const gu: TranslationKeys = {
     remedyVenus: 'કન્યાને સફેદ મીઠાઈ અર્પણ કરો. હીરા અથવા સફેદ વસ્ત્રો પહેરો. કૃતજ્ઞતાનો અભ્યાસ કરો.',
     remedySaturn: 'તલના તેલનો દીવો કરો. કાળી વસ્તુઓ દાન કરો. વડીલોની સેવા કરો. નીલમ પહેરો.',
     // Quality summaries
-    summaryExcellent: 'Stars align beautifully today — seize opportunities with confidence.',
-    summaryGood: 'A favorable day with positive energy supporting your endeavors.',
-    summaryModerate: 'A balanced day — focus on steady progress rather than bold moves.',
-    summaryChallenging: 'Navigate carefully today — patience and remedies will help you through.',
+    summaryExcellent: 'આજે તારા સુંદર રીતે ગોઠવાયેલા છે — આત્મવિશ્વાસથી તકો ઝડપો.',
+    summaryGood: 'સકારાત્મક ઊર્જા સાથે અનુકૂળ દિવસ જે તમારા પ્રયાસોને ટેકો આપે છે.',
+    summaryModerate: 'સંતુલિત દિવસ — હિંમતભર્યા પગલાં કરતાં સ્થિર પ્રગતિ પર ધ્યાન આપો.',
+    summaryChallenging: 'આજે સાવચેતીથી ચાલો — ધીરજ અને ઉપાયો તમને મદદ કરશે.',
     // Transit alerts
-    transitSaturnReturn: 'Saturn Return period active — major career and life restructuring. Embrace discipline and long-term thinking.',
-    transitJupiterReturn: 'Jupiter Return cycle — expansion, growth, and new opportunities. Say yes to big possibilities.',
-    transitRahuKetu: 'Rahu-Ketu axis shifting in your chart — expect unconventional opportunities and karmic turns this month.',
+    transitSaturnReturn: 'શનિ વળતર સમય સક્રિય — કારકિર્દી અને જીવનમાં મોટા ફેરફાર. શિસ્ત અને લાંબા ગાળાની વિચારસરણી અપનાવો.',
+    transitJupiterReturn: 'ગુરુ વળતર ચક્ર — વિસ્તરણ, વૃદ્ધિ અને નવી તકો. મોટી શક્યતાઓને હા કહો.',
+    transitRahuKetu: 'તમારી કુંડળીમાં રાહુ-કેતુ અક્ષ બદલાઈ રહ્યો છે — આ મહિને અસામાન્ય તકો અને કર્મ વળાંકની અપેક્ષા રાખો.',
     // Profession insights
     profSoftwareSun: 'Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal.',
     profSoftwareMoon: 'Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming.',
