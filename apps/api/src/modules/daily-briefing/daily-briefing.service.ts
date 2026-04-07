@@ -177,7 +177,7 @@ export class DailyBriefingService {
     private readonly cacheService: MemoryCacheService,
   ) {}
 
-  async getDailyBriefing(userId: string): Promise<DailyBriefingResult> {
+  async getDailyBriefing(userId: string, locale?: string): Promise<DailyBriefingResult> {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
     const cacheKey = `briefing:${userId}:${dateStr}`;

@@ -5,6 +5,7 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { VastuAnalysisDto } from './dto/vastu-analysis.dto';
+import { getLocaleInstruction } from '../../common/locale';
 
 // ─── Vastu Direction Data ──────────────────────────────────────────────────
 const DIRECTION_DATA: Record<string, { deity: string; element: string; planet: string; color: string; suitableRooms: string[]; avoid: string[] }> = {
@@ -86,7 +87,7 @@ export class VastuService {
         const completion = await client.chat.completions.create({
           model: this.openaiService.getModelForFeature('default'),
           messages: [
-            { role: 'system', content: `You are a Vastu Shastra expert. Provide practical, actionable Vastu advice. Return JSON with keys: summary (string), remedies (array of strings), gemstone (string), mantra (string), favorableChanges (array of strings).${kbContext}` },
+            { role: 'system', content: `You are a Vastu Shastra expert. Provide practical, actionable Vastu advice. Return JSON with keys: summary (string), remedies (array of strings), gemstone (string), mantra (string), favorableChanges (array of strings).${kbContext}${getLocaleInstruction(dto.locale)}` },
             { role: 'user', content: `Property: ${dto.propertyType}\nMain entrance: ${dto.entranceDirection}\nConcern: ${dto.concern || 'General Vastu guidance'}\nEntrance score: ${entranceScore.score}/100 (${entranceScore.verdict})` },
           ],
           max_tokens: 800,

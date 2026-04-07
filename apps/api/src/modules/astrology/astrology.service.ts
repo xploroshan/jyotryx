@@ -5,6 +5,7 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { getLocaleInstruction } from '../../common/locale';
 import * as path from 'path';
 
 // ─── Swiss Ephemeris Setup ──────────────────────────────────────────────────
@@ -175,10 +176,12 @@ export class AstrologyService {
     maxTokens: number = 1500,
     temperature: number = 0.7,
     featureTier: 'default' | 'precision' | 'vision' = 'default',
+    locale?: string,
   ): Promise<any | null> {
+    const localizedPrompt = systemPrompt + getLocaleInstruction(locale);
     return this.openaiService.chatCompletion({
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: localizedPrompt },
         { role: 'user', content: userPrompt },
       ],
       maxTokens,
@@ -188,7 +191,7 @@ export class AstrologyService {
     });
   }
 
-  async generateKundli(userId: string, birthDetails: BirthDetails): Promise<KundliResult> {
+  async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
 
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
@@ -651,7 +654,7 @@ export class AstrologyService {
     };
   }
 
-  async getMatching(userId: string, partner1: BirthDetails, partner2: BirthDetails): Promise<MatchingResult> {
+  async getMatching(userId: string, partner1: BirthDetails, partner2: BirthDetails, locale?: string): Promise<MatchingResult> {
     this.logger.log('Performing Kundli matching');
 
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
@@ -792,7 +795,7 @@ export class AstrologyService {
     ];
   }
 
-  async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly'): Promise<HoroscopeResult> {
+  async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly', locale?: string): Promise<HoroscopeResult> {
     const activePeriod = period || 'daily';
     const today = new Date().toISOString().split('T')[0];
     const cacheKey = `horoscope:${sign.toLowerCase()}:${activePeriod}:${today}`;
@@ -827,6 +830,7 @@ export class AstrologyService {
 
 Make each section unique and specific to the sign. Avoid generic advice. Reference actual Vedic concepts like Nakshatras, Dashas, and planetary lordships.${signKBSection}`,
       `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Consider the sign's ruling planet, current planetary transits, and Nakshatra influences. Provide specific, actionable guidance unique to this sign.`,
+      true, 1500, 0.7, 'default', locale,
     );
 
     if (aiPrediction) {

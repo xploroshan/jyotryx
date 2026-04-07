@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -50,11 +51,13 @@ export class PalmistryController {
   async analyzePalm(
     @CurrentUser() user: JwtPayload,
     @UploadedFile() file?: any,
+    @Body() body?: { locale?: string },
   ): Promise<PalmistryAnalysis> {
     return this.palmistryService.analyzePalm(
       user.sub,
       file?.buffer,
       file?.mimetype,
+      body?.locale,
     );
   }
 }

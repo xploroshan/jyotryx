@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { getLocaleInstruction } from '../../common/locale';
 
 export interface ChatMessage {
   id: string;
@@ -97,6 +98,7 @@ export class ChatService {
         dbSession.category,
         dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
         userProfile,
+        dto.locale,
       );
     } catch (error) {
       this.logger.error('AI response generation failed, refunding credit', error);
@@ -207,13 +209,14 @@ export class ChatService {
     category: string,
     history: { role: string; content: string }[],
     userProfile: any,
+    locale?: string,
   ): Promise<string> {
     // Fetch relevant knowledge base context for RAG
     const kbCategory = this.mapCategoryToKB(category);
     const kbResults = await this.knowledgeService.search(message, kbCategory, 5);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
-    const systemPrompt = this.getSystemPrompt(category, userProfile);
+    const systemPrompt = this.getSystemPrompt(category, userProfile) + getLocaleInstruction(locale);
     const enrichedPrompt = kbContext
       ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
       : systemPrompt;

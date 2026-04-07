@@ -1,5 +1,5 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DailyBriefingService, DailyBriefingResult, PlanetaryHour } from './daily-briefing.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
@@ -13,8 +13,9 @@ export class DailyBriefingController {
 
   @Get()
   @ApiOperation({ summary: 'Get personalized daily briefing (Good Morning + My Day)' })
-  async getDailyBriefing(@CurrentUser() user: JwtPayload): Promise<DailyBriefingResult> {
-    return this.dailyBriefingService.getDailyBriefing(user.sub);
+  @ApiQuery({ name: 'locale', required: false, description: 'Language locale (e.g. hi, ta, bn)' })
+  async getDailyBriefing(@CurrentUser() user: JwtPayload, @Query('locale') locale?: string): Promise<DailyBriefingResult> {
+    return this.dailyBriefingService.getDailyBriefing(user.sub, locale);
   }
 
   @Get('planetary-hours')

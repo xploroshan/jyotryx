@@ -19,7 +19,7 @@ interface PanchangData {
 }
 
 export default function PanchangPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,7 +33,7 @@ export default function PanchangPage() {
     setError("");
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/panchang`
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/panchang?locale=${locale}`
       );
       if (!res.ok) throw new Error("Failed to fetch Panchang data");
       const data = await res.json();

@@ -16,4 +16,9 @@ export class VastuAnalysisDto {
   @IsOptional()
   @IsString()
   concern?: string;
+
+  @ApiProperty({ required: false, description: 'Language locale for AI response (e.g. hi, ta, bn)' })
+  @IsOptional()
+  @IsString()
+  locale?: string;
 }

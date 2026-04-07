@@ -33,7 +33,7 @@ interface VastuResult {
 }
 
 export default function VastuPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [propertyType, setPropertyType] = useState("house");
   const [entranceDirection, setEntranceDirection] = useState("E");
   const [concern, setConcern] = useState("");
@@ -46,7 +46,7 @@ export default function VastuPage() {
     setError("");
     setResult(null);
     try {
-      const data = await api.post<VastuResult>("/vastu/analyze", { propertyType, entranceDirection, concern: concern || undefined });
+      const data = await api.post<VastuResult>("/vastu/analyze", { propertyType, entranceDirection, concern: concern || undefined, locale });
       setResult(data);
     } catch (err: any) {
       setError(err.message || "Analysis failed");

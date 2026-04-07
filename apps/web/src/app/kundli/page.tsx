@@ -38,7 +38,7 @@ interface DoshaData {
 }
 
 export default function KundliPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const tabs = [
     { id: "chart", label: t.kundli.birthChart },
@@ -69,6 +69,7 @@ export default function KundliPage() {
           dateOfBirth: form.dob,
           timeOfBirth: form.time,
           placeOfBirth: form.place,
+          locale,
         }, { token });
         setKundli(result);
 

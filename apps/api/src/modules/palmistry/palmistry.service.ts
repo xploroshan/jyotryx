@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
+import { getLocaleInstruction } from '../../common/locale';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 
 export interface PalmistryAnalysis {
@@ -54,6 +55,7 @@ export class PalmistryService {
     userId: string,
     imageBuffer?: Buffer,
     imageMimeType?: string,
+    locale?: string,
   ): Promise<PalmistryAnalysis> {
     this.logger.log(`Analyzing palm for user: ${userId}`);
 
@@ -79,7 +81,7 @@ export class PalmistryService {
           messages: [
             {
               role: 'system',
-              content: `You are an expert palmist. Analyze the palm image and provide a detailed reading. Return a JSON object with keys: lines (array with name, description, strength, interpretation), mounts (array with name, prominence, interpretation), fingerAnalysis (array with finger, length, interpretation), overallReading (string), healthInsights (string), careerInsights (string), relationshipInsights (string).${palmKBSection}`,
+              content: `You are an expert palmist. Analyze the palm image and provide a detailed reading. Return a JSON object with keys: lines (array with name, description, strength, interpretation), mounts (array with name, prominence, interpretation), fingerAnalysis (array with finger, length, interpretation), overallReading (string), healthInsights (string), careerInsights (string), relationshipInsights (string).${palmKBSection}${getLocaleInstruction(locale)}`,
             },
             {
               role: 'user',
