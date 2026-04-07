@@ -12,7 +12,7 @@ interface KPResult {
 }
 
 export default function KPAstrologyPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [form, setForm] = useState({ dateOfBirth: "", timeOfBirth: "", placeOfBirth: "", latitude: "", longitude: "" });
   const [result, setResult] = useState<KPResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,6 +26,7 @@ export default function KPAstrologyPage() {
         ...form,
         latitude: form.latitude ? parseFloat(form.latitude) : undefined,
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
+        locale,
       });
       setResult(data);
     } catch (err: any) { setError(err.message || "Failed to generate KP chart"); } finally { setLoading(false); }

@@ -20,7 +20,7 @@ interface MuhuratResult {
 }
 
 export default function MuhuratPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const { accessToken, isAuthenticated } = useAuthStore();
 
@@ -60,7 +60,7 @@ export default function MuhuratPage() {
     try {
       const data = await api.post<MuhuratResult>(
         "/astrology/muhurat",
-        { purpose: selectedPurpose, fromDate, toDate, location },
+        { purpose: selectedPurpose, fromDate, toDate, location, locale },
         { token: accessToken! }
       );
       setResult(data);

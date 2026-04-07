@@ -42,7 +42,7 @@ function normalizeProminence(p: string): string {
 }
 
 export default function PalmistryPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -101,6 +101,7 @@ export default function PalmistryPage() {
       const { api } = await import("@/lib/api");
       const formData = new FormData();
       formData.append("image", imageFile);
+      if (locale !== 'en') formData.append("locale", locale);
       const result = await api.upload<any>("/palmistry/analyze", formData);
       if (result) {
         // Map API response to display format

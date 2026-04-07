@@ -12,7 +12,7 @@ interface Message {
 }
 
 export default function ChatPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const { user, accessToken, isAuthenticated } = useAuthStore();
 
@@ -55,7 +55,7 @@ export default function ChatPage() {
 
     try {
       const res = await api.post<any>("/chat/message", {
-        sessionId, message: input, category: selectedCategory,
+        sessionId, message: input, category: selectedCategory, locale,
       }, { token: accessToken! });
       setSessionId(res.session.id);
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply.content }]);

@@ -34,7 +34,7 @@ const mockResults = {
 };
 
 export default function MatchingPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [personA, setPersonA] = useState<PersonForm>({ ...emptyPerson });
   const [personB, setPersonB] = useState<PersonForm>({ ...emptyPerson });
   const [results, setResults] = useState<typeof mockResults | null>(null);
@@ -58,6 +58,7 @@ export default function MatchingPage() {
       const res = await api.post<any>("/astrology/matching", {
         partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place },
         partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place },
+        locale,
       }, { token });
 
       const totalScore = res.totalScore ?? mockResults.totalScore;

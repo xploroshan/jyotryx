@@ -11,4 +11,9 @@ export class DrawCardsDto {
   @IsOptional()
   @IsString()
   question?: string;
+
+  @ApiProperty({ required: false, description: 'Language locale for AI response (e.g. hi, ta, bn)' })
+  @IsOptional()
+  @IsString()
+  locale?: string;
 }

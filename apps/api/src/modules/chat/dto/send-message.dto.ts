@@ -19,4 +19,9 @@ export class SendMessageDto {
   @IsOptional()
   @IsIn(CATEGORIES, { message: `Category must be one of: ${CATEGORIES.join(', ')}` })
   category?: typeof CATEGORIES[number];
+
+  @ApiPropertyOptional({ description: 'Language locale for AI response (e.g. hi, ta, bn)' })
+  @IsOptional()
+  @IsString()
+  locale?: string;
 }

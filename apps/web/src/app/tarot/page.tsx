@@ -26,7 +26,7 @@ interface TarotResult {
 }
 
 export default function TarotPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [spread, setSpread] = useState("single");
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<TarotResult | null>(null);
@@ -44,7 +44,7 @@ export default function TarotPage() {
     setError("");
     setResult(null);
     try {
-      const data = await api.post<TarotResult>("/tarot/draw", { spread, question: question || undefined });
+      const data = await api.post<TarotResult>("/tarot/draw", { spread, question: question || undefined, locale });
       setResult(data);
     } catch (err: any) {
       setError(err.message || "Failed to draw cards");

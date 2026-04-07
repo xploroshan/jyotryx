@@ -5,6 +5,7 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { DrawCardsDto } from './dto/draw-cards.dto';
+import { getLocaleInstruction } from '../../common/locale';
 
 // ─── 78-Card Tarot Deck ────────────────────────────────────────────────────
 const MAJOR_ARCANA = [
@@ -117,7 +118,7 @@ export class TarotService {
         const completion = await client.chat.completions.create({
           model: this.openaiService.getModelForFeature('default'),
           messages: [
-            { role: 'system', content: `You are a wise and compassionate tarot reader rooted in Vedic spiritual tradition. Provide insightful, empathetic interpretations. Return JSON with keys: overall (string), cardInterpretations (array of {card, position, meaning}), advice (string), spiritualGuidance (string).${kbContext}` },
+            { role: 'system', content: `You are a wise and compassionate tarot reader rooted in Vedic spiritual tradition. Provide insightful, empathetic interpretations. Return JSON with keys: overall (string), cardInterpretations (array of {card, position, meaning}), advice (string), spiritualGuidance (string).${kbContext}${getLocaleInstruction(dto.locale)}` },
             { role: 'user', content: `Spread: ${dto.spread}\nQuestion: ${dto.question || 'General guidance'}\nCards drawn:\n${cardsDesc}` },
           ],
           max_tokens: 1200,

@@ -34,9 +34,9 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Kundli generated successfully' })
   async generateKundli(
     @CurrentUser() user: JwtPayload,
-    @Body() birthDetails: BirthDetails,
+    @Body() birthDetails: BirthDetails & { locale?: string },
   ): Promise<KundliResult> {
-    return this.astrologyService.generateKundli(user.sub, birthDetails);
+    return this.astrologyService.generateKundli(user.sub, birthDetails, birthDetails.locale);
   }
 
   @Post('matching')
@@ -44,9 +44,9 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Matching result generated' })
   async getMatching(
     @CurrentUser() user: JwtPayload,
-    @Body() body: { partner1: BirthDetails; partner2: BirthDetails },
+    @Body() body: { partner1: BirthDetails; partner2: BirthDetails; locale?: string },
   ): Promise<MatchingResult> {
-    return this.astrologyService.getMatching(user.sub, body.partner1, body.partner2);
+    return this.astrologyService.getMatching(user.sub, body.partner1, body.partner2, body.locale);
   }
 
   @Get('horoscope/:sign')
@@ -56,8 +56,9 @@ export class AstrologyController {
   async getHoroscope(
     @Param('sign') sign: string,
     @Query('period') period?: string,
+    @Query('locale') locale?: string,
   ): Promise<HoroscopeResult> {
-    return this.astrologyService.getHoroscope(sign, period as any);
+    return this.astrologyService.getHoroscope(sign, period as any, locale);
   }
 
   @Get('panchang')

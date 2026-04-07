@@ -11,7 +11,7 @@ interface DivisionalResult {
 }
 
 export default function DivisionalPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [chartType, setChartType] = useState("9");
   const [form, setForm] = useState({ dateOfBirth: "", timeOfBirth: "", placeOfBirth: "", latitude: "", longitude: "" });
   const [result, setResult] = useState<DivisionalResult | null>(null);
@@ -31,6 +31,7 @@ export default function DivisionalPage() {
         ...form,
         latitude: form.latitude ? parseFloat(form.latitude) : undefined,
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
+        locale,
       });
       setResult(data);
     } catch (err: any) { setError(err.message || "Failed to generate chart"); } finally { setLoading(false); }

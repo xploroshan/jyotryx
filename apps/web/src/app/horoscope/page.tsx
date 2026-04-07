@@ -12,7 +12,7 @@ interface HoroscopeData {
 }
 
 export default function HoroscopePage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const zodiacSigns = [
     { id: "aries", name: t.horoscope.aries, symbol: "\u2648", date: "Apr 14 - May 14", element: t.horoscope.fire },
@@ -54,7 +54,7 @@ export default function HoroscopePage() {
     setError("");
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/horoscope/${selectedSign}?period=${selectedPeriod}`
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/horoscope/${selectedSign}?period=${selectedPeriod}&locale=${locale}`
       );
       if (!res.ok) throw new Error("Failed to fetch horoscope");
       const data = await res.json();

@@ -37,7 +37,7 @@ interface BrandResult {
 }
 
 export default function NumerologyPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const verdictConfig: Record<string, { label: string; color: string; bg: string }> = {
     highly_favorable: { label: t.numerology.highlyFavorable, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
@@ -59,7 +59,7 @@ export default function NumerologyPage() {
     setError("");
     setNameResult(null);
     try {
-      const data = await api.post<NameResult>("/numerology/name", { name: nameInput.trim() });
+      const data = await api.post<NameResult>("/numerology/name", { name: nameInput.trim(), locale });
       setNameResult(data);
     } catch (err: any) {
       setError(err.message || "Analysis failed");
@@ -74,7 +74,7 @@ export default function NumerologyPage() {
     setError("");
     setBrandResult(null);
     try {
-      const data = await api.post<BrandResult>("/numerology/brand", { brandName: brandInput.trim() });
+      const data = await api.post<BrandResult>("/numerology/brand", { brandName: brandInput.trim(), locale });
       setBrandResult(data);
     } catch (err: any) {
       setError(err.message || "Analysis failed");
