@@ -509,14 +509,14 @@ export const or_: TranslationKeys = {
     remedyVenus: 'ଏକ କନ୍ୟାଙ୍କୁ ଧଳା ମିଠା ଅର୍ପଣ କରନ୍ତୁ। ହୀରା କିମ୍ବା ଧଳା ପୋଷାକ ପିନ୍ଧନ୍ତୁ। କୃତଜ୍ଞତା ଅଭ୍ୟାସ କରନ୍ତୁ।',
     remedySaturn: 'ତିଲ ତେଲ ଦୀପ ଜଳାନ୍ତୁ। କଳା ଜିନିଷ ଦାନ କରନ୍ତୁ। ବୟସ୍କଙ୍କ ସେବା କରନ୍ତୁ। ନୀଳମଣି ପିନ୍ଧନ୍ତୁ।',
     // Quality summaries
-    summaryExcellent: 'Stars align beautifully today — seize opportunities with confidence.',
-    summaryGood: 'A favorable day with positive energy supporting your endeavors.',
-    summaryModerate: 'A balanced day — focus on steady progress rather than bold moves.',
-    summaryChallenging: 'Navigate carefully today — patience and remedies will help you through.',
+    summaryExcellent: 'ଆଜି ତାରା ସୁନ୍ଦର ଭାବରେ ମିଳିତ — ଆତ୍ମବିଶ୍ୱାସରେ ସୁଯୋଗ ଗ୍ରହଣ କରନ୍ତୁ।',
+    summaryGood: 'ସକାରାତ୍ମକ ଶକ୍ତି ଆପଣଙ୍କ ପ୍ରୟାସକୁ ସମର୍ଥନ କରୁଥିବା ଏକ ଅନୁକୂଳ ଦିନ।',
+    summaryModerate: 'ଏକ ସନ୍ତୁଳିତ ଦିନ — ସାହସିକ ପଦକ୍ଷେପ ବଦଳରେ ସ୍ଥିର ଅଗ୍ରଗତି ଉପରେ ଧ୍ୟାନ ଦିଅନ୍ତୁ।',
+    summaryChallenging: 'ଆଜି ସାବଧାନରେ ଚାଲନ୍ତୁ — ଧୈର୍ଯ୍ୟ ଏବଂ ଉପଚାର ଆପଣଙ୍କୁ ସାହାଯ୍ୟ କରିବ।',
     // Transit alerts
-    transitSaturnReturn: 'Saturn Return period active — major career and life restructuring. Embrace discipline and long-term thinking.',
-    transitJupiterReturn: 'Jupiter Return cycle — expansion, growth, and new opportunities. Say yes to big possibilities.',
-    transitRahuKetu: 'Rahu-Ketu axis shifting in your chart — expect unconventional opportunities and karmic turns this month.',
+    transitSaturnReturn: 'ଶନି ରିଟର୍ଣ୍ଣ ସକ୍ରିୟ — ବଡ଼ କ୍ୟାରିଅର ଏବଂ ଜୀବନ ପୁନର୍ଗଠନ। ଶୃଙ୍ଖଳା ଏବଂ ଦୀର୍ଘକାଳୀନ ଚିନ୍ତାଧାରା ଅପଣାନ୍ତୁ।',
+    transitJupiterReturn: 'ଗୁରୁ ରିଟର୍ଣ୍ଣ ଚକ୍ର — ବିସ୍ତାର, ଅଭିବୃଦ୍ଧି ଏବଂ ନୂଆ ସୁଯୋଗ। ବଡ଼ ସମ୍ଭାବନାକୁ ହଁ କୁହନ୍ତୁ।',
+    transitRahuKetu: 'ଆପଣଙ୍କ କୁଣ୍ଡଳୀରେ ରାହୁ-କେତୁ ଅକ୍ଷ ବଦଳୁଛି — ଏହି ମାସରେ ଅସାଧାରଣ ସୁଯୋଗ ଏବଂ କର୍ମ ମୋଡ଼ ଆଶା କରନ୍ତୁ।',
     // Profession insights
     profSoftwareSun: 'Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal.',
     profSoftwareMoon: 'Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming.',

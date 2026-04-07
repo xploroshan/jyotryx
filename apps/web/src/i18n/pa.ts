@@ -509,14 +509,14 @@ export const pa: TranslationKeys = {
     remedyVenus: 'ਕੰਨਿਆ ਨੂੰ ਚਿੱਟੀਆਂ ਮਿਠਾਈਆਂ ਦਿਓ। ਹੀਰਾ ਜਾਂ ਚਿੱਟੇ ਕੱਪੜੇ ਪਾਓ। ਸ਼ੁਕਰਗੁਜ਼ਾਰੀ ਦਾ ਅਭਿਆਸ ਕਰੋ।',
     remedySaturn: 'ਤਿਲ ਦੇ ਤੇਲ ਦਾ ਦੀਵਾ ਜਗਾਓ। ਕਾਲੀਆਂ ਚੀਜ਼ਾਂ ਦਾਨ ਕਰੋ। ਬਜ਼ੁਰਗਾਂ ਦੀ ਸੇਵਾ ਕਰੋ। ਨੀਲਮ ਪਾਓ।',
     // Quality summaries
-    summaryExcellent: 'Stars align beautifully today — seize opportunities with confidence.',
-    summaryGood: 'A favorable day with positive energy supporting your endeavors.',
-    summaryModerate: 'A balanced day — focus on steady progress rather than bold moves.',
-    summaryChallenging: 'Navigate carefully today — patience and remedies will help you through.',
+    summaryExcellent: 'ਅੱਜ ਤਾਰੇ ਸੁੰਦਰ ਢੰਗ ਨਾਲ ਮਿਲ ਰਹੇ ਹਨ — ਭਰੋਸੇ ਨਾਲ ਮੌਕੇ ਫੜੋ।',
+    summaryGood: 'ਸਕਾਰਾਤਮਕ ਊਰਜਾ ਨਾਲ ਭਰਿਆ ਅਨੁਕੂਲ ਦਿਨ ਜੋ ਤੁਹਾਡੇ ਯਤਨਾਂ ਦਾ ਸਾਥ ਦਿੰਦਾ ਹੈ।',
+    summaryModerate: 'ਸੰਤੁਲਿਤ ਦਿਨ — ਦਲੇਰ ਕਦਮਾਂ ਦੀ ਬਜਾਏ ਸਥਿਰ ਤਰੱਕੀ \'ਤੇ ਧਿਆਨ ਦਿਓ।',
+    summaryChallenging: 'ਅੱਜ ਸਾਵਧਾਨੀ ਨਾਲ ਚੱਲੋ — ਸਬਰ ਅਤੇ ਉਪਾਅ ਤੁਹਾਡੀ ਮਦਦ ਕਰਨਗੇ।',
     // Transit alerts
-    transitSaturnReturn: 'Saturn Return period active — major career and life restructuring. Embrace discipline and long-term thinking.',
-    transitJupiterReturn: 'Jupiter Return cycle — expansion, growth, and new opportunities. Say yes to big possibilities.',
-    transitRahuKetu: 'Rahu-Ketu axis shifting in your chart — expect unconventional opportunities and karmic turns this month.',
+    transitSaturnReturn: 'ਸ਼ਨੀ ਵਾਪਸੀ ਦਾ ਸਮਾਂ ਸਰਗਰਮ — ਕਰੀਅਰ ਅਤੇ ਜੀਵਨ ਵਿੱਚ ਵੱਡੀ ਪੁਨਰਗਠਨ। ਅਨੁਸ਼ਾਸਨ ਅਤੇ ਲੰਬੇ ਸਮੇਂ ਦੀ ਸੋਚ ਅਪਣਾਓ।',
+    transitJupiterReturn: 'ਬ੍ਰਿਹਸਪਤੀ ਵਾਪਸੀ ਚੱਕਰ — ਵਿਸਤਾਰ, ਵਿਕਾਸ ਅਤੇ ਨਵੇਂ ਮੌਕੇ। ਵੱਡੀਆਂ ਸੰਭਾਵਨਾਵਾਂ ਨੂੰ ਹਾਂ ਕਹੋ।',
+    transitRahuKetu: 'ਤੁਹਾਡੀ ਕੁੰਡਲੀ ਵਿੱਚ ਰਾਹੂ-ਕੇਤੂ ਧੁਰਾ ਬਦਲ ਰਿਹਾ ਹੈ — ਇਸ ਮਹੀਨੇ ਅਸਧਾਰਨ ਮੌਕਿਆਂ ਅਤੇ ਕਰਮ ਮੋੜਾਂ ਦੀ ਉਮੀਦ ਰੱਖੋ।',
     // Profession insights
     profSoftwareSun: 'Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal.',
     profSoftwareMoon: 'Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming.',
