@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "@/i18n";
 
 interface PersonForm {
   name: string;
@@ -33,6 +34,7 @@ const mockResults = {
 };
 
 export default function MatchingPage() {
+  const { t } = useTranslation();
   const [personA, setPersonA] = useState<PersonForm>({ ...emptyPerson });
   const [personB, setPersonB] = useState<PersonForm>({ ...emptyPerson });
   const [results, setResults] = useState<typeof mockResults | null>(null);
@@ -49,7 +51,7 @@ export default function MatchingPage() {
       const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
       if (!token) {
-        setError("Please log in to use Kundli Matching.");
+        setError(t.matching.loginRequired);
         return;
       }
       const { api } = await import("@/lib/api");
@@ -104,18 +106,18 @@ export default function MatchingPage() {
       </h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/40 mb-1.5">Full Name</label>
+          <label className="block text-sm text-white/40 mb-1.5">{t.matching.fullName}</label>
           <input
             type="text"
             value={person.name}
             onChange={(e) => setPerson({ ...person, name: e.target.value })}
-            placeholder="Enter name"
+            placeholder={t.matching.enterName}
             className={inputClass}
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-white/40 mb-1.5">Date of Birth</label>
+            <label className="block text-sm text-white/40 mb-1.5">{t.form.dateOfBirth}</label>
             <input
               type="date"
               value={person.dob}
@@ -124,7 +126,7 @@ export default function MatchingPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-white/40 mb-1.5">Time of Birth</label>
+            <label className="block text-sm text-white/40 mb-1.5">{t.form.timeOfBirth}</label>
             <input
               type="time"
               value={person.time}
@@ -134,12 +136,12 @@ export default function MatchingPage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm text-white/40 mb-1.5">Place of Birth</label>
+          <label className="block text-sm text-white/40 mb-1.5">{t.form.placeOfBirth}</label>
           <input
             type="text"
             value={person.place}
             onChange={(e) => setPerson({ ...person, place: e.target.value })}
-            placeholder="Search city..."
+            placeholder={t.matching.searchCity}
             className={inputClass}
           />
         </div>
@@ -161,26 +163,26 @@ export default function MatchingPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
             <span className="text-lg">💞</span>
-            Ashtakoota Guna Milan
+            {t.matching.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Kundli <span className="text-gradient">Matching</span>
+            {t.matching.title} <span className="text-gradient">{t.matching.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Check marriage compatibility with detailed Ashtakoota analysis, Manglik check, and expert compatibility insights.
+            {t.matching.description}
           </p>
         </div>
 
         {/* Forms */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <PersonFormComponent
-            label="Person A"
+            label={t.matching.personA}
             person={personA}
             setPerson={setPersonA}
             gradient="from-pink-400 to-red-400"
           />
           <PersonFormComponent
-            label="Person B"
+            label={t.matching.personB}
             person={personB}
             setPerson={setPersonB}
             gradient="from-blue-400 to-cyan-400"
@@ -200,10 +202,10 @@ export default function MatchingPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Matching Kundlis...
+                {t.matching.matchingKundlis}
               </span>
             ) : (
-              "Check Compatibility"
+              t.matching.checkCompatibility
             )}
           </button>
         </div>
@@ -219,20 +221,20 @@ export default function MatchingPage() {
           <div className="space-y-6">
             {/* Score Overview */}
             <div className="surface-card p-8 text-center">
-              <h2 className="text-2xl font-bold text-gradient mb-6">Compatibility Results</h2>
+              <h2 className="text-2xl font-bold text-gradient mb-6">{t.matching.results}</h2>
               <div className="grid sm:grid-cols-3 gap-6 mb-8">
                 <div className="p-4 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-white/30 mb-1">Ashtakoota Score</p>
+                  <p className="text-xs text-white/30 mb-1">{t.matching.ashtakootaScore}</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>
                     {results.totalScore}<span className="text-lg text-white/30">/{results.maxScore}</span>
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-white/30 mb-1">Compatibility</p>
+                  <p className="text-xs text-white/30 mb-1">{t.matching.compatibility}</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>{results.percentage}%</p>
                 </div>
                 <div className="p-4 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-white/30 mb-1">Verdict</p>
+                  <p className="text-xs text-white/30 mb-1">{t.matching.verdict}</p>
                   <p className="text-3xl font-bold text-emerald-400">{results.verdict}</p>
                 </div>
               </div>
@@ -240,13 +242,13 @@ export default function MatchingPage() {
               {/* Manglik Status */}
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
-                  <span className="text-sm text-white/40">{personA.name || "Person A"} - Manglik</span>
+                  <span className="text-sm text-white/40">{personA.name || t.matching.personA} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikA ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikA ? "Yes" : "No"}
                   </span>
                 </div>
                 <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
-                  <span className="text-sm text-white/40">{personB.name || "Person B"} - Manglik</span>
+                  <span className="text-sm text-white/40">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikB ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikB ? "Yes (Mild)" : "No"}
                   </span>
@@ -256,7 +258,7 @@ export default function MatchingPage() {
 
             {/* Koota Details */}
             <div className="surface-card p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Ashtakoota Breakdown</h3>
+              <h3 className="text-lg font-bold text-white mb-4">{t.matching.ashtakootaBreakdown}</h3>
               <div className="space-y-3">
                 {results.koota.map((k) => {
                   const pct = (k.obtained / k.max) * 100;
@@ -287,11 +289,11 @@ export default function MatchingPage() {
 
             {/* Summary */}
             <div className="surface-card p-6">
-              <h3 className="text-lg font-bold text-gradient mb-4">Analysis Summary</h3>
+              <h3 className="text-lg font-bold text-gradient mb-4">{t.matching.analysisSummary}</h3>
               <p className="text-white/60 leading-relaxed">{results.summary}</p>
               <div className="mt-4 pt-4 border-t divider">
                 <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400 hover:bg-white/[0.1] transition-all">
-                  Download Detailed Report (PDF)
+                  {t.matching.downloadReport}
                 </button>
               </div>
             </div>

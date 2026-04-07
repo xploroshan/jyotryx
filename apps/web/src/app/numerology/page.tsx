@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { api } from "@/lib/api";
+import { useTranslation } from "@/i18n";
 
 interface NameResult {
   name: string;
@@ -35,14 +36,15 @@ interface BrandResult {
   luckyColors: string[];
 }
 
-const verdictConfig: Record<string, { label: string; color: string; bg: string }> = {
-  highly_favorable: { label: "Highly Favorable", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-  favorable: { label: "Favorable", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
-  neutral: { label: "Neutral", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-  unfavorable: { label: "Needs Adjustment", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
-};
-
 export default function NumerologyPage() {
+  const { t } = useTranslation();
+
+  const verdictConfig: Record<string, { label: string; color: string; bg: string }> = {
+    highly_favorable: { label: t.numerology.highlyFavorable, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+    favorable: { label: t.numerology.favorable, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+    neutral: { label: t.numerology.neutral, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+    unfavorable: { label: t.numerology.needsAdjustment, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
+  };
   const [activeTab, setActiveTab] = useState<"name" | "brand">("name");
   const [nameInput, setNameInput] = useState("");
   const [brandInput, setBrandInput] = useState("");
@@ -91,25 +93,25 @@ export default function NumerologyPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-2">
-            <span className="text-gradient">Numerology</span> Analyzer
+            <span className="text-gradient">{t.numerology.title}</span> {t.numerology.titleHighlight}
           </h1>
-          <p className="text-white/40 text-sm">Discover the hidden power in names and numbers</p>
+          <p className="text-white/40 text-sm">{t.numerology.description}</p>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8 rounded-xl bg-white/[0.03] p-1 w-fit mx-auto">
           {[
-            { id: "name" as const, label: "Name Analysis" },
-            { id: "brand" as const, label: "Brand / Business" },
-          ].map((t) => (
+            { id: "name" as const, label: t.numerology.nameAnalysis },
+            { id: "brand" as const, label: t.numerology.brandBusiness },
+          ].map((tab) => (
             <button
-              key={t.id}
-              onClick={() => { setActiveTab(t.id); setError(""); }}
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setError(""); }}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === t.id ? "btn-primary" : "text-white/40 hover:text-white"
+                activeTab === tab.id ? "btn-primary" : "text-white/40 hover:text-white"
               }`}
             >
-              {t.label}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -122,14 +124,14 @@ export default function NumerologyPage() {
         {activeTab === "name" && (
           <div>
             <div className="surface-card p-6 mb-6">
-              <label className="block text-xs text-white/30 mb-2">Enter a name to analyze</label>
+              <label className="block text-xs text-white/30 mb-2">{t.numerology.enterNameLabel}</label>
               <div className="flex gap-3">
                 <input
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && analyzeName()}
-                  placeholder="e.g., Arjun Sharma"
+                  placeholder={t.numerology.enterNamePlaceholder}
                   className="flex-1 px-4 py-3 rounded-xl surface-input"
                 />
                 <button
@@ -137,7 +139,7 @@ export default function NumerologyPage() {
                   disabled={loading || !nameInput.trim()}
                   className="px-6 py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50"
                 >
-                  {loading ? "..." : "Analyze"}
+                  {loading ? "..." : t.numerology.analyze}
                 </button>
               </div>
             </div>
@@ -147,9 +149,9 @@ export default function NumerologyPage() {
                 {/* Numbers */}
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: "Destiny Number", num: nameResult.destinyNumber, desc: nameResult.destinyMeaning },
-                    { label: "Soul Number", num: nameResult.soulNumber, desc: nameResult.soulMeaning },
-                    { label: "Personality Number", num: nameResult.personalityNumber, desc: nameResult.personalityMeaning },
+                    { label: t.numerology.destinyNumber, num: nameResult.destinyNumber, desc: nameResult.destinyMeaning },
+                    { label: t.numerology.soulNumber, num: nameResult.soulNumber, desc: nameResult.soulMeaning },
+                    { label: t.numerology.personalityNumber, num: nameResult.personalityNumber, desc: nameResult.personalityMeaning },
                   ].map((item) => (
                     <div key={item.label} className="surface-card p-5 text-center">
                       <p className="text-xs text-white/30 mb-1">{item.label}</p>
@@ -163,7 +165,7 @@ export default function NumerologyPage() {
                 <div className={`p-4 rounded-xl border ${vc.bg}`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-sm font-semibold ${vc.color}`}>{vc.label}</span>
-                    <span className="text-xs text-white/30">Ruling Planet: {nameResult.rulingPlanet}</span>
+                    <span className="text-xs text-white/30">{t.numerology.rulingPlanet}: {nameResult.rulingPlanet}</span>
                   </div>
                   <p className="text-sm text-white/60 mt-2">{nameResult.suggestion}</p>
                 </div>
@@ -171,7 +173,7 @@ export default function NumerologyPage() {
                 {/* Strengths & Cautions */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="surface-card p-5">
-                    <h3 className="text-sm font-semibold text-emerald-400 mb-3">Strengths</h3>
+                    <h3 className="text-sm font-semibold text-emerald-400 mb-3">{t.numerology.strengths}</h3>
                     <ul className="space-y-1.5">
                       {nameResult.strengths.map((s, i) => (
                         <li key={i} className="text-sm text-white/60 flex items-center gap-2">
@@ -181,7 +183,7 @@ export default function NumerologyPage() {
                     </ul>
                   </div>
                   <div className="surface-card p-5">
-                    <h3 className="text-sm font-semibold text-amber-400 mb-3">Cautions</h3>
+                    <h3 className="text-sm font-semibold text-amber-400 mb-3">{t.numerology.cautions}</h3>
                     <ul className="space-y-1.5">
                       {nameResult.cautions.map((c, i) => (
                         <li key={i} className="text-sm text-white/60 flex items-center gap-2">
@@ -196,15 +198,15 @@ export default function NumerologyPage() {
                 <div className="surface-card p-5">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-white/30 mb-1">Lucky Colors</p>
+                      <p className="text-xs text-white/30 mb-1">{t.numerology.luckyColors}</p>
                       <p className="text-sm text-white/70">{nameResult.luckyColors.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-white/30 mb-1">Best Days</p>
+                      <p className="text-xs text-white/30 mb-1">{t.numerology.bestDays}</p>
                       <p className="text-sm text-white/70">{nameResult.bestDaysToUse.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-white/30 mb-1">Compatibility</p>
+                      <p className="text-xs text-white/30 mb-1">{t.numerology.compatibility}</p>
                       <p className="text-sm text-white/70">{nameResult.compatibility}</p>
                     </div>
                   </div>
@@ -218,14 +220,14 @@ export default function NumerologyPage() {
         {activeTab === "brand" && (
           <div>
             <div className="surface-card p-6 mb-6">
-              <label className="block text-xs text-white/30 mb-2">Enter brand or business name</label>
+              <label className="block text-xs text-white/30 mb-2">{t.numerology.enterBrandLabel}</label>
               <div className="flex gap-3">
                 <input
                   type="text"
                   value={brandInput}
                   onChange={(e) => setBrandInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && analyzeBrand()}
-                  placeholder="e.g., TechNova Solutions"
+                  placeholder={t.numerology.enterBrandPlaceholder}
                   className="flex-1 px-4 py-3 rounded-xl surface-input"
                 />
                 <button
@@ -233,7 +235,7 @@ export default function NumerologyPage() {
                   disabled={loading || !brandInput.trim()}
                   className="px-6 py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50"
                 >
-                  {loading ? "..." : "Analyze"}
+                  {loading ? "..." : t.numerology.analyze}
                 </button>
               </div>
             </div>
@@ -243,12 +245,12 @@ export default function NumerologyPage() {
                 {/* Score + Number */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="surface-card p-5 text-center">
-                    <p className="text-xs text-white/30 mb-1">Name Number</p>
+                    <p className="text-xs text-white/30 mb-1">{t.numerology.nameNumber}</p>
                     <p className="text-5xl font-bold text-gradient mb-2">{brandResult.nameNumber}</p>
                     <p className="text-sm text-white/50">{brandResult.vibration}</p>
                   </div>
                   <div className="surface-card p-5 text-center">
-                    <p className="text-xs text-white/30 mb-1">Business Score</p>
+                    <p className="text-xs text-white/30 mb-1">{t.numerology.businessScore}</p>
                     <p className="text-5xl font-bold mb-2">
                       <span className={brandResult.overallScore >= 7 ? "text-emerald-400" : brandResult.overallScore >= 5 ? "text-amber-400" : "text-red-400"}>
                         {brandResult.overallScore}
@@ -267,7 +269,7 @@ export default function NumerologyPage() {
                 {/* Suitable / Avoid */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="surface-card p-5">
-                    <h3 className="text-sm font-semibold text-emerald-400 mb-3">Best Suited For</h3>
+                    <h3 className="text-sm font-semibold text-emerald-400 mb-3">{t.numerology.bestSuitedFor}</h3>
                     <div className="flex flex-wrap gap-2">
                       {brandResult.suitableFor.map((s, i) => (
                         <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300">{s}</span>
@@ -275,7 +277,7 @@ export default function NumerologyPage() {
                     </div>
                   </div>
                   <div className="surface-card p-5">
-                    <h3 className="text-sm font-semibold text-red-400 mb-3">Less Suitable For</h3>
+                    <h3 className="text-sm font-semibold text-red-400 mb-3">{t.numerology.lessSuitableFor}</h3>
                     <div className="flex flex-wrap gap-2">
                       {brandResult.avoidFor.map((s, i) => (
                         <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-red-500/10 text-red-300">{s}</span>
@@ -288,11 +290,11 @@ export default function NumerologyPage() {
                 <div className="surface-card p-5">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-white/30 mb-1">Best Launch Days</p>
+                      <p className="text-xs text-white/30 mb-1">{t.numerology.bestLaunchDays}</p>
                       <p className="text-sm text-white/70">{brandResult.bestLaunchDays.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-white/30 mb-1">Lucky Colors</p>
+                      <p className="text-xs text-white/30 mb-1">{t.numerology.luckyColors}</p>
                       <p className="text-sm text-white/70">{brandResult.luckyColors.join(", ")}</p>
                     </div>
                   </div>

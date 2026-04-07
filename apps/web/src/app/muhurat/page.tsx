@@ -4,17 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
-
-const purposes = [
-  { id: "marriage", label: "Marriage", icon: "💒" },
-  { id: "business", label: "Business Start", icon: "🏢" },
-  { id: "travel", label: "Travel", icon: "✈️" },
-  { id: "property", label: "Property Purchase", icon: "🏠" },
-  { id: "vehicle", label: "Vehicle Purchase", icon: "🚗" },
-  { id: "education", label: "Education", icon: "📚" },
-  { id: "puja", label: "Puja / Ceremony", icon: "🪔" },
-  { id: "housewarming", label: "Housewarming", icon: "🏡" },
-];
+import { useTranslation } from "@/i18n";
 
 interface AuspiciousTime {
   date: string;
@@ -30,8 +20,20 @@ interface MuhuratResult {
 }
 
 export default function MuhuratPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { accessToken, isAuthenticated } = useAuthStore();
+
+  const purposes = [
+    { id: "marriage", label: t.muhurat.marriage, icon: "💒" },
+    { id: "business", label: t.muhurat.businessStart, icon: "🏢" },
+    { id: "travel", label: t.muhurat.travel, icon: "✈️" },
+    { id: "property", label: t.muhurat.property, icon: "🏠" },
+    { id: "vehicle", label: t.muhurat.vehicle, icon: "🚗" },
+    { id: "education", label: t.muhurat.education, icon: "📚" },
+    { id: "puja", label: t.muhurat.puja, icon: "🪔" },
+    { id: "housewarming", label: t.muhurat.housewarming, icon: "🏡" },
+  ];
   const [selectedPurpose, setSelectedPurpose] = useState("marriage");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -42,7 +44,7 @@ export default function MuhuratPage() {
 
   const handleSearch = async () => {
     if (!fromDate || !toDate || !location.trim()) {
-      setError("Please fill in all fields");
+      setError(t.muhurat.fillAllFields);
       return;
     }
 
@@ -83,19 +85,19 @@ export default function MuhuratPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
             <span className="text-lg">📅</span>
-            Auspicious Timing
+            {t.muhurat.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            <span className="text-gradient">Muhurat</span> Finder
+            <span className="text-gradient">{t.muhurat.title}</span> {t.muhurat.titleHighlight}
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Find the most auspicious dates and times for important events based on Vedic astrology.
+            {t.muhurat.description}
           </p>
         </div>
 
         {/* Purpose Selection */}
         <div className="surface-card p-6 mb-6">
-          <h2 className="text-sm font-medium text-white/40 mb-4">Select Purpose</h2>
+          <h2 className="text-sm font-medium text-white/40 mb-4">{t.muhurat.selectPurpose}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {purposes.map((p) => (
               <button
@@ -118,7 +120,7 @@ export default function MuhuratPage() {
         <div className="surface-card p-6 mb-6">
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-white/30 mb-2">From Date</label>
+              <label className="block text-xs text-white/30 mb-2">{t.muhurat.fromDate}</label>
               <input
                 type="date"
                 value={fromDate}
@@ -127,7 +129,7 @@ export default function MuhuratPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/30 mb-2">To Date</label>
+              <label className="block text-xs text-white/30 mb-2">{t.muhurat.toDate}</label>
               <input
                 type="date"
                 value={toDate}
@@ -136,12 +138,12 @@ export default function MuhuratPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/30 mb-2">Location</label>
+              <label className="block text-xs text-white/30 mb-2">{t.muhurat.location}</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Mumbai, India"
+                placeholder={t.muhurat.locationPlaceholder}
                 className="w-full px-4 py-3 rounded-xl surface-input"
               />
             </div>
@@ -152,7 +154,7 @@ export default function MuhuratPage() {
             disabled={loading}
             className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50"
           >
-            {loading ? "Finding Muhurat..." : "Find Auspicious Times"}
+            {loading ? t.muhurat.finding : t.muhurat.findTimes}
           </button>
         </div>
 
@@ -166,12 +168,12 @@ export default function MuhuratPage() {
         {result && (
           <div>
             <h2 className="text-xl font-bold text-gradient mb-4">
-              Auspicious Times for {purposes.find((p) => p.id === selectedPurpose)?.label}
+              {t.muhurat.resultsFor} {purposes.find((p) => p.id === selectedPurpose)?.label}
             </h2>
 
             {result.auspiciousTimes.length === 0 ? (
               <div className="surface-card p-8 text-center text-white/30">
-                No auspicious times found in the selected date range. Try a wider range.
+                {t.muhurat.noResults}
               </div>
             ) : (
               <div className="space-y-4">

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { useTranslation } from "@/i18n";
 
 interface PlanetaryHour {
   planet: string;
@@ -57,6 +58,7 @@ const planetIcons: Record<string, { symbol: string; color: string; bg: string }>
 };
 
 export default function MyDayPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isAuthenticated, accessToken } = useAuthStore();
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
@@ -95,7 +97,7 @@ export default function MyDayPage() {
             <div className="absolute inset-3 rounded-full border border-accent-500/20" />
             <div className="absolute inset-3 rounded-full border border-transparent border-t-accent-400 animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
           </div>
-          <p className="text-white/40 text-sm">Reading the stars for you...</p>
+          <p className="text-white/40 text-sm">{t.myDay.readingStars}</p>
         </div>
       </div>
     );
@@ -110,9 +112,9 @@ export default function MyDayPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
           </div>
-          <p className="text-red-400 mb-1 text-sm font-medium">Something went wrong</p>
+          <p className="text-red-400 mb-1 text-sm font-medium">{t.myDay.somethingWrong}</p>
           <p className="text-white/40 text-xs mb-5">{error}</p>
-          <button onClick={fetchBriefing} className="px-6 py-2.5 btn-primary rounded-xl text-sm">Try Again</button>
+          <button onClick={fetchBriefing} className="px-6 py-2.5 btn-primary rounded-xl text-sm">{t.myDay.tryAgain}</button>
         </div>
       </div>
     );
@@ -178,7 +180,7 @@ export default function MyDayPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-semibold text-purple-300 mb-1">Planetary Transit</p>
+                <p className="text-sm font-semibold text-purple-300 mb-1">{t.myDay.planetaryTransit}</p>
                 <p className="text-sm text-purple-200/60 leading-relaxed">{briefing.transitAlert}</p>
               </div>
             </div>
@@ -194,7 +196,7 @@ export default function MyDayPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-white">Favorable Today</h3>
+              <h3 className="text-sm font-semibold text-white">{t.myDay.favorableToday}</h3>
             </div>
             <ul className="space-y-2.5">
               {briefing.doList.map((item, i) => (
@@ -212,7 +214,7 @@ export default function MyDayPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-white">Best to Avoid</h3>
+              <h3 className="text-sm font-semibold text-white">{t.myDay.bestToAvoid}</h3>
             </div>
             <ul className="space-y-2.5">
               {briefing.avoidList.map((item, i) => (
@@ -234,7 +236,7 @@ export default function MyDayPage() {
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-primary-400 mb-1">Career &amp; Work</h3>
+              <h3 className="text-sm font-semibold text-primary-400 mb-1">{t.myDay.careerWork}</h3>
               <p className="text-sm text-white/60 leading-relaxed">{briefing.professionInsight}</p>
             </div>
           </div>
@@ -244,7 +246,7 @@ export default function MyDayPage() {
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           {briefing.currentHora && (
             <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">Current Hora</h3>
+              <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
               <div className="flex items-center gap-4">
                 <div className={`w-14 h-14 rounded-2xl ${planetIcons[briefing.currentHora.planet]?.bg || "bg-white/[0.06]"} flex items-center justify-center`}>
                   <span className={`text-2xl ${planetIcons[briefing.currentHora.planet]?.color || "text-white/60"}`}>
@@ -261,7 +263,7 @@ export default function MyDayPage() {
                 </div>
               </div>
               <div className="mt-4 pt-3 border-t border-white/[0.06]">
-                <p className="text-xs text-white/30 mb-1">Best for</p>
+                <p className="text-xs text-white/30 mb-1">{t.myDay.bestFor}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {briefing.currentHora.activities.map((a, i) => (
                     <span key={i} className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[11px] text-white/50">{a}</span>
@@ -272,14 +274,14 @@ export default function MyDayPage() {
           )}
 
           <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">Lucky Today</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">{t.myDay.luckyToday}</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center">
                   <div className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-orange-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-white/30 uppercase tracking-wider">Color</p>
+                  <p className="text-[11px] text-white/30 uppercase tracking-wider">{t.myDay.color}</p>
                   <p className="text-sm text-white font-medium">{briefing.luckyColor}</p>
                 </div>
               </div>
@@ -288,7 +290,7 @@ export default function MyDayPage() {
                   <span className="text-accent-400 font-bold text-lg">{briefing.luckyNumber}</span>
                 </div>
                 <div>
-                  <p className="text-[11px] text-white/30 uppercase tracking-wider">Number</p>
+                  <p className="text-[11px] text-white/30 uppercase tracking-wider">{t.myDay.number}</p>
                   <p className="text-sm text-white font-medium">{briefing.luckyNumber}</p>
                 </div>
               </div>
@@ -299,7 +301,7 @@ export default function MyDayPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[11px] text-white/30 uppercase tracking-wider">Best Time</p>
+                  <p className="text-[11px] text-white/30 uppercase tracking-wider">{t.myDay.bestTime}</p>
                   <p className="text-sm text-white font-medium">{briefing.luckyTime}</p>
                 </div>
               </div>
@@ -310,12 +312,12 @@ export default function MyDayPage() {
         {/* ── Planetary Hours Timeline ── */}
         <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider">Planetary Hours</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider">{t.myDay.planetaryHours}</h3>
             <button
               onClick={() => setShowAllHours(!showAllHours)}
               className="text-xs text-primary-400 hover:text-primary-300 transition-colors"
             >
-              {showAllHours ? "Show relevant" : "View all 24"}
+              {showAllHours ? t.myDay.showRelevant : t.myDay.viewAll24}
             </button>
           </div>
           <div className="space-y-1.5">
@@ -346,7 +348,7 @@ export default function MyDayPage() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-50" />
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-400" />
                       </span>
-                      <span className="text-[10px] font-semibold tracking-wide">NOW</span>
+                      <span className="text-[10px] font-semibold tracking-wide">{t.myDay.now}</span>
                     </span>
                   )}
                 </div>
@@ -357,14 +359,14 @@ export default function MyDayPage() {
 
         {/* ── Panchang ── */}
         <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-          <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">Today&apos;s Panchang</h3>
+          <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: "Tithi", value: briefing.panchang.tithi, icon: "\ud83c\udf19" },
-              { label: "Nakshatra", value: briefing.panchang.nakshatra, icon: "\u2b50" },
-              { label: "Yoga", value: briefing.panchang.yoga, icon: "\ud83e\uddd8" },
-              { label: "Day", value: briefing.panchang.vara, icon: "\ud83d\udcc5" },
-              { label: "Rahu Kaal", value: briefing.panchang.rahukaal, icon: "\u26a0\ufe0f" },
+              { label: t.myDay.tithi, value: briefing.panchang.tithi, icon: "\ud83c\udf19" },
+              { label: t.myDay.nakshatraLabel, value: briefing.panchang.nakshatra, icon: "\u2b50" },
+              { label: t.myDay.yoga, value: briefing.panchang.yoga, icon: "\ud83e\uddd8" },
+              { label: t.myDay.day, value: briefing.panchang.vara, icon: "\ud83d\udcc5" },
+              { label: t.myDay.rahuKaal, value: briefing.panchang.rahukaal, icon: "\u26a0\ufe0f" },
             ].map((item) => (
               <div key={item.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
                 <p className="text-lg mb-1">{item.icon}</p>
@@ -385,14 +387,14 @@ export default function MyDayPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-accent-400 mb-1.5">Today&apos;s Remedy</h3>
+                <h3 className="text-sm font-semibold text-accent-400 mb-1.5">{t.myDay.todaysRemedy}</h3>
                 <p className="text-sm text-white/60 leading-relaxed">{briefing.remedy}</p>
               </div>
             </div>
           </div>
 
           <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-600/8 to-accent-500/5 border border-white/[0.06] flex flex-col items-center justify-center text-center">
-            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">Today&apos;s Mantra</h3>
+            <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">{t.myDay.todaysMantra}</h3>
             <p className="text-xl sm:text-2xl text-white/90 font-semibold leading-relaxed tracking-wide">
               {briefing.mantra}
             </p>

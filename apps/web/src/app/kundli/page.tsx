@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const tabs = [
-  { id: "chart", label: "Birth Chart" },
-  { id: "planets", label: "Planetary Details" },
-  { id: "houses", label: "House Analysis" },
-  { id: "dasha", label: "Dasha Periods" },
-  { id: "yogas", label: "Yogas" },
-  { id: "doshas", label: "Doshas" },
-];
+import { useTranslation } from "@/i18n";
 
 interface KundliData {
   id: string;
@@ -46,6 +38,17 @@ interface DoshaData {
 }
 
 export default function KundliPage() {
+  const { t } = useTranslation();
+
+  const tabs = [
+    { id: "chart", label: t.kundli.birthChart },
+    { id: "planets", label: t.kundli.planetaryDetails },
+    { id: "houses", label: t.kundli.houseAnalysis },
+    { id: "dasha", label: t.kundli.dashaPeriods },
+    { id: "yogas", label: t.kundli.yogas },
+    { id: "doshas", label: t.kundli.doshasTab },
+  ];
+
   const [activeTab, setActiveTab] = useState("chart");
   const [kundli, setKundli] = useState<KundliData | null>(null);
   const [doshas, setDoshas] = useState<DoshaData | null>(null);
@@ -77,7 +80,7 @@ export default function KundliPage() {
           // Dosha fetch is optional
         }
       } else {
-        setError("Please log in to generate your Kundli.");
+        setError(t.kundli.loginRequired);
       }
     } catch (err: any) {
       setError(err.message || "Failed to generate Kundli. Please try again.");
@@ -119,13 +122,13 @@ export default function KundliPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-white/60 mb-4">
-            Vedic Birth Chart
+            {t.kundli.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-            Kundli <span className="text-gradient">Generator</span>
+            {t.kundli.title} <span className="text-gradient">{t.kundli.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Generate your complete Vedic birth chart with planetary positions, Dasha periods, Yogas, and detailed house analysis.
+            {t.kundli.description}
           </p>
         </div>
 
@@ -133,7 +136,7 @@ export default function KundliPage() {
         {!kundli && (
           <div className="max-w-lg mx-auto">
             <div className="surface-card p-8">
-              <h2 className="text-lg font-bold text-white mb-6">Enter Birth Details</h2>
+              <h2 className="text-lg font-bold text-white mb-6">{t.kundli.enterBirthDetails}</h2>
 
               {error && (
                 <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
@@ -141,18 +144,18 @@ export default function KundliPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-white/40 mb-1.5">Full Name</label>
+                  <label className="block text-sm text-white/40 mb-1.5">{t.kundli.fullName}</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Enter your full name"
+                    placeholder={t.kundli.enterName}
                     className="w-full px-4 py-3 rounded-xl surface-input"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-white/40 mb-1.5">Date of Birth</label>
+                    <label className="block text-sm text-white/40 mb-1.5">{t.form.dateOfBirth}</label>
                     <input
                       type="date"
                       value={form.dob}
@@ -161,7 +164,7 @@ export default function KundliPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-white/40 mb-1.5">Time of Birth</label>
+                    <label className="block text-sm text-white/40 mb-1.5">{t.form.timeOfBirth}</label>
                     <input
                       type="time"
                       value={form.time}
@@ -171,15 +174,15 @@ export default function KundliPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-white/40 mb-1.5">Place of Birth</label>
+                  <label className="block text-sm text-white/40 mb-1.5">{t.form.placeOfBirth}</label>
                   <input
                     type="text"
                     value={form.place}
                     onChange={(e) => setForm({ ...form, place: e.target.value })}
-                    placeholder="Search city..."
+                    placeholder={t.kundli.searchCity}
                     className="w-full px-4 py-3 rounded-xl surface-input"
                   />
-                  <p className="text-xs text-white/20 mt-1">Enter your birth city name</p>
+                  <p className="text-xs text-white/20 mt-1">{t.kundli.birthCityNote}</p>
                 </div>
                 <button
                   onClick={handleGenerate}
@@ -192,10 +195,10 @@ export default function KundliPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Generating Kundli...
+                      {t.kundli.generating}
                     </span>
                   ) : (
-                    "Generate Kundli"
+                    t.kundli.generateKundli
                   )}
                 </button>
               </div>
@@ -214,17 +217,17 @@ export default function KundliPage() {
                   {form.dob} at {form.time} &bull; {form.place}
                 </p>
                 <p className="text-xs text-white/30 mt-1">
-                  Ascendant: <span className="text-primary-400">{kundli.ascendant}</span> &bull;
-                  Moon Sign: <span className="text-primary-400">{kundli.moonSign}</span> &bull;
-                  Sun Sign: <span className="text-primary-400">{kundli.sunSign}</span> &bull;
-                  Nakshatra: <span className="text-primary-400">{kundli.nakshatra}</span>
+                  {t.kundli.ascendant}: <span className="text-primary-400">{kundli.ascendant}</span> &bull;
+                  {t.kundli.moonSign}: <span className="text-primary-400">{kundli.moonSign}</span> &bull;
+                  {t.kundli.sunSign}: <span className="text-primary-400">{kundli.sunSign}</span> &bull;
+                  {t.kundli.nakshatra}: <span className="text-primary-400">{kundli.nakshatra}</span>
                 </p>
               </div>
               <button
                 onClick={() => { setKundli(null); setDoshas(null); setForm({ name: "", dob: "", time: "", place: "" }); setError(""); }}
                 className="px-4 py-2 rounded-xl btn-secondary text-sm"
               >
-                New Kundli
+                {t.kundli.newKundli}
               </button>
             </div>
 
@@ -248,7 +251,7 @@ export default function KundliPage() {
             {/* Tab Content */}
             {activeTab === "chart" && (
               <div className="surface-card p-8 flex flex-col items-center">
-                <h3 className="text-lg font-bold text-gradient mb-6">Rashi Chart (D1)</h3>
+                <h3 className="text-lg font-bold text-gradient mb-6">{t.kundli.rashiChart}</h3>
                 <div className="relative w-80 h-80 sm:w-96 sm:h-96">
                   <svg viewBox="0 0 400 400" className="w-full h-full">
                     <rect x="10" y="10" width="380" height="380" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
@@ -276,7 +279,7 @@ export default function KundliPage() {
                     })}
                   </svg>
                 </div>
-                <p className="text-xs text-white/30 mt-4">North Indian style birth chart based on your birth details.</p>
+                <p className="text-xs text-white/30 mt-4">{t.kundli.chartNote}</p>
               </div>
             )}
 
@@ -286,12 +289,12 @@ export default function KundliPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b divider">
-                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Planet</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Sign</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">House</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Degree</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Nakshatra</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">Status</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">{t.kundli.planet}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">{t.kundli.sign}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">{t.kundli.house}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">{t.kundli.degree}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">{t.kundli.nakshatra}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-white/40 uppercase">{t.kundli.status}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -306,7 +309,7 @@ export default function KundliPage() {
                             <span className={`text-xs px-2 py-1 rounded-full ${
                               p.isRetrograde ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
                             }`}>
-                              {p.isRetrograde ? "Retrograde" : "Direct"}
+                              {p.isRetrograde ? t.kundli.retrograde : t.kundli.direct}
                             </span>
                           </td>
                         </tr>
@@ -345,11 +348,11 @@ export default function KundliPage() {
 
             {activeTab === "dasha" && (
               <div className="surface-card p-6">
-                <h3 className="text-lg font-bold text-gradient mb-4">Vimshottari Dasha</h3>
+                <h3 className="text-lg font-bold text-gradient mb-4">{t.kundli.vimshottariDasha}</h3>
                 {kundli.dashas?.map((d, di) => (
                   <div key={di} className="mb-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-sm font-semibold text-white">Mahadasha: {d.planet}</span>
+                      <span className="text-sm font-semibold text-white">{t.kundli.mahadasha}: {d.planet}</span>
                       <span className="text-xs text-white/30">{d.startDate} to {d.endDate}</span>
                     </div>
                     {d.subPeriods && d.subPeriods.length > 0 && (
@@ -377,7 +380,7 @@ export default function KundliPage() {
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-white/30">{s.startDate} - {s.endDate}</span>
                                 {isActive && (
-                                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300">Current</span>
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300">{t.kundli.current}</span>
                                 )}
                               </div>
                             </div>
@@ -410,7 +413,7 @@ export default function KundliPage() {
                   ))
                 ) : (
                   <div className="surface-card p-8 text-center text-white/30">
-                    No significant yogas detected in your chart.
+                    {t.kundli.noYogas}
                   </div>
                 )}
               </div>
@@ -429,14 +432,14 @@ export default function KundliPage() {
                           d.severity === "moderate" ? "bg-amber-500/20 text-amber-400" :
                           "bg-red-500/20 text-red-400"
                         }`}>
-                          {d.present ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : "Absent"}
+                          {d.present ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : t.kundli.absent}
                         </span>
                       </div>
                       <p className="text-sm text-white/60 mb-2">{d.description}</p>
                       {d.remedies && d.remedies.length > 0 && (
                         <div className="p-3 rounded-lg bg-white/[0.03]">
                           <p className="text-xs text-white/40">
-                            <span className="text-primary-400 font-medium">Remedies:</span>{" "}
+                            <span className="text-primary-400 font-medium">{t.kundli.remedies}:</span>{" "}
                             {d.remedies.join(". ")}
                           </p>
                         </div>
@@ -445,8 +448,8 @@ export default function KundliPage() {
                   ))
                 ) : (
                   <div className="surface-card p-8 text-center">
-                    <p className="text-white/30">Dosha analysis is generated from your birth chart data.</p>
-                    <p className="text-xs text-white/20 mt-2">Complete the Kundli generation to view Dosha analysis.</p>
+                    <p className="text-white/30">{t.kundli.doshaNote}</p>
+                    <p className="text-xs text-white/20 mt-2">{t.kundli.doshaComplete}</p>
                   </div>
                 )}
               </div>
