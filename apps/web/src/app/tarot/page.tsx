@@ -2,12 +2,7 @@
 
 import React, { useState } from "react";
 import { api } from "@/lib/api";
-
-const SPREADS = [
-  { value: "single", label: "Single Card", credits: 1, description: "Quick insight into your current situation" },
-  { value: "three-card", label: "Three Card", credits: 2, description: "Past, Present, and Future reading" },
-  { value: "celtic-cross", label: "Celtic Cross", credits: 3, description: "Comprehensive 10-card deep reading" },
-];
+import { useTranslation } from "@/i18n";
 
 interface TarotCard {
   name: string;
@@ -31,11 +26,18 @@ interface TarotResult {
 }
 
 export default function TarotPage() {
+  const { t } = useTranslation();
   const [spread, setSpread] = useState("single");
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<TarotResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const SPREADS = [
+    { value: "single", label: t.tarot.singleCard, credits: 1, description: t.tarot.singleCardDesc },
+    { value: "three-card", label: t.tarot.threeCard, credits: 2, description: t.tarot.threeCardDesc },
+    { value: "celtic-cross", label: t.tarot.celticCross, credits: 3, description: t.tarot.celticCrossDesc },
+  ];
 
   const drawCards = async () => {
     setLoading(true);
@@ -53,8 +55,8 @@ export default function TarotPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-white mb-2">Tarot Card Reading</h1>
-      <p className="text-white/40 mb-8">Draw cards from the sacred 78-card deck for divine guidance</p>
+      <h1 className="text-3xl font-bold text-white mb-2">{t.tarot.title}</h1>
+      <p className="text-white/40 mb-8">{t.tarot.description}</p>
 
       {/* Spread Selection */}
       <div className="grid sm:grid-cols-3 gap-3 mb-6">
@@ -66,25 +68,25 @@ export default function TarotPage() {
           >
             <div className="text-sm font-semibold text-white">{s.label}</div>
             <div className="text-xs text-white/40 mt-1">{s.description}</div>
-            <div className="text-xs text-accent-400 mt-2">{s.credits} credit{s.credits > 1 ? "s" : ""}</div>
+            <div className="text-xs text-accent-400 mt-2">{s.credits} {s.credits > 1 ? t.tarot.credits : t.tarot.credit}</div>
           </button>
         ))}
       </div>
 
       {/* Question */}
       <div className="mb-6">
-        <label className="text-sm text-white/60 mb-2 block">Your question or intention (optional)</label>
+        <label className="text-sm text-white/60 mb-2 block">{t.tarot.questionLabel}</label>
         <input
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="What guidance do you seek?"
+          placeholder={t.tarot.questionPlaceholder}
           className="w-full px-4 py-3 rounded-xl surface-input"
         />
       </div>
 
       <button onClick={drawCards} disabled={loading} className="w-full py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50">
-        {loading ? "Drawing cards..." : "Draw Cards"}
+        {loading ? t.tarot.drawing : t.tarot.drawCards}
       </button>
 
       {error && <p className="mt-4 text-red-400 text-sm">{error}</p>}
@@ -101,7 +103,7 @@ export default function TarotPage() {
                   {card.name}
                 </div>
                 <div className="text-xs text-white/30 mt-1">
-                  {card.isReversed ? "Reversed" : "Upright"}
+                  {card.isReversed ? t.tarot.reversed : t.tarot.upright}
                 </div>
               </div>
             ))}
@@ -109,7 +111,7 @@ export default function TarotPage() {
 
           {/* Interpretation */}
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">Reading</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">{t.tarot.reading}</h3>
             <p className="text-sm text-white/60 mb-4">{result.interpretation.overall}</p>
 
             {result.interpretation.cardInterpretations?.map((ci, i) => (
@@ -120,8 +122,8 @@ export default function TarotPage() {
             ))}
 
             <div className="mt-4 pt-4 border-t border-white/[0.06]">
-              <p className="text-sm text-white/50"><span className="text-primary-400 font-medium">Advice:</span> {result.interpretation.advice}</p>
-              <p className="text-sm text-white/50 mt-2"><span className="text-accent-400 font-medium">Spiritual Guidance:</span> {result.interpretation.spiritualGuidance}</p>
+              <p className="text-sm text-white/50"><span className="text-primary-400 font-medium">{t.tarot.advice}:</span> {result.interpretation.advice}</p>
+              <p className="text-sm text-white/50 mt-2"><span className="text-accent-400 font-medium">{t.tarot.spiritualGuidance}:</span> {result.interpretation.spiritualGuidance}</p>
             </div>
           </div>
         </div>

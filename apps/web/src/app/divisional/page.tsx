@@ -2,11 +2,7 @@
 
 import React, { useState } from "react";
 import { api } from "@/lib/api";
-
-const CHART_TYPES = [
-  { value: "9", label: "D9 — Navamsa", description: "Marriage, dharma, and spiritual strength" },
-  { value: "10", label: "D10 — Dashamsha", description: "Career, profession, and public life" },
-];
+import { useTranslation } from "@/i18n";
 
 interface DivisionalResult {
   type: string;
@@ -15,14 +11,20 @@ interface DivisionalResult {
 }
 
 export default function DivisionalPage() {
+  const { t } = useTranslation();
   const [chartType, setChartType] = useState("9");
   const [form, setForm] = useState({ dateOfBirth: "", timeOfBirth: "", placeOfBirth: "", latitude: "", longitude: "" });
   const [result, setResult] = useState<DivisionalResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const CHART_TYPES = [
+    { value: "9", label: t.divisional.d9, description: t.divisional.d9Desc },
+    { value: "10", label: t.divisional.d10, description: t.divisional.d10Desc },
+  ];
+
   const generate = async () => {
-    if (!form.dateOfBirth || !form.timeOfBirth || !form.placeOfBirth) { setError("Please fill all fields"); return; }
+    if (!form.dateOfBirth || !form.timeOfBirth || !form.placeOfBirth) { setError(t.form.fillAllFields); return; }
     setLoading(true); setError(""); setResult(null);
     try {
       const data = await api.post<DivisionalResult>(`/astrology/divisional/${chartType}`, {
@@ -36,13 +38,13 @@ export default function DivisionalPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-white mb-2">Divisional Charts</h1>
-      <p className="text-white/40 mb-8">Navamsa, Dashamsha, and other Varga charts for deeper insight</p>
+      <h1 className="text-3xl font-bold text-white mb-2">{t.divisional.title}</h1>
+      <p className="text-white/40 mb-8">{t.divisional.description}</p>
 
       <div className="surface-card p-6 mb-6">
         {/* Chart Type */}
         <div className="mb-4">
-          <label className="text-sm text-white/60 mb-2 block">Chart Type</label>
+          <label className="text-sm text-white/60 mb-2 block">{t.divisional.chartType}</label>
           <div className="grid grid-cols-2 gap-3">
             {CHART_TYPES.map((ct) => (
               <button key={ct.value} onClick={() => setChartType(ct.value)} className={`p-3 rounded-xl text-left transition-all ${chartType === ct.value ? "bg-primary-600/15 border border-primary-500/40" : "bg-white/[0.03] border border-white/[0.06]"}`}>
@@ -56,31 +58,31 @@ export default function DivisionalPage() {
         {/* Birth Details */}
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-sm text-white/60 mb-1 block">Date of Birth</label>
+            <label className="text-sm text-white/60 mb-1 block">{t.form.dateOfBirth}</label>
             <input type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div>
-            <label className="text-sm text-white/60 mb-1 block">Time of Birth</label>
+            <label className="text-sm text-white/60 mb-1 block">{t.form.timeOfBirth}</label>
             <input type="time" value={form.timeOfBirth} onChange={(e) => setForm({ ...form, timeOfBirth: e.target.value })} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div>
-            <label className="text-sm text-white/60 mb-1 block">Place of Birth</label>
-            <input type="text" value={form.placeOfBirth} onChange={(e) => setForm({ ...form, placeOfBirth: e.target.value })} placeholder="City, Country" className="w-full px-4 py-3 rounded-xl surface-input" />
+            <label className="text-sm text-white/60 mb-1 block">{t.form.placeOfBirth}</label>
+            <input type="text" value={form.placeOfBirth} onChange={(e) => setForm({ ...form, placeOfBirth: e.target.value })} placeholder={t.form.placePlaceholder} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-sm text-white/60 mb-1 block">Latitude</label>
+              <label className="text-sm text-white/60 mb-1 block">{t.form.latitude}</label>
               <input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="28.61" className="w-full px-4 py-3 rounded-xl surface-input" />
             </div>
             <div>
-              <label className="text-sm text-white/60 mb-1 block">Longitude</label>
+              <label className="text-sm text-white/60 mb-1 block">{t.form.longitude}</label>
               <input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="77.20" className="w-full px-4 py-3 rounded-xl surface-input" />
             </div>
           </div>
         </div>
 
         <button onClick={generate} disabled={loading} className="w-full py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50">
-          {loading ? "Generating..." : "Generate Chart"}
+          {loading ? t.divisional.generating : t.divisional.generateChart}
         </button>
       </div>
 
@@ -88,7 +90,7 @@ export default function DivisionalPage() {
 
       {result && (
         <div className="surface-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">{result.type} Chart — Planetary Positions</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{result.type} Chart</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
