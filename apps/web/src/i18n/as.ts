@@ -500,9 +500,9 @@ export const as_: TranslationKeys = {
     summaryModerate: 'এটা সুষম দিন — সাহসী পদক্ষেপতকৈ স্থিৰ অগ্ৰগতিত মনোযোগ দিয়ক।',
     summaryChallenging: 'আজি সাৱধানে চলক — ধৈৰ্য আৰু উপায়ে আপোনাক সহায় কৰিব।',
     // Transit alerts
-    transitSaturnReturn: 'Saturn Return period active — major career and life restructuring. Embrace discipline and long-term thinking.',
-    transitJupiterReturn: 'Jupiter Return cycle — expansion, growth, and new opportunities. Say yes to big possibilities.',
-    transitRahuKetu: 'Rahu-Ketu axis shifting in your chart — expect unconventional opportunities and karmic turns this month.',
+    transitSaturnReturn: 'শনি প্ৰত্যাৱৰ্তন কাল সক্ৰিয় — কেৰিয়াৰ আৰু জীৱনৰ ডাঙৰ পুনৰ্গঠন। অনুশাসন আৰু দীৰ্ঘম্যাদী চিন্তা গ্ৰহণ কৰক।',
+    transitJupiterReturn: 'বৃহস্পতি প্ৰত্যাৱৰ্তন চক্ৰ — সম্প্ৰসাৰণ, বিকাশ আৰু নতুন সুযোগ। ডাঙৰ সম্ভাৱনাক হয় বুলি কওক।',
+    transitRahuKetu: 'আপোনাৰ চাৰ্টত ৰাহু-কেতু অক্ষ স্থানান্তৰ হৈ আছে — এই মাহত অপৰম্পৰাগত সুযোগ আৰু কাৰ্মিক পৰিৱৰ্তন আশা কৰক।',
     // Profession insights
     profSoftwareSun: 'Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal.',
     profSoftwareMoon: 'Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming.',

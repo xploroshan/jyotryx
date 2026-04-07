@@ -509,14 +509,14 @@ export const te: TranslationKeys = {
     remedyVenus: 'చిన్న అమ్మాయికి తెలుపు మిఠాయిలు అర్పించండి. వజ్రం లేదా తెలుపు బట్టలు ధరించండి. కృతజ్ఞత పాటించండి.',
     remedySaturn: 'నువ్వుల నూనె దీపం వెలిగించండి. నల్ల వస్తువులు దానం చేయండి. పెద్దలకు సేవ చేయండి. నీలమణి ధరించండి.',
     // Quality summaries
-    summaryExcellent: 'Stars align beautifully today — seize opportunities with confidence.',
-    summaryGood: 'A favorable day with positive energy supporting your endeavors.',
-    summaryModerate: 'A balanced day — focus on steady progress rather than bold moves.',
-    summaryChallenging: 'Navigate carefully today — patience and remedies will help you through.',
+    summaryExcellent: 'ఈ రోజు నక్షత్రాలు అందంగా కలిసాయి — అవకాశాలను ఆత్మవిశ్వాసంతో అందిపుచ్చుకోండి.',
+    summaryGood: 'మీ ప్రయత్నాలకు సానుకూల శక్తి తోడయ్యే అనుకూలమైన రోజు.',
+    summaryModerate: 'సమతుల్య రోజు — సాహసోపేత చర్యల కంటే స్థిరమైన పురోగతిపై దృష్టి పెట్టండి.',
+    summaryChallenging: 'ఈ రోజు జాగ్రత్తగా నడవండి — ఓర్పు మరియు పరిహారాలు మీకు సహాయపడతాయి.',
     // Transit alerts
-    transitSaturnReturn: 'Saturn Return period active — major career and life restructuring. Embrace discipline and long-term thinking.',
-    transitJupiterReturn: 'Jupiter Return cycle — expansion, growth, and new opportunities. Say yes to big possibilities.',
-    transitRahuKetu: 'Rahu-Ketu axis shifting in your chart — expect unconventional opportunities and karmic turns this month.',
+    transitSaturnReturn: 'శని రిటర్న్ కాలం సక్రియంగా ఉంది — వృత్తి మరియు జీవిత పునర్నిర్మాణం. క్రమశిక్షణ మరియు దీర్ఘకాలిక ఆలోచనను అలవరచుకోండి.',
+    transitJupiterReturn: 'గురు రిటర్న్ చక్రం — విస్తరణ, వృద్ధి మరియు కొత్త అవకాశాలు. పెద్ద అవకాశాలకు అవును అనండి.',
+    transitRahuKetu: 'మీ చార్టులో రాహు-కేతు అక్షం మారుతోంది — ఈ నెల అసాధారణ అవకాశాలు మరియు కర్మ మలుపులను ఆశించండి.',
     // Profession insights
     profSoftwareSun: 'Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal.',
     profSoftwareMoon: 'Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming.',
