@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "@/i18n";
 
 interface PanchangData {
   date: string;
@@ -18,6 +19,7 @@ interface PanchangData {
 }
 
 export default function PanchangPage() {
+  const { t } = useTranslation();
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,27 +47,27 @@ export default function PanchangPage() {
 
   const panchangItems = panchang
     ? [
-        { label: "Tithi", value: panchang.tithi, icon: "🌙", desc: "Lunar Day" },
-        { label: "Nakshatra", value: panchang.nakshatra, icon: "✨", desc: "Birth Star" },
-        { label: "Yoga", value: panchang.yoga, icon: "🔗", desc: "Planetary Combination" },
-        { label: "Karana", value: panchang.karana, icon: "⚡", desc: "Half-day Period" },
-        { label: "Vara", value: panchang.vara, icon: "📆", desc: "Day of Week" },
+        { label: t.panchang.tithi, value: panchang.tithi, icon: "🌙", desc: t.panchang.tithiDesc },
+        { label: t.panchang.nakshatraLabel, value: panchang.nakshatra, icon: "✨", desc: t.panchang.nakshatraDesc },
+        { label: t.panchang.yoga, value: panchang.yoga, icon: "🔗", desc: t.panchang.yogaDesc },
+        { label: t.panchang.karana, value: panchang.karana, icon: "⚡", desc: t.panchang.karanaDesc },
+        { label: t.panchang.vara, value: panchang.vara, icon: "📆", desc: t.panchang.varaDesc },
       ]
     : [];
 
   const timings = panchang
     ? [
-        { label: "Sunrise", value: panchang.sunrise, icon: "🌅" },
-        { label: "Sunset", value: panchang.sunset, icon: "🌇" },
-        { label: "Moonrise", value: panchang.moonrise, icon: "🌕" },
+        { label: t.panchang.sunrise, value: panchang.sunrise, icon: "🌅" },
+        { label: t.panchang.sunset, value: panchang.sunset, icon: "🌇" },
+        { label: t.panchang.moonrise, value: panchang.moonrise, icon: "🌕" },
       ]
     : [];
 
   const inauspicious = panchang
     ? [
-        { label: "Rahu Kaal", value: panchang.rahukaal, desc: "Avoid starting new work" },
-        { label: "Gulika Kaal", value: panchang.gulikakaal, desc: "Inauspicious period" },
-        { label: "Yamakantaka", value: panchang.yamakantaka, desc: "Avoid travel" },
+        { label: t.panchang.rahuKaal, value: panchang.rahukaal, desc: t.panchang.rahuKaalDesc },
+        { label: t.panchang.gulikaKaal, value: panchang.gulikakaal, desc: t.panchang.gulikaKaalDesc },
+        { label: t.panchang.yamakantaka, value: panchang.yamakantaka, desc: t.panchang.yamakantakaDesc },
       ]
     : [];
 
@@ -80,13 +82,13 @@ export default function PanchangPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
             <span className="text-lg">🕉️</span>
-            Hindu Calendar
+            {t.panchang.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Today&apos;s <span className="text-gradient">Panchang</span>
+            {t.panchang.title} <span className="text-gradient">{t.panchang.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Complete daily Hindu calendar with Tithi, Nakshatra, Yoga, Karana, and auspicious timings.
+            {t.panchang.description}
           </p>
         </div>
 
@@ -105,7 +107,7 @@ export default function PanchangPage() {
               <p className="text-red-400">{error}</p>
             </div>
             <button onClick={fetchPanchang} className="mt-4 px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1]">
-              Retry
+              {t.panchang.retry}
             </button>
           </div>
         )}
@@ -114,7 +116,7 @@ export default function PanchangPage() {
           <>
             {/* Date */}
             <div className="surface-card p-6 mb-8 text-center">
-              <p className="text-sm text-white/30 mb-1">Date</p>
+              <p className="text-sm text-white/30 mb-1">{t.panchang.date}</p>
               <p className="text-2xl font-bold text-white">
                 {new Date(panchang.date).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
@@ -138,19 +140,19 @@ export default function PanchangPage() {
             </div>
 
             {/* Sun/Moon Timings */}
-            <h2 className="text-xl font-bold text-gradient mb-4">Sun & Moon Timings</h2>
+            <h2 className="text-xl font-bold text-gradient mb-4">{t.panchang.sunMoonTimings}</h2>
             <div className="grid grid-cols-3 gap-4 mb-8">
-              {timings.map((t) => (
-                <div key={t.label} className="surface-card p-5 text-center">
-                  <span className="text-3xl block mb-2">{t.icon}</span>
-                  <p className="text-xs text-white/30 mb-1">{t.label}</p>
-                  <p className="text-lg font-bold text-white">{t.value}</p>
+              {timings.map((tm) => (
+                <div key={tm.label} className="surface-card p-5 text-center">
+                  <span className="text-3xl block mb-2">{tm.icon}</span>
+                  <p className="text-xs text-white/30 mb-1">{tm.label}</p>
+                  <p className="text-lg font-bold text-white">{tm.value}</p>
                 </div>
               ))}
             </div>
 
             {/* Inauspicious Periods */}
-            <h2 className="text-xl font-bold text-red-400 mb-4">Inauspicious Periods</h2>
+            <h2 className="text-xl font-bold text-red-400 mb-4">{t.panchang.inauspiciousPeriods}</h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {inauspicious.map((item) => (
                 <div key={item.label} className="surface-card p-5 border border-red-500/10">

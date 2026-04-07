@@ -1,29 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-
-// Vedic sidereal zodiac dates (Lahiri ayanamsa, approximate)
-const zodiacSigns = [
-  { id: "aries", name: "Aries", symbol: "\u2648", date: "Apr 14 - May 14", element: "Fire" },
-  { id: "taurus", name: "Taurus", symbol: "\u2649", date: "May 15 - Jun 14", element: "Earth" },
-  { id: "gemini", name: "Gemini", symbol: "\u264A", date: "Jun 15 - Jul 16", element: "Air" },
-  { id: "cancer", name: "Cancer", symbol: "\u264B", date: "Jul 17 - Aug 16", element: "Water" },
-  { id: "leo", name: "Leo", symbol: "\u264C", date: "Aug 17 - Sep 16", element: "Fire" },
-  { id: "virgo", name: "Virgo", symbol: "\u264D", date: "Sep 17 - Oct 16", element: "Earth" },
-  { id: "libra", name: "Libra", symbol: "\u264E", date: "Oct 17 - Nov 15", element: "Air" },
-  { id: "scorpio", name: "Scorpio", symbol: "\u264F", date: "Nov 16 - Dec 15", element: "Water" },
-  { id: "sagittarius", name: "Sagittarius", symbol: "\u2650", date: "Dec 16 - Jan 13", element: "Fire" },
-  { id: "capricorn", name: "Capricorn", symbol: "\u2651", date: "Jan 14 - Feb 12", element: "Earth" },
-  { id: "aquarius", name: "Aquarius", symbol: "\u2652", date: "Feb 13 - Mar 14", element: "Air" },
-  { id: "pisces", name: "Pisces", symbol: "\u2653", date: "Mar 15 - Apr 13", element: "Water" },
-];
-
-const periods = [
-  { id: "daily", label: "Daily" },
-  { id: "weekly", label: "Weekly" },
-  { id: "monthly", label: "Monthly" },
-  { id: "yearly", label: "Yearly" },
-];
+import { useTranslation } from "@/i18n";
 
 interface HoroscopeData {
   overview: string;
@@ -34,6 +12,30 @@ interface HoroscopeData {
 }
 
 export default function HoroscopePage() {
+  const { t } = useTranslation();
+
+  const zodiacSigns = [
+    { id: "aries", name: t.horoscope.aries, symbol: "\u2648", date: "Apr 14 - May 14", element: t.horoscope.fire },
+    { id: "taurus", name: t.horoscope.taurus, symbol: "\u2649", date: "May 15 - Jun 14", element: t.horoscope.earth },
+    { id: "gemini", name: t.horoscope.gemini, symbol: "\u264A", date: "Jun 15 - Jul 16", element: t.horoscope.air },
+    { id: "cancer", name: t.horoscope.cancer, symbol: "\u264B", date: "Jul 17 - Aug 16", element: t.horoscope.water },
+    { id: "leo", name: t.horoscope.leo, symbol: "\u264C", date: "Aug 17 - Sep 16", element: t.horoscope.fire },
+    { id: "virgo", name: t.horoscope.virgo, symbol: "\u264D", date: "Sep 17 - Oct 16", element: t.horoscope.earth },
+    { id: "libra", name: t.horoscope.libra, symbol: "\u264E", date: "Oct 17 - Nov 15", element: t.horoscope.air },
+    { id: "scorpio", name: t.horoscope.scorpio, symbol: "\u264F", date: "Nov 16 - Dec 15", element: t.horoscope.water },
+    { id: "sagittarius", name: t.horoscope.sagittarius, symbol: "\u2650", date: "Dec 16 - Jan 13", element: t.horoscope.fire },
+    { id: "capricorn", name: t.horoscope.capricorn, symbol: "\u2651", date: "Jan 14 - Feb 12", element: t.horoscope.earth },
+    { id: "aquarius", name: t.horoscope.aquarius, symbol: "\u2652", date: "Feb 13 - Mar 14", element: t.horoscope.air },
+    { id: "pisces", name: t.horoscope.pisces, symbol: "\u2653", date: "Mar 15 - Apr 13", element: t.horoscope.water },
+  ];
+
+  const periods = [
+    { id: "daily", label: t.horoscope.daily },
+    { id: "weekly", label: t.horoscope.weekly },
+    { id: "monthly", label: t.horoscope.monthly },
+    { id: "yearly", label: t.horoscope.yearly },
+  ];
+
   const [selectedSign, setSelectedSign] = useState("aries");
   const [selectedPeriod, setSelectedPeriod] = useState("daily");
   const [horoscope, setHoroscope] = useState<HoroscopeData | null>(null);
@@ -93,13 +95,13 @@ export default function HoroscopePage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-white/60 mb-4">
             <span className="text-lg">{sign.symbol}</span>
-            Vedic Horoscope
+            {t.horoscope.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-            Your <span className="text-gradient">Horoscope</span>
+            {t.horoscope.title} <span className="text-gradient">{t.horoscope.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Personalized predictions based on Vedic astrology and current planetary transits.
+            {t.horoscope.description}
           </p>
         </div>
 
@@ -171,7 +173,7 @@ export default function HoroscopePage() {
             </div>
             <br />
             <button onClick={fetchHoroscope} className="mt-4 px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400">
-              Retry
+              {t.horoscope.retry}
             </button>
           </div>
         )}
@@ -182,25 +184,25 @@ export default function HoroscopePage() {
             {/* Overview */}
             <div className="lg:col-span-2 surface-card p-6">
               <h3 className="text-lg font-bold text-gradient mb-4">
-                {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Overview
+                {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} {t.horoscope.overview}
               </h3>
               <p className="text-white/60 leading-relaxed">{horoscope.overview}</p>
             </div>
 
             {/* Lucky */}
             <div className="surface-card p-6">
-              <h3 className="text-lg font-bold text-accent-400 mb-4">Lucky Factors</h3>
+              <h3 className="text-lg font-bold text-accent-400 mb-4">{t.horoscope.luckyFactors}</h3>
               <div className="space-y-4">
                 <div className="p-3 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-white/30 mb-1">Lucky Numbers</p>
+                  <p className="text-xs text-white/30 mb-1">{t.horoscope.luckyNumbers}</p>
                   <p className="text-white font-semibold">{horoscope.lucky.number}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-white/30 mb-1">Lucky Color</p>
+                  <p className="text-xs text-white/30 mb-1">{t.horoscope.luckyColor}</p>
                   <p className="text-white font-semibold">{horoscope.lucky.color}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-white/30 mb-1">Auspicious Time</p>
+                  <p className="text-xs text-white/30 mb-1">{t.horoscope.auspiciousTime}</p>
                   <p className="text-white font-semibold">{horoscope.lucky.time}</p>
                 </div>
               </div>
@@ -209,7 +211,7 @@ export default function HoroscopePage() {
             {/* Love */}
             <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-bold text-white">Love &amp; Relationships</h3>
+                <h3 className="font-bold text-white">{t.horoscope.loveRelationships}</h3>
               </div>
               <p className="text-sm text-white/60 leading-relaxed">{horoscope.love}</p>
             </div>
@@ -217,7 +219,7 @@ export default function HoroscopePage() {
             {/* Career */}
             <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-bold text-white">Career &amp; Finance</h3>
+                <h3 className="font-bold text-white">{t.horoscope.careerFinance}</h3>
               </div>
               <p className="text-sm text-white/60 leading-relaxed">{horoscope.career}</p>
             </div>
@@ -225,7 +227,7 @@ export default function HoroscopePage() {
             {/* Health */}
             <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-bold text-white">Health &amp; Wellness</h3>
+                <h3 className="font-bold text-white">{t.horoscope.healthWellness}</h3>
               </div>
               <p className="text-sm text-white/60 leading-relaxed">{horoscope.health}</p>
             </div>
