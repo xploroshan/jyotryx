@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import ProfileGate from "@/components/auth/ProfileGate";
 
 export const metadata: Metadata = {
   title: "Jyotron — Vedic Astrology Platform",
@@ -47,7 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1 pt-16 lg:pt-[100px]">{children}</main>
+        <main className="flex-1 pt-16 lg:pt-[100px]">
+          <ProfileGate>{children}</ProfileGate>
+        </main>
         <Footer />
       </body>
     </html>

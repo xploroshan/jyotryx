@@ -18,13 +18,14 @@ vi.mock('next/navigation', () => ({
 }));
 
 // ─── Mock store ─────────────────────────────────────────────────────────────
-const mockStoreState = {
+const mockStoreState: Record<string, any> = {
   user: null,
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
   setAuth: vi.fn(),
   updateCredits: vi.fn(),
+  setProfileComplete: vi.fn(),
   logout: vi.fn(),
 };
 
@@ -127,10 +128,22 @@ describe('Auth Page: Rendering', () => {
     expect(screen.getByText(/Terms of Service/)).toBeDefined();
   });
 
-  it('should redirect to /my-day when already authenticated', () => {
+  it('should redirect to /my-day when already authenticated with complete profile', () => {
     mockStoreState.isAuthenticated = true;
+    (mockStoreState as any).user = { id: '1', name: 'Test', email: 'test@test.com', credits: 10, role: 'user', profileComplete: true };
     render(<AuthPage />);
     expect(mockReplace).toHaveBeenCalledWith('/my-day');
+    mockStoreState.isAuthenticated = false;
+    (mockStoreState as any).user = null;
+  });
+
+  it('should redirect to /profile when authenticated but profile incomplete', () => {
+    mockStoreState.isAuthenticated = true;
+    (mockStoreState as any).user = { id: '1', name: 'Test', email: 'test@test.com', credits: 10, role: 'user', profileComplete: false };
+    render(<AuthPage />);
+    expect(mockReplace).toHaveBeenCalledWith('/profile');
+    mockStoreState.isAuthenticated = false;
+    (mockStoreState as any).user = null;
   });
 
   it('should show email login error on API failure', async () => {

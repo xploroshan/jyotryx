@@ -22,17 +22,18 @@ function AuthPageContent() {
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const existingUser = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<"login" | "signup">("login");
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/my-day");
+      router.replace(existingUser?.profileComplete ? "/my-day" : "/profile");
       return;
     }
     const mode = searchParams.get("mode");
     if (mode === "signup") setTab("signup");
     else if (mode === "login") setTab("login");
-  }, [searchParams, isAuthenticated, router]);
+  }, [searchParams, isAuthenticated, existingUser, router]);
 
   const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
@@ -67,7 +68,7 @@ function AuthPageContent() {
     try {
       const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      router.push("/my-day");
+      router.push(res.user?.profileComplete ? "/my-day" : "/profile");
     } catch (err: any) {
       throw new Error(err.message || "Failed to authenticate with server. Please try again.");
     }
@@ -168,7 +169,7 @@ function AuthPageContent() {
       const body = tab === "login" ? { email, password } : { name, email, password };
       const res = await api.post<any>(endpoint, body);
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      router.push("/my-day");
+      router.push(res.user?.profileComplete ? "/my-day" : "/profile");
     } catch (err: any) {
       // If backend login fails, try Firebase auth as fallback
       // (handles case where user reset password via Firebase)

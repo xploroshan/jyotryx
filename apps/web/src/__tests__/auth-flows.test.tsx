@@ -25,6 +25,7 @@ const mockStoreState: Record<string, any> = {
   isAuthenticated: false,
   setAuth: vi.fn(),
   updateCredits: vi.fn(),
+  setProfileComplete: vi.fn(),
   logout: vi.fn(),
 };
 
@@ -112,7 +113,7 @@ describe('Auth Flow: Email Login', () => {
   });
 
   it('should login successfully with email and password', async () => {
-    const mockUser = { id: '1', name: 'Test User', email: 'test@test.com' };
+    const mockUser = { id: '1', name: 'Test User', email: 'test@test.com', profileComplete: true };
     const mockTokens = { accessToken: 'at-123', refreshToken: 'rt-456' };
     mockApiPost.mockResolvedValueOnce({ user: mockUser, tokens: mockTokens });
 
@@ -180,7 +181,7 @@ describe('Auth Flow: Email Signup', () => {
   });
 
   it('should signup successfully with name, email and password', async () => {
-    const mockUser = { id: '2', name: 'New User', email: 'new@test.com' };
+    const mockUser = { id: '2', name: 'New User', email: 'new@test.com', profileComplete: true };
     const mockTokens = { accessToken: 'at-new', refreshToken: 'rt-new' };
     mockApiPost.mockResolvedValueOnce({ user: mockUser, tokens: mockTokens });
 
@@ -271,7 +272,7 @@ describe('Auth Flow: Phone OTP Login', () => {
   });
 
   it('should verify OTP and authenticate with backend', async () => {
-    const mockUser = { id: '3', name: 'Phone User', email: '' };
+    const mockUser = { id: '3', name: 'Phone User', email: '', profileComplete: true };
     const mockTokens = { accessToken: 'at-phone', refreshToken: 'rt-phone' };
     mockApiPost.mockResolvedValueOnce({ user: mockUser, tokens: mockTokens });
 
@@ -378,7 +379,7 @@ describe('Auth Flow: Google Sign-In', () => {
   });
 
   it('should authenticate with Google successfully', async () => {
-    const mockUser = { id: '4', name: 'Google User', email: 'google@test.com' };
+    const mockUser = { id: '4', name: 'Google User', email: 'google@test.com', profileComplete: true };
     const mockTokens = { accessToken: 'at-google', refreshToken: 'rt-google' };
 
     mockSignInWithPopup.mockResolvedValueOnce({
@@ -546,10 +547,18 @@ describe('Auth Flow: Authenticated Redirect', () => {
     resetAllMocks();
   });
 
-  it('should redirect authenticated user to /my-day', () => {
+  it('should redirect authenticated user with complete profile to /my-day', () => {
     mockStoreState.isAuthenticated = true;
+    mockStoreState.user = { id: '1', name: 'Test', email: 't@t.com', profileComplete: true };
     render(<AuthPage />);
     expect(mockReplace).toHaveBeenCalledWith('/my-day');
+  });
+
+  it('should redirect authenticated user with incomplete profile to /profile', () => {
+    mockStoreState.isAuthenticated = true;
+    mockStoreState.user = { id: '1', name: 'Test', email: 't@t.com', profileComplete: false };
+    render(<AuthPage />);
+    expect(mockReplace).toHaveBeenCalledWith('/profile');
   });
 
   it('should open signup tab when mode=signup query param is set', () => {
