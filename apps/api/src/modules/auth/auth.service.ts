@@ -35,6 +35,7 @@ type PrismaUser = {
   timeOfBirth: string | null;
   placeOfBirth: any;
   gender: string | null;
+  preferredLanguage?: string;
 };
 
 export interface AuthTokens {
@@ -51,12 +52,13 @@ export interface AuthResponse {
     phone?: string | null;
     credits: number;
     role: string;
+    preferredLanguage: string;
     profileComplete: boolean;
   };
   tokens: AuthTokens;
 }
 
-function toAuthUser(user: PrismaUser): AuthResponse['user'] {
+function toAuthUser(user: PrismaUser & { preferredLanguage?: string }): AuthResponse['user'] {
   return {
     id: user.id,
     name: user.name,
@@ -64,6 +66,7 @@ function toAuthUser(user: PrismaUser): AuthResponse['user'] {
     phone: user.phone,
     credits: user.credits,
     role: user.role,
+    preferredLanguage: (user as any).preferredLanguage ?? 'en',
     profileComplete: isProfileComplete(user),
   };
 }
