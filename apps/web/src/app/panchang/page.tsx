@@ -18,15 +18,19 @@ interface PanchangData {
   yamakantaka: string;
 }
 
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-IN", hi: "hi-IN", ta: "ta-IN", te: "te-IN", bn: "bn-IN", mr: "mr-IN",
+  gu: "gu-IN", kn: "kn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN", as: "as-IN",
+};
+
 export default function PanchangPage() {
   const { t, locale } = useTranslation();
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchPanchang();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchPanchang(); }, [locale]);
 
   const fetchPanchang = async () => {
     setLoading(true);
@@ -35,11 +39,11 @@ export default function PanchangPage() {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/panchang?locale=${locale}`
       );
-      if (!res.ok) throw new Error("Failed to fetch Panchang data");
+      if (!res.ok) throw new Error(t.panchang.fetchFailed);
       const data = await res.json();
       setPanchang(data);
     } catch (err: any) {
-      setError(err.message || "Could not load Panchang. Please try again later.");
+      setError(err.message || t.panchang.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -118,7 +122,7 @@ export default function PanchangPage() {
             <div className="surface-card p-6 mb-8 text-center">
               <p className="text-sm text-white/30 mb-1">{t.panchang.date}</p>
               <p className="text-2xl font-bold text-white">
-                {new Date(panchang.date).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
               <p className="text-sm text-accent-400 mt-1">{panchang.vara}</p>
             </div>

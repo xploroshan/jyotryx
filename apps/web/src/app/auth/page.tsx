@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { useTranslation } from "@/i18n";
 import { LogoMark } from "@/components/ui/Logo";
 import {
   auth,
@@ -18,6 +19,7 @@ import {
 import type { ConfirmationResult } from "firebase/auth";
 
 function AuthPageContent() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -70,9 +72,9 @@ function AuthPageContent() {
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       router.push(res.user?.profileComplete ? "/my-day" : "/profile");
     } catch (err: any) {
-      throw new Error(err.message || "Failed to authenticate with server. Please try again.");
+      throw new Error(err.message || t.auth.errServerAuthFailed);
     }
-  }, [setAuth, router]);
+  }, [setAuth, router, t]);
 
   const setupRecaptcha = useCallback(() => {
     // Clear previous verifier to avoid stale instances
@@ -88,7 +90,7 @@ function AuthPageContent() {
   }, []);
 
   const handleSendOtp = async () => {
-    if (phone.length < 10) { setError("Please enter a valid 10-digit phone number"); return; }
+    if (phone.length < 10) { setError(t.auth.errPhoneInvalid); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       setupRecaptcha();
@@ -96,7 +98,7 @@ function AuthPageContent() {
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current!);
       confirmationResultRef.current = result;
       setOtpSent(true);
-      setSuccess("OTP sent successfully! Check your phone.");
+      setSuccess(t.auth.errOtpSent);
     } catch (err: any) {
       // Reset recaptcha on error so it can be re-initialized
       if (recaptchaVerifierRef.current) {
@@ -104,24 +106,24 @@ function AuthPageContent() {
         recaptchaVerifierRef.current = null;
       }
       if (err.code === "auth/too-many-requests") {
-        setError("Too many attempts. Please try again later.");
+        setError(t.auth.errTooManyAttempts);
       } else if (err.code === "auth/invalid-phone-number") {
-        setError("Invalid phone number. Please check and try again.");
+        setError(t.auth.errPhoneInvalidFirebase);
       } else if (err.code === "auth/invalid-app-credential" || err.code === "auth/captcha-check-failed") {
-        setError("Verification failed. Please refresh the page and try again.");
+        setError(t.auth.errVerificationFailed);
       } else if (err.code === "auth/quota-exceeded") {
-        setError("SMS quota exceeded. Please try again later or use email login.");
+        setError(t.auth.errSmsQuotaExceeded);
       } else if (err.code === "auth/operation-not-allowed") {
-        setError("Phone authentication is not enabled. Please use email or Google sign-in.");
+        setError(t.auth.errPhoneAuthDisabled);
       } else {
-        setError(err.message || "Failed to send OTP. Please try again.");
+        setError(err.message || t.auth.errSendOtpFailed);
       }
     } finally { setLoading(false); }
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length < 6) { setError("Please enter the 6-digit OTP"); return; }
-    if (!confirmationResultRef.current) { setError("Please request OTP first"); return; }
+    if (otp.length < 6) { setError(t.auth.errEnterOtp); return; }
+    if (!confirmationResultRef.current) { setError(t.auth.errRequestOtpFirst); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       const credential = await confirmationResultRef.current.confirm(otp);
@@ -129,14 +131,14 @@ function AuthPageContent() {
       await authenticateWithBackend(idToken);
     } catch (err: any) {
       if (err.code === "auth/invalid-verification-code") {
-        setError("Invalid OTP. Please check and try again.");
+        setError(t.auth.errInvalidOtp);
       } else if (err.code === "auth/code-expired") {
-        setError("OTP has expired. Please request a new one.");
+        setError(t.auth.errOtpExpired);
         setOtpSent(false);
         setOtp("");
         confirmationResultRef.current = null;
       } else {
-        setError(err.message || "OTP verification failed. Please try again.");
+        setError(err.message || t.auth.errOtpFailed);
       }
     } finally { setLoading(false); }
   };
@@ -152,17 +154,17 @@ function AuthPageContent() {
       if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
         // User closed popup, don't show error
       } else if (err.code === "auth/popup-blocked") {
-        setError("Popup was blocked by your browser. Please allow popups and try again.");
+        setError(t.auth.errPopupBlocked);
       } else {
-        setError(err.message || "Google sign-in failed. Please try again.");
+        setError(err.message || t.auth.errGoogleFailed);
       }
     } finally { setGoogleLoading(false); }
   };
 
   const handleEmailAuth = async () => {
-    if (!email) { setError("Please enter your email"); return; }
-    if (!password || password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (tab === "signup" && !name) { setError("Please enter your name"); return; }
+    if (!email) { setError(t.auth.errEnterEmail); return; }
+    if (!password || password.length < 8) { setError(t.auth.errPasswordShort); return; }
+    if (tab === "signup" && !name) { setError(t.auth.errEnterName); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
@@ -183,33 +185,33 @@ function AuthPageContent() {
           // Firebase fallback also failed, show original error
         }
       }
-      setError(err.message || "Authentication failed");
+      setError(err.message || t.auth.errAuthFailed);
     }
     finally { setLoading(false); }
   };
 
   const handleForgotPassword = async () => {
-    if (!resetEmail) { setError("Please enter your email address"); return; }
+    if (!resetEmail) { setError(t.auth.errEnterEmailReset); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       // First, tell the backend to ensure user exists in Firebase Auth
       await api.post("/auth/forgot-password", { email: resetEmail });
       // Then send the password reset email via Firebase client SDK
       await sendPasswordResetEmail(auth, resetEmail);
-      setSuccess("Password reset email sent! Check your inbox.");
+      setSuccess(t.auth.errResetLinkSent);
       setTimeout(() => {
         setShowForgotPassword(false);
         setSuccess("");
       }, 3000);
     } catch (err: any) {
       if (err.code === "auth/user-not-found") {
-        setError("No account found with this email address.");
+        setError(t.auth.errNoAccountFound);
       } else if (err.code === "auth/invalid-email") {
-        setError("Please enter a valid email address.");
+        setError(t.auth.errEmailInvalid);
       } else if (err.code === "auth/too-many-requests") {
-        setError("Too many requests. Please try again later.");
+        setError(t.auth.errResetTooManyRequests);
       } else {
-        setError(err.message || "Failed to send reset email. Please try again.");
+        setError(err.message || t.auth.errResetFailed);
       }
     } finally { setLoading(false); }
   };
@@ -225,7 +227,7 @@ function AuthPageContent() {
   };
 
   const strength = passwordStrength(password);
-  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong", "Very Strong"][strength] || "";
+  const strengthLabel = ["", t.auth.strengthWeak, t.auth.strengthFair, t.auth.strengthGood, t.auth.strengthStrong, t.auth.strengthVeryStrong][strength] || "";
   const strengthColor = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"][strength] || "";
 
   return (
@@ -238,9 +240,9 @@ function AuthPageContent() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-semibold text-white">Jyotron</span>
+            <span className="text-lg font-semibold text-white">{t.auth.brandName}</span>
           </Link>
-          <p className="text-sm text-white/40">Vedic astrology platform</p>
+          <p className="text-sm text-white/40">{t.auth.subtitle}</p>
         </div>
 
         <div className="surface-card p-6">
@@ -254,12 +256,12 @@ function AuthPageContent() {
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to login
+                {t.auth.backToLogin}
               </button>
 
-              <h2 className="text-base font-semibold text-white mb-1">Reset Password</h2>
+              <h2 className="text-base font-semibold text-white mb-1">{t.auth.forgotTitle}</h2>
               <p className="text-xs text-white/40 mb-5">
-                Enter your email and we&apos;ll send you a link to reset your password.
+                {t.auth.forgotDesc}
               </p>
 
               {error && (
@@ -275,12 +277,12 @@ function AuthPageContent() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-white/40 mb-1.5">Email</label>
+                  <label className="block text-xs text-white/40 mb-1.5">{t.auth.emailLabel}</label>
                   <input
                     type="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder={t.auth.emailPlaceholder}
                     className="w-full px-3 py-2.5 rounded-lg surface-input text-sm"
                     onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
                   />
@@ -290,7 +292,7 @@ function AuthPageContent() {
                   disabled={loading}
                   className="w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50"
                 >
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {loading ? t.auth.sending : t.auth.sendResetLink}
                 </button>
               </div>
             </>
@@ -302,13 +304,13 @@ function AuthPageContent() {
                   onClick={() => { setTab("login"); setError(""); setSuccess(""); }}
                   className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "login" ? "bg-primary-600 text-white" : "text-white/40 hover:text-white/60"}`}
                 >
-                  Log in
+                  {t.auth.tabLogin}
                 </button>
                 <button
                   onClick={() => { setTab("signup"); setError(""); setSuccess(""); }}
                   className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "signup" ? "bg-primary-600 text-white" : "text-white/40 hover:text-white/60"}`}
                 >
-                  Sign up
+                  {t.auth.tabSignup}
                 </button>
               </div>
 
@@ -332,12 +334,12 @@ function AuthPageContent() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                {googleLoading ? "Signing in..." : "Continue with Google"}
+                {googleLoading ? t.auth.signingIn : t.auth.continueWithGoogle}
               </button>
 
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-1 h-px bg-white/[0.06]" />
-                <span className="text-[11px] text-white/25 uppercase">or</span>
+                <span className="text-[11px] text-white/25 uppercase">{t.auth.or}</span>
                 <div className="flex-1 h-px bg-white/[0.06]" />
               </div>
 
@@ -347,13 +349,13 @@ function AuthPageContent() {
                   onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); setSuccess(""); }}
                   className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "phone" ? "bg-white/[0.08] text-white" : "text-white/30 hover:text-white/50"}`}
                 >
-                  Phone (OTP)
+                  {t.auth.phoneOtp}
                 </button>
                 <button
                   onClick={() => { setAuthMethod("email"); setError(""); setSuccess(""); }}
                   className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "email" ? "bg-white/[0.08] text-white" : "text-white/30 hover:text-white/50"}`}
                 >
-                  Email
+                  {t.auth.emailMethod}
                 </button>
               </div>
 
@@ -361,8 +363,8 @@ function AuthPageContent() {
               <div className="space-y-3">
                 {tab === "signup" && authMethod === "email" && (
                   <div>
-                    <label className="block text-xs text-white/40 mb-1.5">Full Name</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name"
+                    <label className="block text-xs text-white/40 mb-1.5">{t.auth.fullNameLabel}</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.auth.fullNamePlaceholder}
                       className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
                   </div>
                 )}
@@ -370,48 +372,48 @@ function AuthPageContent() {
                 {authMethod === "phone" ? (
                   <>
                     <div>
-                      <label className="block text-xs text-white/40 mb-1.5">Phone Number</label>
+                      <label className="block text-xs text-white/40 mb-1.5">{t.auth.phoneNumberLabel}</label>
                       <div className="flex gap-2">
                         <span className="flex items-center px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/30 text-sm">+91</span>
-                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="Phone number"
+                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder={t.auth.phoneNumberPlaceholder}
                           disabled={otpSent} className="flex-1 px-3 py-2.5 rounded-lg surface-input text-sm disabled:opacity-40" />
                       </div>
                     </div>
 
                     {otpSent && (
                       <div>
-                        <label className="block text-xs text-white/40 mb-1.5">Enter OTP</label>
-                        <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit OTP" maxLength={6}
+                        <label className="block text-xs text-white/40 mb-1.5">{t.auth.enterOtpLabel}</label>
+                        <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder={t.auth.enterOtpPlaceholder} maxLength={6}
                           className="w-full px-3 py-2.5 rounded-lg surface-input text-sm tracking-[0.3em] text-center"
                           onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()} />
                         <div className="flex items-center justify-between mt-2">
-                          <button onClick={handleSendOtp} disabled={loading} className="text-[11px] text-primary-400 hover:text-primary-300">Resend OTP</button>
-                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); confirmationResultRef.current = null; }} className="text-[11px] text-white/30 hover:text-white/50">Change Number</button>
+                          <button onClick={handleSendOtp} disabled={loading} className="text-[11px] text-primary-400 hover:text-primary-300">{t.auth.resendOtp}</button>
+                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); confirmationResultRef.current = null; }} className="text-[11px] text-white/30 hover:text-white/50">{t.auth.changeNumber}</button>
                         </div>
                       </div>
                     )}
 
                     <button onClick={otpSent ? handleVerifyOtp : handleSendOtp} disabled={loading}
                       className="w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50">
-                      {loading ? "Please wait..." : otpSent ? "Verify & Continue" : "Send OTP"}
+                      {loading ? t.auth.pleaseWait : otpSent ? t.auth.verifyContinue : t.auth.sendOtp}
                     </button>
                   </>
                 ) : (
                   <>
                     <div>
-                      <label className="block text-xs text-white/40 mb-1.5">Email</label>
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+                      <label className="block text-xs text-white/40 mb-1.5">{t.auth.emailLabel}</label>
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.auth.emailPlaceholder}
                         className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-white/40 mb-1.5">Password</label>
+                      <label className="block text-xs text-white/40 mb-1.5">{t.auth.passwordLabel}</label>
                       <div className="relative">
-                        <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 8 characters"
+                        <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.auth.passwordPlaceholder}
                           className="w-full px-3 py-2.5 pr-14 rounded-lg surface-input text-sm"
                           onKeyDown={(e) => e.key === "Enter" && handleEmailAuth()} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 text-xs">
-                          {showPassword ? "Hide" : "Show"}
+                          {showPassword ? t.auth.hide : t.auth.show}
                         </button>
                       </div>
                       {tab === "signup" && password.length > 0 && (
@@ -435,21 +437,21 @@ function AuthPageContent() {
                           onClick={() => { setShowForgotPassword(true); setResetEmail(email); setError(""); setSuccess(""); }}
                           className="text-[11px] text-primary-400 hover:text-primary-300 transition-colors"
                         >
-                          Forgot password?
+                          {t.auth.forgotPassword}
                         </button>
                       </div>
                     )}
 
                     <button onClick={handleEmailAuth} disabled={loading}
                       className="w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50">
-                      {loading ? "Please wait..." : tab === "login" ? "Log in" : "Create Account"}
+                      {loading ? t.auth.pleaseWait : tab === "login" ? t.auth.loginButton : t.auth.createAccount}
                     </button>
                   </>
                 )}
               </div>
 
               <p className="text-[11px] text-white/20 text-center mt-5">
-                By continuing, you agree to our Terms of Service and Privacy Policy.
+                {t.auth.terms}
               </p>
             </>
           )}

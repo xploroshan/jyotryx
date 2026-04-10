@@ -4,30 +4,33 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
-
-const defaultPlans = [
-  {
-    id: "free", name: "Free", price: 0, period: "",
-    features: ["Limited consultations", "Astrologer Chat", "Daily Horoscope", "Panchang Access"],
-    cta: "Get Started", popular: false,
-  },
-  {
-    id: "monthly", name: "Premium", price: 499, period: "/month",
-    features: ["Unlimited Chat", "Kundli Generation", "Kundli Matching", "Palmistry Analysis", "All Horoscopes", "Muhurat Finder", "Report Generation", "Priority Support"],
-    cta: "Subscribe", popular: true,
-  },
-  {
-    id: "annual", name: "Annual", price: 4999, period: "/year",
-    features: ["Everything in Premium", "Save 17% (2 months free)", "Exclusive Annual Reports", "Early access to features", "Dedicated support"],
-    cta: "Best Value", popular: false,
-  },
-];
+import { useTranslation } from "@/i18n";
 
 export default function PricingPage() {
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const { isAuthenticated, accessToken } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  const defaultPlans = [
+    {
+      id: "free", name: t.pricing.planFreeName, price: 0, period: "",
+      features: [t.pricing.featFreeLimited, t.pricing.featFreeChat, t.pricing.featFreeHoroscope, t.pricing.featFreePanchang],
+      cta: t.pricing.ctaGetStarted, popular: false,
+    },
+    {
+      id: "monthly", name: t.pricing.planPremiumName, price: 499, period: t.pricing.perMonth,
+      features: [t.pricing.featPremiumChat, t.pricing.featPremiumKundli, t.pricing.featPremiumMatching, t.pricing.featPremiumPalm, t.pricing.featPremiumHoroscope, t.pricing.featPremiumMuhurat, t.pricing.featPremiumReports, t.pricing.featPremiumSupport],
+      cta: t.pricing.ctaSubscribe, popular: true,
+    },
+    {
+      id: "annual", name: t.pricing.planAnnualName, price: 4999, period: t.pricing.perYear,
+      features: [t.pricing.featAnnualAll, t.pricing.featAnnualSave, t.pricing.featAnnualReports, t.pricing.featAnnualEarly, t.pricing.featAnnualDedicated],
+      cta: t.pricing.ctaBestValue, popular: false,
+    },
+  ];
+
   const [plans, setPlans] = useState(defaultPlans);
 
   useEffect(() => {
@@ -40,7 +43,8 @@ export default function PricingPage() {
         return p;
       }));
     }).catch(() => {});
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   const handleSubscribe = async (planId: string) => {
     if (!isAuthenticated) { router.push("/auth?mode=signup"); return; }
@@ -49,7 +53,7 @@ export default function PricingPage() {
     try {
       const res = await api.post<{ subscriptionId: string; shortUrl?: string }>("/payments/subscribe", { plan: planId === "monthly" ? "MONTHLY" : "ANNUAL" }, { token: accessToken! });
       if (res.shortUrl) window.location.href = res.shortUrl;
-    } catch (err: any) { setError(err.message || "Failed to create subscription."); }
+    } catch (err: any) { setError(err.message || t.pricing.subscribeFailed); }
     finally { setLoading(null); }
   };
 
@@ -60,10 +64,10 @@ export default function PricingPage() {
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
-          Simple, transparent <span className="text-gradient">pricing</span>
+          {t.pricing.titlePart1} <span className="text-gradient">{t.pricing.titleHighlight}</span>
         </h1>
         <p className="text-sm text-white/40 max-w-md mx-auto">
-          Unlock unlimited access to Vedic astrology insights.
+          {t.pricing.subtitle}
         </p>
       </div>
 
@@ -77,7 +81,7 @@ export default function PricingPage() {
           <div key={plan.id} className={`surface-card p-6 relative ${plan.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
             {plan.popular && (
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary-600 text-[11px] font-medium text-white">
-                Most Popular
+                {t.pricing.mostPopular}
               </div>
             )}
             <h3 className="text-sm font-semibold text-white mb-1">{plan.name}</h3>
@@ -88,7 +92,7 @@ export default function PricingPage() {
                   <span className="text-xs text-white/30">{plan.period}</span>
                 </>
               ) : (
-                <span className="text-3xl font-bold text-white">Free</span>
+                <span className="text-3xl font-bold text-white">{t.pricing.free}</span>
               )}
             </div>
             <ul className="space-y-2.5 mb-6">
@@ -106,7 +110,7 @@ export default function PricingPage() {
               disabled={loading === plan.id}
               className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${plan.popular ? "btn-primary" : "btn-secondary"}`}
             >
-              {loading === plan.id ? "Processing..." : plan.cta}
+              {loading === plan.id ? t.pricing.processing : plan.cta}
             </button>
           </div>
         ))}

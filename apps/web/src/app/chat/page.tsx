@@ -60,7 +60,7 @@ export default function ChatPage() {
       setSessionId(res.session.id);
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply.content }]);
     } catch (err: any) {
-      setError(err.message || "Failed to send message");
+      setError(err.message || t.chat.sendFailed);
       setMessages((prev) => [...prev, { role: "assistant", content: t.chat.errorMsg }]);
     } finally {
       setIsTyping(false);

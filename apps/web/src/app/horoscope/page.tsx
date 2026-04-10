@@ -15,18 +15,18 @@ export default function HoroscopePage() {
   const { t, locale } = useTranslation();
 
   const zodiacSigns = [
-    { id: "aries", name: t.horoscope.aries, symbol: "\u2648", date: "Apr 14 - May 14", element: t.horoscope.fire },
-    { id: "taurus", name: t.horoscope.taurus, symbol: "\u2649", date: "May 15 - Jun 14", element: t.horoscope.earth },
-    { id: "gemini", name: t.horoscope.gemini, symbol: "\u264A", date: "Jun 15 - Jul 16", element: t.horoscope.air },
-    { id: "cancer", name: t.horoscope.cancer, symbol: "\u264B", date: "Jul 17 - Aug 16", element: t.horoscope.water },
-    { id: "leo", name: t.horoscope.leo, symbol: "\u264C", date: "Aug 17 - Sep 16", element: t.horoscope.fire },
-    { id: "virgo", name: t.horoscope.virgo, symbol: "\u264D", date: "Sep 17 - Oct 16", element: t.horoscope.earth },
-    { id: "libra", name: t.horoscope.libra, symbol: "\u264E", date: "Oct 17 - Nov 15", element: t.horoscope.air },
-    { id: "scorpio", name: t.horoscope.scorpio, symbol: "\u264F", date: "Nov 16 - Dec 15", element: t.horoscope.water },
-    { id: "sagittarius", name: t.horoscope.sagittarius, symbol: "\u2650", date: "Dec 16 - Jan 13", element: t.horoscope.fire },
-    { id: "capricorn", name: t.horoscope.capricorn, symbol: "\u2651", date: "Jan 14 - Feb 12", element: t.horoscope.earth },
-    { id: "aquarius", name: t.horoscope.aquarius, symbol: "\u2652", date: "Feb 13 - Mar 14", element: t.horoscope.air },
-    { id: "pisces", name: t.horoscope.pisces, symbol: "\u2653", date: "Mar 15 - Apr 13", element: t.horoscope.water },
+    { id: "aries", name: t.horoscope.aries, symbol: "\u2648", date: t.horoscope.zdAries, element: t.horoscope.fire },
+    { id: "taurus", name: t.horoscope.taurus, symbol: "\u2649", date: t.horoscope.zdTaurus, element: t.horoscope.earth },
+    { id: "gemini", name: t.horoscope.gemini, symbol: "\u264A", date: t.horoscope.zdGemini, element: t.horoscope.air },
+    { id: "cancer", name: t.horoscope.cancer, symbol: "\u264B", date: t.horoscope.zdCancer, element: t.horoscope.water },
+    { id: "leo", name: t.horoscope.leo, symbol: "\u264C", date: t.horoscope.zdLeo, element: t.horoscope.fire },
+    { id: "virgo", name: t.horoscope.virgo, symbol: "\u264D", date: t.horoscope.zdVirgo, element: t.horoscope.earth },
+    { id: "libra", name: t.horoscope.libra, symbol: "\u264E", date: t.horoscope.zdLibra, element: t.horoscope.air },
+    { id: "scorpio", name: t.horoscope.scorpio, symbol: "\u264F", date: t.horoscope.zdScorpio, element: t.horoscope.water },
+    { id: "sagittarius", name: t.horoscope.sagittarius, symbol: "\u2650", date: t.horoscope.zdSagittarius, element: t.horoscope.fire },
+    { id: "capricorn", name: t.horoscope.capricorn, symbol: "\u2651", date: t.horoscope.zdCapricorn, element: t.horoscope.earth },
+    { id: "aquarius", name: t.horoscope.aquarius, symbol: "\u2652", date: t.horoscope.zdAquarius, element: t.horoscope.air },
+    { id: "pisces", name: t.horoscope.pisces, symbol: "\u2653", date: t.horoscope.zdPisces, element: t.horoscope.water },
   ];
 
   const periods = [
@@ -56,25 +56,29 @@ export default function HoroscopePage() {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/horoscope/${selectedSign}?period=${selectedPeriod}&locale=${locale}`
       );
-      if (!res.ok) throw new Error("Failed to fetch horoscope");
+      if (!res.ok) throw new Error(t.horoscope.fetchFailed);
       const data = await res.json();
 
-      const periodLabel = selectedPeriod === "daily" ? "today" : `this ${selectedPeriod.replace("ly", "")}`;
+      const periodLabel =
+        selectedPeriod === "daily" ? t.horoscope.today
+        : selectedPeriod === "weekly" ? t.horoscope.thisWeek
+        : selectedPeriod === "monthly" ? t.horoscope.thisMonth
+        : t.horoscope.thisYear;
 
       // Map API response to our display format
       setHoroscope({
-        overview: data.prediction || "Horoscope data is currently unavailable. Please try again later.",
-        love: data.love || `Compatibility with ${data.compatibility || "Leo"} is highlighted ${periodLabel}. Relationship dynamics are influenced by Venus's current transit, bringing warmth and deeper connections.`,
-        career: data.career || `Professional energy is ${data.mood?.toLowerCase() || "positive"} ${periodLabel}. Planetary transits support strategic decisions and career growth.`,
-        health: data.health || `Your vitality is supported by favorable planetary alignments ${periodLabel}. Maintain a balanced routine and incorporate mindfulness practices for optimal well-being.`,
+        overview: data.prediction || t.horoscope.unavailable,
+        love: data.love || `${data.compatibility || t.horoscope.defaultCompatibleSign} - ${periodLabel}`,
+        career: data.career || `${data.mood || ""} - ${periodLabel}`,
+        health: data.health || `${periodLabel}`,
         lucky: {
           number: String(data.luckyNumber || "7"),
-          color: data.luckyColor || "Purple",
-          time: selectedPeriod === "daily" ? "2:00 PM - 4:00 PM" : "Varies by day",
+          color: data.luckyColor || t.horoscope.defaultLuckyColor,
+          time: selectedPeriod === "daily" ? t.horoscope.defaultLuckyTime : t.horoscope.variesByDay,
         },
       });
     } catch {
-      setError("Could not load horoscope. Please check your connection and try again.");
+      setError(t.horoscope.loadFailed);
       setHoroscope(null);
     } finally {
       setLoading(false);
@@ -82,7 +86,7 @@ export default function HoroscopePage() {
   };
 
   const elementColor = (el: string) =>
-    el === "Fire" ? "text-red-400" : el === "Earth" ? "text-emerald-400" : el === "Air" ? "text-sky-400" : "text-blue-400";
+    el === t.horoscope.fire ? "text-red-400" : el === t.horoscope.earth ? "text-emerald-400" : el === t.horoscope.air ? "text-sky-400" : "text-blue-400";
 
   return (
     <div className="relative min-h-screen">
@@ -184,7 +188,7 @@ export default function HoroscopePage() {
             {/* Overview */}
             <div className="lg:col-span-2 surface-card p-6">
               <h3 className="text-lg font-bold text-gradient mb-4">
-                {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} {t.horoscope.overview}
+                {selectedPeriod === "daily" ? t.horoscope.dailyCap : selectedPeriod === "weekly" ? t.horoscope.weeklyCap : selectedPeriod === "monthly" ? t.horoscope.monthlyCap : t.horoscope.yearlyCap} {t.horoscope.overview}
               </h3>
               <p className="text-white/60 leading-relaxed">{horoscope.overview}</p>
             </div>

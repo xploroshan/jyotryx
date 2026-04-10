@@ -12,29 +12,28 @@ interface PersonForm {
 
 const emptyPerson: PersonForm = { name: "", dob: "", time: "", place: "" };
 
-const mockResults = {
-  totalScore: 28,
-  maxScore: 36,
-  percentage: 78,
-  manglikA: false,
-  manglikB: true,
-  koota: [
-    { name: "Varna", description: "Spiritual compatibility", obtained: 1, max: 1 },
-    { name: "Vashya", description: "Mutual attraction & control", obtained: 2, max: 2 },
-    { name: "Tara", description: "Birth star compatibility", obtained: 3, max: 3 },
-    { name: "Yoni", description: "Physical & sexual compatibility", obtained: 3, max: 4 },
-    { name: "Graha Maitri", description: "Intellectual compatibility", obtained: 5, max: 5 },
-    { name: "Gana", description: "Temperament compatibility", obtained: 4, max: 6 },
-    { name: "Bhakoot", description: "Love & family harmony", obtained: 7, max: 7 },
-    { name: "Nadi", description: "Health & genetic compatibility", obtained: 3, max: 8 },
-  ],
-  verdict: "Good Match",
-  summary:
-    "With a score of 28 out of 36, this is a favorable match for marriage. The couple shares strong intellectual and emotional compatibility. The Bhakoot score is excellent, indicating harmonious family life. The Nadi score suggests some caution regarding health aspects of progeny - simple remedies can address this. Overall, this alliance is recommended with minor considerations.",
-};
-
 export default function MatchingPage() {
   const { t, locale } = useTranslation();
+
+  const mockResults = {
+    totalScore: 28,
+    maxScore: 36,
+    percentage: 78,
+    manglikA: false,
+    manglikB: true,
+    koota: [
+      { name: t.matching.kootaVarna, description: t.matching.kootaVarnaDesc, obtained: 1, max: 1 },
+      { name: t.matching.kootaVashya, description: t.matching.kootaVashyaDesc, obtained: 2, max: 2 },
+      { name: t.matching.kootaTara, description: t.matching.kootaTaraDesc, obtained: 3, max: 3 },
+      { name: t.matching.kootaYoni, description: t.matching.kootaYoniDesc, obtained: 3, max: 4 },
+      { name: t.matching.kootaGrahaMaitri, description: t.matching.kootaGrahaMaitriDesc, obtained: 5, max: 5 },
+      { name: t.matching.kootaGana, description: t.matching.kootaGanaDesc, obtained: 4, max: 6 },
+      { name: t.matching.kootaBhakoot, description: t.matching.kootaBhakootDesc, obtained: 7, max: 7 },
+      { name: t.matching.kootaNadi, description: t.matching.kootaNadiDesc, obtained: 3, max: 8 },
+    ],
+    verdict: t.matching.verdictGood,
+    summary: t.matching.mockSummary,
+  };
   const [personA, setPersonA] = useState<PersonForm>({ ...emptyPerson });
   const [personB, setPersonB] = useState<PersonForm>({ ...emptyPerson });
   const [results, setResults] = useState<typeof mockResults | null>(null);
@@ -77,11 +76,11 @@ export default function MatchingPage() {
           obtained: g.obtainedPoints,
           max: g.maxPoints,
         })) || mockResults.koota,
-        verdict: res.compatibility || (percentage >= 75 ? "Excellent Match" : percentage >= 50 ? "Good Match" : "Average Match"),
+        verdict: res.compatibility || (percentage >= 75 ? t.matching.verdictExcellent : percentage >= 50 ? t.matching.verdictGood : t.matching.verdictAverage),
         summary: res.recommendation || mockResults.summary,
       });
     } catch (err: any) {
-      setError(err.message || "Failed to check compatibility. Please try again.");
+      setError(err.message || t.matching.checkFailed);
     } finally {
       setLoading(false);
     }
@@ -245,13 +244,13 @@ export default function MatchingPage() {
                 <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
                   <span className="text-sm text-white/40">{personA.name || t.matching.personA} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikA ? "text-red-400" : "text-emerald-400"}`}>
-                    {results.manglikA ? "Yes" : "No"}
+                    {results.manglikA ? t.matching.yes : t.matching.no}
                   </span>
                 </div>
                 <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
                   <span className="text-sm text-white/40">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikB ? "text-red-400" : "text-emerald-400"}`}>
-                    {results.manglikB ? "Yes (Mild)" : "No"}
+                    {results.manglikB ? t.matching.yesMild : t.matching.no}
                   </span>
                 </div>
               </div>

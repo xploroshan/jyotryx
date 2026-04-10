@@ -4,26 +4,6 @@ import React, { useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 
-const PROPERTY_TYPES = [
-  { value: "house", label: "House" },
-  { value: "apartment", label: "Apartment" },
-  { value: "office", label: "Office" },
-  { value: "shop", label: "Shop" },
-  { value: "factory", label: "Factory" },
-  { value: "plot", label: "Plot" },
-];
-
-const DIRECTIONS = [
-  { value: "N", label: "North" },
-  { value: "NE", label: "North-East" },
-  { value: "E", label: "East" },
-  { value: "SE", label: "South-East" },
-  { value: "S", label: "South" },
-  { value: "SW", label: "South-West" },
-  { value: "W", label: "West" },
-  { value: "NW", label: "North-West" },
-];
-
 interface VastuResult {
   propertyType: string;
   entrance: { direction: string; score: number; verdict: string; deity: string; element: string };
@@ -41,6 +21,26 @@ export default function VastuPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const PROPERTY_TYPES = [
+    { value: "house", label: t.vastu.propHouse },
+    { value: "apartment", label: t.vastu.propApartment },
+    { value: "office", label: t.vastu.propOffice },
+    { value: "shop", label: t.vastu.propShop },
+    { value: "factory", label: t.vastu.propFactory },
+    { value: "plot", label: t.vastu.propPlot },
+  ];
+
+  const DIRECTIONS = [
+    { value: "N", label: t.vastu.dirN },
+    { value: "NE", label: t.vastu.dirNE },
+    { value: "E", label: t.vastu.dirE },
+    { value: "SE", label: t.vastu.dirSE },
+    { value: "S", label: t.vastu.dirS },
+    { value: "SW", label: t.vastu.dirSW },
+    { value: "W", label: t.vastu.dirW },
+    { value: "NW", label: t.vastu.dirNW },
+  ];
+
   const analyze = async () => {
     setLoading(true);
     setError("");
@@ -49,7 +49,7 @@ export default function VastuPage() {
       const data = await api.post<VastuResult>("/vastu/analyze", { propertyType, entranceDirection, concern: concern || undefined, locale });
       setResult(data);
     } catch (err: any) {
-      setError(err.message || "Analysis failed");
+      setError(err.message || t.vastu.analysisFailed);
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export default function VastuPage() {
           <div className="surface-card p-6 text-center">
             <div className={`text-4xl font-bold ${getScoreColor(result.entrance.score)}`}>{result.entrance.score}/100</div>
             <div className="text-sm text-white/60 mt-1">{result.entrance.verdict}</div>
-            <div className="text-xs text-white/30 mt-2">Entrance: {result.entrance.direction} | Deity: {result.entrance.deity} | Element: {result.entrance.element}</div>
+            <div className="text-xs text-white/30 mt-2">{t.vastu.entrance}: {result.entrance.direction} | {t.vastu.deity}: {result.entrance.deity} | {t.vastu.element}: {result.entrance.element}</div>
           </div>
 
           {/* Summary */}
@@ -141,7 +141,7 @@ export default function VastuPage() {
               {result.directions.map((d) => (
                 <div key={d.direction} className="bg-white/[0.03] rounded-lg p-3">
                   <div className="text-sm font-medium text-white">{d.direction} — {d.deity}</div>
-                  <div className="text-xs text-white/30 mt-1">Element: {d.element}</div>
+                  <div className="text-xs text-white/30 mt-1">{t.vastu.element}: {d.element}</div>
                   <div className="text-xs text-emerald-400/70 mt-1">{t.vastu.bestFor}: {d.suitableRooms.join(", ")}</div>
                   <div className="text-xs text-red-400/70 mt-0.5">{t.vastu.avoid}: {d.avoid.join(", ")}</div>
                 </div>

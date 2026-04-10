@@ -6,6 +6,11 @@ import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
 
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-IN", hi: "hi-IN", ta: "ta-IN", te: "te-IN", bn: "bn-IN", mr: "mr-IN",
+  gu: "gu-IN", kn: "kn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN", as: "as-IN",
+};
+
 interface AuspiciousTime {
   date: string;
   startTime: string;
@@ -65,7 +70,7 @@ export default function MuhuratPage() {
       );
       setResult(data);
     } catch (err: any) {
-      setError(err.message || "Failed to find auspicious times. Please try again.");
+      setError(err.message || t.muhurat.findFailed);
     } finally {
       setLoading(false);
     }
@@ -183,10 +188,10 @@ export default function MuhuratPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <p className="text-lg font-bold text-white">
-                            {new Date(time.date).toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                            {new Date(time.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                           </p>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${qualityColor(time.quality)}`}>
-                            {time.quality.charAt(0).toUpperCase() + time.quality.slice(1)}
+                            {time.quality === "excellent" ? t.muhurat.qualityExcellent : time.quality === "good" ? t.muhurat.qualityGood : t.muhurat.qualityAverage}
                           </span>
                         </div>
                         <p className="text-sm text-primary-400 font-medium mb-1">

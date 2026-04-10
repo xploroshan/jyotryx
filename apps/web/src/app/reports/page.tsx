@@ -4,15 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
-
-const reportTypes = [
-  { id: "LIFE", label: "Life Analysis", icon: "🌟", desc: "Comprehensive life path analysis based on your birth chart", cost: 5 },
-  { id: "CAREER", label: "Career Outlook", icon: "💼", desc: "Professional growth and career trajectory predictions", cost: 5 },
-  { id: "MARRIAGE", label: "Marriage Report", icon: "💒", desc: "Marriage compatibility and timing predictions", cost: 5 },
-  { id: "WEALTH", label: "Wealth Forecast", icon: "💰", desc: "Financial outlook and wealth accumulation insights", cost: 5 },
-  { id: "PALM", label: "Palmistry Report", icon: "🤚", desc: "Detailed palm reading analysis document", cost: 5 },
-  { id: "ANNUAL", label: "Annual Horoscope", icon: "📅", desc: "Complete yearly forecast for all life areas", cost: 5 },
-];
+import { useTranslation } from "@/i18n";
 
 interface Report {
   id: string;
@@ -27,12 +19,22 @@ interface Report {
 
 export default function ReportsPage() {
   const router = useRouter();
-  const { isAuthenticated, accessToken, user } = useAuthStore();
+  const { t, locale } = useTranslation();
+  const { isAuthenticated, accessToken } = useAuthStore();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [activeView, setActiveView] = useState<"generate" | "history">("generate");
+
+  const reportTypes = [
+    { id: "LIFE", label: t.reports.typeLifeName, icon: "🌟", desc: t.reports.typeLifeDesc, cost: 5 },
+    { id: "CAREER", label: t.reports.typeCareerName, icon: "💼", desc: t.reports.typeCareerDesc, cost: 5 },
+    { id: "MARRIAGE", label: t.reports.typeMarriageName, icon: "💒", desc: t.reports.typeMarriageDesc, cost: 5 },
+    { id: "WEALTH", label: t.reports.typeWealthName, icon: "💰", desc: t.reports.typeWealthDesc, cost: 5 },
+    { id: "PALM", label: t.reports.typePalmName, icon: "🤚", desc: t.reports.typePalmDesc, cost: 5 },
+    { id: "ANNUAL", label: t.reports.typeAnnualName, icon: "📅", desc: t.reports.typeAnnualDesc, cost: 5 },
+  ];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -40,6 +42,7 @@ export default function ReportsPage() {
       return;
     }
     loadReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   const loadReports = async () => {
@@ -65,7 +68,7 @@ export default function ReportsPage() {
       setReports((prev) => [res, ...prev]);
       setActiveView("history");
     } catch (err: any) {
-      setError(err.message || "Failed to generate report.");
+      setError(err.message || t.reports.reportFailed);
     } finally {
       setGenerating(null);
     }
@@ -89,13 +92,13 @@ export default function ReportsPage() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
             <span className="text-lg">📄</span>
-            Astrology Reports
+            {t.reports.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            Your <span className="text-gradient">Reports</span>
+            {t.reports.titlePart1} <span className="text-gradient">{t.reports.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
-            Generate detailed astrology reports based on your birth chart.
+            {t.reports.subtitle}
           </p>
         </div>
 
@@ -104,7 +107,7 @@ export default function ReportsPage() {
           {(["generate", "history"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveView(tab)}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-white" : "text-white/40 hover:text-white"}`}>
-              {tab === "generate" ? "Generate New" : `My Reports (${reports.length})`}
+              {tab === "generate" ? t.reports.generateNew : `${t.reports.myReports} (${reports.length})`}
             </button>
           ))}
         </div>
@@ -127,7 +130,7 @@ export default function ReportsPage() {
                     disabled={generating === rt.id}
                     className="px-4 py-2 rounded-xl btn-primary text-sm text-white font-medium  transition-all disabled:opacity-50"
                   >
-                    {generating === rt.id ? "Generating..." : "Generate"}
+                    {generating === rt.id ? t.reports.generating : t.reports.generate}
                   </button>
                 </div>
               </div>
@@ -147,9 +150,9 @@ export default function ReportsPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="surface-card p-12 text-center">
-                <p className="text-white/30 mb-4">No reports generated yet</p>
+                <p className="text-white/30 mb-4">{t.reports.noReports}</p>
                 <button onClick={() => setActiveView("generate")} className="px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1]">
-                  Generate Your First Report
+                  {t.reports.firstReport}
                 </button>
               </div>
             ) : (
@@ -164,13 +167,13 @@ export default function ReportsPage() {
                       </div>
                       <p className="text-sm text-white/40">{report.summary}</p>
                       <p className="text-xs text-white/20 mt-1">
-                        Generated {new Date(report.createdAt).toLocaleDateString()}
+                        {t.reports.generatedOn} {new Date(report.createdAt).toLocaleDateString(locale === "en" ? "en-IN" : locale)}
                       </p>
                     </div>
                     {report.pdfUrl && (
                       <a href={report.pdfUrl} target="_blank" rel="noopener noreferrer"
                         className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1] transition-all shrink-0">
-                        Download PDF
+                        {t.reports.downloadPdf}
                       </a>
                     )}
                   </div>
