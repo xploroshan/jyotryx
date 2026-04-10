@@ -41,7 +41,7 @@ export default function Navbar() {
   const showAuth = mounted && isAuthenticated;
 
   const featureLinkClass =
-    "px-3 py-1.5 text-[13px] text-white/60 hover:text-white rounded-md hover:bg-white/[0.06] transition-colors duration-150";
+    "px-3 py-1.5 text-[13px] text-white/60 hover:text-white rounded-md hover:bg-white/[0.06] transition-colors duration-150 text-center min-w-[96px]";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-lg border-b divider">
@@ -119,7 +119,7 @@ export default function Navbar() {
 
         {/* Row 2: Feature navigation (desktop only) */}
         <div className="hidden lg:flex items-center justify-center h-11 border-t border-white/[0.04]">
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             {dailyGroup.map((link) => (
               <Link key={link.href} href={link.href} className={featureLinkClass}>
                 {link.label}
@@ -127,9 +127,9 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="h-4 w-px bg-white/10 mx-4" aria-hidden />
+          <div className="h-3 w-px bg-white/10 mx-3" aria-hidden />
 
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             {chartsGroup.map((link) => (
               <Link key={link.href} href={link.href} className={featureLinkClass}>
                 {link.label}
@@ -137,9 +137,9 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="h-4 w-px bg-white/10 mx-4" aria-hidden />
+          <div className="h-3 w-px bg-white/10 mx-3" aria-hidden />
 
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             {readingsGroup.map((link) => (
               <Link key={link.href} href={link.href} className={featureLinkClass}>
                 {link.label}
