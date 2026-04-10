@@ -1034,6 +1034,11 @@ export const mr: TranslationKeys = {
     featAnnualReports: 'Exclusive Annual Reports',
     featAnnualEarly: 'Early access to features',
     featAnnualDedicated: 'Dedicated support',
+    creditPacksTitle: 'क्रेडिट पॅक',
+    creditPacksSubtitle: 'एकदा क्रेडिट खरेदी करा, कधीही वापरा.',
+    credits: 'क्रेडिट्स',
+    buyNow: 'आत्ता खरेदी करा',
+    bestValue: 'सर्वोत्तम मूल्य',
   },
   reports: {
     badge: 'Astrology Reports',

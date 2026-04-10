@@ -74,10 +74,11 @@ export class PalmistryService {
     const palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
 
     if (client && imageBuffer) {
+      const visionModel = this.openaiService.getModelForFeature('vision');
       try {
         const base64Image = imageBuffer.toString('base64');
         const completion = await client.chat.completions.create({
-          model: this.openaiService.getModelForFeature('vision'),
+          model: visionModel,
           messages: [
             {
               role: 'system',
@@ -93,6 +94,14 @@ export class PalmistryService {
           ],
           max_tokens: 1500,
           response_format: { type: 'json_object' },
+        });
+
+        // Track per-user LLM cost — fire-and-forget.
+        this.openaiService.recordUsage?.({
+          userId,
+          feature: 'palmistry',
+          model: visionModel,
+          usage: completion?.usage,
         });
 
         const content = completion.choices[0]?.message?.content;

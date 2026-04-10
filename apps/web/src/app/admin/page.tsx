@@ -94,6 +94,45 @@ interface UserDetail {
   };
 }
 
+interface PlatformAnalytics {
+  sessionsToday: number;
+  sessionsLast7Days: number;
+  avgSessionsPerDay: number;
+  avgChatLength: number;
+  creditsConsumedToday: number;
+  creditsConsumedLast7Days: number;
+  revenueTrend: Array<{ date: string; revenue: number }>;
+  featureUsage: Array<{ feature: string; count: number; percent: number }>;
+  conversionRate: number;
+  retention: { day1: number; day7: number; day30: number };
+  llmTotals: {
+    callsLast7Days: number;
+    totalCostUsdLast7Days: number;
+    totalTokensLast7Days: number;
+  };
+}
+
+interface LlmCostRow {
+  userId: string | null;
+  userName: string | null;
+  userEmail: string | null;
+  calls: number;
+  totalTokens: number;
+  totalCostUsd: number;
+}
+
+interface ContentStats {
+  knowledgeDocuments: number;
+  knowledgeCategories: Array<{ category: string; count: number }>;
+  tarotReadings: number;
+  kundliCharts: number;
+  reports: number;
+  palmistryReadings: number;
+  matchingResults: number;
+  chatSessions: number;
+  notifications: number;
+}
+
 interface ActivityLog {
   id: string;
   adminId: string;
@@ -730,18 +769,54 @@ export default function AdminPage() {
   const [aiSaving, setAiSaving] = useState(false);
   const [aiSubTab, setAiSubTab] = useState<"providers" | "usage" | "features">("providers");
 
+  // Analytics state
+  const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
+  const [llmCosts, setLlmCosts] = useState<LlmCostRow[]>([]);
+  const [llmCostDays, setLlmCostDays] = useState(30);
+
+  // Content state
+  const [contentStats, setContentStats] = useState<ContentStats | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated || user?.role !== "ADMIN") {
       router.push("/auth");
       return;
     }
     loadData();
-  }, [isAuthenticated, user, activeTab, userPage]);
+  }, [isAuthenticated, user, activeTab, userPage, llmCostDays]);
 
   const loadData = async () => {
     if (!accessToken) return;
-    if (activeTab === "analytics" || activeTab === "content" || activeTab === "activity") {
+    if (activeTab === "activity") {
       setLoading(false);
+      return;
+    }
+    if (activeTab === "analytics") {
+      setLoading(true);
+      try {
+        const [a, l] = await Promise.all([
+          api.get<PlatformAnalytics>("/admin/analytics", { token: accessToken }),
+          api.get<LlmCostRow[]>(`/admin/analytics/llm-costs?limit=20&days=${llmCostDays}`, { token: accessToken }),
+        ]);
+        setAnalytics(a);
+        setLlmCosts(l);
+      } catch (err: any) {
+        setError(err.message || "Failed to load analytics");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    if (activeTab === "content") {
+      setLoading(true);
+      try {
+        const c = await api.get<ContentStats>("/admin/content/stats", { token: accessToken });
+        setContentStats(c);
+      } catch (err: any) {
+        setError(err.message || "Failed to load content stats");
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     if (activeTab === "ai") {
@@ -914,14 +989,20 @@ export default function AdminPage() {
     }
   };
 
-  const contentSections = [
-    { title: "Horoscope Content", desc: "Daily, weekly, monthly horoscope templates", items: 12, lastUpdated: "Today" },
-    { title: "Panchang Data", desc: "Hindu calendar data and calculations", items: 365, lastUpdated: "Daily auto-update" },
-    { title: "Remedy Database", desc: "Gemstones, mantras, pujas, and fasting recommendations", items: 156, lastUpdated: "2 days ago" },
-    { title: "Knowledge Base", desc: "RAG documents for AI agent context", items: 48, lastUpdated: "1 week ago" },
-    { title: "Report Templates", desc: "Templates for Life, Career, Marriage, Wealth, Palm, Annual reports", items: 6, lastUpdated: "3 days ago" },
-    { title: "Zodiac Profiles", desc: "Detailed sign descriptions and characteristics", items: 12, lastUpdated: "1 month ago" },
-  ];
+  const buildContentSections = (cs: ContentStats | null) => {
+    if (!cs) return [];
+    return [
+      { title: "Knowledge Base", desc: "RAG documents for AI agent context", items: cs.knowledgeDocuments },
+      { title: "Kundli Charts", desc: "User-generated birth charts", items: cs.kundliCharts },
+      { title: "Chat Sessions", desc: "AI astrology consultation threads", items: cs.chatSessions },
+      { title: "Reports", desc: "Generated life, career, and marriage reports", items: cs.reports },
+      { title: "Palmistry Readings", desc: "Palm image analyses performed", items: cs.palmistryReadings },
+      { title: "Matching Results", desc: "Kundli compatibility reports", items: cs.matchingResults },
+      { title: "Tarot Readings", desc: "Tarot card spread consultations", items: cs.tarotReadings },
+      { title: "Notifications", desc: "User push / in-app notifications", items: cs.notifications },
+    ];
+  };
+  const contentSections = buildContentSections(contentStats);
 
   const userTotalPages = Math.ceil(userTotal / 20);
 
@@ -1031,61 +1112,132 @@ export default function AdminPage() {
             {activeTab === "analytics" && (
               <div>
                 <h2 className="text-xl font-bold text-gradient mb-6">Platform Analytics</h2>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {[
-                    { label: "Avg. Sessions/Day", value: "342", change: "+12%", positive: true },
-                    { label: "Avg. Chat Length", value: "4.7 msgs", change: "+8%", positive: true },
-                    { label: "Credit Consumption", value: "1,240/day", change: "+15%", positive: true },
-                    { label: "API Response Time", value: "1.8s", change: "-5%", positive: true },
-                    { label: "User Retention (7d)", value: "68%", change: "+3%", positive: true },
-                    { label: "Conversion Rate", value: "4.2%", change: "-0.3%", positive: false },
-                  ].map((m) => (
-                    <div key={m.label} className="surface-card p-5">
-                      <p className="text-xs text-white/30 mb-1">{m.label}</p>
-                      <div className="flex items-end gap-2">
-                        <p className="text-2xl font-bold text-white">{m.value}</p>
-                        <span className={`text-xs font-medium mb-1 ${m.positive ? "text-emerald-400" : "text-red-400"}`}>{m.change}</span>
+                {!analytics ? (
+                  <div className="surface-card p-8 text-center text-white/40 text-sm">Loading analytics…</div>
+                ) : (
+                  <>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                      {[
+                        { label: "Sessions Today", value: analytics.sessionsToday.toLocaleString() },
+                        { label: "Avg. Sessions/Day (7d)", value: analytics.avgSessionsPerDay.toLocaleString() },
+                        { label: "Avg. Chat Length", value: `${analytics.avgChatLength} msgs` },
+                        { label: "Credits Used (Today)", value: analytics.creditsConsumedToday.toLocaleString() },
+                        { label: "Credits Used (7d)", value: analytics.creditsConsumedLast7Days.toLocaleString() },
+                        { label: "User Retention (30d)", value: `${analytics.retention.day30}%` },
+                        { label: "Conversion Rate", value: `${analytics.conversionRate}%` },
+                        { label: "LLM Calls (7d)", value: analytics.llmTotals.callsLast7Days.toLocaleString() },
+                        { label: "LLM Cost (7d)", value: `$${analytics.llmTotals.totalCostUsdLast7Days.toFixed(4)}` },
+                      ].map((m) => (
+                        <div key={m.label} className="surface-card p-5">
+                          <p className="text-xs text-white/30 mb-1">{m.label}</p>
+                          <div className="flex items-end gap-2">
+                            <p className="text-2xl font-bold text-white">{m.value}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <h3 className="text-lg font-bold text-white mb-4">Feature Usage Breakdown</h3>
+                    <div className="surface-card p-6 mb-8">
+                      {analytics.featureUsage.length === 0 || analytics.featureUsage.every((f) => f.count === 0) ? (
+                        <p className="text-sm text-white/40 text-center py-4">No feature usage data yet</p>
+                      ) : (
+                        analytics.featureUsage.map((f, i) => {
+                          const colors = [
+                            "from-blue-500 to-cyan-500",
+                            "from-purple-500 to-violet-500",
+                            "from-red-500 to-orange-500",
+                            "from-pink-500 to-rose-500",
+                            "from-emerald-500 to-green-500",
+                            "from-yellow-500 to-amber-500",
+                          ];
+                          return (
+                            <div key={f.feature} className="flex items-center gap-4 mb-3 last:mb-0">
+                              <span className="text-sm text-white/40 w-20">{f.feature}</span>
+                              <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden">
+                                <div className={`h-full bg-gradient-to-r ${colors[i % colors.length]} rounded-full transition-all`} style={{ width: `${f.percent}%` }} />
+                              </div>
+                              <span className="text-sm font-medium text-white w-16 text-right">{f.count.toLocaleString()}</span>
+                              <span className="text-xs text-white/30 w-12 text-right">{f.percent}%</span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <h3 className="text-lg font-bold text-white mb-4">Revenue Trend (Last 7 Days)</h3>
+                    <div className="surface-card p-6 mb-8">
+                      {(() => {
+                        const maxRev = Math.max(...analytics.revenueTrend.map((d) => d.revenue), 1);
+                        const total = analytics.revenueTrend.reduce((sum, d) => sum + d.revenue, 0);
+                        return (
+                          <>
+                            <div className="flex items-end gap-2 h-40">
+                              {analytics.revenueTrend.map((d) => {
+                                const label = new Date(d.date).toLocaleDateString("en-IN", { weekday: "short" });
+                                return (
+                                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+                                    <div className="w-full bg-gradient-to-t from-primary-600 to-mystic-500 rounded-t-lg transition-all" style={{ height: `${Math.max((d.revenue / maxRev) * 100, 2)}%` }} />
+                                    <span className="text-[10px] text-white/30">{label}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
+                              <span className="text-sm text-white/40">Weekly Total</span>
+                              <span className="text-lg font-bold text-gradient">{formatCurrency(total)}</span>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-white">LLM Cost Per User</h3>
+                      <select
+                        value={llmCostDays}
+                        onChange={(e) => setLlmCostDays(Number(e.target.value))}
+                        className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-xs focus:outline-none focus:border-primary-500"
+                      >
+                        <option value={7}>Last 7 days</option>
+                        <option value={30}>Last 30 days</option>
+                        <option value={90}>Last 90 days</option>
+                      </select>
+                    </div>
+                    <div className="surface-card overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-white/[0.06]">
+                              <th className="text-left px-4 py-3 text-xs font-medium text-white/40">User</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Email</th>
+                              <th className="text-right px-4 py-3 text-xs font-medium text-white/40">Calls</th>
+                              <th className="text-right px-4 py-3 text-xs font-medium text-white/40">Tokens</th>
+                              <th className="text-right px-4 py-3 text-xs font-medium text-white/40">Cost (USD)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {llmCosts.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="px-4 py-6 text-center text-white/30 text-xs">No LLM usage recorded in this period.</td>
+                              </tr>
+                            ) : (
+                              llmCosts.map((row, idx) => (
+                                <tr key={`${row.userId ?? 'unknown'}-${idx}`} className="border-b border-white/5">
+                                  <td className="px-4 py-3 text-white">{row.userName ?? <span className="text-white/30 italic">Deleted user</span>}</td>
+                                  <td className="px-4 py-3 text-white/60">{row.userEmail ?? "—"}</td>
+                                  <td className="px-4 py-3 text-right text-white/80">{row.calls.toLocaleString()}</td>
+                                  <td className="px-4 py-3 text-right text-white/80">{row.totalTokens.toLocaleString()}</td>
+                                  <td className="px-4 py-3 text-right font-medium text-emerald-400">${row.totalCostUsd.toFixed(4)}</td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                <h3 className="text-lg font-bold text-white mb-4">Feature Usage Breakdown</h3>
-                <div className="surface-card p-6 mb-8">
-                  {[
-                    { feature: "Chat", pct: 35, color: "from-blue-500 to-cyan-500" },
-                    { feature: "Horoscope", pct: 25, color: "from-yellow-500 to-amber-500" },
-                    { feature: "Kundli", pct: 15, color: "from-purple-500 to-violet-500" },
-                    { feature: "Palmistry", pct: 10, color: "from-pink-500 to-rose-500" },
-                    { feature: "Matching", pct: 8, color: "from-red-500 to-orange-500" },
-                    { feature: "Reports", pct: 4, color: "from-emerald-500 to-green-500" },
-                    { feature: "Muhurat", pct: 3, color: "from-teal-500 to-cyan-500" },
-                  ].map((f) => (
-                    <div key={f.feature} className="flex items-center gap-4 mb-3 last:mb-0">
-                      <span className="text-sm text-white/40 w-20">{f.feature}</span>
-                      <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden">
-                        <div className={`h-full bg-gradient-to-r ${f.color} rounded-full transition-all`} style={{ width: `${f.pct}%` }} />
-                      </div>
-                      <span className="text-sm font-medium text-white w-10 text-right">{f.pct}%</span>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className="text-lg font-bold text-white mb-4">Revenue Trend (Last 7 Days)</h3>
-                <div className="surface-card p-6">
-                  <div className="flex items-end gap-2 h-40">
-                    {[4200, 3800, 5100, 4700, 6200, 5800, 7100].map((val, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div className="w-full bg-gradient-to-t from-primary-600 to-mystic-500 rounded-t-lg transition-all" style={{ height: `${(val / 7100) * 100}%` }} />
-                        <span className="text-[10px] text-white/30">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
-                    <span className="text-sm text-white/40">Weekly Total</span>
-                    <span className="text-lg font-bold text-gradient">{formatCurrency(36900)}</span>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1672,46 +1824,42 @@ export default function AdminPage() {
             {activeTab === "content" && (
               <div>
                 <h2 className="text-xl font-bold text-gradient mb-6">Content Management</h2>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {contentSections.map((section) => (
-                    <div key={section.title} className="surface-card p-5">
-                      <h3 className="font-bold text-white mb-1">{section.title}</h3>
-                      <p className="text-xs text-white/40 mb-3">{section.desc}</p>
-                      <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
-                        <div>
-                          <p className="text-lg font-bold text-gradient">{section.items}</p>
-                          <p className="text-[10px] text-white/30">items</p>
+                {!contentStats ? (
+                  <div className="surface-card p-8 text-center text-white/40 text-sm">Loading content stats…</div>
+                ) : (
+                  <>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {contentSections.map((section) => (
+                        <div key={section.title} className="surface-card p-5">
+                          <h3 className="font-bold text-white mb-1">{section.title}</h3>
+                          <p className="text-xs text-white/40 mb-3">{section.desc}</p>
+                          <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
+                            <div>
+                              <p className="text-lg font-bold text-gradient">{section.items.toLocaleString()}</p>
+                              <p className="text-[10px] text-white/30">items</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-white/30">Last updated</p>
-                          <p className="text-xs text-white/60">{section.lastUpdated}</p>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <h3 className="text-lg font-bold text-white mt-8 mb-4">Content Actions</h3>
-                <div className="surface-card p-6">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
-                      <p className="text-sm font-medium text-white mb-1">Refresh Panchang Data</p>
-                      <p className="text-xs text-white/30">Update today&apos;s Tithi, Nakshatra, and timings</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
-                      <p className="text-sm font-medium text-white mb-1">Update Knowledge Base</p>
-                      <p className="text-xs text-white/30">Re-index RAG documents for AI agents</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
-                      <p className="text-sm font-medium text-white mb-1">Generate Weekly Horoscopes</p>
-                      <p className="text-xs text-white/30">Batch generate horoscopes for all 12 signs</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/[0.03] hover:bg-white/10 transition-all cursor-pointer">
-                      <p className="text-sm font-medium text-white mb-1">Export User Reports</p>
-                      <p className="text-xs text-white/30">Download CSV of all generated reports</p>
-                    </div>
-                  </div>
-                </div>
+                    {contentStats.knowledgeCategories.length > 0 && (
+                      <>
+                        <h3 className="text-lg font-bold text-white mt-8 mb-4">Knowledge Base by Category</h3>
+                        <div className="surface-card p-6">
+                          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {contentStats.knowledgeCategories.map((cat) => (
+                              <div key={cat.category} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
+                                <span className="text-sm text-white/70 capitalize">{cat.category}</span>
+                                <span className="text-sm font-bold text-primary-400">{cat.count.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </>

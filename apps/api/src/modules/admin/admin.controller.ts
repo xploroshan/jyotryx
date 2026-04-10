@@ -13,7 +13,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AdminService, DashboardStats, UserListItem, UserDetail, AdminUserUpdate } from './admin.service';
+import { AdminService, DashboardStats, UserListItem, UserDetail, AdminUserUpdate, PlatformAnalytics, LlmCostRow } from './admin.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
 
@@ -127,7 +127,7 @@ export class AdminController {
     @Body() dto: Record<string, string>,
     @Request() req: any,
   ): Promise<Record<string, string>> {
-    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.'];
+    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.'];
     const invalidKeys = Object.keys(dto).filter(
       (key) => !ALLOWED_PREFIXES.some((prefix) => key.startsWith(prefix)),
     );
@@ -145,5 +145,32 @@ export class AdminController {
     @Request() req: any,
   ) {
     return this.adminService.cancelSubscription(subscriptionId, req.user.sub, req.user.email);
+  }
+
+  @Get('analytics')
+  @ApiOperation({ summary: 'Get platform-wide analytics' })
+  @ApiResponse({ status: 200, description: 'Analytics returned' })
+  async getAnalytics(): Promise<PlatformAnalytics> {
+    return this.adminService.getPlatformAnalytics();
+  }
+
+  @Get('analytics/llm-costs')
+  @ApiOperation({ summary: 'Get top users by LLM spend' })
+  @ApiResponse({ status: 200, description: 'LLM cost breakdown returned' })
+  async getLlmCosts(
+    @Query('limit') limit?: string,
+    @Query('days') days?: string,
+  ): Promise<LlmCostRow[]> {
+    return this.adminService.getLlmCostsByUser(
+      parseInt(limit || '20', 10),
+      parseInt(days || '30', 10),
+    );
+  }
+
+  @Get('content/stats')
+  @ApiOperation({ summary: 'Get content counts for the admin Content tab' })
+  @ApiResponse({ status: 200, description: 'Content stats returned' })
+  async getContentStats() {
+    return this.adminService.getContentStats();
   }
 }

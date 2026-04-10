@@ -76,7 +76,7 @@ export class ReportService {
       ANNUAL: 'Annual Horoscope Report',
     };
 
-    const sections = await this.generateAIReportSections(dto.type, birthDetails, user?.name || 'User', user?.gender);
+    const sections = await this.generateAIReportSections(dto.type, birthDetails, user?.name || 'User', user?.gender, userId);
 
     const report = await this.prisma.report.create({
       data: {
@@ -114,7 +114,7 @@ export class ReportService {
       timeOfBirth: user?.timeOfBirth || '',
       placeOfBirth: (user?.placeOfBirth as any)?.name || '',
     };
-    return this.generateAIReportSections(type, birthDetails, user?.name || 'User', user?.gender);
+    return this.generateAIReportSections(type, birthDetails, user?.name || 'User', user?.gender, userId);
   }
 
   private async generateAIReportSections(
@@ -122,6 +122,7 @@ export class ReportService {
     birthDetails: { dateOfBirth: string; timeOfBirth: string; placeOfBirth: string },
     name: string,
     gender?: string | null,
+    userId?: string,
   ): Promise<ReportSection[]> {
     if (!birthDetails.dateOfBirth) {
       return this.getFallbackSections(type, birthDetails, name);
@@ -159,6 +160,8 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
         maxTokens: 2000,
         temperature: 0.7,
         jsonMode: true,
+        userId,
+        feature: `report:${type.toLowerCase()}`,
       });
 
       if (result?.sections && Array.isArray(result.sections)) {
