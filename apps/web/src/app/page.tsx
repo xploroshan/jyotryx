@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+import AstrologyAnimation from "@/components/ui/AstrologyAnimation";
 
 const featureIcons = {
   chat: (
@@ -112,6 +113,7 @@ export default function HomePage() {
       <section className="relative min-h-[88vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-surface-950 to-surface-950" />
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-600/[0.04] rounded-full blur-[120px]" />
+        <AstrologyAnimation />
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border divider bg-white/[0.03] text-xs text-white/50 mb-8">
