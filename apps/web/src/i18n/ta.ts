@@ -1034,6 +1034,11 @@ export const ta: TranslationKeys = {
     featAnnualReports: 'பிரத்யேக வருடாந்திர அறிக்கைகள்',
     featAnnualEarly: 'அம்சங்களுக்கு முன்கூட்டிய அணுகல்',
     featAnnualDedicated: 'அர்ப்பணிக்கப்பட்ட ஆதரவு',
+    creditPacksTitle: 'கிரெடிட் பேக்குகள்',
+    creditPacksSubtitle: 'ஒரு முறை கிரெடிட்கள் வாங்கி எப்போது வேண்டுமானாலும் பயன்படுத்துங்கள்.',
+    credits: 'கிரெடிட்கள்',
+    buyNow: 'இப்போது வாங்கு',
+    bestValue: 'சிறந்த மதிப்பு',
   },
   reports: {
     badge: 'ஜோதிட அறிக்கைகள்',

@@ -19,6 +19,9 @@ export const mockOpenAIService = () => ({
   getClient: jest.fn().mockReturnValue(null),
   getModel: jest.fn().mockReturnValue('gpt-4o'),
   getModelForFeature: jest.fn().mockReturnValue('gpt-4o'),
+  recordUsage: jest.fn().mockResolvedValue(undefined),
+  invalidateCache: jest.fn().mockResolvedValue(undefined),
+  computeCost: jest.fn().mockReturnValue(0),
 });
 
 export const mockPrismaService = () => ({
@@ -60,6 +63,23 @@ export const mockPrismaService = () => ({
     create: jest.fn(),
     createMany: jest.fn().mockResolvedValue({ count: 10 }),
     count: jest.fn().mockResolvedValue(100),
+  },
+  llmUsage: {
+    create: jest.fn().mockResolvedValue({ id: 'llm-usage-1', createdAt: new Date() }),
+    findMany: jest.fn().mockResolvedValue([]),
+    groupBy: jest.fn().mockResolvedValue([]),
+    aggregate: jest.fn().mockResolvedValue({ _sum: { costUsd: 0, totalTokens: 0 }, _count: 0 }),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  siteSetting: {
+    findMany: jest.fn().mockResolvedValue([]),
+    upsert: jest.fn(),
+  },
+  notification: {
+    findMany: jest.fn().mockResolvedValue([]),
+    create: jest.fn(),
+    update: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
   },
   creditTransaction: {
     create: jest.fn(),

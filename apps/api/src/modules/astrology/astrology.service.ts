@@ -177,6 +177,7 @@ export class AstrologyService {
     temperature: number = 0.7,
     featureTier: 'default' | 'precision' | 'vision' = 'default',
     locale?: string,
+    context?: { userId?: string | null; feature?: string },
   ): Promise<any | null> {
     const localizedPrompt = systemPrompt + getLocaleInstruction(locale);
     return this.openaiService.chatCompletion({
@@ -188,6 +189,8 @@ export class AstrologyService {
       temperature,
       jsonMode,
       model: this.openaiService.getModelForFeature(featureTier),
+      userId: context?.userId,
+      feature: context?.feature || 'astrology',
     });
   }
 
@@ -831,6 +834,7 @@ export class AstrologyService {
 Make each section unique and specific to the sign. Avoid generic advice. Reference actual Vedic concepts like Nakshatras, Dashas, and planetary lordships.${signKBSection}`,
       `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Consider the sign's ruling planet, current planetary transits, and Nakshatra influences. Provide specific, actionable guidance unique to this sign.`,
       true, 1500, 0.7, 'default', locale,
+      { feature: `horoscope:${activePeriod}` },
     );
 
     if (aiPrediction) {
@@ -997,6 +1001,8 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
 - gulikakaal: string (Gulika Kaal time range)
 - yamakantaka: string (Yama Kantaka time range)${panchangKBSection}`,
       `Calculate the Panchang for today: ${dateStr} for location: ${locationLabel}. Use the Vedic Hindu calendar with Lahiri ayanamsa.`,
+      true, 1500, 0.7, 'default', undefined,
+      { feature: 'panchang' },
     );
 
     if (aiResult) {
@@ -1093,6 +1099,8 @@ Consider Rahu Kaal, Gulika Kaal, and other inauspicious periods. Factor in the s
       `Find auspicious Muhurat for: ${dto.purpose}
 Location: ${dto.location}
 Date range: ${dto.fromDate} to ${dto.toDate}`,
+      true, 1500, 0.7, 'default', undefined,
+      { feature: 'muhurat' },
     );
 
     if (aiResult?.auspiciousTimes) {

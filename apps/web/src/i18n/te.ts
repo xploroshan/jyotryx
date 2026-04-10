@@ -1034,6 +1034,11 @@ export const te: TranslationKeys = {
     featAnnualReports: 'Exclusive Annual Reports',
     featAnnualEarly: 'Early access to features',
     featAnnualDedicated: 'Dedicated support',
+    creditPacksTitle: 'Credit Packs',
+    creditPacksSubtitle: 'Buy credits once, use any time. No subscription required.',
+    credits: 'credits',
+    buyNow: 'Buy Now',
+    bestValue: 'Best Value',
   },
   reports: {
     badge: 'Astrology Reports',

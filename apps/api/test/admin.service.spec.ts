@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AdminService } from '../src/modules/admin/admin.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { OpenAIService } from '../src/openai/openai.service';
+import { mockOpenAIService } from './helpers/mocks';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -46,12 +48,40 @@ describe('AdminService', () => {
         findMany: jest.fn().mockResolvedValue([]),
         upsert: jest.fn(),
       },
+      creditTransaction: {
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 } }),
+      },
+      matchingResult: {
+        count: jest.fn().mockResolvedValue(0),
+      },
+      palmistryReading: {
+        count: jest.fn().mockResolvedValue(0),
+      },
+      report: {
+        count: jest.fn().mockResolvedValue(0),
+      },
+      tarotReading: {
+        count: jest.fn().mockResolvedValue(0),
+      },
+      notification: {
+        count: jest.fn().mockResolvedValue(0),
+      },
+      knowledgeDocument: {
+        count: jest.fn().mockResolvedValue(0),
+        groupBy: jest.fn().mockResolvedValue([]),
+      },
+      llmUsage: {
+        aggregate: jest.fn().mockResolvedValue({ _sum: { costUsd: 0, totalTokens: 0 }, _count: 0 }),
+        groupBy: jest.fn().mockResolvedValue([]),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
         { provide: PrismaService, useValue: prisma },
+        { provide: OpenAIService, useValue: mockOpenAIService() },
       ],
     }).compile();
 
@@ -157,6 +187,174 @@ describe('AdminService', () => {
       const result = await service.getActivityLogs(1, 20);
 
       expect(result.logs).toEqual([]);
+    });
+  });
+
+  describe('getPlatformAnalytics', () => {
+    it('should aggregate sessions, revenue trend, feature usage, and LLM totals', async () => {
+      prisma.chatSession.count.mockImplementation(({ where }: any = {}) => {
+        // sessionsToday & sessionsLast7Days & totalSessions & chatsLast7
+        if (where?.createdAt?.gte) return Promise.resolve(5);
+        return Promise.resolve(200);
+      });
+      prisma.chatMessage.count.mockResolvedValue(940);
+      prisma.creditTransaction.aggregate.mockResolvedValue({ _sum: { amount: -15 } });
+      prisma.user.count.mockImplementation(({ where }: any = {}) => {
+        if (where?.role) return Promise.resolve(10); // premium
+        if (where?.OR || where?.chatSessions) return Promise.resolve(30); // retention
+        return Promise.resolve(100); // total
+      });
+      prisma.kundliChart.count.mockResolvedValue(40);
+      prisma.matchingResult.count.mockResolvedValue(20);
+      prisma.palmistryReading.count.mockResolvedValue(10);
+      prisma.report.count.mockResolvedValue(5);
+      prisma.tarotReading.count.mockResolvedValue(8);
+      prisma.payment.findMany.mockResolvedValue([
+        { amount: 500, createdAt: new Date() },
+        { amount: 300, createdAt: new Date() },
+      ]);
+      prisma.llmUsage.aggregate.mockResolvedValue({
+        _sum: { costUsd: 12.345678, totalTokens: 98765 },
+        _count: 42,
+      });
+
+      const result = await service.getPlatformAnalytics();
+
+      expect(result.sessionsLast7Days).toBe(5);
+      expect(result.avgChatLength).toBe(4.7); // 940/200
+      expect(result.revenueTrend.length).toBe(7);
+      expect(result.featureUsage.find((f) => f.feature === 'Chat')).toBeDefined();
+      expect(result.featureUsage.find((f) => f.feature === 'Kundli')?.count).toBe(40);
+      expect(result.conversionRate).toBe(10); // 10/100
+      expect(result.llmTotals.callsLast7Days).toBe(42);
+      expect(result.llmTotals.totalCostUsdLast7Days).toBeCloseTo(12.345678);
+      expect(result.llmTotals.totalTokensLast7Days).toBe(98765);
+    });
+
+    it('should handle zero users without divide-by-zero', async () => {
+      prisma.user.count.mockResolvedValue(0);
+      prisma.chatSession.count.mockResolvedValue(0);
+      prisma.chatMessage.count.mockResolvedValue(0);
+      prisma.kundliChart.count.mockResolvedValue(0);
+      prisma.matchingResult.count.mockResolvedValue(0);
+      prisma.palmistryReading.count.mockResolvedValue(0);
+      prisma.report.count.mockResolvedValue(0);
+      prisma.tarotReading.count.mockResolvedValue(0);
+      prisma.payment.findMany.mockResolvedValue([]);
+
+      const result = await service.getPlatformAnalytics();
+
+      expect(result.conversionRate).toBe(0);
+      expect(result.avgChatLength).toBe(0);
+      expect(result.retention.day1).toBe(0);
+      expect(result.retention.day7).toBe(0);
+      expect(result.retention.day30).toBe(0);
+    });
+  });
+
+  describe('getLlmCostsByUser', () => {
+    it('should join groupBy results with user details', async () => {
+      prisma.llmUsage.groupBy.mockResolvedValue([
+        {
+          userId: 'u1',
+          _sum: { costUsd: 5.25, totalTokens: 12000 },
+          _count: 15,
+        },
+        {
+          userId: 'u2',
+          _sum: { costUsd: 1.1, totalTokens: 4000 },
+          _count: 4,
+        },
+      ]);
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u1', name: 'Alice', email: 'alice@test.com' },
+        { id: 'u2', name: 'Bob', email: 'bob@test.com' },
+      ]);
+
+      const result = await service.getLlmCostsByUser(20, 30);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({
+        userId: 'u1',
+        userName: 'Alice',
+        userEmail: 'alice@test.com',
+        calls: 15,
+        totalTokens: 12000,
+        totalCostUsd: 5.25,
+      });
+      expect(result[1].userName).toBe('Bob');
+      expect(prisma.llmUsage.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          by: ['userId'],
+          orderBy: { _sum: { costUsd: 'desc' } },
+          take: 20,
+        }),
+      );
+    });
+
+    it('should handle null userId rows (deleted users)', async () => {
+      prisma.llmUsage.groupBy.mockResolvedValue([
+        {
+          userId: null,
+          _sum: { costUsd: 2.0, totalTokens: 5000 },
+          _count: 3,
+        },
+      ]);
+      prisma.user.findMany.mockResolvedValue([]);
+
+      const result = await service.getLlmCostsByUser();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].userId).toBeNull();
+      expect(result[0].userName).toBeNull();
+      expect(result[0].userEmail).toBeNull();
+      expect(result[0].totalCostUsd).toBe(2.0);
+    });
+
+    it('should return empty array when no usage', async () => {
+      prisma.llmUsage.groupBy.mockResolvedValue([]);
+      const result = await service.getLlmCostsByUser();
+      expect(result).toEqual([]);
+      expect(prisma.user.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getContentStats', () => {
+    it('should return counts for all content sections', async () => {
+      prisma.knowledgeDocument.count.mockResolvedValue(120);
+      prisma.knowledgeDocument.groupBy.mockResolvedValue([
+        { category: 'astrology', _count: 60 },
+        { category: 'numerology', _count: 40 },
+        { category: 'palmistry', _count: 20 },
+      ]);
+      prisma.tarotReading.count.mockResolvedValue(45);
+      prisma.kundliChart.count.mockResolvedValue(230);
+      prisma.report.count.mockResolvedValue(18);
+      prisma.palmistryReading.count.mockResolvedValue(52);
+      prisma.matchingResult.count.mockResolvedValue(33);
+      prisma.chatSession.count.mockResolvedValue(600);
+      prisma.notification.count.mockResolvedValue(75);
+
+      const result = await service.getContentStats();
+
+      expect(result.knowledgeDocuments).toBe(120);
+      expect(result.knowledgeCategories).toHaveLength(3);
+      expect(result.knowledgeCategories[0]).toEqual({ category: 'astrology', count: 60 });
+      expect(result.tarotReadings).toBe(45);
+      expect(result.kundliCharts).toBe(230);
+      expect(result.reports).toBe(18);
+      expect(result.palmistryReadings).toBe(52);
+      expect(result.matchingResults).toBe(33);
+      expect(result.chatSessions).toBe(600);
+      expect(result.notifications).toBe(75);
+    });
+
+    it('should return zero counts when DB is empty', async () => {
+      const result = await service.getContentStats();
+      expect(result.knowledgeDocuments).toBe(0);
+      expect(result.knowledgeCategories).toEqual([]);
+      expect(result.tarotReadings).toBe(0);
+      expect(result.notifications).toBe(0);
     });
   });
 });

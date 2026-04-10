@@ -1034,6 +1034,11 @@ export const hi: TranslationKeys = {
     featAnnualReports: 'विशेष वार्षिक रिपोर्ट',
     featAnnualEarly: 'सुविधाओं तक शीघ्र पहुंच',
     featAnnualDedicated: 'समर्पित समर्थन',
+    creditPacksTitle: 'क्रेडिट पैक',
+    creditPacksSubtitle: 'एक बार क्रेडिट खरीदें, कभी भी उपयोग करें। कोई सदस्यता आवश्यक नहीं।',
+    credits: 'क्रेडिट',
+    buyNow: 'अभी खरीदें',
+    bestValue: 'सर्वोत्तम मूल्य',
   },
   reports: {
     badge: 'ज्योतिष रिपोर्ट',

@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { OpenAIService } from '../../openai/openai.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -55,6 +56,41 @@ export interface UserDetail {
     palmistryReadings: number;
     matchingResults: number;
   };
+  llmUsage: {
+    totalCostUsd: number;
+    totalTokens: number;
+    totalCalls: number;
+    byProvider: Array<{ provider: string; model: string; calls: number; totalTokens: number; costUsd: number }>;
+    byFeature: Array<{ feature: string; calls: number; totalTokens: number; costUsd: number }>;
+    recent: Array<{ id: string; provider: string; model: string; feature: string; totalTokens: number; costUsd: number; createdAt: string }>;
+  };
+}
+
+export interface PlatformAnalytics {
+  sessionsToday: number;
+  sessionsLast7Days: number;
+  avgSessionsPerDay: number;
+  avgChatLength: number;
+  creditsConsumedToday: number;
+  creditsConsumedLast7Days: number;
+  revenueTrend: Array<{ date: string; revenue: number }>; // last 7 days
+  featureUsage: Array<{ feature: string; count: number; percent: number }>;
+  conversionRate: number; // % of total users who are premium
+  retention: { day1: number; day7: number; day30: number };
+  llmTotals: {
+    callsLast7Days: number;
+    totalCostUsdLast7Days: number;
+    totalTokensLast7Days: number;
+  };
+}
+
+export interface LlmCostRow {
+  userId: string | null;
+  userName: string | null;
+  userEmail: string | null;
+  calls: number;
+  totalTokens: number;
+  totalCostUsd: number;
 }
 
 export interface AdminUserUpdate {
@@ -86,7 +122,10 @@ export interface ActivityLogItem {
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private openaiService: OpenAIService,
+  ) {}
 
   async getDashboardStats(): Promise<DashboardStats> {
     const today = new Date();
@@ -209,7 +248,17 @@ export class AdminService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    const [totalPaymentsAgg, totalCreditsUsed, kundliCount, palmistryCount, matchingCount] = await Promise.all([
+    const [
+      totalPaymentsAgg,
+      totalCreditsUsed,
+      kundliCount,
+      palmistryCount,
+      matchingCount,
+      llmTotals,
+      llmByProvider,
+      llmByFeature,
+      llmRecent,
+    ] = await Promise.all([
       this.prisma.payment.aggregate({
         where: { userId, status: 'SUCCESS' },
         _sum: { amount: true },
@@ -222,6 +271,28 @@ export class AdminService {
       this.prisma.kundliChart.count({ where: { userId } }),
       this.prisma.palmistryReading.count({ where: { userId } }),
       this.prisma.matchingResult.count({ where: { userId } }),
+      this.prisma.llmUsage.aggregate({
+        where: { userId },
+        _sum: { costUsd: true, totalTokens: true },
+        _count: true,
+      }),
+      this.prisma.llmUsage.groupBy({
+        by: ['provider', 'model'],
+        where: { userId },
+        _sum: { costUsd: true, totalTokens: true },
+        _count: true,
+      }),
+      this.prisma.llmUsage.groupBy({
+        by: ['feature'],
+        where: { userId },
+        _sum: { costUsd: true, totalTokens: true },
+        _count: true,
+      }),
+      this.prisma.llmUsage.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
     ]);
 
     return {
@@ -284,6 +355,33 @@ export class AdminService {
         kundliCharts: kundliCount,
         palmistryReadings: palmistryCount,
         matchingResults: matchingCount,
+      },
+      llmUsage: {
+        totalCostUsd: Number(llmTotals._sum.costUsd ?? 0),
+        totalTokens: Number(llmTotals._sum.totalTokens ?? 0),
+        totalCalls: llmTotals._count,
+        byProvider: llmByProvider.map((row: any) => ({
+          provider: row.provider,
+          model: row.model,
+          calls: row._count,
+          totalTokens: Number(row._sum.totalTokens ?? 0),
+          costUsd: Number(row._sum.costUsd ?? 0),
+        })),
+        byFeature: llmByFeature.map((row: any) => ({
+          feature: row.feature,
+          calls: row._count,
+          totalTokens: Number(row._sum.totalTokens ?? 0),
+          costUsd: Number(row._sum.costUsd ?? 0),
+        })),
+        recent: llmRecent.map((row: any) => ({
+          id: row.id,
+          provider: row.provider,
+          model: row.model,
+          feature: row.feature,
+          totalTokens: row.totalTokens,
+          costUsd: Number(row.costUsd),
+          createdAt: row.createdAt.toISOString(),
+        })),
       },
     };
   }
@@ -581,6 +679,16 @@ export class AdminService {
       });
     }
 
+    // If any llm.* setting was touched, force the OpenAIService to reload
+    // its cached client so the new key/model takes effect immediately.
+    if (Object.keys(settings).some((k) => k.startsWith('llm.'))) {
+      try {
+        await this.openaiService.invalidateCache();
+      } catch (err) {
+        this.logger.warn(`Failed to invalidate OpenAI cache: ${err}`);
+      }
+    }
+
     this.logger.log(`Admin ${adminEmail} updated settings: ${JSON.stringify(Object.keys(settings))}`);
     return this.getSettings();
   }
@@ -616,5 +724,246 @@ export class AdminService {
 
     this.logger.log(`Admin ${adminEmail} cancelled subscription ${subscriptionId}`);
     return { cancelled: true };
+  }
+
+  // ─── Analytics ────────────────────────────────────────────────────────────
+
+  /**
+   * Returns high-level platform analytics for the admin dashboard.
+   * All numbers are computed live from the DB — nothing hardcoded.
+   */
+  async getPlatformAnalytics(): Promise<PlatformAnalytics> {
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [
+      sessionsToday,
+      sessionsLast7Days,
+      totalChatMessages,
+      totalSessions,
+      creditsToday,
+      creditsLast7Days,
+      totalUsers,
+      premiumUsers,
+      kundliCount,
+      matchingCount,
+      palmistryCount,
+      reportCount,
+      tarotCount,
+      chatsLast7,
+      paymentsLast7,
+      llmLast7,
+    ] = await Promise.all([
+      this.prisma.chatSession.count({ where: { createdAt: { gte: today } } }),
+      this.prisma.chatSession.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.prisma.chatMessage.count(),
+      this.prisma.chatSession.count(),
+      this.prisma.creditTransaction.aggregate({
+        where: { createdAt: { gte: today }, amount: { lt: 0 } },
+        _sum: { amount: true },
+      }),
+      this.prisma.creditTransaction.aggregate({
+        where: { createdAt: { gte: sevenDaysAgo }, amount: { lt: 0 } },
+        _sum: { amount: true },
+      }),
+      this.prisma.user.count(),
+      this.prisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] } } }),
+      this.prisma.kundliChart.count(),
+      this.prisma.matchingResult.count(),
+      this.prisma.palmistryReading.count(),
+      this.prisma.report.count(),
+      this.prisma.tarotReading.count(),
+      this.prisma.chatSession.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.prisma.payment.findMany({
+        where: { status: 'SUCCESS', createdAt: { gte: sevenDaysAgo } },
+        select: { amount: true, createdAt: true },
+      }),
+      this.prisma.llmUsage.aggregate({
+        where: { createdAt: { gte: sevenDaysAgo } },
+        _sum: { costUsd: true, totalTokens: true },
+        _count: true,
+      }),
+    ]);
+
+    // Build revenue trend (last 7 days, oldest → newest).
+    const revenueByDay = new Map<string, number>();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      revenueByDay.set(d.toISOString().slice(0, 10), 0);
+    }
+    for (const p of paymentsLast7) {
+      const day = p.createdAt.toISOString().slice(0, 10);
+      if (revenueByDay.has(day)) {
+        revenueByDay.set(day, (revenueByDay.get(day) || 0) + Number(p.amount));
+      }
+    }
+    const revenueTrend = Array.from(revenueByDay.entries()).map(([date, revenue]) => ({ date, revenue }));
+
+    // Feature usage breakdown — percentages of total interactions.
+    const featureCounts = [
+      { feature: 'Chat', count: totalSessions },
+      { feature: 'Kundli', count: kundliCount },
+      { feature: 'Matching', count: matchingCount },
+      { feature: 'Palmistry', count: palmistryCount },
+      { feature: 'Reports', count: reportCount },
+      { feature: 'Tarot', count: tarotCount },
+    ];
+    const totalFeatureUsage = featureCounts.reduce((sum, f) => sum + f.count, 0) || 1;
+    const featureUsage = featureCounts.map((f) => ({
+      feature: f.feature,
+      count: f.count,
+      percent: Math.round((f.count / totalFeatureUsage) * 1000) / 10,
+    }));
+
+    // Retention: % of users who created something in the first N days
+    // after signup. Approximated by counting users whose most recent
+    // activity timestamp is within the cohort window.
+    const [retainedDay1, retainedDay7, retainedDay30] = await Promise.all([
+      this.prisma.user.count({
+        where: {
+          createdAt: { lte: now },
+          OR: [
+            { chatSessions: { some: {} } },
+            { kundliCharts: { some: {} } },
+          ],
+        },
+      }),
+      this.prisma.user.count({
+        where: {
+          createdAt: { gte: thirtyDaysAgo, lte: sevenDaysAgo },
+          chatSessions: { some: { createdAt: { gte: sevenDaysAgo } } },
+        },
+      }),
+      this.prisma.user.count({
+        where: {
+          createdAt: { lte: thirtyDaysAgo },
+          chatSessions: { some: { createdAt: { gte: thirtyDaysAgo } } },
+        },
+      }),
+    ]);
+    const retention = {
+      day1: totalUsers > 0 ? Math.round((retainedDay1 / totalUsers) * 1000) / 10 : 0,
+      day7: totalUsers > 0 ? Math.round((retainedDay7 / totalUsers) * 1000) / 10 : 0,
+      day30: totalUsers > 0 ? Math.round((retainedDay30 / totalUsers) * 1000) / 10 : 0,
+    };
+
+    return {
+      sessionsToday,
+      sessionsLast7Days,
+      avgSessionsPerDay: Math.round((sessionsLast7Days / 7) * 10) / 10,
+      avgChatLength: totalSessions > 0 ? Math.round((totalChatMessages / totalSessions) * 10) / 10 : 0,
+      creditsConsumedToday: Math.abs(Number(creditsToday._sum.amount ?? 0)),
+      creditsConsumedLast7Days: Math.abs(Number(creditsLast7Days._sum.amount ?? 0)),
+      revenueTrend,
+      featureUsage,
+      conversionRate: totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 1000) / 10 : 0,
+      retention,
+      llmTotals: {
+        callsLast7Days: llmLast7._count,
+        totalCostUsdLast7Days: Number(llmLast7._sum.costUsd ?? 0),
+        totalTokensLast7Days: Number(llmLast7._sum.totalTokens ?? 0),
+      },
+    };
+  }
+
+  /**
+   * Returns real counts for the admin Content tab. Each section's item
+   * count is derived from the actual data in the database.
+   */
+  async getContentStats(): Promise<{
+    knowledgeDocuments: number;
+    knowledgeCategories: Array<{ category: string; count: number }>;
+    tarotReadings: number;
+    kundliCharts: number;
+    reports: number;
+    palmistryReadings: number;
+    matchingResults: number;
+    chatSessions: number;
+    notifications: number;
+  }> {
+    const [
+      knowledgeDocuments,
+      tarotReadings,
+      kundliCharts,
+      reports,
+      palmistryReadings,
+      matchingResults,
+      chatSessions,
+      notifications,
+      kbByCategory,
+    ] = await Promise.all([
+      this.prisma.knowledgeDocument.count(),
+      this.prisma.tarotReading.count(),
+      this.prisma.kundliChart.count(),
+      this.prisma.report.count(),
+      this.prisma.palmistryReading.count(),
+      this.prisma.matchingResult.count(),
+      this.prisma.chatSession.count(),
+      this.prisma.notification.count(),
+      this.prisma.knowledgeDocument.groupBy({
+        by: ['category'],
+        _count: true,
+      }),
+    ]);
+
+    return {
+      knowledgeDocuments,
+      knowledgeCategories: kbByCategory.map((row: any) => ({
+        category: row.category,
+        count: row._count,
+      })),
+      tarotReadings,
+      kundliCharts,
+      reports,
+      palmistryReadings,
+      matchingResults,
+      chatSessions,
+      notifications,
+    };
+  }
+
+  /**
+   * Returns the top users ranked by LLM spend (USD) over a given period.
+   * Used by the admin Analytics tab to surface who's driving AI cost.
+   */
+  async getLlmCostsByUser(limit: number = 20, days: number = 30): Promise<LlmCostRow[]> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const grouped = await this.prisma.llmUsage.groupBy({
+      by: ['userId'],
+      where: { createdAt: { gte: since } },
+      _sum: { costUsd: true, totalTokens: true },
+      _count: true,
+      orderBy: { _sum: { costUsd: 'desc' } },
+      take: limit,
+    });
+
+    const userIds = grouped.map((g: any) => g.userId).filter((id: string | null): id is string => !!id);
+    const users = userIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true, email: true },
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    return grouped.map((row: any) => {
+      const user = row.userId ? userMap.get(row.userId) : null;
+      return {
+        userId: row.userId,
+        userName: user?.name ?? null,
+        userEmail: user?.email ?? null,
+        calls: row._count,
+        totalTokens: Number(row._sum.totalTokens ?? 0),
+        totalCostUsd: Number(row._sum.costUsd ?? 0),
+      };
+    });
   }
 }

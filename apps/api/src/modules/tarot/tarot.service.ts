@@ -113,16 +113,23 @@ export class TarotService {
     const kbContext = tarotKB.length > 0 ? `\n\nReference Knowledge:\n${tarotKB.map(r => r.text).join('\n')}` : '';
 
     if (client) {
+      const model = this.openaiService.getModelForFeature('default');
       try {
         const cardsDesc = drawn.map(c => `${c.position}: ${c.name}${c.isReversed ? ' (Reversed)' : ''}`).join('\n');
         const completion = await client.chat.completions.create({
-          model: this.openaiService.getModelForFeature('default'),
+          model,
           messages: [
             { role: 'system', content: `You are a wise and compassionate tarot reader rooted in Vedic spiritual tradition. Provide insightful, empathetic interpretations. Return JSON with keys: overall (string), cardInterpretations (array of {card, position, meaning}), advice (string), spiritualGuidance (string).${kbContext}${getLocaleInstruction(dto.locale)}` },
             { role: 'user', content: `Spread: ${dto.spread}\nQuestion: ${dto.question || 'General guidance'}\nCards drawn:\n${cardsDesc}` },
           ],
           max_tokens: 1200,
           response_format: { type: 'json_object' },
+        });
+        this.openaiService.recordUsage?.({
+          userId,
+          feature: `tarot:${dto.spread}`,
+          model,
+          usage: completion?.usage,
         });
         const content = completion.choices[0]?.message?.content;
         if (content) interpretation = JSON.parse(content);

@@ -130,6 +130,7 @@ model User {
   creditTransactions CreditTransaction[]
   notifications      Notification[]
   tarotReadings      TarotReading[]
+  llmUsage           LlmUsage[]
 
   @@index([email])
   @@index([phone])
@@ -350,6 +351,29 @@ model TarotReading {
 
   @@index([userId])
   @@map("tarot_readings")
+}
+
+// ─── LLM Usage Tracking ─────────────────────────────────────────────────────
+
+model LlmUsage {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String?  @db.Uuid /// Null when system-initiated (e.g. cron)
+  provider         String   /// "openai", "anthropic", "google", "mistral", "cohere", "groq"
+  model            String   /// e.g. "gpt-4o-mini"
+  feature          String   /// e.g. "chat", "kundli", "palmistry", "tarot", "vastu", "numerology", "report", "briefing"
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  costUsd          Decimal  @default(0) @db.Decimal(12, 6)
+  createdAt        DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([provider, model])
+  @@map("llm_usage")
 }
 
 // ─── Knowledge Base ─────────────────────────────────────────────────────────

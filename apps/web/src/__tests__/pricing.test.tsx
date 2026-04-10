@@ -107,4 +107,54 @@ describe('Pricing Page', () => {
     fireEvent.click(getStartedBtn);
     expect(mockPush).toHaveBeenCalledWith('/chat');
   });
+
+  it('renders skeletons on first paint (no hardcoded price flash)', () => {
+    // This test deliberately does NOT await findBy — it asserts the
+    // synchronous initial render. Before the fix, the page rendered
+    // `₹499` synchronously from the hardcoded `defaultPlans`. After the
+    // fix, the initial render shows skeleton placeholders until the
+    // GET /payments/pricing fetch resolves.
+    mockApiGet.mockReset();
+    mockApiGet.mockImplementation(() => new Promise(() => {})); // never resolves
+    render(<PricingPage />);
+    // Skeleton placeholders are rendered instead of price text.
+    expect(screen.getAllByTestId('plan-skeleton').length).toBe(3);
+    expect(screen.getAllByTestId('credit-skeleton').length).toBe(3);
+    // No plan prices are rendered yet.
+    expect(screen.queryByText(/₹499/)).toBeNull();
+    expect(screen.queryByText(/₹100/)).toBeNull();
+  });
+
+  it('displays admin-updated monthly price after fetch', async () => {
+    // Simulate admin saving pricing.monthly.price = 100.
+    mockApiGet.mockReset();
+    mockApiGet.mockResolvedValueOnce({
+      'pricing.monthly.price': '100',
+      'pricing.annual.price': '999',
+    });
+    render(<PricingPage />);
+    // Use findByText to wait for the post-fetch render.
+    expect(await screen.findByText(/₹100/)).toBeDefined();
+    // The hardcoded ₹499 default should NEVER appear.
+    expect(screen.queryByText(/₹499/)).toBeNull();
+  });
+
+  it('renders credit packs from settings', async () => {
+    mockApiGet.mockReset();
+    mockApiGet.mockResolvedValueOnce({
+      'pricing.monthly.price': '499',
+      'pricing.annual.price': '4999',
+      'pricing.credits.starter.credits': '50',
+      'pricing.credits.starter.price': '99',
+      'pricing.credits.popular.credits': '150',
+      'pricing.credits.popular.price': '249',
+      'pricing.credits.pro.credits': '500',
+      'pricing.credits.pro.price': '699',
+    });
+    render(<PricingPage />);
+    expect(await screen.findByText(/Credit Packs/)).toBeDefined();
+    expect(await screen.findByText(/₹99/)).toBeDefined();
+    expect(await screen.findByText(/₹249/)).toBeDefined();
+    expect(await screen.findByText(/₹699/)).toBeDefined();
+  });
 });

@@ -99,6 +99,7 @@ export class ChatService {
         dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
         userProfile,
         dto.locale,
+        userId,
       );
     } catch (error) {
       this.logger.error('AI response generation failed, refunding credit', error);
@@ -210,6 +211,7 @@ export class ChatService {
     history: { role: string; content: string }[],
     userProfile: any,
     locale?: string,
+    userId?: string,
   ): Promise<string> {
     // Fetch relevant knowledge base context for RAG
     const kbCategory = this.mapCategoryToKB(category);
@@ -234,6 +236,8 @@ export class ChatService {
       messages,
       maxTokens: 800,
       temperature: 0.7,
+      userId,
+      feature: `chat:${category}`,
     });
 
     if (result) return result;

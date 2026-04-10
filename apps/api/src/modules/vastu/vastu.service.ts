@@ -83,15 +83,22 @@ export class VastuService {
     const kbContext = vastuKB.length > 0 ? `\n\nReference Knowledge:\n${vastuKB.map(r => r.text).join('\n')}` : '';
 
     if (client) {
+      const model = this.openaiService.getModelForFeature('default');
       try {
         const completion = await client.chat.completions.create({
-          model: this.openaiService.getModelForFeature('default'),
+          model,
           messages: [
             { role: 'system', content: `You are a Vastu Shastra expert. Provide practical, actionable Vastu advice. Return JSON with keys: summary (string), remedies (array of strings), gemstone (string), mantra (string), favorableChanges (array of strings).${kbContext}${getLocaleInstruction(dto.locale)}` },
             { role: 'user', content: `Property: ${dto.propertyType}\nMain entrance: ${dto.entranceDirection}\nConcern: ${dto.concern || 'General Vastu guidance'}\nEntrance score: ${entranceScore.score}/100 (${entranceScore.verdict})` },
           ],
           max_tokens: 800,
           response_format: { type: 'json_object' },
+        });
+        this.openaiService.recordUsage?.({
+          userId,
+          feature: 'vastu',
+          model,
+          usage: completion?.usage,
         });
         const content = completion.choices[0]?.message?.content;
         if (content) aiInsights = JSON.parse(content);
