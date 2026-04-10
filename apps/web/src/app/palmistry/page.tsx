@@ -5,14 +5,15 @@ import PalmDiagram from "@/components/palmistry/PalmDiagram";
 import { useTranslation } from "@/i18n";
 
 interface AnalysisResult {
-  majorLines: { name: string; description: string; strength: string }[];
+  majorLines: { name: string; description: string; strength: "strong" | "moderate" | "weak" }[];
   minorLines: { name: string; description: string }[];
-  mounts: { name: string; description: string; prominence: string }[];
+  mounts: { name: string; description: string; prominence: "high" | "medium" | "low" }[];
   insights: { label: string; text: string }[];
   fingerAnalysis: { finger: string; interpretation: string }[];
 }
 
-const MAJOR_LINE_NAMES = ["Heart Line", "Head Line", "Life Line", "Fate Line", "Sun Line"];
+// Canonical (English, locale-independent) keys used for comparisons / logic
+const MAJOR_LINE_KEYWORDS = ["heart", "head", "life", "fate", "sun"];
 
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/\s+/g, " ").trim();
@@ -20,25 +21,24 @@ function normalizeName(name: string): string {
 
 function isMajorLine(lineName: string): boolean {
   const normalized = normalizeName(lineName);
-  return MAJOR_LINE_NAMES.some((major) => {
-    const majorNorm = normalizeName(major);
-    const keyword = majorNorm.split(" ")[0]; // "heart", "head", "life", "fate", "sun"
-    return normalized === majorNorm || normalized.includes(keyword);
-  });
+  return MAJOR_LINE_KEYWORDS.some((keyword) => normalized.includes(keyword));
 }
 
-function normalizeStrength(s: string): string {
+// Returns canonical English code so the display layer can translate it.
+type StrengthCode = "strong" | "moderate" | "weak";
+function normalizeStrength(s: string): StrengthCode {
   const lower = (s || "").toLowerCase();
-  if (lower === "strong" || lower === "prominent" || lower === "deep") return "Strong";
-  if (lower === "moderate" || lower === "medium" || lower === "normal" || lower === "average") return "Moderate";
-  return "Weak";
+  if (lower === "strong" || lower === "prominent" || lower === "deep") return "strong";
+  if (lower === "moderate" || lower === "medium" || lower === "normal" || lower === "average") return "moderate";
+  return "weak";
 }
 
-function normalizeProminence(p: string): string {
+type ProminenceCode = "high" | "medium" | "low";
+function normalizeProminence(p: string): ProminenceCode {
   const lower = (p || "").toLowerCase();
-  if (lower === "elevated" || lower === "high" || lower === "prominent") return "High";
-  if (lower === "flat" || lower === "low" || lower === "underdeveloped") return "Low";
-  return "Medium";
+  if (lower === "elevated" || lower === "high" || lower === "prominent") return "high";
+  if (lower === "flat" || lower === "low" || lower === "underdeveloped") return "low";
+  return "medium";
 }
 
 export default function PalmistryPage() {
@@ -60,8 +60,7 @@ export default function PalmistryPage() {
       if (feature.type === "mount") {
         setActiveTab("mounts");
       } else {
-        const majorNames = ["Heart Line", "Head Line", "Life Line", "Fate Line", "Sun Line"];
-        setActiveTab(majorNames.includes(feature.name) ? "major" : "minor");
+        setActiveTab(isMajorLine(feature.name) ? "major" : "minor");
       }
     },
     [],
@@ -127,10 +126,10 @@ export default function PalmistryPage() {
         }));
 
         const insights: { label: string; text: string }[] = [];
-        if (result.overallReading) insights.push({ label: "Overall Reading", text: result.overallReading });
-        if (result.healthInsights) insights.push({ label: "Health", text: result.healthInsights });
-        if (result.careerInsights) insights.push({ label: "Career", text: result.careerInsights });
-        if (result.relationshipInsights) insights.push({ label: "Relationships", text: result.relationshipInsights });
+        if (result.overallReading) insights.push({ label: t.palmistry.insightOverall, text: result.overallReading });
+        if (result.healthInsights) insights.push({ label: t.palmistry.insightHealth, text: result.healthInsights });
+        if (result.careerInsights) insights.push({ label: t.palmistry.insightCareer, text: result.careerInsights });
+        if (result.relationshipInsights) insights.push({ label: t.palmistry.insightRelationships, text: result.relationshipInsights });
 
         const fingerAnalysis = (result.fingerAnalysis || [])
           .filter((f: any) => f.interpretation)
@@ -138,10 +137,10 @@ export default function PalmistryPage() {
 
         setAnalysis({ majorLines, minorLines, mounts, insights, fingerAnalysis });
       } else {
-        setError("No analysis results received. Please try again.");
+        setError(t.palmistry.noResultsError);
       }
     } catch (err: any) {
-      setError(err.message || "Analysis failed. Please try again.");
+      setError(err.message || t.palmistry.analysisFailed);
     } finally {
       setAnalyzing(false);
     }
@@ -154,8 +153,14 @@ export default function PalmistryPage() {
     { id: "insights", label: t.palmistry.insights },
   ];
 
-  const strengthColor = (s: string) =>
-    s === "Strong" ? "text-emerald-400" : s === "Moderate" ? "text-accent-400" : "text-white/40";
+  const strengthColor = (s: "strong" | "moderate" | "weak") =>
+    s === "strong" ? "text-emerald-400" : s === "moderate" ? "text-accent-400" : "text-white/40";
+
+  const strengthLabel = (s: "strong" | "moderate" | "weak") =>
+    s === "strong" ? t.palmistry.strengthStrong : s === "moderate" ? t.palmistry.strengthModerate : t.palmistry.strengthWeak;
+
+  const prominenceLabel = (p: "high" | "medium" | "low") =>
+    p === "high" ? t.palmistry.prominenceHigh : p === "medium" ? t.palmistry.prominenceMedium : t.palmistry.prominenceLow;
 
   return (
     <div className="relative min-h-screen">
@@ -358,7 +363,7 @@ export default function PalmistryPage() {
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-white text-sm">{line.name}</h4>
                           <span className={`text-xs font-medium ${strengthColor(line.strength)}`}>
-                            {line.strength}
+                            {strengthLabel(line.strength)}
                           </span>
                         </div>
                         <p className="text-xs text-white/40 leading-relaxed">{line.description}</p>
@@ -392,9 +397,9 @@ export default function PalmistryPage() {
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-white text-sm">{mount.name}</h4>
                           <span className={`text-xs font-medium ${
-                            mount.prominence === "High" ? "text-emerald-400" : "text-accent-400"
+                            mount.prominence === "high" ? "text-emerald-400" : "text-accent-400"
                           }`}>
-                            {mount.prominence}
+                            {prominenceLabel(mount.prominence)}
                           </span>
                         </div>
                         <p className="text-xs text-white/40 leading-relaxed">{mount.description}</p>

@@ -327,7 +327,7 @@ export default function MyDayPage() {
       const data = await api.get<DailyBriefing>(`/daily-briefing?locale=${locale}`, { token: accessToken! });
       setBriefing(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load daily briefing");
+      setError(err.message || t.myDay.loadFailed);
     } finally {
       setLoading(false);
     }

@@ -62,7 +62,7 @@ export default function NumerologyPage() {
       const data = await api.post<NameResult>("/numerology/name", { name: nameInput.trim(), locale });
       setNameResult(data);
     } catch (err: any) {
-      setError(err.message || "Analysis failed");
+      setError(err.message || t.numerology.analysisFailed);
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function NumerologyPage() {
       const data = await api.post<BrandResult>("/numerology/brand", { brandName: brandInput.trim(), locale });
       setBrandResult(data);
     } catch (err: any) {
-      setError(err.message || "Analysis failed");
+      setError(err.message || t.numerology.analysisFailed);
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ export default function NumerologyPage() {
                   disabled={loading || !nameInput.trim()}
                   className="px-6 py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50"
                 >
-                  {loading ? "..." : t.numerology.analyze}
+                  {loading ? t.numerology.analyzing : t.numerology.analyze}
                 </button>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function NumerologyPage() {
                   disabled={loading || !brandInput.trim()}
                   className="px-6 py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50"
                 >
-                  {loading ? "..." : t.numerology.analyze}
+                  {loading ? t.numerology.analyzing : t.numerology.analyze}
                 </button>
               </div>
             </div>
@@ -257,7 +257,7 @@ export default function NumerologyPage() {
                       </span>
                       <span className="text-lg text-white/20">/10</span>
                     </p>
-                    <p className="text-sm text-white/50">Ruled by {brandResult.planetaryRuler}</p>
+                    <p className="text-sm text-white/50">{t.numerology.ruledBy} {brandResult.planetaryRuler}</p>
                   </div>
                 </div>
 

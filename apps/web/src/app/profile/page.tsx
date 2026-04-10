@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { useTranslation } from "@/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 interface UserProfile {
   id: string;
@@ -33,6 +35,7 @@ interface CreditInfo {
 export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete } = useAuthStore();
   const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -90,7 +93,7 @@ export default function ProfilePage() {
       setProfession(profileData.profession || "");
       updateCredits(profileData.credits);
     } catch (err: any) {
-      setError(err.message || "Failed to load profile");
+      setError(err.message || t.profile.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -105,12 +108,12 @@ export default function ProfilePage() {
     const wasIncomplete = profile ? !profile.profileComplete : true;
     if (wasIncomplete) {
       const missing: string[] = [];
-      if (!dob) missing.push("Date of Birth");
-      if (!tob) missing.push("Time of Birth");
-      if (!pob.trim()) missing.push("Place of Birth");
-      if (!gender) missing.push("Gender");
+      if (!dob) missing.push(t.profile.missingDob);
+      if (!tob) missing.push(t.profile.missingTob);
+      if (!pob.trim()) missing.push(t.profile.missingPob);
+      if (!gender) missing.push(t.profile.missingGender);
       if (missing.length) {
-        setError(`Please fill in: ${missing.join(", ")}`);
+        setError(`${t.profile.pleaseFillIn} ${missing.join(", ")}`);
         return;
       }
     }
@@ -136,15 +139,15 @@ export default function ProfilePage() {
 
       // First-time completion → unlock the rest of the app.
       if (wasIncomplete && updated.profileComplete) {
-        setSuccess("Profile complete! Redirecting to your dashboard...");
+        setSuccess(t.profile.profileCompleteRedirecting);
         setTimeout(() => router.push("/my-day"), 1200);
         return;
       }
 
-      setSuccess("Profile updated successfully!");
+      setSuccess(t.profile.profileUpdatedSuccess);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      setError(err.message || "Failed to update profile");
+      setError(err.message || t.profile.updateFailed);
     } finally {
       setSaving(false);
     }
@@ -157,11 +160,11 @@ export default function ProfilePage() {
     if (!hasPassword) {
       // Setting password for OTP/social users
       if (!newPassword || newPassword.length < 8) {
-        setError("Password must be at least 8 characters");
+        setError(t.profile.errPasswordShort);
         return;
       }
       if (newPassword !== confirmPassword) {
-        setError("Passwords do not match");
+        setError(t.profile.errPasswordsMismatchInline);
         return;
       }
       setChangingPw(true);
@@ -173,7 +176,7 @@ export default function ProfilePage() {
         setConfirmPassword("");
         setTimeout(() => setSuccess(""), 3000);
       } catch (err: any) {
-        setError(err.message || "Failed to set password");
+        setError(err.message || t.profile.errSetFailed);
       } finally {
         setChangingPw(false);
       }
@@ -182,19 +185,19 @@ export default function ProfilePage() {
 
     // Changing existing password
     if (!currentPassword) {
-      setError("Please enter your current password");
+      setError(t.profile.errCurrentRequired);
       return;
     }
     if (!newPassword || newPassword.length < 8) {
-      setError("New password must be at least 8 characters");
+      setError(t.profile.errNewPasswordShort);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match");
+      setError(t.profile.errPasswordsMismatch);
       return;
     }
     if (currentPassword === newPassword) {
-      setError("New password must be different from current password");
+      setError(t.profile.errPasswordSame);
       return;
     }
 
@@ -211,7 +214,7 @@ export default function ProfilePage() {
       setConfirmPassword("");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      setError(err.message || "Failed to change password");
+      setError(err.message || t.profile.errChangeFailed);
     } finally {
       setChangingPw(false);
     }
@@ -236,7 +239,7 @@ export default function ProfilePage() {
   };
 
   const strength = passwordStrength(newPassword);
-  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong", "Very Strong"][strength] || "";
+  const strengthLabel = ["", t.profile.strengthWeak, t.profile.strengthFair, t.profile.strengthGood, t.profile.strengthStrong, t.profile.strengthVeryStrong][strength] || "";
   const strengthColor = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"][strength] || "";
 
   return (
@@ -248,15 +251,15 @@ export default function ProfilePage() {
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-2">
             {profile && !profile.profileComplete ? (
-              <>Welcome to <span className="text-gradient">Jyotron</span></>
+              <>{t.profile.welcomePrefix} <span className="text-gradient">{t.profile.brandName}</span></>
             ) : (
-              <>My <span className="text-gradient">Profile</span></>
+              <>{t.profile.myPrefix} <span className="text-gradient">{t.profile.profileHighlight}</span></>
             )}
           </h1>
           <p className="text-white/40 text-sm">
             {profile && !profile.profileComplete
-              ? "Complete your birth details to unlock personalized astrology"
-              : "Manage your account and birth details for accurate predictions"}
+              ? t.profile.subtitleIncomplete
+              : t.profile.subtitleComplete}
           </p>
         </div>
 
@@ -270,12 +273,12 @@ export default function ProfilePage() {
             </div>
             <div className="text-sm">
               <p className="text-white font-medium mb-0.5">
-                {completeMode ? "Almost there!" : "Complete your profile"}
+                {completeMode ? t.profile.almostThere : t.profile.completeYourProfile}
               </p>
               <p className="text-white/60 text-xs leading-relaxed">
-                We need your <span className="text-white">date, time and place of birth</span> plus
-                your <span className="text-white">gender</span> to generate accurate kundli, horoscope,
-                and compatibility readings. Other features stay locked until this is filled.
+                {t.profile.completeDescPart1} <span className="text-white">{t.profile.completeDescBirth}</span>{" "}
+                {t.profile.completeDescPlus} <span className="text-white">{t.profile.completeDescGender}</span>{" "}
+                {t.profile.completeDescPart2}
               </p>
             </div>
           </div>
@@ -312,23 +315,34 @@ export default function ProfilePage() {
                 <p className="text-sm text-white/40">{profile.email}</p>
                 <div className="flex items-center gap-2 mt-1 justify-center sm:justify-start">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleBadge(profile.role)}`}>{profile.role}</span>
-                  <span className="text-xs text-white/30">Member since {new Date(profile.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-white/30">{t.profile.memberSince} {new Date(profile.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
               <button onClick={handleLogout} className="px-4 py-2 rounded-xl btn-secondary text-sm text-red-400 hover:bg-red-500/10 transition-all">
-                Logout
+                {t.profile.logout}
               </button>
+            </div>
+
+            {/* Language preference card */}
+            <div className="surface-card p-6 mb-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">{t.profile.language}</h3>
+                  <p className="text-sm text-white/40">{t.profile.languageDesc}</p>
+                </div>
+                <LanguageSwitcher />
+              </div>
             </div>
 
             {/* Tabs */}
             <div className="flex gap-2 mb-6 rounded-xl bg-white/[0.03] p-1 w-fit">
               {([
-                { id: "profile" as const, label: "Birth Details" },
-                { id: "security" as const, label: "Security" },
-              ]).map((t) => (
-                <button key={t.id} onClick={() => { setActiveTab(t.id); setError(""); setSuccess(""); }}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === t.id ? "btn-primary" : "text-white/40 hover:text-white"}`}>
-                  {t.label}
+                { id: "profile" as const, label: t.profile.tabBirthDetails },
+                { id: "security" as const, label: t.profile.tabSecurity },
+              ]).map((tab) => (
+                <button key={tab.id} onClick={() => { setActiveTab(tab.id); setError(""); setSuccess(""); }}
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? "btn-primary" : "text-white/40 hover:text-white"}`}>
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -336,29 +350,29 @@ export default function ProfilePage() {
             {/* Birth Details Tab */}
             {activeTab === "profile" && (
               <div className="surface-card p-6">
-                <h3 className="text-lg font-bold text-white mb-6">Birth Details</h3>
+                <h3 className="text-lg font-bold text-white mb-6">{t.profile.birthDetails}</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs text-white/30 mb-2">Full Name</label>
+                    <label className="block text-xs text-white/30 mb-2">{t.profile.name}</label>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/30 mb-2">Phone Number</label>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 9876543210"
+                    <label className="block text-xs text-white/30 mb-2">{t.profile.phoneNumberLabel}</label>
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.profile.phoneNumberPlaceholder}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-white/30 mb-2">
-                        Date of Birth <span className="text-primary-400">*</span>
+                        {t.profile.dob} <span className="text-primary-400">*</span>
                       </label>
                       <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input" />
                     </div>
                     <div>
                       <label className="block text-xs text-white/30 mb-2">
-                        Time of Birth <span className="text-primary-400">*</span>
+                        {t.profile.tob} <span className="text-primary-400">*</span>
                       </label>
                       <input type="time" value={tob} onChange={(e) => setTob(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input" />
@@ -366,49 +380,49 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-xs text-white/30 mb-2">
-                      Place of Birth <span className="text-primary-400">*</span>
+                      {t.profile.pob} <span className="text-primary-400">*</span>
                     </label>
-                    <input type="text" value={pob} onChange={(e) => setPob(e.target.value)} placeholder="e.g. Mumbai, India"
+                    <input type="text" value={pob} onChange={(e) => setPob(e.target.value)} placeholder={t.profile.pobPlaceholderEg}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-white/30 mb-2">
-                        Gender <span className="text-primary-400">*</span>
+                        {t.profile.gender} <span className="text-primary-400">*</span>
                       </label>
                       <select value={gender} onChange={(e) => setGender(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input">
-                        <option value="">Select gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="">{t.profile.selectGender}</option>
+                        <option value="Male">{t.profile.genderMale}</option>
+                        <option value="Female">{t.profile.genderFemale}</option>
+                        <option value="Other">{t.profile.genderOther}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">Profession</label>
+                      <label className="block text-xs text-white/30 mb-2">{t.profile.profession}</label>
                       <select value={profession} onChange={(e) => setProfession(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input">
-                        <option value="">Select profession</option>
-                        <option value="SOFTWARE">IT / Software Engineer</option>
-                        <option value="SALES">Sales Professional</option>
-                        <option value="MARKETING">Marketing Professional</option>
-                        <option value="FINANCE">Finance / Stock Market</option>
-                        <option value="STUDENT">Student / Job Seeker</option>
-                        <option value="BUSINESS">Business Owner</option>
-                        <option value="HEALTHCARE">Healthcare Professional</option>
-                        <option value="CREATIVE">Creative / Artist</option>
-                        <option value="GOVERNMENT">Government / Public Sector</option>
-                        <option value="OTHER">Other</option>
+                        <option value="">{t.profile.selectProfession}</option>
+                        <option value="SOFTWARE">{t.profile.profSoftwareFull}</option>
+                        <option value="SALES">{t.profile.profSalesFull}</option>
+                        <option value="MARKETING">{t.profile.profMarketingFull}</option>
+                        <option value="FINANCE">{t.profile.profFinanceFull}</option>
+                        <option value="STUDENT">{t.profile.profStudentFull}</option>
+                        <option value="BUSINESS">{t.profile.profBusinessFull}</option>
+                        <option value="HEALTHCARE">{t.profile.profHealthcareFull}</option>
+                        <option value="CREATIVE">{t.profile.profCreativeFull}</option>
+                        <option value="GOVERNMENT">{t.profile.profGovernmentFull}</option>
+                        <option value="OTHER">{t.profile.profOtherFull}</option>
                       </select>
                     </div>
                   </div>
                   <button onClick={handleSave} disabled={saving}
                     className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
                     {saving
-                      ? "Saving..."
+                      ? t.profile.saving
                       : profile && !profile.profileComplete
-                        ? "Complete Profile & Continue"
-                        : "Save Changes"}
+                        ? t.profile.completeAndContinue
+                        : t.profile.saveChanges}
                   </button>
                 </div>
               </div>
@@ -419,39 +433,37 @@ export default function ProfilePage() {
               <div className="space-y-6">
                 <div className="surface-card p-6">
                   <h3 className="text-lg font-bold text-white mb-2">
-                    {hasPassword ? "Change Password" : "Set Password"}
+                    {hasPassword ? t.profile.changePassword : t.profile.setPassword}
                   </h3>
                   <p className="text-sm text-white/40 mb-6">
-                    {hasPassword
-                      ? "Update your password to keep your account secure."
-                      : "You signed in via OTP/social login. Set a password to also log in with email."}
+                    {hasPassword ? t.profile.changePasswordDesc : t.profile.setPasswordDesc}
                   </p>
 
                   <div className="space-y-4">
                     {hasPassword && (
                       <div>
-                        <label className="block text-xs text-white/30 mb-2">Current Password</label>
+                        <label className="block text-xs text-white/30 mb-2">{t.profile.currentPassword}</label>
                         <div className="relative">
                           <input type={showCurrentPw ? "text" : "password"} value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password"
+                            onChange={(e) => setCurrentPassword(e.target.value)} placeholder={t.profile.currentPasswordPlaceholder}
                             className="w-full px-4 py-3 pr-16 rounded-xl surface-input" />
                           <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
-                            {showCurrentPw ? "Hide" : "Show"}
+                            {showCurrentPw ? t.profile.hide : t.profile.show}
                           </button>
                         </div>
                       </div>
                     )}
 
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">New Password</label>
+                      <label className="block text-xs text-white/30 mb-2">{t.profile.newPassword}</label>
                       <div className="relative">
                         <input type={showNewPw ? "text" : "password"} value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 8 chars, upper + lower + number"
+                          onChange={(e) => setNewPassword(e.target.value)} placeholder={t.profile.newPasswordPlaceholder}
                           className="w-full px-4 py-3 pr-16 rounded-xl surface-input" />
                         <button type="button" onClick={() => setShowNewPw(!showNewPw)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
-                          {showNewPw ? "Hide" : "Show"}
+                          {showNewPw ? t.profile.hide : t.profile.show}
                         </button>
                       </div>
                       {newPassword.length > 0 && (
@@ -469,57 +481,57 @@ export default function ProfilePage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">Confirm New Password</label>
+                      <label className="block text-xs text-white/30 mb-2">{t.profile.confirmNewPassword}</label>
                       <input type="password" value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password"
+                        onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t.profile.confirmPasswordPlaceholder}
                         className="w-full px-4 py-3 rounded-xl surface-input" />
                       {confirmPassword && newPassword !== confirmPassword && (
-                        <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
+                        <p className="text-xs text-red-400 mt-1">{t.profile.errPasswordsMismatchInline}</p>
                       )}
                     </div>
 
                     <button onClick={handleChangePassword} disabled={changingPw}
                       className="px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
-                      {changingPw ? "Saving..." : hasPassword ? "Change Password" : "Set Password"}
+                      {changingPw ? t.profile.saving : hasPassword ? t.profile.changePassword : t.profile.setPassword}
                     </button>
                   </div>
                 </div>
 
                 {/* Account Info */}
                 <div className="surface-card p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Account Security</h3>
+                  <h3 className="text-lg font-bold text-white mb-4">{t.profile.accountSecurity}</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
-                        <p className="text-sm text-white">Password</p>
-                        <p className="text-xs text-white/30">Authentication method</p>
+                        <p className="text-sm text-white">{t.profile.passwordStatus}</p>
+                        <p className="text-xs text-white/30">{t.profile.authMethod}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${hasPassword ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
-                        {hasPassword ? "Set" : "Not Set"}
+                        {hasPassword ? t.profile.passwordSet : t.profile.passwordNotSet}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
-                        <p className="text-sm text-white">Email</p>
+                        <p className="text-sm text-white">{t.profile.emailField}</p>
                         <p className="text-xs text-white/30">{profile.email}</p>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">Verified</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">{t.profile.verified}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
-                        <p className="text-sm text-white">Phone</p>
-                        <p className="text-xs text-white/30">{profile.phone || "Not added"}</p>
+                        <p className="text-sm text-white">{t.profile.phoneField}</p>
+                        <p className="text-xs text-white/30">{profile.phone || t.profile.notAdded}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${profile.phone ? "bg-emerald-500/20 text-emerald-400" : "bg-white/[0.03] text-white/30"}`}>
-                        {profile.phone ? "Linked" : "Not Linked"}
+                        {profile.phone ? t.profile.linked : t.profile.notLinked}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
                       <div>
-                        <p className="text-sm text-white">Two-Factor Auth</p>
-                        <p className="text-xs text-white/30">Extra security layer</p>
+                        <p className="text-sm text-white">{t.profile.twoFactorAuth}</p>
+                        <p className="text-xs text-white/30">{t.profile.extraSecurityLayer}</p>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-white/[0.03] text-white/30">Coming Soon</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-white/[0.03] text-white/30">{t.profile.comingSoon}</span>
                     </div>
                   </div>
                 </div>

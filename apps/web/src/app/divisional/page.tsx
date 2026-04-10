@@ -34,7 +34,7 @@ export default function DivisionalPage() {
         locale,
       });
       setResult(data);
-    } catch (err: any) { setError(err.message || "Failed to generate chart"); } finally { setLoading(false); }
+    } catch (err: any) { setError(err.message || t.divisional.generateFailed); } finally { setLoading(false); }
   };
 
   return (
@@ -91,14 +91,14 @@ export default function DivisionalPage() {
 
       {result && (
         <div className="surface-card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">{result.type} Chart</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{result.type} {t.divisional.chartLabel}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-white/40 border-b border-white/[0.06]">
-                  <th className="text-left py-2 px-3">Planet</th>
-                  <th className="text-left py-2 px-3">Sign</th>
-                  <th className="text-right py-2 px-3">Degree</th>
+                  <th className="text-left py-2 px-3">{t.divisional.planet}</th>
+                  <th className="text-left py-2 px-3">{t.divisional.sign}</th>
+                  <th className="text-right py-2 px-3">{t.divisional.degree}</th>
                 </tr>
               </thead>
               <tbody>

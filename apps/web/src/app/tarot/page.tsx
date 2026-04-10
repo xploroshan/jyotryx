@@ -47,7 +47,7 @@ export default function TarotPage() {
       const data = await api.post<TarotResult>("/tarot/draw", { spread, question: question || undefined, locale });
       setResult(data);
     } catch (err: any) {
-      setError(err.message || "Failed to draw cards");
+      setError(err.message || t.tarot.drawFailed);
     } finally {
       setLoading(false);
     }

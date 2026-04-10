@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/i18n";
+import type { TranslationKeys } from "@/i18n";
 
 interface KundliData {
   id: string;
@@ -84,7 +85,7 @@ export default function KundliPage() {
         setError(t.kundli.loginRequired);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to generate Kundli. Please try again.");
+      setError(err.message || t.kundli.generateFailed);
     } finally {
       setGenerating(false);
     }
@@ -263,7 +264,7 @@ export default function KundliPage() {
                     <line x1="200" y1="390" x2="10" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
                     <line x1="10" y1="200" x2="200" y2="10" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
                     {/* Ascendant label */}
-                    <text x="185" y="105" fill="rgba(217,70,239,0.6)" fontSize="11" fontFamily="sans-serif">Asc</text>
+                    <text x="185" y="105" fill="rgba(217,70,239,0.6)" fontSize="11" fontFamily="sans-serif">{t.kundli.asc}</text>
                     <text x="180" y="125" fill="rgba(255,255,255,0.7)" fontSize="10" fontFamily="sans-serif">
                       {kundli.ascendant?.substring(0, 3)}
                     </text>
@@ -326,7 +327,7 @@ export default function KundliPage() {
                 {kundli.houses?.map((h) => (
                   <div key={h.house} className="surface-card p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                      <h4 className="font-semibold text-white">House {h.house}</h4>
+                      <h4 className="font-semibold text-white">{t.kundli.houseLabel} {h.house}</h4>
                       <div className="flex gap-2">
                         <span className="text-xs px-2 py-1 rounded-full bg-mystic-500/20 text-mystic-400">{h.sign}</span>
                         {h.planets.length > 0 && (
@@ -338,8 +339,8 @@ export default function KundliPage() {
                     </div>
                     <p className="text-sm text-white/60">
                       {h.planets.length > 0
-                        ? `${h.planets.join(", ")} ${h.planets.length === 1 ? "is" : "are"} placed in ${h.sign} in the ${h.house}${getOrdinal(h.house)} house.`
-                        : `${h.sign} rules the ${h.house}${getOrdinal(h.house)} house with no planets placed here.`
+                        ? `${h.planets.join(", ")} ${h.planets.length === 1 ? t.kundli.isPlaced : t.kundli.arePlaced} ${h.sign} ${t.kundli.inThe} ${h.house}${getOrdinal(h.house, t)} ${t.kundli.houseWord}.`
+                        : `${h.sign} ${t.kundli.rulesWithNoPlanets} ${h.house}${getOrdinal(h.house, t)} ${t.kundli.withNoPlanets}`
                       }
                     </p>
                   </div>
@@ -406,7 +407,7 @@ export default function KundliPage() {
                           y.effect === "malefic" ? "bg-red-500/20 text-red-400" :
                           "bg-accent-500/20 text-accent-400"
                         }`}>
-                          {y.effect.charAt(0).toUpperCase() + y.effect.slice(1)}
+                          {y.effect === "benefic" ? t.kundli.effectBenefic : y.effect === "malefic" ? t.kundli.effectMalefic : t.kundli.effectNeutral}
                         </span>
                       </div>
                       <p className="text-sm text-white/60">{y.description}</p>
@@ -433,7 +434,15 @@ export default function KundliPage() {
                           d.severity === "moderate" ? "bg-amber-500/20 text-amber-400" :
                           "bg-red-500/20 text-red-400"
                         }`}>
-                          {d.present ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : t.kundli.absent}
+                          {!d.present
+                            ? t.kundli.absent
+                            : d.severity === "mild"
+                              ? t.kundli.severityMild
+                              : d.severity === "moderate"
+                                ? t.kundli.severityModerate
+                                : d.severity === "severe"
+                                  ? t.kundli.severitySevere
+                                  : t.kundli.severityNone}
                         </span>
                       </div>
                       <p className="text-sm text-white/60 mb-2">{d.description}</p>
@@ -462,8 +471,8 @@ export default function KundliPage() {
   );
 }
 
-function getOrdinal(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
+function getOrdinal(n: number, t: TranslationKeys): string {
+  const s = [t.kundli.ordTh, t.kundli.ordSt, t.kundli.ordNd, t.kundli.ordRd];
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
 }

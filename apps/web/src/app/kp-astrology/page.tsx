@@ -29,7 +29,7 @@ export default function KPAstrologyPage() {
         locale,
       });
       setResult(data);
-    } catch (err: any) { setError(err.message || "Failed to generate KP chart"); } finally { setLoading(false); }
+    } catch (err: any) { setError(err.message || t.kp.generateFailed); } finally { setLoading(false); }
   };
 
   return (
@@ -76,7 +76,7 @@ export default function KPAstrologyPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="text-white/40 border-b border-white/[0.06]">
-                  <th className="text-left py-2 px-2">Cusp</th><th className="text-left py-2 px-2">Sign</th><th className="text-left py-2 px-2">Nakshatra</th><th className="text-left py-2 px-2">Star Lord</th><th className="text-left py-2 px-2">Sub Lord</th><th className="text-right py-2 px-2">Longitude</th>
+                  <th className="text-left py-2 px-2">{t.kp.cusp}</th><th className="text-left py-2 px-2">{t.kp.sign}</th><th className="text-left py-2 px-2">{t.kp.nakshatra}</th><th className="text-left py-2 px-2">{t.kp.starLord}</th><th className="text-left py-2 px-2">{t.kp.subLord}</th><th className="text-right py-2 px-2">{t.kp.longitude}</th>
                 </tr></thead>
                 <tbody>
                   {result.cusps.map((c) => (
@@ -99,7 +99,7 @@ export default function KPAstrologyPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="text-white/40 border-b border-white/[0.06]">
-                  <th className="text-left py-2 px-2">Planet</th><th className="text-left py-2 px-2">Sign</th><th className="text-left py-2 px-2">Nakshatra</th><th className="text-left py-2 px-2">Star Lord</th><th className="text-left py-2 px-2">Sub Lord</th><th className="text-right py-2 px-2">Degree</th>
+                  <th className="text-left py-2 px-2">{t.kp.planet}</th><th className="text-left py-2 px-2">{t.kp.sign}</th><th className="text-left py-2 px-2">{t.kp.nakshatra}</th><th className="text-left py-2 px-2">{t.kp.starLord}</th><th className="text-left py-2 px-2">{t.kp.subLord}</th><th className="text-right py-2 px-2">{t.kp.degree}</th>
                 </tr></thead>
                 <tbody>
                   {result.planets.map((p) => (
@@ -122,8 +122,8 @@ export default function KPAstrologyPage() {
             <div className="grid sm:grid-cols-3 gap-3">
               {Object.entries(result.significators).map(([house, planets]) => (
                 <div key={house} className="bg-white/[0.03] rounded-lg p-3">
-                  <div className="text-sm font-medium text-primary-400">House {house}</div>
-                  <div className="text-xs text-white/60 mt-1">{(planets as string[]).length > 0 ? (planets as string[]).join(", ") : "None"}</div>
+                  <div className="text-sm font-medium text-primary-400">{t.kp.house} {house}</div>
+                  <div className="text-xs text-white/60 mt-1">{(planets as string[]).length > 0 ? (planets as string[]).join(", ") : t.kp.none}</div>
                 </div>
               ))}
             </div>
