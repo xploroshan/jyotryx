@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 
@@ -19,6 +19,7 @@ interface UserProfile {
   credits: number;
   role: string;
   createdAt: string;
+  profileComplete: boolean;
 }
 
 interface CreditInfo {
@@ -31,7 +32,9 @@ interface CreditInfo {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { isAuthenticated, accessToken, logout, updateCredits } = useAuthStore();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete } = useAuthStore();
+  const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,9 +97,25 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
     setError("");
     setSuccess("");
+
+    // When the user is completing their profile for the first time, enforce
+    // that the required birth fields are filled before hitting the API.
+    const wasIncomplete = profile ? !profile.profileComplete : true;
+    if (wasIncomplete) {
+      const missing: string[] = [];
+      if (!dob) missing.push("Date of Birth");
+      if (!tob) missing.push("Time of Birth");
+      if (!pob.trim()) missing.push("Place of Birth");
+      if (!gender) missing.push("Gender");
+      if (missing.length) {
+        setError(`Please fill in: ${missing.join(", ")}`);
+        return;
+      }
+    }
+
+    setSaving(true);
     try {
       const updated = await api.put<UserProfile>(
         "/users/me",
@@ -113,6 +132,15 @@ export default function ProfilePage() {
       );
       setProfile(updated);
       updateCredits(updated.credits);
+      setProfileComplete(updated.profileComplete);
+
+      // First-time completion → unlock the rest of the app.
+      if (wasIncomplete && updated.profileComplete) {
+        setSuccess("Profile complete! Redirecting to your dashboard...");
+        setTimeout(() => router.push("/my-day"), 1200);
+        return;
+      }
+
       setSuccess("Profile updated successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
@@ -219,10 +247,39 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-2">
-            My <span className="text-gradient">Profile</span>
+            {profile && !profile.profileComplete ? (
+              <>Welcome to <span className="text-gradient">Jyotron</span></>
+            ) : (
+              <>My <span className="text-gradient">Profile</span></>
+            )}
           </h1>
-          <p className="text-white/40 text-sm">Manage your account and birth details for accurate predictions</p>
+          <p className="text-white/40 text-sm">
+            {profile && !profile.profileComplete
+              ? "Complete your birth details to unlock personalized astrology"
+              : "Manage your account and birth details for accurate predictions"}
+          </p>
         </div>
+
+        {/* Onboarding banner — only shown when profile is incomplete */}
+        {profile && !profile.profileComplete && (
+          <div className="mb-6 p-4 rounded-xl border border-primary-500/30 bg-primary-500/10 flex gap-3">
+            <div className="shrink-0 w-9 h-9 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-300">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <div className="text-sm">
+              <p className="text-white font-medium mb-0.5">
+                {completeMode ? "Almost there!" : "Complete your profile"}
+              </p>
+              <p className="text-white/60 text-xs leading-relaxed">
+                We need your <span className="text-white">date, time and place of birth</span> plus
+                your <span className="text-white">gender</span> to generate accurate kundli, horoscope,
+                and compatibility readings. Other features stay locked until this is filled.
+              </p>
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -293,24 +350,32 @@ export default function ProfilePage() {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">Date of Birth</label>
+                      <label className="block text-xs text-white/30 mb-2">
+                        Date of Birth <span className="text-primary-400">*</span>
+                      </label>
                       <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input" />
                     </div>
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">Time of Birth</label>
+                      <label className="block text-xs text-white/30 mb-2">
+                        Time of Birth <span className="text-primary-400">*</span>
+                      </label>
                       <input type="time" value={tob} onChange={(e) => setTob(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-white/30 mb-2">Place of Birth</label>
+                    <label className="block text-xs text-white/30 mb-2">
+                      Place of Birth <span className="text-primary-400">*</span>
+                    </label>
                     <input type="text" value={pob} onChange={(e) => setPob(e.target.value)} placeholder="e.g. Mumbai, India"
                       className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">Gender</label>
+                      <label className="block text-xs text-white/30 mb-2">
+                        Gender <span className="text-primary-400">*</span>
+                      </label>
                       <select value={gender} onChange={(e) => setGender(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input">
                         <option value="">Select gender</option>
@@ -339,7 +404,11 @@ export default function ProfilePage() {
                   </div>
                   <button onClick={handleSave} disabled={saving}
                     className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving
+                      ? "Saving..."
+                      : profile && !profile.profileComplete
+                        ? "Complete Profile & Continue"
+                        : "Save Changes"}
                   </button>
                 </div>
               </div>

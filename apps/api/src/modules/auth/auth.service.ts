@@ -21,7 +21,21 @@ import {
   ChangePasswordDto,
   FirebaseAuthDto,
 } from './dto';
+import { isProfileComplete } from '../user/user.service';
 import * as admin from 'firebase-admin';
+
+type PrismaUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  credits: number;
+  role: string;
+  dateOfBirth: Date | null;
+  timeOfBirth: string | null;
+  placeOfBirth: any;
+  gender: string | null;
+};
 
 export interface AuthTokens {
   accessToken: string;
@@ -37,8 +51,21 @@ export interface AuthResponse {
     phone?: string | null;
     credits: number;
     role: string;
+    profileComplete: boolean;
   };
   tokens: AuthTokens;
+}
+
+function toAuthUser(user: PrismaUser): AuthResponse['user'] {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    credits: user.credits,
+    role: user.role,
+    profileComplete: isProfileComplete(user),
+  };
 }
 
 // In-memory OTP store (use Redis in production)
@@ -149,14 +176,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        credits: user.credits,
-        role: user.role,
-      },
+      user: toAuthUser(user),
       tokens,
     };
   }
@@ -194,14 +214,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        credits: user.credits,
-        role: user.role,
-      },
+      user: toAuthUser(user),
       tokens,
     };
   }
@@ -378,14 +391,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        credits: user.credits,
-        role: user.role,
-      },
+      user: toAuthUser(user),
       tokens,
     };
   }
@@ -461,14 +467,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        credits: user.credits,
-        role: user.role,
-      },
+      user: toAuthUser(user),
       tokens,
     };
   }
@@ -545,14 +544,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        credits: user.credits,
-        role: user.role,
-      },
+      user: toAuthUser(user),
       tokens,
     };
   }

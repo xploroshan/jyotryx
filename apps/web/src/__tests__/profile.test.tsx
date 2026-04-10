@@ -10,18 +10,21 @@ import React from 'react';
 
 // ─── Mock next/navigation ───────────────────────────────────────────────────
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // ─── Mock store state ───────────────────────────────────────────────────────
 const mockStoreState = {
-  user: { id: '1', name: 'Test User', email: 'test@test.com', credits: 10, role: 'user' },
+  user: { id: '1', name: 'Test User', email: 'test@test.com', credits: 10, role: 'user', profileComplete: true },
   accessToken: 'valid-token',
   refreshToken: 'valid-refresh',
   isAuthenticated: true,
   setAuth: vi.fn(),
   updateCredits: vi.fn(),
+  setProfileComplete: vi.fn(),
   logout: vi.fn(),
 };
 
@@ -52,6 +55,7 @@ const mockProfile = {
   dateOfBirth: '1990-05-15', timeOfBirth: '10:30', placeOfBirth: 'Mumbai',
   gender: 'Male', profession: 'SOFTWARE', profilePhoto: null,
   credits: 10, role: 'user', createdAt: '2025-01-01T00:00:00Z',
+  profileComplete: true,
 };
 const mockCredits = { available: 10, used: 5, total: 15, role: 'user', resetsAt: '2026-05-01' };
 const mockAuthStatus = { hasPassword: true };

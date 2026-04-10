@@ -8,6 +8,7 @@ interface User {
   phone?: string | null;
   credits: number;
   role: string;
+  profileComplete: boolean;
 }
 
 interface AuthState {
@@ -17,6 +18,7 @@ interface AuthState {
   isAuthenticated: boolean;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateCredits: (credits: number) => void;
+  setProfileComplete: (complete: boolean) => void;
   logout: () => void;
 }
 
@@ -32,6 +34,10 @@ export const useAuthStore = create<AuthState>()(
       updateCredits: (credits) =>
         set((state) => ({
           user: state.user ? { ...state.user, credits } : null,
+        })),
+      setProfileComplete: (complete) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, profileComplete: complete } : null,
         })),
       logout: () => {
         // Sign out of Firebase client SDK too

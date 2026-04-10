@@ -15,6 +15,30 @@ export interface UserProfile {
   credits: number;
   role: string;
   createdAt: string;
+  profileComplete: boolean;
+}
+
+/**
+ * A profile is considered "complete" once the user has supplied the minimum
+ * birth details required by the astrology features: date of birth, time of
+ * birth, place of birth (with a name), and gender.
+ */
+export function isProfileComplete(user: {
+  dateOfBirth: Date | null;
+  timeOfBirth: string | null;
+  placeOfBirth: any;
+  gender: string | null;
+}): boolean {
+  if (!user.dateOfBirth) return false;
+  if (!user.timeOfBirth) return false;
+  if (!user.gender) return false;
+  const place = user.placeOfBirth;
+  if (!place) return false;
+  if (typeof place === 'string') return place.trim().length > 0;
+  if (typeof place === 'object' && typeof place.name === 'string') {
+    return place.name.trim().length > 0;
+  }
+  return false;
 }
 
 export interface UpdateProfileDto {
@@ -60,6 +84,7 @@ export class UserService {
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),
+      profileComplete: isProfileComplete(user),
     };
   }
 
@@ -92,6 +117,7 @@ export class UserService {
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),
+      profileComplete: isProfileComplete(user),
     };
   }
 
