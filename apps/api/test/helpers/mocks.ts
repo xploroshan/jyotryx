@@ -115,6 +115,7 @@ export const mockUser = {
   phone: '+919876543210',
   credits: 20,
   role: 'USER',
+  preferredLanguage: 'en',
   gender: 'Male',
   profession: 'SOFTWARE',
   dateOfBirth: new Date('1990-05-15'),

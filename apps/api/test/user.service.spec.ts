@@ -15,7 +15,10 @@ describe('UserService', () => {
     dateOfBirth: new Date('1990-05-15'),
     timeOfBirth: '14:30',
     placeOfBirth: { name: 'Mumbai' },
+    gender: 'Male',
+    profession: null,
     profilePhoto: null,
+    preferredLanguage: 'en',
     credits: 10,
     role: 'USER',
     createdAt: new Date(),
@@ -71,6 +74,50 @@ describe('UserService', () => {
       const result = await service.updateProfile('test-uuid', { name: 'Updated Name' });
 
       expect(result.name).toBe('Updated Name');
+    });
+
+    it('should persist preferredLanguage when set', async () => {
+      prisma.user.update.mockResolvedValue({ ...mockUser, preferredLanguage: 'hi' });
+
+      const result = await service.updateProfile('test-uuid', { preferredLanguage: 'hi' });
+
+      expect(result.preferredLanguage).toBe('hi');
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'test-uuid' },
+        data: expect.objectContaining({ preferredLanguage: 'hi' }),
+      });
+    });
+
+    it('should accept every supported language code', async () => {
+      const supported = ['en', 'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa', 'or', 'as'];
+      for (const lang of supported) {
+        prisma.user.update.mockResolvedValue({ ...mockUser, preferredLanguage: lang });
+        const result = await service.updateProfile('test-uuid', { preferredLanguage: lang });
+        expect(result.preferredLanguage).toBe(lang);
+      }
+    });
+
+    it('should reject unsupported language codes', async () => {
+      await expect(
+        service.updateProfile('test-uuid', { preferredLanguage: 'xx' }),
+      ).rejects.toThrow(/Unsupported language/);
+      // Prisma should never be called when validation fails
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should NOT overwrite preferredLanguage when the field is omitted', async () => {
+      prisma.user.update.mockResolvedValue({ ...mockUser, name: 'Renamed' });
+      await service.updateProfile('test-uuid', { name: 'Renamed' });
+      const callArg = prisma.user.update.mock.calls[0][0];
+      expect(callArg.data).not.toHaveProperty('preferredLanguage');
+    });
+  });
+
+  describe('getProfile: preferredLanguage', () => {
+    it('should return preferredLanguage from the database', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, preferredLanguage: 'ta' });
+      const result = await service.getProfile('test-uuid');
+      expect(result.preferredLanguage).toBe('ta');
     });
   });
 

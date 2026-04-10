@@ -12,11 +12,16 @@ export interface UserProfile {
   gender?: string | null;
   profession?: string | null;
   profilePhoto?: string | null;
+  preferredLanguage: string;
   credits: number;
   role: string;
   createdAt: string;
   profileComplete: boolean;
 }
+
+const SUPPORTED_LANGUAGES = new Set([
+  'en', 'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa', 'or', 'as',
+]);
 
 /**
  * A profile is considered "complete" once the user has supplied the minimum
@@ -50,6 +55,7 @@ export interface UpdateProfileDto {
   gender?: string;
   profession?: string;
   profilePhoto?: string;
+  preferredLanguage?: string;
 }
 
 export interface UserCredits {
@@ -81,6 +87,7 @@ export class UserService {
       gender: user.gender,
       profession: user.profession,
       profilePhoto: user.profilePhoto,
+      preferredLanguage: user.preferredLanguage,
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),
@@ -89,6 +96,9 @@ export class UserService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserProfile> {
+    if (dto.preferredLanguage && !SUPPORTED_LANGUAGES.has(dto.preferredLanguage)) {
+      throw new NotFoundException(`Unsupported language: ${dto.preferredLanguage}`);
+    }
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -100,6 +110,7 @@ export class UserService {
         ...(dto.gender && { gender: dto.gender }),
         ...(dto.profession && { profession: dto.profession as any }),
         ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
+        ...(dto.preferredLanguage && { preferredLanguage: dto.preferredLanguage }),
       },
     });
 
@@ -114,6 +125,7 @@ export class UserService {
       gender: user.gender,
       profession: user.profession,
       profilePhoto: user.profilePhoto,
+      preferredLanguage: user.preferredLanguage,
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),

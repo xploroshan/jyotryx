@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
-import { useTranslation } from "@/i18n";
+import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { LogoMark } from "@/components/ui/Logo";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
   auth,
   RecaptchaVerifier,
@@ -19,7 +20,7 @@ import {
 import type { ConfirmationResult } from "firebase/auth";
 
 function AuthPageContent() {
-  const { t } = useTranslation();
+  const { t, setLocale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -66,15 +67,22 @@ function AuthPageContent() {
     };
   }, []);
 
+  const applyUserLanguage = useCallback((userLang?: string | null) => {
+    if (userLang && (SUPPORTED_LOCALES as string[]).includes(userLang)) {
+      setLocale(userLang as Locale, { userSet: true });
+    }
+  }, [setLocale]);
+
   const authenticateWithBackend = useCallback(async (firebaseIdToken: string) => {
     try {
       const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+      applyUserLanguage(res.user?.preferredLanguage);
       router.push(res.user?.profileComplete ? "/my-day" : "/profile");
     } catch (err: any) {
       throw new Error(err.message || t.auth.errServerAuthFailed);
     }
-  }, [setAuth, router, t]);
+  }, [setAuth, router, t, applyUserLanguage]);
 
   const setupRecaptcha = useCallback(() => {
     // Clear previous verifier to avoid stale instances
@@ -171,6 +179,7 @@ function AuthPageContent() {
       const body = tab === "login" ? { email, password } : { name, email, password };
       const res = await api.post<any>(endpoint, body);
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+      applyUserLanguage(res.user?.preferredLanguage);
       router.push(res.user?.profileComplete ? "/my-day" : "/profile");
     } catch (err: any) {
       // If backend login fails, try Firebase auth as fallback
@@ -235,6 +244,11 @@ function AuthPageContent() {
       <div className="w-full max-w-sm">
         {/* Invisible reCAPTCHA container */}
         <div ref={recaptchaContainerRef} id="recaptcha-container" />
+
+        {/* Language switcher (anonymous users can change language before signing in) */}
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
 
         {/* Header */}
         <div className="text-center mb-8">

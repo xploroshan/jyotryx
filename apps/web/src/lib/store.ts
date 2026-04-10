@@ -8,6 +8,7 @@ interface User {
   phone?: string | null;
   credits: number;
   role: string;
+  preferredLanguage?: string;
   profileComplete: boolean;
 }
 
@@ -43,6 +44,11 @@ export const useAuthStore = create<AuthState>()(
         // Sign out of Firebase client SDK too
         import('@/lib/firebase').then(({ auth }) => {
           auth.signOut().catch(() => {});
+        });
+        // Reset the locale preference so the next user starts from their
+        // system default instead of the previous user's chosen language.
+        import('@/i18n').then(({ useI18nStore }) => {
+          try { useI18nStore.getState().resetLocale(); } catch {}
         });
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
       },

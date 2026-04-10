@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation, type Locale } from '@/i18n';
+import { useAuthStore } from '@/lib/store';
+import { api } from '@/lib/api';
 
 const locales: { code: Locale; label: string; native: string }[] = [
   { code: 'en', label: 'EN', native: 'English' },
@@ -20,8 +22,23 @@ const locales: { code: Locale; label: string; native: string }[] = [
 
 export default function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  /**
+   * Applies the chosen locale to the i18n store (marking it as a user-set
+   * choice so it survives rehydration) and, when the user is authenticated,
+   * persists the choice to the backend so it's restored on next login.
+   */
+  const handleSelect = (code: Locale) => {
+    setLocale(code, { userSet: true });
+    setOpen(false);
+    if (isAuthenticated) {
+      // Fire-and-forget — UI updates immediately; server sync is best-effort.
+      api.put('/users/me', { preferredLanguage: code }).catch(() => {});
+    }
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -53,7 +70,7 @@ export default function LanguageSwitcher() {
           {locales.map((l) => (
             <button
               key={l.code}
-              onClick={() => { setLocale(l.code); setOpen(false); }}
+              onClick={() => handleSelect(l.code)}
               className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
                 locale === l.code
                   ? 'text-primary-400 bg-primary-600/10'
