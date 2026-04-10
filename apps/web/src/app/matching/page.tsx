@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n";
+import { useAuthStore } from "@/lib/store";
 
 interface PersonForm {
   name: string;
@@ -39,6 +40,29 @@ export default function MatchingPage() {
   const [results, setResults] = useState<typeof mockResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [personAPrefilled, setPersonAPrefilled] = useState(false);
+  const user = useAuthStore((s) => s.user);
+
+  // Prepopulate Person A from the logged-in user's profile (Person B is always the partner).
+  useEffect(() => {
+    if (!user) return;
+    setPersonA((prev) => {
+      const next: PersonForm = {
+        name: prev.name || user.name || "",
+        dob: prev.dob || user.dateOfBirth || "",
+        time: prev.time || user.timeOfBirth || "",
+        place: prev.place || user.placeOfBirth || "",
+      };
+      const didPrefill = Boolean(
+        (user.name && !prev.name) ||
+          (user.dateOfBirth && !prev.dob) ||
+          (user.timeOfBirth && !prev.time) ||
+          (user.placeOfBirth && !prev.place),
+      );
+      if (didPrefill) setPersonAPrefilled(true);
+      return next;
+    });
+  }, [user]);
 
   const isValid = personA.name && personA.dob && personA.time && personA.place && personB.name && personB.dob && personB.time && personB.place;
 
@@ -47,7 +71,6 @@ export default function MatchingPage() {
     setLoading(true);
     setError("");
     try {
-      const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
       if (!token) {
         setError(t.matching.loginRequired);
@@ -175,12 +198,22 @@ export default function MatchingPage() {
 
         {/* Forms */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <PersonFormComponent
-            label={t.matching.personA}
-            person={personA}
-            setPerson={setPersonA}
-            gradient="from-pink-400 to-red-400"
-          />
+          <div>
+            {personAPrefilled && (
+              <div className="mb-3 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{t.common.usingProfileDetails}</span>
+              </div>
+            )}
+            <PersonFormComponent
+              label={t.matching.personA}
+              person={personA}
+              setPerson={setPersonA}
+              gradient="from-pink-400 to-red-400"
+            />
+          </div>
           <PersonFormComponent
             label={t.matching.personB}
             person={personB}

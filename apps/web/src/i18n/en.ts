@@ -24,6 +24,7 @@ export const en = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'Using your profile details',
   },
 
   // Navigation

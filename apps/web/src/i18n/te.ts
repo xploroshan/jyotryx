@@ -25,6 +25,7 @@ export const te: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'మీ ప్రొఫైల్ వివరాలను ఉపయోగిస్తోంది',
   },
   nav: {
     myDay: 'నా రోజు',

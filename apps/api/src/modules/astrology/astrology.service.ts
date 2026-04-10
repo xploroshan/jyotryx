@@ -641,8 +641,18 @@ export class AstrologyService {
   }
 
   private async generateAIKundli(birthDetails: BirthDetails): Promise<any> {
-    // PRIMARY: Use Swiss Ephemeris for precise deterministic calculations
-    return this.generateSwissEphKundli(birthDetails);
+    // PRIMARY: Use Swiss Ephemeris for precise deterministic calculations.
+    // The chart is a pure function of (date, time, place, lat, lng) so it is safe
+    // to memoize across users. This eliminates the dominant Swiss Ephemeris cost
+    // for the 2nd+ kundli request with identical inputs (e.g. a user re-opening
+    // their own chart or matching both partners repeatedly).
+    const cacheKey = `kundli:chart:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
+    const cached = this.cacheService.get<any>(cacheKey);
+    if (cached) return cached;
+    const chartData = this.generateSwissEphKundli(birthDetails);
+    // 24h TTL — birth charts are fully deterministic so TTL is a safety net only.
+    this.cacheService.set(cacheKey, chartData, 24 * 60 * 60 * 1000);
+    return chartData;
   }
 
   // ─── Swiss Ephemeris: get Moon data for matching ─────────────────────────────
@@ -672,9 +682,13 @@ export class AstrologyService {
     const compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
     const recommendation = `The match score of ${totalScore}/36 indicates ${compatibility.toLowerCase()} compatibility. ${totalScore >= 18 ? 'The couple shares promising foundations for a harmonious relationship.' : 'Remedial measures may be recommended for a balanced relationship.'}`;
 
-    // Detect Manglik status for each partner
-    const chart1 = this.generateSwissEphKundli(partner1);
-    const chart2 = this.generateSwissEphKundli(partner2);
+    // Detect Manglik status for each partner — use the cached chart pipeline so
+    // re-running the same matching (or matching when a partner's chart was
+    // already computed elsewhere) skips the expensive Swiss Ephemeris pass.
+    const [chart1, chart2] = await Promise.all([
+      this.generateAIKundli(partner1),
+      this.generateAIKundli(partner2),
+    ]);
     const doshas1 = this.detectDoshas(chart1.planetaryPositions);
     const doshas2 = this.detectDoshas(chart2.planetaryPositions);
     const manglikA = doshas1.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
@@ -1268,7 +1282,8 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
     }
 
-    const chart = this.generateSwissEphKundli(birthDetails);
+    // Reuse the cached deterministic chart computation.
+    const chart = await this.generateAIKundli(birthDetails);
     const planetLongitudes = chart.planetaryPositions.map((p: PlanetPosition) => ({
       planet: p.planet,
       longitude: ALL_SIGNS.indexOf(p.sign as any) * 30 + p.degree,
@@ -1292,6 +1307,12 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     if (!deducted) {
       throw new BadRequestException('Insufficient credits.');
     }
+
+    // KP charts are a pure function of birth details — cache the expensive
+    // Placidus house + sub-lord computation across requests.
+    const cacheKey = `kp:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
+    const cached = this.cacheService.get<any>(cacheKey);
+    if (cached) return { ...cached, birthDetails };
 
     const jd = this.computeJulianDay(birthDetails);
     const lat = birthDetails.latitude || 28.6139;
@@ -1385,13 +1406,15 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       }
     }
 
-    return {
+    const kpResult = {
       system: 'KP (Krishnamurti Paddhati)',
       birthDetails,
       cusps: cuspAnalysis,
       planets: planetPositions,
       significators,
     };
+    this.cacheService.set(cacheKey, kpResult, 24 * 60 * 60 * 1000);
+    return kpResult;
   }
 
   private buildKPSubLordTable(): { start: number; end: number; lord: string }[] {

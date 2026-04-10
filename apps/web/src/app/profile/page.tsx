@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete } = useAuthStore();
+  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails } = useAuthStore();
   const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
@@ -92,6 +92,13 @@ export default function ProfilePage() {
       setGender(profileData.gender || "");
       setProfession(profileData.profession || "");
       updateCredits(profileData.credits);
+      updateBirthDetails({
+        name: profileData.name,
+        dateOfBirth: profileData.dateOfBirth ? profileData.dateOfBirth.split("T")[0] : null,
+        timeOfBirth: profileData.timeOfBirth || null,
+        placeOfBirth: typeof profileData.placeOfBirth === "object" ? profileData.placeOfBirth?.name || null : profileData.placeOfBirth || null,
+        gender: profileData.gender || null,
+      });
     } catch (err: any) {
       setError(err.message || t.profile.loadFailed);
     } finally {
@@ -136,6 +143,13 @@ export default function ProfilePage() {
       setProfile(updated);
       updateCredits(updated.credits);
       setProfileComplete(updated.profileComplete);
+      updateBirthDetails({
+        name: updated.name,
+        dateOfBirth: updated.dateOfBirth ? updated.dateOfBirth.split("T")[0] : null,
+        timeOfBirth: updated.timeOfBirth || null,
+        placeOfBirth: typeof updated.placeOfBirth === "object" ? updated.placeOfBirth?.name || null : updated.placeOfBirth || null,
+        gender: updated.gender || null,
+      });
 
       // First-time completion → unlock the rest of the app.
       if (wasIncomplete && updated.profileComplete) {

@@ -25,6 +25,7 @@ export const pa: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'ਤੁਹਾਡੀ ਪ੍ਰੋਫਾਈਲ ਵੇਰਵਿਆਂ ਦੀ ਵਰਤੋਂ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ',
   },
   nav: {
     myDay: 'ਮੇਰਾ ਦਿਨ',

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n";
 import type { TranslationKeys } from "@/i18n";
+import { useAuthStore } from "@/lib/store";
 
 interface KundliData {
   id: string;
@@ -56,31 +57,54 @@ export default function KundliPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", dob: "", time: "", place: "" });
+  const [prefilled, setPrefilled] = useState(false);
+  const user = useAuthStore((s) => s.user);
+
+  // Prepopulate from user profile when available
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => {
+      const next = {
+        name: prev.name || user.name || "",
+        dob: prev.dob || user.dateOfBirth || "",
+        time: prev.time || user.timeOfBirth || "",
+        place: prev.place || user.placeOfBirth || "",
+      };
+      const didPrefill = Boolean(
+        (user.name && !prev.name) ||
+          (user.dateOfBirth && !prev.dob) ||
+          (user.timeOfBirth && !prev.time) ||
+          (user.placeOfBirth && !prev.place),
+      );
+      if (didPrefill) setPrefilled(true);
+      return next;
+    });
+  }, [user]);
 
   const handleGenerate = async () => {
     if (!form.name || !form.dob || !form.time || !form.place) return;
     setGenerating(true);
     setError("");
     try {
-      const { useAuthStore } = await import("@/lib/store");
       const token = useAuthStore.getState().accessToken;
       if (token) {
         const { api } = await import("@/lib/api");
-        const result = await api.post<KundliData>("/astrology/kundli", {
-          dateOfBirth: form.dob,
-          timeOfBirth: form.time,
-          placeOfBirth: form.place,
-          locale,
-        }, { token });
+        // Run kundli + dosha fetches in parallel to cut wait time roughly in half.
+        const [result, doshaResult] = await Promise.all([
+          api.post<KundliData>(
+            "/astrology/kundli",
+            {
+              dateOfBirth: form.dob,
+              timeOfBirth: form.time,
+              placeOfBirth: form.place,
+              locale,
+            },
+            { token },
+          ),
+          api.get<DoshaData>("/astrology/dosha", { token }).catch(() => null),
+        ]);
         setKundli(result);
-
-        // Also fetch doshas
-        try {
-          const doshaResult = await api.get<DoshaData>("/astrology/dosha", { token });
-          setDoshas(doshaResult);
-        } catch {
-          // Dosha fetch is optional
-        }
+        if (doshaResult) setDoshas(doshaResult);
       } else {
         setError(t.kundli.loginRequired);
       }
@@ -139,6 +163,15 @@ export default function KundliPage() {
           <div className="max-w-lg mx-auto">
             <div className="surface-card p-8">
               <h2 className="text-lg font-bold text-white mb-6">{t.kundli.enterBirthDetails}</h2>
+
+              {prefilled && (
+                <div className="mb-4 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{t.common.usingProfileDetails}</span>
+                </div>
+              )}
 
               {error && (
                 <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>

@@ -25,6 +25,7 @@ export const kn: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ವಿವರಗಳನ್ನು ಬಳಸಲಾಗುತ್ತಿದೆ',
   },
   nav: {
     myDay: 'ನನ್ನ ದಿನ',

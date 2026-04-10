@@ -54,8 +54,19 @@ export interface AuthResponse {
     role: string;
     preferredLanguage: string;
     profileComplete: boolean;
+    dateOfBirth?: string | null;
+    timeOfBirth?: string | null;
+    placeOfBirth?: string | null;
+    gender?: string | null;
   };
   tokens: AuthTokens;
+}
+
+function extractPlaceName(place: any): string | null {
+  if (!place) return null;
+  if (typeof place === 'string') return place;
+  if (typeof place === 'object' && typeof place.name === 'string') return place.name;
+  return null;
 }
 
 function toAuthUser(user: PrismaUser & { preferredLanguage?: string }): AuthResponse['user'] {
@@ -68,6 +79,10 @@ function toAuthUser(user: PrismaUser & { preferredLanguage?: string }): AuthResp
     role: user.role,
     preferredLanguage: (user as any).preferredLanguage ?? 'en',
     profileComplete: isProfileComplete(user),
+    dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().slice(0, 10) : null,
+    timeOfBirth: user.timeOfBirth ?? null,
+    placeOfBirth: extractPlaceName(user.placeOfBirth),
+    gender: user.gender ?? null,
   };
 }
 

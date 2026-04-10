@@ -335,15 +335,77 @@ export default function MyDayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-2 border-primary-500/20" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary-500 animate-spin" />
-            <div className="absolute inset-3 rounded-full border border-accent-500/20" />
-            <div className="absolute inset-3 rounded-full border border-transparent border-t-accent-400 animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
+      <div className="min-h-screen bg-surface-950" aria-busy="true" aria-live="polite">
+        {/* Hero skeleton — mirrors the real hero layout so the page doesn't jump */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary-600/8 via-transparent to-transparent" />
+          <div className="relative mx-auto max-w-5xl px-4 pt-8 pb-6 sm:pt-12 sm:pb-10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div className="space-y-3">
+                <div className="h-3 w-40 rounded bg-white/[0.08] animate-pulse" />
+                <div className="h-9 w-72 rounded bg-white/[0.08] animate-pulse" />
+              </div>
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.06]">
+                <div className="w-8 h-8 rounded-full bg-white/[0.08] animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-3 w-16 rounded bg-white/[0.08] animate-pulse" />
+                  <div className="h-1 w-24 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-full w-1/2 bg-primary-500/40 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-white/40 text-sm">{t.myDay.readingStars}</p>
+        </div>
+
+        <div className="mx-auto max-w-5xl px-4 pb-16">
+          {/* Summary skeleton */}
+          <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/[0.06]">
+            <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
+            <div className="pl-4 space-y-2">
+              <div className="h-3 w-full rounded bg-white/[0.08] animate-pulse" />
+              <div className="h-3 w-11/12 rounded bg-white/[0.08] animate-pulse" />
+              <div className="h-3 w-3/4 rounded bg-white/[0.08] animate-pulse" />
+            </div>
+          </div>
+
+          {/* Do & Avoid skeletons */}
+          <div className="grid sm:grid-cols-2 gap-4 mb-8">
+            {[0, 1].map((col) => (
+              <div key={col} className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/[0.06] animate-pulse" />
+                  <div className="h-3 w-32 rounded bg-white/[0.08] animate-pulse" />
+                </div>
+                <ul className="space-y-2.5">
+                  {[0, 1, 2].map((i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/[0.2] shrink-0" />
+                      <div className="h-3 flex-1 rounded bg-white/[0.06] animate-pulse" />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Planetary hours skeleton */}
+          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="h-4 w-40 rounded bg-white/[0.08] animate-pulse mb-4" />
+            <div className="space-y-3">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/[0.06] animate-pulse" />
+                    <div className="h-3 w-28 rounded bg-white/[0.06] animate-pulse" />
+                  </div>
+                  <div className="h-3 w-16 rounded bg-white/[0.06] animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="sr-only">{t.myDay.readingStars}</p>
         </div>
       </div>
     );

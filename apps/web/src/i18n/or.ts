@@ -25,6 +25,7 @@ export const or_: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'ଆପଣଙ୍କ ପ୍ରୋଫାଇଲ୍ ବିବରଣୀ ବ୍ୟବହାର କରାଯାଉଛି',
   },
   nav: {
     myDay: 'ମୋ ଦିନ',
