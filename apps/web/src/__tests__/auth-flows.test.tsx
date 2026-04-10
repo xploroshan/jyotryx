@@ -8,6 +8,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 
+// Auth page checks this env var to decide between Firebase phone auth and the
+// backend OTP fallback. These tests cover the Firebase path, so force it on.
+process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'test-api-key';
+
 // ─── Mock next/navigation ───────────────────────────────────────────────────
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
@@ -69,6 +73,10 @@ vi.mock('@/lib/firebase', () => ({
   GoogleAuthProvider: vi.fn(),
   signInWithPopup: (...args: any[]) => mockSignInWithPopup(...args),
   sendPasswordResetEmail: (...args: any[]) => mockSendPasswordResetEmail(...args),
+  // Firebase email/password fallback. Tests don't exercise a working
+  // Firebase path, so we always reject — the auth page then surfaces the
+  // original backend error message.
+  signInWithEmailAndPassword: vi.fn(() => Promise.reject(new Error('firebase-disabled'))),
 }));
 
 function resetAllMocks() {
@@ -123,7 +131,11 @@ describe('Auth Flow: Email Login', () => {
     clickSubmit('Log in');
 
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith('/auth/login', { email: 'test@test.com', password: 'password123' });
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/auth/login',
+        { email: 'test@test.com', password: 'password123' },
+        expect.anything(),
+      );
     });
     expect(mockStoreState.setAuth).toHaveBeenCalledWith(mockUser, 'at-123', 'rt-456');
     expect(mockPush).toHaveBeenCalledWith('/my-day');
@@ -194,11 +206,15 @@ describe('Auth Flow: Email Signup', () => {
     clickSubmit('Create Account');
 
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith('/auth/register', {
-        name: 'New User',
-        email: 'new@test.com',
-        password: 'SecurePass123',
-      });
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/auth/register',
+        {
+          name: 'New User',
+          email: 'new@test.com',
+          password: 'SecurePass123',
+        },
+        expect.anything(),
+      );
     });
     expect(mockStoreState.setAuth).toHaveBeenCalledWith(mockUser, 'at-new', 'rt-new');
     expect(mockPush).toHaveBeenCalledWith('/my-day');
@@ -298,7 +314,11 @@ describe('Auth Flow: Phone OTP Login', () => {
       expect(mockConfirmation.confirm).toHaveBeenCalledWith('123456');
     });
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith('/auth/firebase', { idToken: 'firebase-id-token' });
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/auth/firebase',
+        { idToken: 'firebase-id-token' },
+        expect.anything(),
+      );
     });
     expect(mockStoreState.setAuth).toHaveBeenCalledWith(mockUser, 'at-phone', 'rt-phone');
     expect(mockPush).toHaveBeenCalledWith('/my-day');
@@ -391,7 +411,11 @@ describe('Auth Flow: Google Sign-In', () => {
     fireEvent.click(screen.getByText('Continue with Google'));
 
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith('/auth/firebase', { idToken: 'google-firebase-token' });
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/auth/firebase',
+        { idToken: 'google-firebase-token' },
+        expect.anything(),
+      );
     });
     await waitFor(() => {
       expect(mockStoreState.setAuth).toHaveBeenCalledWith(mockUser, 'at-google', 'rt-google');

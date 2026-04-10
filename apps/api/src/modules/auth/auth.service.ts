@@ -339,9 +339,13 @@ export class AuthService {
     return { message: 'If an account exists with this email, a password reset link has been sent.' };
   }
 
-  async sendOtp(dto: SendOtpDto): Promise<{ message: string; expiresIn: number }> {
+  async sendOtp(
+    dto: SendOtpDto,
+  ): Promise<{ message: string; expiresIn: number; devOtp?: string }> {
+    const phone = this.normalizePhone(dto.phone);
+
     // Rate limit OTP sends
-    const existing = otpStore.get(dto.phone);
+    const existing = otpStore.get(phone);
     if (existing && new Date() < new Date(existing.expiresAt.getTime() - 4 * 60 * 1000)) {
       throw new BadRequestException('Please wait before requesting a new OTP');
     }
@@ -356,29 +360,38 @@ export class AuthService {
       crypto.randomInt(0, 10),
     ).join('');
 
-    otpStore.set(dto.phone, {
+    otpStore.set(phone, {
       otp,
       expiresAt: new Date(Date.now() + expiresInMinutes * 60 * 1000),
     });
 
-    // TODO: Integrate with SMS provider (Twilio, MSG91, etc.)
-    this.logger.log(`OTP generated for ${dto.phone}`);
+    // Best-effort SMS delivery — never blocks a successful response. If the
+    // provider is disabled or fails, we still return success so the dev/staging
+    // `devOtp` flow keeps working.
+    this.sendSmsOtp(phone, otp, expiresInMinutes).catch((err) =>
+      this.logger.warn(`SMS OTP delivery failed for ${phone}: ${err?.message || err}`),
+    );
 
+    this.logger.log(`OTP generated for ${phone}`);
+
+    const exposeOtp = this.configService.get<boolean>('otp.exposeOtpInResponse', false);
     return {
       message: 'OTP sent successfully',
       expiresIn: expiresInMinutes * 60,
+      ...(exposeOtp ? { devOtp: otp } : {}),
     };
   }
 
   async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponse> {
-    const stored = otpStore.get(dto.phone);
+    const phone = this.normalizePhone(dto.phone);
+    const stored = otpStore.get(phone);
 
     if (!stored) {
       throw new BadRequestException('No OTP found for this phone number. Please request a new one.');
     }
 
     if (new Date() > stored.expiresAt) {
-      otpStore.delete(dto.phone);
+      otpStore.delete(phone);
       throw new BadRequestException('OTP has expired. Please request a new one.');
     }
 
@@ -386,23 +399,23 @@ export class AuthService {
       throw new BadRequestException('Invalid OTP. Please check and try again.');
     }
 
-    otpStore.delete(dto.phone);
+    otpStore.delete(phone);
 
     // Find or create user by phone
     let user = await this.prisma.user.findUnique({
-      where: { phone: dto.phone },
+      where: { phone },
     });
 
     if (!user) {
       user = await this.prisma.user.create({
         data: {
           name: 'User',
-          email: `${dto.phone.replace(/\+/g, '')}@phone.jyotron.com`,
-          phone: dto.phone,
+          email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
+          phone,
           credits: this.configService.get<number>('credits.freeMonthly', 10),
         },
       });
-      this.logger.log(`New user created via OTP: ${dto.phone}`);
+      this.logger.log(`New user created via OTP: ${phone}`);
     }
 
     this.logger.log(`User logged in via OTP: ${user.email}`);
@@ -412,6 +425,75 @@ export class AuthService {
       user: toAuthUser(user),
       tokens,
     };
+  }
+
+  /**
+   * Normalize a phone number so that the same user who enters "9876543210",
+   * "+91 9876543210", and "+919876543210" hits the same OTP slot. We strip
+   * whitespace/dashes/parens and ensure a leading '+' (prepending the default
+   * +91 country code for bare 10-digit numbers).
+   */
+  private normalizePhone(raw: string): string {
+    if (!raw) return raw;
+    let digits = raw.replace(/[\s\-()]/g, '').trim();
+    if (!digits.startsWith('+')) {
+      // Bare 10-digit → assume Indian number. Otherwise leave as-is with +.
+      digits = digits.length === 10 ? `+91${digits}` : `+${digits}`;
+    }
+    return digits;
+  }
+
+  /**
+   * Best-effort SMS OTP delivery. Supports Twilio out of the box via REST
+   * (no extra npm dep). If SMS_PROVIDER is unset or the Twilio credentials
+   * are missing we log the OTP and return — the devOtp response field still
+   * lets dev/staging clients authenticate.
+   */
+  private async sendSmsOtp(
+    phone: string,
+    otp: string,
+    expiresInMinutes: number,
+  ): Promise<void> {
+    const provider = (this.configService.get<string>('sms.provider') || '').toLowerCase();
+
+    if (provider !== 'twilio') {
+      // No provider configured — the logger entry above is the only delivery.
+      return;
+    }
+
+    const accountSid = this.configService.get<string>('sms.twilio.accountSid');
+    const authToken = this.configService.get<string>('sms.twilio.authToken');
+    const fromPhone = this.configService.get<string>('sms.twilio.fromPhone');
+
+    if (!accountSid || !authToken || !fromPhone) {
+      this.logger.warn(
+        'SMS_PROVIDER=twilio but TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_FROM_PHONE are not all set — skipping send.',
+      );
+      return;
+    }
+
+    const body = `Your Jyotryx verification code is ${otp}. It expires in ${expiresInMinutes} minute${expiresInMinutes === 1 ? '' : 's'}. Do not share this code.`;
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+    const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
+    const form = new URLSearchParams();
+    form.append('To', phone);
+    form.append('From', fromPhone);
+    form.append('Body', body);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: form.toString(),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error(`Twilio ${response.status}: ${errText.slice(0, 200)}`);
+    }
+    this.logger.log(`SMS OTP delivered via Twilio to ${phone}`);
   }
 
   async googleAuth(dto: GoogleAuthDto): Promise<AuthResponse> {

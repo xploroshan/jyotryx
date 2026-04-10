@@ -39,6 +39,20 @@ export default () => ({
   otp: {
     expiresInMinutes: parseInt(process.env.OTP_EXPIRES_IN_MINUTES || '5', 10),
     length: parseInt(process.env.OTP_LENGTH || '6', 10),
+    // When true, the /auth/otp/send response includes the OTP (dev/staging only).
+    // Automatically enabled outside production unless explicitly disabled.
+    exposeOtpInResponse:
+      process.env.OTP_EXPOSE_IN_RESPONSE === 'true' ||
+      (process.env.NODE_ENV !== 'production' && process.env.OTP_EXPOSE_IN_RESPONSE !== 'false'),
+  },
+
+  sms: {
+    provider: process.env.SMS_PROVIDER || '', // 'twilio' | '' (disabled)
+    twilio: {
+      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      authToken: process.env.TWILIO_AUTH_TOKEN || '',
+      fromPhone: process.env.TWILIO_FROM_PHONE || '',
+    },
   },
 
   google: {

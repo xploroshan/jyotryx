@@ -61,6 +61,7 @@ vi.mock('@/lib/firebase', () => ({
   GoogleAuthProvider: vi.fn(),
   signInWithPopup: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(() => Promise.reject(new Error('firebase-disabled'))),
 }));
 
 // ─── Import component AFTER mocks ───────────────────────────────────────────

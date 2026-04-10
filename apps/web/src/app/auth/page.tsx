@@ -56,6 +56,17 @@ function AuthPageContent() {
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  // Tracks whether the current OTP session used Firebase (client-side
+  // confirmation) or the backend /auth/otp/* fallback, so `handleVerifyOtp`
+  // knows which verify flow to run.
+  const otpChannelRef = useRef<"firebase" | "backend">("firebase");
+  // Phone (in E.164) the backend fallback sent the OTP to, needed by verify.
+  const backendOtpPhoneRef = useRef<string>("");
+
+  // If the NEXT_PUBLIC_FIREBASE_API_KEY env var isn't set at build time,
+  // Firebase phone auth cannot work. Detect this once and use the backend
+  // OTP endpoints instead.
+  const firebasePhoneAvailable = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
 
   // Cleanup reCAPTCHA on unmount
   useEffect(() => {
@@ -75,7 +86,7 @@ function AuthPageContent() {
 
   const authenticateWithBackend = useCallback(async (firebaseIdToken: string) => {
     try {
-      const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken });
+      const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken }, { timeoutMs: 15_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       applyUserLanguage(res.user?.preferredLanguage);
       router.push(res.user?.profileComplete ? "/my-day" : "/profile");
@@ -97,14 +108,49 @@ function AuthPageContent() {
     });
   }, []);
 
+  // Fallback path: call the backend /auth/otp/send directly. Used when
+  // Firebase phone auth isn't configured or returns a configuration-class
+  // error (operation-not-allowed, invalid-app-credential, etc.).
+  const sendOtpViaBackend = async (phoneNumber: string) => {
+    const res = await api.post<{ message: string; expiresIn: number; devOtp?: string }>(
+      "/auth/otp/send",
+      { phone: phoneNumber },
+      { timeoutMs: 15_000 },
+    );
+    otpChannelRef.current = "backend";
+    backendOtpPhoneRef.current = phoneNumber;
+    confirmationResultRef.current = null;
+    setOtpSent(true);
+    // In non-prod, the backend returns the OTP so users can self-test.
+    setSuccess(
+      res.devOtp
+        ? `${t.auth.errOtpSent} (dev OTP: ${res.devOtp})`
+        : t.auth.errOtpSent,
+    );
+  };
+
   const handleSendOtp = async () => {
     if (phone.length < 10) { setError(t.auth.errPhoneInvalid); return; }
     setLoading(true); setError(""); setSuccess("");
+    const phoneNumber = `+91${phone}`;
+
+    // If Firebase isn't configured on the client, go straight to the backend.
+    if (!firebasePhoneAvailable) {
+      try {
+        await sendOtpViaBackend(phoneNumber);
+      } catch (err: any) {
+        setError(err.message || t.auth.errSendOtpFailed);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       setupRecaptcha();
-      const phoneNumber = `+91${phone}`;
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current!);
       confirmationResultRef.current = result;
+      otpChannelRef.current = "firebase";
       setOtpSent(true);
       setSuccess(t.auth.errOtpSent);
     } catch (err: any) {
@@ -113,16 +159,34 @@ function AuthPageContent() {
         try { recaptchaVerifierRef.current.clear(); } catch {}
         recaptchaVerifierRef.current = null;
       }
+
+      // Configuration-class Firebase errors mean the project / env isn't set
+      // up for phone auth. Rather than leaving the user stuck, transparently
+      // fall back to the backend OTP flow.
+      const configFailure =
+        err?.code === "auth/operation-not-allowed" ||
+        err?.code === "auth/invalid-app-credential" ||
+        err?.code === "auth/captcha-check-failed" ||
+        err?.code === "auth/internal-error";
+
+      if (configFailure) {
+        try {
+          await sendOtpViaBackend(phoneNumber);
+          return;
+        } catch (fallbackErr: any) {
+          setError(fallbackErr.message || t.auth.errSendOtpFailed);
+          return;
+        } finally {
+          setLoading(false);
+        }
+      }
+
       if (err.code === "auth/too-many-requests") {
         setError(t.auth.errTooManyAttempts);
       } else if (err.code === "auth/invalid-phone-number") {
         setError(t.auth.errPhoneInvalidFirebase);
-      } else if (err.code === "auth/invalid-app-credential" || err.code === "auth/captcha-check-failed") {
-        setError(t.auth.errVerificationFailed);
       } else if (err.code === "auth/quota-exceeded") {
         setError(t.auth.errSmsQuotaExceeded);
-      } else if (err.code === "auth/operation-not-allowed") {
-        setError(t.auth.errPhoneAuthDisabled);
       } else {
         setError(err.message || t.auth.errSendOtpFailed);
       }
@@ -131,9 +195,25 @@ function AuthPageContent() {
 
   const handleVerifyOtp = async () => {
     if (otp.length < 6) { setError(t.auth.errEnterOtp); return; }
-    if (!confirmationResultRef.current) { setError(t.auth.errRequestOtpFirst); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
+      if (otpChannelRef.current === "backend") {
+        if (!backendOtpPhoneRef.current) {
+          setError(t.auth.errRequestOtpFirst);
+          return;
+        }
+        const res = await api.post<any>(
+          "/auth/otp/verify",
+          { phone: backendOtpPhoneRef.current, otp },
+          { timeoutMs: 15_000 },
+        );
+        setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+        applyUserLanguage(res.user?.preferredLanguage);
+        router.push(res.user?.profileComplete ? "/my-day" : "/profile");
+        return;
+      }
+
+      if (!confirmationResultRef.current) { setError(t.auth.errRequestOtpFirst); return; }
       const credential = await confirmationResultRef.current.confirm(otp);
       const idToken = await credential.user.getIdToken();
       await authenticateWithBackend(idToken);
@@ -177,21 +257,38 @@ function AuthPageContent() {
     try {
       const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
       const body = tab === "login" ? { email, password } : { name, email, password };
-      const res = await api.post<any>(endpoint, body);
+      // Auth endpoints get a tighter timeout so the UI doesn't sit in
+      // "Please wait…" for 30s when the server is unreachable.
+      const res = await api.post<any>(endpoint, body, { timeoutMs: 15_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       applyUserLanguage(res.user?.preferredLanguage);
       router.push(res.user?.profileComplete ? "/my-day" : "/profile");
     } catch (err: any) {
-      // If backend login fails, try Firebase auth as fallback
-      // (handles case where user reset password via Firebase)
-      if (tab === "login") {
+      // Fall back to Firebase email/password ONLY when the backend rejected
+      // the credentials (HTTP 401). We skip the fallback on timeouts, network
+      // failures, and server errors so a slow backend doesn't compound into a
+      // second 15-30s hang waiting for Firebase.
+      const isCredentialError =
+        tab === "login" &&
+        (err?.status === 401 || (err?.message || "").toLowerCase().includes("invalid email or password")) &&
+        typeof signInWithEmailAndPassword === "function";
+
+      if (isCredentialError) {
         try {
-          const credential = await signInWithEmailAndPassword(auth, email, password);
+          // Race the Firebase call against a short timer so a stuck
+          // Firebase popup can't lock the login button forever.
+          const credential = await Promise.race<any>([
+            signInWithEmailAndPassword(auth, email, password),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("firebase-timeout")), 10_000),
+            ),
+          ]);
           const idToken = await credential.user.getIdToken();
           await authenticateWithBackend(idToken);
           return;
         } catch {
-          // Firebase fallback also failed, show original error
+          // Firebase fallback also failed — fall through and surface the
+          // original backend error below.
         }
       }
       setError(err.message || t.auth.errAuthFailed);
@@ -402,7 +499,7 @@ function AuthPageContent() {
                           onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()} />
                         <div className="flex items-center justify-between mt-2">
                           <button onClick={handleSendOtp} disabled={loading} className="text-[11px] text-primary-400 hover:text-primary-300">{t.auth.resendOtp}</button>
-                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); confirmationResultRef.current = null; }} className="text-[11px] text-white/30 hover:text-white/50">{t.auth.changeNumber}</button>
+                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="text-[11px] text-white/30 hover:text-white/50">{t.auth.changeNumber}</button>
                         </div>
                       </div>
                     )}
