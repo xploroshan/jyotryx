@@ -25,6 +25,7 @@ export const gu: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'તમારી પ્રોફાઇલ વિગતોનો ઉપયોગ કરી રહ્યા છીએ',
   },
   nav: {
     myDay: 'મારો દિવસ',

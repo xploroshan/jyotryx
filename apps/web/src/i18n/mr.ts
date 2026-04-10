@@ -25,6 +25,7 @@ export const mr: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'तुमच्या प्रोफाइल तपशीलांचा वापर करत आहे',
   },
   nav: {
     myDay: 'माझा दिवस',

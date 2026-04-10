@@ -9,13 +9,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 
 // ─── Mock store ──────────────────────────────────────────────────────────────
+const mockStoreState = {
+  isAuthenticated: true,
+  user: { name: 'Test' },
+};
 vi.mock('@/lib/store', () => ({
-  useAuthStore: Object.assign(vi.fn(() => ({
-    isAuthenticated: true,
-    user: { name: 'Test' },
-  })), {
-    getState: () => ({ isAuthenticated: true, user: { name: 'Test' } }),
-  }),
+  useAuthStore: Object.assign(
+    vi.fn((selector?: any) => (selector ? selector(mockStoreState) : mockStoreState)),
+    { getState: () => mockStoreState },
+  ),
 }));
 
 // ─── Mock API ────────────────────────────────────────────────────────────────

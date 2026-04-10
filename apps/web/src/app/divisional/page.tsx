@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
+import { useAuthStore } from "@/lib/store";
 
 interface DivisionalResult {
   type: string;
@@ -17,6 +18,28 @@ export default function DivisionalPage() {
   const [result, setResult] = useState<DivisionalResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => {
+      const next = {
+        dateOfBirth: prev.dateOfBirth || user.dateOfBirth || "",
+        timeOfBirth: prev.timeOfBirth || user.timeOfBirth || "",
+        placeOfBirth: prev.placeOfBirth || user.placeOfBirth || "",
+        latitude: prev.latitude,
+        longitude: prev.longitude,
+      };
+      const didPrefill = Boolean(
+        (user.dateOfBirth && !prev.dateOfBirth) ||
+          (user.timeOfBirth && !prev.timeOfBirth) ||
+          (user.placeOfBirth && !prev.placeOfBirth),
+      );
+      if (didPrefill) setPrefilled(true);
+      return next;
+    });
+  }, [user]);
 
   const CHART_TYPES = [
     { value: "9", label: t.divisional.d9, description: t.divisional.d9Desc },
@@ -43,6 +66,14 @@ export default function DivisionalPage() {
       <p className="text-white/40 mb-8">{t.divisional.description}</p>
 
       <div className="surface-card p-6 mb-6">
+        {prefilled && (
+          <div className="mb-4 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{t.common.usingProfileDetails}</span>
+          </div>
+        )}
         {/* Chart Type */}
         <div className="mb-4">
           <label className="text-sm text-white/60 mb-2 block">{t.divisional.chartType}</label>

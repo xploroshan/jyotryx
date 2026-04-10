@@ -10,6 +10,17 @@ interface User {
   role: string;
   preferredLanguage?: string;
   profileComplete: boolean;
+  dateOfBirth?: string | null;
+  timeOfBirth?: string | null;
+  placeOfBirth?: string | null;
+  gender?: string | null;
+}
+
+interface BirthDetails {
+  dateOfBirth?: string | null;
+  timeOfBirth?: string | null;
+  placeOfBirth?: string | null;
+  gender?: string | null;
 }
 
 interface AuthState {
@@ -20,6 +31,7 @@ interface AuthState {
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateCredits: (credits: number) => void;
   setProfileComplete: (complete: boolean) => void;
+  updateBirthDetails: (details: BirthDetails & { name?: string }) => void;
   logout: () => void;
 }
 
@@ -39,6 +51,19 @@ export const useAuthStore = create<AuthState>()(
       setProfileComplete: (complete) =>
         set((state) => ({
           user: state.user ? { ...state.user, profileComplete: complete } : null,
+        })),
+      updateBirthDetails: (details) =>
+        set((state) => ({
+          user: state.user
+            ? {
+                ...state.user,
+                ...(details.name !== undefined && { name: details.name || state.user.name }),
+                ...(details.dateOfBirth !== undefined && { dateOfBirth: details.dateOfBirth }),
+                ...(details.timeOfBirth !== undefined && { timeOfBirth: details.timeOfBirth }),
+                ...(details.placeOfBirth !== undefined && { placeOfBirth: details.placeOfBirth }),
+                ...(details.gender !== undefined && { gender: details.gender }),
+              }
+            : null,
         })),
       logout: () => {
         // Sign out of Firebase client SDK too

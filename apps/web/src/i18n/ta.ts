@@ -25,6 +25,7 @@ export const ta: TranslationKeys = {
     confirm: 'உறுதிப்படுத்து',
     delete: 'நீக்கு',
     edit: 'திருத்து',
+    usingProfileDetails: 'உங்கள் சுயவிவரத் தகவலைப் பயன்படுத்துகிறது',
   },
   nav: {
     myDay: 'என் நாள்',

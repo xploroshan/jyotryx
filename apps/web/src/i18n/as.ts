@@ -25,6 +25,7 @@ export const as_: TranslationKeys = {
     confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
+    usingProfileDetails: 'আপোনাৰ প্ৰফাইল বিৱৰণ ব্যৱহাৰ কৰা হৈছে',
   },
   nav: {
     myDay: 'মোৰ দিন',
