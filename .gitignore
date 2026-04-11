@@ -47,3 +47,8 @@ tmp/
 
 # Coverage
 coverage/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
