@@ -1,38 +1,26 @@
-import { Injectable } from '@nestjs/common';
-
-interface CacheEntry {
-  value: any;
-  expiresAt: number;
-}
-
-const MAX_CACHE_SIZE = 500;
+import { Injectable, Inject } from '@nestjs/common';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.module';
 
 @Injectable()
 export class MemoryCacheService {
-  private cache = new Map<string, CacheEntry>();
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
-  get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(key);
+  async get<T>(key: string): Promise<T | null> {
+    const raw = await this.redis.get(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
       return null;
     }
-    return entry.value as T;
   }
 
-  set(key: string, value: any, ttlMs: number): void {
-    // Evict oldest entries if at capacity
-    if (this.cache.size >= MAX_CACHE_SIZE) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey !== undefined) {
-        this.cache.delete(firstKey);
-      }
-    }
-    this.cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+  async set(key: string, value: unknown, ttlMs: number): Promise<void> {
+    await this.redis.set(key, JSON.stringify(value), 'PX', ttlMs);
   }
 
-  delete(key: string): void {
-    this.cache.delete(key);
+  async delete(key: string): Promise<void> {
+    await this.redis.del(key);
   }
 }

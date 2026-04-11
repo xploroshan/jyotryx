@@ -647,11 +647,11 @@ export class AstrologyService {
     // for the 2nd+ kundli request with identical inputs (e.g. a user re-opening
     // their own chart or matching both partners repeatedly).
     const cacheKey = `kundli:chart:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
-    const cached = this.cacheService.get<any>(cacheKey);
+    const cached = await this.cacheService.get<any>(cacheKey);
     if (cached) return cached;
     const chartData = this.generateSwissEphKundli(birthDetails);
     // 24h TTL — birth charts are fully deterministic so TTL is a safety net only.
-    this.cacheService.set(cacheKey, chartData, 24 * 60 * 60 * 1000);
+    await this.cacheService.set(cacheKey, chartData, 24 * 60 * 60 * 1000);
     return chartData;
   }
 
@@ -816,7 +816,7 @@ export class AstrologyService {
     const activePeriod = period || 'daily';
     const today = new Date().toISOString().split('T')[0];
     const cacheKey = `horoscope:${sign.toLowerCase()}:${activePeriod}:${today}`;
-    const cached = this.cacheService.get<HoroscopeResult>(cacheKey);
+    const cached = await this.cacheService.get<HoroscopeResult>(cacheKey);
     if (cached) return cached;
 
     this.logger.log(`Fetching ${activePeriod} horoscope for: ${sign}`);
@@ -865,7 +865,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
         mood: aiPrediction.mood,
         compatibility: aiPrediction.compatibility,
       };
-      this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000); // 24h TTL
+      await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000); // 24h TTL
       return result;
     }
 
@@ -981,7 +981,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
       mood: moods[(seed + periodOffset) % moods.length],
       compatibility: signs[(signIdx + dayOfYear + periodOffset) % 12],
     };
-    this.cacheService.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000);
+    await this.cacheService.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000);
     return fallbackResult;
   }
 
@@ -993,7 +993,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
     const pLng = lng ?? 77.2090;
     const locationLabel = (lat != null && lng != null) ? `${pLat.toFixed(4)}°N, ${pLng.toFixed(4)}°E` : 'New Delhi, India (28.6139°N, 77.2090°E)';
     const cacheKey = `panchang:${dateStr}:${pLat.toFixed(2)}:${pLng.toFixed(2)}`;
-    const cached = this.cacheService.get<PanchangResult>(cacheKey);
+    const cached = await this.cacheService.get<PanchangResult>(cacheKey);
     if (cached) return cached;
 
     // Enrich with panchang KB context
@@ -1021,7 +1021,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
 
     if (aiResult) {
       const result = { date: dateStr, ...aiResult };
-      this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
+      await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
       return result;
     }
 
@@ -1095,7 +1095,7 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
       gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][today.getDay()],
       yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][today.getDay()],
     };
-    this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
+    await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
     return result;
   }
 
@@ -1311,7 +1311,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     // KP charts are a pure function of birth details — cache the expensive
     // Placidus house + sub-lord computation across requests.
     const cacheKey = `kp:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
-    const cached = this.cacheService.get<any>(cacheKey);
+    const cached = await this.cacheService.get<any>(cacheKey);
     if (cached) return { ...cached, birthDetails };
 
     const jd = this.computeJulianDay(birthDetails);
@@ -1413,7 +1413,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       planets: planetPositions,
       significators,
     };
-    this.cacheService.set(cacheKey, kpResult, 24 * 60 * 60 * 1000);
+    await this.cacheService.set(cacheKey, kpResult, 24 * 60 * 60 * 1000);
     return kpResult;
   }
 

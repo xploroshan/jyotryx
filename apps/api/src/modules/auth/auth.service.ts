@@ -5,12 +5,15 @@ import {
   BadRequestException,
   Logger,
   ForbiddenException,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import Redis from 'ioredis';
 import { PrismaService } from '../../prisma/prisma.service';
+import { REDIS_CLIENT } from '../../redis/redis.module';
 import {
   RegisterDto,
   LoginDto,
@@ -86,14 +89,8 @@ function toAuthUser(user: PrismaUser & { preferredLanguage?: string }): AuthResp
   };
 }
 
-// In-memory OTP store (use Redis in production)
-const otpStore: Map<string, { otp: string; expiresAt: Date }> = new Map();
-
-// In-memory login attempt tracker (use Redis in production)
-const loginAttempts: Map<string, { count: number; lockedUntil: Date | null }> = new Map();
-
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_MINUTES = 15;
+const LOCKOUT_SECONDS = 15 * 60; // 15 minutes
 
 @Injectable()
 export class AuthService {
@@ -103,6 +100,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {
     // Initialize Firebase Admin SDK
     if (!admin.apps.length) {
@@ -201,22 +199,22 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthResponse> {
     // Check rate limiting
-    this.checkLoginAttempts(dto.email);
+    await this.checkLoginAttempts(dto.email);
 
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
     if (!user || !user.passwordHash) {
-      this.recordFailedAttempt(dto.email);
+      await this.recordFailedAttempt(dto.email);
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isPasswordValid) {
-      this.recordFailedAttempt(dto.email);
-      const attempts = loginAttempts.get(dto.email);
-      const remaining = MAX_LOGIN_ATTEMPTS - (attempts?.count || 0);
+      await this.recordFailedAttempt(dto.email);
+      const failCount = parseInt(await this.redis.get(`login:fail:${dto.email}`) || '0');
+      const remaining = MAX_LOGIN_ATTEMPTS - failCount;
       if (remaining <= 2 && remaining > 0) {
         throw new UnauthorizedException(
           `Invalid email or password. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout.`,
@@ -226,7 +224,7 @@ export class AuthService {
     }
 
     // Clear attempts on successful login
-    loginAttempts.delete(dto.email);
+    await this.clearLoginAttempts(dto.email);
 
     this.logger.log(`User logged in: ${user.email}`);
     const tokens = await this.generateTokens(user.id, user.email, user.name);
@@ -344,26 +342,20 @@ export class AuthService {
   ): Promise<{ message: string; expiresIn: number; devOtp?: string }> {
     const phone = this.normalizePhone(dto.phone);
 
-    // Rate limit OTP sends
-    const existing = otpStore.get(phone);
-    if (existing && new Date() < new Date(existing.expiresAt.getTime() - 4 * 60 * 1000)) {
+    // Rate limit OTP sends: block if OTP was set less than 1 minute ago
+    const ttl = await this.redis.ttl(`otp:${phone}`);
+    const expiresInMinutes = this.configService.get<number>('otp.expiresInMinutes', 5);
+    if (ttl > (expiresInMinutes - 1) * 60) {
       throw new BadRequestException('Please wait before requesting a new OTP');
     }
 
-    // Periodic cleanup of expired OTPs to prevent memory leaks
-    this.cleanupExpiredOtps();
-
     const otpLength = this.configService.get<number>('otp.length', 6);
-    const expiresInMinutes = this.configService.get<number>('otp.expiresInMinutes', 5);
 
     const otp = Array.from({ length: otpLength }, () =>
       crypto.randomInt(0, 10),
     ).join('');
 
-    otpStore.set(phone, {
-      otp,
-      expiresAt: new Date(Date.now() + expiresInMinutes * 60 * 1000),
-    });
+    await this.redis.set(`otp:${phone}`, otp, 'EX', expiresInMinutes * 60);
 
     // Best-effort SMS delivery — never blocks a successful response. If the
     // provider is disabled or fails, we still return success so the dev/staging
@@ -384,22 +376,17 @@ export class AuthService {
 
   async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponse> {
     const phone = this.normalizePhone(dto.phone);
-    const stored = otpStore.get(phone);
+    const stored = await this.redis.get(`otp:${phone}`);
 
     if (!stored) {
       throw new BadRequestException('No OTP found for this phone number. Please request a new one.');
     }
 
-    if (new Date() > stored.expiresAt) {
-      otpStore.delete(phone);
-      throw new BadRequestException('OTP has expired. Please request a new one.');
-    }
-
-    if (stored.otp !== dto.otp) {
+    if (stored !== dto.otp) {
       throw new BadRequestException('Invalid OTP. Please check and try again.');
     }
 
-    otpStore.delete(phone);
+    await this.redis.del(`otp:${phone}`);
 
     // Find or create user by phone
     let user = await this.prisma.user.findUnique({
@@ -673,50 +660,31 @@ export class AuthService {
     return { hasPassword: !!user?.passwordHash };
   }
 
-  private cleanupExpiredOtps(): void {
-    const now = Date.now();
-    for (const [phone, entry] of otpStore.entries()) {
-      if (now > entry.expiresAt.getTime()) {
-        otpStore.delete(phone);
-      }
-    }
-    // Also clean up expired lockouts
-    for (const [email, entry] of loginAttempts.entries()) {
-      if (entry.lockedUntil && now > entry.lockedUntil.getTime()) {
-        loginAttempts.delete(email);
-      }
-    }
-  }
-
-  private checkLoginAttempts(email: string): void {
-    const attempts = loginAttempts.get(email);
-    if (!attempts) return;
-
-    if (attempts.lockedUntil && new Date() < attempts.lockedUntil) {
-      const minutesLeft = Math.ceil(
-        (attempts.lockedUntil.getTime() - Date.now()) / 60000,
-      );
+  private async checkLoginAttempts(email: string): Promise<void> {
+    const locked = await this.redis.get(`login:lock:${email}`);
+    if (locked) {
+      const ttl = await this.redis.ttl(`login:lock:${email}`);
+      const minutesLeft = Math.ceil(ttl / 60);
       throw new ForbiddenException(
         `Account temporarily locked due to too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.`,
       );
     }
+  }
 
-    // Reset if lockout has expired
-    if (attempts.lockedUntil && new Date() >= attempts.lockedUntil) {
-      loginAttempts.delete(email);
+  private async recordFailedAttempt(email: string): Promise<void> {
+    const key = `login:fail:${email}`;
+    const count = await this.redis.incr(key);
+    await this.redis.expire(key, LOCKOUT_SECONDS);
+
+    if (count >= MAX_LOGIN_ATTEMPTS) {
+      await this.redis.set(`login:lock:${email}`, '1', 'EX', LOCKOUT_SECONDS);
+      await this.redis.del(key);
+      this.logger.warn(`Account locked for ${email} after ${MAX_LOGIN_ATTEMPTS} failed attempts`);
     }
   }
 
-  private recordFailedAttempt(email: string): void {
-    const attempts = loginAttempts.get(email) || { count: 0, lockedUntil: null };
-    attempts.count += 1;
-
-    if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
-      attempts.lockedUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
-      this.logger.warn(`Account locked for ${email} after ${MAX_LOGIN_ATTEMPTS} failed attempts`);
-    }
-
-    loginAttempts.set(email, attempts);
+  private async clearLoginAttempts(email: string): Promise<void> {
+    await this.redis.del(`login:fail:${email}`, `login:lock:${email}`);
   }
 
   private async generateTokens(
