@@ -15,6 +15,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:int": "jest --config ./jest.integration.config.ts --runInBand",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "npx prisma migrate resolve --applied 20260101_init 2>/dev/null; npx prisma migrate resolve --applied 20260315_add_activity_log 2>/dev/null; npx prisma migrate resolve --applied 20260317_add_site_settings 2>/dev/null; npx prisma migrate resolve --applied 20260326_add_knowledge_base 2>/dev/null; npx prisma db execute --file prisma/migrations/20260101_init/migration.sql 2>/dev/null; npx prisma migrate deploy",
