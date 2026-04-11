@@ -110,7 +110,7 @@ export class OpenAIService implements OnModuleInit {
         const rows = await this.prisma.siteSetting.findMany({
           where: { key: { startsWith: 'llm.' } },
         });
-        settings = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+        settings = Object.fromEntries(rows.map((r: { key: string; value: string }) => [r.key, r.value]));
       } catch {
         // DB unavailable — keep env-based config.
       }

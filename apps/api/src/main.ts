@@ -85,12 +85,6 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
   }
 
-  // Health check endpoint
-  const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/health', (_req: any, res: any) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
   const port = process.env.PORT || 4000;
   await app.listen(port);
   logger.log(`Jyotron API running on http://localhost:${port}`);

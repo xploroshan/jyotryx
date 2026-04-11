@@ -182,7 +182,7 @@ export class DailyBriefingService {
     const dateStr = today.toISOString().split('T')[0];
     const cacheKey = `briefing:${userId}:${dateStr}`;
 
-    const cached = this.cacheService.get<DailyBriefingResult>(cacheKey);
+    const cached = await this.cacheService.get<DailyBriefingResult>(cacheKey);
     if (cached) return cached;
 
     const user = await this.prisma.user.findUnique({
@@ -302,7 +302,7 @@ export class DailyBriefingService {
       transitAlert,
     };
 
-    this.cacheService.set(cacheKey, result, 30 * 60 * 1000); // 30 min cache (hora changes)
+    await this.cacheService.set(cacheKey, result, 30 * 60 * 1000); // 30 min cache (hora changes)
     return result;
   }
 

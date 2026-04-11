@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { APP_GUARD } from '@nestjs/core';
+import Redis from 'ioredis';
 import configuration from './config/configuration';
+import { RedisModule, REDIS_CLIENT } from './redis/redis.module';
+import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { OpenAIModule } from './openai/openai.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -26,12 +30,17 @@ import { VastuModule } from './modules/vastu/vastu.module';
       isGlobal: true,
       load: [configuration],
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 60,
-    }]),
+    RedisModule,
+    ThrottlerModule.forRootAsync({
+      inject: [REDIS_CLIENT],
+      useFactory: (redis: Redis) => ({
+        throttlers: [{ ttl: 60000, limit: 60 }],
+        storage: new ThrottlerStorageRedisService(redis),
+      }),
+    }),
     PrismaModule,
     OpenAIModule,
+    HealthModule,
     AuthModule,
     UserModule,
     ChatModule,

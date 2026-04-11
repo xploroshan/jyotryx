@@ -6,9 +6,14 @@
  * see an `undefined` in the UI when that locale is selected — this test
  * catches the regression at build time.
  *
- * The test does not compare values (those are translations); it only checks
- * that every path leading to a string in en.ts also exists in every other
- * locale and resolves to a string.
+ * Beyond structural parity, this suite also asserts translation quality:
+ *   - no empty/whitespace-only values (translator skipped a row)
+ *   - no untranslated values (copy-paste of English that was never translated,
+ *     excluding an allowlist of proper nouns, brand names, and universally
+ *     untranslated terms like 'OK' or 'Kundli')
+ *   - no leading/trailing whitespace drift
+ *   - every SUPPORTED_LOCALES entry from i18n/index.ts has a test case
+ *     (so adding a new locale without wiring it up here fails loudly)
  */
 import { describe, it, expect } from 'vitest';
 import { en } from '@/i18n/en';
@@ -23,6 +28,7 @@ import { ml } from '@/i18n/ml';
 import { pa } from '@/i18n/pa';
 import { or_ } from '@/i18n/or';
 import { as_ } from '@/i18n/as';
+import { SUPPORTED_LOCALES } from '@/i18n';
 
 type Dict = Record<string, unknown>;
 
@@ -46,6 +52,58 @@ function resolvePath(obj: Dict, path: string): unknown {
     return undefined;
   }, obj);
 }
+
+/**
+ * Keys that are allowed to match English verbatim in other locales.
+ *
+ * Use sparingly. Valid reasons: proper nouns ('Jyotron', 'Vedic'), universally
+ * adopted English terms in Indian-language UIs ('OK', 'Email', 'SMS'), and
+ * acronyms (API, URL). Anything else should actually be translated.
+ */
+const UNTRANSLATED_ALLOWLIST = new Set<string>([
+  // Allowlist specific key paths here once we hit legitimate cases.
+  // Format: 'namespace.key' or 'a.b.c'
+]);
+
+/**
+ * Regex for values that are allowed to match English verbatim regardless of
+ * the key path. Use for patterns like brand names, numbers, URLs.
+ */
+const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
+  /^Jyotron$/i,         // brand name
+  /^Jyotryx$/i,         // brand name
+  /^OK$/,               // universal UI term
+  /^\d+$/,              // pure numbers
+  /^[\d.,%+\-\s]+$/,    // numeric formats
+  /^https?:\/\//i,      // URLs
+  /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i, // email addresses
+];
+
+/**
+ * Ratchet baseline: current count of values in each locale that match English
+ * verbatim. These are documented translation gaps — the test fails if a PR
+ * INCREASES any of these counts (regression), but a PR that decreases a count
+ * is allowed and should update the baseline in the same commit.
+ *
+ * Goal: every number here should eventually be 0. Until then, this lock
+ * prevents backsliding.
+ *
+ * To update: run `npx vitest run src/__tests__/i18n-parity.test.ts` and copy
+ * the printed actual count into the matching entry below.
+ */
+const UNTRANSLATED_BASELINE: Record<string, number> = {
+  hi: 79,
+  ta: 79,
+  te: 441,
+  bn: 441,
+  mr: 436,
+  gu: 441,
+  kn: 441,
+  ml: 441,
+  pa: 441,
+  or: 441,
+  as: 441,
+};
 
 const locales: Array<[string, Dict]> = [
   ['hi', hi],
@@ -102,5 +160,98 @@ describe('i18n key parity', () => {
       }
       expect(extra).toEqual([]);
     });
+
+    it(`${name}.ts has no empty or whitespace-only values`, () => {
+      const empties: string[] = [];
+      for (const path of enPaths) {
+        const v = resolvePath(dict, path);
+        if (typeof v === 'string' && v.trim() === '') {
+          empties.push(path);
+        }
+      }
+      if (empties.length) {
+        throw new Error(
+          `${name}.ts has ${empties.length} empty value(s) — translator likely skipped these rows:\n` +
+            empties.slice(0, 10).join('\n') +
+            (empties.length > 10 ? `\n… and ${empties.length - 10} more` : ''),
+        );
+      }
+      expect(empties).toEqual([]);
+    });
+
+    it(`${name}.ts untranslated-count does not exceed ratchet baseline`, () => {
+      const untranslated: string[] = [];
+      for (const path of enPaths) {
+        if (UNTRANSLATED_ALLOWLIST.has(path)) continue;
+        const en_v = resolvePath(en as unknown as Dict, path);
+        const loc_v = resolvePath(dict, path);
+        if (
+          typeof en_v === 'string' &&
+          typeof loc_v === 'string' &&
+          en_v === loc_v &&
+          // Skip values matching the allowlist patterns (brand names, numbers, etc.)
+          !UNTRANSLATED_VALUE_PATTERNS.some((re) => re.test(loc_v.trim()))
+        ) {
+          untranslated.push(`${path} = "${en_v}"`);
+        }
+      }
+
+      const baseline = UNTRANSLATED_BASELINE[name] ?? 0;
+      const actual = untranslated.length;
+
+      if (actual > baseline) {
+        throw new Error(
+          `${name}.ts REGRESSED: ${actual} untranslated values (baseline ${baseline}, +${actual - baseline}).\n` +
+            `Either translate the new entries or, if intentional, add them to ` +
+            `UNTRANSLATED_ALLOWLIST / UNTRANSLATED_VALUE_PATTERNS.\n\n` +
+            `First few untranslated entries:\n` +
+            untranslated.slice(0, 15).join('\n') +
+            (untranslated.length > 15 ? `\n… and ${untranslated.length - 15} more` : ''),
+        );
+      }
+
+      if (actual < baseline) {
+        // Progress! Translations were added. Emit a warning so the dev knows
+        // to lower the baseline in the same commit (otherwise future regressions
+        // won't be caught against the newly-improved state).
+        console.warn(
+          `\n[i18n-parity] ${name}.ts improved: ${actual} untranslated ` +
+            `(baseline ${baseline}, -${baseline - actual}). ` +
+            `Update UNTRANSLATED_BASELINE['${name}'] to ${actual} in ` +
+            `src/__tests__/i18n-parity.test.ts to lock in the progress.\n`,
+        );
+      }
+
+      expect(actual).toBeLessThanOrEqual(baseline);
+    });
+
+    it(`${name}.ts values have no leading/trailing whitespace`, () => {
+      const drifted: string[] = [];
+      for (const path of enPaths) {
+        const v = resolvePath(dict, path);
+        if (typeof v === 'string' && v !== v.trim() && v.trim() !== '') {
+          drifted.push(`${path} = "${v}"`);
+        }
+      }
+      if (drifted.length) {
+        throw new Error(
+          `${name}.ts has ${drifted.length} value(s) with leading/trailing whitespace:\n` +
+            drifted.slice(0, 10).join('\n'),
+        );
+      }
+      expect(drifted).toEqual([]);
+    });
   }
+
+  // Coverage completeness — if a new locale is added to SUPPORTED_LOCALES without
+  // being wired into the test array, this assertion flags it immediately.
+  it('every locale in SUPPORTED_LOCALES has a test case (or is the source locale)', () => {
+    const tested = new Set(['en', ...locales.map(([name]) => name)]);
+    const missing = SUPPORTED_LOCALES.filter((l) => !tested.has(l));
+    expect(
+      missing,
+      `SUPPORTED_LOCALES includes ${missing.join(', ')} but the i18n-parity test does ` +
+        `not cover them. Add the import and a [name, dict] entry to the locales array.`,
+    ).toEqual([]);
+  });
 });
