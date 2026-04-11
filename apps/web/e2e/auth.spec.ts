@@ -1,0 +1,130 @@
+import { test, expect } from '@playwright/test';
+import { gotoAndHydrate, installApiMocks, json } from './helpers/mock-api';
+
+/**
+ * Auth page E2E coverage.
+ *
+ * Firebase phone auth is explicitly disabled by the webServer env
+ * (NEXT_PUBLIC_FIREBASE_API_KEY=''), so the page uses the backend OTP
+ * endpoints `/auth/otp/send` and `/auth/otp/verify`. Both are mocked
+ * here with deterministic responses, exercising the real React state
+ * machine end-to-end: enter phone → send → enter OTP → verify → redirect.
+ *
+ * The OTP-send response returns `devOtp` (the server sends this only in
+ * dev/test mode, per the auth config's `exposeOtpInResponse`). The UI
+ * doesn't consume devOtp — it just submits whatever the user types — so
+ * we manually type "123456" and the mocked verify handler accepts that.
+ */
+test.describe('Auth page', () => {
+  test.beforeEach(async ({ page }) => {
+    await installApiMocks(page, {
+      'POST /auth/otp/send': async (route) => {
+        const body = JSON.parse(route.request().postData() || '{}');
+        await route.fulfill(
+          json({
+            message: 'OTP sent successfully',
+            expiresIn: 300,
+            devOtp: '123456',
+            phone: body.phone,
+          }),
+        );
+      },
+      'POST /auth/otp/verify': async (route) => {
+        const body = JSON.parse(route.request().postData() || '{}');
+        if (body.otp !== '123456') {
+          await route.fulfill(json({ message: 'Invalid OTP' }, 400));
+          return;
+        }
+        await route.fulfill(
+          json({
+            user: {
+              id: 'test-user-1',
+              name: 'Test User',
+              phone: body.phone,
+              email: null,
+              credits: 10,
+              role: 'USER',
+              profileComplete: false,
+              preferredLanguage: 'en',
+            },
+            tokens: {
+              accessToken: 'test-access-token',
+              refreshToken: 'test-refresh-token',
+            },
+          }),
+        );
+      },
+    });
+  });
+
+  test('phone OTP flow: send → enter OTP → verify → redirect', async ({ page }) => {
+    // `gotoAndHydrate` waits for React to finish attaching its event
+    // listeners. On first compile of /auth in dev mode, `goto` returns
+    // before hydration completes and clicks are silently dropped.
+    await gotoAndHydrate(page, '/auth?mode=login');
+
+    // Phone method is the default. Enter the 10-digit number.
+    const phoneInput = page.getByPlaceholder('Phone number');
+    await expect(phoneInput).toBeVisible();
+    await phoneInput.fill('9999000011');
+
+    // Click Send OTP
+    await page.getByRole('button', { name: /Send OTP/i }).click();
+
+    // OTP input appears
+    const otpInput = page.getByPlaceholder('6-digit OTP');
+    // Placeholder matches t.auth.enterOtpPlaceholder exactly.
+    await expect(otpInput).toBeVisible({ timeout: 10_000 });
+
+    // Type the OTP and verify
+    await otpInput.fill('123456');
+    await page.getByRole('button', { name: /Verify & Continue/i }).click();
+
+    // Profile incomplete → redirected to /profile.
+    await expect(page).toHaveURL(/\/profile$/, { timeout: 10_000 });
+  });
+
+  test('invalid OTP shows error and keeps user on auth page', async ({ page }) => {
+    await page.goto('/auth?mode=login');
+
+    await page.getByPlaceholder('Phone number').fill('9999000011');
+    await page.getByRole('button', { name: /Send OTP/i }).click();
+
+    const otpInput = page.getByPlaceholder('6-digit OTP');
+    // Placeholder matches t.auth.enterOtpPlaceholder exactly.
+    await expect(otpInput).toBeVisible();
+
+    await otpInput.fill('000000');
+    await page.getByRole('button', { name: /Verify & Continue/i }).click();
+
+    // Error banner appears; URL unchanged.
+    await expect(page.getByText('Invalid OTP')).toBeVisible();
+    await expect(page).toHaveURL(/\/auth/);
+  });
+
+  test('switches between phone and email methods', async ({ page }) => {
+    await page.goto('/auth');
+
+    // Default is phone.
+    await expect(page.getByPlaceholder('Phone number')).toBeVisible();
+
+    // Switch to email.
+    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
+    await expect(page.getByPlaceholder(/Min 8 characters/i)).toBeVisible();
+
+    // Switch back to phone.
+    await page.getByRole('button', { name: /Phone \(OTP\)/i }).click();
+    await expect(page.getByPlaceholder('Phone number')).toBeVisible();
+  });
+
+  test('signup tab shows name field when email method is selected', async ({ page }) => {
+    await page.goto('/auth?mode=signup');
+
+    const card = page.locator('.surface-card').first();
+    await card.getByRole('button', { name: 'Sign up', exact: true }).click();
+    await page.getByRole('button', { name: 'Email', exact: true }).click();
+
+    await expect(page.getByPlaceholder('Enter your name')).toBeVisible();
+  });
+});
