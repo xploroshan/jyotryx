@@ -92,9 +92,80 @@ export const mockPrismaService = () => ({
 });
 
 export const mockCacheService = () => ({
-  get: jest.fn().mockReturnValue(null),
-  set: jest.fn(),
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  delete: jest.fn().mockResolvedValue(undefined),
 });
+
+/**
+ * In-memory mock of the ioredis client. Supports the ops the app uses:
+ * get, set (with EX/PX), del, ping, incr, expire, ttl, quit, on.
+ * Honors TTLs so tests that depend on expiry behavior still work.
+ */
+export const createMockRedis = () => {
+  const store = new Map<string, { value: string; expiresAt: number | null }>();
+
+  const isExpired = (entry: { expiresAt: number | null }): boolean =>
+    entry.expiresAt !== null && entry.expiresAt <= Date.now();
+
+  const getRaw = (key: string): string | null => {
+    const entry = store.get(key);
+    if (!entry) return null;
+    if (isExpired(entry)) {
+      store.delete(key);
+      return null;
+    }
+    return entry.value;
+  };
+
+  return {
+    get: jest.fn(async (key: string) => getRaw(key)),
+    set: jest.fn(async (key: string, value: string, ...args: any[]) => {
+      let expiresAt: number | null = null;
+      for (let i = 0; i < args.length; i += 2) {
+        const mode = String(args[i]).toUpperCase();
+        const amount = Number(args[i + 1]);
+        if (mode === 'EX') expiresAt = Date.now() + amount * 1000;
+        else if (mode === 'PX') expiresAt = Date.now() + amount;
+      }
+      store.set(key, { value: String(value), expiresAt });
+      return 'OK';
+    }),
+    del: jest.fn(async (...keys: string[]) => {
+      let removed = 0;
+      for (const k of keys) {
+        if (store.delete(k)) removed++;
+      }
+      return removed;
+    }),
+    ping: jest.fn(async () => 'PONG'),
+    incr: jest.fn(async (key: string) => {
+      const raw = getRaw(key);
+      const next = (raw ? parseInt(raw, 10) : 0) + 1;
+      const existing = store.get(key);
+      store.set(key, { value: String(next), expiresAt: existing?.expiresAt ?? null });
+      return next;
+    }),
+    expire: jest.fn(async (key: string, seconds: number) => {
+      const entry = store.get(key);
+      if (!entry) return 0;
+      entry.expiresAt = Date.now() + seconds * 1000;
+      return 1;
+    }),
+    ttl: jest.fn(async (key: string) => {
+      const entry = store.get(key);
+      if (!entry) return -2;
+      if (entry.expiresAt === null) return -1;
+      const remaining = Math.ceil((entry.expiresAt - Date.now()) / 1000);
+      return remaining > 0 ? remaining : -2;
+    }),
+    quit: jest.fn(async () => 'OK'),
+    on: jest.fn(),
+    // Expose for test assertions / setup
+    __store: store,
+    __clear: () => store.clear(),
+  };
+};
 
 export const mockUserService = () => ({
   deductCredits: jest.fn().mockResolvedValue(true),

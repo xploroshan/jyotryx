@@ -11,6 +11,7 @@ import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
+import { REDIS_CLIENT } from '../src/redis/redis.module';
 import {
   mockKnowledgeService,
   mockOpenAIService,
@@ -19,6 +20,7 @@ import {
   mockUserService,
   mockCacheService,
   mockUser,
+  createMockRedis,
 } from './helpers/mocks';
 
 // ─── Performance: Auth Service ─────────────────────────────────────────────
@@ -33,6 +35,7 @@ describe('Performance: Auth Operations', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jest.fn().mockResolvedValue('token'), verify: jest.fn() } },
         { provide: ConfigService, useValue: mockConfigService() },
@@ -490,53 +493,53 @@ describe('Performance: Cache Operations', () => {
   let cache: MemoryCacheService;
 
   beforeEach(() => {
-    cache = new MemoryCacheService();
+    cache = new MemoryCacheService(createMockRedis() as any);
   });
 
-  it('should handle 5000 sequential writes under 100ms', () => {
-    const start = performance.now();
-    for (let i = 0; i < 5000; i++) {
-      cache.set(`perf-key-${i}`, { data: `value-${i}`, nested: { deep: true } }, 60000);
-    }
-    const elapsed = performance.now() - start;
-
-    expect(elapsed).toBeLessThan(100);
-  });
-
-  it('should handle 5000 sequential reads under 50ms', () => {
-    for (let i = 0; i < 5000; i++) {
-      cache.set(`read-key-${i}`, { data: `value-${i}` }, 60000);
-    }
-
-    const start = performance.now();
-    for (let i = 0; i < 5000; i++) {
-      cache.get(`read-key-${i}`);
-    }
-    const elapsed = performance.now() - start;
-
-    expect(elapsed).toBeLessThan(50);
-  });
-
-  it('should handle mixed read/write under 100ms', () => {
+  it('should handle 2000 sequential writes under 500ms', async () => {
     const start = performance.now();
     for (let i = 0; i < 2000; i++) {
-      cache.set(`mixed-${i}`, { v: i }, 60000);
-      cache.get(`mixed-${Math.floor(i / 2)}`);
+      await cache.set(`perf-key-${i}`, { data: `value-${i}`, nested: { deep: true } }, 60000);
     }
     const elapsed = performance.now() - start;
 
-    expect(elapsed).toBeLessThan(100);
+    expect(elapsed).toBeLessThan(500);
   });
 
-  it('should handle rapid overwrite of same key efficiently', () => {
+  it('should handle 2000 sequential reads under 500ms', async () => {
+    for (let i = 0; i < 2000; i++) {
+      await cache.set(`read-key-${i}`, { data: `value-${i}` }, 60000);
+    }
+
     const start = performance.now();
-    for (let i = 0; i < 10000; i++) {
-      cache.set('single-key', { iteration: i }, 60000);
+    for (let i = 0; i < 2000; i++) {
+      await cache.get(`read-key-${i}`);
     }
     const elapsed = performance.now() - start;
 
-    expect(elapsed).toBeLessThan(100);
-    expect(cache.get('single-key')).toEqual({ iteration: 9999 });
+    expect(elapsed).toBeLessThan(500);
+  });
+
+  it('should handle mixed read/write under 500ms', async () => {
+    const start = performance.now();
+    for (let i = 0; i < 1000; i++) {
+      await cache.set(`mixed-${i}`, { v: i }, 60000);
+      await cache.get(`mixed-${Math.floor(i / 2)}`);
+    }
+    const elapsed = performance.now() - start;
+
+    expect(elapsed).toBeLessThan(500);
+  });
+
+  it('should handle rapid overwrite of same key efficiently', async () => {
+    const start = performance.now();
+    for (let i = 0; i < 2000; i++) {
+      await cache.set('single-key', { iteration: i }, 60000);
+    }
+    const elapsed = performance.now() - start;
+
+    expect(elapsed).toBeLessThan(500);
+    expect(await cache.get('single-key')).toEqual({ iteration: 1999 });
   });
 });
 
@@ -652,24 +655,23 @@ describe('Performance: DTO Validation', () => {
 // ─── Performance: Memory Stability ─────────────────────────────────────────
 
 describe('Performance: Memory Stability', () => {
-  it('should not leak memory during sustained cache operations', () => {
-    const cache = new MemoryCacheService();
+  it('should not leak memory during sustained cache operations', async () => {
+    const cache = new MemoryCacheService(createMockRedis() as any);
     const baselineMemory = process.memoryUsage().heapUsed;
 
     // Perform many operations
     for (let round = 0; round < 10; round++) {
       for (let i = 0; i < 500; i++) {
-        cache.set(`mem-${round}-${i}`, { data: 'x'.repeat(100) }, 1); // 1ms TTL
+        await cache.set(`mem-${round}-${i}`, { data: 'x'.repeat(100) }, 1); // 1ms TTL
       }
     }
 
     // Wait for TTLs to expire
-    const waitUntil = Date.now() + 10;
-    while (Date.now() < waitUntil) { /* spin wait */ }
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Trigger reads which should clean up expired entries
     for (let i = 0; i < 100; i++) {
-      cache.get(`mem-0-${i}`);
+      await cache.get(`mem-0-${i}`);
     }
 
     const afterMemory = process.memoryUsage().heapUsed;

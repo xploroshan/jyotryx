@@ -11,7 +11,8 @@ import { Reflector } from '@nestjs/core';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { AuthController } from '../src/modules/auth/auth.controller';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { mockConfigService } from './helpers/mocks';
+import { REDIS_CLIENT } from '../src/redis/redis.module';
+import { mockConfigService, createMockRedis } from './helpers/mocks';
 import * as bcrypt from 'bcrypt';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -41,6 +42,7 @@ async function buildAuthService(prisma: any, jwtService: any) {
       { provide: PrismaService, useValue: prisma },
       { provide: JwtService, useValue: jwtService },
       { provide: ConfigService, useValue: mockConfigService() },
+      { provide: REDIS_CLIENT, useValue: createMockRedis() },
     ],
   }).compile();
 

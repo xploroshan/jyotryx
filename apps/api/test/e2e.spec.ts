@@ -10,6 +10,7 @@ import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { REDIS_CLIENT } from '../src/redis/redis.module';
 import {
   mockKnowledgeService,
   mockOpenAIService,
@@ -17,6 +18,7 @@ import {
   mockConfigService,
   mockUserService,
   mockUser,
+  createMockRedis,
 } from './helpers/mocks';
 import * as crypto from 'crypto';
 
@@ -38,6 +40,7 @@ describe('E2E: Auth → Chat Flow', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         ChatService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
@@ -175,6 +178,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         ChatService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
@@ -817,6 +821,7 @@ describe('E2E: Token Refresh', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: mockConfigService() },
@@ -879,6 +884,7 @@ describe('E2E: Password Management', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jest.fn().mockResolvedValue('token') } },
         { provide: ConfigService, useValue: mockConfigService() },

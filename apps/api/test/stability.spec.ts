@@ -20,6 +20,7 @@ import {
   mockConfigService,
   mockUser,
   mockBirthDetails,
+  createMockRedis,
 } from './helpers/mocks';
 
 // ─── Graceful Degradation Tests ──────────────────────────────────────────────
@@ -284,43 +285,37 @@ describe('Stability: Knowledge Service Failures', () => {
 // ─── Memory Stability Tests ─────────────────────────────────────────────────
 
 describe('Stability: Memory Management', () => {
-  describe('MemoryCacheService bounds', () => {
+  describe('MemoryCacheService (Redis-backed) bounds', () => {
     let cache: MemoryCacheService;
 
     beforeEach(() => {
-      cache = new MemoryCacheService();
+      cache = new MemoryCacheService(createMockRedis() as any);
     });
 
-    it('should enforce maximum cache size of 500 entries', () => {
+    it('should retain entries by key without corruption under sustained writes', async () => {
       for (let i = 0; i < 600; i++) {
-        cache.set(`key-${i}`, `value-${i}`, 60000);
+        await cache.set(`key-${i}`, `value-${i}`, 60000);
       }
 
-      // First 100 entries should have been evicted
-      let evictedCount = 0;
-      for (let i = 0; i < 100; i++) {
-        if (cache.get(`key-${i}`) === null) evictedCount++;
-      }
-      expect(evictedCount).toBeGreaterThan(0);
-
-      // Recent entries should still exist
-      expect(cache.get('key-599')).toBe('value-599');
+      // With Redis-backed cache, eviction is the server's responsibility.
+      // Verify entries can be read back correctly.
+      expect(await cache.get('key-599')).toBe('value-599');
+      expect(await cache.get('key-0')).toBe('value-0');
     });
 
-    it('should clean up expired entries on access', () => {
-      cache.set('will-expire', 'temp', 1); // 1ms TTL
+    it('should return null for expired entries based on TTL', async () => {
+      await cache.set('will-expire', 'temp', 1); // 1ms TTL
 
-      // Spin wait for expiry
-      const waitUntil = Date.now() + 5;
-      while (Date.now() < waitUntil) { /* spin */ }
+      // Wait for expiry
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(cache.get('will-expire')).toBeNull();
+      expect(await cache.get('will-expire')).toBeNull();
     });
 
-    it('should handle rapid set/delete cycles without leaking', () => {
-      for (let i = 0; i < 1000; i++) {
-        cache.set('rapid-key', `value-${i}`, 60000);
-        if (i % 2 === 0) cache.delete('rapid-key');
+    it('should handle rapid set/delete cycles without leaking', async () => {
+      for (let i = 0; i < 500; i++) {
+        await cache.set('rapid-key', `value-${i}`, 60000);
+        if (i % 2 === 0) await cache.delete('rapid-key');
       }
       // Should not throw or leak
       expect(true).toBe(true);

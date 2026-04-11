@@ -14,6 +14,7 @@ import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { SetPasswordDto } from '../src/modules/auth/dto/set-password.dto';
 import { SendMessageDto } from '../src/modules/chat/dto/send-message.dto';
+import { REDIS_CLIENT } from '../src/redis/redis.module';
 import {
   mockKnowledgeService,
   mockOpenAIService,
@@ -21,6 +22,7 @@ import {
   mockConfigService,
   mockUserService,
   mockUser,
+  createMockRedis,
 } from './helpers/mocks';
 import * as crypto from 'crypto';
 
@@ -33,6 +35,7 @@ describe('Security: Crypto OTP Generation', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: mockPrismaService() },
         { provide: JwtService, useValue: { signAsync: jest.fn().mockResolvedValue('token') } },
         { provide: ConfigService, useValue: mockConfigService() },
@@ -42,12 +45,12 @@ describe('Security: Crypto OTP Generation', () => {
     authService = module.get<AuthService>(AuthService);
   });
 
-  it('should generate OTPs with crypto.randomInt (not Math.random)', () => {
+  it('should generate OTPs with crypto.randomInt (not Math.random)', async () => {
     const spy = jest.spyOn(crypto, 'randomInt');
 
     // We can't easily extract the OTP from sendOtp, but we can verify
     // that crypto.randomInt is being called
-    authService.sendOtp({ phone: '+919999900001' });
+    await authService.sendOtp({ phone: '+919999900001' });
 
     // crypto.randomInt should be called 6 times (one per digit)
     expect(spy).toHaveBeenCalled();
@@ -437,6 +440,7 @@ describe('Security: Brute Force Protection', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jest.fn().mockResolvedValue('token'), verify: jest.fn() } },
         { provide: ConfigService, useValue: mockConfigService() },
@@ -773,6 +777,7 @@ describe('Security: Password Hashing', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jest.fn().mockResolvedValue('token') } },
         { provide: ConfigService, useValue: mockConfigService() },

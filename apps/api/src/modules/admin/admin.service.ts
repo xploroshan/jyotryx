@@ -952,10 +952,13 @@ export class AdminService {
           select: { id: true, name: true, email: true },
         })
       : [];
-    const userMap = new Map(users.map((u) => [u.id, u]));
+    type UserRow = { id: string; name: string | null; email: string };
+    const userMap = new Map<string, UserRow>(
+      users.map((u: UserRow) => [u.id, u]),
+    );
 
     return grouped.map((row: any) => {
-      const user = row.userId ? userMap.get(row.userId) : null;
+      const user: UserRow | null = row.userId ? userMap.get(row.userId) ?? null : null;
       return {
         userId: row.userId,
         userName: user?.name ?? null,

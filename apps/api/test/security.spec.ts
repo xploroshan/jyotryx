@@ -9,7 +9,8 @@ import { PaymentService } from '../src/modules/payment/payment.service';
 import { ChatService } from '../src/modules/chat/chat.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
-import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService } from './helpers/mocks';
+import { REDIS_CLIENT } from '../src/redis/redis.module';
+import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService, createMockRedis } from './helpers/mocks';
 import * as crypto from 'crypto';
 
 // ─── Authentication Security Tests ───────────────────────────────────────────
@@ -37,6 +38,7 @@ describe('Security: Authentication', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: mockConfigService() },

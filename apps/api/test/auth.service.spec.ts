@@ -4,6 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { REDIS_CLIENT } from '../src/redis/redis.module';
+import { createMockRedis } from './helpers/mocks';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -29,6 +31,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
+        { provide: REDIS_CLIENT, useValue: createMockRedis() },
         {
           provide: ConfigService,
           useValue: {

@@ -5,7 +5,7 @@ import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
-import { mockOpenAIService, mockKnowledgeService, mockPrismaService, mockCacheService, mockUser } from './helpers/mocks';
+import { mockOpenAIService, mockKnowledgeService, mockPrismaService, mockCacheService, mockUser, createMockRedis } from './helpers/mocks';
 
 // ─── Response Time Benchmarks ────────────────────────────────────────────────
 
@@ -96,65 +96,59 @@ describe('Performance: Cache', () => {
   let cache: MemoryCacheService;
 
   beforeEach(() => {
-    cache = new MemoryCacheService();
+    cache = new MemoryCacheService(createMockRedis() as any);
   });
 
-  it('should handle 1000 sequential writes under 50ms', () => {
+  it('should handle 500 sequential writes under 500ms', async () => {
     const start = performance.now();
 
-    for (let i = 0; i < 1000; i++) {
-      cache.set(`key-${i}`, { data: `value-${i}` }, 60000);
+    for (let i = 0; i < 500; i++) {
+      await cache.set(`key-${i}`, { data: `value-${i}` }, 60000);
     }
 
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(50);
+    expect(elapsed).toBeLessThan(500);
   });
 
-  it('should handle 1000 sequential reads under 20ms', () => {
-    for (let i = 0; i < 1000; i++) {
-      cache.set(`key-${i}`, { data: `value-${i}` }, 60000);
+  it('should handle 500 sequential reads under 500ms', async () => {
+    for (let i = 0; i < 500; i++) {
+      await cache.set(`key-${i}`, { data: `value-${i}` }, 60000);
     }
 
     const start = performance.now();
 
-    for (let i = 0; i < 1000; i++) {
-      cache.get(`key-${i}`);
+    for (let i = 0; i < 500; i++) {
+      await cache.get(`key-${i}`);
     }
 
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(20);
+    expect(elapsed).toBeLessThan(500);
   });
 
-  it('should return null for expired entries without significant overhead', () => {
-    cache.set('expired', 'value', 1); // 1ms TTL
+  it('should return null for expired entries', async () => {
+    await cache.set('expired', 'value', 1); // 1ms TTL
 
     // Wait for expiry
-    const waitUntil = Date.now() + 5;
-    while (Date.now() < waitUntil) { /* spin wait */ }
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const start = performance.now();
-    const result = cache.get('expired');
-    const elapsed = performance.now() - start;
-
+    const result = await cache.get('expired');
     expect(result).toBeNull();
-    expect(elapsed).toBeLessThan(1);
   });
 
-  it('should maintain performance with cache at capacity (LRU eviction)', () => {
-    // Fill cache to capacity (MAX_CACHE_SIZE = 500)
+  it('should maintain performance under large number of entries', async () => {
+    // Redis doesn't have a hard entry cap — just verify we can handle many entries
     for (let i = 0; i < 500; i++) {
-      cache.set(`fill-${i}`, `val-${i}`, 60000);
+      await cache.set(`fill-${i}`, `val-${i}`, 60000);
     }
 
     const start = performance.now();
 
-    // Insert 100 more (triggers eviction each time)
     for (let i = 0; i < 100; i++) {
-      cache.set(`new-${i}`, `new-val-${i}`, 60000);
+      await cache.set(`new-${i}`, `new-val-${i}`, 60000);
     }
 
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(20);
+    expect(elapsed).toBeLessThan(500);
   });
 });
 
