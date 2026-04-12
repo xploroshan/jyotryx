@@ -334,11 +334,11 @@ describe('E2E: Chat Session Lifecycle', () => {
       category: 'general',
       createdAt: new Date(),
       updatedAt: new Date(),
-      messages: [
-        { id: 'm1', sessionId: 'session-detail', role: 'USER', content: 'Hello', createdAt: new Date() },
-        { id: 'm2', sessionId: 'session-detail', role: 'ASSISTANT', content: 'Namaste!', createdAt: new Date() },
-      ],
     });
+    prisma.chatMessage.findMany.mockResolvedValue([
+      { id: 'm1', sessionId: 'session-detail', role: 'USER', content: 'Hello', createdAt: new Date() },
+      { id: 'm2', sessionId: 'session-detail', role: 'ASSISTANT', content: 'Namaste!', createdAt: new Date() },
+    ]);
 
     const session = await chatService.getSession('test-uuid', 'session-detail');
     expect(session.messages.length).toBe(2);
