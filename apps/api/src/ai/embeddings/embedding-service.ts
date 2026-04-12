@@ -6,6 +6,8 @@
  * similarity search in the knowledge base.
  */
 
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import OpenAI from "openai";
 
 export interface EmbeddingResult {
@@ -18,21 +20,29 @@ export interface BatchEmbeddingResult {
   totalTokensUsed: number;
 }
 
+@Injectable()
 export class EmbeddingService {
-  private readonly openai: OpenAI;
+  private readonly logger = new Logger(EmbeddingService.name);
+  private readonly openai: OpenAI | null;
   private readonly model: string;
 
-  constructor(model: string = "text-embedding-3-small") {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-    this.model = model;
+  constructor(private readonly configService: ConfigService) {
+    const apiKey = this.configService.get<string>('openai.apiKey') || process.env.OPENAI_API_KEY;
+    this.model = 'text-embedding-3-small';
+    if (apiKey) {
+      this.openai = new OpenAI({ apiKey });
+    } else {
+      this.openai = null;
+      this.logger.warn('OPENAI_API_KEY not configured — embedding generation disabled');
+    }
   }
 
   /**
    * Generate an embedding vector for a single text string.
    */
-  async generateEmbedding(text: string): Promise<number[]> {
+  async generateEmbedding(text: string): Promise<number[] | null> {
+    if (!this.openai) return null;
+
     const sanitized = text.replace(/\n/g, " ").trim();
 
     const response = await this.openai.embeddings.create({
@@ -47,7 +57,8 @@ export class EmbeddingService {
    * Generate embedding vectors for multiple texts in a single API call.
    * OpenAI supports batching up to 2048 inputs per request.
    */
-  async generateBatchEmbeddings(texts: string[]): Promise<BatchEmbeddingResult> {
+  async generateBatchEmbeddings(texts: string[]): Promise<BatchEmbeddingResult | null> {
+    if (!this.openai) return null;
     if (texts.length === 0) {
       return { embeddings: [], totalTokensUsed: 0 };
     }
@@ -82,7 +93,9 @@ export class EmbeddingService {
   /**
    * Generate an embedding and return it alongside token usage metadata.
    */
-  async generateEmbeddingWithMetadata(text: string): Promise<EmbeddingResult> {
+  async generateEmbeddingWithMetadata(text: string): Promise<EmbeddingResult | null> {
+    if (!this.openai) return null;
+
     const sanitized = text.replace(/\n/g, " ").trim();
 
     const response = await this.openai.embeddings.create({

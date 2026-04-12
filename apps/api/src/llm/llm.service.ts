@@ -1,0 +1,270 @@
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma/prisma.service';
+import { OpenAIProvider } from './providers/openai.provider';
+import { AnthropicProvider } from './providers/anthropic.provider';
+import { LlmChatOptions, LlmChatResult, LlmProvider } from './providers/llm-provider.interface';
+import { createLlmPolicy, ResiliencePolicy } from './llm-resilience';
+
+/**
+ * Per-model token cost table (USD per 1M tokens).
+ */
+const MODEL_COSTS_USD_PER_1M: Record<string, { prompt: number; completion: number }> = {
+  'gpt-4o': { prompt: 2.5, completion: 10 },
+  'gpt-4o-mini': { prompt: 0.15, completion: 0.6 },
+  'gpt-4-turbo': { prompt: 10, completion: 30 },
+  'gpt-4': { prompt: 30, completion: 60 },
+  'gpt-3.5-turbo': { prompt: 0.5, completion: 1.5 },
+  'claude-opus-4-6': { prompt: 15, completion: 75 },
+  'claude-sonnet-4-6': { prompt: 3, completion: 15 },
+  'claude-haiku-4-5': { prompt: 0.8, completion: 4 },
+  'gemini-1.5-pro': { prompt: 1.25, completion: 5 },
+  'gemini-1.5-flash': { prompt: 0.075, completion: 0.3 },
+  'mistral-large': { prompt: 2, completion: 6 },
+  'command-r-plus': { prompt: 3, completion: 15 },
+  'llama-3.1-70b': { prompt: 0.59, completion: 0.79 },
+};
+const DEFAULT_COST = { prompt: 0.15, completion: 0.6 };
+
+interface LlmRuntimeConfig {
+  provider: string;
+  apiKey: string | null;
+  defaultModel: string;
+  precisionModel: string;
+  visionModel: string;
+  temperature: number;
+}
+
+@Injectable()
+export class LlmService implements OnModuleInit {
+  private readonly logger = new Logger(LlmService.name);
+
+  private readonly openaiPolicy: ResiliencePolicy;
+  private readonly anthropicPolicy: ResiliencePolicy;
+
+  private currentConfig!: LlmRuntimeConfig;
+  private configLoadedAt = 0;
+  private readonly CONFIG_TTL_MS = 30_000;
+
+  private failoverEnabled: boolean;
+
+  constructor(
+    private configService: ConfigService,
+    private openaiProvider: OpenAIProvider,
+    private anthropicProvider: AnthropicProvider,
+    @Optional() private prisma?: PrismaService,
+  ) {
+    this.openaiPolicy = createLlmPolicy('openai');
+    this.anthropicPolicy = createLlmPolicy('anthropic');
+
+    this.failoverEnabled = this.configService.get<string>('llm.failoverEnabled', 'true') !== 'false';
+
+    // Seed config from env vars
+    const envKey = this.configService.get<string>('openai.apiKey') || null;
+    this.currentConfig = {
+      provider: 'openai',
+      apiKey: envKey,
+      defaultModel: this.configService.get<string>('openai.model', 'gpt-4o-mini'),
+      precisionModel: this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
+      visionModel: this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
+      temperature: 0.7,
+    };
+  }
+
+  async onModuleInit() {
+    await this.reloadConfig(true).catch(() => {});
+    const primary = this.openaiProvider.isAvailable() ? 'OpenAI' : 'none';
+    const secondary = this.anthropicProvider.isAvailable() ? 'Anthropic' : 'none';
+    this.logger.log(`LLM service ready — primary: ${primary}, secondary: ${secondary}, failover: ${this.failoverEnabled}`);
+  }
+
+  // ─── Public API ─────────────────────────────────────────────────────────
+
+  getModel(): string {
+    this.maybeRefreshInBackground();
+    return this.currentConfig.defaultModel;
+  }
+
+  getModelForFeature(feature: 'default' | 'precision' | 'vision'): string {
+    this.maybeRefreshInBackground();
+    switch (feature) {
+      case 'precision': return this.currentConfig.precisionModel;
+      case 'vision': return this.currentConfig.visionModel;
+      default: return this.currentConfig.defaultModel;
+    }
+  }
+
+  getClient(): any | null {
+    // Backward-compat: returns the OpenAI SDK client directly for callers
+    // that need raw access (e.g., vision with image_url).
+    this.maybeRefreshInBackground();
+    return this.openaiProvider.isAvailable() ? (this.openaiProvider as any).client : null;
+  }
+
+  async invalidateCache(): Promise<void> {
+    await this.reloadConfig(true).catch(() => {});
+  }
+
+  computeCost(model: string, promptTokens: number, completionTokens: number): number {
+    const rate = MODEL_COSTS_USD_PER_1M[model] || DEFAULT_COST;
+    const cost = (promptTokens * rate.prompt + completionTokens * rate.completion) / 1_000_000;
+    return Math.round(cost * 1_000_000) / 1_000_000;
+  }
+
+  async recordUsage(params: {
+    userId?: string | null;
+    feature: string;
+    provider?: string;
+    model: string;
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null;
+  }): Promise<void> {
+    if (!this.prisma) return;
+    try {
+      const promptTokens = params.usage?.prompt_tokens ?? 0;
+      const completionTokens = params.usage?.completion_tokens ?? 0;
+      const totalTokens = params.usage?.total_tokens ?? promptTokens + completionTokens;
+      const costUsd = this.computeCost(params.model, promptTokens, completionTokens);
+
+      await this.prisma.llmUsage.create({
+        data: {
+          userId: params.userId || null,
+          provider: params.provider || this.currentConfig.provider || 'openai',
+          model: params.model,
+          feature: params.feature,
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          costUsd,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to record LLM usage', err);
+    }
+  }
+
+  /**
+   * Chat completion with circuit breaker, retry, timeout, and provider failover.
+   * Returns parsed JSON if jsonMode is true, raw string otherwise, or null on total failure.
+   */
+  async chatCompletion(options: LlmChatOptions & { jsonMode?: boolean }): Promise<any | null> {
+    await this.reloadConfig(false).catch(() => {});
+
+    const model = options.model || this.currentConfig.defaultModel;
+    const feature = options.feature || 'chat';
+    const enrichedOptions = { ...options, model };
+
+    // Try primary provider (OpenAI)
+    if (this.openaiProvider.isAvailable()) {
+      try {
+        const result = await this.openaiPolicy.execute(() =>
+          this.openaiProvider.chatCompletion(enrichedOptions),
+        );
+        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
+        return this.processResult(result, options.jsonMode);
+      } catch (err) {
+        this.logger.warn(`OpenAI failed: ${(err as Error).message}`);
+      }
+    }
+
+    // Try secondary provider (Anthropic) if failover is enabled
+    if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
+      try {
+        const result = await this.anthropicPolicy.execute(() =>
+          this.anthropicProvider.chatCompletion(enrichedOptions),
+        );
+        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
+        return this.processResult(result, options.jsonMode);
+      } catch (err) {
+        this.logger.error(`Anthropic also failed: ${(err as Error).message}`);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Streaming chat completion with failover.
+   * Returns an async iterable of string chunks, or null if no provider is available.
+   */
+  async chatCompletionStream(options: LlmChatOptions): Promise<AsyncIterable<string> | null> {
+    await this.reloadConfig(false).catch(() => {});
+
+    const model = options.model || this.currentConfig.defaultModel;
+    const enrichedOptions = { ...options, model };
+
+    if (this.openaiProvider.isAvailable()) {
+      try {
+        return this.openaiProvider.chatCompletionStream(enrichedOptions);
+      } catch (err) {
+        this.logger.warn(`OpenAI stream failed: ${(err as Error).message}`);
+      }
+    }
+
+    if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
+      try {
+        return this.anthropicProvider.chatCompletionStream(enrichedOptions);
+      } catch (err) {
+        this.logger.error(`Anthropic stream also failed: ${(err as Error).message}`);
+      }
+    }
+
+    return null;
+  }
+
+  // ─── Config Management ──────────────────────────────────────────────────
+
+  private async reloadConfig(force = false): Promise<void> {
+    const now = Date.now();
+    if (!force && now - this.configLoadedAt < this.CONFIG_TTL_MS) return;
+    this.configLoadedAt = now;
+
+    let settings: Record<string, string> = {};
+    if (this.prisma) {
+      try {
+        const rows = await this.prisma.siteSetting.findMany({
+          where: { key: { startsWith: 'llm.' } },
+        });
+        settings = Object.fromEntries(rows.map((r: { key: string; value: string }) => [r.key, r.value]));
+      } catch {
+        // DB unavailable — keep env-based config.
+      }
+    }
+
+    const envKey = this.configService.get<string>('openai.apiKey') || null;
+
+    const next: LlmRuntimeConfig = {
+      provider: settings['llm.default.provider'] || 'openai',
+      apiKey: settings['llm.openai.key'] || envKey,
+      defaultModel: settings['llm.default.model'] || this.configService.get<string>('openai.model', 'gpt-4o-mini'),
+      precisionModel: settings['llm.precision.model'] || this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
+      visionModel: settings['llm.vision.model'] || this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
+      temperature: parseFloat(settings['llm.default.temperature'] || '0.7') || 0.7,
+    };
+
+    const keyChanged = next.apiKey !== this.currentConfig.apiKey;
+    this.currentConfig = next;
+
+    if (keyChanged) {
+      this.openaiProvider.reinitialize(next.apiKey || '');
+    }
+  }
+
+  private maybeRefreshInBackground(): void {
+    if (Date.now() - this.configLoadedAt >= this.CONFIG_TTL_MS) {
+      this.reloadConfig(false).catch(() => {});
+    }
+  }
+
+  private processResult(result: LlmChatResult, jsonMode?: boolean): any {
+    if (!result.content) return null;
+    if (jsonMode) {
+      try {
+        return JSON.parse(result.content);
+      } catch {
+        this.logger.error('Failed to parse LLM JSON response');
+        return null;
+      }
+    }
+    return result.content;
+  }
+}

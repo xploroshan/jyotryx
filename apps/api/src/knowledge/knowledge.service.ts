@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
+import { VectorSearchService } from './vector-search.service';
+import { EmbeddingService } from '../ai/embeddings/embedding-service';
 
 export interface KBSearchResult {
   id: string;
@@ -18,18 +20,64 @@ export class KnowledgeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly openaiService: OpenAIService,
+    private readonly vectorSearchService: VectorSearchService,
+    private readonly embeddingService: EmbeddingService,
   ) {}
 
   /**
-   * Search the knowledge base using keyword matching + optional embedding similarity.
-   * This is a hybrid approach: fast keyword pre-filter, then cosine re-rank if embeddings exist.
+   * Hybrid search: vector similarity first, fill remaining slots with keyword search.
+   * Falls back to keyword-only if embedding generation fails.
    */
   async search(
     query: string,
     category?: string,
     topK: number = 5,
   ): Promise<KBSearchResult[]> {
-    // Step 1: Keyword-based pre-filter using PostgreSQL array overlap
+    const results: KBSearchResult[] = [];
+    const seenIds = new Set<string>();
+
+    // Step 1: Try vector search first
+    try {
+      const queryEmbedding = await this.embeddingService.generateEmbedding(query);
+      if (queryEmbedding) {
+        const vectorResults = await this.vectorSearchService.searchByVector(
+          queryEmbedding,
+          category,
+          topK,
+        );
+        for (const r of vectorResults) {
+          if (r.score > 0.3) {
+            results.push(r);
+            seenIds.add(r.id);
+          }
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Vector search failed, falling back to keyword: ${(err as Error).message}`);
+    }
+
+    // Step 2: Fill remaining slots with keyword search
+    if (results.length < topK) {
+      const keywordResults = await this.keywordSearch(query, category, topK - results.length);
+      for (const r of keywordResults) {
+        if (!seenIds.has(r.id)) {
+          results.push(r);
+          seenIds.add(r.id);
+        }
+      }
+    }
+
+    return results.slice(0, topK);
+  }
+
+  /**
+   * Keyword-based search using PostgreSQL array overlap.
+   */
+  private async keywordSearch(
+    query: string,
+    category?: string,
+    topK: number = 5,
+  ): Promise<KBSearchResult[]> {
     const queryWords = query
       .toLowerCase()
       .replace(/[^\w\s]/g, '')
@@ -38,19 +86,17 @@ export class KnowledgeService {
 
     if (queryWords.length === 0) return [];
 
-    // Build where clause
     const where: any = {};
     if (category) {
       where.category = category;
     }
 
-    // Fetch candidate documents (keyword match via hasMome on keywords array)
     const candidates = await this.prisma.knowledgeDocument.findMany({
       where: {
         ...where,
         keywords: { hasSome: queryWords },
       },
-      take: topK * 3, // Over-fetch for re-ranking
+      take: topK * 3,
       select: {
         id: true,
         text: true,
@@ -62,7 +108,6 @@ export class KnowledgeService {
     });
 
     if (candidates.length === 0) {
-      // Fallback: text search on content
       const textResults = await this.prisma.knowledgeDocument.findMany({
         where: {
           ...where,
@@ -89,7 +134,6 @@ export class KnowledgeService {
       }));
     }
 
-    // Step 2: Score by keyword overlap
     const scored = candidates.map((doc: any) => ({
       id: doc.id,
       text: doc.text,
@@ -99,7 +143,6 @@ export class KnowledgeService {
       score: this.keywordScore(queryWords, doc.keywords),
     }));
 
-    // Sort by score and return top K
     scored.sort((a: any, b: any) => b.score - a.score);
     return scored.slice(0, topK);
   }
@@ -149,7 +192,7 @@ export class KnowledgeService {
   }
 
   /**
-   * Add a document to the knowledge base.
+   * Add a document to the knowledge base with optional vector embedding.
    */
   async addDocument(
     text: string,
@@ -169,7 +212,24 @@ export class KnowledgeService {
       },
     });
 
+    // Generate and store embedding asynchronously (non-blocking)
+    this.generateAndStoreEmbedding(doc.id, text).catch((err) =>
+      this.logger.warn(`Failed to generate embedding for doc ${doc.id}: ${(err as Error).message}`),
+    );
+
     return { id: doc.id };
+  }
+
+  private async generateAndStoreEmbedding(docId: string, text: string): Promise<void> {
+    const embedding = await this.embeddingService.generateEmbedding(text);
+    if (!embedding) return;
+
+    const vecString = `[${embedding.join(',')}]`;
+    await this.prisma.$queryRawUnsafe(
+      `UPDATE knowledge_documents SET embedding_vec = $1::vector WHERE id = $2::uuid`,
+      vecString,
+      docId,
+    );
   }
 
   /**

@@ -36,6 +36,15 @@ export default () => ({
     modelVision: process.env.OPENAI_MODEL_VISION || 'gpt-4o-mini',
   },
 
+  anthropic: {
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+    model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+  },
+
+  llm: {
+    failoverEnabled: process.env.LLM_FAILOVER_ENABLED || 'true',
+  },
+
   otp: {
     expiresInMinutes: parseInt(process.env.OTP_EXPIRES_IN_MINUTES || '5', 10),
     length: parseInt(process.env.OTP_LENGTH || '6', 10),
@@ -68,6 +77,14 @@ export default () => ({
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  },
+
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID || '',
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+    bucketName: process.env.R2_BUCKET_NAME || 'jyotryx-uploads',
+    publicUrl: process.env.R2_PUBLIC_URL || '',
   },
 
   credits: {

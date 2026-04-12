@@ -1,10 +1,15 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { StorageService } from '../../storage/storage.service';
+import { PALMISTRY_QUEUE } from '../../queue/queue.module';
+import type { PalmistryJobData } from '../../queue/palmistry.processor';
 
 export interface PalmistryAnalysis {
   id: string;
@@ -43,13 +48,19 @@ export interface FingerAnalysis {
 export class PalmistryService {
   private readonly logger = new Logger(PalmistryService.name);
 
+  private readonly queueEnabled: boolean;
+
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
     private openaiService: OpenAIService,
     private knowledgeService: KnowledgeService,
-  ) {}
+    private storageService: StorageService,
+    @Optional() @InjectQueue(PALMISTRY_QUEUE) private palmistryQueue?: Queue<PalmistryJobData>,
+  ) {
+    this.queueEnabled = this.configService.get<string>('QUEUE_ENABLED', 'false') === 'true' && !!this.palmistryQueue;
+  }
 
   async analyzePalm(
     userId: string,
@@ -65,10 +76,60 @@ export class PalmistryService {
       throw new BadRequestException('Insufficient credits for palmistry reading.');
     }
 
+    // Upload image to R2 first (needed by both sync and async paths)
+    let imageKey: string | null = null;
+    let imageUrl = '';
+    if (imageBuffer && this.storageService.isAvailable()) {
+      const ext = (imageMimeType || 'image/jpeg').split('/')[1] || 'jpeg';
+      imageKey = `palmistry/${userId}/${Date.now()}.${ext}`;
+      try {
+        await this.storageService.uploadBuffer(imageKey, imageBuffer, imageMimeType || 'image/jpeg');
+        imageUrl = await this.storageService.getPresignedDownloadUrl(imageKey);
+      } catch (err) {
+        this.logger.error('R2 upload failed, storing without image', err);
+        imageKey = null;
+      }
+    }
+
+    // Async path: enqueue job for background processing
+    if (this.queueEnabled) {
+      const reading = await this.prisma.palmistryReading.create({
+        data: {
+          userId,
+          imageUrl,
+          imageKey,
+          analysisData: { status: 'processing' },
+        },
+      });
+
+      await this.palmistryQueue!.add('analyze', {
+        readingId: reading.id,
+        userId,
+        creditCost,
+        imageKey: imageKey ?? undefined,
+        imageMimeType,
+        locale,
+      } satisfies PalmistryJobData);
+
+      return {
+        id: reading.id,
+        userId,
+        imageUrl,
+        lines: [],
+        mounts: [],
+        fingerAnalysis: [],
+        overallReading: 'Your palmistry reading is being processed. Check back shortly.',
+        healthInsights: '',
+        careerInsights: '',
+        relationshipInsights: '',
+        createdAt: reading.createdAt.toISOString(),
+      };
+    }
+
+    // Sync path (fallback when QUEUE_ENABLED=false)
     let analysisData: any;
     const client = this.openaiService.getClient();
 
-    // Fetch palmistry KB context for enriched readings
     const palmKB = await this.knowledgeService.getByCategory('palmistry', 15);
     const palmKBContext = this.knowledgeService.assembleContext(palmKB);
     const palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
@@ -96,7 +157,6 @@ export class PalmistryService {
           response_format: { type: 'json_object' },
         });
 
-        // Track per-user LLM cost — fire-and-forget.
         this.openaiService.recordUsage?.({
           userId,
           feature: 'palmistry',
@@ -117,11 +177,11 @@ export class PalmistryService {
       analysisData = await this.getKBEnrichedFallback();
     }
 
-    // Save to database
     const reading = await this.prisma.palmistryReading.create({
       data: {
         userId,
-        imageUrl: imageBuffer ? `data:${imageMimeType || 'image/jpeg'};base64,${imageBuffer.toString('base64')}` : '',
+        imageUrl,
+        imageKey,
         analysisData,
       },
     });
@@ -129,9 +189,44 @@ export class PalmistryService {
     return {
       id: reading.id,
       userId,
+      imageUrl,
       ...analysisData,
       createdAt: reading.createdAt.toISOString(),
     };
+  }
+
+  async getReadingStatus(userId: string, readingId: string): Promise<{ id: string; status: string }> {
+    const reading = await this.prisma.palmistryReading.findFirst({
+      where: { id: readingId, userId },
+      select: { id: true, analysisData: true },
+    });
+    if (!reading) throw new BadRequestException('Reading not found');
+    const data = reading.analysisData as any;
+    const status = data?.status === 'processing' ? 'processing' : 'completed';
+    return { id: reading.id, status };
+  }
+
+  async getImageUrl(userId: string, readingId: string): Promise<{ url: string }> {
+    const reading = await this.prisma.palmistryReading.findFirst({
+      where: { id: readingId, userId },
+      select: { imageKey: true, imageUrl: true },
+    });
+
+    if (!reading) {
+      throw new BadRequestException('Reading not found');
+    }
+
+    // Prefer R2 presigned URL; fall back to legacy imageUrl
+    if (reading.imageKey && this.storageService.isAvailable()) {
+      const url = await this.storageService.getPresignedDownloadUrl(reading.imageKey);
+      return { url };
+    }
+
+    if (reading.imageUrl) {
+      return { url: reading.imageUrl };
+    }
+
+    throw new BadRequestException('No image available for this reading');
   }
 
   private async getKBEnrichedFallback() {
