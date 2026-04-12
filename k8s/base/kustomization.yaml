@@ -1,0 +1,17 @@
+apiVersion: kustomize.io/v1beta1
+kind: Kustomization
+
+namespace: jyotryx
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - api-hpa.yaml
+  - api-pdb.yaml
+  - web-deployment.yaml
+  - web-service.yaml
+  - web-hpa.yaml
+  - ingress.yaml

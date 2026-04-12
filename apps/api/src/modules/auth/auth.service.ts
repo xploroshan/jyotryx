@@ -637,18 +637,85 @@ export class AuthService {
   }
 
   async refreshToken(dto: RefreshTokenDto): Promise<AuthTokens> {
+    let payload: any;
     try {
-      const payload = this.jwtService.verify(dto.refreshToken, {
+      payload = this.jwtService.verify(dto.refreshToken, {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const { jti, familyId, sub, email, name } = payload;
+
+    // Legacy tokens (pre-rotation) have no jti — issue rotated tokens going forward
+    if (!jti || !familyId) {
+      const user = await this.prisma.user.findUnique({ where: { id: sub } });
+      if (!user) throw new UnauthorizedException('Invalid or expired refresh token');
+      return this.generateTokens(sub, email, name);
+    }
+
+    // Check token in Redis
+    const tokenData = await this.redis.get(`rt:${jti}`);
+    if (!tokenData) {
+      // Token not found — either expired or already revoked
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const parsed = JSON.parse(tokenData);
+
+    if (parsed.used) {
+      // Reuse detected — possible token theft. Revoke the entire family.
+      this.logger.warn(`Refresh token reuse detected for family ${familyId}, user ${sub}. Revoking family.`);
+      await this.revokeFamilyTokens(familyId);
+      throw new UnauthorizedException('Refresh token reuse detected. All sessions revoked for security.');
+    }
+
+    // Mark current token as used
+    const ttl = await this.redis.ttl(`rt:${jti}`);
+    if (ttl > 0) {
+      await this.redis.set(`rt:${jti}`, JSON.stringify({ ...parsed, used: true }), 'EX', ttl);
+    }
+
+    // Verify user still exists
+    const user = await this.prisma.user.findUnique({ where: { id: sub } });
+    if (!user) {
+      await this.revokeFamilyTokens(familyId);
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    return this.generateTokens(sub, email, name, familyId);
+  }
+
+  async logout(refreshToken: string): Promise<{ message: string }> {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
         secret: this.configService.get<string>('jwt.refreshSecret'),
       });
 
-      // Verify user still exists
-      const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
-      if (!user) throw new Error('User not found');
-
-      return this.generateTokens(payload.sub, payload.email, payload.name);
+      if (payload.familyId) {
+        await this.revokeFamilyTokens(payload.familyId);
+        this.logger.log(`User ${payload.sub} logged out, family ${payload.familyId} revoked`);
+      }
     } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      // Token is invalid/expired — nothing to revoke, still return success
+    }
+
+    return { message: 'Logged out' };
+  }
+
+  private async revokeFamilyTokens(familyId: string): Promise<void> {
+    const familyKey = `rt:family:${familyId}`;
+    const members = await this.redis.smembers(familyKey);
+    if (members.length > 0) {
+      const pipeline = this.redis.pipeline();
+      for (const jti of members) {
+        pipeline.del(`rt:${jti}`);
+      }
+      pipeline.del(familyKey);
+      await pipeline.exec();
+    } else {
+      await this.redis.del(familyKey);
     }
   }
 
@@ -691,24 +758,52 @@ export class AuthService {
     userId: string,
     email: string,
     name: string,
+    existingFamilyId?: string,
   ): Promise<AuthTokens> {
-    const payload = { sub: userId, email, name };
+    const jti = crypto.randomUUID();
+    const familyId = existingFamilyId || crypto.randomUUID();
+    const accessPayload = { sub: userId, email, name };
+    const refreshPayload = { sub: userId, email, name, jti, familyId };
+
+    const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn', '30d');
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(accessPayload, {
         secret: this.configService.get<string>('jwt.secret'),
         expiresIn: this.configService.get<string>('jwt.expiresIn', '1d'),
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(refreshPayload, {
         secret: this.configService.get<string>('jwt.refreshSecret'),
-        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn', '30d'),
+        expiresIn: refreshExpiresIn,
       }),
     ]);
+
+    // Store refresh token metadata in Redis
+    const ttlSeconds = this.parseExpiryToSeconds(refreshExpiresIn);
+    const pipeline = this.redis.pipeline();
+    pipeline.set(`rt:${jti}`, JSON.stringify({ userId, familyId, used: false }), 'EX', ttlSeconds);
+    pipeline.sadd(`rt:family:${familyId}`, jti);
+    pipeline.expire(`rt:family:${familyId}`, ttlSeconds);
+    await pipeline.exec();
 
     return {
       accessToken,
       refreshToken,
       expiresIn: this.configService.get<string>('jwt.expiresIn', '1d'),
     };
+  }
+
+  private parseExpiryToSeconds(expiry: string): number {
+    const match = expiry.match(/^(\d+)(s|m|h|d)$/);
+    if (!match) return 30 * 24 * 3600; // default 30 days
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+    switch (unit) {
+      case 's': return value;
+      case 'm': return value * 60;
+      case 'h': return value * 3600;
+      case 'd': return value * 86400;
+      default: return 30 * 86400;
+    }
   }
 }

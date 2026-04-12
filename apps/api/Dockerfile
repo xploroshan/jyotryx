@@ -29,3 +29,4 @@ COPY --from=build /app/package.json ./
 EXPOSE 4000
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+# Note: tracing.ts is imported at the top of main.ts, so no -r flag needed

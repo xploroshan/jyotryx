@@ -2,18 +2,10 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useState, useEffect } from 'react';
+
+// English is always statically loaded (type source + instant fallback)
 import { en, type TranslationKeys } from './en';
-import { hi } from './hi';
-import { ta } from './ta';
-import { te } from './te';
-import { bn } from './bn';
-import { mr } from './mr';
-import { gu } from './gu';
-import { kn } from './kn';
-import { ml } from './ml';
-import { pa } from './pa';
-import { or_ } from './or';
-import { as_ } from './as';
 
 export type Locale = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr' | 'gu' | 'kn' | 'ml' | 'pa' | 'or' | 'as';
 
@@ -21,16 +13,43 @@ export const SUPPORTED_LOCALES: Locale[] = [
   'en', 'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa', 'or', 'as',
 ];
 
-const translations: Record<Locale, TranslationKeys> = {
-  en, hi, ta, te, bn, mr, gu, kn, ml, pa, or: or_, as: as_,
+// Dynamic locale loaders — each non-English locale is loaded on demand
+const localeLoaders: Record<string, () => Promise<TranslationKeys>> = {
+  hi: () => import('./hi').then(m => m.hi),
+  ta: () => import('./ta').then(m => m.ta),
+  te: () => import('./te').then(m => m.te),
+  bn: () => import('./bn').then(m => m.bn),
+  mr: () => import('./mr').then(m => m.mr),
+  gu: () => import('./gu').then(m => m.gu),
+  kn: () => import('./kn').then(m => m.kn),
+  ml: () => import('./ml').then(m => m.ml),
+  pa: () => import('./pa').then(m => m.pa),
+  or: () => import('./or').then(m => m.or_),
+  as: () => import('./as').then(m => m.as_),
 };
+
+// In-memory cache for loaded locale translations
+const loadedLocales = new Map<Locale, TranslationKeys>();
+loadedLocales.set('en', en);
+
+async function loadLocale(locale: Locale): Promise<TranslationKeys> {
+  const cached = loadedLocales.get(locale);
+  if (cached) return cached;
+
+  const loader = localeLoaders[locale];
+  if (!loader) return en;
+
+  try {
+    const translations = await loader();
+    loadedLocales.set(locale, translations);
+    return translations;
+  } catch {
+    return en; // Fallback to English on load failure
+  }
+}
 
 /**
  * Detects the user's preferred locale from the browser.
- *
- * Reads `navigator.language` (and `navigator.languages`) and maps the primary
- * subtag to a supported Indian-language locale. Falls back to English if no
- * match is found or if running on the server.
  */
 export function detectSystemLocale(): Locale {
   if (typeof navigator === 'undefined') return 'en';
@@ -48,10 +67,8 @@ export function detectSystemLocale(): Locale {
 
 interface I18nState {
   locale: Locale;
-  /** True once the user has explicitly chosen a locale (persists across reloads). */
   userSet: boolean;
   setLocale: (locale: Locale, opts?: { userSet?: boolean }) => void;
-  /** Reset to system default (used on logout). */
   resetLocale: () => void;
 }
 
@@ -66,9 +83,6 @@ export const useI18nStore = create<I18nState>()(
     }),
     {
       name: 'jyotron-locale',
-      // On rehydrate, if the user never explicitly set a locale, re-detect from
-      // the current browser language so that a new user on the same device sees
-      // their system language on first visit.
       onRehydrateStorage: () => (state) => {
         if (state && !state.userSet) {
           const sys = detectSystemLocale();
@@ -79,6 +93,10 @@ export const useI18nStore = create<I18nState>()(
   ),
 );
 
+/**
+ * Hook that provides translations for the current locale.
+ * English is always available instantly; other locales load async.
+ */
 export function useTranslation(): {
   t: TranslationKeys;
   locale: Locale;
@@ -86,7 +104,17 @@ export function useTranslation(): {
   resetLocale: () => void;
 } {
   const { locale, setLocale, resetLocale } = useI18nStore();
-  return { t: translations[locale], locale, setLocale, resetLocale };
+  const [t, setT] = useState<TranslationKeys>(loadedLocales.get(locale) ?? en);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadLocale(locale).then((loaded) => {
+      if (!cancelled) setT(loaded);
+    });
+    return () => { cancelled = true; };
+  }, [locale]);
+
+  return { t, locale, setLocale, resetLocale };
 }
 
 export { type TranslationKeys };

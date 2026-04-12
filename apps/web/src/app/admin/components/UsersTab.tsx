@@ -1,0 +1,216 @@
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import { api } from "@/lib/api";
+import { Badge, roleBadge, statusBadge, formatCurrency, formatDate } from "./helpers";
+import { EditUserModal } from "./EditUserModal";
+import { UserDetailPanel } from "./UserDetailPanel";
+import type { UserItem, UserDetail } from "./types";
+
+export function UsersTab({ token }: { token: string }) {
+  const [users, setUsers] = useState<UserItem[]>([]);
+  const [userTotal, setUserTotal] = useState(0);
+  const [userPage, setUserPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get<{ users: UserItem[]; total: number }>(
+        `/admin/users?search=${encodeURIComponent(search)}&page=${userPage}&limit=20`,
+        { token }
+      );
+      setUsers(res.users);
+      setUserTotal(res.total);
+    } catch (err: any) {
+      setError(err.message || "Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, search, userPage]);
+
+  useEffect(() => { loadUsers(); }, [loadUsers]);
+
+  const handleUpdateUser = async (userId: string, data: any) => {
+    setError("");
+    setSuccess("");
+    try {
+      await api.put(`/admin/users/${userId}`, data, { token });
+      setSuccess("User updated successfully");
+      setEditingUser(null);
+      setSelectedUserId(null);
+      loadUsers();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
+    setError("");
+    try {
+      await api.delete(`/admin/users/${userId}`, { token });
+      setSuccess("User deleted successfully");
+      setSelectedUserId(null);
+      loadUsers();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleCancelSubscription = async (subId: string) => {
+    if (!confirm("Cancel this subscription?")) return;
+    try {
+      await api.post(`/admin/subscriptions/${subId}/cancel`, {}, { token });
+      setSuccess("Subscription cancelled");
+      setSelectedUserId((prev) => { const t = prev; setSelectedUserId(null); setTimeout(() => setSelectedUserId(t), 50); return prev; });
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleQuickRoleChange = async (userId: string, role: string) => {
+    try {
+      await api.put(`/admin/users/${userId}`, { role }, { token });
+      loadUsers();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const userTotalPages = Math.ceil(userTotal / 20);
+
+  return (
+    <div>
+      {/* Messages */}
+      {error && (
+        <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
+          {error}
+          <button onClick={() => setError("")} className="text-red-400 hover:text-red-300">&times;</button>
+        </div>
+      )}
+      {success && (
+        <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+          {success}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={(data) => handleUpdateUser(editingUser.id, data)}
+        />
+      )}
+
+      {/* Search bar */}
+      <div className="flex gap-4 mb-6">
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, email, or phone..."
+          className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/20 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20"
+          onKeyDown={(e) => { if (e.key === "Enter") { setUserPage(1); loadUsers(); } }} />
+        <button onClick={() => { setUserPage(1); loadUsers(); }} className="px-5 py-2.5 rounded-xl surface-card text-sm text-primary-400 hover:bg-white/10">Search</button>
+      </div>
+      <p className="text-sm text-white/30 mb-4">{userTotal} users total</p>
+
+      {/* User detail panel */}
+      {selectedUserId && (
+        <div className="mb-6">
+          <UserDetailPanel
+            userId={selectedUserId}
+            token={token}
+            onClose={() => setSelectedUserId(null)}
+            onEdit={(user) => setEditingUser(user)}
+            onDelete={handleDeleteUser}
+            onCancelSubscription={handleCancelSubscription}
+          />
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <svg className="w-6 h-6 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        </div>
+      ) : (
+        <>
+          {/* Users table */}
+          <div className="surface-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/[0.06]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Name</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Email</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Role</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Credits</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Subscription</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Joined</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id} className={`border-b border-white/5 hover:bg-white/[0.03] cursor-pointer ${selectedUserId === u.id ? "bg-primary-600/10" : ""}`}
+                      onClick={() => setSelectedUserId(u.id === selectedUserId ? null : u.id)}>
+                      <td className="px-4 py-3 text-white font-medium">{u.name}</td>
+                      <td className="px-4 py-3 text-white/60">{u.email}</td>
+                      <td className="px-4 py-3">{roleBadge(u.role)}</td>
+                      <td className="px-4 py-3 text-white/60">{u.credits}</td>
+                      <td className="px-4 py-3">
+                        {u.subscriptionPlan ? (
+                          <div className="flex items-center gap-1">
+                            <Badge variant="purple">{u.subscriptionPlan}</Badge>
+                            {u.subscriptionStatus && statusBadge(u.subscriptionStatus)}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-white/20">Free</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-white/30 text-xs">{formatDate(u.createdAt)}</td>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-2">
+                          <select onChange={(e) => handleQuickRoleChange(u.id, e.target.value)} value={u.role}
+                            className="text-xs px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60">
+                            <option value="USER">User</option>
+                            <option value="PREMIUM">Premium</option>
+                            <option value="ADMIN">Admin</option>
+                          </select>
+                          <button onClick={() => handleDeleteUser(u.id)} className="text-xs px-2 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-white/30">No users found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          {userTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <button onClick={() => setUserPage(Math.max(1, userPage - 1))} disabled={userPage === 1}
+                className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Prev</button>
+              <span className="text-sm text-white/40">Page {userPage} of {userTotalPages}</span>
+              <button onClick={() => setUserPage(Math.min(userTotalPages, userPage + 1))} disabled={userPage === userTotalPages}
+                className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Next</button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
