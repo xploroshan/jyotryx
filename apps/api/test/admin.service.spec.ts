@@ -2,12 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AdminService } from '../src/modules/admin/admin.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { PrismaReadReplicaService } from '../src/prisma/prisma-read-replica.service';
 import { OpenAIService } from '../src/openai/openai.service';
+import { StatsService } from '../src/stats/stats.service';
+import { GdprPurgeService } from '../src/modules/admin/gdpr-purge.service';
+import { ANALYTICS_SERVICE } from '../src/analytics/analytics.interface';
 import { mockOpenAIService } from './helpers/mocks';
 
 describe('AdminService', () => {
   let service: AdminService;
   let prisma: any;
+  let mockAnalyticsService: any;
 
   beforeEach(async () => {
     prisma = {
@@ -77,11 +82,32 @@ describe('AdminService', () => {
       },
     };
 
+    const mockStatsService = {
+      getStatsRange: jest.fn().mockResolvedValue([]),
+      getLatestStats: jest.fn().mockResolvedValue(null),
+      computeAndStoreDailyStats: jest.fn(),
+    };
+
+    mockAnalyticsService = {
+      getLlmCostsByUser: jest.fn().mockResolvedValue([]),
+      getLlmTotals: jest.fn().mockResolvedValue({ calls: 0, totalTokens: 0, totalCostUsd: 0 }),
+      getLlmUsageByFeature: jest.fn().mockResolvedValue([]),
+      getLlmUsageByProvider: jest.fn().mockResolvedValue([]),
+    };
+
+    const mockGdprPurgeService = {
+      purgeUserData: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
         { provide: PrismaService, useValue: prisma },
+        { provide: PrismaReadReplicaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: StatsService, useValue: mockStatsService },
+        { provide: ANALYTICS_SERVICE, useValue: mockAnalyticsService },
+        { provide: GdprPurgeService, useValue: mockGdprPurgeService },
       ],
     }).compile();
 
@@ -253,22 +279,24 @@ describe('AdminService', () => {
   });
 
   describe('getLlmCostsByUser', () => {
-    it('should join groupBy results with user details', async () => {
-      prisma.llmUsage.groupBy.mockResolvedValue([
+    it('should delegate to analyticsService and return results', async () => {
+      mockAnalyticsService.getLlmCostsByUser.mockResolvedValue([
         {
           userId: 'u1',
-          _sum: { costUsd: 5.25, totalTokens: 12000 },
-          _count: 15,
+          userName: 'Alice',
+          userEmail: 'alice@test.com',
+          calls: 15,
+          totalTokens: 12000,
+          totalCostUsd: 5.25,
         },
         {
           userId: 'u2',
-          _sum: { costUsd: 1.1, totalTokens: 4000 },
-          _count: 4,
+          userName: 'Bob',
+          userEmail: 'bob@test.com',
+          calls: 4,
+          totalTokens: 4000,
+          totalCostUsd: 1.1,
         },
-      ]);
-      prisma.user.findMany.mockResolvedValue([
-        { id: 'u1', name: 'Alice', email: 'alice@test.com' },
-        { id: 'u2', name: 'Bob', email: 'bob@test.com' },
       ]);
 
       const result = await service.getLlmCostsByUser(20, 30);
@@ -283,24 +311,20 @@ describe('AdminService', () => {
         totalCostUsd: 5.25,
       });
       expect(result[1].userName).toBe('Bob');
-      expect(prisma.llmUsage.groupBy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          by: ['userId'],
-          orderBy: { _sum: { costUsd: 'desc' } },
-          take: 20,
-        }),
-      );
+      expect(mockAnalyticsService.getLlmCostsByUser).toHaveBeenCalledWith(20, 30);
     });
 
     it('should handle null userId rows (deleted users)', async () => {
-      prisma.llmUsage.groupBy.mockResolvedValue([
+      mockAnalyticsService.getLlmCostsByUser.mockResolvedValue([
         {
           userId: null,
-          _sum: { costUsd: 2.0, totalTokens: 5000 },
-          _count: 3,
+          userName: null,
+          userEmail: null,
+          calls: 3,
+          totalTokens: 5000,
+          totalCostUsd: 2.0,
         },
       ]);
-      prisma.user.findMany.mockResolvedValue([]);
 
       const result = await service.getLlmCostsByUser();
 
@@ -312,10 +336,8 @@ describe('AdminService', () => {
     });
 
     it('should return empty array when no usage', async () => {
-      prisma.llmUsage.groupBy.mockResolvedValue([]);
       const result = await service.getLlmCostsByUser();
       expect(result).toEqual([]);
-      expect(prisma.user.findMany).not.toHaveBeenCalled();
     });
   });
 

@@ -1,8 +1,12 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 
+import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaReadReplicaService } from '../../prisma/prisma-read-replica.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { StatsService } from '../../stats/stats.service';
+import { ANALYTICS_SERVICE, AnalyticsService } from '../../analytics/analytics.interface';
+import { GdprPurgeService } from './gdpr-purge.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -123,11 +127,20 @@ export interface ActivityLogItem {
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
+  /** Read replica for analytics queries; falls back to primary when unconfigured. */
+  private readonly readPrisma: PrismaService;
+
   constructor(
     private prisma: PrismaService,
+    private readReplicaPrisma: PrismaReadReplicaService,
     private openaiService: OpenAIService,
     private statsService: StatsService,
-  ) {}
+    @Inject(ANALYTICS_SERVICE) private analyticsService: AnalyticsService,
+    private gdprPurgeService: GdprPurgeService,
+  ) {
+    // Analytics / read-only queries go through the replica
+    this.readPrisma = readReplicaPrisma as unknown as PrismaService;
+  }
 
   async getDashboardStats(): Promise<DashboardStats> {
     const today = new Date();
@@ -143,17 +156,17 @@ export class AdminService {
       newUsersToday,
       activeSubscriptions,
     ] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] } } }),
-      this.prisma.payment.aggregate({
+      this.readPrisma.user.count(),
+      this.readPrisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] } } }),
+      this.readPrisma.payment.aggregate({
         where: { status: 'SUCCESS' },
         _sum: { amount: true },
       }),
-      this.prisma.chatSession.count(),
-      this.prisma.kundliChart.count(),
-      this.prisma.payment.count({ where: { status: 'SUCCESS' } }),
-      this.prisma.user.count({ where: { createdAt: { gte: today } } }),
-      this.prisma.subscription.count({ where: { status: 'ACTIVE' } }),
+      this.readPrisma.chatSession.count(),
+      this.readPrisma.kundliChart.count(),
+      this.readPrisma.payment.count({ where: { status: 'SUCCESS' } }),
+      this.readPrisma.user.count({ where: { createdAt: { gte: today } } }),
+      this.readPrisma.subscription.count({ where: { status: 'ACTIVE' } }),
     ]);
 
     return {
@@ -180,7 +193,7 @@ export class AdminService {
       : {};
 
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({
+      this.readPrisma.user.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -202,7 +215,7 @@ export class AdminService {
           },
         },
       }),
-      this.prisma.user.count({ where }),
+      this.readPrisma.user.count({ where }),
     ]);
 
     return {
@@ -223,7 +236,7 @@ export class AdminService {
   }
 
   async getUserDetail(userId: string): Promise<UserDetail> {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.readPrisma.user.findUnique({
       where: { id: userId },
       include: {
         subscriptions: {
@@ -260,36 +273,36 @@ export class AdminService {
       llmByFeature,
       llmRecent,
     ] = await Promise.all([
-      this.prisma.payment.aggregate({
+      this.readPrisma.payment.aggregate({
         where: { userId, status: 'SUCCESS' },
         _sum: { amount: true },
         _count: true,
       }),
-      this.prisma.creditTransaction.aggregate({
+      this.readPrisma.creditTransaction.aggregate({
         where: { userId, amount: { lt: 0 } },
         _sum: { amount: true },
       }),
-      this.prisma.kundliChart.count({ where: { userId } }),
-      this.prisma.palmistryReading.count({ where: { userId } }),
-      this.prisma.matchingResult.count({ where: { userId } }),
-      this.prisma.llmUsage.aggregate({
+      this.readPrisma.kundliChart.count({ where: { userId } }),
+      this.readPrisma.palmistryReading.count({ where: { userId } }),
+      this.readPrisma.matchingResult.count({ where: { userId } }),
+      this.readPrisma.llmUsage.aggregate({
         where: { userId },
         _sum: { costUsd: true, totalTokens: true },
         _count: true,
       }),
-      this.prisma.llmUsage.groupBy({
+      this.readPrisma.llmUsage.groupBy({
         by: ['provider', 'model'],
         where: { userId },
         _sum: { costUsd: true, totalTokens: true },
         _count: true,
       }),
-      this.prisma.llmUsage.groupBy({
+      this.readPrisma.llmUsage.groupBy({
         by: ['feature'],
         where: { userId },
         _sum: { costUsd: true, totalTokens: true },
         _count: true,
       }),
-      this.prisma.llmUsage.findMany({
+      this.readPrisma.llmUsage.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
         take: 20,
@@ -328,7 +341,7 @@ export class AdminService {
         createdAt: p.createdAt.toISOString(),
       })),
       recentChats: await Promise.all(user.chatSessions.map(async (c: any) => {
-        const msgCount = await this.prisma.chatMessage.count({ where: { sessionId: c.id } });
+        const msgCount = await this.readPrisma.chatMessage.count({ where: { sessionId: c.id } });
         return {
           id: c.id,
           title: c.title,
@@ -527,13 +540,16 @@ export class AdminService {
       },
     });
 
+    // Purge data from partitioned tables (FK cascading was removed)
+    await this.gdprPurgeService.purgeUserData(userId);
+
     await this.prisma.user.delete({ where: { id: userId } });
     this.logger.log(`Admin ${adminEmail} deleted user: ${userId} (${user.email})`);
     return { deleted: true };
   }
 
   async getRecentPayments(limit: number = 20) {
-    const payments = await this.prisma.payment.findMany({
+    const payments = await this.readPrisma.payment.findMany({
       orderBy: { createdAt: 'desc' },
       take: limit,
       include: { user: { select: { name: true, email: true } } },
@@ -552,7 +568,7 @@ export class AdminService {
   }
 
   async getRecentChats(limit: number = 20) {
-    const sessions = await this.prisma.chatSession.findMany({
+    const sessions = await this.readPrisma.chatSession.findMany({
       orderBy: { updatedAt: 'desc' },
       take: limit,
       include: {
@@ -561,7 +577,7 @@ export class AdminService {
     });
 
     return Promise.all(sessions.map(async (s: any) => {
-      const messageCount = await this.prisma.chatMessage.count({ where: { sessionId: s.id } });
+      const messageCount = await this.readPrisma.chatMessage.count({ where: { sessionId: s.id } });
       return {
         id: s.id,
         userName: s.user.name,
@@ -585,13 +601,13 @@ export class AdminService {
     const where = action ? { action: action as any } : {};
 
     const [logs, total] = await Promise.all([
-      this.prisma.activityLog.findMany({
+      this.readPrisma.activityLog.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.activityLog.count({ where }),
+      this.readPrisma.activityLog.count({ where }),
     ]);
 
     return {
@@ -765,31 +781,31 @@ export class AdminService {
       paymentsLast7,
       llmLast7,
     ] = await Promise.all([
-      this.prisma.chatSession.count({ where: { createdAt: { gte: today } } }),
-      this.prisma.chatSession.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-      this.prisma.chatMessage.count(),
-      this.prisma.chatSession.count(),
-      this.prisma.creditTransaction.aggregate({
+      this.readPrisma.chatSession.count({ where: { createdAt: { gte: today } } }),
+      this.readPrisma.chatSession.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.readPrisma.chatMessage.count(),
+      this.readPrisma.chatSession.count(),
+      this.readPrisma.creditTransaction.aggregate({
         where: { createdAt: { gte: today }, amount: { lt: 0 } },
         _sum: { amount: true },
       }),
-      this.prisma.creditTransaction.aggregate({
+      this.readPrisma.creditTransaction.aggregate({
         where: { createdAt: { gte: sevenDaysAgo }, amount: { lt: 0 } },
         _sum: { amount: true },
       }),
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] } } }),
-      this.prisma.kundliChart.count(),
-      this.prisma.matchingResult.count(),
-      this.prisma.palmistryReading.count(),
-      this.prisma.report.count(),
-      this.prisma.tarotReading.count(),
-      this.prisma.chatSession.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-      this.prisma.payment.findMany({
+      this.readPrisma.user.count(),
+      this.readPrisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] } } }),
+      this.readPrisma.kundliChart.count(),
+      this.readPrisma.matchingResult.count(),
+      this.readPrisma.palmistryReading.count(),
+      this.readPrisma.report.count(),
+      this.readPrisma.tarotReading.count(),
+      this.readPrisma.chatSession.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      this.readPrisma.payment.findMany({
         where: { status: 'SUCCESS', createdAt: { gte: sevenDaysAgo } },
         select: { amount: true, createdAt: true },
       }),
-      this.prisma.llmUsage.aggregate({
+      this.readPrisma.llmUsage.aggregate({
         where: { createdAt: { gte: sevenDaysAgo } },
         _sum: { costUsd: true, totalTokens: true },
         _count: true,
@@ -847,7 +863,7 @@ export class AdminService {
     // after signup. Approximated by counting users whose most recent
     // activity timestamp is within the cohort window.
     const [retainedDay1, retainedDay7, retainedDay30] = await Promise.all([
-      this.prisma.user.count({
+      this.readPrisma.user.count({
         where: {
           createdAt: { lte: now },
           OR: [
@@ -856,13 +872,13 @@ export class AdminService {
           ],
         },
       }),
-      this.prisma.user.count({
+      this.readPrisma.user.count({
         where: {
           createdAt: { gte: thirtyDaysAgo, lte: sevenDaysAgo },
           chatSessions: { some: { createdAt: { gte: sevenDaysAgo } } },
         },
       }),
-      this.prisma.user.count({
+      this.readPrisma.user.count({
         where: {
           createdAt: { lte: thirtyDaysAgo },
           chatSessions: { some: { createdAt: { gte: thirtyDaysAgo } } },
@@ -920,15 +936,15 @@ export class AdminService {
       notifications,
       kbByCategory,
     ] = await Promise.all([
-      this.prisma.knowledgeDocument.count(),
-      this.prisma.tarotReading.count(),
-      this.prisma.kundliChart.count(),
-      this.prisma.report.count(),
-      this.prisma.palmistryReading.count(),
-      this.prisma.matchingResult.count(),
-      this.prisma.chatSession.count(),
-      this.prisma.notification.count(),
-      this.prisma.knowledgeDocument.groupBy({
+      this.readPrisma.knowledgeDocument.count(),
+      this.readPrisma.tarotReading.count(),
+      this.readPrisma.kundliChart.count(),
+      this.readPrisma.report.count(),
+      this.readPrisma.palmistryReading.count(),
+      this.readPrisma.matchingResult.count(),
+      this.readPrisma.chatSession.count(),
+      this.readPrisma.notification.count(),
+      this.readPrisma.knowledgeDocument.groupBy({
         by: ['category'],
         _count: true,
       }),
@@ -952,43 +968,9 @@ export class AdminService {
 
   /**
    * Returns the top users ranked by LLM spend (USD) over a given period.
-   * Used by the admin Analytics tab to surface who's driving AI cost.
+   * Delegates to the pluggable AnalyticsService (Postgres or ClickHouse).
    */
   async getLlmCostsByUser(limit: number = 20, days: number = 30): Promise<LlmCostRow[]> {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-
-    const grouped = await this.prisma.llmUsage.groupBy({
-      by: ['userId'],
-      where: { createdAt: { gte: since } },
-      _sum: { costUsd: true, totalTokens: true },
-      _count: true,
-      orderBy: { _sum: { costUsd: 'desc' } },
-      take: limit,
-    });
-
-    const userIds = grouped.map((g: any) => g.userId).filter((id: string | null): id is string => !!id);
-    const users = userIds.length
-      ? await this.prisma.user.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, name: true, email: true },
-        })
-      : [];
-    type UserRow = { id: string; name: string | null; email: string };
-    const userMap = new Map<string, UserRow>(
-      users.map((u: UserRow) => [u.id, u]),
-    );
-
-    return grouped.map((row: any) => {
-      const user: UserRow | null = row.userId ? userMap.get(row.userId) ?? null : null;
-      return {
-        userId: row.userId,
-        userName: user?.name ?? null,
-        userEmail: user?.email ?? null,
-        calls: row._count,
-        totalTokens: Number(row._sum.totalTokens ?? 0),
-        totalCostUsd: Number(row._sum.costUsd ?? 0),
-      };
-    });
+    return this.analyticsService.getLlmCostsByUser(limit, days);
   }
 }

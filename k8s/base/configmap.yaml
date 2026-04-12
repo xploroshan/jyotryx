@@ -11,3 +11,7 @@ data:
   RATE_LIMIT_MAX_REQUESTS: "60"
   NEXT_TELEMETRY_DISABLED: "1"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring:4318"
+  # Read replica URL for analytics (set in secrets for production)
+  # DATABASE_READ_REPLICA_URL: ""
+  # Data retention: months to keep partitioned data before dropping
+  DATA_RETENTION_MONTHS: "6"

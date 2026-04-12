@@ -6,6 +6,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StatsService } from '../src/stats/stats.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { PrismaReadReplicaService } from '../src/prisma/prisma-read-replica.service';
 import { mockPrismaService } from './helpers/mocks';
 
 describe('StatsService', () => {
@@ -19,6 +20,7 @@ describe('StatsService', () => {
       providers: [
         StatsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: PrismaReadReplicaService, useValue: prisma },
       ],
     }).compile();
 

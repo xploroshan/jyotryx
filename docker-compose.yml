@@ -93,6 +93,36 @@ services:
     depends_on:
       - api
 
+  # ─── Postgres Read Replica (uncomment when ready) ─────────────────────────
+  # postgres-replica:
+  #   image: pgvector/pgvector:pg16
+  #   container_name: jyotron-postgres-replica
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5433:5432"
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-jyotron}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  #     POSTGRES_DB: ${POSTGRES_DB:-jyotron}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+  # ─── ClickHouse (uncomment for LLM analytics offloading) ────────────────
+  # clickhouse:
+  #   image: clickhouse/clickhouse-server:24
+  #   container_name: jyotron-clickhouse
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8123:8123"
+  #     - "9000:9000"
+  #   volumes:
+  #     - clickhouse_data:/var/lib/clickhouse
+  #   environment:
+  #     CLICKHOUSE_DB: jyotryx
+  #     CLICKHOUSE_USER: default
+  #     CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: jyotron-pgadmin
