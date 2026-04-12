@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIProvider } from './providers/openai.provider';
 import { AnthropicProvider } from './providers/anthropic.provider';
+import { GeminiProvider } from './providers/gemini.provider';
 import { LlmChatOptions, LlmChatResult, LlmProvider } from './providers/llm-provider.interface';
 import { createLlmPolicy, ResiliencePolicy } from './llm-resilience';
 
@@ -18,6 +19,8 @@ const MODEL_COSTS_USD_PER_1M: Record<string, { prompt: number; completion: numbe
   'claude-opus-4-6': { prompt: 15, completion: 75 },
   'claude-sonnet-4-6': { prompt: 3, completion: 15 },
   'claude-haiku-4-5': { prompt: 0.8, completion: 4 },
+  'gemini-2.0-flash': { prompt: 0.10, completion: 0.40 },
+  'gemini-2.0-flash-lite': { prompt: 0.075, completion: 0.30 },
   'gemini-1.5-pro': { prompt: 1.25, completion: 5 },
   'gemini-1.5-flash': { prompt: 0.075, completion: 0.3 },
   'mistral-large': { prompt: 2, completion: 6 },
@@ -41,6 +44,7 @@ export class LlmService implements OnModuleInit {
 
   private readonly openaiPolicy: ResiliencePolicy;
   private readonly anthropicPolicy: ResiliencePolicy;
+  private readonly geminiPolicy: ResiliencePolicy;
 
   private currentConfig!: LlmRuntimeConfig;
   private configLoadedAt = 0;
@@ -52,10 +56,12 @@ export class LlmService implements OnModuleInit {
     private configService: ConfigService,
     private openaiProvider: OpenAIProvider,
     private anthropicProvider: AnthropicProvider,
+    private geminiProvider: GeminiProvider,
     @Optional() private prisma?: PrismaService,
   ) {
     this.openaiPolicy = createLlmPolicy('openai');
     this.anthropicPolicy = createLlmPolicy('anthropic');
+    this.geminiPolicy = createLlmPolicy('gemini');
 
     this.failoverEnabled = this.configService.get<string>('llm.failoverEnabled', 'true') !== 'false';
 
@@ -74,8 +80,9 @@ export class LlmService implements OnModuleInit {
   async onModuleInit() {
     await this.reloadConfig(true).catch(() => {});
     const primary = this.openaiProvider.isAvailable() ? 'OpenAI' : 'none';
-    const secondary = this.anthropicProvider.isAvailable() ? 'Anthropic' : 'none';
-    this.logger.log(`LLM service ready — primary: ${primary}, secondary: ${secondary}, failover: ${this.failoverEnabled}`);
+    const secondary = this.geminiProvider.isAvailable() ? 'Gemini' : 'none';
+    const tertiary = this.anthropicProvider.isAvailable() ? 'Anthropic' : 'none';
+    this.logger.log(`LLM service ready — primary: ${primary}, secondary: ${secondary}, tertiary: ${tertiary}, failover: ${this.failoverEnabled}`);
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────
@@ -166,7 +173,20 @@ export class LlmService implements OnModuleInit {
       }
     }
 
-    // Try secondary provider (Anthropic) if failover is enabled
+    // Try secondary provider (Gemini) if failover is enabled
+    if (this.failoverEnabled && this.geminiProvider.isAvailable()) {
+      try {
+        const result = await this.geminiPolicy.execute(() =>
+          this.geminiProvider.chatCompletion(enrichedOptions),
+        );
+        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
+        return this.processResult(result, options.jsonMode);
+      } catch (err) {
+        this.logger.warn(`Gemini also failed: ${(err as Error).message}`);
+      }
+    }
+
+    // Try tertiary provider (Anthropic) if failover is enabled
     if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
       try {
         const result = await this.anthropicPolicy.execute(() =>
@@ -200,6 +220,14 @@ export class LlmService implements OnModuleInit {
       }
     }
 
+    if (this.failoverEnabled && this.geminiProvider.isAvailable()) {
+      try {
+        return this.geminiProvider.chatCompletionStream(enrichedOptions);
+      } catch (err) {
+        this.logger.warn(`Gemini stream also failed: ${(err as Error).message}`);
+      }
+    }
+
     if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
       try {
         return this.anthropicProvider.chatCompletionStream(enrichedOptions);
@@ -209,6 +237,77 @@ export class LlmService implements OnModuleInit {
     }
 
     return null;
+  }
+
+  /**
+   * Submit a chat completion via OpenAI's Batch API for async processing.
+   * Returns the batch ID for status polling, or null if unavailable.
+   * Ideal for non-real-time features like report generation (50% cost discount).
+   */
+  async batchCompletion(options: LlmChatOptions & { jsonMode?: boolean; customId: string }): Promise<string | null> {
+    const client = this.getClient();
+    if (!client) return null;
+
+    const model = options.model || this.currentConfig.defaultModel;
+
+    try {
+      const requestBody = {
+        model,
+        messages: options.messages,
+        max_tokens: options.maxTokens ?? 2000,
+        temperature: options.temperature ?? 0.7,
+        ...(options.jsonMode && { response_format: { type: 'json_object' } }),
+      };
+
+      // Create a JSONL batch input as a file
+      const batchLine = JSON.stringify({
+        custom_id: options.customId,
+        method: 'POST',
+        url: '/v1/chat/completions',
+        body: requestBody,
+      });
+
+      const file = await client.files.create({
+        file: new Blob([batchLine], { type: 'application/jsonl' }),
+        purpose: 'batch',
+      });
+
+      const batch = await client.batches.create({
+        input_file_id: file.id,
+        endpoint: '/v1/chat/completions',
+        completion_window: '24h',
+      });
+
+      this.logger.log(`Batch submitted: ${batch.id} for custom_id=${options.customId}`);
+      return batch.id;
+    } catch (err) {
+      this.logger.error(`Batch submission failed: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Check the status of a batch job and retrieve results if complete.
+   */
+  async getBatchResult(batchId: string): Promise<{ status: string; result?: any } | null> {
+    const client = this.getClient();
+    if (!client) return null;
+
+    try {
+      const batch = await client.batches.retrieve(batchId);
+
+      if (batch.status === 'completed' && batch.output_file_id) {
+        const fileResponse = await client.files.content(batch.output_file_id);
+        const text = await fileResponse.text();
+        const lines = text.trim().split('\n').map((l: string) => JSON.parse(l));
+        return { status: 'completed', result: lines };
+      }
+
+      return { status: batch.status };
+    } catch (err) {
+      this.logger.error(`Batch status check failed: ${(err as Error).message}`);
+      return null;
+    }
   }
 
   // ─── Config Management ──────────────────────────────────────────────────

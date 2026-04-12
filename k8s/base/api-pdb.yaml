@@ -4,7 +4,7 @@ metadata:
   name: api
   namespace: jyotryx
 spec:
-  minAvailable: 1
+  minAvailable: 2
   selector:
     matchLabels:
       app: api

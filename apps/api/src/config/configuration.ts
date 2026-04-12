@@ -42,6 +42,12 @@ export default () => ({
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
   },
 
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || '',
+    model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+    modelVision: process.env.GEMINI_MODEL_VISION || 'gemini-2.0-flash',
+  },
+
   llm: {
     failoverEnabled: process.env.LLM_FAILOVER_ENABLED || 'true',
   },

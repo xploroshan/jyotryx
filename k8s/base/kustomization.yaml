@@ -11,6 +11,8 @@ resources:
   - api-service.yaml
   - api-hpa.yaml
   - api-pdb.yaml
+  - worker-deployment.yaml
+  - worker-hpa.yaml
   - web-deployment.yaml
   - web-service.yaml
   - web-hpa.yaml
