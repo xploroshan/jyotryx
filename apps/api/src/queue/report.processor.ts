@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
+import { LlmService } from '../llm/llm.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UserService } from '../modules/user/user.service';
 import { REPORT_QUEUE } from './queue.module';
@@ -15,6 +16,7 @@ export interface ReportJobData {
   birthDetails: { dateOfBirth: string; timeOfBirth: string; placeOfBirth: string };
   name: string;
   gender?: string | null;
+  batchId?: string;
 }
 
 @Processor(REPORT_QUEUE)
@@ -24,6 +26,7 @@ export class ReportProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly openaiService: OpenAIService,
+    private readonly llmService: LlmService,
     private readonly knowledgeService: KnowledgeService,
     private readonly userService: UserService,
   ) {
@@ -103,11 +106,52 @@ Generate these sections: ${sectionTitles.join(', ')}
 
 Be specific with planetary positions, Dasha periods, Yogas, and transit effects. Use Lahiri ayanamsa. Reference the person by name.${kbSection}`;
 
+    const messages = [
+      { role: 'system', content: 'You are an expert Vedic astrologer creating detailed professional reports. Use accurate Jyotish terminology and provide actionable insights. Return valid JSON.' },
+      { role: 'user', content: prompt },
+    ];
+
+    // Try OpenAI Batch API first (50% cost discount) for non-urgent reports
+    const batchId = await this.llmService.batchCompletion({
+      messages,
+      maxTokens: 2000,
+      temperature: 0.7,
+      jsonMode: true,
+      model: this.llmService.getModelForFeature('precision'),
+      userId,
+      feature: `report:${type.toLowerCase()}`,
+      customId: `report-${type.toLowerCase()}-${Date.now()}`,
+    });
+
+    if (batchId) {
+      // Poll for batch result (check every 30s, up to 10 minutes for BullMQ job window)
+      for (let i = 0; i < 20; i++) {
+        await new Promise((r) => setTimeout(r, 30_000));
+        const batchResult = await this.llmService.getBatchResult(batchId);
+        if (batchResult?.status === 'completed' && batchResult.result?.[0]) {
+          const body = batchResult.result[0].response?.body;
+          const content = body?.choices?.[0]?.message?.content;
+          if (content) {
+            try {
+              const parsed = JSON.parse(content);
+              if (parsed?.sections && Array.isArray(parsed.sections)) {
+                this.logger.log(`Report generated via Batch API (50% discount): ${batchId}`);
+                return parsed.sections;
+              }
+            } catch { /* fall through to sync */ }
+          }
+        }
+        if (batchResult?.status === 'failed' || batchResult?.status === 'expired' || batchResult?.status === 'cancelled') {
+          this.logger.warn(`Batch ${batchId} ${batchResult.status}, falling back to sync`);
+          break;
+        }
+      }
+      this.logger.warn(`Batch ${batchId} timed out in job window, falling back to sync`);
+    }
+
+    // Fallback: synchronous completion via LlmService (with full failover chain)
     const result = await this.openaiService.chatCompletion({
-      messages: [
-        { role: 'system', content: 'You are an expert Vedic astrologer creating detailed professional reports. Use accurate Jyotish terminology and provide actionable insights. Return valid JSON.' },
-        { role: 'user', content: prompt },
-      ],
+      messages,
       maxTokens: 2000,
       temperature: 0.7,
       jsonMode: true,

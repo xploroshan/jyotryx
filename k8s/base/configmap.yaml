@@ -11,6 +11,9 @@ data:
   RATE_LIMIT_MAX_REQUESTS: "60"
   NEXT_TELEMETRY_DISABLED: "1"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.monitoring:4318"
+  LLM_FAILOVER_ENABLED: "true"
+  GEMINI_MODEL: "gemini-2.0-flash"
+  GEMINI_MODEL_VISION: "gemini-2.0-flash"
   # Read replica URL for analytics (set in secrets for production)
   # DATABASE_READ_REPLICA_URL: ""
   # Data retention: months to keep partitioned data before dropping

@@ -1,54 +1,49 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api
+  name: worker
   namespace: jyotryx
   labels:
-    app: api
+    app: worker
     app.kubernetes.io/part-of: jyotryx
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: api
+      app: worker
   template:
     metadata:
       labels:
-        app: api
+        app: worker
         app.kubernetes.io/part-of: jyotryx
     spec:
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 60
       containers:
-        - name: api
+        - name: worker
           image: ghcr.io/xploroshan/jyotryx-api:latest
-          ports:
-            - containerPort: 4000
-              name: http
+          command: ["node", "dist/main", "--worker"]
           envFrom:
             - configMapRef:
                 name: jyotryx-config
             - secretRef:
                 name: jyotryx-secrets
+          env:
+            - name: WORKER_MODE
+              value: "true"
           readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 4000
+            exec:
+              command: ["sh", "-c", "node -e 'process.exit(0)'"]
             initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            periodSeconds: 30
           livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 4000
+            exec:
+              command: ["sh", "-c", "node -e 'process.exit(0)'"]
             initialDelaySeconds: 15
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
+            periodSeconds: 30
           lifecycle:
             preStop:
               exec:
-                command: ["sh", "-c", "sleep 5"]
+                command: ["sh", "-c", "sleep 15"]
           resources:
             requests:
               cpu: 500m
