@@ -23,6 +23,8 @@ import { DailyBriefingModule } from './modules/daily-briefing/daily-briefing.mod
 import { NumerologyModule } from './modules/numerology/numerology.module';
 import { TarotModule } from './modules/tarot/tarot.module';
 import { VastuModule } from './modules/vastu/vastu.module';
+import { StorageModule } from './storage/storage.module';
+import { EphemerisModule } from './ephemeris/ephemeris.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { VastuModule } from './modules/vastu/vastu.module';
       load: [configuration],
     }),
     RedisModule,
+    StorageModule,
+    EphemerisModule,
     ThrottlerModule.forRootAsync({
       inject: [REDIS_CLIENT],
       useFactory: (redis: Redis) => ({

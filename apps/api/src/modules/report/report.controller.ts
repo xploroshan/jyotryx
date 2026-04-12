@@ -6,6 +6,8 @@ import {
   Param,
   UseGuards,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ReportService, ReportResponse, GenerateReportDto } from './report.service';
@@ -20,14 +22,26 @@ export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
   @Post('generate')
-  @ApiOperation({ summary: 'Generate an astrology report' })
-  @ApiResponse({ status: 201, description: 'Report generation started' })
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Generate an astrology report (returns 202 when queued)' })
+  @ApiResponse({ status: 202, description: 'Report generation started' })
   @ApiResponse({ status: 400, description: 'Insufficient credits' })
   async generateReport(
     @CurrentUser() user: JwtPayload,
     @Body() dto: GenerateReportDto,
   ): Promise<ReportResponse> {
     return this.reportService.generateReport(user.sub, dto);
+  }
+
+  @Get(':id/status')
+  @ApiOperation({ summary: 'Get report generation status' })
+  @ApiResponse({ status: 200, description: 'Report status returned' })
+  @ApiResponse({ status: 404, description: 'Report not found' })
+  async getReportStatus(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) reportId: string,
+  ): Promise<{ id: string; status: string; completedAt?: string }> {
+    return this.reportService.getReportStatus(user.sub, reportId);
   }
 
   @Get(':id')

@@ -38,6 +38,31 @@ export interface DailyBriefingResult {
   transitAlert: string | null;
 }
 
+// ─── Internal cache layer types ─────────────────────────────────────────────
+
+interface GlobalBriefingData {
+  dayRuler: string;
+  currentPlanet: string;
+  dayQuality: DailyBriefingResult['dayQuality'];
+  doList: string[];
+  avoidList: string[];
+  planetaryHours: PlanetaryHour[];
+  currentHora: PlanetaryHour | null;
+  luckyColor: string;
+  luckyNumber: number;
+  luckyTime: string;
+  remedy: string;
+  mantra: string;
+  panchang: DailyBriefingResult['panchang'];
+}
+
+interface UserBriefingOverlay {
+  greeting: string;
+  professionInsight: string;
+  summary: string;
+  transitAlert: string | null;
+}
+
 // Planetary hour order starting from Sunday
 const HORA_ORDER = ['Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'];
 const DAY_RULERS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
@@ -180,67 +205,80 @@ export class DailyBriefingService {
   async getDailyBriefing(userId: string, locale?: string): Promise<DailyBriefingResult> {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
-    const cacheKey = `briefing:${userId}:${dateStr}`;
+    // 30-min bucket aligns with hora changes
+    const hourBucket = Math.floor((today.getHours() * 60 + today.getMinutes()) / 30);
 
-    const cached = await this.cacheService.get<DailyBriefingResult>(cacheKey);
-    if (cached) return cached;
+    // ── 1. Global portion (shared across ALL users) ─────────────────────
+    const globalKey = `briefing:global:${dateStr}:${hourBucket}`;
+    let global = await this.cacheService.get<GlobalBriefingData>(globalKey);
+    if (!global) {
+      global = await this.computeGlobalBriefing(today);
+      await this.cacheService.set(globalKey, global, 30 * 60 * 1000);
+    }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true },
-    });
+    // ── 2. Per-user overlay (greeting, profession insight, transit) ─────
+    const userKey = `briefing:user:${userId}:${dateStr}:${hourBucket}`;
+    let overlay = await this.cacheService.get<UserBriefingOverlay>(userKey);
+    if (!overlay) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true },
+      });
+      overlay = this.computeUserOverlay(user, global.currentPlanet, global.dayRuler, global.panchang, global.dayQuality, today);
+      await this.cacheService.set(userKey, overlay, 30 * 60 * 1000);
+    }
 
-    const profession = user?.profession || 'OTHER';
-    const userName = user?.name?.split(' ')[0] || 'there';
+    // ── 3. Merge into final response ────────────────────────────────────
+    return {
+      greeting: overlay.greeting,
+      date: dateStr,
+      dayQuality: global.dayQuality,
+      summary: overlay.summary,
+      doList: global.doList,
+      avoidList: global.avoidList,
+      planetaryHours: global.planetaryHours,
+      currentHora: global.currentHora,
+      luckyColor: global.luckyColor,
+      luckyNumber: global.luckyNumber,
+      luckyTime: global.luckyTime,
+      professionInsight: overlay.professionInsight,
+      remedy: global.remedy,
+      mantra: global.mantra,
+      panchang: global.panchang,
+      transitAlert: overlay.transitAlert,
+    };
+  }
+
+  // ─── Global briefing: identical for every user in the same 30-min slot ──
+  private async computeGlobalBriefing(today: Date): Promise<GlobalBriefingData> {
     const dayOfWeek = today.getDay();
     const dayRuler = DAY_RULERS[dayOfWeek];
 
-    // Calculate planetary hours
     const planetaryHours = this.calculatePlanetaryHours(dayOfWeek, today);
     const currentHora = planetaryHours.find((h) => h.isCurrent) || null;
     const currentPlanet = currentHora?.planet || dayRuler;
 
-    // Panchang basics
     const panchang = this.getBasicPanchang(today);
 
-    // Profession-specific insight
-    const professionInsight = PROFESSION_INSIGHTS[profession]?.[currentPlanet]
-      || PROFESSION_INSIGHTS.OTHER[currentPlanet]
-      || 'Focus on your core strengths today.';
-
-    // Build do/avoid lists based on day ruler + current hora
     const dayActivities = PLANET_ACTIVITIES[dayRuler] || PLANET_ACTIVITIES.Sun;
     const horaActivities = PLANET_ACTIVITIES[currentPlanet] || PLANET_ACTIVITIES.Sun;
 
     const doList = [...new Set([...dayActivities.do.slice(0, 3), ...horaActivities.do.slice(0, 2)])];
     const avoidList = [...new Set([...dayActivities.avoid, ...horaActivities.avoid.slice(0, 1)])];
 
-    // Day quality based on planetary combinations
     const dayQuality = this.assessDayQuality(dayRuler, panchang, today);
 
-    // Greeting
-    const hour = today.getHours();
-    const timeGreeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-    const greeting = `${timeGreeting}, ${userName}!`;
-
-    // Lucky attributes
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
     const luckyColor = this.getPlanetColor(dayRuler);
     const luckyNumber = ((dayOfYear + dayOfWeek) % 9) + 1;
     const luckyTime = currentHora ? `${currentHora.startTime} - ${currentHora.endTime}` : '10:00 AM - 11:30 AM';
 
-    // Mantra for the day
     const mantras: Record<string, string> = {
-      Sun: 'Om Suryaya Namaha',
-      Moon: 'Om Chandraya Namaha',
-      Mars: 'Om Mangalaya Namaha',
-      Mercury: 'Om Budhaya Namaha',
-      Jupiter: 'Om Gurave Namaha',
-      Venus: 'Om Shukraya Namaha',
+      Sun: 'Om Suryaya Namaha', Moon: 'Om Chandraya Namaha', Mars: 'Om Mangalaya Namaha',
+      Mercury: 'Om Budhaya Namaha', Jupiter: 'Om Gurave Namaha', Venus: 'Om Shukraya Namaha',
       Saturn: 'Om Shanaischaraya Namaha',
     };
 
-    // Remedy
     const remedies: Record<string, string> = {
       Sun: 'Offer water to the rising Sun while chanting Gayatri Mantra. Wear ruby or red clothes.',
       Moon: 'Drink water from a silver glass. Wear white or pearl. Practice Chandra Namaskar.',
@@ -251,59 +289,56 @@ export class DailyBriefingService {
       Saturn: 'Light a sesame oil lamp. Donate black items. Serve the elderly. Wear blue sapphire.',
     };
 
-    // Summary
-    const qualityDescriptions = {
+    return {
+      dayRuler, currentPlanet, dayQuality, doList, avoidList,
+      planetaryHours, currentHora, luckyColor, luckyNumber, luckyTime,
+      remedy: remedies[dayRuler] || remedies.Sun,
+      mantra: mantras[dayRuler] || mantras.Sun,
+      panchang,
+    };
+  }
+
+  // ─── Per-user overlay: personalized fields only ─────────────────────────
+  private computeUserOverlay(
+    user: { name: string | null; dateOfBirth: Date | null; profession: string | null } | null,
+    currentPlanet: string,
+    dayRuler: string,
+    panchang: DailyBriefingResult['panchang'],
+    dayQuality: DailyBriefingResult['dayQuality'],
+    today: Date,
+  ): UserBriefingOverlay {
+    const profession = (user?.profession as string) || 'OTHER';
+    const userName = user?.name?.split(' ')[0] || 'there';
+
+    const hour = today.getHours();
+    const timeGreeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    const greeting = `${timeGreeting}, ${userName}!`;
+
+    const professionInsight = PROFESSION_INSIGHTS[profession]?.[currentPlanet]
+      || PROFESSION_INSIGHTS.OTHER[currentPlanet]
+      || 'Focus on your core strengths today.';
+
+    const qualityDescriptions: Record<string, string> = {
       excellent: 'Stars align beautifully today — seize opportunities with confidence.',
       good: 'A favorable day with positive energy supporting your endeavors.',
       moderate: 'A balanced day — focus on steady progress rather than bold moves.',
       challenging: 'Navigate carefully today — patience and remedies will help you through.',
     };
 
-    // Try AI-enhanced summary, fall back to KB
+    // Build personalized summary that includes profession insight
     let summary = '';
-    let transitAlert: string | null = null;
-
     try {
-      const kbResults = await this.knowledgeService.search(`${dayRuler} ${panchang.nakshatra} ${profession}`, undefined, 3);
-      const kbContext = this.knowledgeService.assembleContext(kbResults);
-
-      if (kbContext) {
-        summary = `${qualityDescriptions[dayQuality]} Today is ${panchang.vara} ruled by ${dayRuler}. ${panchang.nakshatra} Nakshatra brings ${this.getNakshatraQuality(panchang.nakshatra)} energy. ${professionInsight}`;
-      }
+      summary = `${qualityDescriptions[dayQuality]} Today is ${panchang.vara} ruled by ${dayRuler}. ${panchang.nakshatra} Nakshatra brings ${this.getNakshatraQuality(panchang.nakshatra)} energy. ${professionInsight}`;
     } catch {
-      // Ignore KB errors
-    }
-
-    if (!summary) {
       summary = `${qualityDescriptions[dayQuality]} Today is ${panchang.vara} ruled by ${dayRuler}. Current planetary hour is ${currentPlanet} hora — ${professionInsight.split('.')[0]}.`;
     }
 
-    // Transit alert for birth-chart users
+    let transitAlert: string | null = null;
     if (user?.dateOfBirth) {
       transitAlert = this.getTransitAlert(user.dateOfBirth, today, profession);
     }
 
-    const result: DailyBriefingResult = {
-      greeting,
-      date: dateStr,
-      dayQuality,
-      summary,
-      doList,
-      avoidList,
-      planetaryHours,
-      currentHora,
-      luckyColor,
-      luckyNumber,
-      luckyTime,
-      professionInsight,
-      remedy: remedies[dayRuler] || remedies.Sun,
-      mantra: mantras[dayRuler] || mantras.Sun,
-      panchang,
-      transitAlert,
-    };
-
-    await this.cacheService.set(cacheKey, result, 30 * 60 * 1000); // 30 min cache (hora changes)
-    return result;
+    return { greeting, professionInsight, summary, transitAlert };
   }
 
   async getPlanetaryHoursOnly(): Promise<PlanetaryHour[]> {

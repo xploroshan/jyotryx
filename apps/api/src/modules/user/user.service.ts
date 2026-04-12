@@ -166,26 +166,27 @@ export class UserService {
   }
 
   async deductCredits(userId: string, amount: number, description: string): Promise<boolean> {
-    return await this.prisma.$transaction(async (tx: any) => {
-      // Atomic decrement with a WHERE guard to prevent negative credits
-      const result = await tx.user.updateMany({
-        where: { id: userId, credits: { gte: amount } },
-        data: { credits: { decrement: amount } },
-      });
-
-      if (result.count === 0) return false;
-
-      await tx.creditTransaction.create({
-        data: {
-          userId,
-          amount: -amount,
-          type: 'CHAT_DEDUCTION',
-          description,
-        },
-      });
-
-      return true;
-    });
+    // Single-SQL CTE: atomically decrements credits (with WHERE guard) and
+    // inserts the credit_transaction record only if the decrement succeeded.
+    // One round-trip instead of two, PgBouncer-compatible.
+    const negAmount = -amount;
+    const result: { affected: bigint }[] = await this.prisma.$queryRawUnsafe(
+      `WITH deducted AS (
+        UPDATE users
+        SET credits = credits - $1, "updatedAt" = NOW()
+        WHERE id = $2::uuid AND credits >= $1
+        RETURNING id
+      )
+      INSERT INTO credit_transactions (id, "userId", amount, type, description, "createdAt")
+      SELECT gen_random_uuid(), $2::uuid, $3, 'CHAT_DEDUCTION'::"CreditTransactionType", $4, NOW()
+      FROM deducted
+      RETURNING (SELECT count(*) FROM deducted)::int AS affected`,
+      amount,
+      userId,
+      negAmount,
+      description,
+    );
+    return Number(result[0]?.affected ?? 0) > 0;
   }
 
   async addCredits(userId: string, amount: number, type: string, description: string): Promise<boolean> {

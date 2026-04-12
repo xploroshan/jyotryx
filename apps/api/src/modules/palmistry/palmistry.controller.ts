@@ -1,11 +1,16 @@
 import {
   Controller,
+  Get,
   Post,
+  Param,
   Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
@@ -21,6 +26,7 @@ export class PalmistryController {
   constructor(private readonly palmistryService: PalmistryService) {}
 
   @Post('analyze')
+  @HttpCode(HttpStatus.ACCEPTED)
   @UseInterceptors(
     FileInterceptor('image', {
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -45,8 +51,8 @@ export class PalmistryController {
       },
     },
   })
-  @ApiOperation({ summary: 'Analyze a palm image for palmistry reading' })
-  @ApiResponse({ status: 201, description: 'Palm analysis completed' })
+  @ApiOperation({ summary: 'Analyze a palm image (returns 202 when queued)' })
+  @ApiResponse({ status: 202, description: 'Palm analysis started' })
   @ApiResponse({ status: 400, description: 'Invalid image or insufficient credits' })
   async analyzePalm(
     @CurrentUser() user: JwtPayload,
@@ -59,5 +65,26 @@ export class PalmistryController {
       file?.mimetype,
       body?.locale,
     );
+  }
+
+  @Get(':id/status')
+  @ApiOperation({ summary: 'Get palmistry reading status' })
+  @ApiResponse({ status: 200, description: 'Reading status returned' })
+  async getReadingStatus(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) readingId: string,
+  ): Promise<{ id: string; status: string }> {
+    return this.palmistryService.getReadingStatus(user.sub, readingId);
+  }
+
+  @Get(':id/image')
+  @ApiOperation({ summary: 'Get a presigned download URL for a palmistry reading image' })
+  @ApiResponse({ status: 200, description: 'Presigned URL returned' })
+  @ApiResponse({ status: 404, description: 'Reading not found or no image' })
+  async getImageUrl(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) readingId: string,
+  ): Promise<{ url: string }> {
+    return this.palmistryService.getImageUrl(user.sub, readingId);
   }
 }

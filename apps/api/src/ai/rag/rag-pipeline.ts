@@ -20,8 +20,8 @@ export class RAGPipeline {
   private readonly embeddingService: EmbeddingService;
   private readonly knowledgeBase: KnowledgeBase;
 
-  constructor() {
-    this.embeddingService = new EmbeddingService();
+  constructor(embeddingService: EmbeddingService) {
+    this.embeddingService = embeddingService;
     this.knowledgeBase = new KnowledgeBase();
   }
 
@@ -39,7 +39,7 @@ export class RAGPipeline {
     // Search the knowledge base with the embedding
     const results = await this.knowledgeBase.search(query, topK, {
       category,
-      embedding: queryEmbedding,
+      embedding: queryEmbedding ?? undefined,
     });
 
     return results;

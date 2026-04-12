@@ -5,10 +5,11 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction } from '../../common/locale';
 import * as path from 'path';
 
-// ─── Swiss Ephemeris Setup ──────────────────────────────────────────────────
+// ─── Swiss Ephemeris Setup (kept as sync fallback for methods not yet ported) ─
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const swisseph = require('swisseph');
 const EPHE_PATH = path.join(path.dirname(require.resolve('swisseph')), 'ephe');
@@ -167,6 +168,7 @@ export class AstrologyService {
     private openaiService: OpenAIService,
     private cacheService: MemoryCacheService,
     private knowledgeService: KnowledgeService,
+    private ephemerisService: EphemerisService,
   ) {}
 
   private async callOpenAI(
@@ -527,16 +529,25 @@ export class AstrologyService {
   }
 
   // ─── Primary Kundli generation using Swiss Ephemeris (deterministic) ────────
-  private generateSwissEphKundli(birthDetails: BirthDetails): any {
-    const jd = this.computeJulianDay(birthDetails);
+  private async generateSwissEphKundliAsync(birthDetails: BirthDetails): Promise<any> {
     const lat = birthDetails.latitude || 28.6139;
     const lng = birthDetails.longitude || 77.2090;
+    const birthDate = new Date(birthDetails.dateOfBirth);
+    const timeParts = birthDetails.timeOfBirth?.split(':') || ['6', '0'];
 
-    // 1. Compute precise planetary positions via Swiss Ephemeris
-    const rawPositions = this.computePlanetaryPositions(jd);
+    // Offload chart computation to worker pool (non-blocking)
+    const chart = await this.ephemerisService.computeChart({
+      year: birthDate.getFullYear(),
+      month: birthDate.getMonth() + 1,
+      day: birthDate.getDate(),
+      hour: parseInt(timeParts[0], 10),
+      minute: parseInt(timeParts[1], 10) || 0,
+      lat,
+      lng,
+    });
 
-    // 2. Compute ascendant
-    const ascLongitude = this.computeAscendant(jd, lat, lng);
+    const rawPositions = chart.positions;
+    const ascLongitude = chart.ascendant;
     const ascIdx = Math.floor(ascLongitude / 30) % 12;
     const ascendant = ALL_SIGNS[ascIdx];
 
@@ -649,7 +660,7 @@ export class AstrologyService {
     const cacheKey = `kundli:chart:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
     const cached = await this.cacheService.get<any>(cacheKey);
     if (cached) return cached;
-    const chartData = this.generateSwissEphKundli(birthDetails);
+    const chartData = await this.generateSwissEphKundliAsync(birthDetails);
     // 24h TTL — birth charts are fully deterministic so TTL is a safety net only.
     await this.cacheService.set(cacheKey, chartData, 24 * 60 * 60 * 1000);
     return chartData;
@@ -1168,7 +1179,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
         latitude: (user.placeOfBirth as any)?.lat,
         longitude: (user.placeOfBirth as any)?.lng,
       };
-      const chart = this.generateSwissEphKundli(birthDetails);
+      const chart = await this.generateSwissEphKundliAsync(birthDetails);
       const doshas = this.detectDoshas(chart.planetaryPositions);
       return { userId, doshas };
     }

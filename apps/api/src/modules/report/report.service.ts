@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { REPORT_QUEUE } from '../../queue/queue.module';
+import type { ReportJobData } from '../../queue/report.processor';
 
 export interface GenerateReportDto {
   type: 'LIFE' | 'CAREER' | 'MARRIAGE' | 'WEALTH' | 'PALM' | 'ANNUAL';
@@ -38,13 +42,18 @@ export interface ReportSection {
 export class ReportService {
   private readonly logger = new Logger(ReportService.name);
 
+  private readonly queueEnabled: boolean;
+
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
     private openaiService: OpenAIService,
     private knowledgeService: KnowledgeService,
-  ) {}
+    @Optional() @InjectQueue(REPORT_QUEUE) private reportQueue?: Queue<ReportJobData>,
+  ) {
+    this.queueEnabled = this.configService.get<string>('QUEUE_ENABLED', 'false') === 'true' && !!this.reportQueue;
+  }
 
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
@@ -76,6 +85,41 @@ export class ReportService {
       ANNUAL: 'Annual Horoscope Report',
     };
 
+    // Async path: enqueue job, return 202-style response
+    if (this.queueEnabled) {
+      const report = await this.prisma.report.create({
+        data: {
+          userId,
+          type: dto.type,
+          status: 'GENERATING',
+          price: creditCost,
+        },
+      });
+
+      await this.reportQueue!.add('generate', {
+        reportId: report.id,
+        userId,
+        type: dto.type,
+        creditCost,
+        birthDetails,
+        name: user?.name || 'User',
+        gender: user?.gender,
+      } satisfies ReportJobData);
+
+      return {
+        id: report.id,
+        userId,
+        type: dto.type,
+        title: reportTitles[dto.type] || 'Astrology Report',
+        status: 'generating',
+        summary: `Your ${dto.type.toLowerCase()} report is being generated. Check back shortly.`,
+        sections: [],
+        creditsCharged: creditCost,
+        createdAt: report.createdAt.toISOString(),
+      };
+    }
+
+    // Sync path (fallback when QUEUE_ENABLED=false)
     const sections = await this.generateAIReportSections(dto.type, birthDetails, user?.name || 'User', user?.gender, userId);
 
     const report = await this.prisma.report.create({
@@ -84,7 +128,6 @@ export class ReportService {
         type: dto.type,
         status: 'READY',
         price: creditCost,
-        // Store generated sections so we don't regenerate on every view
         fileUrl: JSON.stringify({ sections }),
       },
     });
@@ -101,6 +144,19 @@ export class ReportService {
       creditsCharged: creditCost,
       createdAt: report.createdAt.toISOString(),
       completedAt: new Date().toISOString(),
+    };
+  }
+
+  async getReportStatus(userId: string, reportId: string): Promise<{ id: string; status: string; completedAt?: string }> {
+    const report = await this.prisma.report.findFirst({
+      where: { id: reportId, userId },
+      select: { id: true, status: true, createdAt: true },
+    });
+    if (!report) throw new NotFoundException('Report not found');
+    return {
+      id: report.id,
+      status: report.status.toLowerCase(),
+      completedAt: report.status === 'READY' ? report.createdAt.toISOString() : undefined,
     };
   }
 

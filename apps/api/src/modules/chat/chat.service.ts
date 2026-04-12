@@ -1,8 +1,10 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Observable, Subscriber } from 'rxjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
+import { LlmService } from '../../llm/llm.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { getLocaleInstruction } from '../../common/locale';
 
@@ -35,6 +37,7 @@ export class ChatService {
     private configService: ConfigService,
     private userService: UserService,
     private openaiService: OpenAIService,
+    private llmService: LlmService,
     private knowledgeService: KnowledgeService,
   ) {}
 
@@ -160,6 +163,128 @@ export class ChatService {
     };
 
     return { session, reply };
+  }
+
+  /**
+   * Send a message and stream the AI response as SSE events.
+   * Events: token (incremental content), done (completion), error (failure).
+   */
+  sendMessageStream(
+    userId: string,
+    dto: SendMessageDto,
+  ): Observable<MessageEvent> {
+    return new Observable((subscriber: Subscriber<MessageEvent>) => {
+      this.handleStream(userId, dto, subscriber).catch((err) => {
+        this.logger.error('Stream handler error', err);
+        subscriber.next({ data: JSON.stringify({ message: 'Stream failed', refunded: true }) } as MessageEvent);
+        subscriber.complete();
+      });
+    });
+  }
+
+  private async handleStream(
+    userId: string,
+    dto: SendMessageDto,
+    subscriber: Subscriber<MessageEvent>,
+  ): Promise<void> {
+    const creditCost = this.configService.get<number>('credits.chatCost', 1);
+
+    const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
+    if (!deducted) {
+      subscriber.next({ data: JSON.stringify({ message: 'Insufficient credits', refunded: false }) } as MessageEvent);
+      subscriber.complete();
+      return;
+    }
+
+    // Load or create session
+    let dbSession;
+    if (dto.sessionId) {
+      dbSession = await this.prisma.chatSession.findFirst({
+        where: { id: dto.sessionId, userId },
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+      });
+    }
+    if (!dbSession) {
+      dbSession = await this.prisma.chatSession.create({
+        data: {
+          userId,
+          category: dto.category || 'general',
+          title: dto.message.substring(0, 50) + (dto.message.length > 50 ? '...' : ''),
+        },
+        include: { messages: true },
+      });
+    }
+
+    // Save user message
+    await this.prisma.chatMessage.create({
+      data: { sessionId: dbSession.id, role: 'USER', content: dto.message },
+    });
+
+    // Fetch user profile + KB context
+    const userProfile = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true },
+    });
+
+    const kbCategory = this.mapCategoryToKB(dbSession.category);
+    const kbResults = await this.knowledgeService.search(dto.message, kbCategory, 5);
+    const kbContext = this.knowledgeService.assembleContext(kbResults);
+
+    const systemPrompt = this.getSystemPrompt(dbSession.category, userProfile) + getLocaleInstruction(dto.locale);
+    const enrichedPrompt = kbContext
+      ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
+      : systemPrompt;
+
+    const messages = [
+      { role: 'system' as const, content: enrichedPrompt },
+      ...dbSession.messages.slice(-10).map((m: any) => ({
+        role: m.role.toLowerCase() === 'assistant' ? 'assistant' as const : 'user' as const,
+        content: m.content,
+      })),
+      { role: 'user' as const, content: dto.message },
+    ];
+
+    try {
+      const stream = await this.llmService.chatCompletionStream({
+        messages,
+        maxTokens: 800,
+        temperature: 0.7,
+        model: this.openaiService.getModel(),
+      });
+
+      if (!stream) {
+        // Fallback: non-streaming response
+        const fallback = await this.getKBFallbackResponse(dto.message, dbSession.category, userProfile);
+        subscriber.next({ data: JSON.stringify({ content: fallback }) } as MessageEvent);
+
+        const msg = await this.prisma.chatMessage.create({
+          data: { sessionId: dbSession.id, role: 'ASSISTANT', content: fallback },
+        });
+        subscriber.next({ data: JSON.stringify({ messageId: msg.id, sessionId: dbSession.id }) } as MessageEvent);
+        subscriber.complete();
+        return;
+      }
+
+      // Stream tokens
+      let fullContent = '';
+      for await (const chunk of stream) {
+        fullContent += chunk;
+        subscriber.next({ data: JSON.stringify({ content: chunk }) } as MessageEvent);
+      }
+
+      // Save complete response
+      const assistantMsg = await this.prisma.chatMessage.create({
+        data: { sessionId: dbSession.id, role: 'ASSISTANT', content: fullContent },
+      });
+
+      subscriber.next({ data: JSON.stringify({ messageId: assistantMsg.id, sessionId: dbSession.id }) } as MessageEvent);
+      subscriber.complete();
+    } catch (error) {
+      this.logger.error('Stream generation failed, refunding credit', error);
+      await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: Stream failed');
+      subscriber.next({ data: JSON.stringify({ message: (error as Error).message, refunded: true }) } as MessageEvent);
+      subscriber.complete();
+    }
   }
 
   async getSessions(userId: string): Promise<Omit<ChatSession, 'messages'>[]> {
