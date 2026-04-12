@@ -254,8 +254,8 @@ describe('Performance: Chat Operations', () => {
     prisma.chatSession.findFirst.mockResolvedValue({
       id: 'session-big', userId: 'test-uuid', title: 'Big Session',
       category: 'general', createdAt: new Date(), updatedAt: new Date(),
-      messages,
     });
+    prisma.chatMessage.findMany.mockResolvedValue(messages);
 
     const start = performance.now();
     const session = await chatService.getSession('test-uuid', 'session-big');

@@ -515,13 +515,11 @@ describe('E2E: Chat (Consult) Endpoints', () => {
 
   describe('GET /chat/sessions/:id', () => {
     it('should return session with messages', async () => {
-      prisma.chatSession.findFirst.mockResolvedValue({
-        ...mockSession,
-        messages: [
-          { id: 'msg-1', role: 'USER', content: 'Hello', createdAt: new Date(), sessionId: 'session-1' },
-          { id: 'msg-2', role: 'ASSISTANT', content: 'Namaste!', createdAt: new Date(), sessionId: 'session-1' },
-        ],
-      });
+      prisma.chatSession.findFirst.mockResolvedValue(mockSession);
+      prisma.chatMessage.findMany.mockResolvedValue([
+        { id: 'msg-1', role: 'USER', content: 'Hello', createdAt: new Date(), sessionId: 'session-1' },
+        { id: 'msg-2', role: 'ASSISTANT', content: 'Namaste!', createdAt: new Date(), sessionId: 'session-1' },
+      ]);
       const result = await service.getSession('test-uuid', 'session-1');
       expect(result.id).toBe('session-1');
       expect(result.messages.length).toBe(2);

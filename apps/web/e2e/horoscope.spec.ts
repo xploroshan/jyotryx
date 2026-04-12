@@ -14,7 +14,7 @@ test.describe('Horoscope page', () => {
   test('displays zodiac sign selection grid', async ({ page }) => {
     await page.goto('/horoscope');
     // Should show zodiac signs like Aries, Taurus, etc.
-    await expect(page.getByText(/Aries|Taurus|Gemini/i)).toBeVisible();
+    await expect(page.getByText(/Aries|Taurus|Gemini/i).first()).toBeVisible();
   });
 
   test('page loads without errors', async ({ page }) => {

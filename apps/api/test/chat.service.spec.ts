@@ -193,14 +193,11 @@ describe('ChatService', () => {
 
   describe('getSession', () => {
     it('should return session with messages', async () => {
-      const sessionWithMessages = {
-        ...mockSession,
-        messages: [
-          { id: 'msg-1', role: 'user', content: 'Hello', createdAt: new Date() },
-          { id: 'msg-2', role: 'assistant', content: 'Namaste!', createdAt: new Date() },
-        ],
-      };
-      prisma.chatSession.findFirst.mockResolvedValue(sessionWithMessages);
+      prisma.chatSession.findFirst.mockResolvedValue(mockSession);
+      prisma.chatMessage.findMany.mockResolvedValue([
+        { id: 'msg-1', sessionId: 'session-1', role: 'user', content: 'Hello', createdAt: new Date() },
+        { id: 'msg-2', sessionId: 'session-1', role: 'assistant', content: 'Namaste!', createdAt: new Date() },
+      ]);
 
       const result = await service.getSession('test-uuid', 'session-1');
 
