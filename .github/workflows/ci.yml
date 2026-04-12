@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test-api:
+    name: API — Lint & Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: jyotron
+          POSTGRES_PASSWORD: jyotron_test
+          POSTGRES_DB: jyotron_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U jyotron"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://jyotron:jyotron_test@localhost:5432/jyotron_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret
+      JWT_REFRESH_SECRET: ci-test-refresh-secret
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma client & migrate
+        run: |
+          cd apps/api
+          npx prisma generate
+          npx prisma migrate deploy
+      - name: Lint API
+        run: cd apps/api && npx nest build
+      - name: Test API
+        run: cd apps/api && npm test
+
+  build-and-test-web:
+    name: Web — Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Lint Web
+        run: cd apps/web && npx next lint
+      - name: Build Web
+        run: cd apps/web && npx next build
+        env:
+          SENTRY_SUPPRESS_INSTRUMENTATION_FILE_WARNING: "1"
+          SENTRY_SUPPRESS_GLOBAL_ERROR_HANDLER_FILE_WARNING: "1"
+      - name: Test Web
+        run: cd apps/web && npm test
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: apps/web/.next
+          retention-days: 1
+
+  lighthouse:
+    name: Lighthouse CI
+    needs: build-and-test-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: apps/web/.next
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: .lighthouserc.js
+          uploadArtifacts: true
+
+  bundle-size:
+    name: Bundle Size Check
+    needs: build-and-test-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build with analyzer
+        run: cd apps/web && ANALYZE=true npx next build
+        env:
+          SENTRY_SUPPRESS_INSTRUMENTATION_FILE_WARNING: "1"
+          SENTRY_SUPPRESS_GLOBAL_ERROR_HANDLER_FILE_WARNING: "1"
+      - name: Check bundle budgets
+        run: |
+          cd apps/web
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const budgets = JSON.parse(fs.readFileSync('budget.json', 'utf8'));
+            const { globSync } = require('glob');
+            let failed = false;
+            for (const budget of budgets) {
+              const maxBytes = parseInt(budget.maxSize) * 1024;
+              const files = globSync(budget.path);
+              for (const file of files) {
+                const size = fs.statSync(file).size;
+                const sizeKB = (size / 1024).toFixed(1);
+                if (size > maxBytes) {
+                  console.error('OVER BUDGET: ' + file + ' (' + sizeKB + 'kB > ' + budget.maxSize + ')');
+                  failed = true;
+                }
+              }
+            }
+            if (failed) process.exit(1);
+            console.log('All chunks within budget.');
+          "

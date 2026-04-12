@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as Sentry from '@sentry/node';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -34,6 +35,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `Unexpected error: ${exception instanceof Error ? exception.message : 'Unknown error'}`,
         exception instanceof Error ? exception.stack : undefined,
       );
+      // Report 5xx errors to Sentry
+      Sentry.captureException(exception);
     }
 
     const errorResponse = {

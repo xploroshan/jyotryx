@@ -53,12 +53,18 @@ export class ChatService {
     }
 
     let dbSession;
+    let existingMessages: any[] = [];
 
     if (dto.sessionId) {
       dbSession = await this.prisma.chatSession.findFirst({
         where: { id: dto.sessionId, userId },
-        include: { messages: { orderBy: { createdAt: 'asc' } } },
       });
+      if (dbSession) {
+        existingMessages = await this.prisma.chatMessage.findMany({
+          where: { sessionId: dbSession.id },
+          orderBy: { createdAt: 'asc' },
+        });
+      }
     }
 
     if (!dbSession) {
@@ -68,7 +74,6 @@ export class ChatService {
           category: dto.category || 'general',
           title: dto.message.substring(0, 50) + (dto.message.length > 50 ? '...' : ''),
         },
-        include: { messages: true },
       });
     }
 
@@ -99,7 +104,7 @@ export class ChatService {
       aiReply = await this.generateAIResponse(
         dto.message,
         dbSession.category,
-        dbSession.messages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
+        existingMessages.map((m: any) => ({ role: m.role.toLowerCase(), content: m.content })),
         userProfile,
         dto.locale,
         userId,
@@ -121,7 +126,7 @@ export class ChatService {
 
     // Build session from data we already have (avoids extra DB query)
     const allMessages = [
-      ...dbSession.messages.map((m: any) => ({
+      ...existingMessages.map((m: any) => ({
         id: m.id,
         sessionId: m.sessionId,
         role: m.role.toLowerCase() as 'user' | 'assistant',
@@ -198,11 +203,17 @@ export class ChatService {
 
     // Load or create session
     let dbSession;
+    let existingMessages: any[] = [];
     if (dto.sessionId) {
       dbSession = await this.prisma.chatSession.findFirst({
         where: { id: dto.sessionId, userId },
-        include: { messages: { orderBy: { createdAt: 'asc' } } },
       });
+      if (dbSession) {
+        existingMessages = await this.prisma.chatMessage.findMany({
+          where: { sessionId: dbSession.id },
+          orderBy: { createdAt: 'asc' },
+        });
+      }
     }
     if (!dbSession) {
       dbSession = await this.prisma.chatSession.create({
@@ -211,7 +222,6 @@ export class ChatService {
           category: dto.category || 'general',
           title: dto.message.substring(0, 50) + (dto.message.length > 50 ? '...' : ''),
         },
-        include: { messages: true },
       });
     }
 
@@ -237,7 +247,7 @@ export class ChatService {
 
     const messages = [
       { role: 'system' as const, content: enrichedPrompt },
-      ...dbSession.messages.slice(-10).map((m: any) => ({
+      ...existingMessages.slice(-10).map((m: any) => ({
         role: m.role.toLowerCase() === 'assistant' ? 'assistant' as const : 'user' as const,
         content: m.content,
       })),
@@ -306,19 +316,24 @@ export class ChatService {
   async getSession(userId: string, sessionId: string): Promise<ChatSession> {
     const session = await this.prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
-      include: { messages: { orderBy: { createdAt: 'asc' }, take: 200 } },
     });
 
     if (!session) {
       throw new BadRequestException('Session not found');
     }
 
+    const messages = await this.prisma.chatMessage.findMany({
+      where: { sessionId: session.id },
+      orderBy: { createdAt: 'asc' },
+      take: 200,
+    });
+
     return {
       id: session.id,
       userId: session.userId,
       title: session.title,
       category: session.category,
-      messages: session.messages.map((m: any) => ({
+      messages: messages.map((m: any) => ({
         id: m.id,
         sessionId: m.sessionId,
         role: m.role.toLowerCase() as 'user' | 'assistant',

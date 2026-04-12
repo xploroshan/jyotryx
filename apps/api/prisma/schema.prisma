@@ -128,9 +128,10 @@ model User {
   payments           Payment[]
   reports            Report[]
   creditTransactions CreditTransaction[]
-  notifications      Notification[]
   tarotReadings      TarotReading[]
-  llmUsage           LlmUsage[]
+
+  // Relations removed for partitioned tables (FK constraints dropped):
+  // notifications, llmUsage — see 20260413_partition_tables migration
 
   @@index([email])
   @@index([phone])
@@ -165,7 +166,7 @@ model ChatSession {
   updatedAt DateTime @updatedAt
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages ChatMessage[]
+  // messages relation removed — chat_messages is now a partitioned table
 
   @@index([userId])
   @@index([userId, createdAt])
@@ -173,14 +174,16 @@ model ChatSession {
 }
 
 model ChatMessage {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @default(uuid()) @db.Uuid
   sessionId String   @db.Uuid
-  role      MessageRole
+  role      String   /// "USER" | "ASSISTANT" (stored as text in partitioned table)
   content   String
   createdAt DateTime @default(now())
 
-  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  // FK relation removed — partitioned tables cannot reference non-partitioned parents
+  // Application-level integrity maintained via Prisma queries
 
+  @@id([id, createdAt])
   @@index([sessionId])
   @@index([sessionId, createdAt])
   @@map("chat_messages")
@@ -300,10 +303,10 @@ model SiteSetting {
 }
 
 model ActivityLog {
-  id           String      @id @default(uuid()) @db.Uuid
+  id           String      @default(uuid()) @db.Uuid
   adminId      String      @db.Uuid
   adminEmail   String
-  action       AdminAction
+  action       String      /// AdminAction values stored as text in partitioned table
   entityType   String      /// e.g. "User", "Subscription"
   entityId     String      @db.Uuid
   entityLabel  String?     /// Human-readable label e.g. user email
@@ -313,6 +316,7 @@ model ActivityLog {
   undoneAt     DateTime?
   createdAt    DateTime    @default(now())
 
+  @@id([id, createdAt])
   @@index([adminId])
   @@index([entityType, entityId])
   @@index([createdAt])
@@ -322,7 +326,7 @@ model ActivityLog {
 // ─── Notifications ──────────────────────────────────────────────────────────
 
 model Notification {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
   title     String
   body      String
@@ -331,8 +335,9 @@ model Notification {
   data      Json?    /// Optional metadata
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // FK relation removed — partitioned table
 
+  @@id([id, createdAt])
   @@index([userId])
   @@index([userId, read])
   @@map("notifications")
@@ -357,7 +362,7 @@ model TarotReading {
 // ─── LLM Usage Tracking ─────────────────────────────────────────────────────
 
 model LlmUsage {
-  id               String   @id @default(uuid()) @db.Uuid
+  id               String   @default(uuid()) @db.Uuid
   userId           String?  @db.Uuid /// Null when system-initiated (e.g. cron)
   provider         String   /// "openai", "anthropic", "google", "mistral", "cohere", "groq"
   model            String   /// e.g. "gpt-4o-mini"
@@ -368,8 +373,9 @@ model LlmUsage {
   costUsd          Decimal  @default(0) @db.Decimal(12, 6)
   createdAt        DateTime @default(now())
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // FK relation removed — partitioned table
 
+  @@id([id, createdAt])
   @@index([userId])
   @@index([userId, createdAt])
   @@index([createdAt])
@@ -393,4 +399,31 @@ model KnowledgeDocument {
   @@index([category])
   @@index([category, topic])
   @@map("knowledge_documents")
+}
+
+// ─── Daily Stats Aggregation ────────────────────────────────────────────────
+
+model StatDaily {
+  date                DateTime @db.Date
+  totalUsers          Int      @default(0)
+  newUsers            Int      @default(0)
+  premiumUsers        Int      @default(0)
+  activeSubscriptions Int      @default(0)
+  totalRevenue        Decimal  @default(0) @db.Decimal(12, 2)
+  dailyRevenue        Decimal  @default(0) @db.Decimal(12, 2)
+  totalSessions       Int      @default(0)
+  dailySessions       Int      @default(0)
+  creditsConsumed     Int      @default(0)
+  kundliCount         Int      @default(0)
+  matchingCount       Int      @default(0)
+  palmistryCount      Int      @default(0)
+  reportCount         Int      @default(0)
+  tarotCount          Int      @default(0)
+  llmCalls            Int      @default(0)
+  llmCostUsd          Decimal  @default(0) @db.Decimal(12, 6)
+  llmTokens           Int      @default(0)
+  createdAt           DateTime @default(now())
+
+  @@id([date])
+  @@map("stats_daily")
 }

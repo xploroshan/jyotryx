@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@jyotryx/shared": "*",
+    "@sentry/nextjs": "^10.48.0",
     "clsx": "^2.1.1",
     "firebase": "^12.10.0",
     "framer-motion": "^12.0.0",
@@ -26,6 +27,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.3",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",

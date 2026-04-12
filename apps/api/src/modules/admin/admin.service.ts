@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAIService } from '../../openai/openai.service';
+import { StatsService } from '../../stats/stats.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -125,6 +126,7 @@ export class AdminService {
   constructor(
     private prisma: PrismaService,
     private openaiService: OpenAIService,
+    private statsService: StatsService,
   ) {}
 
   async getDashboardStats(): Promise<DashboardStats> {
@@ -234,7 +236,6 @@ export class AdminService {
         chatSessions: {
           orderBy: { updatedAt: 'desc' },
           take: 10,
-          include: { _count: { select: { messages: true } } },
         },
         creditTransactions: {
           orderBy: { createdAt: 'desc' },
@@ -326,12 +327,15 @@ export class AdminService {
         type: p.type,
         createdAt: p.createdAt.toISOString(),
       })),
-      recentChats: user.chatSessions.map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        category: c.category,
-        messageCount: c._count.messages,
-        updatedAt: c.updatedAt.toISOString(),
+      recentChats: await Promise.all(user.chatSessions.map(async (c: any) => {
+        const msgCount = await this.prisma.chatMessage.count({ where: { sessionId: c.id } });
+        return {
+          id: c.id,
+          title: c.title,
+          category: c.category,
+          messageCount: msgCount,
+          updatedAt: c.updatedAt.toISOString(),
+        };
       })),
       creditTransactions: user.creditTransactions.map((t: any) => ({
         id: t.id,
@@ -553,19 +557,21 @@ export class AdminService {
       take: limit,
       include: {
         user: { select: { name: true, email: true } },
-        _count: { select: { messages: true } },
       },
     });
 
-    return sessions.map((s: any) => ({
-      id: s.id,
-      userName: s.user.name,
-      userEmail: s.user.email,
-      title: s.title,
-      category: s.category,
-      messageCount: s._count.messages,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
+    return Promise.all(sessions.map(async (s: any) => {
+      const messageCount = await this.prisma.chatMessage.count({ where: { sessionId: s.id } });
+      return {
+        id: s.id,
+        userName: s.user.name,
+        userEmail: s.user.email,
+        title: s.title,
+        category: s.category,
+        messageCount,
+        createdAt: s.createdAt.toISOString(),
+        updatedAt: s.updatedAt.toISOString(),
+      };
     }));
   }
 
@@ -791,18 +797,34 @@ export class AdminService {
     ]);
 
     // Build revenue trend (last 7 days, oldest → newest).
+    // Use stats_daily for historical days, live query for today.
     const revenueByDay = new Map<string, number>();
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       revenueByDay.set(d.toISOString().slice(0, 10), 0);
     }
-    for (const p of paymentsLast7) {
-      const day = p.createdAt.toISOString().slice(0, 10);
+
+    const historicalStats = await this.statsService.getStatsRange(sevenDaysAgo, today);
+    for (const stat of historicalStats) {
+      const day = stat.date.toISOString().slice(0, 10);
       if (revenueByDay.has(day)) {
-        revenueByDay.set(day, (revenueByDay.get(day) || 0) + Number(p.amount));
+        revenueByDay.set(day, Number(stat.dailyRevenue));
       }
     }
+
+    // Today's revenue from live payments (not yet aggregated)
+    const todayKey = today.toISOString().slice(0, 10);
+    if (revenueByDay.has(todayKey)) {
+      let todayRevenue = 0;
+      for (const p of paymentsLast7) {
+        if (p.createdAt.toISOString().slice(0, 10) === todayKey) {
+          todayRevenue += Number(p.amount);
+        }
+      }
+      revenueByDay.set(todayKey, todayRevenue);
+    }
+
     const revenueTrend = Array.from(revenueByDay.entries()).map(([date, revenue]) => ({ date, revenue }));
 
     // Feature usage breakdown — percentages of total interactions.

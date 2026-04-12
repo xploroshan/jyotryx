@@ -25,6 +25,10 @@ import { TarotModule } from './modules/tarot/tarot.module';
 import { VastuModule } from './modules/vastu/vastu.module';
 import { StorageModule } from './storage/storage.module';
 import { EphemerisModule } from './ephemeris/ephemeris.module';
+import { PartitionModule } from './partition/partition.module';
+import { StatsModule } from './stats/stats.module';
+import { AppLoggerModule } from './common/logger/logger.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -32,6 +36,8 @@ import { EphemerisModule } from './ephemeris/ephemeris.module';
       isGlobal: true,
       load: [configuration],
     }),
+    AppLoggerModule,
+    MetricsModule,
     RedisModule,
     StorageModule,
     EphemerisModule,
@@ -59,6 +65,8 @@ import { EphemerisModule } from './ephemeris/ephemeris.module';
     NumerologyModule,
     TarotModule,
     VastuModule,
+    PartitionModule,
+    StatsModule,
   ],
   providers: [
     {

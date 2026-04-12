@@ -98,11 +98,20 @@ export class AuthController {
   @Post('refresh')
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiOperation({ summary: 'Refresh access token (with rotation)' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
-  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
+  @ApiResponse({ status: 401, description: 'Invalid refresh token or reuse detected' })
   async refreshToken(@Body() dto: RefreshTokenDto): Promise<AuthTokens> {
     return this.authService.refreshToken(dto);
+  }
+
+  @Post('logout')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout and revoke refresh token family' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  async logout(@Body() dto: RefreshTokenDto): Promise<{ message: string }> {
+    return this.authService.logout(dto.refreshToken);
   }
 
   @Post('forgot-password')
