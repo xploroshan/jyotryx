@@ -27,6 +27,7 @@ import { StorageModule } from './storage/storage.module';
 import { EphemerisModule } from './ephemeris/ephemeris.module';
 import { PartitionModule } from './partition/partition.module';
 import { StatsModule } from './stats/stats.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AppLoggerModule } from './common/logger/logger.module';
 import { MetricsModule } from './metrics/metrics.module';
 
@@ -67,6 +68,7 @@ import { MetricsModule } from './metrics/metrics.module';
     VastuModule,
     PartitionModule,
     StatsModule,
+    AnalyticsModule,
   ],
   providers: [
     {

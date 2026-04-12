@@ -14,6 +14,7 @@ export default () => ({
 
   database: {
     url: requireInProduction('DATABASE_URL', 'postgresql://localhost:5432/jyotron'),
+    readReplicaUrl: process.env.DATABASE_READ_REPLICA_URL || '',
   },
 
   jwt: {
@@ -85,6 +86,14 @@ export default () => ({
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
     bucketName: process.env.R2_BUCKET_NAME || 'jyotryx-uploads',
     publicUrl: process.env.R2_PUBLIC_URL || '',
+  },
+
+  data: {
+    retentionMonths: parseInt(process.env.DATA_RETENTION_MONTHS || '6', 10),
+  },
+
+  analytics: {
+    clickhouseUrl: process.env.CLICKHOUSE_URL || '',
   },
 
   credits: {

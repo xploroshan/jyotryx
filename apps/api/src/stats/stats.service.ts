@@ -1,12 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { PrismaReadReplicaService } from '../prisma/prisma-read-replica.service';
 
 @Injectable()
 export class StatsService {
   private readonly logger = new Logger(StatsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  /** Read replica for analytics reads; falls back to primary when unconfigured. */
+  private readonly readPrisma: PrismaService;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    readReplicaPrisma: PrismaReadReplicaService,
+  ) {
+    this.readPrisma = readReplicaPrisma as unknown as PrismaService;
+  }
 
   /**
    * Runs daily at 00:05 to compute and store yesterday's stats.
@@ -46,30 +55,30 @@ export class StatsService {
         tarotCount,
         llmAgg,
       ] = await Promise.all([
-        this.prisma.user.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.user.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
-        this.prisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] }, createdAt: { lt: dayEnd } } }),
-        this.prisma.subscription.count({ where: { status: 'ACTIVE', startDate: { lt: dayEnd } } }),
-        this.prisma.payment.aggregate({
+        this.readPrisma.user.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.user.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
+        this.readPrisma.user.count({ where: { role: { in: ['PREMIUM', 'ADMIN'] }, createdAt: { lt: dayEnd } } }),
+        this.readPrisma.subscription.count({ where: { status: 'ACTIVE', startDate: { lt: dayEnd } } }),
+        this.readPrisma.payment.aggregate({
           where: { status: 'SUCCESS', createdAt: { lt: dayEnd } },
           _sum: { amount: true },
         }),
-        this.prisma.payment.aggregate({
+        this.readPrisma.payment.aggregate({
           where: { status: 'SUCCESS', createdAt: { gte: dayStart, lt: dayEnd } },
           _sum: { amount: true },
         }),
-        this.prisma.chatSession.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.chatSession.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
-        this.prisma.creditTransaction.aggregate({
+        this.readPrisma.chatSession.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.chatSession.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
+        this.readPrisma.creditTransaction.aggregate({
           where: { createdAt: { gte: dayStart, lt: dayEnd }, amount: { lt: 0 } },
           _sum: { amount: true },
         }),
-        this.prisma.kundliChart.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.matchingResult.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.palmistryReading.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.report.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.tarotReading.count({ where: { createdAt: { lt: dayEnd } } }),
-        this.prisma.llmUsage.aggregate({
+        this.readPrisma.kundliChart.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.matchingResult.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.palmistryReading.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.report.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.tarotReading.count({ where: { createdAt: { lt: dayEnd } } }),
+        this.readPrisma.llmUsage.aggregate({
           where: { createdAt: { gte: dayStart, lt: dayEnd } },
           _sum: { costUsd: true, totalTokens: true },
           _count: true,
@@ -129,7 +138,7 @@ export class StatsService {
    * Get the most recent stats_daily row (for admin dashboard acceleration).
    */
   async getLatestStats() {
-    return this.prisma.statDaily.findFirst({
+    return this.readPrisma.statDaily.findFirst({
       orderBy: { date: 'desc' },
     });
   }
@@ -138,7 +147,7 @@ export class StatsService {
    * Get stats for a date range (for revenue trends, etc.).
    */
   async getStatsRange(from: Date, to: Date) {
-    return this.prisma.statDaily.findMany({
+    return this.readPrisma.statDaily.findMany({
       where: { date: { gte: from, lte: to } },
       orderBy: { date: 'asc' },
     });

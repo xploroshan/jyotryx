@@ -10,6 +10,7 @@ import { AuthService } from '../src/modules/auth/auth.service';
 import { StatsService } from '../src/stats/stats.service';
 import { MetricsService } from '../src/metrics/metrics.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { PrismaReadReplicaService } from '../src/prisma/prisma-read-replica.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
 import {
   mockPrismaService,
@@ -37,6 +38,7 @@ describe('Performance: API Response Benchmarks', () => {
         StatsService,
         MetricsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: PrismaReadReplicaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jest.fn().mockResolvedValue('token'), verify: jest.fn() } },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: REDIS_CLIENT, useValue: redis },

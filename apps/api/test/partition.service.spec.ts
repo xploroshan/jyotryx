@@ -4,9 +4,10 @@
  * Verifies automated partition creation for time-series tables.
  */
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { PartitionService } from '../src/partition/partition.service';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { mockPrismaService } from './helpers/mocks';
+import { mockPrismaService, mockConfigService } from './helpers/mocks';
 
 describe('PartitionService', () => {
   let service: PartitionService;
@@ -19,6 +20,7 @@ describe('PartitionService', () => {
       providers: [
         PartitionService,
         { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: mockConfigService() },
       ],
     }).compile();
 
