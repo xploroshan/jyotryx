@@ -1,0 +1,194 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+import { getQueueToken } from '@nestjs/bullmq';
+import { ReportService } from '../src/modules/report/report.service';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { UserService } from '../src/modules/user/user.service';
+import { OpenAIService } from '../src/openai/openai.service';
+import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { REPORT_QUEUE } from '../src/queue/queue.module';
+import { mockOpenAIService, mockKnowledgeService, mockUserService, mockUser } from './helpers/mocks';
+
+describe('ReportService — Async Queue Path (Item 2)', () => {
+  let service: ReportService;
+  let prisma: any;
+  let reportQueue: any;
+  let userService: any;
+
+  beforeEach(async () => {
+    prisma = {
+      user: { findUnique: jest.fn().mockResolvedValue(mockUser) },
+      report: {
+        create: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'GENERATING', price: 5, userId: 'test-uuid' }),
+        findFirst: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
+    };
+
+    reportQueue = {
+      add: jest.fn().mockResolvedValue({ id: 'job-1' }),
+    };
+
+    userService = mockUserService();
+
+    const openaiService = mockOpenAIService();
+    openaiService.chatCompletion.mockResolvedValue({
+      sections: [{ title: 'Overview', content: 'Test', order: 1 }],
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ReportService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, def?: any) => {
+              const cfg: Record<string, any> = {
+                'credits.reportCost': 5,
+                'QUEUE_ENABLED': 'true',
+              };
+              return cfg[key] ?? def;
+            }),
+          },
+        },
+        { provide: UserService, useValue: userService },
+        { provide: OpenAIService, useValue: openaiService },
+        { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: getQueueToken(REPORT_QUEUE), useValue: reportQueue },
+      ],
+    }).compile();
+
+    service = module.get<ReportService>(ReportService);
+  });
+
+  describe('generateReport — async path', () => {
+    it('should enqueue job and return generating status when queue enabled', async () => {
+      const result = await service.generateReport('test-uuid', { type: 'LIFE' });
+
+      expect(result.status).toBe('generating');
+      expect(result.sections).toEqual([]);
+      expect(reportQueue.add).toHaveBeenCalledWith('generate', expect.objectContaining({
+        reportId: 'report-1',
+        userId: 'test-uuid',
+        type: 'LIFE',
+        creditCost: 5,
+      }));
+    });
+
+    it('should create report with GENERATING status', async () => {
+      await service.generateReport('test-uuid', { type: 'CAREER' });
+
+      expect(prisma.report.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'GENERATING' }),
+        }),
+      );
+    });
+
+    it('should deduct credits and enqueue job', async () => {
+      await service.generateReport('test-uuid', { type: 'LIFE' });
+
+      expect(userService.deductCredits).toHaveBeenCalled();
+      expect(reportQueue.add).toHaveBeenCalled();
+    });
+
+    it('should reject when credits are insufficient', async () => {
+      userService.deductCredits.mockResolvedValue(false);
+
+      await expect(
+        service.generateReport('test-uuid', { type: 'LIFE' }),
+      ).rejects.toThrow('Insufficient credits');
+    });
+  });
+
+  describe('getReportStatus', () => {
+    it('should return status for existing report', async () => {
+      prisma.report.findFirst.mockResolvedValue({
+        id: 'report-1',
+        status: 'GENERATING',
+        createdAt: new Date(),
+      });
+
+      const status = await service.getReportStatus('test-uuid', 'report-1');
+
+      expect(status.id).toBe('report-1');
+      expect(status.status).toBe('generating');
+    });
+
+    it('should include completedAt for READY reports', async () => {
+      prisma.report.findFirst.mockResolvedValue({
+        id: 'report-1',
+        status: 'READY',
+        createdAt: new Date(),
+      });
+
+      const status = await service.getReportStatus('test-uuid', 'report-1');
+
+      expect(status.status).toBe('ready');
+      expect(status.completedAt).toBeDefined();
+    });
+
+    it('should throw for non-existent report', async () => {
+      prisma.report.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.getReportStatus('test-uuid', 'nonexistent'),
+      ).rejects.toThrow('Report not found');
+    });
+  });
+});
+
+describe('ReportService — Sync Fallback', () => {
+  let service: ReportService;
+  let prisma: any;
+
+  beforeEach(async () => {
+    prisma = {
+      user: { findUnique: jest.fn().mockResolvedValue(mockUser) },
+      report: {
+        create: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'READY', price: 5, userId: 'test-uuid', fileUrl: '{}' }),
+        findFirst: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+    };
+
+    const openaiService = mockOpenAIService();
+    openaiService.chatCompletion.mockResolvedValue({
+      sections: [{ title: 'Overview', content: 'Full content', order: 1 }],
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ReportService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, def?: any) => {
+              const cfg: Record<string, any> = {
+                'credits.reportCost': 5,
+                'QUEUE_ENABLED': 'false', // Queue disabled
+              };
+              return cfg[key] ?? def;
+            }),
+          },
+        },
+        { provide: UserService, useValue: mockUserService() },
+        { provide: OpenAIService, useValue: openaiService },
+        { provide: KnowledgeService, useValue: mockKnowledgeService() },
+      ],
+    }).compile();
+
+    service = module.get<ReportService>(ReportService);
+  });
+
+  it('should process synchronously when QUEUE_ENABLED=false', async () => {
+    const result = await service.generateReport('test-uuid', { type: 'LIFE' });
+
+    expect(result.status).toBe('completed');
+    expect(result.sections.length).toBeGreaterThan(0);
+    expect(result.completedAt).toBeDefined();
+  });
+});

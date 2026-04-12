@@ -254,7 +254,7 @@ describe('Docker Compose', () => {
 
   it('should define postgres service', () => {
     expect(compose).toContain('postgres:');
-    expect(compose).toContain('postgres:16-alpine');
+    expect(compose).toContain('pgvector/pgvector:pg16');
   });
 
   it('should define redis service', () => {

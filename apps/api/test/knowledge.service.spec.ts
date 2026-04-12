@@ -2,7 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
-import { mockOpenAIService } from './helpers/mocks';
+import { VectorSearchService } from '../src/knowledge/vector-search.service';
+import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
+import { mockOpenAIService, mockVectorSearchService, mockEmbeddingService } from './helpers/mocks';
 
 describe('KnowledgeService', () => {
   let service: KnowledgeService;
@@ -29,6 +31,8 @@ describe('KnowledgeService', () => {
         KnowledgeService,
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: VectorSearchService, useValue: mockVectorSearchService() },
+        { provide: EmbeddingService, useValue: mockEmbeddingService() },
       ],
     }).compile();
 
