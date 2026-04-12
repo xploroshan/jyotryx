@@ -33,30 +33,22 @@ export const mockPrismaService = () => ({
     update: jest.fn(),
     count: jest.fn().mockResolvedValue(0),
   },
-  kundliChart: {
-    create: jest.fn().mockResolvedValue({ id: 'kundli-1', createdAt: new Date() }),
-    findFirst: jest.fn(),
-  },
-  matchingResult: {
-    create: jest.fn().mockResolvedValue({ id: 'match-1', createdAt: new Date() }),
-  },
   chatSession: {
     create: jest.fn().mockResolvedValue({ id: 'session-1', createdAt: new Date(), updatedAt: new Date() }),
     findFirst: jest.fn(),
     findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
   },
   chatMessage: {
     create: jest.fn().mockResolvedValue({ id: 'msg-1', createdAt: new Date() }),
     findMany: jest.fn().mockResolvedValue([]),
-  },
-  palmistryReading: {
-    create: jest.fn().mockResolvedValue({ id: 'palm-1', createdAt: new Date() }),
   },
   report: {
     create: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'READY', fileUrl: null, price: 5, userId: 'test-uuid' }),
     findFirst: jest.fn(),
     findMany: jest.fn().mockResolvedValue([]),
     update: jest.fn().mockResolvedValue({ id: 'report-1', status: 'COMPLETED' }),
+    count: jest.fn().mockResolvedValue(0),
   },
   knowledgeDocument: {
     findMany: jest.fn().mockResolvedValue([]),
@@ -91,6 +83,38 @@ export const mockPrismaService = () => ({
   })),
   $queryRawUnsafe: jest.fn().mockResolvedValue([{ affected: BigInt(1) }]),
   $queryRaw: jest.fn().mockResolvedValue([]),
+  $executeRawUnsafe: jest.fn().mockResolvedValue(0),
+  subscription: {
+    count: jest.fn().mockResolvedValue(0),
+    findMany: jest.fn().mockResolvedValue([]),
+    aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 }, _count: 0 }),
+  },
+  payment: {
+    aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 }, _count: 0 }),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  tarotReading: {
+    count: jest.fn().mockResolvedValue(0),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  statDaily: {
+    upsert: jest.fn().mockResolvedValue({ date: new Date() }),
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  kundliChart: {
+    create: jest.fn().mockResolvedValue({ id: 'kundli-1', createdAt: new Date() }),
+    findFirst: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  matchingResult: {
+    create: jest.fn().mockResolvedValue({ id: 'match-1', createdAt: new Date() }),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  palmistryReading: {
+    create: jest.fn().mockResolvedValue({ id: 'palm-1', createdAt: new Date() }),
+    count: jest.fn().mockResolvedValue(0),
+  },
 });
 
 export const mockCacheService = () => ({
@@ -163,6 +187,50 @@ export const createMockRedis = () => {
     }),
     quit: jest.fn(async () => 'OK'),
     on: jest.fn(),
+    smembers: jest.fn(async (key: string) => {
+      const entry = store.get(key);
+      if (!entry || isExpired(entry)) return [];
+      try { return JSON.parse(entry.value); } catch { return []; }
+    }),
+    sadd: jest.fn(async (key: string, ...members: string[]) => {
+      const entry = store.get(key);
+      let set: string[] = [];
+      if (entry && !isExpired(entry)) {
+        try { set = JSON.parse(entry.value); } catch { set = []; }
+      }
+      let added = 0;
+      for (const m of members) {
+        if (!set.includes(m)) { set.push(m); added++; }
+      }
+      store.set(key, { value: JSON.stringify(set), expiresAt: entry?.expiresAt ?? null });
+      return added;
+    }),
+    srem: jest.fn(async (key: string, ...members: string[]) => {
+      const entry = store.get(key);
+      if (!entry || isExpired(entry)) return 0;
+      let set: string[];
+      try { set = JSON.parse(entry.value); } catch { return 0; }
+      let removed = 0;
+      for (const m of members) {
+        const idx = set.indexOf(m);
+        if (idx >= 0) { set.splice(idx, 1); removed++; }
+      }
+      store.set(key, { value: JSON.stringify(set), expiresAt: entry.expiresAt });
+      return removed;
+    }),
+    pipeline: jest.fn(() => {
+      const ops: Array<{ method: string; args: any[] }> = [];
+      const chain: any = {
+        set: jest.fn((...args: any[]) => { ops.push({ method: 'set', args }); return chain; }),
+        del: jest.fn((...args: any[]) => { ops.push({ method: 'del', args }); return chain; }),
+        sadd: jest.fn((...args: any[]) => { ops.push({ method: 'sadd', args }); return chain; }),
+        srem: jest.fn((...args: any[]) => { ops.push({ method: 'srem', args }); return chain; }),
+        expire: jest.fn((...args: any[]) => { ops.push({ method: 'expire', args }); return chain; }),
+        exec: jest.fn(async () => ops.map(() => [null, 'OK'])),
+        __ops: ops,
+      };
+      return chain;
+    }),
     // Expose for test assertions / setup
     __store: store,
     __clear: () => store.clear(),
@@ -275,4 +343,14 @@ export const mockVectorSearchService = () => ({
 export const mockEmbeddingService = () => ({
   generateEmbedding: jest.fn().mockResolvedValue(null),
   generateBatchEmbeddings: jest.fn().mockResolvedValue([]),
+});
+
+export const mockMetricsService = () => ({
+  httpRequestsTotal: { inc: jest.fn(), labels: jest.fn().mockReturnThis() },
+  httpRequestDuration: { observe: jest.fn(), labels: jest.fn().mockReturnThis(), startTimer: jest.fn().mockReturnValue(jest.fn()) },
+  llmRequestsTotal: { inc: jest.fn(), labels: jest.fn().mockReturnThis() },
+  llmCostTotal: { inc: jest.fn(), labels: jest.fn().mockReturnThis() },
+  getMetrics: jest.fn().mockResolvedValue('# HELP http_requests_total\nhttp_requests_total 0\n'),
+  getContentType: jest.fn().mockReturnValue('text/plain; version=0.0.4; charset=utf-8'),
+  onModuleInit: jest.fn(),
 });
