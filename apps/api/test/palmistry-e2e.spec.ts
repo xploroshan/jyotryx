@@ -20,11 +20,13 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { StorageService } from '../src/storage/storage.service';
 import {
   mockPrismaService,
   mockUserService,
   mockOpenAIService,
   mockKnowledgeService,
+  mockStorageService,
 } from './helpers/mocks';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -83,6 +85,7 @@ describe('Palmistry E2E (HTTP)', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: StorageService, useValue: mockStorageService() },
       ],
     }).compile();
 
@@ -118,13 +121,13 @@ describe('Palmistry E2E (HTTP)', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Authentication', () => {
-    it('should return 201 with a valid JWT token', async () => {
+    it('should return 202 with a valid JWT token', async () => {
       const token = signToken();
 
       const res = await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
-        .expect(201);
+        .expect(202);
 
       expect(res.body).toHaveProperty('id');
       expect(res.body).toHaveProperty('userId', 'test-uuid');
@@ -203,7 +206,7 @@ describe('Palmistry E2E (HTTP)', () => {
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
         .attach('image', TINY_JPEG, { filename: 'palm.jpg', contentType: 'image/jpeg' })
-        .expect(201);
+        .expect(202);
 
       expect(res.body.lines).toBeDefined();
       expect(res.body.mounts).toBeDefined();
@@ -216,7 +219,7 @@ describe('Palmistry E2E (HTTP)', () => {
       const res = await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
-        .expect(201);
+        .expect(202);
 
       expect(res.body.lines.length).toBeGreaterThan(0);
       expect(res.body.overallReading).toBeTruthy();
@@ -259,7 +262,7 @@ describe('Palmistry E2E (HTTP)', () => {
       await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
-        .expect(201);
+        .expect(202);
 
       expect(userService.deductCredits).toHaveBeenCalledWith(
         'test-uuid',
@@ -280,7 +283,7 @@ describe('Palmistry E2E (HTTP)', () => {
       const res = await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
-        .expect(201);
+        .expect(202);
 
       const body = res.body;
 
@@ -358,7 +361,7 @@ describe('Palmistry E2E (HTTP)', () => {
       const successRes = await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${freshToken}`)
-        .expect(201);
+        .expect(202);
       expect(successRes.body.id).toBeTruthy();
     });
 
@@ -369,7 +372,7 @@ describe('Palmistry E2E (HTTP)', () => {
       const res = await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
-        .expect(201);
+        .expect(202);
 
       expect(res.body.userId).toBe('test-uuid');
     });

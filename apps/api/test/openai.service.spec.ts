@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { OpenAIService } from '../src/openai/openai.service';
-import { mockConfigService } from './helpers/mocks';
+import { LlmService } from '../src/llm/llm.service';
+import { mockConfigService, mockLlmService } from './helpers/mocks';
 
 describe('OpenAIService', () => {
   let service: OpenAIService;
   let configService: ReturnType<typeof mockConfigService>;
 
-  describe('when no API key is configured', () => {
+  describe('when no LlmService is available (degraded mode)', () => {
     beforeEach(async () => {
       configService = mockConfigService();
 
@@ -22,7 +23,7 @@ describe('OpenAIService', () => {
       service.onModuleInit();
     });
 
-    it('should return null when no API key configured', () => {
+    it('should return null when no LlmService available', () => {
       expect(service.getClient()).toBeNull();
     });
 
@@ -30,7 +31,7 @@ describe('OpenAIService', () => {
       expect(service.getModel()).toBe('gpt-4o');
     });
 
-    it('chatCompletion should return null when client is null', async () => {
+    it('chatCompletion should return null when LlmService is absent', async () => {
       const result = await service.chatCompletion({
         messages: [{ role: 'user', content: 'Hello' }],
       });
@@ -38,38 +39,28 @@ describe('OpenAIService', () => {
     });
   });
 
-  describe('when API key is configured', () => {
-    let mockCreate: jest.Mock;
+  describe('when LlmService is available', () => {
+    let llmService: any;
 
     beforeEach(async () => {
-      mockCreate = jest.fn();
-
       configService = mockConfigService({ 'openai.apiKey': 'test-api-key' });
+      llmService = mockLlmService();
 
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           OpenAIService,
           { provide: ConfigService, useValue: configService },
+          { provide: LlmService, useValue: llmService },
         ],
       }).compile();
 
       service = module.get<OpenAIService>(OpenAIService);
-
-      // Mock the require('openai') call by setting the client directly
-      (service as any).client = {
-        chat: {
-          completions: {
-            create: mockCreate,
-          },
-        },
-      };
+      service.onModuleInit();
     });
 
-    it('chatCompletion should handle JSON mode parsing', async () => {
+    it('chatCompletion should delegate to LlmService and return result', async () => {
       const jsonPayload = { sign: 'Aries', prediction: 'A great day ahead' };
-      mockCreate.mockResolvedValue({
-        choices: [{ message: { content: JSON.stringify(jsonPayload) } }],
-      });
+      llmService.chatCompletion.mockResolvedValue(jsonPayload);
 
       const result = await service.chatCompletion({
         messages: [{ role: 'user', content: 'Give me a horoscope' }],
@@ -77,21 +68,24 @@ describe('OpenAIService', () => {
       });
 
       expect(result).toEqual(jsonPayload);
-      expect(mockCreate).toHaveBeenCalledWith(
+      expect(llmService.chatCompletion).toHaveBeenCalledWith(
         expect.objectContaining({
-          response_format: { type: 'json_object' },
+          messages: [{ role: 'user', content: 'Give me a horoscope' }],
+          jsonMode: true,
         }),
       );
     });
 
-    it('chatCompletion should return null on API error', async () => {
-      mockCreate.mockRejectedValue(new Error('API rate limit exceeded'));
+    it('chatCompletion should propagate LlmService errors', async () => {
+      llmService.chatCompletion.mockRejectedValue(new Error('All providers down'));
 
-      const result = await service.chatCompletion({
+      await expect(service.chatCompletion({
         messages: [{ role: 'user', content: 'Hello' }],
-      });
+      })).rejects.toThrow('All providers down');
+    });
 
-      expect(result).toBeNull();
+    it('should expose model from LlmService', () => {
+      expect(service.getModel()).toBe('gpt-4o');
     });
   });
 });

@@ -9,8 +9,9 @@ import { PaymentService } from '../src/modules/payment/payment.service';
 import { ChatService } from '../src/modules/chat/chat.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
-import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService, createMockRedis } from './helpers/mocks';
+import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService, mockLlmService, createMockRedis } from './helpers/mocks';
 import * as crypto from 'crypto';
 
 // ─── Authentication Security Tests ───────────────────────────────────────────
@@ -239,6 +240,7 @@ describe('Security: Input Validation', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -382,6 +384,7 @@ describe('Security: Data Isolation', () => {
         create: jest.fn(),
       },
       $transaction: jest.fn(),
+      $queryRawUnsafe: jest.fn().mockResolvedValue([{ affected: BigInt(1) }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -403,29 +406,14 @@ describe('Security: Data Isolation', () => {
   });
 
   it('should prevent negative credit deduction (credit stealing)', async () => {
-    prisma.$transaction.mockImplementation(async (cb: any) => {
-      return cb({
-        user: {
-          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-        },
-        creditTransaction: { create: jest.fn() },
-      });
-    });
+    prisma.$queryRawUnsafe.mockResolvedValue([{ affected: BigInt(1) }]);
 
-    // Even though the function is internal, verify it handles edge cases
     const result = await userService.deductCredits('u1', 0, 'Zero cost');
     expect(result).toBe(true);
   });
 
   it('should reject credit deduction when balance is insufficient', async () => {
-    prisma.$transaction.mockImplementation(async (cb: any) => {
-      return cb({
-        user: {
-          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-        },
-        creditTransaction: { create: jest.fn() },
-      });
-    });
+    prisma.$queryRawUnsafe.mockResolvedValue([{ affected: BigInt(0) }]);
 
     const result = await userService.deductCredits('u1', 5, 'Expensive operation');
     expect(result).toBe(false);

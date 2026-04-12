@@ -1202,6 +1202,7 @@ describe('9. AstrologyService Integration', () => {
     const { OpenAIService } = require('../src/openai/openai.service');
     const { MemoryCacheService } = require('../src/common/cache.service');
     const { KnowledgeService } = require('../src/knowledge/knowledge.service');
+    const { EphemerisService } = require('../src/ephemeris/ephemeris.service');
 
     const module = await Test.createTestingModule({
       providers: [
@@ -1226,6 +1227,25 @@ describe('9. AstrologyService Integration', () => {
           search: jest.fn().mockResolvedValue([]),
           getByCategory: jest.fn().mockResolvedValue([]),
           assembleContext: jest.fn().mockReturnValue(''),
+        }},
+        { provide: EphemerisService, useValue: {
+          computeChart: jest.fn().mockResolvedValue({
+            julianDay: 2447919.9375,
+            positions: [
+              { name: 'Sun', longitude: 282.0, speed: 0.95 },
+              { name: 'Moon', longitude: 54.5, speed: 12.5 },
+              { name: 'Mars', longitude: 320.0, speed: 0.6 },
+              { name: 'Mercury', longitude: 270.0, speed: 1.2 },
+              { name: 'Jupiter', longitude: 60.0, speed: 0.08 },
+              { name: 'Venus', longitude: 300.0, speed: 1.1 },
+              { name: 'Saturn', longitude: 270.0, speed: 0.03 },
+              { name: 'Rahu', longitude: 300.0, speed: -0.05 },
+              { name: 'Ketu', longitude: 120.0, speed: -0.05 },
+            ],
+            houses: Array.from({ length: 12 }, (_, i) => i * 30),
+            ascendant: 0,
+          }),
+          computePanchang: jest.fn().mockResolvedValue({ tithi: { name: 'Shukla Panchami' }, nakshatra: { name: 'Rohini' }, yoga: { name: 'Shobhana' }, karana: { name: 'Balava' }, vara: 'Friday' }),
         }},
       ],
     }).compile();

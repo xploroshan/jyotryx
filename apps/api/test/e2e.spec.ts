@@ -10,6 +10,7 @@ import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
 import {
   mockKnowledgeService,
@@ -17,6 +18,7 @@ import {
   mockPrismaService,
   mockConfigService,
   mockUserService,
+  mockLlmService,
   mockUser,
   createMockRedis,
 } from './helpers/mocks';
@@ -47,6 +49,7 @@ describe('E2E: Auth → Chat Flow', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -185,6 +188,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -242,6 +246,7 @@ describe('E2E: Chat Session Lifecycle', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -489,6 +494,7 @@ describe('E2E: Report Flow', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -582,6 +588,7 @@ describe('E2E: Report Flow', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -636,6 +643,7 @@ describe('E2E: User Profile & Credits', () => {
         },
         creditTransaction: { create: jest.fn() },
       })),
+      $queryRawUnsafe: jest.fn().mockResolvedValue([{ affected: BigInt(1) }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -972,6 +980,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userServiceMock },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -1026,6 +1035,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userServiceMock },
         { provide: OpenAIService, useValue: openaiMock },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: knowledgeMock },
       ],
     }).compile();

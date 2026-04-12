@@ -11,6 +11,9 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { MemoryCacheService } from '../src/common/cache.service';
+import { LlmService } from '../src/llm/llm.service';
+import { EphemerisService } from '../src/ephemeris/ephemeris.service';
+import { StorageService } from '../src/storage/storage.service';
 import {
   mockKnowledgeService,
   mockOpenAIService,
@@ -20,6 +23,9 @@ import {
   mockConfigService,
   mockUser,
   mockBirthDetails,
+  mockLlmService,
+  mockEphemerisService,
+  mockStorageService,
 } from './helpers/mocks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -53,6 +59,7 @@ describe('Palmistry Service — Correctness & Bug Validation', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: StorageService, useValue: mockStorageService() },
       ],
     }).compile();
     service = module.get<PalmistryService>(PalmistryService);
@@ -361,6 +368,27 @@ describe('Kundli (Birth Chart) — Astronomical Correctness', () => {
   beforeEach(async () => {
     prisma = mockPrismaService();
     userService = mockUserService();
+    // Use an input-sensitive mock so different birth details produce different charts
+    const ephemeris = mockEphemerisService();
+    ephemeris.computeChart.mockImplementation(async (input: any) => {
+      const offset = (input.hour || 0) * 15 + (input.day || 1) * 3;
+      return {
+        julianDay: 2448000.0 + offset,
+        positions: [
+          { name: 'Sun', longitude: (54.5 + offset) % 360, speed: 0.95 },
+          { name: 'Moon', longitude: (120.3 + offset * 2) % 360, speed: 12.5 },
+          { name: 'Mars', longitude: (180.0 + offset) % 360, speed: 0.6 },
+          { name: 'Mercury', longitude: (45.0 + offset) % 360, speed: 1.2 },
+          { name: 'Jupiter', longitude: (90.0 + offset) % 360, speed: 0.08 },
+          { name: 'Venus', longitude: (30.0 + offset) % 360, speed: 1.1 },
+          { name: 'Saturn', longitude: (300.0 + offset) % 360, speed: 0.03 },
+          { name: 'Rahu', longitude: (210.0 + offset) % 360, speed: -0.05 },
+          { name: 'Ketu', longitude: (30.0 + offset) % 360, speed: -0.05 },
+        ],
+        houses: Array.from({ length: 12 }, (_, i) => (i * 30 + offset) % 360),
+        ascendant: offset % 360,
+      };
+    });
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AstrologyService,
@@ -370,6 +398,7 @@ describe('Kundli (Birth Chart) — Astronomical Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: ephemeris },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -585,6 +614,7 @@ describe('Matching (Ashtakoota) — Rule Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -697,6 +727,7 @@ describe('Panchang — Calendar & Astronomical Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -817,6 +848,7 @@ describe('Horoscope — Differentiation & Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -929,6 +961,7 @@ describe('Muhurat — Auspicious Time Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -1220,6 +1253,7 @@ describe('Consult (Chat) — Session & Response Correctness', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: openaiService },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();

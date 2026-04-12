@@ -5,7 +5,9 @@ import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
-import { mockOpenAIService, mockKnowledgeService, mockPrismaService, mockCacheService, mockUser, createMockRedis } from './helpers/mocks';
+import { VectorSearchService } from '../src/knowledge/vector-search.service';
+import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
+import { mockOpenAIService, mockKnowledgeService, mockPrismaService, mockCacheService, mockUser, createMockRedis, mockVectorSearchService, mockEmbeddingService } from './helpers/mocks';
 
 // ─── Response Time Benchmarks ────────────────────────────────────────────────
 
@@ -239,6 +241,8 @@ describe('Performance: Knowledge Service', () => {
         KnowledgeService,
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: VectorSearchService, useValue: mockVectorSearchService() },
+        { provide: EmbeddingService, useValue: mockEmbeddingService() },
       ],
     }).compile();
 

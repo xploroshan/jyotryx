@@ -8,10 +8,13 @@ import { ReportService } from '../src/modules/report/report.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { VectorSearchService } from '../src/knowledge/vector-search.service';
+import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
+import { LlmService } from '../src/llm/llm.service';
 import {
   mockKnowledgeService,
   mockOpenAIService,
@@ -21,6 +24,9 @@ import {
   mockCacheService,
   mockUser,
   createMockRedis,
+  mockLlmService,
+  mockVectorSearchService,
+  mockEmbeddingService,
 } from './helpers/mocks';
 
 // ─── Performance: Auth Service ─────────────────────────────────────────────
@@ -118,6 +124,7 @@ describe('Performance: Credit Operations', () => {
         user: { updateMany: jest.fn().mockResolvedValue({ count: 1 }), update: jest.fn() },
         creditTransaction: { create: jest.fn() },
       })),
+      $queryRawUnsafe: jest.fn().mockResolvedValue([{ affected: BigInt(1) }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -193,6 +200,7 @@ describe('Performance: Chat Operations', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     }).compile();
@@ -564,6 +572,8 @@ describe('Performance: Knowledge Service', () => {
         KnowledgeService,
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: VectorSearchService, useValue: mockVectorSearchService() },
+        { provide: EmbeddingService, useValue: mockEmbeddingService() },
       ],
     }).compile();
 

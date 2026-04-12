@@ -18,6 +18,9 @@ import { DailyBriefingController } from '../src/modules/daily-briefing/daily-bri
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { ChatController } from '../src/modules/chat/chat.controller';
 import { ChatService } from '../src/modules/chat/chat.service';
+import { LlmService } from '../src/llm/llm.service';
+import { EphemerisService } from '../src/ephemeris/ephemeris.service';
+import { StorageService } from '../src/storage/storage.service';
 import {
   mockKnowledgeService,
   mockOpenAIService,
@@ -27,6 +30,9 @@ import {
   mockConfigService,
   mockUser,
   mockBirthDetails,
+  mockLlmService,
+  mockEphemerisService,
+  mockStorageService,
 } from './helpers/mocks';
 
 // ─── Mock Auth Guard ─────────────────────────────────────────────────────────
@@ -72,6 +78,7 @@ describe('E2E: Astrology Endpoints', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -295,6 +302,7 @@ describe('E2E: Palmistry Endpoint', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: StorageService, useValue: mockStorageService() },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -453,6 +461,7 @@ describe('E2E: Chat (Consult) Endpoints', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: openai },
+        { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
       ],
     })
@@ -547,6 +556,7 @@ describe('E2E: Cross-Feature Consistency', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();
 
