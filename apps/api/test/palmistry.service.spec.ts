@@ -5,7 +5,8 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
-import { mockKnowledgeService } from './helpers/mocks';
+import { StorageService } from '../src/storage/storage.service';
+import { mockKnowledgeService, mockStorageService } from './helpers/mocks';
 
 describe('PalmistryService', () => {
   let service: PalmistryService;
@@ -67,6 +68,7 @@ describe('PalmistryService', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: openaiService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: StorageService, useValue: mockStorageService() },
       ],
     }).compile();
 
