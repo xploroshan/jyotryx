@@ -237,20 +237,19 @@ export const mockLlmService = () => ({
 export const mockEphemerisService = () => ({
   computeChart: jest.fn().mockResolvedValue({
     julianDay: 2448000.0,
-    ayanamsa: 23.7,
-    planets: [
-      { id: 0, name: 'Sun', longitude: 54.5, latitude: 0, speed: 0.95, sign: 'Taurus', signIndex: 1, degree: 24.5, nakshatra: 'Mrigashira', nakshatraIndex: 5, nakshatraPada: 3, isRetrograde: false, house: 1 },
-      { id: 1, name: 'Moon', longitude: 120.3, latitude: 2.1, speed: 12.5, sign: 'Cancer', signIndex: 3, degree: 0.3, nakshatra: 'Pushya', nakshatraIndex: 7, nakshatraPada: 1, isRetrograde: false, house: 4 },
-      { id: 2, name: 'Mars', longitude: 180.0, latitude: 0.5, speed: 0.6, sign: 'Libra', signIndex: 6, degree: 0.0, nakshatra: 'Chitra', nakshatraIndex: 13, nakshatraPada: 3, isRetrograde: false, house: 7 },
-      { id: 3, name: 'Mercury', longitude: 45.0, latitude: 0.1, speed: 1.2, sign: 'Taurus', signIndex: 1, degree: 15.0, nakshatra: 'Rohini', nakshatraIndex: 3, nakshatraPada: 4, isRetrograde: false, house: 1 },
-      { id: 4, name: 'Jupiter', longitude: 90.0, latitude: -0.2, speed: 0.08, sign: 'Cancer', signIndex: 3, degree: 0.0, nakshatra: 'Punarvasu', nakshatraIndex: 6, nakshatraPada: 4, isRetrograde: false, house: 4 },
-      { id: 5, name: 'Venus', longitude: 30.0, latitude: 0.3, speed: 1.1, sign: 'Taurus', signIndex: 1, degree: 0.0, nakshatra: 'Krittika', nakshatraIndex: 2, nakshatraPada: 3, isRetrograde: false, house: 1 },
-      { id: 6, name: 'Saturn', longitude: 300.0, latitude: 0.0, speed: 0.03, sign: 'Aquarius', signIndex: 10, degree: 0.0, nakshatra: 'Dhanishta', nakshatraIndex: 22, nakshatraPada: 3, isRetrograde: false, house: 10 },
-      { id: 7, name: 'Rahu', longitude: 210.0, latitude: 0.0, speed: -0.05, sign: 'Scorpio', signIndex: 7, degree: 0.0, nakshatra: 'Anuradha', nakshatraIndex: 16, nakshatraPada: 2, isRetrograde: true, house: 7 },
-      { id: 8, name: 'Ketu', longitude: 30.0, latitude: 0.0, speed: -0.05, sign: 'Taurus', signIndex: 1, degree: 0.0, nakshatra: 'Krittika', nakshatraIndex: 2, nakshatraPada: 3, isRetrograde: true, house: 1 },
+    positions: [
+      { name: 'Sun', longitude: 54.5, speed: 0.95 },
+      { name: 'Moon', longitude: 120.3, speed: 12.5 },
+      { name: 'Mars', longitude: 180.0, speed: 0.6 },
+      { name: 'Mercury', longitude: 45.0, speed: 1.2 },
+      { name: 'Jupiter', longitude: 90.0, speed: 0.08 },
+      { name: 'Venus', longitude: 30.0, speed: 1.1 },
+      { name: 'Saturn', longitude: 300.0, speed: 0.03 },
+      { name: 'Rahu', longitude: 210.0, speed: -0.05 },
+      { name: 'Ketu', longitude: 30.0, speed: -0.05 },
     ],
-    houses: Array.from({ length: 12 }, (_, i) => ({ house: i + 1, longitude: i * 30, sign: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'][i], degree: 0 })),
-    ascendant: { longitude: 0, sign: 'Aries', degree: 0, nakshatra: 'Ashwini', nakshatraPada: 1 },
+    houses: Array.from({ length: 12 }, (_, i) => i * 30),
+    ascendant: 0,
   }),
   computePanchang: jest.fn().mockResolvedValue({
     tithi: { name: 'Shukla Panchami', number: 5, paksha: 'Shukla' },

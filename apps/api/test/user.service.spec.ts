@@ -36,6 +36,7 @@ describe('UserService', () => {
         create: jest.fn(),
       },
       $transaction: jest.fn(),
+      $queryRawUnsafe: jest.fn().mockResolvedValue([{ affected: BigInt(1) }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -135,18 +136,19 @@ describe('UserService', () => {
   });
 
   describe('deductCredits', () => {
-    it('should deduct credits via transaction', async () => {
-      prisma.$transaction.mockImplementation(async (cb: any) => {
-        return cb({
-          user: {
-            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          },
-          creditTransaction: { create: jest.fn() },
-        });
-      });
+    it('should deduct credits via CTE query', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([{ affected: BigInt(1) }]);
 
       const result = await service.deductCredits('test-uuid', 2, 'Test deduction');
       expect(result).toBe(true);
+      expect(prisma.$queryRawUnsafe).toHaveBeenCalled();
+    });
+
+    it('should return false when insufficient credits', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([{ affected: BigInt(0) }]);
+
+      const result = await service.deductCredits('test-uuid', 100, 'Too much');
+      expect(result).toBe(false);
     });
   });
 });

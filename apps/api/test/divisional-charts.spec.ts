@@ -7,6 +7,7 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { EphemerisService } from '../src/ephemeris/ephemeris.service';
 import {
   mockPrismaService,
   mockConfigService,
@@ -15,6 +16,7 @@ import {
   mockCacheService,
   mockKnowledgeService,
   mockBirthDetails,
+  mockEphemerisService,
 } from './helpers/mocks';
 
 describe('AstrologyService – Divisional Charts', () => {
@@ -38,6 +40,7 @@ describe('AstrologyService – Divisional Charts', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();
 
