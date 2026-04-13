@@ -96,6 +96,12 @@ enum AdminAction {
   SUBSCRIPTION_UPDATE
 }
 
+enum AstrologyTradition {
+  VEDIC
+  WESTERN
+  CHINESE
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -110,7 +116,8 @@ model User {
   gender            String?
   profession        Profession?
   profilePhoto      String?
-  preferredLanguage String    @default("en")
+  preferredLanguage   String    @default("en")
+  astrologyTraditions AstrologyTradition[] @default([VEDIC])
   role              Role      @default(USER)
   credits           Int       @default(3)
   provider          AuthProvider @default(LOCAL)

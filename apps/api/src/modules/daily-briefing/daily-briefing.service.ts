@@ -219,11 +219,13 @@ export class DailyBriefingService {
     // ── 2. Per-user overlay (greeting, profession insight, transit) ─────
     const userKey = `briefing:user:${userId}:${dateStr}:${hourBucket}`;
     let overlay = await this.cacheService.get<UserBriefingOverlay>(userKey);
+    let userTraditions: string[] = ['VEDIC'];
     if (!overlay) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true },
+        select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
       });
+      userTraditions = (user as any)?.astrologyTraditions ?? ['VEDIC'];
       overlay = this.computeUserOverlay(user, global.currentPlanet, global.dayRuler, global.panchang, global.dayQuality, today);
       await this.cacheService.set(userKey, overlay, 30 * 60 * 1000);
     }
@@ -246,7 +248,8 @@ export class DailyBriefingService {
       mantra: global.mantra,
       panchang: global.panchang,
       transitAlert: overlay.transitAlert,
-    };
+      astrologyTraditions: userTraditions,
+    } as any;
   }
 
   // ─── Global briefing: identical for every user in the same 30-min slot ──

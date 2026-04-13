@@ -91,6 +91,13 @@ export enum CreditTransactionType {
   REPORT_PURCHASE = "REPORT_PURCHASE",
 }
 
+export enum AstrologyTradition {
+  VEDIC = "VEDIC",
+  WESTERN = "WESTERN",
+  CHINESE = "CHINESE",
+  // Future: HELLENISTIC, HORARY, MEDICAL
+}
+
 // ─── Common Types ───────────────────────────────────────────────────────────
 
 export interface PlaceOfBirth {
@@ -112,6 +119,7 @@ export interface User {
   gender?: string | null;
   profilePhoto?: string | null;
   preferredLanguage: string;
+  astrologyTraditions: AstrologyTradition[];
   role: Role;
   credits: number;
   provider: AuthProvider;
@@ -244,6 +252,7 @@ export interface UpdateProfileRequest {
   placeOfBirth?: PlaceOfBirth;
   gender?: string;
   preferredLanguage?: string;
+  astrologyTraditions?: AstrologyTradition[];
 }
 
 export interface SendChatMessageRequest {

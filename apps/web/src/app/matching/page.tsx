@@ -13,8 +13,19 @@ interface PersonForm {
 
 const emptyPerson: PersonForm = { name: "", dob: "", time: "", place: "" };
 
+const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese" };
+const TRADITION_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+  VEDIC: { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+  WESTERN: { text: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/30" },
+  CHINESE: { text: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
+};
+
 export default function MatchingPage() {
   const { t, locale } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC"];
+  const isMultiTradition = userTraditions.length > 1;
+  const [activeTradition, setActiveTradition] = useState(userTraditions[0] || "VEDIC");
 
   const mockResults = {
     totalScore: 28,
@@ -81,6 +92,7 @@ export default function MatchingPage() {
         partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place },
         partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place },
         locale,
+        tradition: activeTradition,
       }, { token });
 
       const totalScore = res.totalScore ?? mockResults.totalScore;
@@ -189,12 +201,38 @@ export default function MatchingPage() {
             {t.matching.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            {t.matching.title} <span className="text-gradient">{t.matching.titleHighlight}</span>
+            {activeTradition === "WESTERN" ? "Synastry" : activeTradition === "CHINESE" ? "Animal Sign" : t.matching.title}{" "}
+            <span className="text-gradient">{t.matching.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
             {t.matching.description}
           </p>
         </div>
+
+        {/* Tradition Tabs */}
+        {isMultiTradition && (
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex gap-1 rounded-xl bg-white/[0.03] p-1">
+              {userTraditions.map((trad) => {
+                const colors = TRADITION_COLORS[trad] || TRADITION_COLORS.VEDIC;
+                const isActive = activeTradition === trad;
+                return (
+                  <button
+                    key={trad}
+                    onClick={() => { setActiveTradition(trad); setResults(null); }}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? `${colors.bg} ${colors.text} ${colors.border} border`
+                        : "text-white/40 hover:text-white/70"
+                    }`}
+                  >
+                    {TRADITION_LABELS[trad] || trad}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Forms */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">

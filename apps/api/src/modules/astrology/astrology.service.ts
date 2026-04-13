@@ -7,6 +7,7 @@ import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction } from '../../common/locale';
+import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import * as path from 'path';
 
 // ─── Swiss Ephemeris Setup (kept as sync fallback for methods not yet ported) ─
@@ -823,17 +824,18 @@ export class AstrologyService {
     ];
   }
 
-  async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly', locale?: string): Promise<HoroscopeResult> {
+  async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly', locale?: string, tradition?: string): Promise<HoroscopeResult> {
     const activePeriod = period || 'daily';
+    const activeTradition = tradition || 'VEDIC';
     const today = new Date().toISOString().split('T')[0];
-    const cacheKey = `horoscope:${sign.toLowerCase()}:${activePeriod}:${today}`;
+    const cacheKey = `horoscope:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${today}`;
     const cached = await this.cacheService.get<HoroscopeResult>(cacheKey);
     if (cached) return cached;
 
-    this.logger.log(`Fetching ${activePeriod} horoscope for: ${sign}`);
+    this.logger.log(`Fetching ${activePeriod} ${activeTradition} horoscope for: ${sign}`);
     const formattedSign = sign.charAt(0).toUpperCase() + sign.slice(1).toLowerCase();
 
-    // Enrich with sign-specific KB context
+    // Enrich with sign-specific KB context (primarily for Vedic, but usable for all)
     const signKB = await this.knowledgeService.search(formattedSign, 'signs', 3);
     const signKBContext = this.knowledgeService.assembleContext(signKB);
     const signKBSection = signKBContext ? `\n\nReference Knowledge about ${formattedSign}:\n${signKBContext}` : '';
@@ -845,21 +847,20 @@ export class AstrologyService {
       yearly: `this year's (${new Date().getFullYear()})`,
     };
 
-    const aiPrediction = await this.callOpenAI(
-      `You are an expert Vedic astrologer with deep knowledge of planetary transits, Nakshatras, and Dasha periods. Generate a ${activePeriod} horoscope prediction for the given zodiac sign. Return a JSON object with:
-- prediction: string (${activePeriod === 'daily' ? '3-4' : '5-7'} sentences, specific overview referencing current planetary positions and transits relevant to this sign)
-- career: string (${activePeriod === 'daily' ? '2-3' : '3-5'} sentences about career and financial outlook, referencing specific planetary influences on the 2nd, 6th, 10th houses)
-- health: string (${activePeriod === 'daily' ? '2-3' : '3-5'} sentences about health and wellness, referencing planetary effects on the 6th and 8th houses, suggest specific remedies or practices)
-- love: string (${activePeriod === 'daily' ? '2-3' : '3-5'} sentences about love and relationships, referencing Venus, 7th house lord, and relationship dynamics)
-- luckyNumber: number (1-9, based on ruling planet numerology)
-- luckyColor: string (based on the sign's ruling planet)
-- mood: string (one word reflecting dominant planetary energy)
-- compatibility: string (most compatible sign based on current transits)
+    // Use tradition-specific prompt from the registry
+    const traditionConfig = getTraditionConfig(activeTradition);
+    const systemPrompt = traditionConfig
+      ? traditionConfig.horoscopePrompt(formattedSign, activePeriod, periodDescriptions[activePeriod]) + signKBSection
+      : this.getDefaultHoroscopePrompt(formattedSign, activePeriod, signKBSection);
 
-Make each section unique and specific to the sign. Avoid generic advice. Reference actual Vedic concepts like Nakshatras, Dashas, and planetary lordships.${signKBSection}`,
-      `Generate ${periodDescriptions[activePeriod]} Vedic horoscope for ${formattedSign}. Consider the sign's ruling planet, current planetary transits, and Nakshatra influences. Provide specific, actionable guidance unique to this sign.`,
+    const traditionLabel = activeTradition === 'VEDIC' ? 'Vedic' : activeTradition === 'WESTERN' ? 'Western' : activeTradition === 'CHINESE' ? 'Chinese' : '';
+    const userPrompt = `Generate ${periodDescriptions[activePeriod]} ${traditionLabel} horoscope for ${formattedSign}. Provide specific, actionable guidance unique to this sign.`;
+
+    const aiPrediction = await this.callOpenAI(
+      systemPrompt,
+      userPrompt,
       true, 1500, 0.7, 'default', locale,
-      { feature: `horoscope:${activePeriod}` },
+      { feature: `horoscope:${activePeriod}:${activeTradition.toLowerCase()}` },
     );
 
     if (aiPrediction) {
@@ -994,6 +995,77 @@ Make each section unique and specific to the sign. Avoid generic advice. Referen
     };
     await this.cacheService.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000);
     return fallbackResult;
+  }
+
+  /** Fallback Vedic prompt when tradition config is missing */
+  private getDefaultHoroscopePrompt(sign: string, period: string, kbSection: string): string {
+    return `You are an expert Vedic astrologer. Generate a ${period} horoscope prediction for ${sign}. Return a JSON object with: prediction, career, health, love (strings), luckyNumber (number 1-9), luckyColor (string), mood (one word), compatibility (string).${kbSection}`;
+  }
+
+  /**
+   * Get horoscopes for multiple traditions and produce a combined summary.
+   * Used when a user has selected more than one astrology tradition.
+   */
+  async getMultiTraditionHoroscope(
+    sign: string,
+    period: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    traditions: string[],
+    locale?: string,
+  ): Promise<{ traditions: Record<string, HoroscopeResult>; summary?: string }> {
+    // Fetch each tradition's horoscope in parallel
+    const results: Record<string, HoroscopeResult> = {};
+    const promises = traditions.map(async (t) => {
+      const result = await this.getHoroscope(sign, period, locale, t);
+      results[t] = result;
+    });
+    await Promise.all(promises);
+
+    // Generate combined summary if multiple traditions
+    let summary: string | undefined;
+    if (traditions.length > 1) {
+      const summaryParts = traditions.map(t => {
+        const r = results[t];
+        const label = t === 'VEDIC' ? 'Vedic' : t === 'WESTERN' ? 'Western' : 'Chinese';
+        return `${label}: ${r?.prediction || 'N/A'}`;
+      }).join('\n\n');
+
+      const summaryResult = await this.callOpenAI(
+        `You are a master astrologer versed in multiple traditions. Synthesize the following horoscope readings from different astrological traditions into a unified, coherent summary. Highlight where traditions agree or offer complementary insights. Keep it to 3-5 sentences. Return a JSON object with a single "summary" field.`,
+        `Synthesize these ${period} horoscope readings for ${sign}:\n\n${summaryParts}`,
+        true, 500, 0.7, 'default', locale,
+        { feature: `horoscope:combined:${period}` },
+      );
+      summary = summaryResult?.summary;
+    }
+
+    return { traditions: results, summary };
+  }
+
+  /**
+   * Returns the list of available astrology traditions with metadata.
+   */
+  getAvailableTraditions() {
+    return AVAILABLE_TRADITIONS.map(t => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      zodiacType: t.zodiacType,
+      signSystem: t.signSystem,
+      features: t.features,
+      isAvailable: t.isAvailable,
+    }));
+  }
+
+  /**
+   * Compute Chinese zodiac animal and element from a birth year.
+   */
+  getChineseZodiac(birthYear: number): { animal: string; element: string; yinYang: string } {
+    const animalIndex = (birthYear - 4) % 12;
+    const animal = CHINESE_ANIMALS[animalIndex >= 0 ? animalIndex : animalIndex + 12];
+    const elementIndex = Math.floor(((birthYear - 4) % 10) / 2);
+    const element = CHINESE_ELEMENTS[elementIndex >= 0 ? elementIndex : elementIndex + 5];
+    const yinYang = birthYear % 2 === 0 ? 'Yang' : 'Yin';
+    return { animal, element, yinYang };
   }
 
   async getPanchang(lat?: number, lng?: number): Promise<PanchangResult> {
