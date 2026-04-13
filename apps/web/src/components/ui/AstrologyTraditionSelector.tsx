@@ -12,7 +12,6 @@ interface TraditionOption {
   borderColor: string;
   glowColor: string;
   isAvailable: boolean;
-  isDefault?: boolean;
 }
 
 interface AstrologyTraditionSelectorProps {
@@ -46,7 +45,6 @@ export default function AstrologyTraditionSelector({
       borderColor: "border-amber-500/50",
       glowColor: "shadow-amber-500/20",
       isAvailable: true,
-      isDefault: true,
     },
     {
       id: "WESTERN",
@@ -85,23 +83,22 @@ export default function AstrologyTraditionSelector({
       glowColor: "shadow-red-500/20",
       isAvailable: true,
     },
-    // Future traditions (coming soon)
     {
       id: "HELLENISTIC",
       name: t.traditions.hellenistic,
       description: t.traditions.hellenisticDesc,
       icon: (
         <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.2" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16" opacity="0.5">
+          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16">
             &#x2609;
           </text>
         </svg>
       ),
-      color: "text-white/30",
-      borderColor: "border-white/10",
-      glowColor: "",
-      isAvailable: false,
+      color: "text-violet-400",
+      borderColor: "border-violet-500/50",
+      glowColor: "shadow-violet-500/20",
+      isAvailable: true,
     },
     {
       id: "HORARY",
@@ -109,16 +106,16 @@ export default function AstrologyTraditionSelector({
       description: t.traditions.horaryDesc,
       icon: (
         <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.2" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="14" opacity="0.5">
+          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="14">
             ?
           </text>
         </svg>
       ),
-      color: "text-white/30",
-      borderColor: "border-white/10",
-      glowColor: "",
-      isAvailable: false,
+      color: "text-teal-400",
+      borderColor: "border-teal-500/50",
+      glowColor: "shadow-teal-500/20",
+      isAvailable: true,
     },
     {
       id: "MEDICAL",
@@ -126,16 +123,16 @@ export default function AstrologyTraditionSelector({
       description: t.traditions.medicalDesc,
       icon: (
         <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.2" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16" opacity="0.5">
+          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16">
             +
           </text>
         </svg>
       ),
-      color: "text-white/30",
-      borderColor: "border-white/10",
-      glowColor: "",
-      isAvailable: false,
+      color: "text-emerald-400",
+      borderColor: "border-emerald-500/50",
+      glowColor: "shadow-emerald-500/20",
+      isAvailable: true,
     },
   ];
 
@@ -195,13 +192,6 @@ export default function AstrologyTraditionSelector({
               {!available && (
                 <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-white/30 font-medium">
                   {t.traditions.comingSoon}
-                </div>
-              )}
-
-              {/* Default badge */}
-              {tradition.isDefault && available && (
-                <div className={`absolute top-3 ${selected ? 'right-11' : 'right-11'} px-2 py-0.5 rounded-full bg-amber-500/15 text-[10px] text-amber-400 font-medium`}>
-                  {t.traditions.default}
                 </div>
               )}
 

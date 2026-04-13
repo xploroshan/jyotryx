@@ -98,12 +98,9 @@ describe('AstrologyTraditionSelector', () => {
     const onChange = vi.fn();
     render(<AstrologyTraditionSelector value={['VEDIC']} onChange={onChange} />);
 
-    // Available traditions
     expect(screen.getByText('Vedic / Jyotish')).toBeDefined();
     expect(screen.getByText('Western Astrology')).toBeDefined();
     expect(screen.getByText('Chinese Astrology')).toBeDefined();
-
-    // Coming soon traditions
     expect(screen.getByText('Hellenistic')).toBeDefined();
     expect(screen.getByText('Horary')).toBeDefined();
     expect(screen.getByText('Medical')).toBeDefined();
@@ -165,30 +162,47 @@ describe('AstrologyTraditionSelector', () => {
     expect(screen.getByText('Please select at least one tradition')).toBeDefined();
   });
 
-  it('should disable coming-soon traditions', () => {
+  it('should allow selecting Hellenistic tradition', () => {
     const onChange = vi.fn();
     render(<AstrologyTraditionSelector value={['VEDIC']} onChange={onChange} />);
 
     const hellenisticCard = screen.getByText('Hellenistic').closest('button')!;
-    expect(hellenisticCard.disabled).toBe(true);
+    expect(hellenisticCard.disabled).toBe(false);
 
     fireEvent.click(hellenisticCard);
-    expect(onChange).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenCalledWith(['VEDIC', 'HELLENISTIC']);
   });
 
-  it('should show "Coming Soon" badge on unavailable traditions', () => {
+  it('should allow selecting Horary tradition', () => {
     const onChange = vi.fn();
     render(<AstrologyTraditionSelector value={['VEDIC']} onChange={onChange} />);
 
-    const badges = screen.getAllByText('Coming Soon');
-    expect(badges.length).toBe(3); // HELLENISTIC, HORARY, MEDICAL
+    const horaryCard = screen.getByText('Horary').closest('button')!;
+    expect(horaryCard.disabled).toBe(false);
+
+    fireEvent.click(horaryCard);
+    expect(onChange).toHaveBeenCalledWith(['VEDIC', 'HORARY']);
   });
 
-  it('should show "Default" badge on Vedic tradition', () => {
+  it('should allow selecting Medical tradition', () => {
     const onChange = vi.fn();
     render(<AstrologyTraditionSelector value={['VEDIC']} onChange={onChange} />);
 
-    expect(screen.getByText('Default')).toBeDefined();
+    const medicalCard = screen.getByText('Medical').closest('button')!;
+    expect(medicalCard.disabled).toBe(false);
+
+    fireEvent.click(medicalCard);
+    expect(onChange).toHaveBeenCalledWith(['VEDIC', 'MEDICAL']);
+  });
+
+  it('should have all 6 traditions enabled and selectable', () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <AstrologyTraditionSelector value={['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL']} onChange={onChange} />
+    );
+
+    const checkmarks = container.querySelectorAll('path[d*="M5 13l4 4L19 7"]');
+    expect(checkmarks.length).toBe(6);
   });
 });
 

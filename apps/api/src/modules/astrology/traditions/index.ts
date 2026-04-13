@@ -116,9 +116,8 @@ Make each section unique and specific to the animal sign. Avoid generic advice. 
   isAvailable: true,
 };
 
-// ─── Future Traditions (Coming Soon) ────────────────────────────────────────
+// ─── Hellenistic Astrology ──────────────────────────────────────────────────
 
-// Placeholder configs for UI display purposes (not yet functional)
 const hellenisticConfig: TraditionConfig = {
   id: 'HELLENISTIC',
   name: 'Hellenistic Astrology',
@@ -126,11 +125,24 @@ const hellenisticConfig: TraditionConfig = {
   zodiacType: 'tropical',
   signSystem: WESTERN_SIGNS,
   houseSystem: 'WholeSign',
-  systemPromptPrefix: '',
-  horoscopePrompt: () => '',
-  features: [],
-  isAvailable: false,
+  systemPromptPrefix: 'You are an expert Hellenistic astrologer with deep knowledge of ancient Greco-Roman astrological techniques including sect, planetary joys, whole sign houses, profections, zodiacal releasing, and time lord systems.',
+  horoscopePrompt: (sign, period, periodDesc) =>
+    `You are an expert Hellenistic astrologer with deep knowledge of ancient Greco-Roman astrological techniques including sect, planetary joys, whole sign houses, profections, zodiacal releasing, and time lord systems. Generate a ${period} horoscope prediction for the given zodiac sign. Return a JSON object with:
+- prediction: string (${period === 'daily' ? '3-4' : '5-7'} sentences, specific overview referencing sect considerations, planetary conditions, and whole sign house placements)
+- career: string (${period === 'daily' ? '2-3' : '3-5'} sentences about career and financial outlook, referencing the 10th sign from the ascendant, the lot of fortune, and benefic/malefic conditions)
+- health: string (${period === 'daily' ? '2-3' : '3-5'} sentences about health and wellness, referencing the 6th sign, planetary debilities, and traditional remedial measures)
+- love: string (${period === 'daily' ? '2-3' : '3-5'} sentences about love and relationships, referencing the 7th sign, Venus conditions, and the lot of eros)
+- luckyNumber: number (1-9, based on planetary numerology)
+- luckyColor: string (based on the sign's domicile lord)
+- mood: string (one word reflecting dominant planetary energy)
+- compatibility: string (most compatible sign based on current transits)
+
+Make each section unique and specific to the sign. Avoid generic advice. Reference Hellenistic concepts like sect (diurnal/nocturnal), planetary joys, essential dignities (domicile, exaltation, triplicity, bounds, decan), whole sign houses, and lots/parts.`,
+  features: ['natalChart', 'horoscope', 'profections'],
+  isAvailable: true,
 };
+
+// ─── Horary Astrology ──────────────────────────────────────────────────────
 
 const horaryConfig: TraditionConfig = {
   id: 'HORARY',
@@ -139,11 +151,24 @@ const horaryConfig: TraditionConfig = {
   zodiacType: 'tropical',
   signSystem: WESTERN_SIGNS,
   houseSystem: 'Regiomontanus',
-  systemPromptPrefix: '',
-  horoscopePrompt: () => '',
-  features: [],
-  isAvailable: false,
+  systemPromptPrefix: 'You are an expert Horary astrologer skilled in answering specific questions by interpreting the chart cast for the moment a question is asked, using planetary dignities, receptions, aspects, and traditional house significations.',
+  horoscopePrompt: (sign, period, periodDesc) =>
+    `You are an expert Horary astrologer skilled in interpreting charts cast for the moment a question is asked. Generate a ${period} horoscope prediction for the given zodiac sign using horary principles. Return a JSON object with:
+- prediction: string (${period === 'daily' ? '3-4' : '5-7'} sentences, specific overview referencing planetary dignities, essential and accidental dignities, and the querent's significators)
+- career: string (${period === 'daily' ? '2-3' : '3-5'} sentences about career and financial outlook, referencing the 10th house ruler, planetary receptions, and applying/separating aspects)
+- health: string (${period === 'daily' ? '2-3' : '3-5'} sentences about health and wellness, referencing the 6th house ruler, Moon's condition, and planetary debilities)
+- love: string (${period === 'daily' ? '2-3' : '3-5'} sentences about love and relationships, referencing the 7th house ruler, Venus and Moon conditions, and mutual reception)
+- luckyNumber: number (1-9, based on planetary hour numerology)
+- luckyColor: string (based on the planetary hour ruler)
+- mood: string (one word reflecting dominant planetary energy)
+- compatibility: string (most compatible sign based on current planetary receptions)
+
+Make each section unique and specific to the sign. Avoid generic advice. Reference Horary concepts like essential dignities (domicile, exaltation, detriment, fall), accidental dignities, planetary hours, reception, application and separation, and considerations before judgment.`,
+  features: ['horaryQuestion', 'horoscope'],
+  isAvailable: true,
 };
+
+// ─── Medical Astrology ─────────────────────────────────────────────────────
 
 const medicalConfig: TraditionConfig = {
   id: 'MEDICAL',
@@ -152,10 +177,21 @@ const medicalConfig: TraditionConfig = {
   zodiacType: 'tropical',
   signSystem: WESTERN_SIGNS,
   houseSystem: 'Placidus',
-  systemPromptPrefix: '',
-  horoscopePrompt: () => '',
-  features: [],
-  isAvailable: false,
+  systemPromptPrefix: 'You are an expert Medical astrologer with deep knowledge of zodiac-body correspondences, decumbiture charts, planetary rulerships over body systems, and the traditional links between celestial influences and health and wellness.',
+  horoscopePrompt: (sign, period, periodDesc) =>
+    `You are an expert Medical astrologer with deep knowledge of zodiac-body correspondences, decumbiture charts, and planetary rulerships over body systems. Generate a ${period} health-focused horoscope prediction for the given zodiac sign. Return a JSON object with:
+- prediction: string (${period === 'daily' ? '3-4' : '5-7'} sentences, specific overview referencing the sign's anatomical rulership, planetary transits affecting health houses (6th, 8th, 12th), and overall vitality indicators)
+- career: string (${period === 'daily' ? '2-3' : '3-5'} sentences about career energy and productivity, referencing how physical vitality and planetary influences affect professional stamina and mental clarity)
+- health: string (${period === 'daily' ? '2-3' : '3-5'} sentences, the primary focus — detailed health guidance referencing the sign's body zone, vulnerable organs, beneficial herbs/foods, exercise recommendations, and planetary influences on the humoral balance)
+- love: string (${period === 'daily' ? '2-3' : '3-5'} sentences about emotional wellness and relationships, referencing Venus and Moon conditions and their impact on emotional health and hormonal balance)
+- luckyNumber: number (1-9, based on healing numerology)
+- luckyColor: string (based on the sign's therapeutic color association)
+- mood: string (one word reflecting dominant health/energy state)
+- compatibility: string (most health-compatible sign based on elemental balance)
+
+Make each section unique and specific to the sign. Avoid generic advice. Reference Medical astrology concepts like zodiac-body rulerships (Aries=head, Taurus=throat, etc.), the four humors (sanguine, choleric, melancholic, phlegmatic), critical degrees, and planetary influences on specific organ systems.`,
+  features: ['healthAnalysis', 'horoscope'],
+  isAvailable: true,
 };
 
 // ─── Registry ───────────────────────────────────────────────────────────────
