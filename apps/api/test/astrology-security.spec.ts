@@ -104,18 +104,54 @@ describe('Security — Tradition Input Validation', () => {
   });
 
   describe('VALID_TRADITIONS set', () => {
-    it('should only accept VEDIC, WESTERN, CHINESE for user profiles', () => {
+    it('should accept all six valid traditions for user profiles', () => {
       // Simulates the validation logic in user.service.ts
-      const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE']);
+      const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL']);
 
       expect(VALID_TRADITIONS.has('VEDIC')).toBe(true);
       expect(VALID_TRADITIONS.has('WESTERN')).toBe(true);
       expect(VALID_TRADITIONS.has('CHINESE')).toBe(true);
-      expect(VALID_TRADITIONS.has('HELLENISTIC')).toBe(false);
-      expect(VALID_TRADITIONS.has('HORARY')).toBe(false);
-      expect(VALID_TRADITIONS.has('MEDICAL')).toBe(false);
+      expect(VALID_TRADITIONS.has('HELLENISTIC')).toBe(true);
+      expect(VALID_TRADITIONS.has('HORARY')).toBe(true);
+      expect(VALID_TRADITIONS.has('MEDICAL')).toBe(true);
+      expect(VALID_TRADITIONS.has('MAYAN')).toBe(false);
       expect(VALID_TRADITIONS.has('__proto__')).toBe(false);
       expect(VALID_TRADITIONS.has('constructor')).toBe(false);
+    });
+  });
+
+  describe('New tradition prompt injection resistance', () => {
+    it('Hellenistic prompt should resist malicious sign input', () => {
+      const maliciousSign = '{{system.exec("rm -rf /")}}';
+      const prompt = TRADITION_CONFIGS.HELLENISTIC.horoscopePrompt(maliciousSign, 'daily', "today's");
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(100);
+      expect(prompt).toContain('Hellenistic');
+    });
+
+    it('Horary prompt should resist malicious sign input', () => {
+      const maliciousSign = '<script>alert("xss")</script>';
+      const prompt = TRADITION_CONFIGS.HORARY.horoscopePrompt(maliciousSign, 'daily', "today's");
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(100);
+      expect(prompt).toContain('Horary');
+    });
+
+    it('Medical prompt should resist malicious sign input', () => {
+      const maliciousSign = "'; DELETE FROM users; --";
+      const prompt = TRADITION_CONFIGS.MEDICAL.horoscopePrompt(maliciousSign, 'daily', "today's");
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(100);
+      expect(prompt).toContain('Medical');
+    });
+
+    it('all six tradition prompts should be deterministic', () => {
+      const traditions = ['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL'] as const;
+      for (const id of traditions) {
+        const prompt1 = TRADITION_CONFIGS[id].horoscopePrompt('Aries', 'daily', "today's");
+        const prompt2 = TRADITION_CONFIGS[id].horoscopePrompt('Aries', 'daily', "today's");
+        expect(prompt1).toBe(prompt2);
+      }
     });
   });
 });

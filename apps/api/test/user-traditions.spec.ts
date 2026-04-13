@@ -174,7 +174,7 @@ describe('UserService — Astrology Traditions', () => {
       expect(updateCall.data.astrologyTraditions).toBeUndefined();
     });
 
-    it('should accept all three valid traditions', async () => {
+    it('should accept all three original traditions', async () => {
       prisma.user.update.mockResolvedValue({
         ...mockDbUser,
         astrologyTraditions: ['VEDIC', 'WESTERN', 'CHINESE'],
@@ -188,6 +188,102 @@ describe('UserService — Astrology Traditions', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             astrologyTraditions: ['VEDIC', 'WESTERN', 'CHINESE'],
+          }),
+        }),
+      );
+    });
+
+    it('should accept all six valid traditions', async () => {
+      const allSix = ['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL'];
+      prisma.user.update.mockResolvedValue({
+        ...mockDbUser,
+        astrologyTraditions: allSix,
+      });
+
+      await service.updateProfile('test-uuid', {
+        astrologyTraditions: allSix,
+      });
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            astrologyTraditions: allSix,
+          }),
+        }),
+      );
+    });
+
+    it('should accept HELLENISTIC tradition', async () => {
+      prisma.user.update.mockResolvedValue({
+        ...mockDbUser,
+        astrologyTraditions: ['HELLENISTIC'],
+      });
+
+      await service.updateProfile('test-uuid', {
+        astrologyTraditions: ['HELLENISTIC'],
+      });
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            astrologyTraditions: ['HELLENISTIC'],
+          }),
+        }),
+      );
+    });
+
+    it('should accept HORARY tradition', async () => {
+      prisma.user.update.mockResolvedValue({
+        ...mockDbUser,
+        astrologyTraditions: ['HORARY'],
+      });
+
+      await service.updateProfile('test-uuid', {
+        astrologyTraditions: ['HORARY'],
+      });
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            astrologyTraditions: ['HORARY'],
+          }),
+        }),
+      );
+    });
+
+    it('should accept MEDICAL tradition', async () => {
+      prisma.user.update.mockResolvedValue({
+        ...mockDbUser,
+        astrologyTraditions: ['MEDICAL'],
+      });
+
+      await service.updateProfile('test-uuid', {
+        astrologyTraditions: ['MEDICAL'],
+      });
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            astrologyTraditions: ['MEDICAL'],
+          }),
+        }),
+      );
+    });
+
+    it('should filter out invalid traditions but keep new valid ones', async () => {
+      prisma.user.update.mockResolvedValue({
+        ...mockDbUser,
+        astrologyTraditions: ['HELLENISTIC', 'MEDICAL'],
+      });
+
+      await service.updateProfile('test-uuid', {
+        astrologyTraditions: ['HELLENISTIC', 'MAYAN', 'MEDICAL'],
+      });
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            astrologyTraditions: ['HELLENISTIC', 'MEDICAL'],
           }),
         }),
       );
