@@ -47,7 +47,7 @@ export function isProfileComplete(user: {
   return false;
 }
 
-const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE']);
+const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL']);
 
 export interface UpdateProfileDto {
   name?: string;

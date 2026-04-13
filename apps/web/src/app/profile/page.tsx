@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const [pob, setPob] = useState("");
   const [gender, setGender] = useState("");
   const [profession, setProfession] = useState("");
-  const [selectedTraditions, setSelectedTraditions] = useState<string[]>(["VEDIC"]);
+  const [selectedTraditions, setSelectedTraditions] = useState<string[]>(["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"]);
 
   // Security form
   const [hasPassword, setHasPassword] = useState(true);
@@ -96,7 +96,7 @@ export default function ProfilePage() {
       setPob(typeof profileData.placeOfBirth === "object" ? profileData.placeOfBirth?.name || "" : profileData.placeOfBirth || "");
       setGender(profileData.gender || "");
       setProfession(profileData.profession || "");
-      setSelectedTraditions((profileData as any).astrologyTraditions?.length ? (profileData as any).astrologyTraditions : ["VEDIC"]);
+      setSelectedTraditions((profileData as any).astrologyTraditions?.length ? (profileData as any).astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"]);
       updateCredits(profileData.credits);
       updateBirthDetails({
         name: profileData.name,

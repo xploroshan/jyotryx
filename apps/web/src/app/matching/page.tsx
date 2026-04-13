@@ -13,17 +13,20 @@ interface PersonForm {
 
 const emptyPerson: PersonForm = { name: "", dob: "", time: "", place: "" };
 
-const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese" };
+const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese", HELLENISTIC: "Hellenistic", HORARY: "Horary", MEDICAL: "Medical" };
 const TRADITION_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   VEDIC: { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
   WESTERN: { text: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/30" },
   CHINESE: { text: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
+  HELLENISTIC: { text: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/30" },
+  HORARY: { text: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/30" },
+  MEDICAL: { text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
 };
 
 export default function MatchingPage() {
   const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC"];
+  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
   const isMultiTradition = userTraditions.length > 1;
   const [activeTradition, setActiveTradition] = useState(userTraditions[0] || "VEDIC");
 

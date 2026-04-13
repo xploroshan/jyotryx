@@ -84,14 +84,17 @@ const TRADITION_BADGE_COLORS: Record<string, string> = {
   VEDIC: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   WESTERN: "bg-sky-500/10 text-sky-400 border-sky-500/20",
   CHINESE: "bg-red-500/10 text-red-400 border-red-500/20",
+  HELLENISTIC: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  HORARY: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+  MEDICAL: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
 };
-const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese" };
+const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese", HELLENISTIC: "Hellenistic", HORARY: "Horary", MEDICAL: "Medical" };
 
 export default function MyDayPage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
   const { isAuthenticated, accessToken, user } = useAuthStore();
-  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC"];
+  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
   const isMultiTradition = userTraditions.length > 1;
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [loading, setLoading] = useState(true);

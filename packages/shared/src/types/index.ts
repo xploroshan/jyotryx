@@ -95,7 +95,9 @@ export enum AstrologyTradition {
   VEDIC = "VEDIC",
   WESTERN = "WESTERN",
   CHINESE = "CHINESE",
-  // Future: HELLENISTIC, HORARY, MEDICAL
+  HELLENISTIC = "HELLENISTIC",
+  HORARY = "HORARY",
+  MEDICAL = "MEDICAL",
 }
 
 // ─── Common Types ───────────────────────────────────────────────────────────
