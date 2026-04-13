@@ -39,22 +39,24 @@ describe('Tradition Config Registry', () => {
     expect(TRADITION_CONFIGS.MEDICAL).toBeDefined();
   });
 
-  it('should mark only VEDIC, WESTERN, CHINESE as available', () => {
+  it('should mark all six traditions as available', () => {
     expect(TRADITION_CONFIGS.VEDIC.isAvailable).toBe(true);
     expect(TRADITION_CONFIGS.WESTERN.isAvailable).toBe(true);
     expect(TRADITION_CONFIGS.CHINESE.isAvailable).toBe(true);
-    expect(TRADITION_CONFIGS.HELLENISTIC.isAvailable).toBe(false);
-    expect(TRADITION_CONFIGS.HORARY.isAvailable).toBe(false);
-    expect(TRADITION_CONFIGS.MEDICAL.isAvailable).toBe(false);
+    expect(TRADITION_CONFIGS.HELLENISTIC.isAvailable).toBe(true);
+    expect(TRADITION_CONFIGS.HORARY.isAvailable).toBe(true);
+    expect(TRADITION_CONFIGS.MEDICAL.isAvailable).toBe(true);
   });
 
-  it('AVAILABLE_TRADITIONS should only include available configs', () => {
-    expect(AVAILABLE_TRADITIONS).toHaveLength(3);
+  it('AVAILABLE_TRADITIONS should include all six configs', () => {
+    expect(AVAILABLE_TRADITIONS).toHaveLength(6);
     const ids = AVAILABLE_TRADITIONS.map(t => t.id);
     expect(ids).toContain('VEDIC');
     expect(ids).toContain('WESTERN');
     expect(ids).toContain('CHINESE');
-    expect(ids).not.toContain('HELLENISTIC');
+    expect(ids).toContain('HELLENISTIC');
+    expect(ids).toContain('HORARY');
+    expect(ids).toContain('MEDICAL');
   });
 
   it('getTraditionConfig should return config by ID', () => {
@@ -174,17 +176,81 @@ describe('Tradition Config Registry', () => {
     });
   });
 
-  describe('Future tradition configs', () => {
-    it('should have empty horoscope prompts', () => {
-      expect(TRADITION_CONFIGS.HELLENISTIC.horoscopePrompt('Aries', 'daily', '')).toBe('');
-      expect(TRADITION_CONFIGS.HORARY.horoscopePrompt('Aries', 'daily', '')).toBe('');
-      expect(TRADITION_CONFIGS.MEDICAL.horoscopePrompt('Aries', 'daily', '')).toBe('');
+  describe('HELLENISTIC config', () => {
+    let config: TraditionConfig;
+    beforeAll(() => { config = TRADITION_CONFIGS.HELLENISTIC; });
+
+    it('should use tropical zodiac', () => {
+      expect(config.zodiacType).toBe('tropical');
     });
 
-    it('should have empty features arrays', () => {
-      expect(TRADITION_CONFIGS.HELLENISTIC.features).toHaveLength(0);
-      expect(TRADITION_CONFIGS.HORARY.features).toHaveLength(0);
-      expect(TRADITION_CONFIGS.MEDICAL.features).toHaveLength(0);
+    it('should use WholeSign house system', () => {
+      expect(config.houseSystem).toBe('WholeSign');
+    });
+
+    it('should include Hellenistic-specific features', () => {
+      expect(config.features).toContain('natalChart');
+      expect(config.features).toContain('horoscope');
+      expect(config.features).toContain('profections');
+    });
+
+    it('should generate a prompt referencing Hellenistic concepts', () => {
+      const prompt = config.horoscopePrompt('Aries', 'daily', "today's");
+      expect(prompt).toBeTruthy();
+      expect(prompt).toContain('Hellenistic');
+      expect(prompt).toContain('sect');
+      expect(prompt).toContain('whole sign');
+    });
+  });
+
+  describe('HORARY config', () => {
+    let config: TraditionConfig;
+    beforeAll(() => { config = TRADITION_CONFIGS.HORARY; });
+
+    it('should use tropical zodiac', () => {
+      expect(config.zodiacType).toBe('tropical');
+    });
+
+    it('should use Regiomontanus house system', () => {
+      expect(config.houseSystem).toBe('Regiomontanus');
+    });
+
+    it('should include Horary-specific features', () => {
+      expect(config.features).toContain('horaryQuestion');
+      expect(config.features).toContain('horoscope');
+    });
+
+    it('should generate a prompt referencing Horary concepts', () => {
+      const prompt = config.horoscopePrompt('Aries', 'daily', "today's");
+      expect(prompt).toBeTruthy();
+      expect(prompt).toContain('Horary');
+      expect(prompt).toContain('dignities');
+    });
+  });
+
+  describe('MEDICAL config', () => {
+    let config: TraditionConfig;
+    beforeAll(() => { config = TRADITION_CONFIGS.MEDICAL; });
+
+    it('should use tropical zodiac', () => {
+      expect(config.zodiacType).toBe('tropical');
+    });
+
+    it('should use Placidus house system', () => {
+      expect(config.houseSystem).toBe('Placidus');
+    });
+
+    it('should include Medical-specific features', () => {
+      expect(config.features).toContain('healthAnalysis');
+      expect(config.features).toContain('horoscope');
+    });
+
+    it('should generate a prompt referencing Medical astrology concepts', () => {
+      const prompt = config.horoscopePrompt('Aries', 'daily', "today's");
+      expect(prompt).toBeTruthy();
+      expect(prompt).toContain('Medical');
+      expect(prompt).toContain('zodiac-body');
+      expect(prompt).toContain('humors');
     });
   });
 });
@@ -291,6 +357,39 @@ describe('AstrologyService — Tradition Features', () => {
       );
     });
 
+    it('should accept HELLENISTIC tradition', async () => {
+      openaiService.chat.mockResolvedValue(null);
+      const result = await service.getHoroscope('aries', 'daily', undefined, 'HELLENISTIC');
+      expect(result.sign).toBe('Aries');
+      expect(cacheService.set).toHaveBeenCalledWith(
+        expect.stringContaining('HELLENISTIC'),
+        expect.any(Object),
+        expect.any(Number),
+      );
+    });
+
+    it('should accept HORARY tradition', async () => {
+      openaiService.chat.mockResolvedValue(null);
+      const result = await service.getHoroscope('aries', 'daily', undefined, 'HORARY');
+      expect(result.sign).toBe('Aries');
+      expect(cacheService.set).toHaveBeenCalledWith(
+        expect.stringContaining('HORARY'),
+        expect.any(Object),
+        expect.any(Number),
+      );
+    });
+
+    it('should accept MEDICAL tradition', async () => {
+      openaiService.chat.mockResolvedValue(null);
+      const result = await service.getHoroscope('aries', 'daily', undefined, 'MEDICAL');
+      expect(result.sign).toBe('Aries');
+      expect(cacheService.set).toHaveBeenCalledWith(
+        expect.stringContaining('MEDICAL'),
+        expect.any(Object),
+        expect.any(Number),
+      );
+    });
+
     it('should include tradition in cache key for isolation', async () => {
       openaiService.chat.mockResolvedValue(null);
       await service.getHoroscope('aries', 'daily', undefined, 'VEDIC');
@@ -375,16 +474,35 @@ describe('AstrologyService — Tradition Features', () => {
 
       expect(Object.keys(result.traditions)).toHaveLength(3);
     });
+
+    it('should handle all six traditions', async () => {
+      openaiService.chat.mockResolvedValue(null);
+
+      const result = await service.getMultiTraditionHoroscope(
+        'aries', 'daily', ['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL'],
+      );
+
+      expect(Object.keys(result.traditions)).toHaveLength(6);
+      expect(result.traditions['HELLENISTIC']).toBeDefined();
+      expect(result.traditions['HORARY']).toBeDefined();
+      expect(result.traditions['MEDICAL']).toBeDefined();
+    });
   });
 
   // ─── getAvailableTraditions ───────────────────────────────────────────────
 
   describe('getAvailableTraditions', () => {
-    it('should return list of available traditions', () => {
+    it('should return list of all six available traditions', () => {
       const traditions = service.getAvailableTraditions();
 
-      expect(traditions).toHaveLength(3);
-      expect(traditions.map(t => t.id)).toEqual(['VEDIC', 'WESTERN', 'CHINESE']);
+      expect(traditions).toHaveLength(6);
+      const ids = traditions.map(t => t.id);
+      expect(ids).toContain('VEDIC');
+      expect(ids).toContain('WESTERN');
+      expect(ids).toContain('CHINESE');
+      expect(ids).toContain('HELLENISTIC');
+      expect(ids).toContain('HORARY');
+      expect(ids).toContain('MEDICAL');
     });
 
     it('should include required fields in each tradition', () => {

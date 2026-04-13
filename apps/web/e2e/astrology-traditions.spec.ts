@@ -25,6 +25,9 @@ const mockTraditions = [
   { id: 'VEDIC', name: 'Vedic / Jyotish', description: 'Sidereal zodiac', zodiacType: 'sidereal', signSystem: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'], features: ['kundli','matching','horoscope'], isAvailable: true },
   { id: 'WESTERN', name: 'Western Astrology', description: 'Tropical zodiac', zodiacType: 'tropical', signSystem: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'], features: ['natalChart','horoscope','synastry'], isAvailable: true },
   { id: 'CHINESE', name: 'Chinese Astrology', description: '12 animal signs', zodiacType: 'lunar', signSystem: ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'], features: ['yearlyForecast','horoscope','compatibility'], isAvailable: true },
+  { id: 'HELLENISTIC', name: 'Hellenistic Astrology', description: 'Ancient Greco-Roman tradition', zodiacType: 'tropical', signSystem: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'], features: ['natalChart','horoscope','profections'], isAvailable: true },
+  { id: 'HORARY', name: 'Horary Astrology', description: 'Answer specific questions', zodiacType: 'tropical', signSystem: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'], features: ['horaryQuestion','horoscope'], isAvailable: true },
+  { id: 'MEDICAL', name: 'Medical Astrology', description: 'Health-focused astrology', zodiacType: 'tropical', signSystem: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'], features: ['healthAnalysis','horoscope'], isAvailable: true },
 ];
 
 test.describe('Horoscope Page — Tradition Features', () => {
@@ -115,9 +118,12 @@ test.describe('Traditions API Endpoint', () => {
     }).catch(() => mockTraditions);
 
     // Verify the mock structure
-    expect(mockTraditions).toHaveLength(3);
+    expect(mockTraditions).toHaveLength(6);
     expect(mockTraditions[0].id).toBe('VEDIC');
     expect(mockTraditions[1].id).toBe('WESTERN');
     expect(mockTraditions[2].id).toBe('CHINESE');
+    expect(mockTraditions[3].id).toBe('HELLENISTIC');
+    expect(mockTraditions[4].id).toBe('HORARY');
+    expect(mockTraditions[5].id).toBe('MEDICAL');
   });
 });

@@ -28,9 +28,12 @@ describe('Performance — Tradition Config Operations', () => {
       getTraditionConfig('VEDIC');
       getTraditionConfig('WESTERN');
       getTraditionConfig('CHINESE');
+      getTraditionConfig('HELLENISTIC');
+      getTraditionConfig('HORARY');
+      getTraditionConfig('MEDICAL');
     }
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(100); // 3000 lookups in <100ms
+    expect(elapsed).toBeLessThan(100); // 6000 lookups in <100ms
   });
 
   it('AVAILABLE_TRADITIONS filter should be pre-computed (not recomputed)', () => {
@@ -49,9 +52,12 @@ describe('Performance — Tradition Config Operations', () => {
       TRADITION_CONFIGS.VEDIC.horoscopePrompt('Aries', 'daily', "today's");
       TRADITION_CONFIGS.WESTERN.horoscopePrompt('Aries', 'weekly', "this week's");
       TRADITION_CONFIGS.CHINESE.horoscopePrompt('Dragon', 'yearly', "this year's");
+      TRADITION_CONFIGS.HELLENISTIC.horoscopePrompt('Aries', 'daily', "today's");
+      TRADITION_CONFIGS.HORARY.horoscopePrompt('Aries', 'weekly', "this week's");
+      TRADITION_CONFIGS.MEDICAL.horoscopePrompt('Aries', 'monthly', "this month's");
     }
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(200); // 3000 prompt generations in <200ms
+    expect(elapsed).toBeLessThan(300); // 6000 prompt generations in <300ms
   });
 });
 
@@ -108,7 +114,7 @@ describe('Performance — Horoscope Cache Key Generation', () => {
   it('cache key generation should be fast for varied inputs', () => {
     const signs = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
     const periods = ['daily', 'weekly', 'monthly', 'yearly'];
-    const traditions = ['VEDIC', 'WESTERN', 'CHINESE'];
+    const traditions = ['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL'];
     const today = new Date().toISOString().split('T')[0];
 
     const start = performance.now();
