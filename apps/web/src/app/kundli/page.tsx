@@ -73,7 +73,6 @@ export default function KundliPage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", dob: "", time: "", place: "" });
   const [prefilled, setPrefilled] = useState(false);
-  const user = useAuthStore((s) => s.user);
 
   // Prepopulate from user profile when available
   useEffect(() => {

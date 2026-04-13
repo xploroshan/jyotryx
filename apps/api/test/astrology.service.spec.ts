@@ -232,7 +232,7 @@ describe('AstrologyService', () => {
       await service.getHoroscope('aries', 'daily');
 
       expect(cacheService.set).toHaveBeenCalledWith(
-        expect.stringContaining('horoscope:aries:daily:'),
+        expect.stringContaining('horoscope:VEDIC:aries:daily:'),
         expect.objectContaining({ sign: 'Aries', period: 'daily' }),
         24 * 60 * 60 * 1000,
       );

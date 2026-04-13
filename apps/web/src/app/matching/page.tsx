@@ -52,7 +52,6 @@ export default function MatchingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [personAPrefilled, setPersonAPrefilled] = useState(false);
-  const user = useAuthStore((s) => s.user);
 
   // Prepopulate Person A from the logged-in user's profile (Person B is always the partner).
   useEffect(() => {
