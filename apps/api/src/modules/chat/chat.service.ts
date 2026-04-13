@@ -435,16 +435,35 @@ export class ChatService {
       }
     }
 
-    const basePrompt = `You are Jyotron, an expert AI Vedic astrologer. You provide insightful, compassionate guidance based on Vedic astrology principles. Always be respectful and positive. Include specific planetary references and Vedic terminology where appropriate. Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
+    // Build tradition-aware persona based on user's selected astrology traditions
+    const traditions: string[] = userProfile?.astrologyTraditions ?? ['VEDIC'];
+    let traditionDescriptor: string;
+    if (traditions.length === 1) {
+      const t = traditions[0];
+      traditionDescriptor = t === 'VEDIC' ? 'Vedic astrology'
+        : t === 'WESTERN' ? 'Western (tropical) astrology'
+        : t === 'CHINESE' ? 'Chinese astrology' : 'Vedic astrology';
+    } else {
+      const labels = traditions.map(t =>
+        t === 'VEDIC' ? 'Vedic' : t === 'WESTERN' ? 'Western' : t === 'CHINESE' ? 'Chinese' : t,
+      );
+      traditionDescriptor = `${labels.join(', ')} astrology traditions`;
+    }
+
+    const multiTraditionNote = traditions.length > 1
+      ? ` When the user's question is relevant, provide insights from each tradition you are versed in, and note where they align or differ.`
+      : '';
+
+    const basePrompt = `You are Jyotron, an expert AI astrologer versed in ${traditionDescriptor}. You provide insightful, compassionate guidance based on ${traditionDescriptor} principles.${multiTraditionNote} Always be respectful and positive. Include specific references and terminology appropriate to the tradition(s). Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
 
     const categoryPrompts: Record<string, string> = {
-      career: `${basePrompt}\n\nFocus on career guidance, professional growth, Dashamsha chart analysis, and work-related planetary transits. Reference the user's birth chart specifics if available.`,
-      relationship: `${basePrompt}\n\nFocus on relationship compatibility, Navamsa chart, Venus placements, 7th house analysis, and love predictions. Personalize based on the user's chart if birth details are available.`,
-      kundli: `${basePrompt}\n\nFocus on birth chart interpretation, planetary positions, house analysis, Dasha periods, and Yogas. Use the user's actual birth details for accurate chart reading.`,
-      remedy: `${basePrompt}\n\nFocus on astrological remedies: gemstones, mantras, pujas, fasting, and charitable acts. Be specific with instructions. Tailor remedies to the user's chart if birth details are available.`,
-      wealth: `${basePrompt}\n\nFocus on financial astrology: 2nd and 11th house analysis, Dhana Yogas, wealth-producing planetary combinations, investment timing, and financial planning based on transits.`,
-      health: `${basePrompt}\n\nFocus on medical astrology: 6th and 8th house analysis, planetary influences on health, Ayurvedic constitution, favorable periods for health improvements. Always include a disclaimer that this is not a substitute for medical advice.`,
-      numerology: `${basePrompt}\n\nFocus on Vedic and Chaldean numerology: Life Path numbers, Name Numbers, Personal Year cycles, lucky numbers, and practical numerological guidance. Use the user's date of birth for accurate calculations.`,
+      career: `${basePrompt}\n\nFocus on career guidance, professional growth, and work-related planetary transits. Reference the user's birth chart specifics if available.`,
+      relationship: `${basePrompt}\n\nFocus on relationship compatibility, love predictions, and partnership analysis. Personalize based on the user's chart if birth details are available.`,
+      kundli: `${basePrompt}\n\nFocus on birth chart interpretation, planetary positions, house analysis, and key patterns. Use the user's actual birth details for accurate chart reading.`,
+      remedy: `${basePrompt}\n\nFocus on astrological remedies appropriate to the tradition(s): gemstones, mantras, elemental balancing, feng shui, or other tradition-specific practices. Be specific with instructions.`,
+      wealth: `${basePrompt}\n\nFocus on financial astrology: wealth indicators, prosperity patterns, investment timing, and financial planning based on current transits.`,
+      health: `${basePrompt}\n\nFocus on health-related astrology: body-sign associations, planetary health influences, and wellness guidance. Always include a disclaimer that this is not a substitute for medical advice.`,
+      numerology: `${basePrompt}\n\nFocus on numerology: Life Path numbers, Name Numbers, Personal Year cycles, lucky numbers, and practical guidance. Use the user's date of birth for accurate calculations.`,
       general: basePrompt,
     };
 

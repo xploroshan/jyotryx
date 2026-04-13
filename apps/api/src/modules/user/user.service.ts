@@ -13,6 +13,7 @@ export interface UserProfile {
   profession?: string | null;
   profilePhoto?: string | null;
   preferredLanguage: string;
+  astrologyTraditions: string[];
   credits: number;
   role: string;
   createdAt: string;
@@ -46,6 +47,8 @@ export function isProfileComplete(user: {
   return false;
 }
 
+const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE']);
+
 export interface UpdateProfileDto {
   name?: string;
   phone?: string;
@@ -56,6 +59,7 @@ export interface UpdateProfileDto {
   profession?: string;
   profilePhoto?: string;
   preferredLanguage?: string;
+  astrologyTraditions?: string[];
 }
 
 export interface UserCredits {
@@ -88,6 +92,7 @@ export class UserService {
       profession: user.profession,
       profilePhoto: user.profilePhoto,
       preferredLanguage: user.preferredLanguage,
+      astrologyTraditions: (user as any).astrologyTraditions ?? ['VEDIC'],
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),
@@ -99,6 +104,17 @@ export class UserService {
     if (dto.preferredLanguage && !SUPPORTED_LANGUAGES.has(dto.preferredLanguage)) {
       throw new NotFoundException(`Unsupported language: ${dto.preferredLanguage}`);
     }
+
+    // Validate astrology traditions if provided
+    let traditionsUpdate: Record<string, any> = {};
+    if (dto.astrologyTraditions) {
+      const filtered = dto.astrologyTraditions.filter(t => VALID_TRADITIONS.has(t));
+      if (filtered.length === 0) {
+        throw new NotFoundException('At least one valid astrology tradition must be selected');
+      }
+      traditionsUpdate = { astrologyTraditions: filtered };
+    }
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -111,6 +127,7 @@ export class UserService {
         ...(dto.profession && { profession: dto.profession as any }),
         ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
         ...(dto.preferredLanguage && { preferredLanguage: dto.preferredLanguage }),
+        ...traditionsUpdate,
       },
     });
 
@@ -126,6 +143,7 @@ export class UserService {
       profession: user.profession,
       profilePhoto: user.profilePhoto,
       preferredLanguage: user.preferredLanguage,
+      astrologyTraditions: (user as any).astrologyTraditions ?? ['VEDIC'],
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),

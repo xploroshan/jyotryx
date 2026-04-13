@@ -80,10 +80,19 @@ const LOCALE_MAP: Record<string, string> = {
   or: 'or-IN', as: 'as-IN',
 };
 
+const TRADITION_BADGE_COLORS: Record<string, string> = {
+  VEDIC: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  WESTERN: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+  CHINESE: "bg-red-500/10 text-red-400 border-red-500/20",
+};
+const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese" };
+
 export default function MyDayPage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const { isAuthenticated, accessToken } = useAuthStore();
+  const { isAuthenticated, accessToken, user } = useAuthStore();
+  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC"];
+  const isMultiTradition = userTraditions.length > 1;
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -222,6 +231,15 @@ export default function MyDayPage() {
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
                 {translateGreeting(briefing.greeting, t)}
               </h1>
+              {isMultiTradition && (
+                <div className="flex gap-2 mt-3">
+                  {userTraditions.map((trad) => (
+                    <span key={trad} className={`text-[10px] font-medium px-2.5 py-1 rounded-full border ${TRADITION_BADGE_COLORS[trad] || TRADITION_BADGE_COLORS.VEDIC}`}>
+                      {TRADITION_LABELS[trad] || trad}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${qs.bg} ring-1 ${qs.ring} self-start sm:self-auto`}>

@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
 
 interface UserProfile {
   id: string;
@@ -36,7 +37,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails } = useAuthStore();
+  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions } = useAuthStore();
   const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
@@ -46,6 +47,9 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState<"profile" | "credits" | "security">("profile");
 
+  // Onboarding step: 1 = birth details, 2 = astrology traditions
+  const [onboardingStep, setOnboardingStep] = useState(1);
+
   // Profile form
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,6 +58,7 @@ export default function ProfilePage() {
   const [pob, setPob] = useState("");
   const [gender, setGender] = useState("");
   const [profession, setProfession] = useState("");
+  const [selectedTraditions, setSelectedTraditions] = useState<string[]>(["VEDIC"]);
 
   // Security form
   const [hasPassword, setHasPassword] = useState(true);
@@ -91,6 +96,7 @@ export default function ProfilePage() {
       setPob(typeof profileData.placeOfBirth === "object" ? profileData.placeOfBirth?.name || "" : profileData.placeOfBirth || "");
       setGender(profileData.gender || "");
       setProfession(profileData.profession || "");
+      setSelectedTraditions((profileData as any).astrologyTraditions?.length ? (profileData as any).astrologyTraditions : ["VEDIC"]);
       updateCredits(profileData.credits);
       updateBirthDetails({
         name: profileData.name,
@@ -104,6 +110,21 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // During onboarding step 1, validate birth details and proceed to step 2
+  const handleNextStep = () => {
+    setError("");
+    const missing: string[] = [];
+    if (!dob) missing.push(t.profile.missingDob);
+    if (!tob) missing.push(t.profile.missingTob);
+    if (!pob.trim()) missing.push(t.profile.missingPob);
+    if (!gender) missing.push(t.profile.missingGender);
+    if (missing.length) {
+      setError(`${t.profile.pleaseFillIn} ${missing.join(", ")}`);
+      return;
+    }
+    setOnboardingStep(2);
   };
 
   const handleSave = async () => {
@@ -137,6 +158,7 @@ export default function ProfilePage() {
           placeOfBirth: pob || undefined,
           gender: gender || undefined,
           profession: profession || undefined,
+          astrologyTraditions: selectedTraditions,
         },
         { token: accessToken! }
       );
@@ -150,6 +172,7 @@ export default function ProfilePage() {
         placeOfBirth: typeof updated.placeOfBirth === "object" ? updated.placeOfBirth?.name || null : updated.placeOfBirth || null,
         gender: updated.gender || null,
       });
+      updateAstrologyTraditions(selectedTraditions);
 
       // First-time completion → unlock the rest of the app.
       if (wasIncomplete && updated.profileComplete) {
@@ -361,8 +384,8 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Birth Details Tab */}
-            {activeTab === "profile" && (
+            {/* Birth Details Tab (hidden during onboarding step 2) */}
+            {activeTab === "profile" && !(completeMode && !profile?.profileComplete && onboardingStep === 2) && (
               <div className="surface-card p-6">
                 <h3 className="text-lg font-bold text-white mb-6">{t.profile.birthDetails}</h3>
                 <div className="space-y-4">
@@ -430,15 +453,80 @@ export default function ProfilePage() {
                       </select>
                     </div>
                   </div>
-                  <button onClick={handleSave} disabled={saving}
-                    className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
-                    {saving
-                      ? t.profile.saving
-                      : profile && !profile.profileComplete
-                        ? t.profile.completeAndContinue
-                        : t.profile.saveChanges}
-                  </button>
+                  {/* In onboarding mode step 1: show Next button, in step 2 or normal mode: show Save */}
+                  {completeMode && !profile?.profileComplete && onboardingStep === 1 ? (
+                    <button onClick={handleNextStep}
+                      className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all">
+                      {t.traditions.next || "Next"}
+                    </button>
+                  ) : (
+                    <button onClick={handleSave} disabled={saving}
+                      className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50">
+                      {saving
+                        ? t.profile.saving
+                        : profile && !profile.profileComplete
+                          ? t.profile.completeAndContinue
+                          : t.profile.saveChanges}
+                    </button>
+                  )}
                 </div>
+
+                {/* Astrology Traditions section - shown inline for normal profile editing */}
+                {(profile?.profileComplete || !completeMode) && (
+                  <div className="mt-8 pt-8 border-t border-white/[0.06]">
+                    <h3 className="text-lg font-bold text-white mb-2">{t.traditions.title}</h3>
+                    <p className="text-sm text-white/40 mb-5">{t.traditions.description}</p>
+                    <AstrologyTraditionSelector
+                      value={selectedTraditions}
+                      onChange={setSelectedTraditions}
+                      compact
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Onboarding Step 2: Astrology Tradition Selection */}
+            {activeTab === "profile" && completeMode && !profile?.profileComplete && onboardingStep === 2 && (
+              <div className="surface-card p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <button onClick={() => setOnboardingStep(1)} className="text-white/40 hover:text-white transition-colors">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{t.traditions.title}</h3>
+                    <p className="text-sm text-white/40">{t.traditions.description}</p>
+                  </div>
+                </div>
+
+                {/* Step indicator */}
+                <div className="flex items-center gap-2 mb-6 mt-4">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-primary-500/20 border border-primary-500/50 flex items-center justify-center">
+                      <svg className="w-3.5 h-3.5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-xs text-primary-400">{t.traditions.stepBirthDetails || "Birth Details"}</span>
+                  </div>
+                  <div className="w-8 h-px bg-white/10" />
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center text-xs font-bold text-white">2</div>
+                    <span className="text-xs text-white">{t.traditions.stepTraditions || "Traditions"}</span>
+                  </div>
+                </div>
+
+                <AstrologyTraditionSelector
+                  value={selectedTraditions}
+                  onChange={setSelectedTraditions}
+                />
+
+                <button onClick={handleSave} disabled={saving}
+                  className="mt-6 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50">
+                  {saving ? t.profile.saving : t.profile.completeAndContinue}
+                </button>
               </div>
             )}
 

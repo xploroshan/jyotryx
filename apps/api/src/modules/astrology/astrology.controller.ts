@@ -49,6 +49,14 @@ export class AstrologyController {
     return this.astrologyService.getMatching(user.sub, body.partner1, body.partner2, body.locale);
   }
 
+  @Get('traditions')
+  @Public()
+  @ApiOperation({ summary: 'Get available astrology traditions' })
+  @ApiResponse({ status: 200, description: 'Traditions returned' })
+  getAvailableTraditions() {
+    return this.astrologyService.getAvailableTraditions();
+  }
+
   @Get('horoscope/:sign')
   @Public()
   @ApiOperation({ summary: 'Get horoscope for a zodiac sign' })
@@ -57,8 +65,36 @@ export class AstrologyController {
     @Param('sign') sign: string,
     @Query('period') period?: string,
     @Query('locale') locale?: string,
+    @Query('tradition') tradition?: string,
   ): Promise<HoroscopeResult> {
-    return this.astrologyService.getHoroscope(sign, period as any, locale);
+    return this.astrologyService.getHoroscope(sign, period as any, locale, tradition);
+  }
+
+  @Get('horoscope/:sign/multi')
+  @Public()
+  @ApiOperation({ summary: 'Get multi-tradition horoscope for a zodiac sign' })
+  @ApiResponse({ status: 200, description: 'Multi-tradition horoscope returned' })
+  async getMultiTraditionHoroscope(
+    @Param('sign') sign: string,
+    @Query('period') period?: string,
+    @Query('locale') locale?: string,
+    @Query('traditions') traditions?: string,
+  ) {
+    const traditionList = traditions?.split(',').map(t => t.trim().toUpperCase()) || ['VEDIC'];
+    return this.astrologyService.getMultiTraditionHoroscope(
+      sign,
+      (period as any) || 'daily',
+      traditionList,
+      locale,
+    );
+  }
+
+  @Get('chinese-zodiac/:year')
+  @Public()
+  @ApiOperation({ summary: 'Get Chinese zodiac for a birth year' })
+  @ApiResponse({ status: 200, description: 'Chinese zodiac returned' })
+  getChineseZodiac(@Param('year') year: string) {
+    return this.astrologyService.getChineseZodiac(parseInt(year, 10));
   }
 
   @Get('panchang')

@@ -1131,6 +1131,31 @@ export const en = {
     typeAnnualName: 'Annual Horoscope',
     typeAnnualDesc: 'Complete yearly forecast for all life areas',
   },
+
+  // Astrology Traditions
+  traditions: {
+    title: 'Astrology Traditions',
+    description: 'Choose which astrology traditions to include in your readings',
+    vedic: 'Vedic / Jyotish',
+    vedicDesc: 'Ancient Indian astrology using sidereal zodiac, nakshatras, and dashas',
+    western: 'Western Astrology',
+    westernDesc: 'Tropical zodiac system with aspects, transits, and house analysis',
+    chinese: 'Chinese Astrology',
+    chineseDesc: '12 animal signs, Five Elements, and Yin-Yang cycles',
+    hellenistic: 'Hellenistic',
+    hellenisticDesc: 'Classical Greek astronomical tradition',
+    horary: 'Horary',
+    horaryDesc: 'Question-based predictive astrology',
+    medical: 'Medical',
+    medicalDesc: 'Health-focused astrological analysis',
+    default: 'Default',
+    comingSoon: 'Coming Soon',
+    selectAtLeast: 'Please select at least one tradition',
+    next: 'Next',
+    stepBirthDetails: 'Birth Details',
+    stepTraditions: 'Traditions',
+    summary: 'Combined Summary',
+  },
 } as const;
 
 type DeepStringify<T> = {
