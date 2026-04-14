@@ -51,6 +51,13 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/package.json ./
 
+# Regenerate the Prisma client against the prod-deps node_modules. The `build`
+# stage ran `prisma generate` against its own dev+prod install, but we ship the
+# leaner `prod-deps` node_modules — which has `@prisma/client` installed but no
+# generated client at `node_modules/.prisma/client`. Without this, the app
+# boots to "@prisma/client did not initialize yet. Please run 'prisma generate'".
+RUN npx prisma generate
+
 EXPOSE 4000
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
