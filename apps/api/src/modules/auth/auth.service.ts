@@ -394,9 +394,10 @@ export class AuthService {
     });
 
     if (!user) {
+      const signupName = dto.name?.trim();
       user = await this.prisma.user.create({
         data: {
-          name: 'User',
+          name: signupName && signupName.length > 0 ? signupName : 'User',
           email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
           phone,
           credits: this.configService.get<number>('credits.freeMonthly', 10),

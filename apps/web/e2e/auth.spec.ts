@@ -18,6 +18,11 @@ import { gotoAndHydrate, installApiMocks, json } from './helpers/mock-api';
 test.describe('Auth page', () => {
   test.beforeEach(async ({ page }) => {
     await installApiMocks(page, {
+      // Wake-up ping fires on auth-page mount; return a quick 200 so the
+      // "Waking up the server..." indicator clears.
+      'GET /health': async (route) => {
+        await route.fulfill(json({ status: 'ok' }));
+      },
       'POST /auth/otp/send': async (route) => {
         const body = JSON.parse(route.request().postData() || '{}');
         await route.fulfill(
@@ -126,5 +131,120 @@ test.describe('Auth page', () => {
     await page.getByRole('button', { name: 'Email', exact: true }).click();
 
     await expect(page.getByPlaceholder('Enter your name')).toBeVisible();
+  });
+
+  test('signup tab shows name field for phone OTP method too', async ({ page }) => {
+    // Previously the name field was email-only — phone-OTP signups fell back
+    // to a hard-coded "User" default on the backend. Regression guard.
+    await page.goto('/auth?mode=signup');
+
+    const card = page.locator('.surface-card').first();
+    await card.getByRole('button', { name: 'Sign up', exact: true }).click();
+    // Phone is the default method.
+    await expect(page.getByPlaceholder('Phone number')).toBeVisible();
+    await expect(page.getByPlaceholder('Enter your name')).toBeVisible();
+  });
+});
+
+// ─── Email login flow ───────────────────────────────────────────────────────
+// Exercises /auth/login via the email/password method tab. Covers the happy
+// path, a 401 from the backend, and a network error that should render the
+// generic "can't reach server" banner with a Retry button.
+test.describe('Auth page — email login', () => {
+  test('happy path: valid credentials → redirect', async ({ page }) => {
+    await installApiMocks(page, {
+      'GET /health': async (route) => {
+        await route.fulfill(json({ status: 'ok' }));
+      },
+      'POST /auth/login': async (route) => {
+        await route.fulfill(
+          json({
+            user: {
+              id: 'email-user-1',
+              name: 'Email User',
+              email: 'user@example.com',
+              phone: null,
+              credits: 10,
+              role: 'USER',
+              profileComplete: true,
+              preferredLanguage: 'en',
+            },
+            tokens: {
+              accessToken: 'test-access',
+              refreshToken: 'test-refresh',
+            },
+          }),
+        );
+      },
+    });
+
+    await gotoAndHydrate(page, '/auth?mode=login');
+
+    // Switch from the default phone method to email.
+    await page.getByRole('button', { name: 'Email', exact: true }).click();
+
+    await page.getByPlaceholder('you@example.com').fill('user@example.com');
+    await page.getByPlaceholder(/Min 8 characters/i).fill('CorrectPass123');
+
+    await page.getByRole('button', { name: /^Log in$/ }).click();
+
+    // profileComplete=true → /my-day
+    await expect(page).toHaveURL(/\/my-day$/, { timeout: 10_000 });
+  });
+
+  test('wrong password: backend 401 renders an error and keeps user on /auth', async ({ page }) => {
+    // Abort any Firebase Identity Toolkit call — the auth page attempts a
+    // Firebase email/password fallback on backend 401, and without this the
+    // test would wait 10s for Firebase's internal timeout.
+    await page.route('**/identitytoolkit.googleapis.com/**', (route) =>
+      route.abort('failed'),
+    );
+    await installApiMocks(page, {
+      'GET /health': async (route) => {
+        await route.fulfill(json({ status: 'ok' }));
+      },
+      'POST /auth/login': async (route) => {
+        await route.fulfill(json({ message: 'Invalid email or password' }, 401));
+      },
+    });
+
+    await gotoAndHydrate(page, '/auth?mode=login');
+    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await page.getByPlaceholder('you@example.com').fill('user@example.com');
+    await page.getByPlaceholder(/Min 8 characters/i).fill('WrongPass123');
+    await page.getByRole('button', { name: /^Log in$/ }).click();
+
+    // Firebase fallback fails immediately → control falls back to the
+    // original 401 message which is surfaced inline.
+    await expect(page.getByText(/Invalid email or password/i)).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).toHaveURL(/\/auth/);
+  });
+
+  test('network error: shows generic banner with Retry button', async ({ page }) => {
+    // No mock registered for /auth/login → the mock-api route handler aborts
+    // the request, which the client sees as `ApiError.isNetwork`.
+    await installApiMocks(page, {
+      'GET /health': async (route) => {
+        await route.fulfill(json({ status: 'ok' }));
+      },
+      'POST /auth/login': async (route) => {
+        await route.abort('failed');
+      },
+    });
+
+    await gotoAndHydrate(page, '/auth?mode=login');
+    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await page.getByPlaceholder('you@example.com').fill('user@example.com');
+    await page.getByPlaceholder(/Min 8 characters/i).fill('SomePass123');
+    await page.getByRole('button', { name: /^Log in$/ }).click();
+
+    // Banner with the network string and a Retry affordance.
+    await expect(
+      page.getByText(/Can't reach the server\. Check your connection and try again\./i),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('button', { name: /^Retry$/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/auth/);
   });
 });

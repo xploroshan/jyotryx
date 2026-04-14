@@ -15,6 +15,24 @@ import { REDIS_CLIENT } from '../src/redis/redis.module';
 import { mockConfigService, createMockRedis } from './helpers/mocks';
 import * as bcrypt from 'bcrypt';
 
+// ─── firebase-admin mock ────────────────────────────────────────────────────
+// Tests control `admin.apps.length` and `admin.auth().verifyIdToken(...)` via
+// the handles below. Default state: Firebase is configured (apps.length > 0)
+// and verifyIdToken returns a Google-style decoded token.
+const firebaseAppsList: any[] = [{ name: '[DEFAULT]' }];
+const verifyIdTokenMock = jest.fn();
+
+jest.mock('firebase-admin', () => {
+  return {
+    get apps() {
+      return firebaseAppsList;
+    },
+    auth: () => ({ verifyIdToken: verifyIdTokenMock }),
+    credential: { cert: jest.fn(() => ({ type: 'cert' })) },
+    initializeApp: jest.fn(),
+  };
+});
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function createPrismaMock() {
@@ -501,6 +519,386 @@ describe('Auth: Phone OTP', () => {
         service.verifyOtp({ phone: '+910000099999', otp: '123456' }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should persist provided name when creating a new phone user on signup', async () => {
+      // The OTP store is backed by the real in-memory Redis mock, so we can
+      // access it directly to grab the generated OTP and run the happy path.
+      const redisMock = (service as any).redis;
+      await service.sendOtp({ phone: '+918888888881' });
+      const otp = (await redisMock.get('otp:+918888888881')) as string;
+
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: 'new-named-user',
+        name: 'Arjun Mehta',
+        email: '918888888881@phone.jyotron.com',
+        phone: '+918888888881',
+        credits: 10,
+        role: 'USER',
+      });
+
+      await service.verifyOtp({ phone: '+918888888881', otp, name: 'Arjun Mehta' });
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ name: 'Arjun Mehta', phone: '+918888888881' }),
+        }),
+      );
+    });
+
+    it('should default name to "User" if no name is provided on first signup', async () => {
+      const redisMock = (service as any).redis;
+      await service.sendOtp({ phone: '+918888888882' });
+      const otp = (await redisMock.get('otp:+918888888882')) as string;
+
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: 'new-default-user',
+        name: 'User',
+        email: '918888888882@phone.jyotron.com',
+        phone: '+918888888882',
+        credits: 10,
+        role: 'USER',
+      });
+
+      await service.verifyOtp({ phone: '+918888888882', otp });
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ name: 'User' }),
+        }),
+      );
+    });
+  });
+});
+
+// ─── GOOGLE OAUTH TESTS ─────────────────────────────────────────────────────
+// Direct /auth/google endpoint: verifies Google ID tokens via the public
+// tokeninfo endpoint. We mock global.fetch so these tests don't hit the
+// network.
+
+describe('Auth: Google OAuth', () => {
+  let service: AuthService;
+  let prisma: any;
+  let jwtService: any;
+  const originalFetch = global.fetch;
+
+  beforeEach(async () => {
+    prisma = createPrismaMock();
+    jwtService = createJwtMock();
+    service = await buildAuthService(prisma, jwtService);
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
+
+  const mockTokeninfoResponse = (payload: any, ok = true) => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok,
+      json: async () => payload,
+    }) as any;
+  };
+
+  it('should create a new user when Google token is valid and email is unknown', async () => {
+    mockTokeninfoResponse({
+      sub: 'google-sub-123',
+      email: 'new@example.com',
+      name: 'New User',
+      picture: 'https://g/p.jpg',
+      email_verified: 'true',
+      aud: 'test-google-client-id',
+    });
+    prisma.user.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 'google-user-1',
+      name: 'New User',
+      email: 'new@example.com',
+      phone: null,
+      credits: 10,
+      role: 'USER',
+      provider: 'GOOGLE',
+      providerId: 'google-sub-123',
+    });
+
+    const result = await service.googleAuth({ idToken: 'valid-google-token' });
+
+    expect(result.user.email).toBe('new@example.com');
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          provider: 'GOOGLE',
+          providerId: 'google-sub-123',
+          email: 'new@example.com',
+        }),
+      }),
+    );
+  });
+
+  it('should link Google provider to an existing email-account user', async () => {
+    mockTokeninfoResponse({
+      sub: 'google-sub-link',
+      email: 'existing@example.com',
+      name: 'Existing',
+      email_verified: 'true',
+      aud: 'test-google-client-id',
+    });
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'user-exist-1',
+      name: 'Existing',
+      email: 'existing@example.com',
+      phone: null,
+      provider: 'LOCAL',
+      providerId: null,
+      credits: 10,
+      role: 'USER',
+    });
+    prisma.user.update.mockResolvedValue({
+      id: 'user-exist-1',
+      name: 'Existing',
+      email: 'existing@example.com',
+      phone: null,
+      provider: 'GOOGLE',
+      providerId: 'google-sub-link',
+      credits: 10,
+      role: 'USER',
+    });
+
+    const result = await service.googleAuth({ idToken: 'valid-google-token' });
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'user-exist-1' },
+        data: expect.objectContaining({ provider: 'GOOGLE', providerId: 'google-sub-link' }),
+      }),
+    );
+    expect(result.user.id).toBe('user-exist-1');
+  });
+
+  it('should reject when tokeninfo returns non-ok (invalid token)', async () => {
+    mockTokeninfoResponse({}, false);
+
+    await expect(
+      service.googleAuth({ idToken: 'garbage-token' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should reject when Google email is not verified', async () => {
+    mockTokeninfoResponse({
+      sub: 'google-sub-unverified',
+      email: 'unverified@example.com',
+      name: 'Unverified',
+      email_verified: 'false',
+      aud: 'test-google-client-id',
+    });
+
+    await expect(
+      service.googleAuth({ idToken: 'unverified-token' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should reject when token audience does not match our client id', async () => {
+    mockTokeninfoResponse({
+      sub: 'google-sub-wrong-aud',
+      email: 'wrong@example.com',
+      name: 'Wrong Aud',
+      email_verified: 'true',
+      aud: 'some-other-app-client-id',
+    });
+
+    await expect(
+      service.googleAuth({ idToken: 'wrong-aud-token' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should reject when fetch throws a network error', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('ECONNRESET')) as any;
+
+    await expect(
+      service.googleAuth({ idToken: 'any-token' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+});
+
+// ─── FIREBASE AUTH TESTS ────────────────────────────────────────────────────
+// /auth/firebase endpoint: verifies Firebase ID tokens via firebase-admin.
+// We control admin.apps.length and verifyIdToken via the module-level mock
+// handles declared at the top of this file.
+
+describe('Auth: Firebase Auth', () => {
+  let service: AuthService;
+  let prisma: any;
+  let jwtService: any;
+
+  beforeEach(async () => {
+    prisma = createPrismaMock();
+    jwtService = createJwtMock();
+    service = await buildAuthService(prisma, jwtService);
+    // Default: Firebase is configured
+    firebaseAppsList.length = 0;
+    firebaseAppsList.push({ name: '[DEFAULT]' });
+    verifyIdTokenMock.mockReset();
+  });
+
+  it('should reject when firebase-admin is not configured on the server', async () => {
+    firebaseAppsList.length = 0;
+
+    await expect(
+      service.firebaseAuth({ idToken: 'any-token' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should reject when the Firebase ID token is malformed / cannot be verified', async () => {
+    verifyIdTokenMock.mockRejectedValue(new Error('auth/argument-error'));
+
+    await expect(
+      service.firebaseAuth({ idToken: 'bogus' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should create a new user for a phone sign-in with no existing account', async () => {
+    verifyIdTokenMock.mockResolvedValue({
+      uid: 'firebase-phone-uid',
+      phone_number: '+919998887770',
+      firebase: { sign_in_provider: 'phone' },
+    });
+    prisma.user.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 'phone-fb-user',
+      name: 'User',
+      email: '919998887770@phone.jyotron.com',
+      phone: '+919998887770',
+      provider: 'PHONE',
+      providerId: 'firebase-phone-uid',
+      credits: 10,
+      role: 'USER',
+    });
+
+    const result = await service.firebaseAuth({ idToken: 'valid-phone-token' });
+
+    expect(result.user.phone).toBe('+919998887770');
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          phone: '+919998887770',
+          provider: 'PHONE',
+          providerId: 'firebase-phone-uid',
+        }),
+      }),
+    );
+  });
+
+  it('should create a new user for a Google sign-in with no existing account', async () => {
+    verifyIdTokenMock.mockResolvedValue({
+      uid: 'firebase-google-uid',
+      email: 'goog@example.com',
+      name: 'Google User',
+      firebase: { sign_in_provider: 'google.com' },
+    });
+    prisma.user.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({
+      id: 'google-fb-user',
+      name: 'Google User',
+      email: 'goog@example.com',
+      phone: null,
+      provider: 'GOOGLE',
+      providerId: 'firebase-google-uid',
+      credits: 10,
+      role: 'USER',
+    });
+
+    const result = await service.firebaseAuth({ idToken: 'valid-google-fb-token' });
+
+    expect(result.user.email).toBe('goog@example.com');
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email: 'goog@example.com',
+          provider: 'GOOGLE',
+          providerId: 'firebase-google-uid',
+        }),
+      }),
+    );
+  });
+
+  it('should link Google provider to an existing email-account user', async () => {
+    verifyIdTokenMock.mockResolvedValue({
+      uid: 'firebase-google-link',
+      email: 'linkme@example.com',
+      name: 'Linked',
+      firebase: { sign_in_provider: 'google.com' },
+    });
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'existing-local-user',
+      name: 'Linked',
+      email: 'linkme@example.com',
+      phone: null,
+      provider: 'LOCAL',
+      providerId: null,
+      credits: 10,
+      role: 'USER',
+    });
+    prisma.user.update.mockResolvedValue({
+      id: 'existing-local-user',
+      name: 'Linked',
+      email: 'linkme@example.com',
+      phone: null,
+      provider: 'GOOGLE',
+      providerId: 'firebase-google-link',
+      credits: 10,
+      role: 'USER',
+    });
+
+    const result = await service.firebaseAuth({ idToken: 'link-token' });
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'existing-local-user' },
+        data: expect.objectContaining({
+          provider: 'GOOGLE',
+          providerId: 'firebase-google-link',
+        }),
+      }),
+    );
+    expect(result.user.id).toBe('existing-local-user');
+  });
+
+  it('should backfill phone number on an existing user who signs in via phone', async () => {
+    verifyIdTokenMock.mockResolvedValue({
+      uid: 'firebase-phone-existing',
+      phone_number: '+917776665550',
+      firebase: { sign_in_provider: 'phone' },
+    });
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'existing-no-phone',
+      name: 'NoPhone',
+      email: 'nophone@example.com',
+      phone: null,
+      provider: 'LOCAL',
+      providerId: null,
+      credits: 10,
+      role: 'USER',
+    });
+    prisma.user.update.mockResolvedValue({
+      id: 'existing-no-phone',
+      name: 'NoPhone',
+      email: 'nophone@example.com',
+      phone: '+917776665550',
+      provider: 'LOCAL',
+      providerId: null,
+      credits: 10,
+      role: 'USER',
+    });
+
+    await service.firebaseAuth({ idToken: 'backfill-phone-token' });
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'existing-no-phone' },
+        data: expect.objectContaining({ phone: '+917776665550' }),
+      }),
+    );
   });
 });
 
