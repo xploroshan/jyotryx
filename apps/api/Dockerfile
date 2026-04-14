@@ -1,6 +1,13 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
+# Native-addon build toolchain. `swisseph` (Swiss Ephemeris, C++) and `bcrypt`
+# are compiled from source by node-gyp at `npm install` time, which requires
+# Python + a C/C++ compiler. `node:20-alpine` ships neither. We install these
+# only in the stages that run `npm install`; the final `production` stage
+# inherits a clean `node:20-alpine` and copies the already-compiled
+# `node_modules` from `prod-deps`, so the runtime image stays slim.
+
 # Install all dependencies (needed for build).
 # `apps/api` is a workspace in the monorepo — the authoritative lockfile lives
 # at the repo root, not here. Railway / any single-service build that uses this
@@ -8,6 +15,7 @@ WORKDIR /app
 # lockfile to `npm ci` against. `npm install` works in both cases: it honours
 # a local lockfile when present and generates one otherwise.
 FROM base AS deps
+RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
 
@@ -20,6 +28,7 @@ RUN npm run build
 
 # Production dependencies only
 FROM base AS prod-deps
+RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev --no-audit --no-fund
 
