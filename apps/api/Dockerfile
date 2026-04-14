@@ -15,7 +15,12 @@ WORKDIR /app
 # lockfile to `npm ci` against. `npm install` works in both cases: it honours
 # a local lockfile when present and generates one otherwise.
 FROM base AS deps
-RUN apk add --no-cache python3 make g++
+# `py3-setuptools` ships a `distutils` compatibility shim. Alpine 3.19+ installs
+# Python 3.12, where `distutils` was removed from the stdlib. The `swisseph`
+# package transitively pins `node-gyp@8.4.1`, which still imports
+# `distutils.version.StrictVersion` — without the shim the native-addon build
+# fails with `ModuleNotFoundError: No module named 'distutils'`.
+RUN apk add --no-cache python3 py3-setuptools make g++
 COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
 
@@ -28,7 +33,7 @@ RUN npm run build
 
 # Production dependencies only
 FROM base AS prod-deps
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 py3-setuptools make g++
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev --no-audit --no-fund
 
