@@ -40,6 +40,12 @@ RUN npm install --omit=dev --no-audit --no-fund
 # Production
 FROM base AS production
 ENV NODE_ENV=production
+# Prisma's query/schema engine dynamically links against libssl at runtime.
+# `node:20-alpine` doesn't ship OpenSSL, so without this the container
+# crashes on `prisma migrate deploy` with:
+#   "Please manually install OpenSSL and try installing Prisma again."
+# `libc6-compat` is Alpine's glibc shim — Prisma's prebuilt binaries expect it.
+RUN apk add --no-cache openssl libc6-compat
 COPY --from=build /app/dist ./dist
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
