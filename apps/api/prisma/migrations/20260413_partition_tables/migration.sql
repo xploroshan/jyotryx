@@ -15,6 +15,13 @@ DROP INDEX IF EXISTS "llm_usage_userId_createdAt_idx";
 DROP INDEX IF EXISTS "llm_usage_createdAt_idx";
 DROP INDEX IF EXISTS "llm_usage_provider_model_idx";
 
+-- Rename primary-key constraint out of the way. `ALTER TABLE ... RENAME TO`
+-- does NOT rename the pkey constraint/index, so without this the subsequent
+-- `CREATE TABLE "llm_usage" (... CONSTRAINT "llm_usage_pkey" ...)` fails with
+-- 42P07 "relation llm_usage_pkey already exists". Renaming the constraint
+-- also renames its backing index in one step.
+ALTER TABLE "llm_usage" RENAME CONSTRAINT "llm_usage_pkey" TO "llm_usage_old_pkey";
+
 -- Rename old table
 ALTER TABLE "llm_usage" RENAME TO "llm_usage_old";
 
@@ -68,6 +75,9 @@ DROP TABLE "llm_usage_old";
 DROP INDEX IF EXISTS "activity_logs_adminId_idx";
 DROP INDEX IF EXISTS "activity_logs_entityType_entityId_idx";
 DROP INDEX IF EXISTS "activity_logs_createdAt_idx";
+
+-- Rename pkey out of the way (see llm_usage note above)
+ALTER TABLE "activity_logs" RENAME CONSTRAINT "activity_logs_pkey" TO "activity_logs_old_pkey";
 
 -- Rename old table
 ALTER TABLE "activity_logs" RENAME TO "activity_logs_old";
@@ -126,6 +136,9 @@ ALTER TABLE "chat_messages" DROP CONSTRAINT IF EXISTS "chat_messages_sessionId_f
 DROP INDEX IF EXISTS "chat_messages_sessionId_idx";
 DROP INDEX IF EXISTS "chat_messages_sessionId_createdAt_idx";
 
+-- Rename pkey out of the way (see llm_usage note above)
+ALTER TABLE "chat_messages" RENAME CONSTRAINT "chat_messages_pkey" TO "chat_messages_old_pkey";
+
 -- Rename old table
 ALTER TABLE "chat_messages" RENAME TO "chat_messages_old";
 
@@ -174,6 +187,9 @@ ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "notifications_userId_fkey
 -- Drop existing indexes
 DROP INDEX IF EXISTS "notifications_userId_idx";
 DROP INDEX IF EXISTS "notifications_userId_read_idx";
+
+-- Rename pkey out of the way (see llm_usage note above)
+ALTER TABLE "notifications" RENAME CONSTRAINT "notifications_pkey" TO "notifications_old_pkey";
 
 -- Rename old table
 ALTER TABLE "notifications" RENAME TO "notifications_old";
