@@ -107,9 +107,13 @@ async function bootstrap() {
   }
 
   const port = process.env.PORT || 4000;
-  await app.listen(port);
-  logger.log(`Jyotron API running on http://localhost:${port}`);
-  logger.log(`Swagger docs at http://localhost:${port}/api/docs`);
+  // Bind explicitly to 0.0.0.0 so container orchestrators (Railway, k8s,
+  // Docker) can reach the app from outside the container. Nest's default
+  // of `::` sometimes routes only IPv6, which silently fails healthchecks
+  // that probe over IPv4.
+  await app.listen(port, '0.0.0.0');
+  logger.log(`Jyotron API running on http://0.0.0.0:${port}`);
+  logger.log(`Swagger docs at http://0.0.0.0:${port}/api/docs`);
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {
