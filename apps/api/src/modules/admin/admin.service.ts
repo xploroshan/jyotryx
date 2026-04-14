@@ -634,7 +634,7 @@ export class AdminService {
     adminId: string,
     adminEmail: string,
   ): Promise<{ success: boolean; message: string }> {
-    const log = await this.prisma.activityLog.findUnique({ where: { id: logId } });
+    const log = await this.prisma.activityLog.findFirst({ where: { id: logId } });
     if (!log) throw new NotFoundException('Activity log not found');
     if (log.undone) throw new BadRequestException('This action has already been undone');
     if (log.action === 'USER_DELETE') {
@@ -666,7 +666,7 @@ export class AdminService {
     }
 
     await this.prisma.activityLog.update({
-      where: { id: logId },
+      where: { id_createdAt: { id: logId, createdAt: log.createdAt } },
       data: { undone: true, undoneAt: new Date() },
     });
 
