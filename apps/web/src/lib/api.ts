@@ -145,6 +145,25 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
   return response.json();
 }
 
+/**
+ * Fire a best-effort GET /health against the API. Used by the auth page on
+ * mount to warm up free-tier hosts (Render, Fly, etc.) so the first real
+ * request doesn't eat the cold-start penalty. Never throws — resolves to
+ * `true` when the server answered, `false` otherwise.
+ */
+export async function wakeUpBackend(timeoutMs = 25_000): Promise<boolean> {
+  try {
+    const res = await fetchWithTimeout(
+      `${API_BASE_URL}/health`,
+      { method: "GET", headers: { "Content-Type": "application/json" } },
+      timeoutMs,
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export const api = {
   get: <T>(endpoint: string, options?: ApiOptions) =>
     apiRequest<T>(endpoint, { ...options, method: "GET" }),

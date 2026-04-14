@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, wakeUpBackend, ApiError } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { LogoMark } from "@/components/ui/Logo";
@@ -52,6 +52,12 @@ function AuthPageContent() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  // When true, the error banner shows a Retry button that re-runs the last
+  // failed action. Set for network/timeout failures only.
+  const [lastAction, setLastAction] = useState<null | (() => void)>(null);
+  // Shows a subtle "Waking up the server…" hint while the initial cold-start
+  // ping is still in flight.
+  const [serverWaking, setServerWaking] = useState(false);
 
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
@@ -78,6 +84,36 @@ function AuthPageContent() {
     };
   }, []);
 
+  // Free-tier hosting (Render, Fly, etc.) spins the API container down after
+  // idle. The auth page is the first thing most users load, so we fire a
+  // best-effort /health ping here to warm the server while the user is still
+  // picking their tab. No error handling needed — the real auth call below
+  // surfaces any actual failures.
+  useEffect(() => {
+    let cancelled = false;
+    setServerWaking(true);
+    wakeUpBackend(25_000).finally(() => {
+      if (!cancelled) setServerWaking(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  /**
+   * Translate an ApiError/FirebaseError/Error into a user-facing string and
+   * decide whether the failure is "retryable" (network/timeout). When it is,
+   * the banner grows a Retry button that re-runs `retryFn`.
+   */
+  const mapAuthError = useCallback((err: any, fallback: string): { message: string; retryable: boolean } => {
+    if (err instanceof ApiError) {
+      if (err.isTimeout) return { message: t.auth.errTimeout, retryable: true };
+      if (err.isNetwork) return { message: t.auth.errNetwork, retryable: true };
+      if (err.status && err.status >= 500) {
+        return { message: t.auth.errNetwork, retryable: true };
+      }
+    }
+    return { message: err?.message || fallback, retryable: false };
+  }, [t]);
+
   const applyUserLanguage = useCallback((userLang?: string | null) => {
     if (userLang && (SUPPORTED_LOCALES as string[]).includes(userLang)) {
       setLocale(userLang as Locale, { userSet: true });
@@ -85,15 +121,13 @@ function AuthPageContent() {
   }, [setLocale]);
 
   const authenticateWithBackend = useCallback(async (firebaseIdToken: string) => {
-    try {
-      const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken }, { timeoutMs: 15_000 });
-      setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
-      applyUserLanguage(res.user?.preferredLanguage);
-      router.push(res.user?.profileComplete ? "/my-day" : "/profile");
-    } catch (err: any) {
-      throw new Error(err.message || t.auth.errServerAuthFailed);
-    }
-  }, [setAuth, router, t, applyUserLanguage]);
+    // Cold-start tolerant: 30s the first time, the ApiError is re-thrown so
+    // the caller can run its own retry UX.
+    const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken }, { timeoutMs: 30_000 });
+    setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+    applyUserLanguage(res.user?.preferredLanguage);
+    router.push(res.user?.profileComplete ? "/my-day" : "/profile");
+  }, [setAuth, router, applyUserLanguage]);
 
   const setupRecaptcha = useCallback(() => {
     // Clear previous verifier to avoid stale instances
@@ -131,7 +165,8 @@ function AuthPageContent() {
 
   const handleSendOtp = async () => {
     if (phone.length < 10) { setError(t.auth.errPhoneInvalid); return; }
-    setLoading(true); setError(""); setSuccess("");
+    if (tab === "signup" && !name.trim()) { setError(t.auth.errEnterName); return; }
+    setLoading(true); setError(""); setSuccess(""); setLastAction(null);
     const phoneNumber = `+91${phone}`;
 
     // If Firebase isn't configured on the client, go straight to the backend.
@@ -202,10 +237,16 @@ function AuthPageContent() {
           setError(t.auth.errRequestOtpFirst);
           return;
         }
+        // On signup, pass the name so new phone users aren't defaulted to "User".
+        const body: { phone: string; otp: string; name?: string } = {
+          phone: backendOtpPhoneRef.current,
+          otp,
+        };
+        if (tab === "signup" && name.trim()) body.name = name.trim();
         const res = await api.post<any>(
           "/auth/otp/verify",
-          { phone: backendOtpPhoneRef.current, otp },
-          { timeoutMs: 15_000 },
+          body,
+          { timeoutMs: 30_000 },
         );
         setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
         applyUserLanguage(res.user?.preferredLanguage);
@@ -232,7 +273,7 @@ function AuthPageContent() {
   };
 
   const handleGoogleClick = async () => {
-    setGoogleLoading(true); setError(""); setSuccess("");
+    setGoogleLoading(true); setError(""); setSuccess(""); setLastAction(null);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -244,7 +285,9 @@ function AuthPageContent() {
       } else if (err.code === "auth/popup-blocked") {
         setError(t.auth.errPopupBlocked);
       } else {
-        setError(err.message || t.auth.errGoogleFailed);
+        const { message, retryable } = mapAuthError(err, t.auth.errGoogleFailed);
+        setError(message);
+        if (retryable) setLastAction(() => handleGoogleClick);
       }
     } finally { setGoogleLoading(false); }
   };
@@ -253,13 +296,14 @@ function AuthPageContent() {
     if (!email) { setError(t.auth.errEnterEmail); return; }
     if (!password || password.length < 8) { setError(t.auth.errPasswordShort); return; }
     if (tab === "signup" && !name) { setError(t.auth.errEnterName); return; }
-    setLoading(true); setError(""); setSuccess("");
+    setLoading(true); setError(""); setSuccess(""); setLastAction(null);
     try {
       const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
       const body = tab === "login" ? { email, password } : { name, email, password };
-      // Auth endpoints get a tighter timeout so the UI doesn't sit in
-      // "Please wait…" for 30s when the server is unreachable.
-      const res = await api.post<any>(endpoint, body, { timeoutMs: 15_000 });
+      // Cold-start tolerant timeout. The wake-up ping in useEffect usually
+      // means the first real request is warm, but Render can take 30s from
+      // stone-cold so we don't abort before that.
+      const res = await api.post<any>(endpoint, body, { timeoutMs: 30_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       applyUserLanguage(res.user?.preferredLanguage);
       router.push(res.user?.profileComplete ? "/my-day" : "/profile");
@@ -291,18 +335,25 @@ function AuthPageContent() {
           // original backend error below.
         }
       }
-      setError(err.message || t.auth.errAuthFailed);
+      const { message, retryable } = mapAuthError(err, t.auth.errAuthFailed);
+      setError(message);
+      if (retryable) setLastAction(() => handleEmailAuth);
     }
     finally { setLoading(false); }
   };
 
   const handleForgotPassword = async () => {
     if (!resetEmail) { setError(t.auth.errEnterEmailReset); return; }
-    setLoading(true); setError(""); setSuccess("");
+    setLoading(true); setError(""); setSuccess(""); setLastAction(null);
+    // Fire the backend hint in parallel (best-effort — it creates the
+    // Firebase Auth user on-demand for users who registered before Firebase
+    // was wired up). Its failure must NOT block the email being sent.
+    api.post("/auth/forgot-password", { email: resetEmail }, { timeoutMs: 15_000 })
+      .catch(() => {/* best-effort; Firebase path below is authoritative */});
+
     try {
-      // First, tell the backend to ensure user exists in Firebase Auth
-      await api.post("/auth/forgot-password", { email: resetEmail });
-      // Then send the password reset email via Firebase client SDK
+      // Firebase sends the reset email directly — works even if our backend
+      // is down, as long as the Firebase project is configured.
       await sendPasswordResetEmail(auth, resetEmail);
       setSuccess(t.auth.errResetLinkSent);
       setTimeout(() => {
@@ -316,6 +367,9 @@ function AuthPageContent() {
         setError(t.auth.errEmailInvalid);
       } else if (err.code === "auth/too-many-requests") {
         setError(t.auth.errResetTooManyRequests);
+      } else if (err.code === "auth/network-request-failed") {
+        setError(t.auth.errNetwork);
+        setLastAction(() => handleForgotPassword);
       } else {
         setError(err.message || t.auth.errResetFailed);
       }
@@ -376,8 +430,16 @@ function AuthPageContent() {
               </p>
 
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
-                  {error}
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start justify-between gap-2">
+                  <span className="flex-1">{error}</span>
+                  {lastAction && (
+                    <button
+                      onClick={() => { const fn = lastAction; setLastAction(null); fn(); }}
+                      className="shrink-0 underline text-red-300 hover:text-red-200"
+                    >
+                      {t.auth.retry}
+                    </button>
+                  )}
                 </div>
               )}
               {success && (
@@ -426,13 +488,27 @@ function AuthPageContent() {
               </div>
 
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
-                  {error}
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start justify-between gap-2">
+                  <span className="flex-1">{error}</span>
+                  {lastAction && (
+                    <button
+                      onClick={() => { const fn = lastAction; setLastAction(null); fn(); }}
+                      className="shrink-0 underline text-red-300 hover:text-red-200"
+                    >
+                      {t.auth.retry}
+                    </button>
+                  )}
                 </div>
               )}
               {success && (
                 <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
                   {success}
+                </div>
+              )}
+              {serverWaking && !error && !success && (
+                <div className="mb-4 p-2 rounded-md text-[11px] text-white/40 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  {t.auth.wakingServer}
                 </div>
               )}
 
@@ -472,7 +548,7 @@ function AuthPageContent() {
 
               {/* Form */}
               <div className="space-y-3">
-                {tab === "signup" && authMethod === "email" && (
+                {tab === "signup" && (
                   <div>
                     <label className="block text-xs text-white/40 mb-1.5">{t.auth.fullNameLabel}</label>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.auth.fullNamePlaceholder}
