@@ -6,7 +6,7 @@ import { OpenAIService } from '../openai/openai.service';
 import { LlmService } from '../llm/llm.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UserService } from '../modules/user/user.service';
-import { REPORT_QUEUE } from './queue.module';
+import { REPORT_QUEUE } from './queue.constants';
 
 export interface ReportJobData {
   reportId: string;

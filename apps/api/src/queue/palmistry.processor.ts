@@ -6,7 +6,7 @@ import { OpenAIService } from '../openai/openai.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UserService } from '../modules/user/user.service';
 import { StorageService } from '../storage/storage.service';
-import { PALMISTRY_QUEUE } from './queue.module';
+import { PALMISTRY_QUEUE } from './queue.constants';
 
 export interface PalmistryJobData {
   readingId: string;

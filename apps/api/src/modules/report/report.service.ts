@@ -6,7 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
-import { REPORT_QUEUE } from '../../queue/queue.module';
+import { REPORT_QUEUE } from '../../queue/queue.constants';
 import type { ReportJobData } from '../../queue/report.processor';
 
 export interface GenerateReportDto {
