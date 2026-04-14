@@ -8,7 +8,7 @@ import { OpenAIService } from '../../openai/openai.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { StorageService } from '../../storage/storage.service';
-import { PALMISTRY_QUEUE } from '../../queue/queue.module';
+import { PALMISTRY_QUEUE } from '../../queue/queue.constants';
 import type { PalmistryJobData } from '../../queue/palmistry.processor';
 
 export interface PalmistryAnalysis {
