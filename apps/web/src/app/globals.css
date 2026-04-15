@@ -101,22 +101,57 @@
   }
 
   /* "Meatball" pill — one per tradition in the Tier-1 rail.
-     Rounded rectangle (not a circle) so the icon + label pair reads as a
-     cohesive chip and lines up nicely on a Swiggy-style horizontal rail. */
+     Chunky rounded rectangle (squircle) styled with layered frosted-glass
+     + inset highlights so each pill reads as a physical, 3D chiclet
+     floating above the rail. The inner highlight (top-edge white gradient)
+     and inset shadow give the illusion of depth; the outer shadow grounds
+     the button. Hover pushes forward in Z; active lifts + glows. */
   .meatball {
     position: relative;
     display: grid;
     place-items: center;
-    border-radius: 1.25rem; /* 20px — squircle-ish */
+    border-radius: 1.5rem; /* 24px — squircle */
     flex-shrink: 0;
     transform-style: preserve-3d;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.02) 100%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -8px 16px -8px rgba(0, 0, 0, 0.45),
+      0 10px 24px -12px rgba(0, 0, 0, 0.55);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  /* Top-edge sheen — gives the chip a glossy 3D highlight */
+  .meatball::before {
+    content: '';
+    position: absolute;
+    inset: 1px 1px auto 1px;
+    height: 55%;
+    border-radius: calc(1.5rem - 1px) calc(1.5rem - 1px) 50% 50% / calc(1.5rem - 1px) calc(1.5rem - 1px) 20% 20%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
   }
   .meatball:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 -8px 16px -8px rgba(0, 0, 0, 0.4),
+      0 18px 32px -10px rgba(0, 0, 0, 0.55);
   }
   .meatball.active {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
+    border-color: rgba(250, 204, 21, 0.45);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 55%, rgba(249, 115, 22, 0.08) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      inset 0 -8px 18px -8px rgba(249, 115, 22, 0.18),
+      0 14px 32px -10px rgba(249, 115, 22, 0.35),
+      0 0 0 2px rgba(250, 204, 21, 0.25);
   }
 
   .no-scrollbar::-webkit-scrollbar {

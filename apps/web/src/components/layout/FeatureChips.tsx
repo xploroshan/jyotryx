@@ -11,10 +11,13 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 
 /**
- * Tier-2 navigation: horizontal chips listing the features of the
- * currently-active tradition. Pulls the feature list from
- * `WEB_TRADITIONS[active].features` — zero-config when a new tradition
- * or feature is added to the registry.
+ * Tier-2 navigation: wrapping rail of icon + label chips showing every
+ * feature for the currently-active tradition. Chips wrap onto multiple
+ * rows instead of horizontally scrolling, so the user sees everything
+ * at a glance (Vedic has 14 items and was overflowing before).
+ *
+ * Pulls the feature list from `WEB_TRADITIONS[active].features` — adding
+ * a new feature to the registry is a one-line change.
  */
 export default function FeatureChips() {
   const pathname = usePathname() ?? '/';
@@ -27,6 +30,8 @@ export default function FeatureChips() {
     astrologyTraditions: user?.astrologyTraditions,
   });
   const cfg = WEB_TRADITIONS[activeId];
+  // Don't render on /my-day — My Day is standalone, no Vedic chips below.
+  if (pathname.startsWith('/my-day')) return null;
 
   const readLabel = (path: string, fallback: string): string => {
     const parts = path.split('.');
@@ -40,19 +45,42 @@ export default function FeatureChips() {
 
   return (
     <div className="sticky top-[176px] z-30 bg-surface-950/60 backdrop-blur-md border-b border-white/[0.04]">
-      <div className="mx-auto max-w-7xl px-4 overflow-x-auto no-scrollbar">
-        <ul className="flex gap-2 py-2.5">
+      <div className="mx-auto max-w-7xl px-4 py-3">
+        <ul className="flex flex-wrap gap-2 sm:gap-2.5 justify-start lg:justify-center">
           {cfg.features.map((f) => {
             const isActive = pathname === f.href;
             const label = readLabel(f.labelKey, f.slug);
-            const chipClass = isActive
-              ? 'bg-white text-surface-950 shadow-[0_4px_14px_-2px] shadow-white/20'
-              : 'glass text-white/70 hover:text-white';
+            const chipBase =
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap transition-all border';
+            const chipState = isActive
+              ? 'bg-white text-surface-950 border-white shadow-[0_4px_14px_-2px] shadow-white/20'
+              : 'glass text-white/75 border-white/[0.08] hover:text-white hover:border-white/25 hover:-translate-y-0.5';
+            const body = (
+              <>
+                {f.icon && (
+                  <span
+                    className="text-[14px] leading-none"
+                    style={{
+                      filter: isActive
+                        ? 'none'
+                        : 'drop-shadow(0 1px 2px rgba(255,255,255,0.25))',
+                    }}
+                    aria-hidden
+                  >
+                    {f.icon}
+                  </span>
+                )}
+                <span>{label}</span>
+              </>
+            );
             if (!f.available) {
               return (
                 <li key={f.slug}>
-                  <span className="glass text-white/40 px-3.5 py-1.5 rounded-full text-[13px] whitespace-nowrap cursor-not-allowed">
-                    {label}
+                  <span
+                    className={`${chipBase} glass text-white/40 border-white/[0.06] cursor-not-allowed`}
+                    aria-disabled="true"
+                  >
+                    {body}
                   </span>
                 </li>
               );
@@ -61,10 +89,10 @@ export default function FeatureChips() {
               <li key={f.slug}>
                 <Link
                   href={f.href}
-                  className={`px-3.5 py-1.5 rounded-full text-[13px] whitespace-nowrap transition ${chipClass}`}
+                  className={`${chipBase} ${chipState}`}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  {label}
+                  {body}
                 </Link>
               </li>
             );
