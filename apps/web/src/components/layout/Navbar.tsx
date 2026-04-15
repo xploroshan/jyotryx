@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store";
 import { LogoMark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import TraditionSwitcher from "@/components/layout/TraditionSwitcher";
 import { useTranslation } from "@/i18n";
 
 export default function Navbar() {
@@ -58,6 +59,7 @@ export default function Navbar() {
 
           {/* Desktop Right (single line) */}
           <div className="hidden lg:flex items-center gap-1">
+            <TraditionSwitcher />
             <LanguageSwitcher />
             {showAuth ? (
               <>
@@ -100,6 +102,7 @@ export default function Navbar() {
 
           {/* Mobile Hamburger */}
           <div className="flex items-center gap-2 lg:hidden">
+            <TraditionSwitcher />
             <LanguageSwitcher />
             <button
               className="p-2 -mr-2 text-white/60 hover:text-white"

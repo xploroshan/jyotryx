@@ -92,17 +92,20 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
  * the printed actual count into the matching entry below.
  */
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  hi: 79,
-  ta: 79,
-  te: 455,
-  bn: 455,
-  mr: 450,
-  gu: 455,
-  kn: 455,
-  ml: 455,
-  pa: 455,
-  or: 455,
-  as: 455,
+  // Bumped by 47 per locale for the new tradition-centric UI keys
+  // (nav.tradition + nav.switchTradition + traditionsUi.* + focusMode.*),
+  // all of which ship as English copies pending translation.
+  hi: 126,
+  ta: 126,
+  te: 502,
+  bn: 502,
+  mr: 497,
+  gu: 502,
+  kn: 502,
+  ml: 502,
+  pa: 502,
+  or: 502,
+  as: 502,
 };
 
 const locales: Array<[string, Dict]> = [

@@ -61,6 +61,8 @@ export interface AuthResponse {
     timeOfBirth?: string | null;
     placeOfBirth?: string | null;
     gender?: string | null;
+    astrologyTraditions?: string[];
+    primaryTradition?: string | null;
   };
   tokens: AuthTokens;
 }
@@ -86,6 +88,8 @@ function toAuthUser(user: PrismaUser & { preferredLanguage?: string }): AuthResp
     timeOfBirth: user.timeOfBirth ?? null,
     placeOfBirth: extractPlaceName(user.placeOfBirth),
     gender: user.gender ?? null,
+    astrologyTraditions: (user as any).astrologyTraditions ?? undefined,
+    primaryTradition: (user as any).primaryTradition ?? null,
   };
 }
 

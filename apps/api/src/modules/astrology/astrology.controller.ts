@@ -151,4 +151,54 @@ export class AstrologyController {
   ) {
     return this.astrologyService.generateKPChart(user.sub, birthDetails);
   }
+
+  // ─── Tradition-specific feature routes ──────────────────────────────────
+
+  @Post('bazi')
+  @ApiOperation({ summary: 'Chinese BaZi (Four Pillars of Destiny)' })
+  @ApiResponse({ status: 201, description: 'BaZi pillars returned' })
+  async getBazi(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+  ) {
+    return this.astrologyService.getBazi(user.sub, dto);
+  }
+
+  @Post('western/natal')
+  @ApiOperation({ summary: 'Western tropical natal chart' })
+  @ApiResponse({ status: 201, description: 'Western natal chart returned' })
+  async getWesternNatal(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+  ) {
+    return this.astrologyService.getWesternNatal(user.sub, dto);
+  }
+
+  @Post('hellenistic/profections')
+  @ApiOperation({ summary: 'Hellenistic annual profections' })
+  @ApiResponse({ status: 201, description: 'Annual profection returned' })
+  async getHellenisticProfections(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: { dateOfBirth: string },
+  ) {
+    return this.astrologyService.getHellenisticProfections(user.sub, dto);
+  }
+
+  @Post('horary/ask')
+  @ApiOperation({ summary: 'Horary chart + judgment for a question asked now' })
+  @ApiResponse({ status: 201, description: 'Horary judgment returned' })
+  async getHoraryAsk(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: { question: string },
+  ) {
+    return this.astrologyService.getHoraryAsk(user.sub, dto);
+  }
+
+  @Get('medical/body-zodiac')
+  @Public()
+  @ApiOperation({ summary: 'Medical astrology zodiac-body correspondence table' })
+  @ApiResponse({ status: 200, description: 'Body-zodiac mapping returned' })
+  getMedicalBodyZodiac() {
+    return this.astrologyService.getMedicalBodyZodiac();
+  }
 }

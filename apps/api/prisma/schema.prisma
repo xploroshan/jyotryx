@@ -138,6 +138,7 @@ model User {
   profilePhoto      String?
   preferredLanguage   String    @default("en")
   astrologyTraditions AstrologyTradition[] @default([VEDIC, WESTERN, CHINESE, HELLENISTIC, HORARY, MEDICAL])
+  primaryTradition    AstrologyTradition?
   role              Role      @default(USER)
   credits           Int       @default(3)
   provider          AuthProvider @default(LOCAL)

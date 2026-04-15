@@ -14,6 +14,7 @@ export interface UserProfile {
   profilePhoto?: string | null;
   preferredLanguage: string;
   astrologyTraditions: string[];
+  primaryTradition: string | null;
   credits: number;
   role: string;
   createdAt: string;
@@ -60,6 +61,7 @@ export interface UpdateProfileDto {
   profilePhoto?: string;
   preferredLanguage?: string;
   astrologyTraditions?: string[];
+  primaryTradition?: string | null;
 }
 
 export interface UserCredits {
@@ -93,6 +95,7 @@ export class UserService {
       profilePhoto: user.profilePhoto,
       preferredLanguage: user.preferredLanguage,
       astrologyTraditions: (user as any).astrologyTraditions ?? ['VEDIC'],
+      primaryTradition: (user as any).primaryTradition ?? null,
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),
@@ -115,6 +118,18 @@ export class UserService {
       traditionsUpdate = { astrologyTraditions: filtered };
     }
 
+    // Validate primaryTradition if provided. `null` clears the preference.
+    let primaryTraditionUpdate: Record<string, any> = {};
+    if (dto.primaryTradition !== undefined) {
+      if (dto.primaryTradition === null) {
+        primaryTraditionUpdate = { primaryTradition: null };
+      } else if (VALID_TRADITIONS.has(dto.primaryTradition)) {
+        primaryTraditionUpdate = { primaryTradition: dto.primaryTradition as any };
+      } else {
+        throw new NotFoundException(`Unsupported primary tradition: ${dto.primaryTradition}`);
+      }
+    }
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -128,6 +143,7 @@ export class UserService {
         ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
         ...(dto.preferredLanguage && { preferredLanguage: dto.preferredLanguage }),
         ...traditionsUpdate,
+        ...primaryTraditionUpdate,
       },
     });
 
@@ -144,6 +160,7 @@ export class UserService {
       profilePhoto: user.profilePhoto,
       preferredLanguage: user.preferredLanguage,
       astrologyTraditions: (user as any).astrologyTraditions ?? ['VEDIC'],
+      primaryTradition: (user as any).primaryTradition ?? null,
       credits: user.credits,
       role: user.role,
       createdAt: user.createdAt.toISOString(),

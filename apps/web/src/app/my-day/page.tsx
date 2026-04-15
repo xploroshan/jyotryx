@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+import FocusModeToggle from "@/components/ui/FocusModeToggle";
 import {
   getQualityLabel,
   translatePlanet,
@@ -235,12 +236,15 @@ export default function MyDayPage() {
                 {translateGreeting(briefing.greeting, t)}
               </h1>
               {isMultiTradition && (
-                <div className="flex gap-2 mt-3">
-                  {userTraditions.map((trad) => (
-                    <span key={trad} className={`text-[10px] font-medium px-2.5 py-1 rounded-full border ${TRADITION_BADGE_COLORS[trad] || TRADITION_BADGE_COLORS.VEDIC}`}>
-                      {TRADITION_LABELS[trad] || trad}
-                    </span>
-                  ))}
+                <div className="flex flex-col gap-2 mt-3">
+                  <div className="flex gap-2">
+                    {userTraditions.map((trad) => (
+                      <span key={trad} className={`text-[10px] font-medium px-2.5 py-1 rounded-full border ${TRADITION_BADGE_COLORS[trad] || TRADITION_BADGE_COLORS.VEDIC}`}>
+                        {TRADITION_LABELS[trad] || trad}
+                      </span>
+                    ))}
+                  </div>
+                  <FocusModeToggle />
                 </div>
               )}
             </div>
