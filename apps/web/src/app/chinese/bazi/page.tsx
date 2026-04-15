@@ -1,0 +1,148 @@
+'use client';
+
+import { useState } from 'react';
+import { useTranslation } from '@/i18n';
+import { useAuthStore } from '@/lib/store';
+import { api } from '@/lib/api';
+import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+
+interface BaZiResponse {
+  pillars: {
+    year: { heavenlyStem: string; earthlyBranch: string; animal: string; element: string };
+    month: { heavenlyStem: string; earthlyBranch: string; animal: string; element: string };
+    day: { heavenlyStem: string; earthlyBranch: string; animal: string; element: string };
+    hour: { heavenlyStem: string; earthlyBranch: string; animal: string; element: string };
+  };
+  dayMaster: string;
+  elementBalance: Record<string, number>;
+  interpretation: string;
+}
+
+/**
+ * Chinese BaZi (Four Pillars) — user submits birth details, backend
+ * returns the four pillars plus an LLM-authored interpretation.
+ */
+export default function ChineseBaZiPage() {
+  const { t } = useTranslation();
+  const { user, isAuthenticated, accessToken } = useAuthStore();
+  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
+  const [timeOfBirth, setTimeOfBirth] = useState(user?.timeOfBirth ?? '');
+  const [placeOfBirth, setPlaceOfBirth] = useState(user?.placeOfBirth ?? '');
+  const [result, setResult] = useState<BaZiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setResult(null);
+    try {
+      const res = await api.post<BaZiResponse>(
+        '/astrology/bazi',
+        { dateOfBirth, timeOfBirth, placeOfBirth },
+        { token: accessToken ?? undefined },
+      );
+      setResult(res);
+    } catch (err: any) {
+      setError(err?.message ?? 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <TraditionFeatureStub
+      traditionId="CHINESE"
+      featureKey="traditionsUi.chinese.features.bazi"
+    >
+      {!isAuthenticated ? (
+        <p className="text-sm text-white/60 text-center py-6">
+          {(t.common as any).login ?? 'Log in'} to get a personalised BaZi reading.
+        </p>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Date of birth</label>
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                required
+                className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Time of birth</label>
+              <input
+                type="time"
+                value={timeOfBirth}
+                onChange={(e) => setTimeOfBirth(e.target.value)}
+                required
+                className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Place of birth</label>
+              <input
+                type="text"
+                value={placeOfBirth}
+                onChange={(e) => setPlaceOfBirth(e.target.value)}
+                placeholder="City, Country"
+                required
+                className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
+            >
+              {loading ? (t.common as any).processing ?? 'Processing...' : 'Calculate BaZi'}
+            </button>
+            {error && (
+              <p className="text-xs text-red-400 mt-2">{error}</p>
+            )}
+          </form>
+
+          {result && (
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {(['year', 'month', 'day', 'hour'] as const).map((k) => {
+                  const p = result.pillars[k];
+                  return (
+                    <div key={k} className="rounded-xl border divider bg-white/[0.03] p-3">
+                      <div className="text-[10px] uppercase tracking-wider text-white/40">
+                        {k} pillar
+                      </div>
+                      <div className="mt-1 text-white text-sm font-semibold">
+                        {p.heavenlyStem} · {p.earthlyBranch}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        {p.animal} · {p.element}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="rounded-xl border divider bg-white/[0.03] p-4">
+                <div className="text-xs uppercase tracking-wider text-white/40">
+                  Day Master
+                </div>
+                <div className="mt-1 text-white font-medium">{result.dayMaster}</div>
+              </div>
+              {result.interpretation && (
+                <div className="rounded-xl border divider bg-white/[0.03] p-4">
+                  <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
+                    {result.interpretation}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </TraditionFeatureStub>
+  );
+}

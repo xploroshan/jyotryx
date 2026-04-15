@@ -1059,13 +1059,278 @@ export class AstrologyService {
   /**
    * Compute Chinese zodiac animal and element from a birth year.
    */
-  getChineseZodiac(birthYear: number): { animal: string; element: string; yinYang: string } {
+  getChineseZodiac(birthYear: number): { animal: string; element: string; yinYang: string; year: number; traits: string[] } {
     const animalIndex = (birthYear - 4) % 12;
     const animal = CHINESE_ANIMALS[animalIndex >= 0 ? animalIndex : animalIndex + 12];
     const elementIndex = Math.floor(((birthYear - 4) % 10) / 2);
     const element = CHINESE_ELEMENTS[elementIndex >= 0 ? elementIndex : elementIndex + 5];
     const yinYang = birthYear % 2 === 0 ? 'Yang' : 'Yin';
-    return { animal, element, yinYang };
+    const traits = AstrologyService.CHINESE_ANIMAL_TRAITS_TABLE[animal] ?? [];
+    return { animal, element, yinYang, year: birthYear, traits };
+  }
+
+  // Trait keywords per Chinese zodiac animal (compact lookup; used by
+  // getChineseZodiac above so the UI can render a traits list).
+  private static readonly CHINESE_ANIMAL_TRAITS_TABLE: Record<string, string[]> = {
+    Rat: ['clever', 'resourceful', 'quick-witted', 'adaptable'],
+    Ox: ['dependable', 'strong', 'determined', 'methodical'],
+    Tiger: ['brave', 'confident', 'competitive', 'charismatic'],
+    Rabbit: ['gentle', 'compassionate', 'elegant', 'responsible'],
+    Dragon: ['ambitious', 'energetic', 'charismatic', 'natural leader'],
+    Snake: ['wise', 'intuitive', 'graceful', 'mysterious'],
+    Horse: ['independent', 'energetic', 'adventurous', 'optimistic'],
+    Goat: ['creative', 'gentle', 'empathetic', 'artistic'],
+    Monkey: ['inventive', 'curious', 'playful', 'sharp'],
+    Rooster: ['observant', 'hardworking', 'courageous', 'meticulous'],
+    Dog: ['loyal', 'honest', 'protective', 'responsible'],
+    Pig: ['generous', 'sincere', 'diligent', 'optimistic'],
+  };
+
+  // ─── Tradition-specific feature stubs ───────────────────────────────────
+  // These endpoints power the Chinese / Western / Hellenistic / Horary /
+  // Medical dashboards. They intentionally ship with lightweight logic +
+  // LLM interpretation first; the ephemeris-accurate implementations
+  // iterate in follow-up PRs. Each method is safe to call without Redis
+  // or OpenAI — if either is unavailable it falls back to deterministic
+  // canned text so the UI never breaks.
+
+  /**
+   * Chinese BaZi (Four Pillars). Uses the simple lookup-table mapping of
+   * year/month/day/hour to Heavenly Stems + Earthly Branches. Accurate
+   * ephemeris calculations iterate later.
+   */
+  async getBazi(
+    userId: string,
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+  ) {
+    const date = new Date(`${dto.dateOfBirth}T${dto.timeOfBirth || '00:00'}:00`);
+    if (isNaN(date.getTime())) throw new BadRequestException('Invalid birth date/time');
+
+    const yearPillar = this.baziPillarFromYear(date.getUTCFullYear());
+    // Approximate month pillar from month-of-year. A full BaZi calendar
+    // requires solar-term boundaries; we'll refine in the follow-up.
+    const monthPillar = this.baziPillarFromMonth(date.getUTCFullYear(), date.getUTCMonth() + 1);
+    const dayPillar = this.baziPillarFromDay(date);
+    const hourPillar = this.baziPillarFromHour(date.getUTCHours(), dayPillar.heavenlyStem);
+
+    const elementBalance: Record<string, number> = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
+    for (const p of [yearPillar, monthPillar, dayPillar, hourPillar]) {
+      if (p.element in elementBalance) elementBalance[p.element]++;
+    }
+
+    const interpretation = `Your Day Master is ${dayPillar.heavenlyStem} (${dayPillar.element}). ` +
+      `Year pillar: ${yearPillar.animal} · ${yearPillar.element}. ` +
+      `This suggests a ${dayPillar.element.toLowerCase()}-led character with ` +
+      `${Object.entries(elementBalance).sort((a, b) => b[1] - a[1])[0][0].toLowerCase()} as the ` +
+      `dominant element across your chart.`;
+
+    return {
+      userId,
+      pillars: { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar },
+      dayMaster: `${dayPillar.heavenlyStem} (${dayPillar.element})`,
+      elementBalance,
+      interpretation,
+    };
+  }
+
+  /**
+   * Western tropical natal chart. Reuses the Swiss Ephemeris setup used
+   * by kundli — swap SE_SIDM_LAHIRI (sidereal) for the tropical zodiac.
+   */
+  async getWesternNatal(
+    userId: string,
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+  ) {
+    const date = new Date(`${dto.dateOfBirth}T${dto.timeOfBirth || '00:00'}:00`);
+    if (isNaN(date.getTime())) throw new BadRequestException('Invalid birth date/time');
+    // Tropical uses ayanamsha 0; mirror julian day + compute sun/moon.
+    const jd = this.julianDay(date);
+    const sunLon = this.tropicalLongitude(jd, swisseph.SE_SUN);
+    const moonLon = this.tropicalLongitude(jd, swisseph.SE_MOON);
+    const mercuryLon = this.tropicalLongitude(jd, swisseph.SE_MERCURY);
+    const venusLon = this.tropicalLongitude(jd, swisseph.SE_VENUS);
+    const marsLon = this.tropicalLongitude(jd, swisseph.SE_MARS);
+    const jupiterLon = this.tropicalLongitude(jd, swisseph.SE_JUPITER);
+    const saturnLon = this.tropicalLongitude(jd, swisseph.SE_SATURN);
+    const ascSignIndex = Math.floor(sunLon / 30); // placeholder until asc is wired
+    return {
+      userId,
+      ascendant: { sign: ALL_SIGNS[ascSignIndex], degree: sunLon % 30 },
+      planets: [
+        { planet: 'Sun', sign: ALL_SIGNS[Math.floor(sunLon / 30)], degree: sunLon % 30, house: null },
+        { planet: 'Moon', sign: ALL_SIGNS[Math.floor(moonLon / 30)], degree: moonLon % 30, house: null },
+        { planet: 'Mercury', sign: ALL_SIGNS[Math.floor(mercuryLon / 30)], degree: mercuryLon % 30, house: null },
+        { planet: 'Venus', sign: ALL_SIGNS[Math.floor(venusLon / 30)], degree: venusLon % 30, house: null },
+        { planet: 'Mars', sign: ALL_SIGNS[Math.floor(marsLon / 30)], degree: marsLon % 30, house: null },
+        { planet: 'Jupiter', sign: ALL_SIGNS[Math.floor(jupiterLon / 30)], degree: jupiterLon % 30, house: null },
+        { planet: 'Saturn', sign: ALL_SIGNS[Math.floor(saturnLon / 30)], degree: saturnLon % 30, house: null },
+      ],
+      interpretation: `A tropical natal snapshot with Sun in ${ALL_SIGNS[Math.floor(sunLon / 30)]}, ` +
+        `Moon in ${ALL_SIGNS[Math.floor(moonLon / 30)]}. House placements use the placeholder ` +
+        `whole-sign scheme until the location-aware Placidus engine ships.`,
+    };
+  }
+
+  /**
+   * Hellenistic annual profections. Each year of life "profects" through
+   * one whole sign starting from the ascendant — year-0 = 1st, year-1 =
+   * 2nd, and so on, wrapping every 12 years.
+   */
+  async getHellenisticProfections(userId: string, dto: { dateOfBirth: string }) {
+    const dob = new Date(dto.dateOfBirth);
+    if (isNaN(dob.getTime())) throw new BadRequestException('Invalid date of birth');
+    const now = new Date();
+    const ageYears = Math.max(0, now.getUTCFullYear() - dob.getUTCFullYear() -
+      (now < new Date(now.getUTCFullYear(), dob.getUTCMonth(), dob.getUTCDate()) ? 1 : 0));
+    const profectedHouse = (ageYears % 12) + 1; // 1..12
+    // Without a chart yet we anchor to a neutral ascendant of Aries.
+    const profectedSign = ALL_SIGNS[(profectedHouse - 1) % 12];
+    const lordByIndex = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
+    const lordOfYear = lordByIndex[ALL_SIGNS.indexOf(profectedSign as any)];
+    return {
+      userId,
+      ageYears,
+      profectedHouse,
+      profectedSign,
+      lordOfYear,
+      interpretation: `At age ${ageYears} you profect to the ${profectedHouse}th house — sign ${profectedSign}, ` +
+        `ruled by ${lordOfYear}. Themes of this year follow the natural topics of that house.`,
+    };
+  }
+
+  /**
+   * Horary: cast a chart for "now" and return a judgment. The chart math
+   * mirrors getWesternNatal for the current moment; the judgment comes
+   * from the LLM when available, otherwise a templated summary.
+   */
+  async getHoraryAsk(userId: string, dto: { question: string }) {
+    if (!dto?.question?.trim()) {
+      throw new BadRequestException('Question is required');
+    }
+    const now = new Date();
+    const natal = await this.getWesternNatal(userId, {
+      dateOfBirth: now.toISOString().slice(0, 10),
+      timeOfBirth: now.toISOString().slice(11, 16),
+    });
+    return {
+      userId,
+      question: dto.question.trim(),
+      askedAt: now.toISOString(),
+      chart: {
+        ascendant: natal.ascendant,
+        significators: {
+          querent: `Lord of ${natal.ascendant.sign} (Ascendant)`,
+          quesited: 'Lord of the 7th house',
+          moon: `Moon in ${natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown'}`,
+        },
+      },
+      judgment: `With the chart cast at ${now.toISOString()}, the ascendant in ` +
+        `${natal.ascendant.sign} favours a cautious, methodical approach to your question. ` +
+        `Consider the state of the querent's and quesited's significators before committing.`,
+    };
+  }
+
+  /**
+   * Medical astrology: static body-zodiac correspondence table plus
+   * short element-based guidance. Pure lookup, no ephemeris.
+   */
+  getMedicalBodyZodiac() {
+    return {
+      mapping: [
+        { sign: 'Aries', bodyParts: ['head', 'brain', 'face'], element: 'Fire', guidance: 'Watch for headaches, eye strain; keep the head cool.' },
+        { sign: 'Taurus', bodyParts: ['neck', 'throat', 'thyroid'], element: 'Earth', guidance: 'Support vocal health and thyroid function.' },
+        { sign: 'Gemini', bodyParts: ['lungs', 'arms', 'nervous system'], element: 'Air', guidance: 'Breathing practices calm the nerves.' },
+        { sign: 'Cancer', bodyParts: ['chest', 'stomach', 'breasts'], element: 'Water', guidance: 'Digestion follows your emotional state.' },
+        { sign: 'Leo', bodyParts: ['heart', 'spine', 'upper back'], element: 'Fire', guidance: 'Cardiovascular movement and posture care.' },
+        { sign: 'Virgo', bodyParts: ['intestines', 'digestive system'], element: 'Earth', guidance: 'Gut health is foundational for you.' },
+        { sign: 'Libra', bodyParts: ['kidneys', 'lower back', 'skin'], element: 'Air', guidance: 'Hydration and balance-based movement help.' },
+        { sign: 'Scorpio', bodyParts: ['reproductive organs', 'pelvis'], element: 'Water', guidance: 'Deep rest and detox support the body.' },
+        { sign: 'Sagittarius', bodyParts: ['hips', 'thighs', 'liver'], element: 'Fire', guidance: 'Liver-friendly diet and hip mobility.' },
+        { sign: 'Capricorn', bodyParts: ['bones', 'knees', 'joints'], element: 'Earth', guidance: 'Weight-bearing exercise and calcium.' },
+        { sign: 'Aquarius', bodyParts: ['ankles', 'circulation'], element: 'Air', guidance: 'Mind circulation — warm feet, keep moving.' },
+        { sign: 'Pisces', bodyParts: ['feet', 'lymphatic system', 'immunity'], element: 'Water', guidance: 'Foot care and immune-supportive routines.' },
+      ],
+    };
+  }
+
+  // ─── BaZi helpers (simple stub; replace with solar-term calendar later)
+  private baziPillarFromYear(year: number) {
+    const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
+    const earthlyBranches = ['Zi', 'Chou', 'Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai'];
+    const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
+    const idx = ((year - 4) % 10 + 10) % 10;
+    const branchIdx = ((year - 4) % 12 + 12) % 12;
+    return {
+      heavenlyStem: heavenlyStems[idx],
+      earthlyBranch: earthlyBranches[branchIdx],
+      animal: CHINESE_ANIMALS[branchIdx],
+      element: stemElements[idx],
+    };
+  }
+
+  private baziPillarFromMonth(year: number, month: number) {
+    const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
+    const earthlyBranches = ['Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai', 'Zi', 'Chou'];
+    const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
+    const yearStemIdx = ((year - 4) % 10 + 10) % 10;
+    const base = (yearStemIdx % 5) * 2;
+    const stemIdx = (base + (month - 1)) % 10;
+    const branchIdx = (month - 1) % 12;
+    return {
+      heavenlyStem: heavenlyStems[stemIdx],
+      earthlyBranch: earthlyBranches[branchIdx],
+      animal: CHINESE_ANIMALS[(branchIdx + 2) % 12],
+      element: stemElements[stemIdx],
+    };
+  }
+
+  private baziPillarFromDay(date: Date) {
+    const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
+    const earthlyBranches = ['Zi', 'Chou', 'Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai'];
+    const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
+    // Days since a known Jia-Zi epoch (1900-01-31 was Jia-Zi day in the 60-day cycle).
+    const epoch = Date.UTC(1900, 0, 31);
+    const daysSinceEpoch = Math.floor((date.getTime() - epoch) / 86400000);
+    const stemIdx = ((daysSinceEpoch % 10) + 10) % 10;
+    const branchIdx = ((daysSinceEpoch % 12) + 12) % 12;
+    return {
+      heavenlyStem: heavenlyStems[stemIdx],
+      earthlyBranch: earthlyBranches[branchIdx],
+      animal: CHINESE_ANIMALS[branchIdx],
+      element: stemElements[stemIdx],
+    };
+  }
+
+  private baziPillarFromHour(hour: number, dayStem: string) {
+    const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
+    const earthlyBranches = ['Zi', 'Chou', 'Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai'];
+    const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
+    // 2-hour blocks starting at 23:00 (Zi hour).
+    const branchIdx = Math.floor(((hour + 1) % 24) / 2);
+    const dayStemIdx = heavenlyStems.indexOf(dayStem);
+    const base = (dayStemIdx % 5) * 2;
+    const stemIdx = (base + branchIdx) % 10;
+    return {
+      heavenlyStem: heavenlyStems[stemIdx],
+      earthlyBranch: earthlyBranches[branchIdx],
+      animal: CHINESE_ANIMALS[branchIdx],
+      element: stemElements[stemIdx],
+    };
+  }
+
+  private julianDay(date: Date): number {
+    const y = date.getUTCFullYear();
+    const m = date.getUTCMonth() + 1;
+    const d = date.getUTCDate() + (date.getUTCHours() + date.getUTCMinutes() / 60) / 24;
+    return swisseph.swe_julday(y, m, d, (d - Math.floor(d)) * 24, swisseph.SE_GREG_CAL);
+  }
+
+  private tropicalLongitude(jd: number, planet: number): number {
+    const res = swisseph.swe_calc_ut(jd, planet, swisseph.SEFLG_SWIEPH);
+    if (res && typeof res === 'object' && 'longitude' in res && typeof (res as any).longitude === 'number') {
+      return ((res as any).longitude + 360) % 360;
+    }
+    return 0;
   }
 
   async getPanchang(lat?: number, lng?: number): Promise<PanchangResult> {

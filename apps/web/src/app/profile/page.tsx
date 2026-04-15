@@ -37,7 +37,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions } = useAuthStore();
+  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions, updatePrimaryTradition } = useAuthStore();
   const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
@@ -59,6 +59,7 @@ export default function ProfilePage() {
   const [gender, setGender] = useState("");
   const [profession, setProfession] = useState("");
   const [selectedTraditions, setSelectedTraditions] = useState<string[]>(["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"]);
+  const [primaryTradition, setPrimaryTradition] = useState<string | null>(null);
 
   // Security form
   const [hasPassword, setHasPassword] = useState(true);
@@ -97,6 +98,7 @@ export default function ProfilePage() {
       setGender(profileData.gender || "");
       setProfession(profileData.profession || "");
       setSelectedTraditions((profileData as any).astrologyTraditions?.length ? (profileData as any).astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"]);
+      setPrimaryTradition((profileData as any).primaryTradition ?? null);
       updateCredits(profileData.credits);
       updateBirthDetails({
         name: profileData.name,
@@ -159,6 +161,7 @@ export default function ProfilePage() {
           gender: gender || undefined,
           profession: profession || undefined,
           astrologyTraditions: selectedTraditions,
+          primaryTradition: primaryTradition ?? selectedTraditions[0] ?? null,
         },
         { token: accessToken! }
       );
@@ -173,6 +176,7 @@ export default function ProfilePage() {
         gender: updated.gender || null,
       });
       updateAstrologyTraditions(selectedTraditions);
+      updatePrimaryTradition(primaryTradition ?? selectedTraditions[0] ?? null);
 
       // First-time completion → unlock the rest of the app.
       if (wasIncomplete && updated.profileComplete) {
@@ -481,6 +485,37 @@ export default function ProfilePage() {
                       onChange={setSelectedTraditions}
                       compact
                     />
+                    {selectedTraditions.length > 1 && (
+                      <div className="mt-5">
+                        <h4 className="text-sm font-semibold text-white mb-1">
+                          {(t as any).traditionsUi?.primaryLabel || "Primary tradition"}
+                        </h4>
+                        <p className="text-xs text-white/40 mb-3">
+                          {(t as any).traditionsUi?.primaryHint ||
+                            "Your dashboard and default views focus on this tradition."}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedTraditions.map((trad) => {
+                            const active = (primaryTradition ?? selectedTraditions[0]) === trad;
+                            return (
+                              <button
+                                key={trad}
+                                type="button"
+                                onClick={() => setPrimaryTradition(trad)}
+                                className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                                  active
+                                    ? "bg-primary-500/20 border-primary-500/40 text-white"
+                                    : "bg-white/[0.02] border-white/10 text-white/60 hover:text-white/90"
+                                }`}
+                                aria-pressed={active}
+                              >
+                                {trad}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

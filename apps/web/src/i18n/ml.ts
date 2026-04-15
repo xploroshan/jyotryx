@@ -38,6 +38,85 @@ export const ml: TranslationKeys = {
     matching: 'പൊരുത്തം',
     vastu: 'വാസ്തു',
     panchang: 'പഞ്ചാംഗം',
+    tradition: "Tradition",
+    switchTradition: "Switch tradition",
+  },
+
+  traditionsUi: {
+    selector: {
+      label: "Astrology Tradition",
+      hint: "Pick the tradition that speaks to you — you can change this anytime.",
+      allLabel: "All traditions",
+    },
+    vedic: {
+      name: "Vedic",
+      tagline: "Sidereal zodiac, 27 nakshatras, dasha cycles, and remedial guidance.",
+      features: {
+        kundli: "Kundli",
+        matching: "Kundli Matching",
+        panchang: "Panchang",
+        dasha: "Dasha Periods",
+        dosha: "Dosha Check",
+        divisional: "Divisional Charts",
+      },
+    },
+    western: {
+      name: "Western",
+      tagline: "Tropical zodiac, modern psychological astrology, transits, and synastry.",
+      features: {
+        natal: "Natal Chart",
+        transits: "Transits",
+        synastry: "Synastry",
+      },
+    },
+    chinese: {
+      name: "Chinese",
+      tagline: "Four Pillars (BaZi), animal zodiac, elements, and Flying Stars feng shui.",
+      features: {
+        bazi: "BaZi (Four Pillars)",
+        zodiac: "Chinese Zodiac",
+        flyingStars: "Flying Stars",
+      },
+    },
+    hellenistic: {
+      name: "Hellenistic",
+      tagline: "Whole-sign houses, annual profections, and zodiacal releasing.",
+      features: {
+        natal: "Natal Chart",
+        profections: "Profections",
+        zodiacalReleasing: "Zodiacal Releasing",
+      },
+    },
+    horary: {
+      name: "Horary",
+      tagline: "Ask a specific question — a chart is cast for the moment and judged.",
+      features: {
+        ask: "Ask a Question",
+        history: "Question History",
+      },
+    },
+    medical: {
+      name: "Medical",
+      tagline: "Body-zodiac correspondences, decumbiture charts, and wellness timing.",
+      features: {
+        decumbiture: "Decumbiture",
+        bodyZodiac: "Body Zodiac",
+      },
+    },
+    heroCta: "Explore features",
+    comingSoon: "Coming soon",
+    notAvailable: "Not available in your plan",
+    primaryLabel: "Primary tradition",
+    primaryHint: "Your dashboard and default views focus on this tradition.",
+  },
+
+  focusMode: {
+    label: "Focus mode",
+    hint: "Show only your primary tradition.",
+    showingAll: "Showing all selected traditions",
+    showingOne: "Focused on {{tradition}}",
+    toggleOn: "Focus",
+    toggleOff: "All traditions",
   },
   home: {
     badge: 'വൈദിക ജ്യോതിഷ പ്ലാറ്റ്ഫോം',

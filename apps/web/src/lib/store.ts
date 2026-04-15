@@ -10,6 +10,7 @@ interface User {
   role: string;
   preferredLanguage?: string;
   astrologyTraditions: string[];
+  primaryTradition?: string | null;
   profileComplete: boolean;
   dateOfBirth?: string | null;
   timeOfBirth?: string | null;
@@ -34,6 +35,7 @@ interface AuthState {
   setProfileComplete: (complete: boolean) => void;
   updateBirthDetails: (details: BirthDetails & { name?: string }) => void;
   updateAstrologyTraditions: (traditions: string[]) => void;
+  updatePrimaryTradition: (tradition: string | null) => void;
   logout: () => void;
 }
 
@@ -70,6 +72,10 @@ export const useAuthStore = create<AuthState>()(
       updateAstrologyTraditions: (traditions) =>
         set((state) => ({
           user: state.user ? { ...state.user, astrologyTraditions: traditions } : null,
+        })),
+      updatePrimaryTradition: (tradition) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, primaryTradition: tradition } : null,
         })),
       logout: () => {
         // Sign out of Firebase client SDK too
