@@ -39,7 +39,7 @@ export default function FeatureChips() {
   };
 
   return (
-    <div className="sticky top-[166px] z-30 bg-surface-950/60 backdrop-blur-md border-b border-white/[0.04]">
+    <div className="sticky top-[176px] z-30 bg-surface-950/60 backdrop-blur-md border-b border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 overflow-x-auto no-scrollbar">
         <ul className="flex gap-2 py-2.5">
           {cfg.features.map((f) => {

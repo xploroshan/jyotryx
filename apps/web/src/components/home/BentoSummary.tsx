@@ -72,7 +72,106 @@ export default function BentoSummary() {
     return () => { cancelled = true; };
   }, [isAuthenticated, accessToken, locale]);
 
-  if (!isAuthenticated) return null;
+  // Logged-out preview: show the bento layout filled with teaser copy so
+  // first-time visitors see what the summary looks like before signing up.
+  if (!isAuthenticated) {
+    return (
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-primary-400/80 mb-1">
+              {t.myDay.luckyToday}
+            </p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              {t.home.ctaLoggedOut.split('.')[0]}
+            </h2>
+          </div>
+          <Link
+            href="/auth?mode=signup"
+            className="text-xs text-primary-400 hover:text-primary-300 transition-colors whitespace-nowrap"
+          >
+            {t.home.ctaButtonLoggedOut} →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[120px] gap-3">
+          {/* Hero tile — sample day */}
+          <Link
+            href="/auth?mode=signup"
+            className="col-span-2 row-span-2 glass-strong rounded-3xl p-6 relative overflow-hidden group"
+          >
+            <div className="absolute -inset-10 bg-gradient-radial from-sky-500/35 via-sky-500/10 to-transparent blur-2xl opacity-80 pointer-events-none" />
+            <div className="relative z-10 flex flex-col h-full">
+              <span className="text-5xl mb-3" aria-hidden>{'\u2600\ufe0f'}</span>
+              <p className="text-xs uppercase tracking-widest text-white/40 mb-1">
+                {t.myDay.favorableToday}
+              </p>
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                {t.home.heroHighlight}
+              </h3>
+              <p className="text-sm text-white/60 line-clamp-3 flex-1">
+                {t.home.heroDescription}
+              </p>
+              <div className="mt-4 w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-full w-3/4 rounded-full bg-sky-400" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Lucky number placeholder */}
+          <div className="glass rounded-2xl p-4 flex flex-col justify-between">
+            <p className="text-[10px] uppercase tracking-widest text-white/40">
+              {t.myDay.number}
+            </p>
+            <p className="text-5xl font-bold bg-gradient-to-br from-accent-300 to-primary-400 bg-clip-text text-transparent leading-none">
+              7
+            </p>
+          </div>
+
+          {/* Lucky color placeholder */}
+          <div className="glass rounded-2xl p-4 relative overflow-hidden flex flex-col justify-between">
+            <p className="text-[10px] uppercase tracking-widest text-white/40">
+              {t.myDay.color}
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 ring-2 ring-white/20" />
+              <p className="text-sm font-medium text-white/80 truncate">Saffron</p>
+            </div>
+          </div>
+
+          {/* Current Hora placeholder */}
+          <Link
+            href="/auth?mode=signup"
+            className="col-span-2 glass rounded-2xl p-4 flex items-center gap-4 group hover:bg-white/[0.06] transition"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500/20 to-accent-500/10 grid place-items-center shrink-0">
+              <span className="text-2xl text-primary-300">{'\u2609'}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-white/40">
+                {t.myDay.currentHora}
+              </p>
+              <p className="text-sm font-semibold text-white truncate">Sun</p>
+              <p className="text-[11px] text-white/40">
+                {t.home.ctaButtonLoggedOut}
+              </p>
+            </div>
+          </Link>
+
+          {/* Mantra strip */}
+          <div className="col-span-2 lg:col-span-4 glass-strong rounded-2xl p-5 relative overflow-hidden text-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 via-accent-500/10 to-primary-600/10 opacity-60" />
+            <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1 relative z-10">
+              {t.myDay.todaysMantra}
+            </p>
+            <p className="text-lg sm:text-2xl font-semibold text-white tracking-wide relative z-10">
+              {'\u0913\u0902 \u0928\u092e\u0903 \u0936\u093f\u0935\u093e\u092f'}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (error) {
     return (

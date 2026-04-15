@@ -68,12 +68,12 @@ export default function TraditionRail() {
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >
       <div className="mx-auto max-w-7xl px-4 overflow-x-auto no-scrollbar">
-        <ul className="flex gap-4 py-3 justify-start lg:justify-center">
+        <ul className="flex gap-6 sm:gap-8 lg:gap-10 py-4 justify-start lg:justify-center">
           {TRADITION_LIST.map((cfg) => {
             const isActive = cfg.id === activeId;
             const label = readLabel(cfg.labelKey, cfg.slug);
             return (
-              <li key={cfg.id} className="flex flex-col items-center gap-1.5 shrink-0">
+              <li key={cfg.id} className="flex flex-col items-center gap-2 shrink-0">
                 <motion.button
                   ref={isActive ? activeRef : undefined}
                   whileTap={{ scale: 0.94 }}
@@ -81,14 +81,14 @@ export default function TraditionRail() {
                   role="tab"
                   aria-selected={isActive}
                   aria-label={label}
-                  className={`meatball w-16 h-16 ${isActive ? 'active' : ''} ${
+                  className={`meatball w-[72px] h-[60px] sm:w-20 sm:h-[64px] ${isActive ? 'active' : ''} ${
                     isActive
                       ? 'glass-strong ring-2 ring-primary-400/60 shadow-[0_10px_30px_-8px] shadow-primary-500/40'
                       : 'glass hover:ring-1 hover:ring-white/20'
                   }`}
                 >
                   <span
-                    className="text-2xl leading-none"
+                    className="text-[26px] leading-none"
                     style={{
                       filter: isActive
                         ? 'drop-shadow(0 2px 6px rgba(250, 204, 21, 0.45))'
@@ -101,7 +101,7 @@ export default function TraditionRail() {
                   {isActive && (
                     <motion.span
                       layoutId="meatball-glow"
-                      className="absolute inset-[-4px] rounded-full bg-gradient-to-br from-primary-500/30 via-accent-500/20 to-transparent blur-sm -z-10"
+                      className="absolute inset-[-4px] rounded-[1.5rem] bg-gradient-to-br from-primary-500/30 via-accent-500/20 to-transparent blur-sm -z-10"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
