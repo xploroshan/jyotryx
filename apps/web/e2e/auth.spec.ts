@@ -108,7 +108,10 @@ test.describe('Auth page', () => {
   });
 
   test('switches between phone and email methods', async ({ page }) => {
-    await page.goto('/auth');
+    // `gotoAndHydrate` waits for React to finish attaching handlers —
+    // clicks dispatched before hydration are silently dropped on first
+    // compile of /auth in dev mode.
+    await gotoAndHydrate(page, '/auth');
 
     // Default is phone.
     await expect(page.getByPlaceholder('Phone number')).toBeVisible();
@@ -186,7 +189,9 @@ test.describe('Auth page — email login', () => {
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('CorrectPass123');
 
-    await page.getByRole('button', { name: /^Log in$/ }).click();
+    // Two "Log in" buttons exist: the tab switcher at the top and the
+    // form submit below. `.last()` selects the submit button.
+    await page.getByRole('button', { name: /^Log in$/ }).last().click();
 
     // profileComplete=true → /my-day
     await expect(page).toHaveURL(/\/my-day$/, { timeout: 10_000 });
@@ -212,7 +217,9 @@ test.describe('Auth page — email login', () => {
     await page.getByRole('button', { name: 'Email', exact: true }).click();
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('WrongPass123');
-    await page.getByRole('button', { name: /^Log in$/ }).click();
+    // Two "Log in" buttons exist: the tab switcher at the top and the
+    // form submit below. `.last()` selects the submit button.
+    await page.getByRole('button', { name: /^Log in$/ }).last().click();
 
     // Firebase fallback fails immediately → control falls back to the
     // original 401 message which is surfaced inline.
@@ -238,7 +245,9 @@ test.describe('Auth page — email login', () => {
     await page.getByRole('button', { name: 'Email', exact: true }).click();
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('SomePass123');
-    await page.getByRole('button', { name: /^Log in$/ }).click();
+    // Two "Log in" buttons exist: the tab switcher at the top and the
+    // form submit below. `.last()` selects the submit button.
+    await page.getByRole('button', { name: /^Log in$/ }).last().click();
 
     // Banner with the network string and a Retry affordance.
     await expect(
