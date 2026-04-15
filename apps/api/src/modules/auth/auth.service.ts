@@ -96,6 +96,20 @@ const LOCKOUT_SECONDS = 15 * 60; // 15 minutes
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
+  /**
+   * Resolve the signup-credits default. `ConfigService.get` has returned
+   * `undefined`/`NaN` in some production deploys (seen on Railway), which
+   * then propagates into Prisma's `user.create()` and fails with
+   * "Argument `credits` is missing" because the generated client treats
+   * `undefined` for a non-optional field as missing. Coerce defensively so
+   * every call site always gets a concrete integer.
+   */
+  private get signupCredits(): number {
+    const raw = this.configService.get<number | string>('credits.freeMonthly');
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10);
+    return Number.isFinite(n) && n >= 0 ? n : 10;
+  }
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -184,7 +198,7 @@ export class AuthService {
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
         timeOfBirth: dto.timeOfBirth,
         placeOfBirth: dto.placeOfBirth ? { name: dto.placeOfBirth } : undefined,
-        credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
+        credits: this.signupCredits,
       },
     });
 
@@ -400,7 +414,7 @@ export class AuthService {
           name: signupName && signupName.length > 0 ? signupName : 'User',
           email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
           phone,
-          credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
+          credits: this.signupCredits,
         },
       });
       this.logger.log(`New user created via OTP: ${phone}`);
@@ -545,7 +559,7 @@ export class AuthService {
           email: googlePayload.email,
           provider: 'GOOGLE',
           providerId: googlePayload.sub,
-          credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
+          credits: this.signupCredits,
         },
       });
       this.logger.log(`New user created via Google: ${user.email}`);
@@ -622,7 +636,7 @@ export class AuthService {
           phone: phone_number || null,
           provider: isGoogle ? 'GOOGLE' : 'PHONE',
           providerId: uid,
-          credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
+          credits: this.signupCredits,
         },
       });
       this.logger.log(`New user created via Firebase (${sign_in_provider}): ${user.email}`);
