@@ -27,8 +27,13 @@ export class HealthController {
   ready() {
     return this.health.check([
       async (): Promise<HealthIndicatorResult> => {
+        // `$queryRawUnsafe` with a literal — no parameters, no prepared
+        // statement. On PgBouncer (transaction or session mode under
+        // load) `$queryRaw\`SELECT 1\`` can still trip
+        // `42P05 prepared statement "sN" already exists` when the
+        // pooler reuses a backend connection across checkouts.
         try {
-          await this.prisma.$queryRaw`SELECT 1`;
+          await this.prisma.$queryRawUnsafe('SELECT 1');
           return { database: { status: 'up' } };
         } catch (err: any) {
           // Terminus only reports `down` (→ HTTP 503) when the
