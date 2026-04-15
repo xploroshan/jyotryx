@@ -39,36 +39,22 @@ interface DoshaData {
   }[];
 }
 
-const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese", HELLENISTIC: "Hellenistic", HORARY: "Horary", MEDICAL: "Medical" };
-const TRADITION_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  VEDIC: { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  WESTERN: { text: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/30" },
-  CHINESE: { text: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/30" },
-  HELLENISTIC: { text: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/30" },
-  HORARY: { text: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/30" },
-  MEDICAL: { text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-};
-
 export default function KundliPage() {
   const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
-  const isMultiTradition = userTraditions.length > 1;
-  const [activeTradition, setActiveTradition] = useState(userTraditions[0] || "VEDIC");
+  // Kundli is a Vedic-specific feature. Other traditions have their own
+  // dedicated feature pages (Western Natal, Chinese BaZi, …) surfaced via
+  // the tradition rail, so there's no in-page tradition switcher here.
+  const activeTradition = "VEDIC" as const;
 
-  const isWestern = activeTradition === "WESTERN";
-  const isChinese = activeTradition === "CHINESE";
-  const isHellenistic = activeTradition === "HELLENISTIC";
-
-  const allTabs = [
-    { id: "chart", label: isChinese ? "Animal Sign" : (isWestern || isHellenistic) ? "Natal Chart" : t.kundli.birthChart, traditions: ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"] },
-    { id: "planets", label: t.kundli.planetaryDetails, traditions: ["VEDIC", "WESTERN", "HELLENISTIC"] },
-    { id: "houses", label: t.kundli.houseAnalysis, traditions: ["VEDIC", "WESTERN", "HELLENISTIC"] },
-    { id: "dasha", label: t.kundli.dashaPeriods, traditions: ["VEDIC"] },
-    { id: "yogas", label: t.kundli.yogas, traditions: ["VEDIC"] },
-    { id: "doshas", label: t.kundli.doshasTab, traditions: ["VEDIC"] },
+  const tabs = [
+    { id: "chart", label: t.kundli.birthChart },
+    { id: "planets", label: t.kundli.planetaryDetails },
+    { id: "houses", label: t.kundli.houseAnalysis },
+    { id: "dasha", label: t.kundli.dashaPeriods },
+    { id: "yogas", label: t.kundli.yogas },
+    { id: "doshas", label: t.kundli.doshasTab },
   ];
-  const tabs = allTabs.filter((tab) => tab.traditions.includes(activeTradition));
 
   const [activeTab, setActiveTab] = useState("chart");
   const [kundli, setKundli] = useState<KundliData | null>(null);
@@ -172,38 +158,13 @@ export default function KundliPage() {
             {t.kundli.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-            {isChinese ? "Chinese Birth" : isWestern ? "Natal" : t.kundli.title}{" "}
-            <span className="text-gradient">{isChinese ? "Chart" : isWestern ? "Chart" : t.kundli.titleHighlight}</span>
+            {t.kundli.title}{" "}
+            <span className="text-gradient">{t.kundli.titleHighlight}</span>
           </h1>
           <p className="text-white/40 max-w-xl mx-auto">
             {t.kundli.description}
           </p>
         </div>
-
-        {/* Tradition Tabs */}
-        {isMultiTradition && (
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex gap-1 rounded-xl bg-white/[0.03] p-1">
-              {userTraditions.map((trad) => {
-                const colors = TRADITION_COLORS[trad] || TRADITION_COLORS.VEDIC;
-                const isActive = activeTradition === trad;
-                return (
-                  <button
-                    key={trad}
-                    onClick={() => { setActiveTradition(trad); setActiveTab("chart"); setKundli(null); setDoshas(null); }}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      isActive
-                        ? `${colors.bg} ${colors.text} ${colors.border} border`
-                        : "text-white/40 hover:text-white/70"
-                    }`}
-                  >
-                    {TRADITION_LABELS[trad] || trad}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Birth Details Form */}
         {!kundli && (

@@ -95,17 +95,20 @@ const UNTRANSLATED_BASELINE: Record<string, number> = {
   // Bumped by 47 per locale for the new tradition-centric UI keys
   // (nav.tradition + nav.switchTradition + traditionsUi.* + focusMode.*),
   // all of which ship as English copies pending translation.
-  hi: 126,
-  ta: 126,
-  te: 502,
-  bn: 502,
-  mr: 497,
-  gu: 502,
-  kn: 502,
-  ml: 502,
-  pa: 502,
-  or: 502,
-  as: 502,
+  // Bumped again by 9 per locale for the expanded Vedic feature list
+  // (myDay/chat/horoscope/muhurat/kpAstrology/palmistry/numerology/tarot/vastu)
+  // that now drives the Tier-2 FeatureChips — all English until localized.
+  hi: 135,
+  ta: 135,
+  te: 511,
+  bn: 511,
+  mr: 506,
+  gu: 511,
+  kn: 511,
+  ml: 511,
+  pa: 511,
+  or: 511,
+  as: 511,
 };
 
 const locales: Array<[string, Dict]> = [

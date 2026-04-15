@@ -100,19 +100,20 @@
       0 12px 40px -10px rgba(0, 0, 0, 0.50);
   }
 
-  /* Circular "meatball" button — one per tradition in the Tier-1 rail */
+  /* "Meatball" pill — one per tradition in the Tier-1 rail.
+     Rounded rectangle (not a circle) so the icon + label pair reads as a
+     cohesive chip and lines up nicely on a Swiggy-style horizontal rail. */
   .meatball {
     position: relative;
     display: grid;
     place-items: center;
-    aspect-ratio: 1 / 1;
-    border-radius: 9999px;
+    border-radius: 1.25rem; /* 20px — squircle-ish */
     flex-shrink: 0;
     transform-style: preserve-3d;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   }
   .meatball:hover {
-    transform: translateY(-2px) rotateX(6deg);
+    transform: translateY(-2px);
   }
   .meatball.active {
     transform: translateY(-3px);

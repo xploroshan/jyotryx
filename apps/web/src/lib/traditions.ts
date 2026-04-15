@@ -79,15 +79,25 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     badgeClass: TRADITION_BADGE_COLORS.VEDIC,
     heroClass: TRADITION_HERO_COLORS.VEDIC,
     icon: '🕉️',
-    // Vedic features already ship at the top level (historical URLs).
-    // The dashboard links to those directly rather than duplicating them.
+    // Vedic is the flagship tradition — its features are the full Jyotron
+    // feature set (core Vedic + the cross-tradition tools). Other traditions
+    // surface a narrower set of specialised tools in their rails.
     features: [
+      { slug: 'my-day', labelKey: 'traditionsUi.vedic.features.myDay', href: '/my-day', available: true },
+      { slug: 'chat', labelKey: 'traditionsUi.vedic.features.chat', href: '/chat', available: true },
       { slug: 'kundli', labelKey: 'traditionsUi.vedic.features.kundli', href: '/kundli', available: true },
       { slug: 'matching', labelKey: 'traditionsUi.vedic.features.matching', href: '/matching', available: true },
+      { slug: 'horoscope', labelKey: 'traditionsUi.vedic.features.horoscope', href: '/horoscope', available: true },
       { slug: 'panchang', labelKey: 'traditionsUi.vedic.features.panchang', href: '/panchang', available: true },
+      { slug: 'muhurat', labelKey: 'traditionsUi.vedic.features.muhurat', href: '/muhurat', available: true },
       { slug: 'dasha', labelKey: 'traditionsUi.vedic.features.dasha', href: '/vedic/dasha', available: true },
       { slug: 'dosha', labelKey: 'traditionsUi.vedic.features.dosha', href: '/vedic/dosha', available: true },
       { slug: 'divisional', labelKey: 'traditionsUi.vedic.features.divisional', href: '/divisional', available: true },
+      { slug: 'kp-astrology', labelKey: 'traditionsUi.vedic.features.kpAstrology', href: '/kp-astrology', available: true },
+      { slug: 'palmistry', labelKey: 'traditionsUi.vedic.features.palmistry', href: '/palmistry', available: true },
+      { slug: 'numerology', labelKey: 'traditionsUi.vedic.features.numerology', href: '/numerology', available: true },
+      { slug: 'tarot', labelKey: 'traditionsUi.vedic.features.tarot', href: '/tarot', available: true },
+      { slug: 'vastu', labelKey: 'traditionsUi.vedic.features.vastu', href: '/vastu', available: true },
     ],
   },
   WESTERN: {

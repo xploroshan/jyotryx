@@ -7,7 +7,8 @@ import { useTranslation } from "@/i18n";
 import AstrologyAnimation from "@/components/ui/AstrologyAnimation";
 import Orb3D from "@/components/ui/Orb3D";
 
-// Auth-gated; skeleton-on-loading — so lazy-load.
+// Skeleton-on-loading — so lazy-load. Renders a data-driven bento for
+// authenticated users and a teaser bento for logged-out visitors.
 const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
   ssr: false,
 });
@@ -83,8 +84,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Bento summary — auth-only (renders null when logged out) */}
-      {isAuthenticated && <BentoSummary />}
+      {/* Bento summary — data-driven for auth users, teaser for logged out */}
+      <BentoSummary />
 
       {/* How It Works */}
       <section className="py-20 px-4 border-t divider">
