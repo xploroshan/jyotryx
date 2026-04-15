@@ -52,12 +52,6 @@ export default function Navbar() {
                   </Link>
                 )}
                 <Link
-                  href="/my-day"
-                  className="px-3 py-1.5 text-[13px] text-white/80 hover:text-white transition-colors font-medium"
-                >
-                  {t.nav.myDay}
-                </Link>
-                <Link
                   href="/reports"
                   className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors"
                 >
@@ -145,13 +139,6 @@ export default function Navbar() {
                   {t.common.admin}
                 </Link>
               )}
-              <Link
-                href="/my-day"
-                className="block px-3 py-2.5 text-sm font-medium text-white/80 hover:text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t.nav.myDay}
-              </Link>
               <Link
                 href="/reports"
                 className="block px-3 py-2.5 text-sm text-white/60 hover:text-white"

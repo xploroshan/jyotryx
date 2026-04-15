@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   TRADITION_LIST,
@@ -13,10 +14,13 @@ import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 
 /**
- * Tier-1 navigation: circular "meatball" buttons, one per astrology
- * tradition. Swiggy-style horizontally scrollable row; the active
- * tradition lifts, gets a saffron ring-glow, and a shared layout
- * underline animates between buttons.
+ * Tier-1 navigation: chunky frosted-glass pills, one per astrology
+ * tradition. Swiggy-style horizontally scrollable row; active pill
+ * lifts, glows saffron, and a shared layout underline animates between
+ * buttons.
+ *
+ * "My Day" is the first pill — it's not a tradition but a cross-cutting
+ * personalized summary, so it gets the most prominent placement.
  *
  * Pairs with `FeatureChips.tsx` below it (Tier-2).
  */
@@ -25,13 +29,14 @@ export default function TraditionRail() {
   const router = useRouter();
   const { t } = useTranslation();
   const { isAuthenticated, user, updatePrimaryTradition } = useAuthStore();
-  const activeRef = useRef<HTMLButtonElement | null>(null);
+  const activeRef = useRef<HTMLElement | null>(null);
 
   const activeId: TraditionId = resolveActiveTradition({
     pathname,
     primaryTradition: user?.primaryTradition ?? null,
     astrologyTraditions: user?.astrologyTraditions,
   });
+  const isMyDayActive = pathname.startsWith('/my-day');
 
   // Translate label from i18n path (e.g. "traditionsUi.vedic.name")
   const readLabel = (path: string, fallback: string): string => {
@@ -51,7 +56,7 @@ export default function TraditionRail() {
       inline: 'center',
       block: 'nearest',
     });
-  }, [activeId]);
+  }, [activeId, isMyDayActive]);
 
   const handleSelect = (id: TraditionId, slug: string) => {
     updatePrimaryTradition(id);
@@ -61,6 +66,9 @@ export default function TraditionRail() {
     }
   };
 
+  const pillShell =
+    'meatball w-[84px] h-[68px] sm:w-[96px] sm:h-[72px] flex flex-col items-center justify-center gap-0.5';
+
   return (
     <div
       className="sticky top-14 z-40 bg-surface-950/70 backdrop-blur-xl border-b border-white/[0.06]"
@@ -68,31 +76,67 @@ export default function TraditionRail() {
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >
       <div className="mx-auto max-w-7xl px-4 overflow-x-auto no-scrollbar">
-        <ul className="flex gap-6 sm:gap-8 lg:gap-10 py-4 justify-start lg:justify-center">
+        <ul className="flex gap-5 sm:gap-7 lg:gap-9 py-4 justify-start lg:justify-center">
+          {/* My Day — special first pill (cross-tradition personalized summary) */}
+          <li className="flex flex-col items-center gap-2 shrink-0">
+            <motion.div whileTap={{ scale: 0.94 }}>
+              <Link
+                ref={isMyDayActive ? (activeRef as any) : undefined}
+                href="/my-day"
+                role="tab"
+                aria-selected={isMyDayActive}
+                aria-label={t.nav.myDay}
+                className={`${pillShell} ${isMyDayActive ? 'active' : ''}`}
+              >
+                <span
+                  className="text-[24px] leading-none relative z-10"
+                  style={{
+                    filter: isMyDayActive
+                      ? 'drop-shadow(0 2px 6px rgba(250, 204, 21, 0.45))'
+                      : 'drop-shadow(0 1px 3px rgba(255,255,255,0.2))',
+                  }}
+                  aria-hidden
+                >
+                  ☀️
+                </span>
+                {isMyDayActive && (
+                  <motion.span
+                    layoutId="meatball-glow"
+                    className="absolute inset-[-4px] rounded-[1.75rem] bg-gradient-to-br from-primary-500/30 via-accent-500/20 to-transparent blur-md -z-10"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </Link>
+            </motion.div>
+            <span
+              className={`text-[11px] font-semibold tracking-wide transition-colors whitespace-nowrap ${
+                isMyDayActive ? 'text-white' : 'text-white/60'
+              }`}
+            >
+              {t.nav.myDay}
+            </span>
+          </li>
+
           {TRADITION_LIST.map((cfg) => {
-            const isActive = cfg.id === activeId;
+            const isActive = !isMyDayActive && cfg.id === activeId;
             const label = readLabel(cfg.labelKey, cfg.slug);
             return (
               <li key={cfg.id} className="flex flex-col items-center gap-2 shrink-0">
                 <motion.button
-                  ref={isActive ? activeRef : undefined}
+                  ref={isActive ? (activeRef as any) : undefined}
                   whileTap={{ scale: 0.94 }}
                   onClick={() => handleSelect(cfg.id, cfg.slug)}
                   role="tab"
                   aria-selected={isActive}
                   aria-label={label}
-                  className={`meatball w-[72px] h-[60px] sm:w-20 sm:h-[64px] ${isActive ? 'active' : ''} ${
-                    isActive
-                      ? 'glass-strong ring-2 ring-primary-400/60 shadow-[0_10px_30px_-8px] shadow-primary-500/40'
-                      : 'glass hover:ring-1 hover:ring-white/20'
-                  }`}
+                  className={`${pillShell} ${isActive ? 'active' : ''}`}
                 >
                   <span
-                    className="text-[26px] leading-none"
+                    className="text-[26px] leading-none relative z-10"
                     style={{
                       filter: isActive
                         ? 'drop-shadow(0 2px 6px rgba(250, 204, 21, 0.45))'
-                        : 'drop-shadow(0 1px 3px rgba(255,255,255,0.15))',
+                        : 'drop-shadow(0 1px 3px rgba(255,255,255,0.2))',
                     }}
                     aria-hidden
                   >
@@ -101,14 +145,14 @@ export default function TraditionRail() {
                   {isActive && (
                     <motion.span
                       layoutId="meatball-glow"
-                      className="absolute inset-[-4px] rounded-[1.5rem] bg-gradient-to-br from-primary-500/30 via-accent-500/20 to-transparent blur-sm -z-10"
+                      className="absolute inset-[-4px] rounded-[1.75rem] bg-gradient-to-br from-primary-500/30 via-accent-500/20 to-transparent blur-md -z-10"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
                 </motion.button>
                 <span
-                  className={`text-[11px] font-medium tracking-wide transition-colors whitespace-nowrap ${
-                    isActive ? 'text-white' : 'text-white/55'
+                  className={`text-[11px] font-semibold tracking-wide transition-colors whitespace-nowrap ${
+                    isActive ? 'text-white' : 'text-white/60'
                   }`}
                 >
                   {label}

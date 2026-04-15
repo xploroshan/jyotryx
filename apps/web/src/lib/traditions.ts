@@ -34,6 +34,9 @@ export interface TraditionFeature {
   labelKey: string; // maps to t.nav.traditions[slug].features[feature.slug]
   href: string;
   available: boolean;
+  /** Emoji shown on Tier-2 feature chips. Pure decoration; the label
+   *  is the source of truth for accessibility. */
+  icon?: string;
 }
 
 export interface WebTraditionConfig {
@@ -79,25 +82,24 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     badgeClass: TRADITION_BADGE_COLORS.VEDIC,
     heroClass: TRADITION_HERO_COLORS.VEDIC,
     icon: '🕉️',
-    // Vedic is the flagship tradition — its features are the full Jyotron
-    // feature set (core Vedic + the cross-tradition tools). Other traditions
-    // surface a narrower set of specialised tools in their rails.
+    // Vedic is the flagship tradition. My Day deliberately lives outside
+    // this list — it's a cross-tradition shortcut surfaced as the first
+    // pill in the TraditionRail itself, not a Vedic-only feature.
     features: [
-      { slug: 'my-day', labelKey: 'traditionsUi.vedic.features.myDay', href: '/my-day', available: true },
-      { slug: 'chat', labelKey: 'traditionsUi.vedic.features.chat', href: '/chat', available: true },
-      { slug: 'kundli', labelKey: 'traditionsUi.vedic.features.kundli', href: '/kundli', available: true },
-      { slug: 'matching', labelKey: 'traditionsUi.vedic.features.matching', href: '/matching', available: true },
-      { slug: 'horoscope', labelKey: 'traditionsUi.vedic.features.horoscope', href: '/horoscope', available: true },
-      { slug: 'panchang', labelKey: 'traditionsUi.vedic.features.panchang', href: '/panchang', available: true },
-      { slug: 'muhurat', labelKey: 'traditionsUi.vedic.features.muhurat', href: '/muhurat', available: true },
-      { slug: 'dasha', labelKey: 'traditionsUi.vedic.features.dasha', href: '/vedic/dasha', available: true },
-      { slug: 'dosha', labelKey: 'traditionsUi.vedic.features.dosha', href: '/vedic/dosha', available: true },
-      { slug: 'divisional', labelKey: 'traditionsUi.vedic.features.divisional', href: '/divisional', available: true },
-      { slug: 'kp-astrology', labelKey: 'traditionsUi.vedic.features.kpAstrology', href: '/kp-astrology', available: true },
-      { slug: 'palmistry', labelKey: 'traditionsUi.vedic.features.palmistry', href: '/palmistry', available: true },
-      { slug: 'numerology', labelKey: 'traditionsUi.vedic.features.numerology', href: '/numerology', available: true },
-      { slug: 'tarot', labelKey: 'traditionsUi.vedic.features.tarot', href: '/tarot', available: true },
-      { slug: 'vastu', labelKey: 'traditionsUi.vedic.features.vastu', href: '/vastu', available: true },
+      { slug: 'chat', labelKey: 'traditionsUi.vedic.features.chat', href: '/chat', available: true, icon: '💬' },
+      { slug: 'kundli', labelKey: 'traditionsUi.vedic.features.kundli', href: '/kundli', available: true, icon: '🔯' },
+      { slug: 'matching', labelKey: 'traditionsUi.vedic.features.matching', href: '/matching', available: true, icon: '💞' },
+      { slug: 'horoscope', labelKey: 'traditionsUi.vedic.features.horoscope', href: '/horoscope', available: true, icon: '🔮' },
+      { slug: 'panchang', labelKey: 'traditionsUi.vedic.features.panchang', href: '/panchang', available: true, icon: '📜' },
+      { slug: 'muhurat', labelKey: 'traditionsUi.vedic.features.muhurat', href: '/muhurat', available: true, icon: '⏰' },
+      { slug: 'dasha', labelKey: 'traditionsUi.vedic.features.dasha', href: '/vedic/dasha', available: true, icon: '🌀' },
+      { slug: 'dosha', labelKey: 'traditionsUi.vedic.features.dosha', href: '/vedic/dosha', available: true, icon: '🔥' },
+      { slug: 'divisional', labelKey: 'traditionsUi.vedic.features.divisional', href: '/divisional', available: true, icon: '📊' },
+      { slug: 'kp-astrology', labelKey: 'traditionsUi.vedic.features.kpAstrology', href: '/kp-astrology', available: true, icon: '✨' },
+      { slug: 'palmistry', labelKey: 'traditionsUi.vedic.features.palmistry', href: '/palmistry', available: true, icon: '✋' },
+      { slug: 'numerology', labelKey: 'traditionsUi.vedic.features.numerology', href: '/numerology', available: true, icon: '🔢' },
+      { slug: 'tarot', labelKey: 'traditionsUi.vedic.features.tarot', href: '/tarot', available: true, icon: '🎴' },
+      { slug: 'vastu', labelKey: 'traditionsUi.vedic.features.vastu', href: '/vastu', available: true, icon: '🏛️' },
     ],
   },
   WESTERN: {
@@ -109,9 +111,9 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     heroClass: TRADITION_HERO_COLORS.WESTERN,
     icon: '♈',
     features: [
-      { slug: 'natal', labelKey: 'traditionsUi.western.features.natal', href: '/western/natal', available: true },
-      { slug: 'transits', labelKey: 'traditionsUi.western.features.transits', href: '/western/transits', available: true },
-      { slug: 'synastry', labelKey: 'traditionsUi.western.features.synastry', href: '/western/synastry', available: true },
+      { slug: 'natal', labelKey: 'traditionsUi.western.features.natal', href: '/western/natal', available: true, icon: '🌟' },
+      { slug: 'transits', labelKey: 'traditionsUi.western.features.transits', href: '/western/transits', available: true, icon: '🌠' },
+      { slug: 'synastry', labelKey: 'traditionsUi.western.features.synastry', href: '/western/synastry', available: true, icon: '💞' },
     ],
   },
   CHINESE: {
@@ -123,9 +125,9 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     heroClass: TRADITION_HERO_COLORS.CHINESE,
     icon: '🐉',
     features: [
-      { slug: 'bazi', labelKey: 'traditionsUi.chinese.features.bazi', href: '/chinese/bazi', available: true },
-      { slug: 'zodiac', labelKey: 'traditionsUi.chinese.features.zodiac', href: '/chinese/zodiac', available: true },
-      { slug: 'flying-stars', labelKey: 'traditionsUi.chinese.features.flyingStars', href: '/chinese/flying-stars', available: true },
+      { slug: 'bazi', labelKey: 'traditionsUi.chinese.features.bazi', href: '/chinese/bazi', available: true, icon: '🀄' },
+      { slug: 'zodiac', labelKey: 'traditionsUi.chinese.features.zodiac', href: '/chinese/zodiac', available: true, icon: '🐲' },
+      { slug: 'flying-stars', labelKey: 'traditionsUi.chinese.features.flyingStars', href: '/chinese/flying-stars', available: true, icon: '⭐' },
     ],
   },
   HELLENISTIC: {
@@ -137,9 +139,9 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     heroClass: TRADITION_HERO_COLORS.HELLENISTIC,
     icon: '🏛️',
     features: [
-      { slug: 'natal', labelKey: 'traditionsUi.hellenistic.features.natal', href: '/hellenistic/natal', available: true },
-      { slug: 'profections', labelKey: 'traditionsUi.hellenistic.features.profections', href: '/hellenistic/profections', available: true },
-      { slug: 'zodiacal-releasing', labelKey: 'traditionsUi.hellenistic.features.zodiacalReleasing', href: '/hellenistic/zodiacal-releasing', available: true },
+      { slug: 'natal', labelKey: 'traditionsUi.hellenistic.features.natal', href: '/hellenistic/natal', available: true, icon: '🌟' },
+      { slug: 'profections', labelKey: 'traditionsUi.hellenistic.features.profections', href: '/hellenistic/profections', available: true, icon: '📜' },
+      { slug: 'zodiacal-releasing', labelKey: 'traditionsUi.hellenistic.features.zodiacalReleasing', href: '/hellenistic/zodiacal-releasing', available: true, icon: '🗝️' },
     ],
   },
   HORARY: {
@@ -151,8 +153,8 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     heroClass: TRADITION_HERO_COLORS.HORARY,
     icon: '⌛',
     features: [
-      { slug: 'ask', labelKey: 'traditionsUi.horary.features.ask', href: '/horary/ask', available: true },
-      { slug: 'history', labelKey: 'traditionsUi.horary.features.history', href: '/horary/history', available: true },
+      { slug: 'ask', labelKey: 'traditionsUi.horary.features.ask', href: '/horary/ask', available: true, icon: '❓' },
+      { slug: 'history', labelKey: 'traditionsUi.horary.features.history', href: '/horary/history', available: true, icon: '📚' },
     ],
   },
   MEDICAL: {
@@ -164,8 +166,8 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     heroClass: TRADITION_HERO_COLORS.MEDICAL,
     icon: '⚕️',
     features: [
-      { slug: 'decumbiture', labelKey: 'traditionsUi.medical.features.decumbiture', href: '/medical/decumbiture', available: true },
-      { slug: 'body-zodiac', labelKey: 'traditionsUi.medical.features.bodyZodiac', href: '/medical/body-zodiac', available: true },
+      { slug: 'decumbiture', labelKey: 'traditionsUi.medical.features.decumbiture', href: '/medical/decumbiture', available: true, icon: '🛏️' },
+      { slug: 'body-zodiac', labelKey: 'traditionsUi.medical.features.bodyZodiac', href: '/medical/body-zodiac', available: true, icon: '🧬' },
     ],
   },
 };
