@@ -14,20 +14,28 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE };
     BullModule.forRootAsync({
       inject: [ConfigService],
       // Railway / Upstash provide a single `REDIS_URL`; parse it once so
-      // BullMQ and ioredis share the exact same connection parameters.
+      // BullMQ and ioredis share the exact same connection parameters. If
+      // the env var is missing, malformed, or still an unresolved Railway
+      // template literal (`${{Redis.REDIS_URL}}`), fall back to the
+      // per-field `REDIS_HOST` / `REDIS_PORT` config instead of crashing
+      // with `TypeError: Invalid URL` at module init.
       useFactory: (config: ConfigService) => {
         const url = process.env.REDIS_URL;
-        if (url) {
-          const parsed = new URL(url);
-          return {
-            connection: {
-              host: parsed.hostname,
-              port: Number(parsed.port) || 6379,
-              username: parsed.username ? decodeURIComponent(parsed.username) : undefined,
-              password: parsed.password ? decodeURIComponent(parsed.password) : undefined,
-              tls: parsed.protocol === 'rediss:' ? {} : undefined,
-            },
-          };
+        if (url && /^rediss?:\/\//i.test(url)) {
+          try {
+            const parsed = new URL(url);
+            return {
+              connection: {
+                host: parsed.hostname,
+                port: Number(parsed.port) || 6379,
+                username: parsed.username ? decodeURIComponent(parsed.username) : undefined,
+                password: parsed.password ? decodeURIComponent(parsed.password) : undefined,
+                tls: parsed.protocol === 'rediss:' ? {} : undefined,
+              },
+            };
+          } catch {
+            // fall through to host/port
+          }
         }
         return {
           connection: {
