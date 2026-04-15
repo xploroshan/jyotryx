@@ -184,7 +184,7 @@ export class AuthService {
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
         timeOfBirth: dto.timeOfBirth,
         placeOfBirth: dto.placeOfBirth ? { name: dto.placeOfBirth } : undefined,
-        credits: this.configService.get<number>('credits.freeMonthly', 10),
+        credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
       },
     });
 
@@ -400,7 +400,7 @@ export class AuthService {
           name: signupName && signupName.length > 0 ? signupName : 'User',
           email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
           phone,
-          credits: this.configService.get<number>('credits.freeMonthly', 10),
+          credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
         },
       });
       this.logger.log(`New user created via OTP: ${phone}`);
@@ -545,7 +545,7 @@ export class AuthService {
           email: googlePayload.email,
           provider: 'GOOGLE',
           providerId: googlePayload.sub,
-          credits: this.configService.get<number>('credits.freeMonthly', 10),
+          credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
         },
       });
       this.logger.log(`New user created via Google: ${user.email}`);
@@ -622,7 +622,7 @@ export class AuthService {
           phone: phone_number || null,
           provider: isGoogle ? 'GOOGLE' : 'PHONE',
           providerId: uid,
-          credits: this.configService.get<number>('credits.freeMonthly', 10),
+          credits: this.configService.get<number>('credits.freeMonthly') ?? 10,
         },
       });
       this.logger.log(`New user created via Firebase (${sign_in_provider}): ${user.email}`);
