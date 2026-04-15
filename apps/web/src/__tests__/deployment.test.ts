@@ -190,7 +190,10 @@ describe('API Dockerfile', () => {
   });
 
   it('should separate dev and prod dependencies', () => {
-    expect(dockerfile).toContain('npm ci --omit=dev');
+    // The api workspace Dockerfile uses `npm install --omit=dev` (not `npm ci`)
+    // because Railway builds ship only `apps/api/` as the build context, so
+    // there's no lockfile to `npm ci` against. The crucial flag is `--omit=dev`.
+    expect(dockerfile).toMatch(/npm (ci|install).*--omit=dev/);
   });
 
   it('should expose port 4000', () => {

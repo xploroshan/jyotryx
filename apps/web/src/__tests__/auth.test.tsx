@@ -46,6 +46,19 @@ vi.mock('@/lib/api', () => ({
     delete: vi.fn(),
     upload: vi.fn(),
   },
+  wakeUpBackend: vi.fn().mockResolvedValue(true),
+  ApiError: class ApiError extends Error {
+    status: number | null = null;
+    isTimeout = false;
+    isNetwork = false;
+    constructor(message: string, opts: any = {}) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = opts.status ?? null;
+      this.isTimeout = opts.isTimeout ?? false;
+      this.isNetwork = opts.isNetwork ?? false;
+    }
+  },
 }));
 
 // ─── Mock Logo component ────────────────────────────────────────────────────

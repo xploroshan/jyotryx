@@ -94,15 +94,15 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
 const UNTRANSLATED_BASELINE: Record<string, number> = {
   hi: 79,
   ta: 79,
-  te: 441,
-  bn: 441,
-  mr: 436,
-  gu: 441,
-  kn: 441,
-  ml: 441,
-  pa: 441,
-  or: 441,
-  as: 441,
+  te: 455,
+  bn: 455,
+  mr: 450,
+  gu: 455,
+  kn: 455,
+  ml: 455,
+  pa: 455,
+  or: 455,
+  as: 455,
 };
 
 const locales: Array<[string, Dict]> = [

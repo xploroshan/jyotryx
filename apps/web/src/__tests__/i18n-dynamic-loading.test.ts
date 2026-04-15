@@ -55,7 +55,9 @@ describe('i18n Dynamic Locale Loading', () => {
       expect(mod[exportName]).toBeDefined();
       expect(mod[exportName].common).toBeDefined();
     }
-  });
+    // 11 locales × ~2000 key i18n files each takes >5s under Vitest's cold
+    // transform on first run; the default 5s timeout is too tight.
+  }, 30_000);
 
   it('Locale type should be a union of all supported codes', async () => {
     const { SUPPORTED_LOCALES } = await import('@/i18n');

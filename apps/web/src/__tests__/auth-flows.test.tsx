@@ -51,6 +51,19 @@ vi.mock('@/lib/api', () => ({
     delete: vi.fn(),
     upload: vi.fn(),
   },
+  wakeUpBackend: vi.fn().mockResolvedValue(true),
+  ApiError: class ApiError extends Error {
+    status: number | null = null;
+    isTimeout = false;
+    isNetwork = false;
+    constructor(message: string, opts: any = {}) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = opts.status ?? null;
+      this.isTimeout = opts.isTimeout ?? false;
+      this.isNetwork = opts.isNetwork ?? false;
+    }
+  },
 }));
 
 // ─── Mock Logo ──────────────────────────────────────────────────────────────
@@ -84,7 +97,14 @@ function resetAllMocks() {
   mockReplace.mockReset();
   mockGet.mockReturnValue(null);
   mockApiPost.mockReset();
+  // The auth page's forgot-password handler fires api.post('/auth/forgot-password',…)
+  // as a best-effort hint in parallel with Firebase's sendPasswordResetEmail and
+  // attaches a `.catch` to suppress failures. Default the mock to a resolved
+  // promise so `.catch()` doesn't explode on `undefined`. Individual tests can
+  // still override with mockResolvedValueOnce / mockRejectedValueOnce.
+  mockApiPost.mockResolvedValue({});
   mockApiGet.mockReset();
+  mockApiGet.mockResolvedValue({});
   mockSignInWithPhoneNumber.mockReset();
   mockSignInWithPopup.mockReset();
   mockSendPasswordResetEmail.mockReset();
