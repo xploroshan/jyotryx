@@ -37,10 +37,19 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE };
             // fall through to host/port
           }
         }
+        const host = config.get<string>('redis.host', 'redis');
+        const port = config.get<number>('redis.port', 6379);
+        const useTls =
+          process.env.REDIS_TLS === 'true' ||
+          port === 6380 ||
+          /\.upstash\.io$/i.test(host);
         return {
           connection: {
-            host: config.get<string>('redis.host', 'redis'),
-            port: config.get<number>('redis.port', 6379),
+            host,
+            port,
+            password: process.env.REDIS_PASSWORD || undefined,
+            username: process.env.REDIS_USERNAME || undefined,
+            tls: useTls ? {} : undefined,
           },
         };
       },
