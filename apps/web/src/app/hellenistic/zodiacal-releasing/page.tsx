@@ -1,10 +1,128 @@
-import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+'use client';
 
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/lib/store';
+import { useTranslation } from '@/i18n';
+import { api } from '@/lib/api';
+import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+
+interface ZRResponse {
+  ageYears: number;
+  majorPeriod: { sign: string; lord: string; description: string };
+  minorPeriod: { sign: string; lord: string; description: string };
+  interpretation: string;
+}
+
+/**
+ * Hellenistic Zodiacal Releasing — shows the current 12-year chapter
+ * and annual sub-period for the logged-in user, using their saved DOB.
+ */
 export default function HellenisticZodiacalReleasingPage() {
+  const { t } = useTranslation();
+  const { user, accessToken, isAuthenticated } = useAuthStore();
+  const [result, setResult] = useState<ZRResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const hasDob = Boolean(user?.dateOfBirth);
+
+  useEffect(() => {
+    if (!isAuthenticated || !hasDob) return;
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    api
+      .post<ZRResponse>(
+        '/astrology/hellenistic/zodiacal-releasing',
+        { dateOfBirth: user!.dateOfBirth },
+        { token: accessToken ?? undefined },
+      )
+      .then((res) => {
+        if (!cancelled) setResult(res);
+      })
+      .catch((err: any) => {
+        if (!cancelled) setError(err?.message ?? t.kundli.generateFailed);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, hasDob, user, accessToken, t.kundli.generateFailed]);
+
   return (
-    <TraditionFeatureStub
+    <FeaturePageShell
       traditionId="HELLENISTIC"
       featureKey="traditionsUi.hellenistic.features.zodiacalReleasing"
-    />
+      icon="🗝️"
+      description="Lot of Spirit chapter · 12-year release"
+    >
+      {!isAuthenticated && (
+        <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
+          {t.kundli.loginRequired}
+        </div>
+      )}
+      {isAuthenticated && !hasDob && (
+        <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
+          {t.kundli.doshaComplete}
+        </div>
+      )}
+      {loading && (
+        <div className="glass rounded-2xl p-8 text-center text-sm text-white/60">
+          {t.common.loading}
+        </div>
+      )}
+      {error && (
+        <div className="glass rounded-2xl p-6 text-sm text-red-300 text-center">
+          {error}
+        </div>
+      )}
+      {result && (
+        <div className="space-y-4">
+          <div className="glass-strong rounded-2xl p-6 text-center">
+            <p className="text-[10px] uppercase tracking-wide text-white/50">
+              Age
+            </p>
+            <p className="text-4xl font-bold text-white mt-1">{result.ageYears}</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="glass rounded-2xl p-5">
+              <p className="text-[10px] uppercase tracking-wide text-white/50">
+                Major period
+              </p>
+              <p className="text-xl font-semibold text-white mt-1">
+                {result.majorPeriod.sign}
+              </p>
+              <p className="text-xs text-white/60 mt-1">
+                Lord: {result.majorPeriod.lord}
+              </p>
+              <p className="text-xs text-white/70 mt-3">
+                {result.majorPeriod.description}
+              </p>
+            </div>
+            <div className="glass rounded-2xl p-5">
+              <p className="text-[10px] uppercase tracking-wide text-white/50">
+                Annual sub-period
+              </p>
+              <p className="text-xl font-semibold text-white mt-1">
+                {result.minorPeriod.sign}
+              </p>
+              <p className="text-xs text-white/60 mt-1">
+                Lord: {result.minorPeriod.lord}
+              </p>
+              <p className="text-xs text-white/70 mt-3">
+                {result.minorPeriod.description}
+              </p>
+            </div>
+          </div>
+
+          <div className="glass rounded-2xl p-5 text-sm text-white/80 leading-relaxed">
+            {result.interpretation}
+          </div>
+        </div>
+      )}
+    </FeaturePageShell>
   );
 }

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+import { saveHoraryRecord } from '../_history';
 
 interface HoraryResponse {
   question: string;
@@ -16,7 +18,7 @@ interface HoraryResponse {
 }
 
 export default function HoraryAskPage() {
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const { user, accessToken, isAuthenticated } = useAuthStore();
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState<HoraryResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,13 @@ export default function HoraryAskPage() {
         { token: accessToken ?? undefined },
       );
       setResult(res);
+      // Persist to client-side history so the user can revisit this reading.
+      saveHoraryRecord(user?.id, {
+        question: res.question,
+        askedAt: res.askedAt,
+        chart: res.chart,
+        judgment: res.judgment,
+      });
     } catch (err: any) {
       setError(err?.message ?? 'Request failed');
     } finally {
@@ -92,6 +101,14 @@ export default function HoraryAskPage() {
               </div>
               <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-white/80 whitespace-pre-wrap">
                 {result.judgment}
+              </div>
+              <div className="text-right">
+                <Link
+                  href="/horary/history"
+                  className="text-xs text-white/50 hover:text-white transition"
+                >
+                  View history →
+                </Link>
               </div>
             </div>
           )}
