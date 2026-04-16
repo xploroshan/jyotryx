@@ -37,7 +37,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0d0705",
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <FeatureChips />
         {/* Navbar is fixed (h-14). TraditionRail + FeatureChips are sticky
             (in normal flow), so only offset for the Navbar height. */}
-        <main className="flex-1 pt-14">
+        <main className="flex-1 pt-16">
           <ProfileGate>{children}</ProfileGate>
         </main>
         <Footer />

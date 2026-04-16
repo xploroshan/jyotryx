@@ -5,16 +5,6 @@ import { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
 
-/**
- * Shared layout for tradition-feature pages. Gives every feature the
- * same breadcrumb + glass hero + content area so the individual pages
- * can focus purely on data fetching and domain rendering.
- *
- * Compose like:
- *   <FeaturePageShell traditionId="WESTERN" featureKey="traditionsUi.western.features.transits" icon="🌠">
- *     ...page-specific body...
- *   </FeaturePageShell>
- */
 export default function FeaturePageShell({
   traditionId,
   featureKey,
@@ -45,27 +35,28 @@ export default function FeaturePageShell({
   const featureName = readLabel(featureKey, featureKey);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
-      <nav className="mb-4 text-xs text-white/50">
-        <Link href={`/${cfg.slug}`} className="hover:text-white">
+    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
+      <nav className="mb-5 text-sm text-white/40">
+        <Link href={`/${cfg.slug}`} className="hover:text-white transition-colors">
           {traditionName}
         </Link>{' '}
-        / <span className="text-white/70">{featureName}</span>
+        <span className="text-white/20">/</span>{' '}
+        <span className="text-white/60">{featureName}</span>
       </nav>
 
       <section
-        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} ring-1 px-6 sm:px-10 py-8 mb-6`}
+        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-10 py-10 mb-8`}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <span className="text-4xl leading-none" aria-hidden>
             {icon ?? cfg.icon}
           </span>
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {featureName}
             </h1>
             {description && (
-              <p className="mt-1 text-sm text-white/70">{description}</p>
+              <p className="mt-2 text-sm text-white/50 leading-relaxed">{description}</p>
             )}
           </div>
         </div>

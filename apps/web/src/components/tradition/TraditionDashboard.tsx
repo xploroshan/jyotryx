@@ -5,19 +5,6 @@ import { useTranslation } from '@/i18n';
 import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
 import Orb3D from '@/components/ui/Orb3D';
 
-/**
- * Shared aggregator used by every per-tradition dashboard page
- * (`/vedic`, `/chinese`, `/western`, `/hellenistic`, `/horary`, `/medical`).
- *
- * Glass hero with a 3D orb (color-tinted to the tradition), followed by
- * a grid of glass feature tiles pulled from the tradition registry. The
- * tradition-specific flavour (palette, icon, feature list, tagline)
- * comes from `WEB_TRADITIONS[traditionId]`, so each page is a one-line
- * `<TraditionDashboard traditionId="…" />`.
- */
-
-// Per-tradition orb tint — mirrors TRADITION_HERO_COLORS but expressed
-// as gradient-stop Tailwind classes consumable by Orb3D.
 const ORB_TINTS: Record<TraditionId, { from: string; via: string; to: string }> = {
   VEDIC: { from: 'from-amber-400/80', via: 'via-orange-500/40', to: 'to-transparent' },
   WESTERN: { from: 'from-sky-400/80', via: 'via-blue-500/40', to: 'to-transparent' },
@@ -47,40 +34,38 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
   const exploreCta = readLabel('traditionsUi.heroCta', 'Explore features');
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-      {/* Glass hero with 3D orb */}
+    <div className="mx-auto max-w-6xl px-5 sm:px-8 py-8 fade-in-up">
+      {/* Hero */}
       <section
-        className={`relative overflow-hidden rounded-3xl glass-strong bg-gradient-to-br ${cfg.heroClass} ring-1 px-6 sm:px-10 py-10 mb-8`}
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-12 py-12 mb-10`}
       >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 relative z-10">
           <div className="shrink-0">
-            <Orb3D fromClass={tint.from} viaClass={tint.via} toClass={tint.to} size={120} />
+            <Orb3D fromClass={tint.from} viaClass={tint.via} toClass={tint.to} size={110} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2.5 mb-3">
               <span className="text-2xl" aria-hidden>{cfg.icon}</span>
               <span
-                className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass}`}
+                className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${cfg.badgeClass}`}
               >
                 {name}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
               {name}
             </h1>
             {tagline && (
-              <p className="mt-2 text-sm sm:text-base text-white/70 max-w-2xl">{tagline}</p>
+              <p className="mt-3 text-base text-white/50 max-w-2xl leading-relaxed">{tagline}</p>
             )}
           </div>
         </div>
-
-        {/* Decorative background blur */}
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/[0.03] blur-3xl pointer-events-none" />
       </section>
 
       {/* Feature tiles */}
       <section>
-        <h2 className="text-xs uppercase tracking-wider text-white/50 font-medium mb-4">
+        <h2 className="text-[13px] uppercase tracking-widest text-white/40 font-medium mb-5">
           {exploreCta}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -88,22 +73,22 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
             const label = readLabel(f.labelKey, f.slug);
             const tile = (
               <div
-                className={`glass p-5 rounded-2xl h-full flex flex-col justify-between transition-all ${
+                className={`rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 h-full flex flex-col justify-between transition-all duration-300 ${
                   f.available
-                    ? 'hover:-translate-y-0.5 hover:ring-1 hover:ring-white/20 hover:shadow-[0_12px_32px_-10px] hover:shadow-primary-500/20'
-                    : 'opacity-60 cursor-not-allowed'
+                    ? 'hover:-translate-y-1 hover:border-white/[0.12] hover:bg-white/[0.04] hover:shadow-[0_16px_48px_-16px_rgba(99,102,241,0.15)]'
+                    : 'opacity-40 cursor-not-allowed'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-base font-semibold text-white">{label}</h3>
-                  <span
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.badgeClass}`}
-                  >
-                    {name}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    {f.icon && (
+                      <span className="text-lg" aria-hidden>{f.icon}</span>
+                    )}
+                    <h3 className="text-base font-semibold text-white">{label}</h3>
+                  </div>
                 </div>
                 {!f.available && (
-                  <p className="mt-3 text-xs text-white/50">
+                  <p className="mt-4 text-xs text-white/30">
                     {readLabel('traditionsUi.comingSoon', 'Coming soon')}
                   </p>
                 )}

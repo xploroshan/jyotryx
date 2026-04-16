@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary: Sacred Saffron-Orange — devotion, purity, spiritual fire */
-  --color-primary-50: #fff7ed;
-  --color-primary-100: #ffedd5;
-  --color-primary-200: #fed7aa;
-  --color-primary-300: #fdba74;
-  --color-primary-400: #fb923c;
-  --color-primary-500: #f97316;
-  --color-primary-600: #ea580c;
-  --color-primary-700: #c2410c;
-  --color-primary-800: #9a3412;
-  --color-primary-900: #7c2d12;
+  /* ── Primary: Indigo — matches the logo, feels premium + modern ── */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
 
-  /* Accent: Temple Gold — prosperity, divine light, auspiciousness */
-  --color-accent-50: #fefce8;
-  --color-accent-100: #fef9c3;
-  --color-accent-200: #fef08a;
-  --color-accent-300: #fde047;
-  --color-accent-400: #facc15;
-  --color-accent-500: #eab308;
-  --color-accent-600: #ca8a04;
-  --color-accent-700: #a16207;
+  /* ── Accent: Warm amber — retained but refined for CTAs + highlights ── */
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
 
-  /* Surface: Warm maroon-dark — sacred earth, temple interiors */
-  --color-surface-50: #fdf4f3;
-  --color-surface-100: #fce8e6;
-  --color-surface-200: #f5d0cc;
-  --color-surface-700: #3e2723;
-  --color-surface-800: #2a1810;
-  --color-surface-900: #1a0e09;
-  --color-surface-950: #0d0705;
+  /* ── Surface: Zinc-black — cool neutral, Apple-style dark mode ── */
+  --color-surface-50: #fafafa;
+  --color-surface-100: #f4f4f5;
+  --color-surface-200: #e4e4e7;
+  --color-surface-700: #3f3f46;
+  --color-surface-800: #27272a;
+  --color-surface-900: #18181b;
+  --color-surface-950: #09090b;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -42,116 +42,103 @@
   }
 
   ::selection {
-    @apply bg-primary-600/30 text-white;
+    @apply bg-primary-500/30 text-white;
   }
 }
 
 @layer utilities {
+  /* ── Text gradient — indigo→violet→fuchsia sweep ── */
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #818cf8 0%, #a78bfa 40%, #c084fc 70%, #e879f9 100%);
   }
 
+  /* ── Warm text gradient for tradition/spiritual accents ── */
+  .text-gradient-warm {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #f97316 100%);
+  }
+
+  /* ── Card surfaces — two tiers of emphasis ── */
   .surface-card {
-    @apply bg-white/[0.04] border border-primary-900/30 rounded-2xl;
+    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl;
   }
 
   .surface-card-hover {
-    @apply bg-white/[0.04] border border-primary-900/30 rounded-2xl hover:bg-white/[0.07] hover:border-primary-700/40 transition-all duration-200;
+    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl
+           hover:bg-white/[0.05] hover:border-white/[0.1]
+           transition-all duration-300 ease-out;
   }
 
   .surface-input {
-    @apply bg-white/[0.05] border border-primary-900/30 text-white placeholder-white/30 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-all duration-200;
+    @apply bg-white/[0.05] border border-white/[0.08] text-white
+           placeholder-white/25
+           focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/25
+           transition-all duration-200;
   }
 
+  /* ── Buttons ── */
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-500 text-white font-medium hover:from-primary-500 hover:to-primary-400 active:from-primary-700 active:to-primary-600 transition-all duration-150;
+    @apply bg-primary-500 text-white font-medium
+           hover:bg-primary-400
+           active:bg-primary-600
+           transition-all duration-150;
   }
 
   .btn-secondary {
-    @apply bg-white/[0.06] border border-primary-900/30 text-white font-medium hover:bg-white/[0.1] transition-colors duration-150;
+    @apply bg-white/[0.06] border border-white/[0.1] text-white font-medium
+           hover:bg-white/[0.1] hover:border-white/[0.15]
+           transition-all duration-150;
   }
 
   .btn-accent {
-    @apply bg-gradient-to-r from-accent-500 to-accent-400 text-surface-950 font-medium hover:from-accent-400 hover:to-accent-300 transition-all duration-150;
+    @apply bg-accent-500 text-surface-950 font-medium
+           hover:bg-accent-400
+           transition-all duration-150;
   }
 
   .divider {
-    @apply border-primary-900/20;
+    @apply border-white/[0.06];
   }
 
-  /* Frosted glass — primary card surface for the redesigned navigation + bento */
+  /* ── Frosted glass — refined, subtle, Apple-style blur ── */
   .glass {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 8px 32px -8px rgba(0, 0, 0, 0.40);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .glass-strong {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 12px 40px -10px rgba(0, 0, 0, 0.50);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(32px) saturate(140%);
+    -webkit-backdrop-filter: blur(32px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  /* "Meatball" pill — one per tradition in the Tier-1 rail.
-     Chunky rounded rectangle (squircle) styled with layered frosted-glass
-     + inset highlights so each pill reads as a physical, 3D chiclet
-     floating above the rail. The inner highlight (top-edge white gradient)
-     and inset shadow give the illusion of depth; the outer shadow grounds
-     the button. Hover pushes forward in Z; active lifts + glows. */
+  /* ── Tradition pills — clean, flat, modern — no 3D meatball ── */
   .meatball {
     position: relative;
     display: grid;
     place-items: center;
-    border-radius: 1.5rem; /* 24px — squircle */
+    border-radius: 1rem;
     flex-shrink: 0;
-    transform-style: preserve-3d;
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.02) 100%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -8px 16px -8px rgba(0, 0, 0, 0.45),
-      0 10px 24px -12px rgba(0, 0, 0, 0.55);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  /* Top-edge sheen — gives the chip a glossy 3D highlight */
   .meatball::before {
-    content: '';
-    position: absolute;
-    inset: 1px 1px auto 1px;
-    height: 55%;
-    border-radius: calc(1.5rem - 1px) calc(1.5rem - 1px) 50% 50% / calc(1.5rem - 1px) calc(1.5rem - 1px) 20% 20%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
-    pointer-events: none;
+    display: none;
   }
   .meatball:hover {
-    transform: translateY(-3px) scale(1.02);
-    border-color: rgba(255, 255, 255, 0.22);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.28),
-      inset 0 -8px 16px -8px rgba(0, 0, 0, 0.4),
-      0 18px 32px -10px rgba(0, 0, 0, 0.55);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
   }
   .meatball.active {
-    transform: translateY(-4px);
-    border-color: rgba(250, 204, 21, 0.45);
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 55%, rgba(249, 115, 22, 0.08) 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.32),
-      inset 0 -8px 18px -8px rgba(249, 115, 22, 0.18),
-      0 14px 32px -10px rgba(249, 115, 22, 0.35),
-      0 0 0 2px rgba(250, 204, 21, 0.25);
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.3);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -164,6 +151,25 @@
   .bg-gradient-radial {
     background-image: radial-gradient(var(--tw-gradient-stops));
   }
+
+  /* ── Fade-in animation for page content ── */
+  .fade-in {
+    animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .fade-in-up {
+    animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes astro-spin {
@@ -184,10 +190,20 @@
   50% { opacity: 1; }
 }
 
+/* ── Mesh gradient blob for hero sections ── */
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(10px, -10px) scale(1.02); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [class*="astro-spin"],
   [class*="astro-pulse"],
-  [class*="astro-twinkle"] {
+  [class*="astro-twinkle"],
+  .fade-in,
+  .fade-in-up {
     animation: none !important;
   }
 }
