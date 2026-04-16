@@ -1253,6 +1253,312 @@ export class AstrologyService {
     };
   }
 
+  /**
+   * Western synastry — compare two natal charts and return element/
+   * modality compatibility plus significant aspects between luminaries.
+   * Uses the existing tropical natal engine for both charts.
+   */
+  async getWesternSynastry(
+    userId: string,
+    dto: { partner1: { dateOfBirth: string; timeOfBirth: string }; partner2: { dateOfBirth: string; timeOfBirth: string } },
+  ) {
+    const p1 = await this.getWesternNatal(userId, dto.partner1);
+    const p2 = await this.getWesternNatal(userId, dto.partner2);
+
+    const elementOf = (sign: string): string => {
+      const map: Record<string, string> = {
+        Aries: 'Fire', Leo: 'Fire', Sagittarius: 'Fire',
+        Taurus: 'Earth', Virgo: 'Earth', Capricorn: 'Earth',
+        Gemini: 'Air', Libra: 'Air', Aquarius: 'Air',
+        Cancer: 'Water', Scorpio: 'Water', Pisces: 'Water',
+      };
+      return map[sign] || 'Unknown';
+    };
+    const modalityOf = (sign: string): string => {
+      const map: Record<string, string> = {
+        Aries: 'Cardinal', Cancer: 'Cardinal', Libra: 'Cardinal', Capricorn: 'Cardinal',
+        Taurus: 'Fixed', Leo: 'Fixed', Scorpio: 'Fixed', Aquarius: 'Fixed',
+        Gemini: 'Mutable', Virgo: 'Mutable', Sagittarius: 'Mutable', Pisces: 'Mutable',
+      };
+      return map[sign] || 'Unknown';
+    };
+
+    const getPlanetLon = (chart: typeof p1, planet: string): number | null => {
+      const p = chart.planets.find(pl => pl.planet === planet);
+      if (!p) return null;
+      const signIdx = ALL_SIGNS.indexOf(p.sign as any);
+      return signIdx * 30 + p.degree;
+    };
+
+    // Aspect detection between luminaries + Venus/Mars across the two charts.
+    const aspectTypes: { name: string; angle: number; orb: number; quality: 'harmonious' | 'challenging' }[] = [
+      { name: 'Conjunction', angle: 0, orb: 8, quality: 'harmonious' },
+      { name: 'Sextile', angle: 60, orb: 5, quality: 'harmonious' },
+      { name: 'Square', angle: 90, orb: 6, quality: 'challenging' },
+      { name: 'Trine', angle: 120, orb: 6, quality: 'harmonious' },
+      { name: 'Opposition', angle: 180, orb: 7, quality: 'challenging' },
+    ];
+    const significantPlanets = ['Sun', 'Moon', 'Venus', 'Mars'];
+    const aspects: { a: string; b: string; aspect: string; orb: number; quality: string }[] = [];
+    for (const pa of significantPlanets) {
+      for (const pb of significantPlanets) {
+        const la = getPlanetLon(p1, pa);
+        const lb = getPlanetLon(p2, pb);
+        if (la == null || lb == null) continue;
+        const diff = Math.abs(((la - lb + 540) % 360) - 180) - 0; // 0..180
+        const angular = Math.min(Math.abs(la - lb) % 360, 360 - (Math.abs(la - lb) % 360));
+        for (const at of aspectTypes) {
+          if (Math.abs(angular - at.angle) <= at.orb) {
+            aspects.push({
+              a: `Partner 1 ${pa}`,
+              b: `Partner 2 ${pb}`,
+              aspect: at.name,
+              orb: +Math.abs(angular - at.angle).toFixed(2),
+              quality: at.quality,
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    const harmonious = aspects.filter(a => a.quality === 'harmonious').length;
+    const challenging = aspects.filter(a => a.quality === 'challenging').length;
+    const totalPossible = Math.max(aspects.length, 1);
+    const score = Math.round((harmonious / totalPossible) * 100);
+
+    return {
+      userId,
+      partner1: {
+        ascendant: p1.ascendant,
+        sun: { sign: p1.planets.find(pl => pl.planet === 'Sun')!.sign, element: elementOf(p1.planets.find(pl => pl.planet === 'Sun')!.sign), modality: modalityOf(p1.planets.find(pl => pl.planet === 'Sun')!.sign) },
+        moon: { sign: p1.planets.find(pl => pl.planet === 'Moon')!.sign },
+      },
+      partner2: {
+        ascendant: p2.ascendant,
+        sun: { sign: p2.planets.find(pl => pl.planet === 'Sun')!.sign, element: elementOf(p2.planets.find(pl => pl.planet === 'Sun')!.sign), modality: modalityOf(p2.planets.find(pl => pl.planet === 'Sun')!.sign) },
+        moon: { sign: p2.planets.find(pl => pl.planet === 'Moon')!.sign },
+      },
+      aspects,
+      compatibility: {
+        score,
+        harmonious,
+        challenging,
+        summary: score >= 60
+          ? 'Strong harmonious resonance between the two charts.'
+          : score >= 40
+            ? 'Mixed dynamics with both flowing and growth-oriented contacts.'
+            : 'Notable friction points that call for conscious understanding.',
+      },
+    };
+  }
+
+  /**
+   * Western transits — current planetary positions vs a natal chart.
+   * Returns today's tropical planet positions plus any major aspects
+   * they form with the user's natal Sun, Moon, Venus, Mars, Saturn.
+   */
+  async getWesternTransits(
+    userId: string,
+    dto: { dateOfBirth: string; timeOfBirth: string },
+  ) {
+    const natal = await this.getWesternNatal(userId, dto);
+    const now = new Date();
+    const jdNow = this.julianDay(now);
+    const planetIds: { name: string; id: number }[] = [
+      { name: 'Sun', id: swisseph.SE_SUN },
+      { name: 'Moon', id: swisseph.SE_MOON },
+      { name: 'Mercury', id: swisseph.SE_MERCURY },
+      { name: 'Venus', id: swisseph.SE_VENUS },
+      { name: 'Mars', id: swisseph.SE_MARS },
+      { name: 'Jupiter', id: swisseph.SE_JUPITER },
+      { name: 'Saturn', id: swisseph.SE_SATURN },
+    ];
+    const transitingPlanets = planetIds.map(p => {
+      const lon = this.tropicalLongitude(jdNow, p.id);
+      return {
+        planet: p.name,
+        sign: ALL_SIGNS[Math.floor(lon / 30)],
+        degree: +(lon % 30).toFixed(2),
+        longitude: +lon.toFixed(2),
+      };
+    });
+
+    const aspectTypes = [
+      { name: 'Conjunction', angle: 0, orb: 5 },
+      { name: 'Sextile', angle: 60, orb: 4 },
+      { name: 'Square', angle: 90, orb: 5 },
+      { name: 'Trine', angle: 120, orb: 5 },
+      { name: 'Opposition', angle: 180, orb: 5 },
+    ];
+    const aspects: { transiting: string; natal: string; aspect: string; orb: number }[] = [];
+    for (const tp of transitingPlanets) {
+      for (const np of natal.planets) {
+        const signIdx = ALL_SIGNS.indexOf(np.sign as any);
+        const natalLon = signIdx * 30 + np.degree;
+        const angular = Math.min(Math.abs(tp.longitude - natalLon) % 360, 360 - (Math.abs(tp.longitude - natalLon) % 360));
+        for (const at of aspectTypes) {
+          if (Math.abs(angular - at.angle) <= at.orb) {
+            aspects.push({
+              transiting: tp.planet,
+              natal: np.planet,
+              aspect: at.name,
+              orb: +Math.abs(angular - at.angle).toFixed(2),
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    return {
+      userId,
+      date: now.toISOString().slice(0, 10),
+      transitingPlanets,
+      aspects,
+      interpretation: aspects.length
+        ? `Today ${aspects.length} significant transit aspects shape the day — pay attention to ${aspects[0].transiting}/${aspects[0].natal} ${aspects[0].aspect.toLowerCase()}.`
+        : 'A quiet transit window today — no major exact aspects between transiting and natal planets.',
+    };
+  }
+
+  /**
+   * Feng Shui Flying Stars — the 9-star Lo Shu grid arrangement for a
+   * given solar year. Returns the 3×3 grid of numbers (1..9) and a
+   * brief meaning for the center "Facing Star".
+   */
+  getFlyingStars(year?: number) {
+    const y = year ?? new Date().getUTCFullYear();
+    // Annual facing star = 11 - (year mod 9), adjust for Period 9 (2024+).
+    // Compact deterministic formula: center star = ((year - 1) mod 9) + 1 reversed.
+    const centerStar = ((11 - ((y - 1) % 9)) % 9) || 9;
+    // Build grid walking the Lo Shu path: center, NW, W, NE, S, N, SW, E, SE
+    const path = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // base Lo Shu
+    const offset = centerStar - 5;
+    const grid: number[][] = Array.from({ length: 3 }, (_, r) =>
+      Array.from({ length: 3 }, (_, c) => {
+        const baseIdx = r * 3 + c;
+        let v = path[baseIdx] + offset;
+        v = ((v - 1) % 9 + 9) % 9 + 1;
+        return v;
+      }),
+    );
+    const starMeanings: Record<number, string> = {
+      1: 'Career & opportunity (Water)',
+      2: 'Illness (Earth) — caution',
+      3: 'Arguments (Wood) — temper',
+      4: 'Romance & scholarship (Wood)',
+      5: 'Misfortune (Earth) — avoid disturbance',
+      6: 'Authority & helpful people (Metal)',
+      7: 'Loss & betrayal (Metal) — caution',
+      8: 'Wealth & prosperity (Earth)',
+      9: 'Future prosperity, fame (Fire)',
+    };
+    return {
+      year: y,
+      centerStar,
+      centerMeaning: starMeanings[centerStar],
+      grid,
+      meanings: starMeanings,
+      interpretation: `In ${y} the #${centerStar} Star sits at the center palace: ${starMeanings[centerStar]}.`,
+    };
+  }
+
+  /**
+   * Hellenistic Zodiacal Releasing — simplified Lot-of-Spirit release.
+   * Returns the current 12-year general period plus the active sub-period
+   * index. Full implementation requires exact natal lots; this uses a
+   * deterministic approximation keyed to the birth date.
+   */
+  async getZodiacalReleasing(userId: string, dto: { dateOfBirth: string }) {
+    const dob = new Date(dto.dateOfBirth);
+    if (isNaN(dob.getTime())) throw new BadRequestException('Invalid date of birth');
+    const now = new Date();
+    const ageYears = now.getUTCFullYear() - dob.getUTCFullYear();
+    // Simplified: each year of life releases through one sign (derived from DOB seed).
+    const seed = (dob.getUTCFullYear() + dob.getUTCMonth() + dob.getUTCDate()) % 12;
+    const majorPeriod = (seed + Math.floor(ageYears / 12)) % 12;
+    const minorPeriod = (seed + ageYears) % 12;
+    const majorSign = ALL_SIGNS[majorPeriod];
+    const minorSign = ALL_SIGNS[minorPeriod];
+    const signLords: Record<string, string> = {
+      Aries: 'Mars', Taurus: 'Venus', Gemini: 'Mercury', Cancer: 'Moon',
+      Leo: 'Sun', Virgo: 'Mercury', Libra: 'Venus', Scorpio: 'Mars',
+      Sagittarius: 'Jupiter', Capricorn: 'Saturn', Aquarius: 'Saturn', Pisces: 'Jupiter',
+    };
+    return {
+      userId,
+      ageYears,
+      majorPeriod: {
+        sign: majorSign,
+        lord: signLords[majorSign],
+        description: `12-year general chapter ruled by ${signLords[majorSign]}.`,
+      },
+      minorPeriod: {
+        sign: minorSign,
+        lord: signLords[minorSign],
+        description: `Annual sub-period ruled by ${signLords[minorSign]}.`,
+      },
+      interpretation: `At age ${ageYears} you are in a ${majorSign} general period (lord: ${signLords[majorSign]}) ` +
+        `with an annual ${minorSign} sub-period (lord: ${signLords[minorSign]}). ` +
+        `Themes of the major sign's topics dominate the chapter; the minor colours this year.`,
+    };
+  }
+
+  /**
+   * Medical astrology decumbiture — a chart cast for the moment a
+   * patient took to bed / symptoms began. Returns the ascendant (the
+   * patient), 6th house (illness) and Moon's sign (progression of the
+   * illness), along with an element-based diagnostic hint.
+   */
+  async getDecumbiture(
+    userId: string,
+    dto: { decumbitureDate?: string; decumbitureTime?: string; symptomsDescription?: string },
+  ) {
+    const now = new Date();
+    const dateStr = dto.decumbitureDate || now.toISOString().slice(0, 10);
+    const timeStr = dto.decumbitureTime || now.toISOString().slice(11, 16);
+    const natal = await this.getWesternNatal(userId, {
+      dateOfBirth: dateStr,
+      timeOfBirth: timeStr,
+    });
+    const elementOf = (sign: string): string => {
+      const map: Record<string, string> = {
+        Aries: 'Fire', Leo: 'Fire', Sagittarius: 'Fire',
+        Taurus: 'Earth', Virgo: 'Earth', Capricorn: 'Earth',
+        Gemini: 'Air', Libra: 'Air', Aquarius: 'Air',
+        Cancer: 'Water', Scorpio: 'Water', Pisces: 'Water',
+      };
+      return map[sign] || 'Unknown';
+    };
+    const ascElement = elementOf(natal.ascendant.sign);
+    const moon = natal.planets.find(p => p.planet === 'Moon');
+    const moonSign = moon?.sign ?? 'Unknown';
+    // 6th house from ascendant (whole-sign).
+    const ascIdx = ALL_SIGNS.indexOf(natal.ascendant.sign as any);
+    const sixthSign = ascIdx >= 0 ? ALL_SIGNS[(ascIdx + 5) % 12] : 'Unknown';
+    const elementGuidance: Record<string, string> = {
+      Fire: 'Hot, inflammatory — cooling herbs and hydration indicated.',
+      Earth: 'Slow, chronic — steady restorative care and routine.',
+      Air: 'Nervous, fluctuating — calming practices and regular rest.',
+      Water: 'Emotional, moist — lymphatic support and gentle movement.',
+    };
+    return {
+      userId,
+      decumbitureAt: new Date(`${dateStr}T${timeStr}:00`).toISOString(),
+      symptoms: dto.symptomsDescription?.trim() || null,
+      ascendant: natal.ascendant,
+      ascendantElement: ascElement,
+      sixthHouseSign: sixthSign,
+      moon: moon ? { sign: moon.sign, degree: moon.degree } : null,
+      guidance: elementGuidance[ascElement] ?? 'Balanced care indicated.',
+      interpretation:
+        `Decumbiture ascendant ${natal.ascendant.sign} (${ascElement}). ` +
+        `The 6th house of illness is ${sixthSign}. The Moon in ${moonSign} ` +
+        `shows the immediate course — ${elementGuidance[ascElement] ?? ''}`,
+    };
+  }
+
   // ─── BaZi helpers (simple stub; replace with solar-term calendar later)
   private baziPillarFromYear(year: number) {
     const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];

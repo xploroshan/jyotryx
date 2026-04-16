@@ -201,4 +201,60 @@ export class AstrologyController {
   getMedicalBodyZodiac() {
     return this.astrologyService.getMedicalBodyZodiac();
   }
+
+  @Post('western/synastry')
+  @ApiOperation({ summary: 'Western synastry — compare two natal charts' })
+  @ApiResponse({ status: 201, description: 'Synastry comparison returned' })
+  async getWesternSynastry(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: {
+      partner1: { dateOfBirth: string; timeOfBirth: string };
+      partner2: { dateOfBirth: string; timeOfBirth: string };
+    },
+  ) {
+    return this.astrologyService.getWesternSynastry(user.sub, dto);
+  }
+
+  @Post('western/transits')
+  @ApiOperation({ summary: 'Current western transits to a natal chart' })
+  @ApiResponse({ status: 201, description: 'Transits returned' })
+  async getWesternTransits(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: { dateOfBirth: string; timeOfBirth: string },
+  ) {
+    return this.astrologyService.getWesternTransits(user.sub, dto);
+  }
+
+  @Get('chinese/flying-stars')
+  @Public()
+  @ApiOperation({ summary: 'Feng Shui Flying Stars 9-palace grid for a year' })
+  @ApiResponse({ status: 200, description: 'Flying stars grid returned' })
+  getFlyingStars(@Query('year') year?: string) {
+    const y = year ? parseInt(year, 10) : undefined;
+    return this.astrologyService.getFlyingStars(y);
+  }
+
+  @Post('hellenistic/zodiacal-releasing')
+  @ApiOperation({ summary: 'Hellenistic Zodiacal Releasing (simplified)' })
+  @ApiResponse({ status: 201, description: 'Releasing chapter returned' })
+  async getZodiacalReleasing(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: { dateOfBirth: string },
+  ) {
+    return this.astrologyService.getZodiacalReleasing(user.sub, dto);
+  }
+
+  @Post('medical/decumbiture')
+  @ApiOperation({ summary: 'Medical astrology decumbiture chart' })
+  @ApiResponse({ status: 201, description: 'Decumbiture analysis returned' })
+  async getDecumbiture(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: {
+      decumbitureDate?: string;
+      decumbitureTime?: string;
+      symptomsDescription?: string;
+    },
+  ) {
+    return this.astrologyService.getDecumbiture(user.sub, dto);
+  }
 }
