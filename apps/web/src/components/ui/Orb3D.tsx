@@ -9,8 +9,8 @@ import { type CSSProperties } from 'react';
  * `prefers-reduced-motion` via the existing media query in globals.
  */
 export default function Orb3D({
-  fromClass = 'from-primary-500/80',
-  viaClass = 'via-accent-400/40',
+  fromClass = 'from-primary-400/70',
+  viaClass = 'via-violet-500/30',
   toClass = 'to-transparent',
   size = 140,
   className = '',

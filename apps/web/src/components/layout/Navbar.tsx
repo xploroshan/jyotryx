@@ -8,37 +8,40 @@ import { LogoMark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useTranslation } from "@/i18n";
 
-/**
- * Top utility bar. Feature + tradition navigation has moved to
- * `TraditionRail` (Tier-1, meatball) and `FeatureChips` (Tier-2) which
- * are stacked below this bar in the root layout. This component now
- * holds just brand + user/account actions.
- */
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const { t } = useTranslation();
 
   useEffect(() => {
     setMounted(true);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const showAuth = mounted && isAuthenticated;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-950/80 backdrop-blur-lg border-b divider">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between">
-          {/* Logo */}
+    <nav
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        scrolled
+          ? "bg-surface-950/80 backdrop-blur-2xl border-b border-white/[0.06]"
+          : "bg-transparent"
+      )}
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-semibold text-white tracking-tight">
+            <LogoMark className="h-7 w-7" />
+            <span className="text-[15px] font-semibold text-white tracking-tight">
               Jyotron
             </span>
           </Link>
 
-          {/* Desktop Right */}
           <div className="hidden lg:flex items-center gap-1">
             <LanguageSwitcher />
             {showAuth ? (
@@ -46,33 +49,33 @@ export default function Navbar() {
                 {user?.role === "ADMIN" && (
                   <Link
                     href="/admin"
-                    className="px-3 py-1.5 text-[13px] text-red-400 hover:text-red-300 transition-colors"
+                    className="px-3.5 py-2 text-[13px] text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-white/[0.04]"
                   >
                     {t.common.admin}
                   </Link>
                 )}
                 <Link
                   href="/reports"
-                  className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors"
+                  className="px-3.5 py-2 text-[13px] text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
                 >
                   {t.common.reports}
                 </Link>
                 <Link
                   href="/pricing"
-                  className="px-3 py-1.5 text-[13px] font-medium text-accent-400 hover:text-accent-300 transition-colors"
+                  className="px-3.5 py-2 text-[13px] font-medium text-primary-400 hover:text-primary-300 transition-colors rounded-lg hover:bg-white/[0.04]"
                 >
                   {t.common.pricing}
                 </Link>
                 <Link
                   href="/profile"
-                  className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors max-w-[10ch] truncate"
+                  className="px-3.5 py-2 text-[13px] text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04] max-w-[10ch] truncate"
                   title={user?.name}
                 >
                   {user?.name}
                 </Link>
                 <button
                   onClick={logout}
-                  className="px-3 py-1.5 text-[13px] text-white/40 hover:text-white transition-colors"
+                  className="px-3.5 py-2 text-[13px] text-white/35 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
                 >
                   {t.common.logout}
                 </button>
@@ -83,13 +86,13 @@ export default function Navbar() {
                   <>
                     <Link
                       href="/auth?mode=login"
-                      className="px-3 py-1.5 text-[13px] text-white/60 hover:text-white transition-colors"
+                      className="px-3.5 py-2 text-[13px] text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
                     >
                       {t.common.login}
                     </Link>
                     <Link
                       href="/auth?mode=signup"
-                      className="px-4 py-1.5 text-[13px] btn-primary rounded-lg"
+                      className="px-4 py-2 text-[13px] btn-primary rounded-full"
                     >
                       {t.common.signup}
                     </Link>
@@ -99,11 +102,10 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Hamburger */}
           <div className="flex items-center gap-2 lg:hidden">
             <LanguageSwitcher />
             <button
-              className="p-2 -mr-2 text-white/60 hover:text-white"
+              className="p-2 -mr-2 text-white/50 hover:text-white transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -112,7 +114,7 @@ export default function Navbar() {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                strokeWidth={2}
+                strokeWidth={1.5}
               >
                 {mobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -125,15 +127,19 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu — account links only; nav lives in TraditionRail/FeatureChips */}
-      <div className={cn("lg:hidden", mobileMenuOpen ? "block" : "hidden")}>
-        <div className="bg-surface-950 border-t divider px-4 py-3">
+      <div
+        className={cn(
+          "lg:hidden transition-all duration-300 overflow-hidden",
+          mobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <div className="bg-surface-950/95 backdrop-blur-2xl border-t border-white/[0.06] px-5 py-4">
           {showAuth ? (
             <div className="space-y-1">
               {user?.role === "ADMIN" && (
                 <Link
                   href="/admin"
-                  className="block px-3 py-2.5 text-sm text-red-400"
+                  className="block px-3 py-2.5 text-sm text-red-400 rounded-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t.common.admin}
@@ -141,21 +147,21 @@ export default function Navbar() {
               )}
               <Link
                 href="/reports"
-                className="block px-3 py-2.5 text-sm text-white/60 hover:text-white"
+                className="block px-3 py-2.5 text-sm text-white/50 hover:text-white rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.common.reports}
               </Link>
               <Link
                 href="/pricing"
-                className="block px-3 py-2.5 text-sm font-medium text-accent-400"
+                className="block px-3 py-2.5 text-sm font-medium text-primary-400 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.common.pricing}
               </Link>
               <Link
                 href="/profile"
-                className="block px-3 py-2.5 text-sm text-white/60 hover:text-white"
+                className="block px-3 py-2.5 text-sm text-white/50 hover:text-white rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {user?.name}
@@ -165,25 +171,25 @@ export default function Navbar() {
                   logout();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full text-left px-3 py-2.5 text-sm text-white/40 hover:text-white"
+                className="w-full text-left px-3 py-2.5 text-sm text-white/35 hover:text-white rounded-lg"
               >
                 {t.common.logout}
               </button>
             </div>
           ) : (
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-3 pt-1">
               {mounted && (
                 <>
                   <Link
                     href="/auth?mode=login"
-                    className="flex-1 text-center px-4 py-2.5 text-sm btn-secondary rounded-lg"
+                    className="flex-1 text-center px-4 py-2.5 text-sm btn-secondary rounded-full"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t.common.login}
                   </Link>
                   <Link
                     href="/auth?mode=signup"
-                    className="flex-1 text-center px-4 py-2.5 text-sm btn-primary rounded-lg"
+                    className="flex-1 text-center px-4 py-2.5 text-sm btn-primary rounded-full"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t.common.signup}

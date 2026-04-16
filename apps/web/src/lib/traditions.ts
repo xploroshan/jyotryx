@@ -65,12 +65,12 @@ export const TRADITION_BADGE_COLORS: Record<TraditionId, string> = {
 
 /** Hero gradient background for each tradition's dashboard. */
 export const TRADITION_HERO_COLORS: Record<TraditionId, string> = {
-  VEDIC: 'from-amber-500/15 via-amber-500/5 to-transparent ring-amber-500/20',
-  WESTERN: 'from-sky-500/15 via-sky-500/5 to-transparent ring-sky-500/20',
-  CHINESE: 'from-red-500/15 via-red-500/5 to-transparent ring-red-500/20',
-  HELLENISTIC: 'from-violet-500/15 via-violet-500/5 to-transparent ring-violet-500/20',
-  HORARY: 'from-teal-500/15 via-teal-500/5 to-transparent ring-teal-500/20',
-  MEDICAL: 'from-emerald-500/15 via-emerald-500/5 to-transparent ring-emerald-500/20',
+  VEDIC: 'from-amber-500/10 via-transparent to-transparent',
+  WESTERN: 'from-sky-500/10 via-transparent to-transparent',
+  CHINESE: 'from-red-500/10 via-transparent to-transparent',
+  HELLENISTIC: 'from-violet-500/10 via-transparent to-transparent',
+  HORARY: 'from-teal-500/10 via-transparent to-transparent',
+  MEDICAL: 'from-emerald-500/10 via-transparent to-transparent',
 };
 
 export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {

@@ -92,36 +92,37 @@ export default function VedicDoshaPage() {
   const traditionName = (t as any).traditionsUi?.vedic?.name || 'Vedic';
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-4">
-      <nav className="mb-4 text-xs text-white/50">
-        <Link href={`/${cfg.slug}`} className="hover:text-white">
+    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
+      <nav className="mb-5 text-sm text-white/40">
+        <Link href={`/${cfg.slug}`} className="hover:text-white transition-colors">
           {traditionName}
         </Link>{' '}
-        / <span className="text-white/70">{featureName}</span>
+        <span className="text-white/20">/</span>{' '}
+        <span className="text-white/60">{featureName}</span>
       </nav>
 
       <section
-        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} ring-1 px-6 sm:px-10 py-8 mb-6`}
+        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-10 py-10 mb-8`}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <span className="text-4xl leading-none" aria-hidden>
             🔥
           </span>
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {featureName}
             </h1>
-            <p className="mt-1 text-sm text-white/70">{t.kundli.doshaNote}</p>
+            <p className="mt-2 text-sm text-white/50 leading-relaxed">{t.kundli.doshaNote}</p>
           </div>
         </div>
       </section>
 
       {!isAuthenticated && (
-        <div className="glass rounded-2xl p-8 text-center">
-          <p className="text-white/70 mb-4">{t.kundli.loginRequired}</p>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+          <p className="text-white/50 mb-5">{t.kundli.loginRequired}</p>
           <Link
             href="/auth?mode=login"
-            className="inline-block px-5 py-2 btn-primary rounded-lg text-sm"
+            className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
           >
             {t.common.login}
           </Link>
@@ -129,11 +130,11 @@ export default function VedicDoshaPage() {
       )}
 
       {isAuthenticated && !hasBirthDetails && (
-        <div className="glass rounded-2xl p-8 text-center">
-          <p className="text-white/70 mb-4">{t.kundli.doshaComplete}</p>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+          <p className="text-white/50 mb-5">{t.kundli.doshaComplete}</p>
           <Link
             href="/profile"
-            className="inline-block px-5 py-2 btn-primary rounded-lg text-sm"
+            className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
           >
             Profile
           </Link>
@@ -141,13 +142,13 @@ export default function VedicDoshaPage() {
       )}
 
       {isAuthenticated && hasBirthDetails && loading && (
-        <div className="glass rounded-2xl p-8 text-center text-white/60 text-sm">
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-10 text-center text-white/40 text-sm">
           {t.common.loading}
         </div>
       )}
 
       {error && (
-        <div className="glass rounded-2xl p-6 text-center text-red-300 text-sm border-red-500/30">
+        <div className="rounded-2xl bg-red-500/5 border border-red-500/20 p-6 text-center text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -155,26 +156,26 @@ export default function VedicDoshaPage() {
       {data?.doshas && data.doshas.length > 0 && (
         <div className="space-y-4">
           {data.doshas.map((d, i) => (
-            <div key={i} className="glass rounded-2xl p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <h3 className="font-semibold text-white text-base sm:text-lg">
+            <div key={i} className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 sm:p-8">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <h3 className="font-semibold text-white text-lg">
                   {d.name}
                 </h3>
                 <span
-                  className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${severityChipClass(d)}`}
+                  className={`shrink-0 text-[11px] px-3 py-1 rounded-full border font-medium ${severityChipClass(d)}`}
                 >
                   {severityLabel(d)}
                 </span>
               </div>
-              <p className="text-sm text-white/70 leading-relaxed mb-3">
+              <p className="text-sm text-white/50 leading-relaxed mb-4">
                 {d.description}
               </p>
               {d.remedies && d.remedies.length > 0 && (
-                <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3 sm:p-4">
-                  <p className="text-[11px] uppercase tracking-wide text-primary-400 font-semibold mb-1.5">
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4 sm:p-5">
+                  <p className="text-[11px] uppercase tracking-widest text-primary-400 font-medium mb-2">
                     {t.kundli.remedies}
                   </p>
-                  <ul className="text-xs sm:text-sm text-white/75 list-disc pl-5 space-y-1">
+                  <ul className="text-sm text-white/60 list-disc pl-5 space-y-1.5">
                     {d.remedies.map((r, j) => (
                       <li key={j}>{r}</li>
                     ))}
