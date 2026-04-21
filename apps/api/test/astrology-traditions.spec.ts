@@ -532,47 +532,47 @@ describe('AstrologyService — Tradition Features', () => {
   // ─── getChineseZodiac ─────────────────────────────────────────────────────
 
   describe('getChineseZodiac', () => {
-    it('should return correct animal for known years', () => {
-      expect(service.getChineseZodiac(2024).animal).toBe('Dragon');
-      expect(service.getChineseZodiac(2023).animal).toBe('Rabbit');
-      expect(service.getChineseZodiac(2020).animal).toBe('Rat');
-      expect(service.getChineseZodiac(1990).animal).toBe('Horse');
-      expect(service.getChineseZodiac(1988).animal).toBe('Dragon');
+    it('should return correct animal for known years', async () => {
+      expect((await service.getChineseZodiac(2024)).animal).toBe('Dragon');
+      expect((await service.getChineseZodiac(2023)).animal).toBe('Rabbit');
+      expect((await service.getChineseZodiac(2020)).animal).toBe('Rat');
+      expect((await service.getChineseZodiac(1990)).animal).toBe('Horse');
+      expect((await service.getChineseZodiac(1988)).animal).toBe('Dragon');
     });
 
-    it('should return correct element', () => {
+    it('should return correct element', async () => {
       // 2024 = Wood Dragon
-      const r2024 = service.getChineseZodiac(2024);
+      const r2024 = await service.getChineseZodiac(2024);
       expect(r2024.element).toBe('Wood');
 
       // 2020 = Metal Rat
-      const r2020 = service.getChineseZodiac(2020);
+      const r2020 = await service.getChineseZodiac(2020);
       expect(r2020.element).toBe('Metal');
     });
 
-    it('should return correct Yin-Yang', () => {
-      expect(service.getChineseZodiac(2024).yinYang).toBe('Yang'); // even year
-      expect(service.getChineseZodiac(2023).yinYang).toBe('Yin');  // odd year
+    it('should return correct Yin-Yang', async () => {
+      expect((await service.getChineseZodiac(2024)).yinYang).toBe('Yang'); // even year
+      expect((await service.getChineseZodiac(2023)).yinYang).toBe('Yin');  // odd year
     });
 
-    it('should handle historical years', () => {
-      const result = service.getChineseZodiac(1900);
+    it('should handle historical years', async () => {
+      const result = await service.getChineseZodiac(1900);
       expect(result.animal).toBeTruthy();
       expect(result.element).toBeTruthy();
       expect(result.yinYang).toBeTruthy();
     });
 
-    it('should cycle through all 12 animals across 12 consecutive years', () => {
+    it('should cycle through all 12 animals across 12 consecutive years', async () => {
       const animals = new Set<string>();
       for (let year = 2020; year < 2032; year++) {
-        animals.add(service.getChineseZodiac(year).animal);
+        animals.add((await service.getChineseZodiac(year)).animal);
       }
       expect(animals.size).toBe(12);
     });
 
-    it('should return same animal for years 12 apart', () => {
-      expect(service.getChineseZodiac(2000).animal).toBe(service.getChineseZodiac(2012).animal);
-      expect(service.getChineseZodiac(1990).animal).toBe(service.getChineseZodiac(2002).animal);
+    it('should return same animal for years 12 apart', async () => {
+      expect((await service.getChineseZodiac(2000)).animal).toBe((await service.getChineseZodiac(2012)).animal);
+      expect((await service.getChineseZodiac(1990)).animal).toBe((await service.getChineseZodiac(2002)).animal);
     });
   });
 });

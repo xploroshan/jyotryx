@@ -93,8 +93,8 @@ export class AstrologyController {
   @Public()
   @ApiOperation({ summary: 'Get Chinese zodiac for a birth year' })
   @ApiResponse({ status: 200, description: 'Chinese zodiac returned' })
-  getChineseZodiac(@Param('year') year: string) {
-    return this.astrologyService.getChineseZodiac(parseInt(year, 10));
+  getChineseZodiac(@Param('year') year: string, @Query('locale') locale?: string) {
+    return this.astrologyService.getChineseZodiac(parseInt(year, 10), locale);
   }
 
   @Get('panchang')
@@ -104,10 +104,11 @@ export class AstrologyController {
   async getPanchang(
     @Query('lat') lat?: string,
     @Query('lng') lng?: string,
+    @Query('locale') locale?: string,
   ): Promise<PanchangResult> {
     const latitude = lat ? parseFloat(lat) : undefined;
     const longitude = lng ? parseFloat(lng) : undefined;
-    return this.astrologyService.getPanchang(latitude, longitude);
+    return this.astrologyService.getPanchang(latitude, longitude, locale);
   }
 
   @Post('muhurat')
@@ -120,15 +121,21 @@ export class AstrologyController {
   @Get('dosha')
   @ApiOperation({ summary: 'Get dosha analysis for current user' })
   @ApiResponse({ status: 200, description: 'Dosha analysis returned' })
-  async getDosha(@CurrentUser() user: JwtPayload): Promise<DoshaResult> {
-    return this.astrologyService.getDosha(user.sub);
+  async getDosha(
+    @CurrentUser() user: JwtPayload,
+    @Query('locale') locale?: string,
+  ): Promise<DoshaResult> {
+    return this.astrologyService.getDosha(user.sub, locale);
   }
 
   @Get('sade-sati')
   @ApiOperation({ summary: 'Get Sade Sati analysis for current user' })
   @ApiResponse({ status: 200, description: 'Sade Sati analysis returned' })
-  async getSadeSati(@CurrentUser() user: JwtPayload) {
-    return this.astrologyService.getSadeSati(user.sub);
+  async getSadeSati(
+    @CurrentUser() user: JwtPayload,
+    @Query('locale') locale?: string,
+  ) {
+    return this.astrologyService.getSadeSati(user.sub, locale);
   }
 
   @Post('divisional/:type')
@@ -159,7 +166,7 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'BaZi pillars returned' })
   async getBazi(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+    @Body() dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; locale?: string },
   ) {
     return this.astrologyService.getBazi(user.sub, dto);
   }
@@ -169,7 +176,7 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Western natal chart returned' })
   async getWesternNatal(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+    @Body() dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; locale?: string },
   ) {
     return this.astrologyService.getWesternNatal(user.sub, dto);
   }
@@ -179,7 +186,7 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Annual profection returned' })
   async getHellenisticProfections(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: { dateOfBirth: string },
+    @Body() dto: { dateOfBirth: string; locale?: string },
   ) {
     return this.astrologyService.getHellenisticProfections(user.sub, dto);
   }
@@ -189,7 +196,7 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Horary judgment returned' })
   async getHoraryAsk(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: { question: string },
+    @Body() dto: { question: string; locale?: string },
   ) {
     return this.astrologyService.getHoraryAsk(user.sub, dto);
   }
@@ -198,8 +205,8 @@ export class AstrologyController {
   @Public()
   @ApiOperation({ summary: 'Medical astrology zodiac-body correspondence table' })
   @ApiResponse({ status: 200, description: 'Body-zodiac mapping returned' })
-  getMedicalBodyZodiac() {
-    return this.astrologyService.getMedicalBodyZodiac();
+  getMedicalBodyZodiac(@Query('locale') locale?: string) {
+    return this.astrologyService.getMedicalBodyZodiac(locale);
   }
 
   @Post('western/synastry')
@@ -210,6 +217,7 @@ export class AstrologyController {
     @Body() dto: {
       partner1: { dateOfBirth: string; timeOfBirth: string };
       partner2: { dateOfBirth: string; timeOfBirth: string };
+      locale?: string;
     },
   ) {
     return this.astrologyService.getWesternSynastry(user.sub, dto);
@@ -220,7 +228,7 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Transits returned' })
   async getWesternTransits(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: { dateOfBirth: string; timeOfBirth: string },
+    @Body() dto: { dateOfBirth: string; timeOfBirth: string; locale?: string },
   ) {
     return this.astrologyService.getWesternTransits(user.sub, dto);
   }
@@ -229,9 +237,9 @@ export class AstrologyController {
   @Public()
   @ApiOperation({ summary: 'Feng Shui Flying Stars 9-palace grid for a year' })
   @ApiResponse({ status: 200, description: 'Flying stars grid returned' })
-  getFlyingStars(@Query('year') year?: string) {
+  getFlyingStars(@Query('year') year?: string, @Query('locale') locale?: string) {
     const y = year ? parseInt(year, 10) : undefined;
-    return this.astrologyService.getFlyingStars(y);
+    return this.astrologyService.getFlyingStars(y, locale);
   }
 
   @Post('hellenistic/zodiacal-releasing')
@@ -239,7 +247,7 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Releasing chapter returned' })
   async getZodiacalReleasing(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: { dateOfBirth: string },
+    @Body() dto: { dateOfBirth: string; locale?: string },
   ) {
     return this.astrologyService.getZodiacalReleasing(user.sub, dto);
   }
@@ -253,6 +261,7 @@ export class AstrologyController {
       decumbitureDate?: string;
       decumbitureTime?: string;
       symptomsDescription?: string;
+      locale?: string;
     },
   ) {
     return this.astrologyService.getDecumbiture(user.sub, dto);

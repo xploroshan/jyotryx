@@ -29,7 +29,7 @@ interface DoshaData {
  * profile; the API also returns that shape so we just render it.
  */
 export default function VedicDoshaPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { isAuthenticated, user } = useAuthStore();
   const cfg = WEB_TRADITIONS.VEDIC;
 
@@ -45,7 +45,7 @@ export default function VedicDoshaPage() {
     setLoading(true);
     setError('');
     api
-      .get<DoshaData>('/astrology/dosha')
+      .get<DoshaData>(`/astrology/dosha?locale=${locale}`)
       .then((res) => {
         if (!cancelled) setData(res);
       })
@@ -58,7 +58,7 @@ export default function VedicDoshaPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, t.kundli.generateFailed]);
+  }, [isAuthenticated, locale, t.kundli.generateFailed]);
 
   const severityLabel = (d: DoshaEntry): string => {
     if (!d.present) return t.kundli.absent;

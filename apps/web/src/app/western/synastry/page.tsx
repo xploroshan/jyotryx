@@ -34,7 +34,7 @@ interface PersonForm {
  * through cross-chart aspects between luminaries, Venus and Mars.
  */
 export default function WesternSynastryPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [p1, setP1] = useState<PersonForm>({
     dob: user?.dateOfBirth?.slice(0, 10) ?? '',
@@ -58,6 +58,7 @@ export default function WesternSynastryPage() {
         {
           partner1: { dateOfBirth: p1.dob, timeOfBirth: p1.tob },
           partner2: { dateOfBirth: p2.dob, timeOfBirth: p2.tob },
+          locale,
         },
         { token: accessToken ?? undefined },
       );

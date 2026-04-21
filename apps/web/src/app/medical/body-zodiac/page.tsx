@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
@@ -17,6 +18,7 @@ interface BodyZodiacResponse {
 }
 
 export default function MedicalBodyZodiacPage() {
+  const { locale } = useTranslation();
   const { accessToken } = useAuthStore();
   const [result, setResult] = useState<BodyZodiacResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function MedicalBodyZodiacPage() {
     setError('');
     try {
       const res = await api.get<BodyZodiacResponse>(
-        '/astrology/medical/body-zodiac',
+        `/astrology/medical/body-zodiac?locale=${locale}`,
         { token: accessToken ?? undefined },
       );
       setResult(res);

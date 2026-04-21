@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { MemoryCacheService } from '../../common/cache.service';
+import { translateFields } from '../../common/locale';
 
 export interface PlanetaryHour {
   planet: string;
@@ -207,17 +208,19 @@ export class DailyBriefingService {
     const dateStr = today.toISOString().split('T')[0];
     // 30-min bucket aligns with hora changes
     const hourBucket = Math.floor((today.getHours() * 60 + today.getMinutes()) / 30);
+    const localeKey = locale || 'en';
 
-    // ── 1. Global portion (shared across ALL users) ─────────────────────
-    const globalKey = `briefing:global:${dateStr}:${hourBucket}`;
+    // ── 1. Global portion (shared across ALL users in same locale) ──────
+    const globalKey = `briefing:global:${dateStr}:${hourBucket}:${localeKey}`;
     let global = await this.cacheService.get<GlobalBriefingData>(globalKey);
     if (!global) {
-      global = await this.computeGlobalBriefing(today);
+      const rawGlobal = await this.computeGlobalBriefing(today);
+      global = await this.localizeGlobalBriefing(rawGlobal, locale);
       await this.cacheService.set(globalKey, global, 30 * 60 * 1000);
     }
 
     // ── 2. Per-user overlay (greeting, profession insight, transit) ─────
-    const userKey = `briefing:user:${userId}:${dateStr}:${hourBucket}`;
+    const userKey = `briefing:user:${userId}:${dateStr}:${hourBucket}:${localeKey}`;
     let overlay = await this.cacheService.get<UserBriefingOverlay>(userKey);
     let userTraditions: string[] = ['VEDIC'];
     if (!overlay) {
@@ -226,7 +229,8 @@ export class DailyBriefingService {
         select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
       });
       userTraditions = (user as any)?.astrologyTraditions ?? ['VEDIC'];
-      overlay = this.computeUserOverlay(user, global.currentPlanet, global.dayRuler, global.panchang, global.dayQuality, today);
+      const rawOverlay = this.computeUserOverlay(user, global.currentPlanet, global.dayRuler, global.panchang, global.dayQuality, today);
+      overlay = await this.localizeUserOverlay(rawOverlay, locale);
       await this.cacheService.set(userKey, overlay, 30 * 60 * 1000);
     }
 
@@ -250,6 +254,60 @@ export class DailyBriefingService {
       transitAlert: overlay.transitAlert,
       astrologyTraditions: userTraditions,
     } as any;
+  }
+
+  private async localizeGlobalBriefing(data: GlobalBriefingData, locale?: string): Promise<GlobalBriefingData> {
+    if (!locale || locale === 'en') return data;
+    const translated = await translateFields(
+      this.openaiService,
+      {
+        doList: data.doList,
+        avoidList: data.avoidList,
+        luckyColor: data.luckyColor,
+        remedy: data.remedy,
+        tithi: data.panchang.tithi,
+        nakshatra: data.panchang.nakshatra,
+        yoga: data.panchang.yoga,
+        vara: data.panchang.vara,
+      },
+      locale,
+      'daily-briefing-global',
+    );
+    return {
+      ...data,
+      doList: Array.isArray((translated as any).doList) ? (translated as any).doList as string[] : data.doList,
+      avoidList: Array.isArray((translated as any).avoidList) ? (translated as any).avoidList as string[] : data.avoidList,
+      luckyColor: translated.luckyColor ?? data.luckyColor,
+      remedy: translated.remedy ?? data.remedy,
+      panchang: {
+        ...data.panchang,
+        tithi: translated.tithi ?? data.panchang.tithi,
+        nakshatra: translated.nakshatra ?? data.panchang.nakshatra,
+        yoga: translated.yoga ?? data.panchang.yoga,
+        vara: translated.vara ?? data.panchang.vara,
+      },
+    };
+  }
+
+  private async localizeUserOverlay(data: UserBriefingOverlay, locale?: string): Promise<UserBriefingOverlay> {
+    if (!locale || locale === 'en') return data;
+    const translated = await translateFields(
+      this.openaiService,
+      {
+        greeting: data.greeting,
+        professionInsight: data.professionInsight,
+        summary: data.summary,
+        transitAlert: data.transitAlert || undefined,
+      },
+      locale,
+      'daily-briefing-user',
+    );
+    return {
+      greeting: translated.greeting ?? data.greeting,
+      professionInsight: translated.professionInsight ?? data.professionInsight,
+      summary: translated.summary ?? data.summary,
+      transitAlert: data.transitAlert ? (translated.transitAlert ?? data.transitAlert) : null,
+    };
   }
 
   // ─── Global briefing: identical for every user in the same 30-min slot ──

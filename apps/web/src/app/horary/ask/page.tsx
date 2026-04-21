@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
@@ -18,6 +19,7 @@ interface HoraryResponse {
 }
 
 export default function HoraryAskPage() {
+  const { locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState<HoraryResponse | null>(null);
@@ -31,7 +33,7 @@ export default function HoraryAskPage() {
     try {
       const res = await api.post<HoraryResponse>(
         '/astrology/horary/ask',
-        { question },
+        { question, locale },
         { token: accessToken ?? undefined },
       );
       setResult(res);

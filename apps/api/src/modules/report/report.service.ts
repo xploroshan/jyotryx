@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { getLocaleInstruction, translateFields } from '../../common/locale';
 import { REPORT_QUEUE } from '../../queue/queue.constants';
 import type { ReportJobData } from '../../queue/report.processor';
 
@@ -16,6 +17,7 @@ export interface GenerateReportDto {
     timeOfBirth: string;
     placeOfBirth: string;
   };
+  locale?: string;
 }
 
 export interface ReportResponse {
@@ -104,6 +106,7 @@ export class ReportService {
         birthDetails,
         name: user?.name || 'User',
         gender: user?.gender,
+        locale: dto.locale,
       } satisfies ReportJobData);
 
       return {
@@ -120,7 +123,7 @@ export class ReportService {
     }
 
     // Sync path (fallback when QUEUE_ENABLED=false)
-    const sections = await this.generateAIReportSections(dto.type, birthDetails, user?.name || 'User', user?.gender, userId);
+    const sections = await this.generateAIReportSections(dto.type, birthDetails, user?.name || 'User', user?.gender, userId, dto.locale);
 
     const report = await this.prisma.report.create({
       data: {
@@ -179,9 +182,10 @@ export class ReportService {
     name: string,
     gender?: string | null,
     userId?: string,
+    locale?: string,
   ): Promise<ReportSection[]> {
     if (!birthDetails.dateOfBirth) {
-      return this.getFallbackSections(type, birthDetails, name);
+      return this.localizeSections(this.getFallbackSections(type, birthDetails, name), locale);
     }
 
     try {
@@ -208,9 +212,12 @@ Generate these sections: ${sectionStructure.map((s) => s.title).join(', ')}
 
 Be specific with planetary positions, Dasha periods, Yogas, and transit effects. Use Lahiri ayanamsa. Reference the person by name.${kbSection}`;
 
+      const systemPrompt = 'You are an expert Vedic astrologer creating detailed professional reports. Use accurate Jyotish terminology and provide actionable insights. Return valid JSON.' +
+        getLocaleInstruction(locale);
+
       const result = await this.openaiService.chatCompletion({
         messages: [
-          { role: 'system', content: 'You are an expert Vedic astrologer creating detailed professional reports. Use accurate Jyotish terminology and provide actionable insights. Return valid JSON.' },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
         ],
         maxTokens: 2000,
@@ -227,7 +234,26 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
       this.logger.error('OpenAI report generation failed, using fallback', error);
     }
 
-    return this.getFallbackSections(type, birthDetails, name);
+    return this.localizeSections(this.getFallbackSections(type, birthDetails, name), locale);
+  }
+
+  private async localizeSections(sections: ReportSection[], locale?: string): Promise<ReportSection[]> {
+    if (!locale || locale === 'en' || sections.length === 0) return sections;
+    const titles = sections.map(s => s.title);
+    const contents = sections.map(s => s.content);
+    const translated = await translateFields(
+      this.openaiService,
+      { titles, contents },
+      locale,
+      'report-fallback',
+    );
+    const tTitles = Array.isArray((translated as any).titles) ? (translated as any).titles as string[] : titles;
+    const tContents = Array.isArray((translated as any).contents) ? (translated as any).contents as string[] : contents;
+    return sections.map((s, i) => ({
+      title: tTitles[i] ?? s.title,
+      content: tContents[i] ?? s.content,
+      order: s.order,
+    }));
   }
 
   private mapReportTypeToKB(type: string): string {

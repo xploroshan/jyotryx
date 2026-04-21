@@ -37,7 +37,7 @@ const PALACE_LABELS = [
  * Lets the user scrub through years to see how the annual stars shift.
  */
 export default function ChineseFlyingStarsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const currentYear = new Date().getUTCFullYear();
   const [year, setYear] = useState(currentYear);
   const [result, setResult] = useState<FlyingStarsResponse | null>(null);
@@ -49,7 +49,7 @@ export default function ChineseFlyingStarsPage() {
     setLoading(true);
     setError('');
     api
-      .get<FlyingStarsResponse>(`/astrology/chinese/flying-stars?year=${year}`)
+      .get<FlyingStarsResponse>(`/astrology/chinese/flying-stars?year=${year}&locale=${locale}`)
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -62,7 +62,7 @@ export default function ChineseFlyingStarsPage() {
     return () => {
       cancelled = true;
     };
-  }, [year, t.kundli.generateFailed]);
+  }, [year, locale, t.kundli.generateFailed]);
 
   return (
     <FeaturePageShell

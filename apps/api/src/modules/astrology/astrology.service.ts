@@ -6,7 +6,7 @@ import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
-import { getLocaleInstruction } from '../../common/locale';
+import { getLocaleInstruction, translateFields, translateText } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import * as path from 'path';
 
@@ -134,6 +134,7 @@ export interface MuhuratRequest {
   fromDate: string;
   toDate: string;
   location: string;
+  locale?: string;
 }
 
 export interface MuhuratResult {
@@ -1059,14 +1060,24 @@ export class AstrologyService {
   /**
    * Compute Chinese zodiac animal and element from a birth year.
    */
-  getChineseZodiac(birthYear: number): { animal: string; element: string; yinYang: string; year: number; traits: string[] } {
+  async getChineseZodiac(birthYear: number, locale?: string): Promise<{ animal: string; element: string; yinYang: string; year: number; traits: string[] }> {
     const animalIndex = (birthYear - 4) % 12;
     const animal = CHINESE_ANIMALS[animalIndex >= 0 ? animalIndex : animalIndex + 12];
     const elementIndex = Math.floor(((birthYear - 4) % 10) / 2);
     const element = CHINESE_ELEMENTS[elementIndex >= 0 ? elementIndex : elementIndex + 5];
     const yinYang = birthYear % 2 === 0 ? 'Yang' : 'Yin';
     const traits = AstrologyService.CHINESE_ANIMAL_TRAITS_TABLE[animal] ?? [];
-    return { animal, element, yinYang, year: birthYear, traits };
+    if (!locale || locale === 'en' || traits.length === 0) {
+      return { animal, element, yinYang, year: birthYear, traits };
+    }
+    const translated = await translateFields(
+      this.openaiService,
+      { traits },
+      locale,
+      'chinese-zodiac',
+    );
+    const tTraits = Array.isArray((translated as any).traits) ? (translated as any).traits as string[] : traits;
+    return { animal, element, yinYang, year: birthYear, traits: tTraits };
   }
 
   // Trait keywords per Chinese zodiac animal (compact lookup; used by
@@ -1101,7 +1112,7 @@ export class AstrologyService {
    */
   async getBazi(
     userId: string,
-    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; locale?: string },
   ) {
     const date = new Date(`${dto.dateOfBirth}T${dto.timeOfBirth || '00:00'}:00`);
     if (isNaN(date.getTime())) throw new BadRequestException('Invalid birth date/time');
@@ -1124,12 +1135,14 @@ export class AstrologyService {
       `${Object.entries(elementBalance).sort((a, b) => b[1] - a[1])[0][0].toLowerCase()} as the ` +
       `dominant element across your chart.`;
 
+    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'bazi');
+
     return {
       userId,
       pillars: { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar },
       dayMaster: `${dayPillar.heavenlyStem} (${dayPillar.element})`,
       elementBalance,
-      interpretation,
+      interpretation: localizedInterpretation,
     };
   }
 
@@ -1139,7 +1152,7 @@ export class AstrologyService {
    */
   async getWesternNatal(
     userId: string,
-    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string },
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; locale?: string },
   ) {
     const date = new Date(`${dto.dateOfBirth}T${dto.timeOfBirth || '00:00'}:00`);
     if (isNaN(date.getTime())) throw new BadRequestException('Invalid birth date/time');
@@ -1153,6 +1166,10 @@ export class AstrologyService {
     const jupiterLon = this.tropicalLongitude(jd, swisseph.SE_JUPITER);
     const saturnLon = this.tropicalLongitude(jd, swisseph.SE_SATURN);
     const ascSignIndex = Math.floor(sunLon / 30); // placeholder until asc is wired
+    const interpretation = `A tropical natal snapshot with Sun in ${ALL_SIGNS[Math.floor(sunLon / 30)]}, ` +
+      `Moon in ${ALL_SIGNS[Math.floor(moonLon / 30)]}. House placements use the placeholder ` +
+      `whole-sign scheme until the location-aware Placidus engine ships.`;
+    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'western-natal');
     return {
       userId,
       ascendant: { sign: ALL_SIGNS[ascSignIndex], degree: sunLon % 30 },
@@ -1165,9 +1182,7 @@ export class AstrologyService {
         { planet: 'Jupiter', sign: ALL_SIGNS[Math.floor(jupiterLon / 30)], degree: jupiterLon % 30, house: null },
         { planet: 'Saturn', sign: ALL_SIGNS[Math.floor(saturnLon / 30)], degree: saturnLon % 30, house: null },
       ],
-      interpretation: `A tropical natal snapshot with Sun in ${ALL_SIGNS[Math.floor(sunLon / 30)]}, ` +
-        `Moon in ${ALL_SIGNS[Math.floor(moonLon / 30)]}. House placements use the placeholder ` +
-        `whole-sign scheme until the location-aware Placidus engine ships.`,
+      interpretation: localizedInterpretation,
     };
   }
 
@@ -1176,7 +1191,7 @@ export class AstrologyService {
    * one whole sign starting from the ascendant — year-0 = 1st, year-1 =
    * 2nd, and so on, wrapping every 12 years.
    */
-  async getHellenisticProfections(userId: string, dto: { dateOfBirth: string }) {
+  async getHellenisticProfections(userId: string, dto: { dateOfBirth: string; locale?: string }) {
     const dob = new Date(dto.dateOfBirth);
     if (isNaN(dob.getTime())) throw new BadRequestException('Invalid date of birth');
     const now = new Date();
@@ -1187,14 +1202,16 @@ export class AstrologyService {
     const profectedSign = ALL_SIGNS[(profectedHouse - 1) % 12];
     const lordByIndex = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
     const lordOfYear = lordByIndex[ALL_SIGNS.indexOf(profectedSign as any)];
+    const interpretation = `At age ${ageYears} you profect to the ${profectedHouse}th house — sign ${profectedSign}, ` +
+      `ruled by ${lordOfYear}. Themes of this year follow the natural topics of that house.`;
+    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'hellenistic-profections');
     return {
       userId,
       ageYears,
       profectedHouse,
       profectedSign,
       lordOfYear,
-      interpretation: `At age ${ageYears} you profect to the ${profectedHouse}th house — sign ${profectedSign}, ` +
-        `ruled by ${lordOfYear}. Themes of this year follow the natural topics of that house.`,
+      interpretation: localizedInterpretation,
     };
   }
 
@@ -1203,7 +1220,7 @@ export class AstrologyService {
    * mirrors getWesternNatal for the current moment; the judgment comes
    * from the LLM when available, otherwise a templated summary.
    */
-  async getHoraryAsk(userId: string, dto: { question: string }) {
+  async getHoraryAsk(userId: string, dto: { question: string; locale?: string }) {
     if (!dto?.question?.trim()) {
       throw new BadRequestException('Question is required');
     }
@@ -1212,6 +1229,18 @@ export class AstrologyService {
       dateOfBirth: now.toISOString().slice(0, 10),
       timeOfBirth: now.toISOString().slice(11, 16),
     });
+    const judgment = `With the chart cast at ${now.toISOString()}, the ascendant in ` +
+      `${natal.ascendant.sign} favours a cautious, methodical approach to your question. ` +
+      `Consider the state of the querent's and quesited's significators before committing.`;
+    const querent = `Lord of ${natal.ascendant.sign} (Ascendant)`;
+    const quesited = 'Lord of the 7th house';
+    const moonSig = `Moon in ${natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown'}`;
+    const translated = await translateFields(
+      this.openaiService,
+      { judgment, querent, quesited, moon: moonSig },
+      dto.locale,
+      'horary',
+    );
     return {
       userId,
       question: dto.question.trim(),
@@ -1219,14 +1248,12 @@ export class AstrologyService {
       chart: {
         ascendant: natal.ascendant,
         significators: {
-          querent: `Lord of ${natal.ascendant.sign} (Ascendant)`,
-          quesited: 'Lord of the 7th house',
-          moon: `Moon in ${natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown'}`,
+          querent: translated.querent,
+          quesited: translated.quesited,
+          moon: translated.moon,
         },
       },
-      judgment: `With the chart cast at ${now.toISOString()}, the ascendant in ` +
-        `${natal.ascendant.sign} favours a cautious, methodical approach to your question. ` +
-        `Consider the state of the querent's and quesited's significators before committing.`,
+      judgment: translated.judgment,
     };
   }
 
@@ -1234,23 +1261,39 @@ export class AstrologyService {
    * Medical astrology: static body-zodiac correspondence table plus
    * short element-based guidance. Pure lookup, no ephemeris.
    */
-  getMedicalBodyZodiac() {
-    return {
-      mapping: [
-        { sign: 'Aries', bodyParts: ['head', 'brain', 'face'], element: 'Fire', guidance: 'Watch for headaches, eye strain; keep the head cool.' },
-        { sign: 'Taurus', bodyParts: ['neck', 'throat', 'thyroid'], element: 'Earth', guidance: 'Support vocal health and thyroid function.' },
-        { sign: 'Gemini', bodyParts: ['lungs', 'arms', 'nervous system'], element: 'Air', guidance: 'Breathing practices calm the nerves.' },
-        { sign: 'Cancer', bodyParts: ['chest', 'stomach', 'breasts'], element: 'Water', guidance: 'Digestion follows your emotional state.' },
-        { sign: 'Leo', bodyParts: ['heart', 'spine', 'upper back'], element: 'Fire', guidance: 'Cardiovascular movement and posture care.' },
-        { sign: 'Virgo', bodyParts: ['intestines', 'digestive system'], element: 'Earth', guidance: 'Gut health is foundational for you.' },
-        { sign: 'Libra', bodyParts: ['kidneys', 'lower back', 'skin'], element: 'Air', guidance: 'Hydration and balance-based movement help.' },
-        { sign: 'Scorpio', bodyParts: ['reproductive organs', 'pelvis'], element: 'Water', guidance: 'Deep rest and detox support the body.' },
-        { sign: 'Sagittarius', bodyParts: ['hips', 'thighs', 'liver'], element: 'Fire', guidance: 'Liver-friendly diet and hip mobility.' },
-        { sign: 'Capricorn', bodyParts: ['bones', 'knees', 'joints'], element: 'Earth', guidance: 'Weight-bearing exercise and calcium.' },
-        { sign: 'Aquarius', bodyParts: ['ankles', 'circulation'], element: 'Air', guidance: 'Mind circulation — warm feet, keep moving.' },
-        { sign: 'Pisces', bodyParts: ['feet', 'lymphatic system', 'immunity'], element: 'Water', guidance: 'Foot care and immune-supportive routines.' },
-      ],
-    };
+  async getMedicalBodyZodiac(locale?: string) {
+    const mapping = [
+      { sign: 'Aries', bodyParts: ['head', 'brain', 'face'], element: 'Fire', guidance: 'Watch for headaches, eye strain; keep the head cool.' },
+      { sign: 'Taurus', bodyParts: ['neck', 'throat', 'thyroid'], element: 'Earth', guidance: 'Support vocal health and thyroid function.' },
+      { sign: 'Gemini', bodyParts: ['lungs', 'arms', 'nervous system'], element: 'Air', guidance: 'Breathing practices calm the nerves.' },
+      { sign: 'Cancer', bodyParts: ['chest', 'stomach', 'breasts'], element: 'Water', guidance: 'Digestion follows your emotional state.' },
+      { sign: 'Leo', bodyParts: ['heart', 'spine', 'upper back'], element: 'Fire', guidance: 'Cardiovascular movement and posture care.' },
+      { sign: 'Virgo', bodyParts: ['intestines', 'digestive system'], element: 'Earth', guidance: 'Gut health is foundational for you.' },
+      { sign: 'Libra', bodyParts: ['kidneys', 'lower back', 'skin'], element: 'Air', guidance: 'Hydration and balance-based movement help.' },
+      { sign: 'Scorpio', bodyParts: ['reproductive organs', 'pelvis'], element: 'Water', guidance: 'Deep rest and detox support the body.' },
+      { sign: 'Sagittarius', bodyParts: ['hips', 'thighs', 'liver'], element: 'Fire', guidance: 'Liver-friendly diet and hip mobility.' },
+      { sign: 'Capricorn', bodyParts: ['bones', 'knees', 'joints'], element: 'Earth', guidance: 'Weight-bearing exercise and calcium.' },
+      { sign: 'Aquarius', bodyParts: ['ankles', 'circulation'], element: 'Air', guidance: 'Mind circulation — warm feet, keep moving.' },
+      { sign: 'Pisces', bodyParts: ['feet', 'lymphatic system', 'immunity'], element: 'Water', guidance: 'Foot care and immune-supportive routines.' },
+    ];
+    if (!locale || locale === 'en') return { mapping };
+    const bodyPartsFlat = mapping.flatMap(m => m.bodyParts);
+    const guidanceList = mapping.map(m => m.guidance);
+    const translated = await translateFields(
+      this.openaiService,
+      { bodyParts: bodyPartsFlat, guidance: guidanceList },
+      locale,
+      'medical-body-zodiac',
+    );
+    const tBody = Array.isArray((translated as any).bodyParts) ? (translated as any).bodyParts as string[] : bodyPartsFlat;
+    const tGuidance = Array.isArray((translated as any).guidance) ? (translated as any).guidance as string[] : guidanceList;
+    let cursor = 0;
+    const localizedMapping = mapping.map((m, i) => {
+      const parts = tBody.slice(cursor, cursor + m.bodyParts.length);
+      cursor += m.bodyParts.length;
+      return { ...m, bodyParts: parts.length === m.bodyParts.length ? parts : m.bodyParts, guidance: tGuidance[i] ?? m.guidance };
+    });
+    return { mapping: localizedMapping };
   }
 
   /**
@@ -1260,7 +1303,7 @@ export class AstrologyService {
    */
   async getWesternSynastry(
     userId: string,
-    dto: { partner1: { dateOfBirth: string; timeOfBirth: string }; partner2: { dateOfBirth: string; timeOfBirth: string } },
+    dto: { partner1: { dateOfBirth: string; timeOfBirth: string }; partner2: { dateOfBirth: string; timeOfBirth: string }; locale?: string },
   ) {
     const p1 = await this.getWesternNatal(userId, dto.partner1);
     const p2 = await this.getWesternNatal(userId, dto.partner2);
@@ -1327,6 +1370,12 @@ export class AstrologyService {
     const totalPossible = Math.max(aspects.length, 1);
     const score = Math.round((harmonious / totalPossible) * 100);
 
+    const summary = score >= 60
+      ? 'Strong harmonious resonance between the two charts.'
+      : score >= 40
+        ? 'Mixed dynamics with both flowing and growth-oriented contacts.'
+        : 'Notable friction points that call for conscious understanding.';
+    const localizedSummary = await translateText(this.openaiService, summary, dto.locale, 'western-synastry');
     return {
       userId,
       partner1: {
@@ -1344,11 +1393,7 @@ export class AstrologyService {
         score,
         harmonious,
         challenging,
-        summary: score >= 60
-          ? 'Strong harmonious resonance between the two charts.'
-          : score >= 40
-            ? 'Mixed dynamics with both flowing and growth-oriented contacts.'
-            : 'Notable friction points that call for conscious understanding.',
+        summary: localizedSummary,
       },
     };
   }
@@ -1360,7 +1405,7 @@ export class AstrologyService {
    */
   async getWesternTransits(
     userId: string,
-    dto: { dateOfBirth: string; timeOfBirth: string },
+    dto: { dateOfBirth: string; timeOfBirth: string; locale?: string },
   ) {
     const natal = await this.getWesternNatal(userId, dto);
     const now = new Date();
@@ -1411,14 +1456,16 @@ export class AstrologyService {
       }
     }
 
+    const interpretation = aspects.length
+      ? `Today ${aspects.length} significant transit aspects shape the day — pay attention to ${aspects[0].transiting}/${aspects[0].natal} ${aspects[0].aspect.toLowerCase()}.`
+      : 'A quiet transit window today — no major exact aspects between transiting and natal planets.';
+    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'western-transits');
     return {
       userId,
       date: now.toISOString().slice(0, 10),
       transitingPlanets,
       aspects,
-      interpretation: aspects.length
-        ? `Today ${aspects.length} significant transit aspects shape the day — pay attention to ${aspects[0].transiting}/${aspects[0].natal} ${aspects[0].aspect.toLowerCase()}.`
-        : 'A quiet transit window today — no major exact aspects between transiting and natal planets.',
+      interpretation: localizedInterpretation,
     };
   }
 
@@ -1427,7 +1474,7 @@ export class AstrologyService {
    * given solar year. Returns the 3×3 grid of numbers (1..9) and a
    * brief meaning for the center "Facing Star".
    */
-  getFlyingStars(year?: number) {
+  async getFlyingStars(year?: number, locale?: string) {
     const y = year ?? new Date().getUTCFullYear();
     // Annual facing star = 11 - (year mod 9), adjust for Period 9 (2024+).
     // Compact deterministic formula: center star = ((year - 1) mod 9) + 1 reversed.
@@ -1454,13 +1501,29 @@ export class AstrologyService {
       8: 'Wealth & prosperity (Earth)',
       9: 'Future prosperity, fame (Fire)',
     };
+    const interpretation = `In ${y} the #${centerStar} Star sits at the center palace: ${starMeanings[centerStar]}.`;
+    if (!locale || locale === 'en') {
+      return { year: y, centerStar, centerMeaning: starMeanings[centerStar], grid, meanings: starMeanings, interpretation };
+    }
+    const meaningsArr = Object.values(starMeanings);
+    const translated = await translateFields(
+      this.openaiService,
+      { meanings: meaningsArr, interpretation },
+      locale,
+      'flying-stars',
+    );
+    const tMeanings = Array.isArray((translated as any).meanings) ? (translated as any).meanings as string[] : meaningsArr;
+    const localizedMeanings: Record<number, string> = {};
+    Object.keys(starMeanings).forEach((k, i) => {
+      localizedMeanings[Number(k)] = tMeanings[i] ?? starMeanings[Number(k)];
+    });
     return {
       year: y,
       centerStar,
-      centerMeaning: starMeanings[centerStar],
+      centerMeaning: localizedMeanings[centerStar],
       grid,
-      meanings: starMeanings,
-      interpretation: `In ${y} the #${centerStar} Star sits at the center palace: ${starMeanings[centerStar]}.`,
+      meanings: localizedMeanings,
+      interpretation: translated.interpretation ?? interpretation,
     };
   }
 
@@ -1470,7 +1533,7 @@ export class AstrologyService {
    * index. Full implementation requires exact natal lots; this uses a
    * deterministic approximation keyed to the birth date.
    */
-  async getZodiacalReleasing(userId: string, dto: { dateOfBirth: string }) {
+  async getZodiacalReleasing(userId: string, dto: { dateOfBirth: string; locale?: string }) {
     const dob = new Date(dto.dateOfBirth);
     if (isNaN(dob.getTime())) throw new BadRequestException('Invalid date of birth');
     const now = new Date();
@@ -1486,22 +1549,31 @@ export class AstrologyService {
       Leo: 'Sun', Virgo: 'Mercury', Libra: 'Venus', Scorpio: 'Mars',
       Sagittarius: 'Jupiter', Capricorn: 'Saturn', Aquarius: 'Saturn', Pisces: 'Jupiter',
     };
+    const majorDescription = `12-year general chapter ruled by ${signLords[majorSign]}.`;
+    const minorDescription = `Annual sub-period ruled by ${signLords[minorSign]}.`;
+    const interpretation = `At age ${ageYears} you are in a ${majorSign} general period (lord: ${signLords[majorSign]}) ` +
+      `with an annual ${minorSign} sub-period (lord: ${signLords[minorSign]}). ` +
+      `Themes of the major sign's topics dominate the chapter; the minor colours this year.`;
+    const translated = await translateFields(
+      this.openaiService,
+      { majorDescription, minorDescription, interpretation },
+      dto.locale,
+      'zodiacal-releasing',
+    );
     return {
       userId,
       ageYears,
       majorPeriod: {
         sign: majorSign,
         lord: signLords[majorSign],
-        description: `12-year general chapter ruled by ${signLords[majorSign]}.`,
+        description: translated.majorDescription ?? majorDescription,
       },
       minorPeriod: {
         sign: minorSign,
         lord: signLords[minorSign],
-        description: `Annual sub-period ruled by ${signLords[minorSign]}.`,
+        description: translated.minorDescription ?? minorDescription,
       },
-      interpretation: `At age ${ageYears} you are in a ${majorSign} general period (lord: ${signLords[majorSign]}) ` +
-        `with an annual ${minorSign} sub-period (lord: ${signLords[minorSign]}). ` +
-        `Themes of the major sign's topics dominate the chapter; the minor colours this year.`,
+      interpretation: translated.interpretation ?? interpretation,
     };
   }
 
@@ -1513,7 +1585,7 @@ export class AstrologyService {
    */
   async getDecumbiture(
     userId: string,
-    dto: { decumbitureDate?: string; decumbitureTime?: string; symptomsDescription?: string },
+    dto: { decumbitureDate?: string; decumbitureTime?: string; symptomsDescription?: string; locale?: string },
   ) {
     const now = new Date();
     const dateStr = dto.decumbitureDate || now.toISOString().slice(0, 10);
@@ -1543,6 +1615,17 @@ export class AstrologyService {
       Air: 'Nervous, fluctuating — calming practices and regular rest.',
       Water: 'Emotional, moist — lymphatic support and gentle movement.',
     };
+    const guidance = elementGuidance[ascElement] ?? 'Balanced care indicated.';
+    const interpretation =
+      `Decumbiture ascendant ${natal.ascendant.sign} (${ascElement}). ` +
+      `The 6th house of illness is ${sixthSign}. The Moon in ${moonSign} ` +
+      `shows the immediate course — ${elementGuidance[ascElement] ?? ''}`;
+    const translated = await translateFields(
+      this.openaiService,
+      { guidance, interpretation },
+      dto.locale,
+      'decumbiture',
+    );
     return {
       userId,
       decumbitureAt: new Date(`${dateStr}T${timeStr}:00`).toISOString(),
@@ -1551,11 +1634,8 @@ export class AstrologyService {
       ascendantElement: ascElement,
       sixthHouseSign: sixthSign,
       moon: moon ? { sign: moon.sign, degree: moon.degree } : null,
-      guidance: elementGuidance[ascElement] ?? 'Balanced care indicated.',
-      interpretation:
-        `Decumbiture ascendant ${natal.ascendant.sign} (${ascElement}). ` +
-        `The 6th house of illness is ${sixthSign}. The Moon in ${moonSign} ` +
-        `shows the immediate course — ${elementGuidance[ascElement] ?? ''}`,
+      guidance: translated.guidance ?? guidance,
+      interpretation: translated.interpretation ?? interpretation,
     };
   }
 
@@ -1639,14 +1719,15 @@ export class AstrologyService {
     return 0;
   }
 
-  async getPanchang(lat?: number, lng?: number): Promise<PanchangResult> {
+  async getPanchang(lat?: number, lng?: number, locale?: string): Promise<PanchangResult> {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
     // Default to Delhi if no location provided
     const pLat = lat ?? 28.6139;
     const pLng = lng ?? 77.2090;
     const locationLabel = (lat != null && lng != null) ? `${pLat.toFixed(4)}°N, ${pLng.toFixed(4)}°E` : 'New Delhi, India (28.6139°N, 77.2090°E)';
-    const cacheKey = `panchang:${dateStr}:${pLat.toFixed(2)}:${pLng.toFixed(2)}`;
+    const localeKey = locale || 'en';
+    const cacheKey = `panchang:${dateStr}:${pLat.toFixed(2)}:${pLng.toFixed(2)}:${localeKey}`;
     const cached = await this.cacheService.get<PanchangResult>(cacheKey);
     if (cached) return cached;
 
@@ -1669,14 +1750,14 @@ export class AstrologyService {
 - gulikakaal: string (Gulika Kaal time range)
 - yamakantaka: string (Yama Kantaka time range)${panchangKBSection}`,
       `Calculate the Panchang for today: ${dateStr} for location: ${locationLabel}. Use the Vedic Hindu calendar with Lahiri ayanamsa.`,
-      true, 1500, 0.7, 'default', undefined,
+      true, 1500, 0.7, 'default', locale,
       { feature: 'panchang' },
     );
 
     if (aiResult) {
       const result = { date: dateStr, ...aiResult };
       await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
-      return result;
+      return result as PanchangResult;
     }
 
     // Fallback: compute Panchang using Swiss Ephemeris for precision
@@ -1749,8 +1830,26 @@ export class AstrologyService {
       gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][today.getDay()],
       yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][today.getDay()],
     };
-    await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
-    return result;
+    const localizedResult = await this.localizePanchang(result, locale);
+    await this.cacheService.set(cacheKey, localizedResult, 24 * 60 * 60 * 1000);
+    return localizedResult;
+  }
+
+  private async localizePanchang(result: PanchangResult, locale?: string): Promise<PanchangResult> {
+    if (!locale || locale === 'en') return result;
+    const translated = await translateFields(
+      this.openaiService,
+      {
+        tithi: result.tithi,
+        nakshatra: result.nakshatra,
+        yoga: result.yoga,
+        karana: result.karana,
+        vara: result.vara,
+      },
+      locale,
+      'panchang',
+    );
+    return { ...result, ...translated };
   }
 
   async getMuhurat(dto: MuhuratRequest): Promise<MuhuratResult> {
@@ -1767,7 +1866,7 @@ Consider Rahu Kaal, Gulika Kaal, and other inauspicious periods. Factor in the s
       `Find auspicious Muhurat for: ${dto.purpose}
 Location: ${dto.location}
 Date range: ${dto.fromDate} to ${dto.toDate}`,
-      true, 1500, 0.7, 'default', undefined,
+      true, 1500, 0.7, 'default', dto.locale,
       { feature: 'muhurat' },
     );
 
@@ -1803,10 +1902,24 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       };
     });
 
+    if (dto.locale && dto.locale !== 'en') {
+      const reasonTexts = auspiciousTimes.map((t) => t.reason);
+      const translated = await translateFields(
+        this.openaiService,
+        { reasons: reasonTexts },
+        dto.locale,
+        'muhurat',
+      );
+      const translatedReasons = Array.isArray((translated as any).reasons) ? (translated as any).reasons as string[] : reasonTexts;
+      auspiciousTimes.forEach((t, i) => {
+        t.reason = translatedReasons[i] ?? t.reason;
+      });
+    }
+
     return { purpose: dto.purpose, auspiciousTimes };
   }
 
-  async getDosha(userId: string): Promise<DoshaResult> {
+  async getDosha(userId: string, locale?: string): Promise<DoshaResult> {
     // Fetch user's birth details for deterministic analysis
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -1824,18 +1937,49 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       };
       const chart = await this.generateSwissEphKundliAsync(birthDetails);
       const doshas = this.detectDoshas(chart.planetaryPositions);
-      return { userId, doshas };
+      return { userId, doshas: await this.localizeDoshas(doshas, locale) };
     }
 
     // No birth details available — return empty analysis
-    return {
-      userId,
-      doshas: [
-        { name: 'Mangal Dosha (Manglik)', present: false, severity: 'none', description: 'Birth details required for accurate Mangal Dosha analysis. Please update your profile.', remedies: [] },
-        { name: 'Kaal Sarp Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Kaal Sarp Dosha analysis. Please update your profile.', remedies: [] },
-        { name: 'Pitra Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Pitra Dosha analysis. Please update your profile.', remedies: [] },
-      ],
-    };
+    const fallback: DoshaResult['doshas'] = [
+      { name: 'Mangal Dosha (Manglik)', present: false, severity: 'none', description: 'Birth details required for accurate Mangal Dosha analysis. Please update your profile.', remedies: [] },
+      { name: 'Kaal Sarp Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Kaal Sarp Dosha analysis. Please update your profile.', remedies: [] },
+      { name: 'Pitra Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Pitra Dosha analysis. Please update your profile.', remedies: [] },
+    ];
+    return { userId, doshas: await this.localizeDoshas(fallback, locale) };
+  }
+
+  private async localizeDoshas(
+    doshas: DoshaResult['doshas'],
+    locale?: string,
+  ): Promise<DoshaResult['doshas']> {
+    if (!locale || locale === 'en' || doshas.length === 0) return doshas;
+    const names = doshas.map(d => d.name);
+    const descriptions = doshas.map(d => d.description);
+    const remedyLengths = doshas.map(d => d.remedies.length);
+    const flatRemedies: string[] = doshas.flatMap(d => d.remedies);
+    const translated = await translateFields(
+      this.openaiService,
+      { names, descriptions, remedies: flatRemedies },
+      locale,
+      'dosha',
+    );
+    const tNames = Array.isArray((translated as any).names) ? (translated as any).names as string[] : names;
+    const tDescriptions = Array.isArray((translated as any).descriptions) ? (translated as any).descriptions as string[] : descriptions;
+    const tRemedies = Array.isArray((translated as any).remedies) ? (translated as any).remedies as string[] : flatRemedies;
+    let offset = 0;
+    return doshas.map((d, i) => {
+      const take = remedyLengths[i];
+      const rs = tRemedies.slice(offset, offset + take);
+      offset += take;
+      return {
+        name: tNames[i] ?? d.name,
+        present: d.present,
+        severity: d.severity,
+        description: tDescriptions[i] ?? d.description,
+        remedies: rs,
+      };
+    });
   }
 
   // ─── Sade Sati Detection ─────────────────────────────────────────────────────
@@ -1863,14 +2007,20 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     return { active: false, phase: 'Not Active', description: 'Sade Sati is not currently active for your chart. Saturn is well-placed relative to your Moon sign.' };
   }
 
-  async getSadeSati(userId: string): Promise<{ userId: string; sadeSati: { active: boolean; phase: string; description: string } }> {
+  async getSadeSati(userId: string, locale?: string): Promise<{ userId: string; sadeSati: { active: boolean; phase: string; description: string } }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { dateOfBirth: true, timeOfBirth: true, placeOfBirth: true },
     });
 
     if (!user?.dateOfBirth) {
-      return { userId, sadeSati: { active: false, phase: 'Unknown', description: 'Birth details required for Sade Sati analysis.' } };
+      return {
+        userId,
+        sadeSati: await this.localizeSadeSati(
+          { active: false, phase: 'Unknown', description: 'Birth details required for Sade Sati analysis.' },
+          locale,
+        ),
+      };
     }
 
     const bd: BirthDetails = {
@@ -1886,7 +2036,25 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags);
     const moonLng = ((moonResult.longitude % 360) + 360) % 360;
 
-    return { userId, sadeSati: this.detectSadeSati(moonLng) };
+    return { userId, sadeSati: await this.localizeSadeSati(this.detectSadeSati(moonLng), locale) };
+  }
+
+  private async localizeSadeSati(
+    sadeSati: { active: boolean; phase: string; description: string },
+    locale?: string,
+  ): Promise<{ active: boolean; phase: string; description: string }> {
+    if (!locale || locale === 'en') return sadeSati;
+    const translated = await translateFields(
+      this.openaiService,
+      { phase: sadeSati.phase, description: sadeSati.description },
+      locale,
+      'sade-sati',
+    );
+    return {
+      active: sadeSati.active,
+      phase: typeof (translated as any).phase === 'string' ? (translated as any).phase : sadeSati.phase,
+      description: typeof (translated as any).description === 'string' ? (translated as any).description : sadeSati.description,
+    };
   }
 
   // ─── Divisional Charts ───────────────────────────────────────────────────────

@@ -23,7 +23,7 @@ interface BaZiResponse {
  * returns the four pillars plus an LLM-authored interpretation.
  */
 export default function ChineseBaZiPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { user, isAuthenticated, accessToken } = useAuthStore();
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [timeOfBirth, setTimeOfBirth] = useState(user?.timeOfBirth ?? '');
@@ -40,7 +40,7 @@ export default function ChineseBaZiPage() {
     try {
       const res = await api.post<BaZiResponse>(
         '/astrology/bazi',
-        { dateOfBirth, timeOfBirth, placeOfBirth },
+        { dateOfBirth, timeOfBirth, placeOfBirth, locale },
         { token: accessToken ?? undefined },
       );
       setResult(res);

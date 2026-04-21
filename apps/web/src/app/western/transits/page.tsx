@@ -39,7 +39,7 @@ const PLANET_GLYPH: Record<string, string> = {
  * once the user is signed in.
  */
 export default function WesternTransitsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [result, setResult] = useState<TransitsResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +55,7 @@ export default function WesternTransitsPage() {
     api
       .post<TransitsResponse>(
         '/astrology/western/transits',
-        { dateOfBirth: user!.dateOfBirth, timeOfBirth: user!.timeOfBirth },
+        { dateOfBirth: user!.dateOfBirth, timeOfBirth: user!.timeOfBirth, locale },
         { token: accessToken ?? undefined },
       )
       .then((res) => {
@@ -70,7 +70,7 @@ export default function WesternTransitsPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, hasBirth, user, accessToken, t.kundli.generateFailed]);
+  }, [isAuthenticated, hasBirth, user, accessToken, locale, t.kundli.generateFailed]);
 
   return (
     <FeaturePageShell

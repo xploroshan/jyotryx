@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { translateFields } from '../../common/locale';
 
 export interface NameAnalysisResult {
   name: string;
@@ -179,15 +180,16 @@ export class NumerologyService {
     private readonly knowledgeService: KnowledgeService,
   ) {}
 
-  async analyzeName(name: string): Promise<NameAnalysisResult> {
+  async analyzeName(name: string, locale?: string): Promise<NameAnalysisResult> {
     const cleanName = name.toLowerCase().replace(/[^a-z]/g, '');
     if (cleanName.length === 0) {
       // Non-Latin names: transliterate to closest Latin equivalent for analysis
       const transliterated = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
       if (transliterated.length > 0) {
-        return this.analyzeName(transliterated);
+        const result = await this.analyzeName(transliterated);
+        return this.localizeNameResult({ ...result, name }, locale);
       }
-      return this.getDefaultNameResult(name);
+      return this.localizeNameResult(this.getDefaultNameResult(name), locale);
     }
 
     const destinyNumber = this.reduceToSingle(this.calculateChaldean(cleanName));
@@ -213,7 +215,7 @@ export class NumerologyService {
     // Compatibility
     const compatibleNumbers = this.getCompatibleNumbers(destinyNumber);
 
-    return {
+    const result: NameAnalysisResult = {
       name,
       destinyNumber,
       soulNumber,
@@ -230,9 +232,10 @@ export class NumerologyService {
       compatibility: `Best compatible with names vibrating to numbers ${compatibleNumbers.join(', ')}`,
       suggestion: this.getNameSuggestion(destinyNumber, overallVerdict),
     };
+    return this.localizeNameResult(result, locale);
   }
 
-  async analyzeBrand(brandName: string, industry?: string): Promise<BrandAnalysisResult> {
+  async analyzeBrand(brandName: string, industry?: string, locale?: string): Promise<BrandAnalysisResult> {
     const cleanName = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const nameNumber = this.reduceToSingle(this.calculateChaldean(cleanName.replace(/[0-9]/g, '')));
     const data = NUMBER_MEANINGS[nameNumber] || NUMBER_MEANINGS[1];
@@ -244,7 +247,7 @@ export class NumerologyService {
 
     const alternativeNumbers = [1, 3, 5, 6, 9].filter((n) => n !== nameNumber);
 
-    return {
+    const result: BrandAnalysisResult = {
       brandName,
       nameNumber,
       vibration: data.meaning.split('.')[0],
@@ -261,9 +264,10 @@ export class NumerologyService {
       bestLaunchDays: data.days,
       luckyColors: data.colors,
     };
+    return this.localizeBrandResult(result, locale);
   }
 
-  async getPersonalYear(dateOfBirth: string): Promise<PersonalYearResult> {
+  async getPersonalYear(dateOfBirth: string, locale?: string): Promise<PersonalYearResult> {
     const dob = new Date(dateOfBirth);
     const currentYear = new Date().getFullYear();
     const personalYear = this.reduceToSingle(
@@ -290,7 +294,7 @@ export class NumerologyService {
       return { month, focus };
     });
 
-    return {
+    const result: PersonalYearResult = {
       personalYear,
       theme: data.theme,
       description: data.desc,
@@ -300,9 +304,84 @@ export class NumerologyService {
       health: data.health,
       months: monthFocuses,
     };
+    return this.localizePersonalYearResult(result, locale);
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────
+
+  private async localizeNameResult(result: NameAnalysisResult, locale?: string): Promise<NameAnalysisResult> {
+    if (!locale || locale === 'en') return result;
+    const translated = await translateFields(
+      this.openaiService,
+      {
+        destinyMeaning: result.destinyMeaning,
+        soulMeaning: result.soulMeaning,
+        personalityMeaning: result.personalityMeaning,
+        strengths: result.strengths,
+        cautions: result.cautions,
+        bestDaysToUse: result.bestDaysToUse,
+        luckyColors: result.luckyColors,
+        rulingPlanet: result.rulingPlanet,
+        compatibility: result.compatibility,
+        suggestion: result.suggestion,
+      },
+      locale,
+      'numerology-name',
+    );
+    return { ...result, ...translated };
+  }
+
+  private async localizeBrandResult(result: BrandAnalysisResult, locale?: string): Promise<BrandAnalysisResult> {
+    if (!locale || locale === 'en') return result;
+    const translated = await translateFields(
+      this.openaiService,
+      {
+        vibration: result.vibration,
+        planetaryRuler: result.planetaryRuler,
+        suitableFor: result.suitableFor,
+        avoidFor: result.avoidFor,
+        recommendation: result.recommendation,
+        bestLaunchDays: result.bestLaunchDays,
+        luckyColors: result.luckyColors,
+      },
+      locale,
+      'numerology-brand',
+    );
+    return { ...result, ...translated };
+  }
+
+  private async localizePersonalYearResult(result: PersonalYearResult, locale?: string): Promise<PersonalYearResult> {
+    if (!locale || locale === 'en') return result;
+    const monthNames = result.months.map((m) => m.month);
+    const monthFocuses = result.months.map((m) => m.focus);
+    const translated = await translateFields(
+      this.openaiService,
+      {
+        theme: result.theme,
+        description: result.description,
+        career: result.career,
+        finance: result.finance,
+        relationships: result.relationships,
+        health: result.health,
+        monthNames,
+        monthFocuses,
+      },
+      locale,
+      'numerology-personal-year',
+    );
+    const translatedNames = Array.isArray((translated as any).monthNames) ? (translated as any).monthNames as string[] : monthNames;
+    const translatedFocuses = Array.isArray((translated as any).monthFocuses) ? (translated as any).monthFocuses as string[] : monthFocuses;
+    return {
+      ...result,
+      theme: translated.theme ?? result.theme,
+      description: translated.description ?? result.description,
+      career: translated.career ?? result.career,
+      finance: translated.finance ?? result.finance,
+      relationships: translated.relationships ?? result.relationships,
+      health: translated.health ?? result.health,
+      months: result.months.map((m, i) => ({ month: translatedNames[i] ?? m.month, focus: translatedFocuses[i] ?? m.focus })),
+    };
+  }
 
   private calculateChaldean(text: string): number {
     return text.split('').reduce((sum, ch) => sum + (CHALDEAN_VALUES[ch] || 0), 0);

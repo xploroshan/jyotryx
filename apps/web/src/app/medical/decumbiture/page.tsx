@@ -30,7 +30,7 @@ const ELEMENT_BG: Record<string, string> = {
  * the 6th house of illness and the Moon's sign for prognosis.
  */
 export default function MedicalDecumbiturePage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { accessToken, isAuthenticated } = useAuthStore();
   const nowIso = new Date().toISOString();
   const [date, setDate] = useState(nowIso.slice(0, 10));
@@ -52,6 +52,7 @@ export default function MedicalDecumbiturePage() {
           decumbitureDate: date,
           decumbitureTime: time,
           symptomsDescription: symptoms || undefined,
+          locale,
         },
         { token: accessToken ?? undefined },
       );
