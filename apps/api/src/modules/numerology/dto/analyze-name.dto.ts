@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AnalyzeNameDto {
@@ -7,6 +7,12 @@ export class AnalyzeNameDto {
   @IsNotEmpty()
   @MaxLength(200)
   name: string;
+
+  @ApiProperty({ example: 'hi', required: false, description: 'Language locale for the analysis output' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(8)
+  locale?: string;
 }
 
 export class AnalyzeBrandDto {
@@ -18,6 +24,13 @@ export class AnalyzeBrandDto {
 
   @ApiProperty({ example: 'Technology', required: false })
   @IsString()
+  @IsOptional()
   @MaxLength(100)
   industry?: string;
+
+  @ApiProperty({ example: 'hi', required: false, description: 'Language locale for the analysis output' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(8)
+  locale?: string;
 }

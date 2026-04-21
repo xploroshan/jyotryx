@@ -62,7 +62,7 @@ export default function ReportsPage() {
     try {
       const res = await api.post<Report>(
         "/reports/generate",
-        { type },
+        { type, locale },
         { token: accessToken! }
       );
       setReports((prev) => [res, ...prev]);

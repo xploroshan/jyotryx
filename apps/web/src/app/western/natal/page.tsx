@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
@@ -19,6 +20,7 @@ interface NatalResponse {
 }
 
 export default function WesternNatalPage() {
+  const { locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [timeOfBirth, setTimeOfBirth] = useState(user?.timeOfBirth ?? '');
@@ -34,7 +36,7 @@ export default function WesternNatalPage() {
     try {
       const res = await api.post<NatalResponse>(
         '/astrology/western/natal',
-        { dateOfBirth, timeOfBirth, placeOfBirth },
+        { dateOfBirth, timeOfBirth, placeOfBirth, locale },
         { token: accessToken ?? undefined },
       );
       setResult(res);

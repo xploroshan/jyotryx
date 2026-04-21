@@ -16,19 +16,22 @@ export class NumerologyController {
   @Public()
   @ApiOperation({ summary: 'Analyze a personal name numerologically' })
   async analyzeName(@Body() dto: AnalyzeNameDto): Promise<NameAnalysisResult> {
-    return this.numerologyService.analyzeName(dto.name);
+    return this.numerologyService.analyzeName(dto.name, dto.locale);
   }
 
   @Post('brand')
   @Public()
   @ApiOperation({ summary: 'Analyze a brand/business name numerologically' })
   async analyzeBrand(@Body() dto: AnalyzeBrandDto): Promise<BrandAnalysisResult> {
-    return this.numerologyService.analyzeBrand(dto.brandName, dto.industry);
+    return this.numerologyService.analyzeBrand(dto.brandName, dto.industry, dto.locale);
   }
 
   @Get('personal-year')
   @ApiOperation({ summary: 'Get personal year forecast based on DOB' })
-  async getPersonalYear(@Query('dateOfBirth') dateOfBirth: string): Promise<PersonalYearResult> {
-    return this.numerologyService.getPersonalYear(dateOfBirth);
+  async getPersonalYear(
+    @Query('dateOfBirth') dateOfBirth: string,
+    @Query('locale') locale?: string,
+  ): Promise<PersonalYearResult> {
+    return this.numerologyService.getPersonalYear(dateOfBirth, locale);
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
@@ -15,6 +16,7 @@ interface ChineseZodiacResponse {
 }
 
 export default function ChineseZodiacPage() {
+  const { locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [year, setYear] = useState<string>(
     user?.dateOfBirth ? String(new Date(user.dateOfBirth).getFullYear()) : '',
@@ -30,7 +32,7 @@ export default function ChineseZodiacPage() {
     try {
       const y = Number(year);
       const res = await api.get<ChineseZodiacResponse>(
-        `/astrology/chinese-zodiac/${y}`,
+        `/astrology/chinese-zodiac/${y}?locale=${locale}`,
         { token: accessToken ?? undefined },
       );
       setResult(res);

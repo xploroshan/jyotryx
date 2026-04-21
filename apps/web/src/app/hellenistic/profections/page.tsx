@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
@@ -14,6 +15,7 @@ interface ProfectionsResponse {
 }
 
 export default function HellenisticProfectionsPage() {
+  const { locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [result, setResult] = useState<ProfectionsResponse | null>(null);
@@ -27,7 +29,7 @@ export default function HellenisticProfectionsPage() {
     try {
       const res = await api.post<ProfectionsResponse>(
         '/astrology/hellenistic/profections',
-        { dateOfBirth },
+        { dateOfBirth, locale },
         { token: accessToken ?? undefined },
       );
       setResult(res);

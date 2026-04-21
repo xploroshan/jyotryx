@@ -18,7 +18,7 @@ interface ZRResponse {
  * and annual sub-period for the logged-in user, using their saved DOB.
  */
 export default function HellenisticZodiacalReleasingPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [result, setResult] = useState<ZRResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function HellenisticZodiacalReleasingPage() {
     api
       .post<ZRResponse>(
         '/astrology/hellenistic/zodiacal-releasing',
-        { dateOfBirth: user!.dateOfBirth },
+        { dateOfBirth: user!.dateOfBirth, locale },
         { token: accessToken ?? undefined },
       )
       .then((res) => {
@@ -49,7 +49,7 @@ export default function HellenisticZodiacalReleasingPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, hasDob, user, accessToken, t.kundli.generateFailed]);
+  }, [isAuthenticated, hasDob, user, accessToken, locale, t.kundli.generateFailed]);
 
   return (
     <FeaturePageShell
