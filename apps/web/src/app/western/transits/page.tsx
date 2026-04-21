@@ -40,6 +40,7 @@ const PLANET_GLYPH: Record<string, string> = {
  */
 export default function WesternTransitsPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.westernTransits;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [result, setResult] = useState<TransitsResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,7 +78,7 @@ export default function WesternTransitsPage() {
       traditionId="WESTERN"
       featureKey="traditionsUi.western.features.transits"
       icon="🌠"
-      description="Today's transits · cross-aspects to your natal planets"
+      descriptionKey="featurePages.westernTransits.description"
     >
       {!isAuthenticated && (
         <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
@@ -103,7 +104,7 @@ export default function WesternTransitsPage() {
         <div className="space-y-4">
           <div className="glass rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/50 mb-3">
-              Transits for {result.date}
+              {fp.transitsForPrefix} {result.date}
             </p>
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {result.transitingPlanets.map((p) => (
@@ -127,11 +128,11 @@ export default function WesternTransitsPage() {
 
           <div className="glass rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/50 mb-3">
-              Active aspects ({result.aspects.length})
+              {fp.activeAspectsPrefix} ({result.aspects.length})
             </p>
             {result.aspects.length === 0 ? (
               <p className="text-sm text-white/50 text-center py-4">
-                No major aspects today — a quieter transit window.
+                {fp.noAspects}
               </p>
             ) : (
               <ul className="divide-y divide-white/[0.06]">
@@ -141,9 +142,9 @@ export default function WesternTransitsPage() {
                     className="flex items-center justify-between gap-2 py-2 text-sm"
                   >
                     <span className="text-white/90">
-                      Transiting {a.transiting}
+                      {fp.transiting} {a.transiting}
                       <span className="text-white/40 mx-2">→</span>
-                      Natal {a.natal}
+                      {fp.natal} {a.natal}
                     </span>
                     <span
                       className={`shrink-0 text-[11px] px-2 py-0.5 rounded-full ${

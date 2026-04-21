@@ -136,7 +136,7 @@ export default function VedicDoshaPage() {
             href="/profile"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
           >
-            Profile
+            {t.featurePages.vedicDosha.profile}
           </Link>
         </div>
       )}

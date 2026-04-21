@@ -19,6 +19,7 @@ interface ZRResponse {
  */
 export default function HellenisticZodiacalReleasingPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.hellenisticZodiacalReleasing;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [result, setResult] = useState<ZRResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -56,7 +57,7 @@ export default function HellenisticZodiacalReleasingPage() {
       traditionId="HELLENISTIC"
       featureKey="traditionsUi.hellenistic.features.zodiacalReleasing"
       icon="🗝️"
-      description="Lot of Spirit chapter · 12-year release"
+      descriptionKey="featurePages.hellenisticZodiacalReleasing.description"
     >
       {!isAuthenticated && (
         <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
@@ -82,7 +83,7 @@ export default function HellenisticZodiacalReleasingPage() {
         <div className="space-y-4">
           <div className="glass-strong rounded-2xl p-6 text-center">
             <p className="text-[10px] uppercase tracking-wide text-white/50">
-              Age
+              {fp.age}
             </p>
             <p className="text-4xl font-bold text-white mt-1">{result.ageYears}</p>
           </div>
@@ -90,13 +91,13 @@ export default function HellenisticZodiacalReleasingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass rounded-2xl p-5">
               <p className="text-[10px] uppercase tracking-wide text-white/50">
-                Major period
+                {fp.majorPeriod}
               </p>
               <p className="text-xl font-semibold text-white mt-1">
                 {result.majorPeriod.sign}
               </p>
               <p className="text-xs text-white/60 mt-1">
-                Lord: {result.majorPeriod.lord}
+                {fp.lord}: {result.majorPeriod.lord}
               </p>
               <p className="text-xs text-white/70 mt-3">
                 {result.majorPeriod.description}
@@ -104,13 +105,13 @@ export default function HellenisticZodiacalReleasingPage() {
             </div>
             <div className="glass rounded-2xl p-5">
               <p className="text-[10px] uppercase tracking-wide text-white/50">
-                Annual sub-period
+                {fp.annualSubPeriod}
               </p>
               <p className="text-xl font-semibold text-white mt-1">
                 {result.minorPeriod.sign}
               </p>
               <p className="text-xs text-white/60 mt-1">
-                Lord: {result.minorPeriod.lord}
+                {fp.lord}: {result.minorPeriod.lord}
               </p>
               <p className="text-xs text-white/70 mt-3">
                 {result.minorPeriod.description}

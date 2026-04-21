@@ -24,6 +24,7 @@ interface BaZiResponse {
  */
 export default function ChineseBaZiPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.chineseBazi;
   const { user, isAuthenticated, accessToken } = useAuthStore();
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [timeOfBirth, setTimeOfBirth] = useState(user?.timeOfBirth ?? '');
@@ -45,26 +46,34 @@ export default function ChineseBaZiPage() {
       );
       setResult(res);
     } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
+      setError(err?.message ?? t.featurePages.requestFailed);
     } finally {
       setLoading(false);
     }
+  };
+
+  const pillarLabel: Record<'year' | 'month' | 'day' | 'hour', string> = {
+    year: fp.pillarYear,
+    month: fp.pillarMonth,
+    day: fp.pillarDay,
+    hour: fp.pillarHour,
   };
 
   return (
     <TraditionFeatureStub
       traditionId="CHINESE"
       featureKey="traditionsUi.chinese.features.bazi"
+      descriptionKey="featurePages.chineseBazi.description"
     >
       {!isAuthenticated ? (
         <p className="text-sm text-white/60 text-center py-6">
-          {(t.common as any).login ?? 'Log in'} to get a personalised BaZi reading.
+          {fp.loginPrompt}
         </p>
       ) : (
         <>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs text-white/60 mb-1">Date of birth</label>
+              <label className="block text-xs text-white/60 mb-1">{t.kundli.dateOfBirth}</label>
               <input
                 type="date"
                 value={dateOfBirth}
@@ -74,7 +83,7 @@ export default function ChineseBaZiPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">Time of birth</label>
+              <label className="block text-xs text-white/60 mb-1">{t.kundli.timeOfBirth}</label>
               <input
                 type="time"
                 value={timeOfBirth}
@@ -84,12 +93,12 @@ export default function ChineseBaZiPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">Place of birth</label>
+              <label className="block text-xs text-white/60 mb-1">{t.kundli.placeOfBirth}</label>
               <input
                 type="text"
                 value={placeOfBirth}
                 onChange={(e) => setPlaceOfBirth(e.target.value)}
-                placeholder="City, Country"
+                placeholder={t.kundli.placePlaceholder}
                 required
                 className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
               />
@@ -99,7 +108,7 @@ export default function ChineseBaZiPage() {
               disabled={loading}
               className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
             >
-              {loading ? (t.common as any).processing ?? 'Processing...' : 'Calculate BaZi'}
+              {loading ? t.common.processing : fp.submit}
             </button>
             {error && (
               <p className="text-xs text-red-400 mt-2">{error}</p>
@@ -114,7 +123,7 @@ export default function ChineseBaZiPage() {
                   return (
                     <div key={k} className="rounded-xl border divider bg-white/[0.03] p-3">
                       <div className="text-[10px] uppercase tracking-wider text-white/40">
-                        {k} pillar
+                        {pillarLabel[k]} {fp.pillarSuffix}
                       </div>
                       <div className="mt-1 text-white text-sm font-semibold">
                         {p.heavenlyStem} · {p.earthlyBranch}
@@ -128,7 +137,7 @@ export default function ChineseBaZiPage() {
               </div>
               <div className="rounded-xl border divider bg-white/[0.03] p-4">
                 <div className="text-xs uppercase tracking-wider text-white/40">
-                  Day Master
+                  {fp.dayMaster}
                 </div>
                 <div className="mt-1 text-white font-medium">{result.dayMaster}</div>
               </div>

@@ -15,7 +15,8 @@ interface ProfectionsResponse {
 }
 
 export default function HellenisticProfectionsPage() {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
+  const fp = t.featurePages.hellenisticProfections;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [result, setResult] = useState<ProfectionsResponse | null>(null);
@@ -34,7 +35,7 @@ export default function HellenisticProfectionsPage() {
       );
       setResult(res);
     } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
+      setError(err?.message ?? t.featurePages.requestFailed);
     } finally {
       setLoading(false);
     }
@@ -44,10 +45,11 @@ export default function HellenisticProfectionsPage() {
     <TraditionFeatureStub
       traditionId="HELLENISTIC"
       featureKey="traditionsUi.hellenistic.features.profections"
+      descriptionKey="featurePages.hellenisticProfections.description"
     >
       {!isAuthenticated ? (
         <p className="text-sm text-white/60 text-center py-6">
-          Log in to view your profected year.
+          {fp.loginPrompt}
         </p>
       ) : (
         <>
@@ -64,17 +66,17 @@ export default function HellenisticProfectionsPage() {
               disabled={loading}
               className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
             >
-              {loading ? 'Processing...' : 'Calculate'}
+              {loading ? t.common.processing : fp.submit}
             </button>
             {error && <p className="text-xs text-red-400">{error}</p>}
           </form>
 
           {result && (
             <div className="mt-6 rounded-xl border divider bg-white/[0.03] p-4 space-y-2 text-sm text-white/80">
-              <div>Age: {result.ageYears}</div>
-              <div>Profected house: {result.profectedHouse}</div>
-              <div>Profected sign: {result.profectedSign}</div>
-              <div>Lord of the year: {result.lordOfYear}</div>
+              <div>{fp.age}: {result.ageYears}</div>
+              <div>{fp.profectedHouse}: {result.profectedHouse}</div>
+              <div>{fp.profectedSign}: {result.profectedSign}</div>
+              <div>{fp.lordOfYear}: {result.lordOfYear}</div>
               {result.interpretation && (
                 <p className="whitespace-pre-wrap mt-2">{result.interpretation}</p>
               )}
