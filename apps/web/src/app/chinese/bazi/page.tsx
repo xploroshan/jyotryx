@@ -73,7 +73,7 @@ export default function ChineseBaZiPage() {
         <>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs text-white/60 mb-1">{t.kundli.dateOfBirth}</label>
+              <label className="block text-xs text-white/60 mb-1">{t.form.dateOfBirth}</label>
               <input
                 type="date"
                 value={dateOfBirth}
@@ -83,7 +83,7 @@ export default function ChineseBaZiPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">{t.kundli.timeOfBirth}</label>
+              <label className="block text-xs text-white/60 mb-1">{t.form.timeOfBirth}</label>
               <input
                 type="time"
                 value={timeOfBirth}
@@ -93,12 +93,12 @@ export default function ChineseBaZiPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/60 mb-1">{t.kundli.placeOfBirth}</label>
+              <label className="block text-xs text-white/60 mb-1">{t.form.placeOfBirth}</label>
               <input
                 type="text"
                 value={placeOfBirth}
                 onChange={(e) => setPlaceOfBirth(e.target.value)}
-                placeholder={t.kundli.placePlaceholder}
+                placeholder={t.form.placePlaceholder}
                 required
                 className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
               />

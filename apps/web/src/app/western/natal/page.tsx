@@ -79,7 +79,7 @@ export default function WesternNatalPage() {
               type="text"
               value={placeOfBirth}
               onChange={(e) => setPlaceOfBirth(e.target.value)}
-              placeholder={t.kundli.placePlaceholder}
+              placeholder={t.form.placePlaceholder}
               required
               className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
             />

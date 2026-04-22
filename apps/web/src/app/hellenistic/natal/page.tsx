@@ -111,7 +111,7 @@ export default function HellenisticNatalPage() {
               type="text"
               value={pob}
               onChange={(e) => setPob(e.target.value)}
-              placeholder={t.kundli.placePlaceholder}
+              placeholder={t.form.placePlaceholder}
               required
               className="surface-input rounded-lg px-3 py-2 text-sm"
             />
