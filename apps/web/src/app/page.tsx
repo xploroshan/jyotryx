@@ -4,6 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+import { Stagger } from "@/components/ui/PageTransition";
 
 const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
   ssr: false,
@@ -86,16 +87,16 @@ export default function HomePage() {
           </div>
 
           {/* Stats row */}
-          <div className="flex justify-center gap-8 sm:gap-12">
+          <Stagger.Container className="flex justify-center gap-8 sm:gap-12">
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
+              <Stagger.Item key={stat.label} className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</div>
                 <div className="text-[11px] sm:text-xs text-white/30 mt-1 uppercase tracking-wider">
                   {stat.label}
                 </div>
-              </div>
+              </Stagger.Item>
             ))}
-          </div>
+          </Stagger.Container>
         </div>
       </section>
 
@@ -115,24 +116,24 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <Stagger.Container className="grid md:grid-cols-3 gap-6">
             {[
               { step: "01", title: t.home.step01Title, desc: t.home.step01Desc },
               { step: "02", title: t.home.step02Title, desc: t.home.step02Desc },
               { step: "03", title: t.home.step03Title, desc: t.home.step03Desc },
             ].map((item) => (
-              <div
+              <Stagger.Item
                 key={item.step}
-                className="group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] p-8 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-300"
+                className="group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] p-8 hover:bg-white/[0.04] hover:border-white/[0.1] hover:-translate-y-0.5 transition-all duration-300"
               >
                 <div className="text-5xl font-bold text-white/[0.04] mb-4 group-hover:text-primary-500/10 transition-colors">
                   {item.step}
                 </div>
                 <h3 className="text-base font-semibold text-white mb-3">{item.title}</h3>
                 <p className="text-sm text-white/40 leading-relaxed">{item.desc}</p>
-              </div>
+              </Stagger.Item>
             ))}
-          </div>
+          </Stagger.Container>
         </div>
       </section>
 

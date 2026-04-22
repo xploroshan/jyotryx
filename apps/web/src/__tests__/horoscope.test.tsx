@@ -123,9 +123,8 @@ describe('Horoscope Page: Rendering', () => {
     mockFetch.mockReturnValueOnce(new Promise(() => {}));
     render(<HoroscopePage />);
 
-    // The loading spinner SVG should be in the document
-    const spinner = document.querySelector('svg.animate-spin');
-    expect(spinner).toBeDefined();
-    expect(spinner).not.toBeNull();
+    // Skeleton container uses aria-busy to signal the loading state.
+    const busy = document.querySelector('[aria-busy="true"]');
+    expect(busy).not.toBeNull();
   });
 });

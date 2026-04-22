@@ -54,7 +54,7 @@ export default function TarotPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-white mb-2">{t.tarot.title}</h1>
       <p className="text-white/40 mb-8">{t.tarot.description}</p>
 

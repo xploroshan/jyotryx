@@ -88,7 +88,7 @@ export default function NumerologyPage() {
   return (
     <div className="relative min-h-screen">
       <div className="absolute inset-0 bg-surface-950" />
-      <div className="relative z-10 mx-auto max-w-3xl px-4 py-12">
+      <div className="relative z-10 mx-auto max-w-3xl px-4 py-12 fade-in-up">
 
         {/* Header */}
         <div className="text-center mb-10">

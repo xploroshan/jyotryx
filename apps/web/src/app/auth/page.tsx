@@ -392,7 +392,7 @@ function AuthPageContent() {
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm fade-in-up">
         {/* Invisible reCAPTCHA container */}
         <div ref={recaptchaContainerRef} id="recaptcha-container" />
 

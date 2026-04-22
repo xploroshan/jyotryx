@@ -155,7 +155,7 @@ export default function MyDayPage() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-5xl px-4 pb-16">
+        <div className="mx-auto max-w-5xl px-4 pb-16 fade-in-up">
           <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/[0.06]">
             <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
             <div className="pl-4 space-y-2">

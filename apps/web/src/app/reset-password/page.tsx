@@ -99,7 +99,7 @@ function ResetPasswordContent() {
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm fade-in-up">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <LogoMark className="h-8 w-8" />

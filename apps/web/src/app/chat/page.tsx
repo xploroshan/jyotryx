@@ -68,7 +68,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex h-[calc(100vh-3.5rem)] fade-in">
       {/* Mobile sidebar toggle */}
       <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden fixed top-[4.5rem] left-3 z-30 p-2 rounded-lg bg-surface-950 border divider">
         <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>

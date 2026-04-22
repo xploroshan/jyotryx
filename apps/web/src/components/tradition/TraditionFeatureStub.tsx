@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useTranslation } from '@/i18n';
 import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 /**
  * Placeholder scaffold rendered by each new tradition-feature page until
@@ -40,7 +41,7 @@ export default function TraditionFeatureStub({
   const featureName = readLabel(featureKey, featureKey);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-20">
+    <PageTransition className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-20">
       <nav className="mb-4 text-xs text-white/50">
         <Link href={`/${cfg.slug}`} className="hover:text-white">
           {traditionName}
@@ -75,6 +76,6 @@ export default function TraditionFeatureStub({
           </p>
         )}
       </div>
-    </div>
+    </PageTransition>
   );
 }

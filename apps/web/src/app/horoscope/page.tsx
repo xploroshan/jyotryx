@@ -5,6 +5,7 @@ import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { useUiStore } from "@/stores/ui";
 import FocusModeToggle from "@/components/ui/FocusModeToggle";
+import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 
 interface HoroscopeData {
   overview: string;
@@ -218,7 +219,7 @@ export default function HoroscopePage() {
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-12">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-white/60 mb-4">
@@ -358,11 +359,19 @@ export default function HoroscopePage() {
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center justify-center py-16">
-            <svg className="w-8 h-8 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+          <div className="grid sm:grid-cols-2 gap-4" aria-busy="true" aria-live="polite">
+            <div className="surface-card p-6">
+              <Skeleton rounded="rounded-lg" className="h-4 w-24 mb-4" />
+              <SkeletonLines count={4} />
+            </div>
+            <div className="surface-card p-6">
+              <Skeleton rounded="rounded-lg" className="h-4 w-24 mb-4" />
+              <SkeletonLines count={4} />
+            </div>
+            <div className="surface-card p-6 sm:col-span-2">
+              <Skeleton rounded="rounded-lg" className="h-4 w-32 mb-4" />
+              <SkeletonLines count={3} />
+            </div>
           </div>
         )}
 

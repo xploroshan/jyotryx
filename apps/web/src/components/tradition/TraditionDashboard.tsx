@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useTranslation } from '@/i18n';
 import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
 import Orb3D from '@/components/ui/Orb3D';
+import { PageTransition, Stagger } from '@/components/ui/PageTransition';
 
 const ORB_TINTS: Record<TraditionId, { from: string; via: string; to: string }> = {
   VEDIC: { from: 'from-amber-400/80', via: 'via-orange-500/40', to: 'to-transparent' },
@@ -34,7 +35,7 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
   const exploreCta = readLabel('traditionsUi.heroCta', 'Explore features');
 
   return (
-    <div className="mx-auto max-w-6xl px-5 sm:px-8 py-8 fade-in-up">
+    <PageTransition className="mx-auto max-w-6xl px-5 sm:px-8 py-8">
       {/* Hero */}
       <section
         className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-12 py-12 mb-10`}
@@ -68,7 +69,7 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
         <h2 className="text-[13px] uppercase tracking-widest text-white/40 font-medium mb-5">
           {exploreCta}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Stagger.Container className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {cfg.features.map((f) => {
             const label = readLabel(f.labelKey, f.slug);
             const tile = (
@@ -96,19 +97,21 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
             );
             if (!f.available) {
               return (
-                <div key={f.slug} aria-disabled="true">
-                  {tile}
-                </div>
+                <Stagger.Item key={f.slug} className="block">
+                  <div aria-disabled="true">{tile}</div>
+                </Stagger.Item>
               );
             }
             return (
-              <Link key={f.slug} href={f.href} className="block">
-                {tile}
-              </Link>
+              <Stagger.Item key={f.slug} className="block">
+                <Link href={f.href} className="block">
+                  {tile}
+                </Link>
+              </Stagger.Item>
             );
           })}
-        </div>
+        </Stagger.Container>
       </section>
-    </div>
+    </PageTransition>
   );
 }
