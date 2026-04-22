@@ -19,6 +19,11 @@ export type PanchangLocaleMap = {
   paksha?: Record<string, string>;
   planets?: Record<string, string>;
   colors?: Record<string, string>;
+  // Nakshatra quality phrases the backend embeds in the daily summary
+  // (e.g. "Dhanishta Nakshatra brings prosperous and rhythmic energy").
+  // Keyed by the exact English phrase for longest-first substring
+  // replacement in `translateSummary`.
+  nakshatraQualities?: Record<string, string>;
 };
 
 const HI: PanchangLocaleMap = {
@@ -77,6 +82,38 @@ const HI: PanchangLocaleMap = {
     Yellow: 'पीला', Purple: 'बैंगनी', Blue: 'नीला', Grey: 'ग्रे',
     Green: 'हरा', Pink: 'गुलाबी', Violet: 'बैंगनी', Black: 'काला',
     Red: 'लाल', Saffron: 'केसरिया',
+  },
+  // These mirror the 27-entry table in apps/api getNakshatraQuality().
+  // Update both together when a phrase changes.
+  nakshatraQualities: {
+    'swift and healing': 'तीव्र और उपचारात्मक',
+    'transformative': 'परिवर्तनकारी',
+    'purifying and sharp': 'शुद्धिकारक और तीक्ष्ण',
+    'creative and nurturing': 'रचनात्मक और पोषक',
+    'curious and seeking': 'जिज्ञासु और खोजी',
+    'intense and cleansing': 'तीव्र और शुद्धिकारक',
+    'renewing and optimistic': 'नवीनीकारक और आशावादी',
+    'nourishing and auspicious': 'पोषक और शुभ',
+    'mystical and introspective': 'रहस्यमय और आत्मनिरीक्षी',
+    'regal and ancestral': 'राजसी और पैतृक',
+    'pleasurable and creative': 'सुखद और रचनात्मक',
+    'generous and supportive': 'उदार और सहायक',
+    'skillful and productive': 'कुशल और उत्पादक',
+    'artistic and brilliant': 'कलात्मक और तेजस्वी',
+    'independent and adaptable': 'स्वतंत्र और अनुकूलनीय',
+    'determined and goal-oriented': 'दृढ़ और लक्ष्य-केंद्रित',
+    'devotional and friendly': 'भक्तिपूर्ण और मैत्रीपूर्ण',
+    'protective and senior': 'संरक्षक और ज्येष्ठ',
+    'foundational and transformative': 'मौलिक और परिवर्तनकारी',
+    'invincible and confident': 'अजेय और आत्मविश्वासी',
+    'victorious and universal': 'विजयी और सार्वभौमिक',
+    'learning and listening': 'सीखने और सुनने वाली',
+    'prosperous and rhythmic': 'समृद्ध और लयबद्ध',
+    'healing and mysterious': 'उपचारात्मक और रहस्यमय',
+    'fierce and passionate': 'उग्र और भावुक',
+    'wise and deep': 'बुद्धिमान और गहरी',
+    'prosperous and completing': 'समृद्ध और पूर्णकारक',
+    balanced: 'संतुलित',
   },
 };
 
@@ -148,6 +185,23 @@ export function translatePlanetName(value: string, locale: Locale): string {
 
 export function translateColorName(value: string, locale: Locale): string {
   return getPanchangTerms(locale).colors?.[value.trim()] ?? value;
+}
+
+/**
+ * Replace any nakshatra-quality phrase in a longer string (e.g. the
+ * daily briefing summary). Longer phrases are replaced first so that
+ * e.g. "prosperous and rhythmic" doesn't get partially rewritten by a
+ * shorter alternative that happens to be a prefix.
+ */
+export function translateNakshatraQualities(text: string, locale: Locale): string {
+  const map = getPanchangTerms(locale).nakshatraQualities;
+  if (!map) return text;
+  const phrases = Object.keys(map).sort((a, b) => b.length - a.length);
+  let out = text;
+  for (const p of phrases) {
+    if (out.includes(p)) out = out.split(p).join(map[p]);
+  }
+  return out;
 }
 
 /**

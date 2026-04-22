@@ -3,6 +3,7 @@ import {
   translateNakshatra,
   translateVara,
   translatePaksha,
+  translateNakshatraQualities,
 } from "@/i18n/panchang-terms";
 
 export function getQualityLabel(quality: string, t: TranslationKeys): string {
@@ -233,6 +234,10 @@ export function translateSummary(summary: string, t: TranslationKeys, locale: Lo
   for (const [en, tr] of Object.entries(PROF_INSIGHT_MAP(t))) {
     if (result.includes(en)) result = result.split(en).join(tr);
   }
+
+  // "Dhanishta Nakshatra brings prosperous and rhythmic energy." — replace
+  // the adjective phrase the backend injects (see getNakshatraQuality).
+  result = translateNakshatraQualities(result, locale);
 
   result = result.replace(/Today is/g, t.myDay.todayIs);
   result = result.replace(/ruled by/g, t.myDay.ruledBy);
