@@ -135,7 +135,7 @@ export const hi: TranslationKeys = {
     startConsultation: 'परामर्श शुरू करें',
     tryPalmReading: 'हस्तरेखा पढ़ें',
     available: 'उपलब्ध',
-    response: 'प्रतिक्रिया',
+    multiLanguage: 'भाषाएँ',
     accuracy: 'सटीकता',
     users: 'उपयोगकर्ता',
     featuresTitle: 'आपको चाहिए सब कुछ',

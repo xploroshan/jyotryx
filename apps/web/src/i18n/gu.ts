@@ -135,7 +135,7 @@ export const gu: TranslationKeys = {
     startConsultation: 'પરામર્શ શરૂ કરો',
     tryPalmReading: 'હસ્તરેખા વાંચો',
     available: 'ઉપલબ્ધ',
-    response: 'પ્રતિસાદ',
+    multiLanguage: 'ભાષાઓ',
     accuracy: 'ચોકસાઈ',
     users: 'વપરાશકર્તા',
     featuresTitle: 'તમને જોઈએ તે બધું',

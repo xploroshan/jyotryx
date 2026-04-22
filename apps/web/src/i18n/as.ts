@@ -135,7 +135,7 @@ export const as_: TranslationKeys = {
     startConsultation: 'পৰামৰ্শ আৰম্ভ কৰক',
     tryPalmReading: 'হস্তৰেখা পঢ়ক',
     available: 'উপলব্ধ',
-    response: 'সঁহাৰি',
+    multiLanguage: 'ভাষা',
     accuracy: 'নিখুঁততা',
     users: 'ব্যৱহাৰকাৰী',
     featuresTitle: 'আপোনাৰ প্ৰয়োজনীয় সকলো',

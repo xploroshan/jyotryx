@@ -135,7 +135,7 @@ export const bn: TranslationKeys = {
     startConsultation: 'পরামর্শ শুরু করুন',
     tryPalmReading: 'হস্তরেখা পড়ুন',
     available: 'উপলব্ধ',
-    response: 'প্রতিক্রিয়া',
+    multiLanguage: 'ভাষা',
     accuracy: 'নির্ভুলতা',
     users: 'ব্যবহারকারী',
     featuresTitle: 'আপনার প্রয়োজনীয় সবকিছু',
