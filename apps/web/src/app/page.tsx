@@ -15,8 +15,8 @@ export default function HomePage() {
 
   const stats = [
     { label: t.home.available, value: "24/7" },
-    { label: t.home.response, value: "<2s" },
-    { label: t.home.accuracy, value: "95%" },
+    { label: t.home.multiLanguage, value: "12" },
+    { label: t.home.accuracy, value: "100%" },
     { label: t.home.users, value: "100K+" },
   ];
 

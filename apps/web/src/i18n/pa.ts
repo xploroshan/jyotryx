@@ -135,7 +135,7 @@ export const pa: TranslationKeys = {
     startConsultation: 'ਸਲਾਹ ਸ਼ੁਰੂ ਕਰੋ',
     tryPalmReading: 'ਹਸਤਰੇਖਾ ਪੜ੍ਹੋ',
     available: 'ਉਪਲਬਧ',
-    response: 'ਜਵਾਬ',
+    multiLanguage: 'ਭਾਸ਼ਾਵਾਂ',
     accuracy: 'ਸ਼ੁੱਧਤਾ',
     users: 'ਉਪਭੋਗਤਾ',
     featuresTitle: 'ਤੁਹਾਨੂੰ ਲੋੜੀਂਦਾ ਸਭ ਕੁਝ',

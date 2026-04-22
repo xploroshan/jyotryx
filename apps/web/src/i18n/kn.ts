@@ -135,7 +135,7 @@ export const kn: TranslationKeys = {
     startConsultation: 'ಸಮಾಲೋಚನೆ ಪ್ರಾರಂಭಿಸಿ',
     tryPalmReading: 'ಹಸ್ತರೇಖೆ ಓದಿ',
     available: 'ಲಭ್ಯ',
-    response: 'ಪ್ರತಿಕ್ರಿಯೆ',
+    multiLanguage: 'ಭಾಷೆಗಳು',
     accuracy: 'ನಿಖರತೆ',
     users: 'ಬಳಕೆದಾರರು',
     featuresTitle: 'ನಿಮಗೆ ಬೇಕಾದ ಎಲ್ಲವೂ',

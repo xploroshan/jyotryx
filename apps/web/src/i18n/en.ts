@@ -142,7 +142,7 @@ export const en = {
     startConsultation: 'Start Consultation',
     tryPalmReading: 'Try Palm Reading',
     available: 'Available',
-    response: 'Response',
+    multiLanguage: 'Languages',
     accuracy: 'Accuracy',
     users: 'Users',
     featuresTitle: 'Everything you need for',

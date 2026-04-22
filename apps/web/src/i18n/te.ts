@@ -135,7 +135,7 @@ export const te: TranslationKeys = {
     startConsultation: 'సంప్రదింపు ప్రారంభించు',
     tryPalmReading: 'హస్తరేఖ చదవండి',
     available: 'అందుబాటులో',
-    response: 'ప్రతిస్పందన',
+    multiLanguage: 'భాషలు',
     accuracy: 'ఖచ్చితత్వం',
     users: 'వినియోగదారులు',
     featuresTitle: 'మీకు అవసరమైనదంతా',

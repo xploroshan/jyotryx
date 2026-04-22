@@ -135,7 +135,7 @@ export const or_: TranslationKeys = {
     startConsultation: 'ପରାମର୍ଶ ଆରମ୍ଭ କରନ୍ତୁ',
     tryPalmReading: 'ହସ୍ତରେଖା ପଢ଼ନ୍ତୁ',
     available: 'ଉପಲବ୍ଧ',
-    response: 'ପ୍ରତିକ୍ରିୟା',
+    multiLanguage: 'ଭାଷା',
     accuracy: 'ସଠିକତା',
     users: 'ବ୍ୟବହାରକାରୀ',
     featuresTitle: 'ଆପଣଙ୍କ ଆବଶ୍ୟକ ସବୁକିଛି',

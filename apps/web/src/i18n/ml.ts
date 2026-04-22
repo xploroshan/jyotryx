@@ -135,7 +135,7 @@ export const ml: TranslationKeys = {
     startConsultation: 'ആലോചന ആരംഭിക്കുക',
     tryPalmReading: 'ഹസ്തരേഖ വായിക്കുക',
     available: 'ലഭ്യം',
-    response: 'പ്രതികരണം',
+    multiLanguage: 'ഭാഷകള്‍',
     accuracy: 'കൃത്യത',
     users: 'ഉപയോക്താക്കള്‍',
     featuresTitle: 'നിങ്ങള്‍ക്ക് ആവശ്യമായ എല്ലാം',

@@ -135,7 +135,7 @@ export const ta: TranslationKeys = {
     startConsultation: 'ஆலோசனை தொடங்கு',
     tryPalmReading: 'கைரேகை படிக்கவும்',
     available: 'கிடைக்கும்',
-    response: 'பதில்',
+    multiLanguage: 'மொழிகள்',
     accuracy: 'துல்லியம்',
     users: 'பயனர்கள்',
     featuresTitle: 'உங்களுக்கு தேவையான அனைத்தும்',
