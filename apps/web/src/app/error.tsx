@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
 export default function GlobalError({
   error,
   reset,
@@ -7,6 +10,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
@@ -16,7 +23,15 @@ export default function GlobalError({
           </svg>
         </div>
         <h2 className="text-lg font-semibold text-white mb-2">Something went wrong</h2>
-        <p className="text-sm text-white/40 mb-6">An unexpected error occurred. Please try again.</p>
+        <p className="text-sm text-white/40 mb-3">An unexpected error occurred. Please try again.</p>
+        {error?.message && (
+          <p className="text-[11px] text-white/30 font-mono break-words mb-4 px-3 py-2 rounded bg-white/[0.03]">
+            {error.message}
+          </p>
+        )}
+        {error?.digest && (
+          <p className="text-[10px] text-white/20 mb-4">Ref: {error.digest}</p>
+        )}
         <button onClick={reset} className="px-6 py-2.5 rounded-lg btn-primary text-sm">
           Try Again
         </button>

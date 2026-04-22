@@ -216,8 +216,12 @@ export default function MyDayPage() {
 
   if (!briefing) return null;
 
-  const qs = QUALITY_STYLES[briefing.dayQuality];
+  const qs = QUALITY_STYLES[briefing.dayQuality] ?? QUALITY_STYLES.moderate;
   const dateLocale = LOCALE_MAP[locale] || 'en-IN';
+  const panchang = briefing.panchang ?? { tithi: '—', nakshatra: '—', yoga: '—', vara: '—', rahukaal: '—' };
+  const doList = briefing.doList ?? [];
+  const avoidList = briefing.avoidList ?? [];
+  const planetaryHours = briefing.planetaryHours ?? [];
 
   return (
     <div className="min-h-screen bg-surface-950">
@@ -300,7 +304,7 @@ export default function MyDayPage() {
               <h3 className="text-sm font-semibold text-white">{t.myDay.favorableToday}</h3>
             </div>
             <ul className="space-y-2.5">
-              {briefing.doList.map((item, i) => (
+              {doList.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-white/60">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500/50 shrink-0" />
                   {translateActivity(item, t)}
@@ -318,7 +322,7 @@ export default function MyDayPage() {
               <h3 className="text-sm font-semibold text-white">{t.myDay.bestToAvoid}</h3>
             </div>
             <ul className="space-y-2.5">
-              {briefing.avoidList.map((item, i) => (
+              {avoidList.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-white/60">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500/50 shrink-0" />
                   {translateActivity(item, t)}
@@ -366,7 +370,7 @@ export default function MyDayPage() {
               <div className="mt-4 pt-3 border-t border-white/[0.06]">
                 <p className="text-xs text-white/30 mb-1">{t.myDay.bestFor}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {briefing.currentHora.activities.map((a, i) => (
+                  {(briefing.currentHora.activities ?? []).map((a, i) => (
                     <span key={i} className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[11px] text-white/50">{translateActivity(a, t)}</span>
                   ))}
                 </div>
@@ -411,18 +415,18 @@ export default function MyDayPage() {
         </div>
 
         {/* Planetary Hours Timeline (lazy loaded) */}
-        <PlanetaryHoursSection planetaryHours={briefing.planetaryHours} t={t} />
+        <PlanetaryHoursSection planetaryHours={planetaryHours} t={t} />
 
         {/* Panchang */}
         <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
           <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: t.myDay.tithi, value: briefing.panchang.tithi, icon: "\ud83c\udf19" },
-              { label: t.myDay.nakshatraLabel, value: briefing.panchang.nakshatra, icon: "\u2b50" },
-              { label: t.myDay.yoga, value: briefing.panchang.yoga, icon: "\ud83e\uddd8" },
-              { label: t.myDay.day, value: briefing.panchang.vara, icon: "\ud83d\udcc5" },
-              { label: t.myDay.rahuKaal, value: briefing.panchang.rahukaal, icon: "\u26a0\ufe0f" },
+              { label: t.myDay.tithi, value: panchang.tithi, icon: "\ud83c\udf19" },
+              { label: t.myDay.nakshatraLabel, value: panchang.nakshatra, icon: "\u2b50" },
+              { label: t.myDay.yoga, value: panchang.yoga, icon: "\ud83e\uddd8" },
+              { label: t.myDay.day, value: panchang.vara, icon: "\ud83d\udcc5" },
+              { label: t.myDay.rahuKaal, value: panchang.rahukaal, icon: "\u26a0\ufe0f" },
             ].map((item) => (
               <div key={item.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
                 <p className="text-lg mb-1">{item.icon}</p>
