@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
+import { translateColorName, translatePlanetName, translateTimeRange } from '@/i18n/panchang-terms';
+import { translateSummary } from '@/app/my-day/components/translations';
 import { Stagger } from '@/components/ui/PageTransition';
 import { Skeleton } from '@/components/ui/Skeleton';
 
@@ -225,7 +227,7 @@ export default function BentoSummary() {
               {qualityLabel}
             </h3>
             <p className="text-sm text-white/40 line-clamp-3 flex-1 leading-relaxed">
-              {briefing.summary}
+              {translateSummary(briefing.summary, t, locale)}
             </p>
             <div className="mt-5 w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
               <div
@@ -252,7 +254,7 @@ export default function BentoSummary() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 ring-2 ring-white/10" />
             <p className="text-sm font-medium text-white/70">
-              {briefing.luckyColor}
+              {translateColorName(briefing.luckyColor, locale)}
             </p>
           </div>
         </Stagger.Item>
@@ -269,11 +271,11 @@ export default function BentoSummary() {
               {t.myDay.currentHora}
             </p>
             <p className="text-base font-semibold text-white">
-              {briefing.currentHora?.planet ?? '\u2014'}
+              {briefing.currentHora ? translatePlanetName(briefing.currentHora.planet, locale) : '\u2014'}
             </p>
             <p className="text-xs text-white/30 mt-0.5">
               {briefing.currentHora
-                ? `${briefing.currentHora.startTime} \u2013 ${briefing.currentHora.endTime}`
+                ? `${translateTimeRange(briefing.currentHora.startTime, locale)} \u2013 ${translateTimeRange(briefing.currentHora.endTime, locale)}`
                 : t.myDay.bestTime}
             </p>
           </div>

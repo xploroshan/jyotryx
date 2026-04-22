@@ -37,7 +37,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions, updatePrimaryTradition } = useAuthStore();
+  const { isAuthenticated, isHydrated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions, updatePrimaryTradition } = useAuthStore();
   const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
@@ -71,12 +71,13 @@ export default function ProfilePage() {
   const [changingPw, setChangingPw] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push("/auth");
       return;
     }
     loadProfile();
-  }, [isAuthenticated]);
+  }, [isHydrated, isAuthenticated]);
 
   const loadProfile = async () => {
     setLoading(true);

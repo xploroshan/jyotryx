@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import type { TranslationKeys } from "@/i18n";
+import type { Locale, TranslationKeys } from "@/i18n";
 import { translatePlanet, translateActivity } from "./translations";
+import { translateTimeRange } from "@/i18n/panchang-terms";
 
 interface PlanetaryHour {
   planet: string;
@@ -26,9 +27,11 @@ const planetIcons: Record<string, { symbol: string; color: string; bg: string }>
 export function PlanetaryHoursSection({
   planetaryHours,
   t,
+  locale,
 }: {
   planetaryHours: PlanetaryHour[];
   t: TranslationKeys;
+  locale: Locale;
 }) {
   const [showAllHours, setShowAllHours] = useState(false);
   const currentIdx = planetaryHours.findIndex((h) => h.isCurrent);
@@ -64,7 +67,7 @@ export function PlanetaryHoursSection({
               </div>
               <span className={`text-sm font-medium w-16 ${pi.color}`}>{translatePlanet(hour.planet, t)}</span>
               <span className="text-xs text-white/25 w-28 tabular-nums">
-                {hour.startTime} – {hour.endTime}
+                {translateTimeRange(hour.startTime, locale)} – {translateTimeRange(hour.endTime, locale)}
               </span>
               <span className="text-xs text-white/40 flex-1 hidden sm:block">
                 {hour.activities.slice(0, 2).map(a => translateActivity(a, t)).join(", ")}

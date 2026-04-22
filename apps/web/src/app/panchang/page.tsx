@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n";
+import {
+  translateTithi,
+  translateNakshatra,
+  translateYoga,
+  translateVara,
+  translateTimeRange,
+} from "@/i18n/panchang-terms";
 
 interface PanchangData {
   date: string;
@@ -51,27 +58,27 @@ export default function PanchangPage() {
 
   const panchangItems = panchang
     ? [
-        { label: t.panchang.tithi, value: panchang.tithi, icon: "🌙", desc: t.panchang.tithiDesc },
-        { label: t.panchang.nakshatraLabel, value: panchang.nakshatra, icon: "✨", desc: t.panchang.nakshatraDesc },
-        { label: t.panchang.yoga, value: panchang.yoga, icon: "🔗", desc: t.panchang.yogaDesc },
+        { label: t.panchang.tithi, value: translateTithi(panchang.tithi, locale), icon: "🌙", desc: t.panchang.tithiDesc },
+        { label: t.panchang.nakshatraLabel, value: translateNakshatra(panchang.nakshatra, locale), icon: "✨", desc: t.panchang.nakshatraDesc },
+        { label: t.panchang.yoga, value: translateYoga(panchang.yoga, locale), icon: "🔗", desc: t.panchang.yogaDesc },
         { label: t.panchang.karana, value: panchang.karana, icon: "⚡", desc: t.panchang.karanaDesc },
-        { label: t.panchang.vara, value: panchang.vara, icon: "📆", desc: t.panchang.varaDesc },
+        { label: t.panchang.vara, value: translateVara(panchang.vara, locale), icon: "📆", desc: t.panchang.varaDesc },
       ]
     : [];
 
   const timings = panchang
     ? [
-        { label: t.panchang.sunrise, value: panchang.sunrise, icon: "🌅" },
-        { label: t.panchang.sunset, value: panchang.sunset, icon: "🌇" },
-        { label: t.panchang.moonrise, value: panchang.moonrise, icon: "🌕" },
+        { label: t.panchang.sunrise, value: translateTimeRange(panchang.sunrise, locale), icon: "🌅" },
+        { label: t.panchang.sunset, value: translateTimeRange(panchang.sunset, locale), icon: "🌇" },
+        { label: t.panchang.moonrise, value: translateTimeRange(panchang.moonrise, locale), icon: "🌕" },
       ]
     : [];
 
   const inauspicious = panchang
     ? [
-        { label: t.panchang.rahuKaal, value: panchang.rahukaal, desc: t.panchang.rahuKaalDesc },
-        { label: t.panchang.gulikaKaal, value: panchang.gulikakaal, desc: t.panchang.gulikaKaalDesc },
-        { label: t.panchang.yamakantaka, value: panchang.yamakantaka, desc: t.panchang.yamakantakaDesc },
+        { label: t.panchang.rahuKaal, value: translateTimeRange(panchang.rahukaal, locale), desc: t.panchang.rahuKaalDesc },
+        { label: t.panchang.gulikaKaal, value: translateTimeRange(panchang.gulikakaal, locale), desc: t.panchang.gulikaKaalDesc },
+        { label: t.panchang.yamakantaka, value: translateTimeRange(panchang.yamakantaka, locale), desc: t.panchang.yamakantakaDesc },
       ]
     : [];
 
@@ -124,7 +131,7 @@ export default function PanchangPage() {
               <p className="text-2xl font-bold text-white">
                 {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
-              <p className="text-sm text-accent-400 mt-1">{panchang.vara}</p>
+              <p className="text-sm text-accent-400 mt-1">{translateVara(panchang.vara, locale)}</p>
             </div>
 
             {/* Panchang Elements */}

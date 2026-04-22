@@ -59,10 +59,12 @@ const mockStoreState = {
   accessToken: 'valid-token',
   refreshToken: 'valid-refresh',
   isAuthenticated: true,
+  isHydrated: true,
   setAuth: vi.fn(),
   updateCredits: vi.fn(),
   logout: vi.fn(),
   updatePrimaryTradition: vi.fn(),
+  setHydrated: vi.fn(),
 };
 vi.mock('@/lib/store', () => ({
   useAuthStore: Object.assign(

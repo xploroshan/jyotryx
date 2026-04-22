@@ -22,7 +22,7 @@ interface Report {
 export default function ReportsPage() {
   const router = useRouter();
   const { t, locale } = useTranslation();
-  const { isAuthenticated, accessToken } = useAuthStore();
+  const { isAuthenticated, isHydrated, accessToken } = useAuthStore();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
@@ -39,13 +39,14 @@ export default function ReportsPage() {
   ];
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push("/auth");
       return;
     }
     loadReports();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isHydrated, isAuthenticated]);
 
   const loadReports = async () => {
     try {

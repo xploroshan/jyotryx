@@ -20,6 +20,7 @@ const mockStoreState = {
   accessToken: 'valid-token',
   refreshToken: 'valid-refresh',
   isAuthenticated: true,
+  isHydrated: true,
   setAuth: vi.fn(),
   updateCredits: vi.fn(),
   logout: vi.fn(),
