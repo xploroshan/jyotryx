@@ -88,6 +88,13 @@ export const useAuthStore = create<AuthState>()(
         import('@/i18n').then(({ useI18nStore }) => {
           try { useI18nStore.getState().resetLocale(); } catch {}
         });
+        // Drop any per-user cached data so the next account on this device
+        // doesn't see the previous user's briefing.
+        try {
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem('jyotron-my-day-briefing');
+          }
+        } catch { /* quota / private mode */ }
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
       },
     }),

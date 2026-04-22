@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
@@ -106,6 +106,62 @@ const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
   MEDICAL: 'medical',
 };
 
+const BRIEFING_CACHE_KEY = 'jyotron-my-day-briefing';
+
+type BriefingCache = {
+  date: string; // YYYY-MM-DD of cached entry; expires daily
+  locale: string; // cached locale; bust when user switches language
+  userId: string; // bust when user switches accounts
+  data: DailyBriefing;
+};
+
+function readBriefingCache(userId: string, locale: string): DailyBriefing | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(BRIEFING_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BriefingCache;
+    const today = new Date().toISOString().slice(0, 10);
+    if (parsed.date !== today) return null;
+    if (parsed.locale !== locale) return null;
+    if (parsed.userId !== userId) return null;
+    return parsed.data;
+  } catch { return null; }
+}
+
+/**
+ * Synchronous cache read used by the useState initializer, so the FIRST
+ * client render already has the briefing in hand — no wait for Zustand
+ * rehydration or useEffect. We pull userId/locale directly from the
+ * persist middleware's localStorage entries instead of routing through
+ * the hooks to avoid an extra render cycle on the critical path.
+ */
+function readBriefingCacheSync(): DailyBriefing | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const authRaw = window.localStorage.getItem('jyotron-auth');
+    const localeRaw = window.localStorage.getItem('jyotron-locale');
+    if (!authRaw) return null;
+    const userId = JSON.parse(authRaw)?.state?.user?.id;
+    if (!userId) return null;
+    const loc = (localeRaw && JSON.parse(localeRaw)?.state?.locale) || 'en';
+    return readBriefingCache(userId, loc);
+  } catch { return null; }
+}
+
+function writeBriefingCache(userId: string, locale: string, data: DailyBriefing): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload: BriefingCache = {
+      date: new Date().toISOString().slice(0, 10),
+      locale,
+      userId,
+      data,
+    };
+    window.localStorage.setItem(BRIEFING_CACHE_KEY, JSON.stringify(payload));
+  } catch { /* quota / private mode */ }
+}
+
 export default function MyDayPage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -113,9 +169,26 @@ export default function MyDayPage() {
   const isHydrated = useAuthHydrated();
   const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
   const isMultiTradition = userTraditions.length > 1;
+  // Start matching SSR (null + loading skeleton) to avoid hydration
+  // mismatch warnings; a useLayoutEffect below synchronously swaps in
+  // any cached briefing before the browser paints, so returning users
+  // effectively skip the skeleton frame.
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Swap to cached briefing before the first paint on the client.
+  // Falls back to useEffect on the server (no-op) via the SSR-safe ref below.
+  const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+  useIsoLayoutEffect(() => {
+    const cached = readBriefingCacheSync();
+    if (cached) {
+      setBriefing(cached);
+      setLoading(false);
+    }
+    // No dependency array: this runs exactly once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -123,18 +196,36 @@ export default function MyDayPage() {
       router.push("/auth");
       return;
     }
-    fetchBriefing();
-  }, [isHydrated, isAuthenticated]);
+    // Stale-while-revalidate: we already painted today's cache (if any) via
+    // the layout effect; now hit the API to pick up any updates. Only show
+    // the loading skeleton when we don't have a cached page to avoid the
+    // skeleton replacing the content the user is already reading.
+    const cached = user?.id ? readBriefingCache(user.id, locale) : null;
+    if (cached) {
+      // Layout-effect path may have missed this hit (e.g. when the persist
+      // middleware seeded the store from somewhere other than localStorage,
+      // as in unit tests); keep them in sync.
+      setBriefing(cached);
+      setLoading(false);
+    }
+    fetchBriefing(!cached);
+  }, [isHydrated, isAuthenticated, locale, user?.id]);
 
-  const fetchBriefing = async () => {
-    setLoading(true);
+  const fetchBriefing = async (showLoader: boolean) => {
+    if (showLoader) setLoading(true);
     setError("");
     try {
       const data = await api.get<DailyBriefing>(`/daily-briefing?locale=${locale}`, { token: accessToken! });
       setBriefing(data);
+      if (user?.id) writeBriefingCache(user.id, locale, data);
     } catch (err: any) {
-      setError(err.message || t.myDay.loadFailed);
+      // If we already rendered cached data, keep it on screen rather than
+      // replacing a usable page with an error banner.
+      if (showLoader) setError(err.message || t.myDay.loadFailed);
     } finally {
+      // Always clear the loading flag — even on background revalidation —
+      // so a stale cache hit followed by a successful refresh leaves the
+      // page in a coherent state.
       setLoading(false);
     }
   };
@@ -225,7 +316,7 @@ export default function MyDayPage() {
           </div>
           <p className="text-red-400 mb-1 text-sm font-medium">{t.myDay.somethingWrong}</p>
           <p className="text-white/40 text-xs mb-5">{error}</p>
-          <button onClick={fetchBriefing} className="px-6 py-2.5 btn-primary rounded-xl text-sm">{t.myDay.tryAgain}</button>
+          <button onClick={() => fetchBriefing(true)} className="px-6 py-2.5 btn-primary rounded-xl text-sm">{t.myDay.tryAgain}</button>
         </div>
       </div>
     );
