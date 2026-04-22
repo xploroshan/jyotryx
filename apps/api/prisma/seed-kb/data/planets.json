@@ -1,0 +1,132 @@
+{
+  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts (PLANET_ACTIVITIES, mantras, remedies tables, getPlanetColor). Hindi names + colors mined from apps/web/src/i18n/panchang-terms.ts. Remedy/mantra/doList/avoidList require LLM backfill for all locales other than en. Canon: BPHS — planet attributes correspond to the classical sattvic/rajasic/tamasic temperament triad.",
+  "_shape": "{ name: string, color: string, remedy: string, mantra: string, doList: string[], avoidList: string[] }",
+  "rows": [
+    {
+      "key": "Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sun",
+          "color": "Ruby Red",
+          "remedy": "Offer water to the rising Sun while chanting Gayatri Mantra. Wear ruby or red clothes.",
+          "mantra": "Om Suryaya Namaha",
+          "doList": ["Meet authority figures", "Leadership decisions", "Government work", "Health routines", "Presentations"],
+          "avoidList": ["Starting partnerships", "Lending money", "Risky investments"]
+        },
+        "hi": {
+          "name": "सूर्य",
+          "color": "रूबी लाल"
+        }
+      }
+    },
+    {
+      "key": "Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Moon",
+          "color": "Pearl White",
+          "remedy": "Drink water from a silver glass. Wear white or pearl. Practice Chandra Namaskar.",
+          "mantra": "Om Chandraya Namaha",
+          "doList": ["Creative work", "Client meetings", "Nurturing relationships", "Public-facing tasks", "Short travel"],
+          "avoidList": ["Major financial decisions", "Confrontations", "Surgery"]
+        },
+        "hi": {
+          "name": "चंद्र",
+          "color": "मोती सफेद"
+        }
+      }
+    },
+    {
+      "key": "Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mars",
+          "color": "Coral Red",
+          "remedy": "Recite Hanuman Chalisa. Donate red lentils. Wear coral or red thread.",
+          "mantra": "Om Mangalaya Namaha",
+          "doList": ["Physical activities", "Debugging/problem-solving", "Competitive tasks", "Negotiations", "Property matters"],
+          "avoidList": ["Starting new partnerships", "Signing agreements", "Calm discussions needed"]
+        },
+        "hi": {
+          "name": "मंगल",
+          "color": "मूंगा लाल"
+        }
+      }
+    },
+    {
+      "key": "Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mercury",
+          "color": "Emerald Green",
+          "remedy": "Chant Vishnu Sahasranama. Wear emerald green. Feed green vegetables to cows.",
+          "mantra": "Om Budhaya Namaha",
+          "doList": ["Communication", "Writing", "Coding", "Trading", "Learning", "Emails", "Data analysis"],
+          "avoidList": ["Long-term commitments", "Emotional decisions", "Property purchases"]
+        },
+        "hi": {
+          "name": "बुध",
+          "color": "पन्ना हरा"
+        }
+      }
+    },
+    {
+      "key": "Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Jupiter",
+          "color": "Golden Yellow",
+          "remedy": "Visit a temple and offer yellow flowers. Wear yellow sapphire. Read scriptures.",
+          "mantra": "Om Gurave Namaha",
+          "doList": ["Teaching", "Mentoring", "Financial planning", "Spiritual practices", "Closing deals", "Investments"],
+          "avoidList": ["Risky speculation", "Shortcuts", "Unethical actions"]
+        },
+        "hi": {
+          "name": "बृहस्पति",
+          "color": "सुनहरा पीला"
+        }
+      }
+    },
+    {
+      "key": "Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Venus",
+          "color": "Diamond White",
+          "remedy": "Offer white sweets to a young girl. Wear diamond or white clothes. Practice gratitude.",
+          "mantra": "Om Shukraya Namaha",
+          "doList": ["Client relationships", "Creative campaigns", "Buying/selling", "Social media", "Design work", "Networking"],
+          "avoidList": ["Aggressive negotiations", "Conflict resolution", "Heavy physical work"]
+        },
+        "hi": {
+          "name": "शुक्र",
+          "color": "हीरा सफेद"
+        }
+      }
+    },
+    {
+      "key": "Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Saturn",
+          "color": "Sapphire Blue",
+          "remedy": "Light a sesame oil lamp. Donate black items. Serve the elderly. Wear blue sapphire.",
+          "mantra": "Om Shanaischaraya Namaha",
+          "doList": ["Long-term planning", "Discipline tasks", "Refactoring code", "Compliance work", "Auditing", "Research"],
+          "avoidList": ["New beginnings", "Celebrations", "Impulsive decisions", "Product launches"]
+        },
+        "hi": {
+          "name": "शनि",
+          "color": "नीलम नीला"
+        }
+      }
+    }
+  ]
+}

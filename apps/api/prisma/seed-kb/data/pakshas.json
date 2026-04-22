@@ -1,0 +1,8 @@
+{
+  "_source": "Two halves of the lunar month: Shukla Paksha (waxing, bright fortnight) and Krishna Paksha (waning, dark fortnight). Hindi names mined from apps/web/src/i18n/panchang-terms.ts (HI.paksha). Canon: BPHS lunar-month division.",
+  "_shape": "{ name: string }",
+  "rows": [
+    { "key": "Shukla",  "tradition": null, "i18n": { "en": { "name": "Shukla" },  "hi": { "name": "शुक्ल" } } },
+    { "key": "Krishna", "tradition": null, "i18n": { "en": { "name": "Krishna" }, "hi": { "name": "कृष्ण" } } }
+  ]
+}
