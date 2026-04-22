@@ -30,12 +30,18 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  // True once the persist middleware has finished reading from localStorage.
+  // Route gates MUST wait for this before redirecting to /auth, otherwise a
+  // hard refresh redirects an authenticated user out of the app in the tiny
+  // window before rehydration runs.
+  isHydrated: boolean;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateCredits: (credits: number) => void;
   setProfileComplete: (complete: boolean) => void;
   updateBirthDetails: (details: BirthDetails & { name?: string }) => void;
   updateAstrologyTraditions: (traditions: string[]) => void;
   updatePrimaryTradition: (tradition: string | null) => void;
+  setHydrated: (v: boolean) => void;
   logout: () => void;
 }
 
@@ -46,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      isHydrated: false,
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isAuthenticated: true }),
       updateCredits: (credits) =>
@@ -77,6 +84,7 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, primaryTradition: tradition } : null,
         })),
+      setHydrated: (v) => set({ isHydrated: v }),
       logout: () => {
         // Sign out of Firebase client SDK too
         import('@/lib/firebase').then(({ auth }) => {
@@ -92,6 +100,17 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'jyotron-auth',
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      onRehydrateStorage: () => () => {
+        // Fires after the middleware finishes rehydrating from storage.
+        // Route gates watch `isHydrated` to avoid redirecting on cold load.
+        useAuthStore.getState().setHydrated(true);
+      },
     },
   ),
 );

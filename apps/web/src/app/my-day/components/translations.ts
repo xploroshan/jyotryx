@@ -1,4 +1,9 @@
-import type { TranslationKeys } from "@/i18n";
+import type { Locale, TranslationKeys } from "@/i18n";
+import {
+  translateNakshatra,
+  translateVara,
+  translatePaksha,
+} from "@/i18n/panchang-terms";
 
 export function getQualityLabel(quality: string, t: TranslationKeys): string {
   const map: Record<string, string> = {
@@ -110,8 +115,8 @@ export function translateRemedy(text: string, t: TranslationKeys): string {
   return map[text] || text;
 }
 
-export function translateProfInsight(text: string, t: TranslationKeys): string {
-  const map: Record<string, string> = {
+function PROF_INSIGHT_MAP(t: TranslationKeys): Record<string, string> {
+  return {
     'Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal.': t.myDay.profSoftwareSun,
     'Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming.': t.myDay.profSoftwareMoon,
     'High energy for debugging tough issues and performance optimization. Tackle that backlog.': t.myDay.profSoftwareMars,
@@ -184,6 +189,10 @@ export function translateProfInsight(text: string, t: TranslationKeys): string {
     'Discipline and long-term planning. Focus on building lasting foundations.': t.myDay.profOtherSaturn,
     'Focus on your core strengths today.': t.myDay.focusOnStrengths,
   };
+}
+
+export function translateProfInsight(text: string, t: TranslationKeys): string {
+  const map = PROF_INSIGHT_MAP(t);
   return map[text] || text;
 }
 
@@ -207,7 +216,7 @@ export function translateGreeting(greeting: string, t: TranslationKeys): string 
   return `${prefixMap[match[1]] || match[1]}, ${match[2]}`;
 }
 
-export function translateSummary(summary: string, t: TranslationKeys): string {
+export function translateSummary(summary: string, t: TranslationKeys, locale: Locale = 'en'): string {
   let result = summary;
   const qualityMap: Record<string, string> = {
     'Stars align beautifully today — seize opportunities with confidence.': t.myDay.summaryExcellent,
@@ -218,16 +227,50 @@ export function translateSummary(summary: string, t: TranslationKeys): string {
   for (const [en, tr] of Object.entries(qualityMap)) {
     result = result.replace(en, tr);
   }
+
+  // Replace any embedded profession-insight sentence (the backend appends one
+  // to the summary) by scanning the translateProfInsight lookup table.
+  for (const [en, tr] of Object.entries(PROF_INSIGHT_MAP(t))) {
+    if (result.includes(en)) result = result.split(en).join(tr);
+  }
+
   result = result.replace(/Today is/g, t.myDay.todayIs);
   result = result.replace(/ruled by/g, t.myDay.ruledBy);
   result = result.replace(/Nakshatra brings/g, t.myDay.nakshatraBrings);
   result = result.replace(/energy\./g, `${t.myDay.energy}.`);
   result = result.replace(/Current planetary hour is/g, t.myDay.currentHoraIs);
-  result = result.replace(/hora/g, t.myDay.hora);
+  result = result.replace(/\bhora\b/g, t.myDay.hora);
+
+  // Vara with optional (Weekday) suffix: "Budhvaar (Wednesday)" → localized.
+  result = result.replace(
+    /\b(Ravivaar|Somvaar|Mangalvaar|Budhvaar|Guruvaar|Shukravaar|Shanivaar)(?:\s*\((Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\))?/g,
+    (_m, a: string, b?: string) =>
+      b ? translateVara(`${a} (${b})`, locale) : translateVara(a, locale),
+  );
+  // Bare weekday names.
+  result = result.replace(
+    /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/g,
+    (m) => translateVara(m, locale),
+  );
+
+  // Nakshatras.
+  const nakshatraNames = [
+    'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
+    'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni',
+    'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha',
+    'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana',
+    'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati',
+  ];
+  for (const n of nakshatraNames) {
+    result = result.replace(new RegExp(`\\b${n}\\b`, 'g'), translateNakshatra(n, locale));
+  }
+
+  // Paksha.
+  result = result.replace(/\b(Shukla|Krishna)\s+Paksha\b/g, (m) => translatePaksha(m, locale));
+
   const planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
   for (const p of planets) {
     result = result.replace(new RegExp(`\\b${p}\\b`, 'g'), translatePlanet(p, t));
   }
-  result = translateProfInsight(result, t) !== result ? translateProfInsight(result, t) : result;
   return result;
 }

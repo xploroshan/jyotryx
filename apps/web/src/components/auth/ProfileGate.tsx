@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 
@@ -35,14 +35,13 @@ export default function ProfileGate({ children }: { children: React.ReactNode })
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
 
   const needsProfile = isAuthenticated && user ? !user.profileComplete : false;
-  const shouldRedirect = mounted && needsProfile && !isOpenPath(pathname);
+  // Only redirect once the persisted auth state has been loaded; otherwise a
+  // fresh reload would race the rehydration and bounce the user through the
+  // profile flow before we know whether they're logged in at all.
+  const shouldRedirect = isHydrated && needsProfile && !isOpenPath(pathname);
 
   useEffect(() => {
     if (shouldRedirect) {

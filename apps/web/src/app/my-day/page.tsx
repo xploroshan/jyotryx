@@ -18,6 +18,13 @@ import {
   translateGreeting,
   translateSummary,
 } from "./components/translations";
+import {
+  translateTithi,
+  translateNakshatra,
+  translateYoga,
+  translateVara,
+  translateTimeRange,
+} from "@/i18n/panchang-terms";
 
 const PlanetaryHoursSection = dynamic(
   () => import("./components/PlanetaryHoursSection").then(m => ({ default: m.PlanetaryHoursSection })),
@@ -102,7 +109,7 @@ const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
 export default function MyDayPage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const { isAuthenticated, accessToken, user } = useAuthStore();
+  const { isAuthenticated, isHydrated, accessToken, user } = useAuthStore();
   const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
   const isMultiTradition = userTraditions.length > 1;
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
@@ -110,12 +117,13 @@ export default function MyDayPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated) {
       router.push("/auth");
       return;
     }
     fetchBriefing();
-  }, [isAuthenticated]);
+  }, [isHydrated, isAuthenticated]);
 
   const fetchBriefing = async () => {
     setLoading(true);
@@ -284,7 +292,7 @@ export default function MyDayPage() {
         {/* Summary */}
         <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/[0.06]">
           <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
-          <p className="text-white/80 leading-relaxed pl-4 text-[15px]">{translateSummary(briefing.summary, t)}</p>
+          <p className="text-white/80 leading-relaxed pl-4 text-[15px]">{translateSummary(briefing.summary, t, locale)}</p>
         </div>
 
         {/* Transit Alert */}
@@ -375,7 +383,7 @@ export default function MyDayPage() {
                     {translatePlanet(briefing.currentHora.planet, t)}
                   </p>
                   <p className="text-xs text-white/30 mt-0.5">
-                    {briefing.currentHora.startTime} – {briefing.currentHora.endTime}
+                    {translateTimeRange(briefing.currentHora.startTime, locale)} – {translateTimeRange(briefing.currentHora.endTime, locale)}
                   </p>
                 </div>
               </div>
@@ -419,7 +427,7 @@ export default function MyDayPage() {
                 </div>
                 <div>
                   <p className="text-[11px] text-white/30 uppercase tracking-wider">{t.myDay.bestTime}</p>
-                  <p className="text-sm text-white font-medium">{briefing.luckyTime}</p>
+                  <p className="text-sm text-white font-medium">{translateTimeRange(briefing.luckyTime, locale)}</p>
                 </div>
               </div>
             </div>
@@ -427,18 +435,18 @@ export default function MyDayPage() {
         </div>
 
         {/* Planetary Hours Timeline (lazy loaded) */}
-        <PlanetaryHoursSection planetaryHours={planetaryHours} t={t} />
+        <PlanetaryHoursSection planetaryHours={planetaryHours} t={t} locale={locale} />
 
         {/* Panchang */}
         <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
           <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: t.myDay.tithi, value: panchang.tithi, icon: "\ud83c\udf19" },
-              { label: t.myDay.nakshatraLabel, value: panchang.nakshatra, icon: "\u2b50" },
-              { label: t.myDay.yoga, value: panchang.yoga, icon: "\ud83e\uddd8" },
-              { label: t.myDay.day, value: panchang.vara, icon: "\ud83d\udcc5" },
-              { label: t.myDay.rahuKaal, value: panchang.rahukaal, icon: "\u26a0\ufe0f" },
+              { label: t.myDay.tithi, value: translateTithi(panchang.tithi, locale), icon: "\ud83c\udf19" },
+              { label: t.myDay.nakshatraLabel, value: translateNakshatra(panchang.nakshatra, locale), icon: "\u2b50" },
+              { label: t.myDay.yoga, value: translateYoga(panchang.yoga, locale), icon: "\ud83e\uddd8" },
+              { label: t.myDay.day, value: translateVara(panchang.vara, locale), icon: "\ud83d\udcc5" },
+              { label: t.myDay.rahuKaal, value: translateTimeRange(panchang.rahukaal, locale), icon: "\u26a0\ufe0f" },
             ].map((item) => (
               <div key={item.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
                 <p className="text-lg mb-1">{item.icon}</p>

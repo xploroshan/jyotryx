@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 
@@ -11,18 +11,19 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const { isAuthenticated } = useAuthStore();
-
-  useEffect(() => { setMounted(true); }, []);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
 
   useEffect(() => {
-    if (mounted && !isAuthenticated) {
+    // Don't redirect until Zustand has read the persisted token from
+    // localStorage, otherwise authenticated users get bounced to /auth on
+    // every hard refresh in the tiny window before rehydration completes.
+    if (isHydrated && !isAuthenticated) {
       router.replace("/auth?mode=login");
     }
-  }, [mounted, isAuthenticated, router]);
+  }, [isHydrated, isAuthenticated, router]);
 
-  if (!mounted || !isAuthenticated) {
+  if (!isHydrated || !isAuthenticated) {
     return fallback || (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500" />
