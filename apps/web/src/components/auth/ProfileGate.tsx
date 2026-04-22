@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 
 /**
  * Paths that do NOT require a completed profile. Users who are authenticated
@@ -35,7 +35,7 @@ export default function ProfileGate({ children }: { children: React.ReactNode })
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const isHydrated = useAuthHydrated();
 
   const needsProfile = isAuthenticated && user ? !user.profileComplete : false;
   // Only redirect once the persisted auth state has been loaded; otherwise a

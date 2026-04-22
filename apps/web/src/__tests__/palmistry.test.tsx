@@ -28,6 +28,7 @@ vi.mock('@/lib/store', () => ({
   useAuthStore: Object.assign(vi.fn(() => mockStoreState), {
     getState: () => mockStoreState,
   }),
+  useAuthHydrated: () => true,
 }));
 
 // ─── Mock API (dynamic import pattern) ────────────────────────────────────

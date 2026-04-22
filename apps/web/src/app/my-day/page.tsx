@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import FocusModeToggle from "@/components/ui/FocusModeToggle";
 import {
@@ -109,7 +109,8 @@ const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
 export default function MyDayPage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const { isAuthenticated, isHydrated, accessToken, user } = useAuthStore();
+  const { isAuthenticated, accessToken, user } = useAuthStore();
+  const isHydrated = useAuthHydrated();
   const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
   const isMultiTradition = userTraditions.length > 1;
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);

@@ -87,6 +87,7 @@ vi.mock('@/lib/store', () => ({
     vi.fn((selector?: any) => selector ? selector(mockAuthStoreState) : mockAuthStoreState),
     { getState: () => mockAuthStoreState },
   ),
+  useAuthHydrated: () => true,
 }));
 
 // ─── Imports after mocks ────────────────────────────────────────────────────
