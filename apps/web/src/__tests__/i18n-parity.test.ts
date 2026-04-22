@@ -58,11 +58,25 @@ function resolvePath(obj: Dict, path: string): unknown {
  *
  * Use sparingly. Valid reasons: proper nouns ('Jyotron', 'Vedic'), universally
  * adopted English terms in Indian-language UIs ('OK', 'Email', 'SMS'), and
- * acronyms (API, URL). Anything else should actually be translated.
+ * acronyms (API, URL).
+ *
+ * The `language.*` block intentionally renders each locale's own name in its
+ * native script ('हिन्दी', 'தமிழ்'), so en.ts and the locale files share
+ * identical values for those keys by design — those are not "untranslated".
  */
 const UNTRANSLATED_ALLOWLIST = new Set<string>([
-  // Allowlist specific key paths here once we hit legitimate cases.
-  // Format: 'namespace.key' or 'a.b.c'
+  'language.en',
+  'language.hi',
+  'language.ta',
+  'language.te',
+  'language.bn',
+  'language.mr',
+  'language.gu',
+  'language.kn',
+  'language.ml',
+  'language.pa',
+  'language.or',
+  'language.as',
 ]);
 
 /**
@@ -90,25 +104,25 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
  *
  * To update: run `npx vitest run src/__tests__/i18n-parity.test.ts` and copy
  * the printed actual count into the matching entry below.
+ *
+ * Last update: translated traditionsUi.* (48), focusMode.* (6), footer.* (17),
+ * and nav.tradition/switchTradition (2) for every locale — these were the
+ * most user-visible English leakage on the tradition pages and global footer.
+ * Remaining gaps are mostly in profile, auth, pricing, horoscope (date ranges),
+ * and other secondary screens.
  */
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // Bumped by 47 per locale for the new tradition-centric UI keys
-  // (nav.tradition + nav.switchTradition + traditionsUi.* + focusMode.*),
-  // all of which ship as English copies pending translation.
-  // Bumped again by 9 per locale for the expanded Vedic feature list
-  // (myDay/chat/horoscope/muhurat/kpAstrology/palmistry/numerology/tarot/vastu)
-  // that now drives the Tier-2 FeatureChips — all English until localized.
-  hi: 135,
-  ta: 135,
-  te: 511,
-  bn: 511,
-  mr: 506,
-  gu: 511,
-  kn: 511,
-  ml: 511,
-  pa: 511,
-  or: 511,
-  as: 511,
+  hi: 67,
+  ta: 67,
+  te: 426,
+  bn: 426,
+  mr: 421,
+  gu: 426,
+  kn: 426,
+  ml: 426,
+  pa: 426,
+  or: 426,
+  as: 426,
 };
 
 const locales: Array<[string, Dict]> = [
