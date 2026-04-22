@@ -41,7 +41,16 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Allow environments that can't download Playwright's bundled
+        // Chromium (restricted outbound network) to point at a
+        // pre-installed Chrome-for-Testing binary instead. Leave unset in
+        // normal dev/CI and Playwright will use its own browser.
+        ...(process.env.PLAYWRIGHT_CHROME_PATH
+          ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROME_PATH } }
+          : {}),
+      },
     },
   ],
   webServer: {
