@@ -54,21 +54,40 @@ const PLANET_SYMBOL: Record<string, string> = {
   Jupiter: '\u2643', Venus: '\u2640', Saturn: '\u2644',
 };
 
+// Shared cache key with /my-day so visiting one warms the other.
+const BRIEFING_CACHE_KEY = 'jyotron-my-day-briefing';
+
+function readSharedBriefingCache(userId: string, locale: string): DailyBriefing | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(BRIEFING_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const today = new Date().toISOString().slice(0, 10);
+    if (parsed.date !== today || parsed.locale !== locale || parsed.userId !== userId) return null;
+    return parsed.data as DailyBriefing;
+  } catch { return null; }
+}
+
 export default function BentoSummary() {
   const { t, locale } = useTranslation();
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const { accessToken, isAuthenticated, user } = useAuthStore();
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
+    // Stale-while-revalidate: paint cached briefing if /my-day already
+    // populated it today, then revalidate in the background.
+    const cached = user?.id ? readSharedBriefingCache(user.id, locale) : null;
+    if (cached) setBriefing(cached);
     let cancelled = false;
     api
       .get<DailyBriefing>(`/daily-briefing?locale=${locale}`, { token: accessToken })
       .then((data) => { if (!cancelled) setBriefing(data); })
-      .catch(() => { if (!cancelled) setError('failed'); });
+      .catch(() => { if (!cancelled && !cached) setError('failed'); });
     return () => { cancelled = true; };
-  }, [isAuthenticated, accessToken, locale]);
+  }, [isAuthenticated, accessToken, locale, user?.id]);
 
   if (!isAuthenticated) {
     return (
