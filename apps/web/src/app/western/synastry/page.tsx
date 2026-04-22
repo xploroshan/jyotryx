@@ -35,6 +35,7 @@ interface PersonForm {
  */
 export default function WesternSynastryPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.westernSynastry;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [p1, setP1] = useState<PersonForm>({
     dob: user?.dateOfBirth?.slice(0, 10) ?? '',
@@ -75,7 +76,7 @@ export default function WesternSynastryPage() {
       traditionId="WESTERN"
       featureKey="traditionsUi.western.features.synastry"
       icon="💞"
-      description="Compare two charts · luminary & Venus/Mars contacts"
+      descriptionKey="featurePages.westernSynastry.description"
     >
       {!isAuthenticated ? (
         <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
@@ -86,7 +87,7 @@ export default function WesternSynastryPage() {
           <form onSubmit={submit} className="space-y-4">
             <div>
               <p className="text-[11px] uppercase tracking-wide text-white/50 mb-2">
-                Partner 1
+                {fp.partner1}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <input
@@ -107,7 +108,7 @@ export default function WesternSynastryPage() {
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-wide text-white/50 mb-2">
-                Partner 2
+                {fp.partner2}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <input
@@ -132,7 +133,7 @@ export default function WesternSynastryPage() {
                 disabled={!canSubmit}
                 className="btn-primary rounded-lg px-5 py-2 text-sm disabled:opacity-50"
               >
-                {loading ? t.common.loading : 'Analyze compatibility'}
+                {loading ? t.common.loading : fp.analyze}
               </button>
               {error && <p className="text-xs text-red-400">{error}</p>}
             </div>
@@ -144,7 +145,7 @@ export default function WesternSynastryPage() {
         <div className="space-y-4">
           <div className="glass-strong rounded-2xl p-6 text-center">
             <p className="text-[10px] uppercase tracking-wide text-white/50">
-              Compatibility
+              {fp.compatibility}
             </p>
             <p className="text-5xl font-bold text-white mt-2">
               {result.compatibility.score}
@@ -153,10 +154,10 @@ export default function WesternSynastryPage() {
             <p className="text-sm text-white/70 mt-3">{result.compatibility.summary}</p>
             <div className="flex items-center justify-center gap-6 mt-4 text-xs">
               <span className="text-emerald-300">
-                ✓ {result.compatibility.harmonious} harmonious
+                ✓ {result.compatibility.harmonious} {fp.harmonious}
               </span>
               <span className="text-amber-300">
-                ⚡ {result.compatibility.challenging} challenging
+                ⚡ {result.compatibility.challenging} {fp.challenging}
               </span>
             </div>
           </div>
@@ -165,21 +166,21 @@ export default function WesternSynastryPage() {
             {([result.partner1, result.partner2] as const).map((p, i) => (
               <div key={i} className="glass rounded-2xl p-4">
                 <p className="text-[10px] uppercase tracking-wide text-white/50 mb-2">
-                  Partner {i + 1}
+                  {fp.partnerPrefix} {i + 1}
                 </p>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/60">Sun</span>
+                    <span className="text-white/60">{fp.sun}</span>
                     <span className="text-white">
                       {p.sun.sign} ({p.sun.element})
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/60">Moon</span>
+                    <span className="text-white/60">{fp.moon}</span>
                     <span className="text-white">{p.moon.sign}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/60">Asc</span>
+                    <span className="text-white/60">{fp.asc}</span>
                     <span className="text-white">{p.ascendant.sign}</span>
                   </div>
                 </div>
@@ -190,7 +191,7 @@ export default function WesternSynastryPage() {
           {result.aspects.length > 0 && (
             <div className="glass rounded-2xl p-5">
               <p className="text-[10px] uppercase tracking-wide text-white/50 mb-3">
-                Cross-chart aspects
+                {fp.crossAspects}
               </p>
               <ul className="divide-y divide-white/[0.06]">
                 {result.aspects.map((a, i) => (

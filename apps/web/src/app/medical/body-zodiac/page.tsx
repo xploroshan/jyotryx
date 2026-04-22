@@ -18,7 +18,8 @@ interface BodyZodiacResponse {
 }
 
 export default function MedicalBodyZodiacPage() {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
+  const fp = t.featurePages.medicalBodyZodiac;
   const { accessToken } = useAuthStore();
   const [result, setResult] = useState<BodyZodiacResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function MedicalBodyZodiacPage() {
       );
       setResult(res);
     } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
+      setError(err?.message ?? t.featurePages.requestFailed);
     } finally {
       setLoading(false);
     }
@@ -44,13 +45,14 @@ export default function MedicalBodyZodiacPage() {
     <TraditionFeatureStub
       traditionId="MEDICAL"
       featureKey="traditionsUi.medical.features.bodyZodiac"
+      descriptionKey="featurePages.medicalBodyZodiac.description"
     >
       <button
         onClick={load}
         disabled={loading}
         className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
       >
-        {loading ? 'Loading...' : 'Show body-zodiac map'}
+        {loading ? t.common.loading : fp.showMap}
       </button>
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
 

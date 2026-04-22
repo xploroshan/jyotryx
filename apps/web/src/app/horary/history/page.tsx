@@ -34,6 +34,7 @@ function formatDate(iso: string): string {
  */
 export default function HoraryHistoryPage() {
   const { t } = useTranslation();
+  const fp = t.featurePages.horaryHistory;
   const { user, isAuthenticated } = useAuthStore();
   const [records, setRecords] = useState<HoraryRecord[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export default function HoraryHistoryPage() {
       traditionId="HORARY"
       featureKey="traditionsUi.horary.features.history"
       icon="📚"
-      description="Review past questions and judgments"
+      descriptionKey="featurePages.horaryHistory.description"
     >
       {!isAuthenticated ? (
         <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
@@ -71,26 +72,26 @@ export default function HoraryHistoryPage() {
         </div>
       ) : records.length === 0 ? (
         <div className="glass rounded-2xl p-8 text-center">
-          <p className="text-sm text-white/70 mb-4">No questions asked yet.</p>
+          <p className="text-sm text-white/70 mb-4">{fp.empty}</p>
           <Link
             href="/horary/ask"
             className="inline-block px-5 py-2 btn-primary rounded-lg text-sm"
           >
-            Ask a question
+            {fp.askNew}
           </Link>
         </div>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs text-white/50">
-              {records.length} {records.length === 1 ? 'question' : 'questions'}
+              {records.length} {records.length === 1 ? fp.questionSingular : fp.questionPlural}
             </p>
             <button
               type="button"
               onClick={clearAll}
               className="text-xs text-white/50 hover:text-red-300 transition"
             >
-              Clear all
+              {fp.clearAll}
             </button>
           </div>
 
@@ -111,7 +112,7 @@ export default function HoraryHistoryPage() {
                       {r.question}
                     </p>
                     <p className="text-[11px] text-white/45 mt-1">
-                      {formatDate(r.askedAt)} · Asc {r.chart.ascendant.sign}
+                      {formatDate(r.askedAt)} · {fp.ascShort} {r.chart.ascendant.sign}
                     </p>
                   </div>
                   <span className="text-xs text-white/40 shrink-0" aria-hidden>
@@ -122,26 +123,26 @@ export default function HoraryHistoryPage() {
                   <div className="border-t border-white/[0.06] bg-black/20 px-5 py-4 space-y-3">
                     <div className="text-xs space-y-1">
                       <div className="text-white/50">
-                        Ascendant:{' '}
+                        {fp.ascendant}:{' '}
                         <span className="text-white/80">
                           {r.chart.ascendant.sign} (
                           {r.chart.ascendant.degree.toFixed(2)}°)
                         </span>
                       </div>
                       <div className="text-white/50">
-                        Querent:{' '}
+                        {fp.querent}:{' '}
                         <span className="text-white/80">
                           {r.chart.significators.querent}
                         </span>
                       </div>
                       <div className="text-white/50">
-                        Quesited:{' '}
+                        {fp.quesited}:{' '}
                         <span className="text-white/80">
                           {r.chart.significators.quesited}
                         </span>
                       </div>
                       <div className="text-white/50">
-                        Moon:{' '}
+                        {fp.moon}:{' '}
                         <span className="text-white/80">
                           {r.chart.significators.moon}
                         </span>
@@ -156,7 +157,7 @@ export default function HoraryHistoryPage() {
                         onClick={() => remove(r.id)}
                         className="text-xs text-white/40 hover:text-red-300 transition"
                       >
-                        Delete
+                        {fp.delete}
                       </button>
                     </div>
                   </div>

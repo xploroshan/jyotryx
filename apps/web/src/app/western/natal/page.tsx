@@ -20,7 +20,8 @@ interface NatalResponse {
 }
 
 export default function WesternNatalPage() {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
+  const fp = t.featurePages.westernNatal;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [timeOfBirth, setTimeOfBirth] = useState(user?.timeOfBirth ?? '');
@@ -41,7 +42,7 @@ export default function WesternNatalPage() {
       );
       setResult(res);
     } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
+      setError(err?.message ?? t.featurePages.requestFailed);
     } finally {
       setLoading(false);
     }
@@ -51,10 +52,11 @@ export default function WesternNatalPage() {
     <TraditionFeatureStub
       traditionId="WESTERN"
       featureKey="traditionsUi.western.features.natal"
+      descriptionKey="featurePages.westernNatal.description"
     >
       {!isAuthenticated ? (
         <p className="text-sm text-white/60 text-center py-6">
-          Log in to get your personalised natal chart.
+          {fp.loginPrompt}
         </p>
       ) : (
         <>
@@ -77,7 +79,7 @@ export default function WesternNatalPage() {
               type="text"
               value={placeOfBirth}
               onChange={(e) => setPlaceOfBirth(e.target.value)}
-              placeholder="City, Country"
+              placeholder={t.kundli.placePlaceholder}
               required
               className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
             />
@@ -86,7 +88,7 @@ export default function WesternNatalPage() {
               disabled={loading}
               className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
             >
-              {loading ? 'Processing...' : 'Calculate Natal Chart'}
+              {loading ? t.common.processing : fp.submit}
             </button>
             {error && <p className="text-xs text-red-400">{error}</p>}
           </form>
@@ -95,7 +97,7 @@ export default function WesternNatalPage() {
             <div className="mt-6 space-y-4">
               <div className="rounded-xl border divider bg-white/[0.03] p-4">
                 <div className="text-xs uppercase tracking-wider text-white/40">
-                  Ascendant
+                  {fp.ascendant}
                 </div>
                 <div className="mt-1 text-white font-medium">
                   {result.ascendant.sign} ({result.ascendant.degree.toFixed(2)}°)
@@ -103,7 +105,7 @@ export default function WesternNatalPage() {
               </div>
               <div className="rounded-xl border divider bg-white/[0.03] p-4">
                 <div className="text-xs uppercase tracking-wider text-white/40 mb-3">
-                  Planets
+                  {fp.planets}
                 </div>
                 <ul className="space-y-2 text-sm text-white/80">
                   {result.planets.map((p) => (

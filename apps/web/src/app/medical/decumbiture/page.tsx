@@ -31,6 +31,7 @@ const ELEMENT_BG: Record<string, string> = {
  */
 export default function MedicalDecumbiturePage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.medicalDecumbiture;
   const { accessToken, isAuthenticated } = useAuthStore();
   const nowIso = new Date().toISOString();
   const [date, setDate] = useState(nowIso.slice(0, 10));
@@ -69,7 +70,7 @@ export default function MedicalDecumbiturePage() {
       traditionId="MEDICAL"
       featureKey="traditionsUi.medical.features.decumbiture"
       icon="🛏️"
-      description="Chart cast for onset of illness · classical medical reading"
+      descriptionKey="featurePages.medicalDecumbiture.description"
     >
       {!isAuthenticated ? (
         <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
@@ -81,7 +82,7 @@ export default function MedicalDecumbiturePage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="text-[11px] uppercase tracking-wide text-white/50">
-                  Onset date
+                  {fp.onsetDate}
                 </span>
                 <input
                   type="date"
@@ -93,7 +94,7 @@ export default function MedicalDecumbiturePage() {
               </label>
               <label className="block">
                 <span className="text-[11px] uppercase tracking-wide text-white/50">
-                  Onset time
+                  {fp.onsetTime}
                 </span>
                 <input
                   type="time"
@@ -106,13 +107,13 @@ export default function MedicalDecumbiturePage() {
             </div>
             <label className="block">
               <span className="text-[11px] uppercase tracking-wide text-white/50">
-                Symptoms (optional)
+                {fp.symptoms}
               </span>
               <textarea
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
                 rows={2}
-                placeholder="e.g. fever, headache"
+                placeholder={fp.symptomsPlaceholder}
                 className="surface-input rounded-lg px-3 py-2 text-sm w-full mt-1 resize-none"
               />
             </label>
@@ -122,7 +123,7 @@ export default function MedicalDecumbiturePage() {
                 disabled={loading}
                 className="btn-primary rounded-lg px-5 py-2 text-sm disabled:opacity-50"
               >
-                {loading ? t.common.loading : 'Cast chart'}
+                {loading ? t.common.loading : fp.submit}
               </button>
               {error && <p className="text-xs text-red-400">{error}</p>}
             </div>
@@ -139,20 +140,20 @@ export default function MedicalDecumbiturePage() {
             } p-6`}
           >
             <p className="text-[10px] uppercase tracking-wide text-white/50">
-              Ascendant (patient)
+              {fp.ascendantPatient}
             </p>
             <p className="text-2xl font-bold text-white mt-1">
               {result.ascendant.sign}
             </p>
             <p className="text-xs text-white/70 mt-1">
-              Element: {result.ascendantElement}
+              {fp.element}: {result.ascendantElement}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass rounded-2xl p-4">
               <p className="text-[10px] uppercase tracking-wide text-white/50">
-                6th House of illness
+                {fp.sixthHouse}
               </p>
               <p className="text-lg font-semibold text-white mt-1">
                 {result.sixthHouseSign}
@@ -161,7 +162,7 @@ export default function MedicalDecumbiturePage() {
             {result.moon && (
               <div className="glass rounded-2xl p-4">
                 <p className="text-[10px] uppercase tracking-wide text-white/50">
-                  Moon (progression)
+                  {fp.moonProgression}
                 </p>
                 <p className="text-lg font-semibold text-white mt-1">
                   {result.moon.sign}{' '}
@@ -175,7 +176,7 @@ export default function MedicalDecumbiturePage() {
 
           <div className="glass-strong rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/50 mb-2">
-              Guidance
+              {fp.guidance}
             </p>
             <p className="text-sm text-white/85">{result.guidance}</p>
           </div>
@@ -187,7 +188,7 @@ export default function MedicalDecumbiturePage() {
           {result.symptoms && (
             <div className="glass rounded-2xl p-4 text-xs text-white/60">
               <span className="text-white/40 uppercase tracking-wide">
-                Reported symptoms:
+                {fp.reportedSymptoms}:
               </span>{' '}
               {result.symptoms}
             </div>

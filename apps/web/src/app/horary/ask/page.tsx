@@ -19,7 +19,8 @@ interface HoraryResponse {
 }
 
 export default function HoraryAskPage() {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
+  const fp = t.featurePages.horaryAsk;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState<HoraryResponse | null>(null);
@@ -45,7 +46,7 @@ export default function HoraryAskPage() {
         judgment: res.judgment,
       });
     } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
+      setError(err?.message ?? t.featurePages.requestFailed);
     } finally {
       setLoading(false);
     }
@@ -55,10 +56,11 @@ export default function HoraryAskPage() {
     <TraditionFeatureStub
       traditionId="HORARY"
       featureKey="traditionsUi.horary.features.ask"
+      descriptionKey="featurePages.horaryAsk.description"
     >
       {!isAuthenticated ? (
         <p className="text-sm text-white/60 text-center py-6">
-          Log in to ask a horary question.
+          {fp.loginPrompt}
         </p>
       ) : (
         <>
@@ -66,7 +68,7 @@ export default function HoraryAskPage() {
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Frame your question clearly. e.g. 'Will I get the job I applied for?'"
+              placeholder={fp.placeholder}
               rows={4}
               required
               className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
@@ -76,7 +78,7 @@ export default function HoraryAskPage() {
               disabled={loading || !question.trim()}
               className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
             >
-              {loading ? 'Casting chart...' : 'Ask'}
+              {loading ? fp.casting : fp.submit}
             </button>
             {error && <p className="text-xs text-red-400">{error}</p>}
           </form>
@@ -85,21 +87,21 @@ export default function HoraryAskPage() {
             <div className="mt-6 space-y-3">
               <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-white/80">
                 <div className="text-xs uppercase tracking-wider text-white/40 mb-1">
-                  Question
+                  {fp.question}
                 </div>
                 <div>{result.question}</div>
               </div>
               <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-white/80">
                 <div className="text-xs uppercase tracking-wider text-white/40 mb-1">
-                  Chart
+                  {fp.chart}
                 </div>
                 <div>
-                  Ascendant: {result.chart.ascendant.sign}{' '}
+                  {fp.ascendant}: {result.chart.ascendant.sign}{' '}
                   ({result.chart.ascendant.degree.toFixed(2)}°)
                 </div>
-                <div>Querent: {result.chart.significators.querent}</div>
-                <div>Quesited: {result.chart.significators.quesited}</div>
-                <div>Moon: {result.chart.significators.moon}</div>
+                <div>{fp.querent}: {result.chart.significators.querent}</div>
+                <div>{fp.quesited}: {result.chart.significators.quesited}</div>
+                <div>{fp.moon}: {result.chart.significators.moon}</div>
               </div>
               <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-white/80 whitespace-pre-wrap">
                 {result.judgment}
@@ -109,7 +111,7 @@ export default function HoraryAskPage() {
                   href="/horary/history"
                   className="text-xs text-white/50 hover:text-white transition"
                 >
-                  View history →
+                  {fp.viewHistory}
                 </Link>
               </div>
             </div>

@@ -10,12 +10,14 @@ export default function FeaturePageShell({
   featureKey,
   icon,
   description,
+  descriptionKey,
   children,
 }: {
   traditionId: TraditionId;
   featureKey: string;
   icon?: string;
   description?: string;
+  descriptionKey?: string;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -33,6 +35,9 @@ export default function FeaturePageShell({
 
   const traditionName = readLabel(cfg.labelKey, cfg.slug);
   const featureName = readLabel(featureKey, featureKey);
+  const resolvedDescription = descriptionKey
+    ? readLabel(descriptionKey, description ?? '')
+    : description;
 
   return (
     <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
@@ -55,8 +60,8 @@ export default function FeaturePageShell({
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {featureName}
             </h1>
-            {description && (
-              <p className="mt-2 text-sm text-white/50 leading-relaxed">{description}</p>
+            {resolvedDescription && (
+              <p className="mt-2 text-sm text-white/50 leading-relaxed">{resolvedDescription}</p>
             )}
           </div>
         </div>

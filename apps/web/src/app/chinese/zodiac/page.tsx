@@ -16,7 +16,8 @@ interface ChineseZodiacResponse {
 }
 
 export default function ChineseZodiacPage() {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
+  const fp = t.featurePages.chineseZodiac;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [year, setYear] = useState<string>(
     user?.dateOfBirth ? String(new Date(user.dateOfBirth).getFullYear()) : '',
@@ -37,7 +38,7 @@ export default function ChineseZodiacPage() {
       );
       setResult(res);
     } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
+      setError(err?.message ?? t.featurePages.requestFailed);
     } finally {
       setLoading(false);
     }
@@ -47,10 +48,11 @@ export default function ChineseZodiacPage() {
     <TraditionFeatureStub
       traditionId="CHINESE"
       featureKey="traditionsUi.chinese.features.zodiac"
+      descriptionKey="featurePages.chineseZodiac.description"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs text-white/60 mb-1">Birth year</label>
+          <label className="block text-xs text-white/60 mb-1">{fp.birthYear}</label>
           <input
             type="number"
             min={1900}
@@ -66,7 +68,7 @@ export default function ChineseZodiacPage() {
           disabled={loading || !isAuthenticated}
           className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
         >
-          {loading ? 'Processing...' : 'Get My Animal'}
+          {loading ? t.common.processing : fp.submit}
         </button>
         {error && <p className="text-xs text-red-400">{error}</p>}
       </form>

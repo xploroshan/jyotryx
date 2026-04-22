@@ -26,18 +26,18 @@ const STAR_BG: Record<number, string> = {
   9: 'from-red-500/25 to-red-500/5 border-red-500/30',
 };
 
-const PALACE_LABELS = [
-  ['SE', 'S', 'SW'],
-  ['E', 'Center', 'W'],
-  ['NE', 'N', 'NW'],
-];
-
 /**
  * Feng Shui Flying Stars — 9-palace Lo Shu grid for the selected year.
  * Lets the user scrub through years to see how the annual stars shift.
  */
 export default function ChineseFlyingStarsPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.chineseFlyingStars;
+  const palaceLabels = [
+    ['SE', 'S', 'SW'],
+    ['E', fp.palaceCenter, 'W'],
+    ['NE', 'N', 'NW'],
+  ];
   const currentYear = new Date().getUTCFullYear();
   const [year, setYear] = useState(currentYear);
   const [result, setResult] = useState<FlyingStarsResponse | null>(null);
@@ -69,10 +69,10 @@ export default function ChineseFlyingStarsPage() {
       traditionId="CHINESE"
       featureKey="traditionsUi.chinese.features.flyingStars"
       icon="⭐"
-      description="Annual Lo Shu 9-palace star arrangement"
+      descriptionKey="featurePages.chineseFlyingStars.description"
     >
       <div className="glass rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
-        <label className="text-xs text-white/60">Year</label>
+        <label className="text-xs text-white/60">{fp.year}</label>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -123,7 +123,7 @@ export default function ChineseFlyingStarsPage() {
                     } p-3 flex flex-col items-center justify-center relative overflow-hidden`}
                   >
                     <div className="text-[9px] uppercase tracking-wide text-white/40">
-                      {PALACE_LABELS[r][c]}
+                      {palaceLabels[r][c]}
                     </div>
                     <div className="text-4xl font-bold text-white leading-none mt-1">
                       {star}
@@ -136,7 +136,7 @@ export default function ChineseFlyingStarsPage() {
 
           <div className="glass-strong rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/50">
-              Center Star {result.centerStar}
+              {fp.centerStarPrefix} {result.centerStar}
             </p>
             <p className="text-sm text-white mt-2">{result.centerMeaning}</p>
             <p className="text-xs text-white/70 mt-3">{result.interpretation}</p>
@@ -144,7 +144,7 @@ export default function ChineseFlyingStarsPage() {
 
           <div className="glass rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/50 mb-3">
-              Star meanings
+              {fp.starMeanings}
             </p>
             <ul className="space-y-1.5 text-xs">
               {Object.entries(result.meanings).map(([num, meaning]) => (

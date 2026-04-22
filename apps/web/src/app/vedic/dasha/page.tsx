@@ -51,6 +51,7 @@ function fmtDate(s: string): string {
  */
 export default function VedicDashaPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.vedicDasha;
   const { isAuthenticated, user } = useAuthStore();
   const cfg = WEB_TRADITIONS.VEDIC;
 
@@ -125,7 +126,7 @@ export default function VedicDashaPage() {
               {featureName}
             </h1>
             <p className="mt-2 text-sm text-white/50 leading-relaxed">
-              {t.kundli.dashaPeriods} — Vimshottari · 120-year cycle
+              {t.kundli.dashaPeriods} — {fp.description}
             </p>
           </div>
         </div>
@@ -150,7 +151,7 @@ export default function VedicDashaPage() {
             href="/profile"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
           >
-            Profile
+            {fp.profile}
           </Link>
         </div>
       )}
@@ -201,11 +202,11 @@ export default function VedicDashaPage() {
                     <div>
                       <div className="flex items-center gap-2.5">
                         <span className="text-white font-semibold">
-                          {d.planet} Mahadasha
+                          {d.planet} {fp.mahadasha}
                         </span>
                         {isCurrent && (
                           <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-primary-500/15 text-primary-300 border border-primary-500/25 uppercase tracking-widest font-medium">
-                            Current
+                            {fp.current}
                           </span>
                         )}
                       </div>
@@ -223,7 +224,7 @@ export default function VedicDashaPage() {
                 {isOpen && d.subPeriods && d.subPeriods.length > 0 && (
                   <div className="border-t border-white/[0.04] bg-white/[0.01] px-6 py-4 space-y-2">
                     <p className="text-[11px] uppercase tracking-widest text-white/30 mb-3 font-medium">
-                      Antardasha (sub-periods)
+                      {fp.antardasha}
                     </p>
                     {d.subPeriods.map((sp, j) => (
                       <div

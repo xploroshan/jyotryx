@@ -43,6 +43,7 @@ const PLANET_GLYPH: Record<string, string> = {
  */
 export default function HellenisticNatalPage() {
   const { t, locale } = useTranslation();
+  const fp = t.featurePages.hellenisticNatal;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const [dob, setDob] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
   const [tob, setTob] = useState(user?.timeOfBirth ?? '');
@@ -83,7 +84,7 @@ export default function HellenisticNatalPage() {
       traditionId="HELLENISTIC"
       featureKey="traditionsUi.hellenistic.features.natal"
       icon="🌟"
-      description="Whole-sign houses · classical seven planets"
+      descriptionKey="featurePages.hellenisticNatal.description"
     >
       {!isAuthenticated ? (
         <div className="glass rounded-2xl p-8 text-center text-sm text-white/70">
@@ -110,7 +111,7 @@ export default function HellenisticNatalPage() {
               type="text"
               value={pob}
               onChange={(e) => setPob(e.target.value)}
-              placeholder="City, Country"
+              placeholder={t.kundli.placePlaceholder}
               required
               className="surface-input rounded-lg px-3 py-2 text-sm"
             />
@@ -120,7 +121,7 @@ export default function HellenisticNatalPage() {
                 disabled={!canSubmit}
                 className="btn-primary rounded-lg px-5 py-2 text-sm disabled:opacity-50"
               >
-                {loading ? t.common.loading : 'Calculate natal chart'}
+                {loading ? t.common.loading : fp.submit}
               </button>
               {error && <p className="text-xs text-red-400">{error}</p>}
             </div>
@@ -133,23 +134,23 @@ export default function HellenisticNatalPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="glass rounded-2xl p-4">
               <p className="text-[10px] uppercase tracking-wide text-white/40">
-                Ascendant
+                {fp.ascendant}
               </p>
               <p className="text-lg font-semibold text-white mt-1">{result.ascendant}</p>
             </div>
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-white/40">Sun</p>
+              <p className="text-[10px] uppercase tracking-wide text-white/40">{fp.sun}</p>
               <p className="text-lg font-semibold text-white mt-1">{result.sunSign}</p>
             </div>
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-white/40">Moon</p>
+              <p className="text-[10px] uppercase tracking-wide text-white/40">{fp.moon}</p>
               <p className="text-lg font-semibold text-white mt-1">{result.moonSign}</p>
             </div>
           </div>
 
           <div className="glass rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/40 mb-3">
-              Planets
+              {fp.planets}
             </p>
             <ul className="divide-y divide-white/[0.06]">
               {result.planetaryPositions.map((p) => (
@@ -178,7 +179,7 @@ export default function HellenisticNatalPage() {
 
           <div className="glass rounded-2xl p-5">
             <p className="text-[10px] uppercase tracking-wide text-white/40 mb-3">
-              Houses (whole-sign)
+              {fp.houses}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {result.houses.map((h) => (
@@ -187,7 +188,7 @@ export default function HellenisticNatalPage() {
                   className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2"
                 >
                   <div className="flex items-center justify-between text-xs text-white/50">
-                    <span>House {h.house}</span>
+                    <span>{fp.housePrefix} {h.house}</span>
                     <span>{h.sign}</span>
                   </div>
                   {h.planets.length > 0 && (
