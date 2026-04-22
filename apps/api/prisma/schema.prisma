@@ -429,6 +429,90 @@ model KnowledgeDocument {
   @@map("knowledge_documents")
 }
 
+// ─── Structured Knowledge Base (Kb*) ────────────────────────────────────────
+// Deterministic, typed entity tables that back features currently routed
+// through the LLM translation path. Each row carries a per-locale `i18n`
+// bag validated by `apps/api/src/knowledge/__tests__/integrity.spec.ts`.
+// Lookups go through `KbService`; see `apps/api/src/knowledge/kb.service.ts`.
+//
+// `tradition` is null when a row is shared across systems (e.g. Sun is one
+// KbPlanet row used by Vedic + Hellenistic). Different entity → separate
+// row with `tradition` set (e.g. Hellenistic sect-aware overlay, not yet
+// wired — see Track B4 in the rollout plan).
+
+model KbPlanet {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// Canonical English identifier, e.g. "Sun"
+  tradition  String?  /// Null = shared; else VEDIC/WESTERN/CHINESE/HELLENISTIC/HORARY/MEDICAL
+  i18n       Json     /// { en: { name, color, remedy, mantra, doList: string[], avoidList: string[] }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_planets_key_tradition_key", map: "kb_planets_key_tradition_key")
+  @@index([tradition])
+  @@map("kb_planets")
+}
+
+model KbNakshatra {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// e.g. "Ashwini"
+  tradition  String?
+  i18n       Json     /// { en: { name, quality }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_nakshatras_key_tradition_key", map: "kb_nakshatras_key_tradition_key")
+  @@map("kb_nakshatras")
+}
+
+model KbTithi {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// e.g. "Pratipada", "Amavasya"
+  tradition  String?
+  i18n       Json     /// { en: { name }, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_tithis_key_tradition_key", map: "kb_tithis_key_tradition_key")
+  @@map("kb_tithis")
+}
+
+model KbYoga {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// e.g. "Vishkambha"
+  tradition  String?
+  i18n       Json     /// { en: { name }, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_yogas_key_tradition_key", map: "kb_yogas_key_tradition_key")
+  @@map("kb_yogas")
+}
+
+model KbVara {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// e.g. "Ravivaar" (canonical) — render with full form per locale
+  tradition  String?
+  i18n       Json     /// { en: { name }, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_varas_key_tradition_key", map: "kb_varas_key_tradition_key")
+  @@map("kb_varas")
+}
+
+model KbPaksha {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// "Shukla" | "Krishna"
+  tradition  String?
+  i18n       Json     /// { en: { name }, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_pakshas_key_tradition_key", map: "kb_pakshas_key_tradition_key")
+  @@map("kb_pakshas")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {
