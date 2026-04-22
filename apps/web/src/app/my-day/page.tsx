@@ -89,7 +89,15 @@ const TRADITION_BADGE_COLORS: Record<string, string> = {
   HORARY: "bg-teal-500/10 text-teal-400 border-teal-500/20",
   MEDICAL: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
 };
-const TRADITION_LABELS: Record<string, string> = { VEDIC: "Vedic", WESTERN: "Western", CHINESE: "Chinese", HELLENISTIC: "Hellenistic", HORARY: "Horary", MEDICAL: "Medical" };
+type TraditionSlug = 'vedic' | 'western' | 'chinese' | 'hellenistic' | 'horary' | 'medical';
+const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
+  VEDIC: 'vedic',
+  WESTERN: 'western',
+  CHINESE: 'chinese',
+  HELLENISTIC: 'hellenistic',
+  HORARY: 'horary',
+  MEDICAL: 'medical',
+};
 
 export default function MyDayPage() {
   const { t, locale } = useTranslation();
@@ -242,11 +250,15 @@ export default function MyDayPage() {
               {isMultiTradition && (
                 <div className="flex flex-col gap-2 mt-3">
                   <div className="flex gap-2">
-                    {userTraditions.map((trad) => (
-                      <span key={trad} className={`text-[10px] font-medium px-2.5 py-1 rounded-full border ${TRADITION_BADGE_COLORS[trad] || TRADITION_BADGE_COLORS.VEDIC}`}>
-                        {TRADITION_LABELS[trad] || trad}
-                      </span>
-                    ))}
+                    {userTraditions.map((trad) => {
+                      const key = TRADITION_I18N_KEY[trad];
+                      const label = key ? t.traditionsUi[key].name : trad;
+                      return (
+                        <span key={trad} className={`text-[10px] font-medium px-2.5 py-1 rounded-full border ${TRADITION_BADGE_COLORS[trad] || TRADITION_BADGE_COLORS.VEDIC}`}>
+                          {label}
+                        </span>
+                      );
+                    })}
                   </div>
                   <FocusModeToggle />
                 </div>

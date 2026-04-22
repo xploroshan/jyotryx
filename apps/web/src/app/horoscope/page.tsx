@@ -34,13 +34,14 @@ const CHINESE_ANIMALS = [
   { id: "pig", name: "Pig", symbol: "\uD83D\uDC16", years: "2031, 2019, 2007, 1995", element: "Water" },
 ];
 
-const TRADITION_LABELS: Record<string, string> = {
-  VEDIC: "Vedic",
-  WESTERN: "Western",
-  CHINESE: "Chinese",
-  HELLENISTIC: "Hellenistic",
-  HORARY: "Horary",
-  MEDICAL: "Medical",
+type TraditionSlug = 'vedic' | 'western' | 'chinese' | 'hellenistic' | 'horary' | 'medical';
+const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
+  VEDIC: 'vedic',
+  WESTERN: 'western',
+  CHINESE: 'chinese',
+  HELLENISTIC: 'hellenistic',
+  HORARY: 'horary',
+  MEDICAL: 'medical',
 };
 
 const TRADITION_COLORS: Record<string, { text: string; bg: string; border: string }> = {
@@ -249,7 +250,7 @@ export default function HoroscopePage() {
                         : "text-white/40 hover:text-white/70"
                     }`}
                   >
-                    {TRADITION_LABELS[trad] || trad}
+                    {TRADITION_I18N_KEY[trad] ? t.traditionsUi[TRADITION_I18N_KEY[trad]].name : trad}
                   </button>
                 );
               })}
@@ -462,7 +463,7 @@ export default function HoroscopePage() {
                   <div key={tradKey} className={`surface-card p-6 border ${colors.border}`}>
                     <div className="flex items-center gap-2 mb-4">
                       <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
-                        {TRADITION_LABELS[tradKey] || tradKey}
+                        {TRADITION_I18N_KEY[tradKey] ? t.traditionsUi[TRADITION_I18N_KEY[tradKey]].name : tradKey}
                       </span>
                     </div>
                     <p className="text-sm text-white/60 leading-relaxed mb-3">{tradData.overview}</p>
