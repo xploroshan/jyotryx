@@ -1,0 +1,33 @@
+{
+  "_source": "Names mined from apps/web/src/i18n/panchang-terms.ts (HI.yogas). These spellings (Priti, Sukarman, Shula) are canonical — the variants in daily-briefing.service.ts (Preeti, Sukarma, Shoola) are drift fixed during A1. Canon: classical 27-yoga cycle derived from Sun+Moon longitudes.",
+  "_shape": "{ name: string }",
+  "rows": [
+    { "key": "Vishkambha", "tradition": null, "i18n": { "en": { "name": "Vishkambha" }, "hi": { "name": "विष्कम्भ" } } },
+    { "key": "Priti",      "tradition": null, "i18n": { "en": { "name": "Priti" },      "hi": { "name": "प्रीति" } } },
+    { "key": "Ayushman",   "tradition": null, "i18n": { "en": { "name": "Ayushman" },   "hi": { "name": "आयुष्मान" } } },
+    { "key": "Saubhagya",  "tradition": null, "i18n": { "en": { "name": "Saubhagya" },  "hi": { "name": "सौभाग्य" } } },
+    { "key": "Shobhana",   "tradition": null, "i18n": { "en": { "name": "Shobhana" },   "hi": { "name": "शोभन" } } },
+    { "key": "Atiganda",   "tradition": null, "i18n": { "en": { "name": "Atiganda" },   "hi": { "name": "अतिगण्ड" } } },
+    { "key": "Sukarman",   "tradition": null, "i18n": { "en": { "name": "Sukarman" },   "hi": { "name": "सुकर्मा" } } },
+    { "key": "Dhriti",     "tradition": null, "i18n": { "en": { "name": "Dhriti" },     "hi": { "name": "धृति" } } },
+    { "key": "Shula",      "tradition": null, "i18n": { "en": { "name": "Shula" },      "hi": { "name": "शूल" } } },
+    { "key": "Ganda",      "tradition": null, "i18n": { "en": { "name": "Ganda" },      "hi": { "name": "गण्ड" } } },
+    { "key": "Vriddhi",    "tradition": null, "i18n": { "en": { "name": "Vriddhi" },    "hi": { "name": "वृद्धि" } } },
+    { "key": "Dhruva",     "tradition": null, "i18n": { "en": { "name": "Dhruva" },     "hi": { "name": "ध्रुव" } } },
+    { "key": "Vyaghata",   "tradition": null, "i18n": { "en": { "name": "Vyaghata" },   "hi": { "name": "व्याघात" } } },
+    { "key": "Harshana",   "tradition": null, "i18n": { "en": { "name": "Harshana" },   "hi": { "name": "हर्षण" } } },
+    { "key": "Vajra",      "tradition": null, "i18n": { "en": { "name": "Vajra" },      "hi": { "name": "वज्र" } } },
+    { "key": "Siddhi",     "tradition": null, "i18n": { "en": { "name": "Siddhi" },     "hi": { "name": "सिद्धि" } } },
+    { "key": "Vyatipata",  "tradition": null, "i18n": { "en": { "name": "Vyatipata" },  "hi": { "name": "व्यतीपात" } } },
+    { "key": "Variyan",    "tradition": null, "i18n": { "en": { "name": "Variyan" },    "hi": { "name": "वरीयान्" } } },
+    { "key": "Parigha",    "tradition": null, "i18n": { "en": { "name": "Parigha" },    "hi": { "name": "परिघ" } } },
+    { "key": "Shiva",      "tradition": null, "i18n": { "en": { "name": "Shiva" },      "hi": { "name": "शिव" } } },
+    { "key": "Siddha",     "tradition": null, "i18n": { "en": { "name": "Siddha" },     "hi": { "name": "सिद्ध" } } },
+    { "key": "Sadhya",     "tradition": null, "i18n": { "en": { "name": "Sadhya" },     "hi": { "name": "साध्य" } } },
+    { "key": "Shubha",     "tradition": null, "i18n": { "en": { "name": "Shubha" },     "hi": { "name": "शुभ" } } },
+    { "key": "Shukla",     "tradition": null, "i18n": { "en": { "name": "Shukla" },     "hi": { "name": "शुक्ल" } } },
+    { "key": "Brahma",     "tradition": null, "i18n": { "en": { "name": "Brahma" },     "hi": { "name": "ब्रह्म" } } },
+    { "key": "Indra",      "tradition": null, "i18n": { "en": { "name": "Indra" },      "hi": { "name": "इन्द्र" } } },
+    { "key": "Vaidhriti",  "tradition": null, "i18n": { "en": { "name": "Vaidhriti" },  "hi": { "name": "वैधृति" } } }
+  ]
+}

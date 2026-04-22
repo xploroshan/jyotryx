@@ -1,0 +1,22 @@
+{
+  "_source": "Canonical names from panchang lookup in apps/api/src/modules/daily-briefing/daily-briefing.service.ts getBasicPanchang(). Hindi names mined from apps/web/src/i18n/panchang-terms.ts (HI.tithis). Amavasya is the new-moon tithi (not in briefing's tithis array but emitted elsewhere by the offline panchang engine). Canon: standard 16-tithi cycle (15 lunar days + Amavasya).",
+  "_shape": "{ name: string }",
+  "rows": [
+    { "key": "Pratipada",   "tradition": null, "i18n": { "en": { "name": "Pratipada" },   "hi": { "name": "प्रतिपदा" } } },
+    { "key": "Dwitiya",     "tradition": null, "i18n": { "en": { "name": "Dwitiya" },     "hi": { "name": "द्वितीया" } } },
+    { "key": "Tritiya",     "tradition": null, "i18n": { "en": { "name": "Tritiya" },     "hi": { "name": "तृतीया" } } },
+    { "key": "Chaturthi",   "tradition": null, "i18n": { "en": { "name": "Chaturthi" },   "hi": { "name": "चतुर्थी" } } },
+    { "key": "Panchami",    "tradition": null, "i18n": { "en": { "name": "Panchami" },    "hi": { "name": "पंचमी" } } },
+    { "key": "Shashthi",    "tradition": null, "i18n": { "en": { "name": "Shashthi" },    "hi": { "name": "षष्ठी" } } },
+    { "key": "Saptami",     "tradition": null, "i18n": { "en": { "name": "Saptami" },     "hi": { "name": "सप्तमी" } } },
+    { "key": "Ashtami",     "tradition": null, "i18n": { "en": { "name": "Ashtami" },     "hi": { "name": "अष्टमी" } } },
+    { "key": "Navami",      "tradition": null, "i18n": { "en": { "name": "Navami" },      "hi": { "name": "नवमी" } } },
+    { "key": "Dashami",     "tradition": null, "i18n": { "en": { "name": "Dashami" },     "hi": { "name": "दशमी" } } },
+    { "key": "Ekadashi",    "tradition": null, "i18n": { "en": { "name": "Ekadashi" },    "hi": { "name": "एकादशी" } } },
+    { "key": "Dwadashi",    "tradition": null, "i18n": { "en": { "name": "Dwadashi" },    "hi": { "name": "द्वादशी" } } },
+    { "key": "Trayodashi",  "tradition": null, "i18n": { "en": { "name": "Trayodashi" },  "hi": { "name": "त्रयोदशी" } } },
+    { "key": "Chaturdashi", "tradition": null, "i18n": { "en": { "name": "Chaturdashi" }, "hi": { "name": "चतुर्दशी" } } },
+    { "key": "Purnima",     "tradition": null, "i18n": { "en": { "name": "Purnima" },     "hi": { "name": "पूर्णिमा" } } },
+    { "key": "Amavasya",    "tradition": null, "i18n": { "en": { "name": "Amavasya" },    "hi": { "name": "अमावस्या" } } }
+  ]
+}

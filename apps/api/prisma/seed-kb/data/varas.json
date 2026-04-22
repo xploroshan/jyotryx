@@ -1,0 +1,13 @@
+{
+  "_source": "Transliterated Sanskrit day names (Ravivaar..Shanivaar) from apps/web/src/i18n/panchang-terms.ts (HI.varas). These are the canonical keys; the briefing's 'Ravivaar (Sunday)' display format is a composition handled by the render layer, not by the KB row. Canon: 7-day week aligned with the 7 classical planets.",
+  "_shape": "{ name: string }",
+  "rows": [
+    { "key": "Ravivaar",    "tradition": null, "i18n": { "en": { "name": "Sunday" },    "hi": { "name": "रविवार" } } },
+    { "key": "Somvaar",     "tradition": null, "i18n": { "en": { "name": "Monday" },    "hi": { "name": "सोमवार" } } },
+    { "key": "Mangalvaar",  "tradition": null, "i18n": { "en": { "name": "Tuesday" },   "hi": { "name": "मंगलवार" } } },
+    { "key": "Budhvaar",    "tradition": null, "i18n": { "en": { "name": "Wednesday" }, "hi": { "name": "बुधवार" } } },
+    { "key": "Guruvaar",    "tradition": null, "i18n": { "en": { "name": "Thursday" },  "hi": { "name": "गुरुवार" } } },
+    { "key": "Shukravaar",  "tradition": null, "i18n": { "en": { "name": "Friday" },    "hi": { "name": "शुक्रवार" } } },
+    { "key": "Shanivaar",   "tradition": null, "i18n": { "en": { "name": "Saturday" },  "hi": { "name": "शनिवार" } } }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "_source": "English quality phrases from getNakshatraQuality() in apps/api/src/modules/daily-briefing/daily-briefing.service.ts. Hindi names mined from apps/web/src/i18n/panchang-terms.ts (HI.nakshatras). Hindi quality phrases mined from HI.nakshatraQualities. Canon: standard 27 sidereal asterisms from BPHS; Lahiri ayanamsa canonical spellings (Mula not Moola — the 'Moola' variant in daily-briefing.service.ts is a drift fixed during A1).",
+  "_shape": "{ name: string, quality: string }",
+  "rows": [
+    { "key": "Ashwini", "tradition": null, "i18n": { "en": { "name": "Ashwini", "quality": "swift and healing" }, "hi": { "name": "अश्विनी", "quality": "तीव्र और उपचारात्मक" } } },
+    { "key": "Bharani", "tradition": null, "i18n": { "en": { "name": "Bharani", "quality": "transformative" }, "hi": { "name": "भरणी", "quality": "परिवर्तनकारी" } } },
+    { "key": "Krittika", "tradition": null, "i18n": { "en": { "name": "Krittika", "quality": "purifying and sharp" }, "hi": { "name": "कृत्तिका", "quality": "शुद्धिकारक और तीक्ष्ण" } } },
+    { "key": "Rohini", "tradition": null, "i18n": { "en": { "name": "Rohini", "quality": "creative and nurturing" }, "hi": { "name": "रोहिणी", "quality": "रचनात्मक और पोषक" } } },
+    { "key": "Mrigashira", "tradition": null, "i18n": { "en": { "name": "Mrigashira", "quality": "curious and seeking" }, "hi": { "name": "मृगशिरा", "quality": "जिज्ञासु और खोजी" } } },
+    { "key": "Ardra", "tradition": null, "i18n": { "en": { "name": "Ardra", "quality": "intense and cleansing" }, "hi": { "name": "आर्द्रा", "quality": "तीव्र और शुद्धिकारक" } } },
+    { "key": "Punarvasu", "tradition": null, "i18n": { "en": { "name": "Punarvasu", "quality": "renewing and optimistic" }, "hi": { "name": "पुनर्वसु", "quality": "नवीनीकारक और आशावादी" } } },
+    { "key": "Pushya", "tradition": null, "i18n": { "en": { "name": "Pushya", "quality": "nourishing and auspicious" }, "hi": { "name": "पुष्य", "quality": "पोषक और शुभ" } } },
+    { "key": "Ashlesha", "tradition": null, "i18n": { "en": { "name": "Ashlesha", "quality": "mystical and introspective" }, "hi": { "name": "आश्लेषा", "quality": "रहस्यमय और आत्मनिरीक्षी" } } },
+    { "key": "Magha", "tradition": null, "i18n": { "en": { "name": "Magha", "quality": "regal and ancestral" }, "hi": { "name": "मघा", "quality": "राजसी और पैतृक" } } },
+    { "key": "Purva Phalguni", "tradition": null, "i18n": { "en": { "name": "Purva Phalguni", "quality": "pleasurable and creative" }, "hi": { "name": "पूर्व फाल्गुनी", "quality": "सुखद और रचनात्मक" } } },
+    { "key": "Uttara Phalguni", "tradition": null, "i18n": { "en": { "name": "Uttara Phalguni", "quality": "generous and supportive" }, "hi": { "name": "उत्तर फाल्गुनी", "quality": "उदार और सहायक" } } },
+    { "key": "Hasta", "tradition": null, "i18n": { "en": { "name": "Hasta", "quality": "skillful and productive" }, "hi": { "name": "हस्त", "quality": "कुशल और उत्पादक" } } },
+    { "key": "Chitra", "tradition": null, "i18n": { "en": { "name": "Chitra", "quality": "artistic and brilliant" }, "hi": { "name": "चित्रा", "quality": "कलात्मक और तेजस्वी" } } },
+    { "key": "Swati", "tradition": null, "i18n": { "en": { "name": "Swati", "quality": "independent and adaptable" }, "hi": { "name": "स्वाति", "quality": "स्वतंत्र और अनुकूलनीय" } } },
+    { "key": "Vishakha", "tradition": null, "i18n": { "en": { "name": "Vishakha", "quality": "determined and goal-oriented" }, "hi": { "name": "विशाखा", "quality": "दृढ़ और लक्ष्य-केंद्रित" } } },
+    { "key": "Anuradha", "tradition": null, "i18n": { "en": { "name": "Anuradha", "quality": "devotional and friendly" }, "hi": { "name": "अनुराधा", "quality": "भक्तिपूर्ण और मैत्रीपूर्ण" } } },
+    { "key": "Jyeshtha", "tradition": null, "i18n": { "en": { "name": "Jyeshtha", "quality": "protective and senior" }, "hi": { "name": "ज्येष्ठा", "quality": "संरक्षक और ज्येष्ठ" } } },
+    { "key": "Mula", "tradition": null, "i18n": { "en": { "name": "Mula", "quality": "foundational and transformative" }, "hi": { "name": "मूल", "quality": "मौलिक और परिवर्तनकारी" } } },
+    { "key": "Purva Ashadha", "tradition": null, "i18n": { "en": { "name": "Purva Ashadha", "quality": "invincible and confident" }, "hi": { "name": "पूर्वाषाढ़ा", "quality": "अजेय और आत्मविश्वासी" } } },
+    { "key": "Uttara Ashadha", "tradition": null, "i18n": { "en": { "name": "Uttara Ashadha", "quality": "victorious and universal" }, "hi": { "name": "उत्तराषाढ़ा", "quality": "विजयी और सार्वभौमिक" } } },
+    { "key": "Shravana", "tradition": null, "i18n": { "en": { "name": "Shravana", "quality": "learning and listening" }, "hi": { "name": "श्रवण", "quality": "सीखने और सुनने वाली" } } },
+    { "key": "Dhanishta", "tradition": null, "i18n": { "en": { "name": "Dhanishta", "quality": "prosperous and rhythmic" }, "hi": { "name": "धनिष्ठा", "quality": "समृद्ध और लयबद्ध" } } },
+    { "key": "Shatabhisha", "tradition": null, "i18n": { "en": { "name": "Shatabhisha", "quality": "healing and mysterious" }, "hi": { "name": "शतभिषा", "quality": "उपचारात्मक और रहस्यमय" } } },
+    { "key": "Purva Bhadrapada", "tradition": null, "i18n": { "en": { "name": "Purva Bhadrapada", "quality": "fierce and passionate" }, "hi": { "name": "पूर्व भाद्रपद", "quality": "उग्र और भावुक" } } },
+    { "key": "Uttara Bhadrapada", "tradition": null, "i18n": { "en": { "name": "Uttara Bhadrapada", "quality": "wise and deep" }, "hi": { "name": "उत्तर भाद्रपद", "quality": "बुद्धिमान और गहरी" } } },
+    { "key": "Revati", "tradition": null, "i18n": { "en": { "name": "Revati", "quality": "prosperous and completing" }, "hi": { "name": "रेवती", "quality": "समृद्ध और पूर्णकारक" } } }
+  ]
+}

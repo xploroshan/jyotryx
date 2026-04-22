@@ -24,7 +24,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "npx prisma migrate resolve --applied 20260101_init 2>/dev/null; npx prisma migrate resolve --applied 20260315_add_activity_log 2>/dev/null; npx prisma migrate resolve --applied 20260317_add_site_settings 2>/dev/null; npx prisma migrate resolve --applied 20260326_add_knowledge_base 2>/dev/null; npx prisma db execute --file prisma/migrations/20260101_init/migration.sql 2>/dev/null; npx prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "kb:backfill": "ts-node scripts/backfill-locales.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
