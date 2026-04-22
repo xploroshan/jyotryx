@@ -13,7 +13,8 @@ vi.mock('@/lib/store', () => ({
   useAuthStore: Object.assign(vi.fn(() => ({
     isAuthenticated: true,
     user: { name: 'Test' },
-  })), {
+  useAuthHydrated: () => true,
+})), {
     getState: () => ({ isAuthenticated: true, user: { name: 'Test' } }),
   }),
 }));

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
@@ -37,7 +37,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const { isAuthenticated, isHydrated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions, updatePrimaryTradition } = useAuthStore();
+  const { isAuthenticated, accessToken, logout, updateCredits, setProfileComplete, updateBirthDetails, updateAstrologyTraditions, updatePrimaryTradition } = useAuthStore();
+  const isHydrated = useAuthHydrated();
   const completeMode = searchParams.get("complete") === "1";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);

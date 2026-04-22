@@ -73,6 +73,7 @@ vi.mock('@/lib/store', () => ({
     ),
     { getState: () => mockStoreState },
   ),
+  useAuthHydrated: () => true,
 }));
 
 // Mocked daily-briefing payload. Fields that go through LLM translation on

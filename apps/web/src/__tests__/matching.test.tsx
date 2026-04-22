@@ -29,6 +29,7 @@ vi.mock('@/lib/store', () => ({
     vi.fn(() => mockStoreState),
     { getState: () => mockStoreState },
   ),
+  useAuthHydrated: () => true,
 }));
 
 // ─── Mock API ───────────────────────────────────────────────────────────────

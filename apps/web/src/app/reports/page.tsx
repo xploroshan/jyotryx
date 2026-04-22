@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import { Stagger } from "@/components/ui/PageTransition";
@@ -22,7 +22,8 @@ interface Report {
 export default function ReportsPage() {
   const router = useRouter();
   const { t, locale } = useTranslation();
-  const { isAuthenticated, isHydrated, accessToken } = useAuthStore();
+  const { isAuthenticated, accessToken } = useAuthStore();
+  const isHydrated = useAuthHydrated();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
