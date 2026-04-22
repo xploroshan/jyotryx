@@ -56,7 +56,7 @@ export default function KPAstrologyPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto max-w-5xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-white mb-2">{t.kp.title}</h1>
       <p className="text-white/40 mb-8">{t.kp.description}</p>
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
+import { Stagger } from "@/components/ui/PageTransition";
 
 type Plan = {
   id: string;
@@ -116,7 +117,7 @@ export default function PricingPage() {
   const fmt = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(n);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16">
+    <div className="mx-auto max-w-5xl px-4 py-16 fade-in-up">
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
@@ -132,7 +133,7 @@ export default function PricingPage() {
       )}
 
       {/* Plans */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <Stagger.Container className="grid md:grid-cols-3 gap-4">
         {plans === null
           ? [0, 1, 2].map((i) => (
               <div key={i} className="surface-card p-6 animate-pulse" data-testid="plan-skeleton">
@@ -147,7 +148,7 @@ export default function PricingPage() {
               </div>
             ))
           : plans.map((plan) => (
-              <div key={plan.id} className={`surface-card p-6 relative ${plan.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
+              <Stagger.Item key={plan.id} className={`surface-card p-6 relative transition-all duration-300 hover:-translate-y-0.5 ${plan.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
                 {plan.popular && (
                   <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary-600 text-[11px] font-medium text-white">
                     {t.pricing.mostPopular}
@@ -181,9 +182,9 @@ export default function PricingPage() {
                 >
                   {loading === plan.id ? t.pricing.processing : plan.cta}
                 </button>
-              </div>
+              </Stagger.Item>
             ))}
-      </div>
+      </Stagger.Container>
 
       {/* Credit Packs — pay-as-you-go alternative to subscriptions */}
       <div className="mt-16">

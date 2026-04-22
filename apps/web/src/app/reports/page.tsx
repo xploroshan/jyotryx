@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
+import { Stagger } from "@/components/ui/PageTransition";
 
 interface Report {
   id: string;
@@ -87,7 +89,7 @@ export default function ReportsPage() {
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
@@ -142,11 +144,13 @@ export default function ReportsPage() {
         {activeView === "history" && (
           <div>
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <svg className="w-8 h-8 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+              <div className="space-y-4" aria-busy="true" aria-live="polite">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="surface-card p-6">
+                    <Skeleton rounded="rounded-lg" className="h-4 w-1/3 mb-3" />
+                    <SkeletonLines count={2} />
+                  </div>
+                ))}
               </div>
             ) : reports.length === 0 ? (
               <div className="surface-card p-12 text-center">

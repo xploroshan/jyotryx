@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
+import { Stagger } from '@/components/ui/PageTransition';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface DailyBriefing {
   greeting: string;
@@ -86,10 +88,10 @@ export default function BentoSummary() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[140px] gap-4">
-          <Link
+        <Stagger.Container className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[140px] gap-4">
+          <Stagger.Item className="col-span-2 row-span-2"><Link
             href="/auth?mode=signup"
-            className="col-span-2 row-span-2 rounded-3xl bg-white/[0.02] border border-white/[0.06] p-8 relative overflow-hidden group hover:border-white/[0.1] transition-all duration-300"
+            className="h-full block rounded-3xl bg-white/[0.02] border border-white/[0.06] p-8 relative overflow-hidden group hover:border-white/[0.1] hover:-translate-y-0.5 transition-all duration-300"
           >
             <div className="absolute -inset-10 bg-gradient-radial from-sky-500/20 via-transparent to-transparent blur-2xl opacity-80 pointer-events-none" />
             <div className="relative z-10 flex flex-col h-full">
@@ -107,18 +109,18 @@ export default function BentoSummary() {
                 <div className="h-full w-3/4 rounded-full bg-sky-400" />
               </div>
             </div>
-          </Link>
+          </Link></Stagger.Item>
 
-          <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex flex-col justify-between">
+          <Stagger.Item className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex flex-col justify-between hover:-translate-y-0.5 hover:border-white/[0.1] transition-all duration-300">
             <p className="text-[11px] uppercase tracking-widest text-white/30">
               {t.myDay.number}
             </p>
             <p className="text-5xl font-bold text-gradient leading-none">
               7
             </p>
-          </div>
+          </Stagger.Item>
 
-          <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 relative overflow-hidden flex flex-col justify-between">
+          <Stagger.Item className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:border-white/[0.1] transition-all duration-300">
             <p className="text-[11px] uppercase tracking-widest text-white/30">
               {t.myDay.color}
             </p>
@@ -126,11 +128,11 @@ export default function BentoSummary() {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 ring-2 ring-white/10" />
               <p className="text-sm font-medium text-white/70">Saffron</p>
             </div>
-          </div>
+          </Stagger.Item>
 
-          <Link
+          <Stagger.Item className="col-span-2"><Link
             href="/auth?mode=signup"
-            className="col-span-2 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex items-center gap-5 group hover:border-white/[0.1] transition-all duration-300"
+            className="h-full rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex items-center gap-5 group hover:border-white/[0.1] hover:-translate-y-0.5 transition-all duration-300"
           >
             <div className="w-14 h-14 rounded-2xl bg-primary-500/10 border border-primary-500/20 grid place-items-center shrink-0">
               <span className="text-2xl text-primary-400">{'\u2609'}</span>
@@ -144,9 +146,9 @@ export default function BentoSummary() {
                 {t.home.ctaButtonLoggedOut}
               </p>
             </div>
-          </Link>
+          </Link></Stagger.Item>
 
-          <div className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 relative overflow-hidden text-center">
+          <Stagger.Item className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 relative overflow-hidden text-center">
             <div className="absolute inset-0 bg-gradient-to-r from-primary-600/5 via-accent-500/5 to-primary-600/5" />
             <p className="text-[11px] uppercase tracking-widest text-white/30 mb-2 relative z-10">
               {t.myDay.todaysMantra}
@@ -154,8 +156,8 @@ export default function BentoSummary() {
             <p className="text-xl sm:text-2xl font-semibold text-white/80 tracking-wide relative z-10">
               {'\u0913\u0902 \u0928\u092e\u0903 \u0936\u093f\u0935\u093e\u092f'}
             </p>
-          </div>
-        </div>
+          </Stagger.Item>
+        </Stagger.Container>
       </section>
     );
   }
@@ -172,13 +174,13 @@ export default function BentoSummary() {
 
   if (!briefing) {
     return (
-      <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16">
+      <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16" aria-busy="true" aria-live="polite">
         <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[140px] gap-4">
-          <div className="col-span-2 row-span-2 rounded-3xl bg-white/[0.02] border border-white/[0.04] animate-pulse" />
-          <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] animate-pulse" />
-          <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] animate-pulse" />
-          <div className="col-span-2 rounded-2xl bg-white/[0.02] border border-white/[0.04] animate-pulse" />
-          <div className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] animate-pulse" />
+          <Skeleton rounded="rounded-3xl" className="col-span-2 row-span-2 border border-white/[0.04]" />
+          <Skeleton rounded="rounded-2xl" className="border border-white/[0.04]" />
+          <Skeleton rounded="rounded-2xl" className="border border-white/[0.04]" />
+          <Skeleton rounded="rounded-2xl" className="col-span-2 border border-white/[0.04]" />
+          <Skeleton rounded="rounded-2xl" className="col-span-2 lg:col-span-4 border border-white/[0.04]" />
         </div>
       </section>
     );
@@ -208,10 +210,10 @@ export default function BentoSummary() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[140px] gap-4">
-        <Link
+      <Stagger.Container className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[140px] gap-4">
+        <Stagger.Item className="col-span-2 row-span-2"><Link
           href="/my-day"
-          className="col-span-2 row-span-2 rounded-3xl bg-white/[0.02] border border-white/[0.06] p-8 relative overflow-hidden group hover:border-white/[0.1] transition-all duration-300"
+          className="h-full block rounded-3xl bg-white/[0.02] border border-white/[0.06] p-8 relative overflow-hidden group hover:border-white/[0.1] hover:-translate-y-0.5 transition-all duration-300"
         >
           <div className={`absolute -inset-10 bg-gradient-radial ${qs.accent} via-transparent to-transparent blur-2xl opacity-80 pointer-events-none`} />
           <div className="relative z-10 flex flex-col h-full">
@@ -232,18 +234,18 @@ export default function BentoSummary() {
               />
             </div>
           </div>
-        </Link>
+        </Link></Stagger.Item>
 
-        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex flex-col justify-between">
+        <Stagger.Item className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex flex-col justify-between hover:-translate-y-0.5 hover:border-white/[0.1] transition-all duration-300">
           <p className="text-[11px] uppercase tracking-widest text-white/30">
             {t.myDay.number}
           </p>
           <p className="text-5xl font-bold text-gradient leading-none">
             {briefing.luckyNumber}
           </p>
-        </div>
+        </Stagger.Item>
 
-        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 relative overflow-hidden flex flex-col justify-between">
+        <Stagger.Item className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:border-white/[0.1] transition-all duration-300">
           <p className="text-[11px] uppercase tracking-widest text-white/30">
             {t.myDay.color}
           </p>
@@ -253,11 +255,11 @@ export default function BentoSummary() {
               {briefing.luckyColor}
             </p>
           </div>
-        </div>
+        </Stagger.Item>
 
-        <Link
+        <Stagger.Item className="col-span-2"><Link
           href="/my-day"
-          className="col-span-2 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex items-center gap-5 group hover:border-white/[0.1] transition-all duration-300"
+          className="h-full rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 flex items-center gap-5 group hover:border-white/[0.1] hover:-translate-y-0.5 transition-all duration-300"
         >
           <div className="w-14 h-14 rounded-2xl bg-primary-500/10 border border-primary-500/20 grid place-items-center shrink-0">
             <span className="text-2xl text-primary-400">{planetSymbol}</span>
@@ -275,9 +277,9 @@ export default function BentoSummary() {
                 : t.myDay.bestTime}
             </p>
           </div>
-        </Link>
+        </Link></Stagger.Item>
 
-        <div className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 relative overflow-hidden text-center">
+        <Stagger.Item className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 relative overflow-hidden text-center">
           <div className="absolute inset-0 bg-gradient-to-r from-primary-600/5 via-accent-500/5 to-primary-600/5" />
           <p className="text-[11px] uppercase tracking-widest text-white/30 mb-2 relative z-10">
             {t.myDay.todaysMantra}
@@ -285,8 +287,8 @@ export default function BentoSummary() {
           <p className="text-xl sm:text-2xl font-semibold text-white/80 tracking-wide relative z-10">
             {briefing.mantra}
           </p>
-        </div>
-      </div>
+        </Stagger.Item>
+      </Stagger.Container>
     </section>
   );
 }

@@ -85,7 +85,7 @@ export default function MuhuratPage() {
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">

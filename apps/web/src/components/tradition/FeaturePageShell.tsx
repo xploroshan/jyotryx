@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 export default function FeaturePageShell({
   traditionId,
@@ -40,7 +41,7 @@ export default function FeaturePageShell({
     : description;
 
   return (
-    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
+    <PageTransition className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4">
       <nav className="mb-5 text-sm text-white/40">
         <Link href={`/${cfg.slug}`} className="hover:text-white transition-colors">
           {traditionName}
@@ -68,6 +69,6 @@ export default function FeaturePageShell({
       </section>
 
       {children}
-    </div>
+    </PageTransition>
   );
 }

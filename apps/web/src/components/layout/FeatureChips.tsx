@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   WEB_TRADITIONS,
   resolveActiveTradition,
@@ -9,11 +10,13 @@ import {
 } from '@/lib/traditions';
 import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
+import { tapScale } from '@/lib/motion';
 
 export default function FeatureChips() {
   const pathname = usePathname() ?? '/';
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const reduce = useReducedMotion();
 
   const activeId: TraditionId = resolveActiveTradition({
     pathname,
@@ -75,7 +78,7 @@ export default function FeatureChips() {
               );
             }
             return (
-              <li key={f.slug}>
+              <motion.li key={f.slug} whileTap={reduce ? undefined : tapScale}>
                 <Link
                   href={f.href}
                   className={`${chipBase} ${chipState}`}
@@ -83,7 +86,7 @@ export default function FeatureChips() {
                 >
                   {body}
                 </Link>
-              </li>
+              </motion.li>
             );
           })}
         </ul>

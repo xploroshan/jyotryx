@@ -35,8 +35,11 @@ export default function Navbar() {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <LogoMark className="h-7 w-7" />
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 shrink-0 group transition-transform duration-200 hover:scale-[1.02]"
+          >
+            <LogoMark className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[20deg]" />
             <span className="text-[15px] font-semibold text-white tracking-tight">
               Jyotron
             </span>

@@ -58,7 +58,7 @@ export default function VastuPage() {
   const getScoreColor = (score: number) => score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : "text-red-400";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-white mb-2">{t.vastu.title}</h1>
       <p className="text-white/40 mb-8">{t.vastu.description}</p>
 
