@@ -1,5 +1,5 @@
 {
-  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts (greeting/quality/transit/summary) and apps/api/src/modules/numerology/numerology.service.ts (compatibility/suggestion/brand.recommendation/soulMeaning/personalityMeaning/invalidName/month names). A4 extends this with astrology.service.ts templates: flying-stars interpretation, 5 fallback muhurat reasons, and the Sade Sati phase+description set. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts (greeting/quality/transit/summary), apps/api/src/modules/numerology/numerology.service.ts (compatibility/suggestion/brand.recommendation/soulMeaning/personalityMeaning/invalidName/month names), and apps/api/src/modules/astrology/astrology.service.ts. A4 added flying-stars interpretation + muhurat reasons + sade-sati phases/descriptions. A5a extends with the horary / zodiacal-releasing / decumbiture / dosha templates needed to retire the last 4 translateFields sites in astrology.service.ts. Dosha descriptions use many placeholders ({house}, {rahuHouse}, {ketuHouse}, {sunHouse}, {nadiType}, {houseOrdinal}) substituted at render time. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
   "_shape": "{ text: string }",
   "rows": [
     {
@@ -2099,6 +2099,240 @@
         },
         "as": {
           "text": "সাড়ে সাতী বিশ্লেষণৰ বাবে জন্মৰ বিৱৰণ প্ৰয়োজন।"
+        }
+      }
+    },
+    {
+      "key": "horary.judgment.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "With the chart cast at {time}, the ascendant in {sign} favours a cautious, methodical approach to your question. Consider the state of the querent's and quesited's significators before committing."
+        }
+      }
+    },
+    {
+      "key": "horary.querent.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Lord of {sign} (Ascendant)"
+        }
+      }
+    },
+    {
+      "key": "horary.quesited.static",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Lord of the 7th house"
+        }
+      }
+    },
+    {
+      "key": "horary.moon.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Moon in {sign}"
+        }
+      }
+    },
+    {
+      "key": "zodiacal-releasing.major.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "12-year general chapter ruled by {lord}."
+        }
+      }
+    },
+    {
+      "key": "zodiacal-releasing.minor.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Annual sub-period ruled by {lord}."
+        }
+      }
+    },
+    {
+      "key": "zodiacal-releasing.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "At age {age} you are in a {majorSign} general period (lord: {majorLord}) with an annual {minorSign} sub-period (lord: {minorLord}). Themes of the major sign's topics dominate the chapter; the minor colours this year."
+        }
+      }
+    },
+    {
+      "key": "decumbiture.element.fire.guidance",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Hot, inflammatory — cooling herbs and hydration indicated."
+        }
+      }
+    },
+    {
+      "key": "decumbiture.element.earth.guidance",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Slow, chronic — steady restorative care and routine."
+        }
+      }
+    },
+    {
+      "key": "decumbiture.element.air.guidance",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Nervous, fluctuating — calming practices and regular rest."
+        }
+      }
+    },
+    {
+      "key": "decumbiture.element.water.guidance",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Emotional, moist — lymphatic support and gentle movement."
+        }
+      }
+    },
+    {
+      "key": "decumbiture.element.unknown.guidance",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Balanced care indicated."
+        }
+      }
+    },
+    {
+      "key": "decumbiture.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Decumbiture ascendant {sign} ({element}). The 6th house of illness is {sixthSign}. The Moon in {moonSign} shows the immediate course — {guidance}"
+        }
+      }
+    },
+    {
+      "key": "dosha.mangal.absent",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "No Mangal Dosha detected. Mars is well-placed in your chart."
+        }
+      }
+    },
+    {
+      "key": "dosha.mangal.cancelled_exalted",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mars is in house {house} (Manglik position) but the dosha is cancelled due to Mars being exalted."
+        }
+      }
+    },
+    {
+      "key": "dosha.mangal.cancelled_jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mars is in house {house} (Manglik position) but the dosha is cancelled due to Jupiter's benefic influence."
+        }
+      }
+    },
+    {
+      "key": "dosha.mangal.present",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mars is placed in the {houseOrdinal} house, creating Mangal Dosha. This may affect marital harmony."
+        }
+      }
+    },
+    {
+      "key": "dosha.mangal.severe_suffix",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": " Mars in 7th house is the most severe form."
+        }
+      }
+    },
+    {
+      "key": "dosha.mangal.birth_required",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Birth details required for accurate Mangal Dosha analysis. Please update your profile."
+        }
+      }
+    },
+    {
+      "key": "dosha.kaal_sarp.present",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "All planets are hemmed between Rahu (house {rahuHouse}) and Ketu (house {ketuHouse}), forming Kaal Sarp Dosha. This may cause sudden ups and downs in life. The dosha weakens after age 33."
+        }
+      }
+    },
+    {
+      "key": "dosha.kaal_sarp.absent",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "No Kaal Sarp Dosha present. Planets are well-distributed across the chart."
+        }
+      }
+    },
+    {
+      "key": "dosha.kaal_sarp.birth_required",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Birth details required for accurate Kaal Sarp Dosha analysis. Please update your profile."
+        }
+      }
+    },
+    {
+      "key": "dosha.nadi.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your Nadi type is {nadiType}, derived from Moon nakshatra. Nadi Dosha occurs when both partners share the same Nadi type in matching."
+        }
+      }
+    },
+    {
+      "key": "dosha.pitra.present",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Sun-Rahu conjunction in house {sunHouse} indicates ancestral karmic debt. This may affect family harmony and career growth."
+        }
+      }
+    },
+    {
+      "key": "dosha.pitra.absent",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "No significant Pitra Dosha detected in your chart."
+        }
+      }
+    },
+    {
+      "key": "dosha.pitra.birth_required",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Birth details required for accurate Pitra Dosha analysis. Please update your profile."
         }
       }
     }

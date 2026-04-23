@@ -634,6 +634,18 @@ model KbKarana {
   @@map("kb_karanas")
 }
 
+model KbDosha {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// Canonical dosha key: "mangal" | "kaal_sarp" | "nadi" | "pitra"
+  tradition  String?
+  i18n       Json     /// { en: { name, remedies: string[] }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_doshas_key_tradition_key", map: "kb_doshas_key_tradition_key")
+  @@map("kb_doshas")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

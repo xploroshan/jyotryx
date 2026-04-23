@@ -1,0 +1,66 @@
+{
+  "_source": "Lifted from apps/api/src/modules/astrology/astrology.service.ts — the detectDoshas() output plus the fallback block in getDosha(). Each row carries the canonical English dosha name and its 4-item remedy recommendation list. Descriptions are not stored here — they come from kb_briefing_phrases templates keyed dosha.{key}.{branch} (absent / cancelled_exalted / cancelled_jupiter / present / severe_suffix / birth_required / template) because they interpolate chart-specific placeholders. Nadi carries an empty remedies list — detection is matching-specific, not standalone. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ name: string, remedies: string[] }",
+  "rows": [
+    {
+      "key": "mangal",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mangal Dosha (Manglik)",
+          "remedies": [
+            "Perform Mangal Shanti Puja on Tuesdays",
+            "Chant Hanuman Chalisa on Tuesdays",
+            "Wear red coral gemstone (consult astrologer first)",
+            "Kumbh Vivah ritual before marriage"
+          ]
+        }
+      }
+    },
+    {
+      "key": "kaal_sarp",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Kaal Sarp Dosha",
+          "remedies": [
+            "Perform Kaal Sarp Dosha Nivaran Puja at Trimbakeshwar",
+            "Chant Rahu Beej Mantra on Saturdays",
+            "Donate black sesame seeds on Saturdays",
+            "Worship Lord Shiva with Abhishekam on Mondays"
+          ]
+        }
+      }
+    },
+    {
+      "key": "nadi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Nadi Dosha",
+          "remedies": [
+            "Perform Maha Mrityunjaya Jaap before marriage",
+            "Offer prayers at a Shiva temple on Mondays",
+            "Consult an astrologer for Nadi-compatibility-specific remedies",
+            "Donate milk and white items on Mondays"
+          ]
+        }
+      }
+    },
+    {
+      "key": "pitra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Pitra Dosha",
+          "remedies": [
+            "Perform Pitra Shanti Puja on Amavasya",
+            "Offer Tarpan for ancestors during Pitru Paksha",
+            "Donate food to Brahmins on Saturdays",
+            "Plant a Peepal tree and water it regularly"
+          ]
+        }
+      }
+    }
+  ]
+}

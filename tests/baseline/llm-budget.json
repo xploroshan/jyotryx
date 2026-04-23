@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Phase A work should reduce these; bumps up require explicit user approval in review. Regenerate with: npm test -- llm-budget.spec.ts -- --update-baseline (TODO: implement flag).",
-  "version": 5,
+  "version": 6,
   "scenarios": {
     "daily-briefing.en.fresh": {
       "maxCalls": 0,
@@ -61,6 +61,26 @@
     "astrology.muhuratFallback.hi.fresh": {
       "maxCalls": 1,
       "description": "Hindi Muhurat fallback path. getMuhurat makes one primary LLM attempt; A4 flipped the 5 canned fallback reasons to KbBriefingPhrase so the localization step no longer adds a translateFields call. Budget is 1 (the primary attempt)."
+    },
+    "astrology.horaryAsk.hi.fresh": {
+      "maxCalls": 1,
+      "description": "Hindi Horary. A5a flipped the judgment/querent/quesited/moon translateFields block to KbBriefingPhrase templates. The remaining 1 LLM call is the nested getWesternNatal translateText (scoped as A5b). Budget is 1."
+    },
+    "astrology.zodiacalReleasing.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Zodiacal Releasing. A5a flipped the major/minor/interpretation translateFields block to KbBriefingPhrase templates. No nested LLM calls — signLords is an inline constant map. Budget is 0."
+    },
+    "astrology.decumbiture.hi.fresh": {
+      "maxCalls": 1,
+      "description": "Hindi Decumbiture. A5a flipped the guidance/interpretation translateFields block to KbBriefingPhrase templates (5 element guidances + 1 interpretation template). The remaining 1 LLM call is the nested getWesternNatal translateText (scoped as A5b). Budget is 1."
+    },
+    "astrology.dosha.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Dosha. A5a refactored detectDoshas + localizeDoshas to emit descriptionKey+placeholder vars, pulling name/remedies from KbDosha and descriptions from dosha.* KbBriefingPhrase templates. Dosha runs on Swiss Eph + KB only — no LLM calls. Budget is 0."
+    },
+    "astrology.doshaFallback.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Dosha with no birth details. A5a flipped the 3 birth-required fallback descriptions to KbBriefingPhrase templates. Budget is 0."
     }
   }
 }

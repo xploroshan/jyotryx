@@ -30,6 +30,7 @@ import * as zodiacSignsData from './data/zodiac-signs.json';
 import * as chineseAnimalsData from './data/chinese-animals.json';
 import * as flyingStarsData from './data/flying-stars.json';
 import * as karanasData from './data/karanas.json';
+import * as doshasData from './data/doshas.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -57,7 +58,8 @@ export interface SeedTable {
     | 'kbZodiacSign'
     | 'kbChineseAnimal'
     | 'kbFlyingStar'
-    | 'kbKarana';
+    | 'kbKarana'
+    | 'kbDosha';
   /** Compound-unique index key for upsert `where`. */
   uniqueKey:
     | 'kb_planets_key_tradition_key'
@@ -75,7 +77,8 @@ export interface SeedTable {
     | 'kb_zodiac_signs_key_tradition_key'
     | 'kb_chinese_animals_key_tradition_key'
     | 'kb_flying_stars_key_tradition_key'
-    | 'kb_karanas_key_tradition_key';
+    | 'kb_karanas_key_tradition_key'
+    | 'kb_doshas_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -183,5 +186,11 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_karanas_key_tradition_key',
     dataFile: 'data/karanas.json',
     rows: rowsOf(karanasData),
+  },
+  {
+    modelName: 'kbDosha',
+    uniqueKey: 'kb_doshas_key_tradition_key',
+    dataFile: 'data/doshas.json',
+    rows: rowsOf(doshasData),
   },
 ];
