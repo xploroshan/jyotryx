@@ -10,8 +10,133 @@
           "name": "Aries",
           "element": "Fire",
           "modality": "Cardinal",
-          "bodyParts": ["head", "brain", "face"],
+          "bodyParts": [
+            "head",
+            "brain",
+            "face"
+          ],
           "guidance": "Watch for headaches, eye strain; keep the head cool."
+        },
+        "hi": {
+          "name": "Aries",
+          "element": "अग्नि",
+          "modality": "कार्डिनल",
+          "bodyParts": [
+            "सिर",
+            "मस्तिष्क",
+            "चेहरा"
+          ],
+          "guidance": "सिरदर्द, आँखों में तनाव से सावधान रहें; सिर को ठंडा रखें।"
+        },
+        "ta": {
+          "name": "Aries",
+          "element": "அக்கினி",
+          "modality": "முதன்மை",
+          "bodyParts": [
+            "தலை",
+            "மூளை",
+            "முகம்"
+          ],
+          "guidance": "தலைவலி, கண் அழுத்தம் கவனமாக இருங்கள்; தலையை குளிர்ச்சியாக வைத்திருங்கள்."
+        },
+        "te": {
+          "name": "Aries",
+          "element": "అగ్ని",
+          "modality": "కార్డినల్",
+          "bodyParts": [
+            "తల",
+            "మెదడు",
+            "ముఖం"
+          ],
+          "guidance": "తలనొప్పులు, కంటి ఒత్తిడి కోసం జాగ్రత్తగా ఉండండి; తల చల్లగా ఉంచండి."
+        },
+        "bn": {
+          "name": "Aries",
+          "element": "আগুন",
+          "modality": "কার্ডিনাল",
+          "bodyParts": [
+            "মাথা",
+            "মস্তিষ্ক",
+            "মুখ"
+          ],
+          "guidance": "মাথাব্যথা, চোখের চাপের জন্য সতর্ক থাকুন; মাথা ঠান্ডা রাখুন।"
+        },
+        "mr": {
+          "name": "Aries",
+          "element": "अग्नि",
+          "modality": "कार्डिनल",
+          "bodyParts": [
+            "डोके",
+            "मेंदू",
+            "चेहरा"
+          ],
+          "guidance": "डोकेदुखी, डोळ्यांचा ताण याकडे लक्ष द्या; डोके थंड ठेवा."
+        },
+        "gu": {
+          "name": "Aries",
+          "element": "અગ્નિ",
+          "modality": "કાર્ડિનલ",
+          "bodyParts": [
+            "માથું",
+            "મગજ",
+            "ચહેરો"
+          ],
+          "guidance": "માથાના દુખાવા, આંખોના તાણ માટે ધ્યાન રાખો; માથું ઠંડું રાખો."
+        },
+        "kn": {
+          "name": "Aries",
+          "element": "ಅಗ್ನಿ",
+          "modality": "ಕಾರ್ಡಿನಲ್",
+          "bodyParts": [
+            "ತಲೆ",
+            "ಮೆದುಳು",
+            "ಮುಖ"
+          ],
+          "guidance": "ತಲೆನೋವು, ಕಣ್ಣುಗಳ ಒತ್ತಡವನ್ನು ಗಮನಿಸಿ; ತಲೆಯನ್ನು ತಂಪಾಗಿಡಿ."
+        },
+        "ml": {
+          "name": "Aries",
+          "element": "അഗ്നി",
+          "modality": "കാര്ഡിനൽ",
+          "bodyParts": [
+            "തല",
+            "മസ്തിഷ്കം",
+            "മുഖം"
+          ],
+          "guidance": "തലവേദന, കണ്ണിന്റെ ക്ഷീണം എന്നിവയ്ക്കായി ശ്രദ്ധിക്കുക; തല തണുപ്പായി സൂക്ഷിക്കുക."
+        },
+        "pa": {
+          "name": "Aries",
+          "element": "ਅੱਗ",
+          "modality": "ਕਾਰਡਿਨਲ",
+          "bodyParts": [
+            "ਸਿਰ",
+            "ਦਿਮਾਗ",
+            "ਚਿਹਰਾ"
+          ],
+          "guidance": "ਸਿਰਦਰਦ, ਅੱਖਾਂ ਦੀ ਥਕਾਵਟ ਤੋਂ ਸਾਵਧਾਨ ਰਹੋ; ਸਿਰ ਨੂੰ ਠੰਢਾ ਰੱਖੋ।"
+        },
+        "or": {
+          "name": "Aries",
+          "element": "ଅଗ୍ନି",
+          "modality": "Cardinal",
+          "bodyParts": [
+            "ମୁଣ୍ଡ",
+            "ମଗଜ",
+            "ମୁହଁ"
+          ],
+          "guidance": "ମୁଣ୍ଡବଥା, ଚକ୍ଷୁ ଚାପ ଦେଖନ୍ତୁ; ମୁଣ୍ଡକୁ ଠଣ୍ଡା ରଖନ୍ତୁ।"
+        },
+        "as": {
+          "name": "Aries",
+          "element": "অগ্নি",
+          "modality": "কাৰ্ডিনেল",
+          "bodyParts": [
+            "মূৰ",
+            "মগজু",
+            "মুখ"
+          ],
+          "guidance": "মূৰৰ বিষ, চকুৰ টান অনুভৱ হ'ব পাৰে; মূৰ ঠাণ্ডা ৰাখিব।"
         }
       }
     },
@@ -23,8 +148,133 @@
           "name": "Taurus",
           "element": "Earth",
           "modality": "Fixed",
-          "bodyParts": ["neck", "throat", "thyroid"],
+          "bodyParts": [
+            "neck",
+            "throat",
+            "thyroid"
+          ],
           "guidance": "Support vocal health and thyroid function."
+        },
+        "hi": {
+          "name": "Taurus",
+          "element": "पृथ्वी",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "गला",
+            "कंठ",
+            "थायरॉयड"
+          ],
+          "guidance": "स्वर स्वास्थ्य और थायरॉयड कार्य को समर्थन दें।"
+        },
+        "ta": {
+          "name": "Taurus",
+          "element": "பூமி",
+          "modality": "நிலையான",
+          "bodyParts": [
+            "கழுத்து",
+            "தொண்டை",
+            "தைராய்டு"
+          ],
+          "guidance": "குரல் ஆரோக்கியத்தையும் தைராய்டு செயல்பாட்டையும் ஆதரிக்கவும்."
+        },
+        "te": {
+          "name": "Taurus",
+          "element": "భూమి",
+          "modality": "స్థిరమైన",
+          "bodyParts": [
+            "గొంతు",
+            "గొంతు",
+            "థైరాయిడ్"
+          ],
+          "guidance": "గొంతు ఆరోగ్యాన్ని మరియు థైరాయిడ్ పనితీరును మద్దతు ఇవ్వండి."
+        },
+        "bn": {
+          "name": "Taurus",
+          "element": "পৃথিবী",
+          "modality": "স্থির",
+          "bodyParts": [
+            "ঘাড়",
+            "গলা",
+            "থাইরয়েড"
+          ],
+          "guidance": "কণ্ঠস্বাস্থ্য এবং থাইরয়েড কার্যকারিতা সমর্থন করুন।"
+        },
+        "mr": {
+          "name": "Taurus",
+          "element": "पृथ्वी",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "मान",
+            "घसा",
+            "थायरॉईड"
+          ],
+          "guidance": "स्वर आरोग्य आणि थायरॉईड कार्यास समर्थन द्या."
+        },
+        "gu": {
+          "name": "Taurus",
+          "element": "પૃથ્વી",
+          "modality": "સ્થિર",
+          "bodyParts": [
+            "ગળું",
+            "કંઠ",
+            "થાયરોઇડ"
+          ],
+          "guidance": "વાણીના આરોગ્ય અને થાયરોઇડ કાર્યને ટેકો આપો."
+        },
+        "kn": {
+          "name": "Taurus",
+          "element": "ಭೂಮಿ",
+          "modality": "ಸ್ಥಿರ",
+          "bodyParts": [
+            "ಕತ್ತು",
+            "ಕಂಠ",
+            "ಥೈರಾಯ್ಡ್"
+          ],
+          "guidance": "ಕಂಠ ಆರೋಗ್ಯ ಮತ್ತು ಥೈರಾಯ್ಡ್ ಕಾರ್ಯವನ್ನು ಬೆಂಬಲಿಸಿ."
+        },
+        "ml": {
+          "name": "Taurus",
+          "element": "ഭൂമി",
+          "modality": "സ്ഥിരം",
+          "bodyParts": [
+            "കഴുത്ത്",
+            "തൊണ്ട",
+            "തൈറോയ്ഡ്"
+          ],
+          "guidance": "വായ്പ്പാത ആരോഗ്യവും തൈറോയ്ഡ് പ്രവർത്തനവും പിന്തുണയ്ക്കുക."
+        },
+        "pa": {
+          "name": "Taurus",
+          "element": "ਪ੍ਰਿਥਵੀ",
+          "modality": "ਸਥਿਰ",
+          "bodyParts": [
+            "ਗਰਦਨ",
+            "ਗਲਾ",
+            "ਥਾਇਰਾਇਡ"
+          ],
+          "guidance": "ਆਵਾਜ਼ ਦੀ ਸਿਹਤ ਅਤੇ ਥਾਇਰਾਇਡ ਦੇ ਕਾਰਜ ਨੂੰ ਸਮਰਥਨ ਦਿਓ।"
+        },
+        "or": {
+          "name": "Taurus",
+          "element": "ପୃଥିବୀ",
+          "modality": "ନିଶ୍ଚିତ",
+          "bodyParts": [
+            "ଗଳା",
+            "କଣ୍ଠ",
+            "ଥାଇରଏଡ୍"
+          ],
+          "guidance": "କଣ୍ଠ ସ୍ୱାସ୍ଥ୍ୟ ଏବଂ ଥାଇରଏଡ୍ କାର୍ଯ୍ୟକୁ ସମର୍ଥନ କରନ୍ତୁ।"
+        },
+        "as": {
+          "name": "Taurus",
+          "element": "পৃথিৱী",
+          "modality": "স্থিৰ",
+          "bodyParts": [
+            "ঘাড়",
+            "গল",
+            "থাইৰয়ড"
+          ],
+          "guidance": "কণ্ঠস্বাস্থ্য আৰু থাইৰয়ড কাৰ্যক্ষমতা সমৰ্থন কৰক।"
         }
       }
     },
@@ -36,8 +286,133 @@
           "name": "Gemini",
           "element": "Air",
           "modality": "Mutable",
-          "bodyParts": ["lungs", "arms", "nervous system"],
+          "bodyParts": [
+            "lungs",
+            "arms",
+            "nervous system"
+          ],
           "guidance": "Breathing practices calm the nerves."
+        },
+        "hi": {
+          "name": "Gemini",
+          "element": "वायु",
+          "modality": "परिवर्ती",
+          "bodyParts": [
+            "फेफड़े",
+            "बाहें",
+            "तंत्रिका तंत्र"
+          ],
+          "guidance": "सांस लेने के अभ्यास नसों को शांत करते हैं।"
+        },
+        "ta": {
+          "name": "Gemini",
+          "element": "காற்று",
+          "modality": "மாறுபடக்கூடிய",
+          "bodyParts": [
+            "நுரையீரல்",
+            "கைகள்",
+            "நரம்பு அமைப்பு"
+          ],
+          "guidance": "மூச்சுப் பயிற்சிகள் நரம்புகளை அமைதிப்படுத்தும்."
+        },
+        "te": {
+          "name": "Gemini",
+          "element": "గాలి",
+          "modality": "మార్పు చెందే",
+          "bodyParts": [
+            "ఫెఫాలు",
+            "చేతులు",
+            "నాడీ వ్యవస్థ"
+          ],
+          "guidance": "శ్వాస అభ్యాసాలు నరాలను శాంతింపజేస్తాయి."
+        },
+        "bn": {
+          "name": "Gemini",
+          "element": "বায়ু",
+          "modality": "পরিবর্তনশীল",
+          "bodyParts": [
+            "ফুসফুস",
+            "হাত",
+            "স্নায়ুতন্ত্র"
+          ],
+          "guidance": "শ্বাস-প্রশ্বাসের অনুশীলন স্নায়ুকে শান্ত করে।"
+        },
+        "mr": {
+          "name": "Gemini",
+          "element": "वायू",
+          "modality": "चल",
+          "bodyParts": [
+            "फुफ्फुसे",
+            "हात",
+            "मज्जासंस्था"
+          ],
+          "guidance": "श्वासोच्छ्वासाच्या सरावामुळे तणाव कमी होतो."
+        },
+        "gu": {
+          "name": "Gemini",
+          "element": "હવા",
+          "modality": "મ્યુટેબલ",
+          "bodyParts": [
+            "ફેફસા",
+            "બાહુઓ",
+            "નર્વસ સિસ્ટમ"
+          ],
+          "guidance": "શ્વાસ લેવામાં મદદરૂપ પ્રથાઓ નર્વસને શાંત કરે છે."
+        },
+        "kn": {
+          "name": "Gemini",
+          "element": "ಗಾಳಿ",
+          "modality": "ಚಲನೆಯ",
+          "bodyParts": [
+            "ಫೆಫಸುಗಳು",
+            "ಬಾಹುಗಳು",
+            "ನರ ವ್ಯವಸ್ಥೆ"
+          ],
+          "guidance": "ಶ್ವಾಸ ಅಭ್ಯಾಸಗಳು ನರಗಳನ್ನು ಶಾಂತಗೊಳಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "name": "Gemini",
+          "element": "വായു",
+          "modality": "മാറ്റം വരുത്തുന്ന",
+          "bodyParts": [
+            "ശ്വാസകോശങ്ങൾ",
+            "കൈകൾ",
+            "നാഡീവ്യൂഹം"
+          ],
+          "guidance": "ശ്വാസ വ്യായാമങ്ങൾ നാഡീവ്യൂഹത്തെ ശാന്തമാക്കുന്നു."
+        },
+        "pa": {
+          "name": "Gemini",
+          "element": "ਹਵਾ",
+          "modality": "ਬਦਲਣਯੋਗ",
+          "bodyParts": [
+            "ਫੇਫੜੇ",
+            "ਬਾਂਹਾਂ",
+            "ਨਰਵਸ ਸਿਸਟਮ"
+          ],
+          "guidance": "ਸਾਹ ਲੈਣ ਦੀਆਂ ਕਸਰਤਾਂ ਨਰਵਾਂ ਨੂੰ ਸ਼ਾਂਤ ਕਰਦੀਆਂ ਹਨ।"
+        },
+        "or": {
+          "name": "Gemini",
+          "element": "ବାୟୁ",
+          "modality": "ପରିବର୍ତ୍ତନଶୀଳ",
+          "bodyParts": [
+            "ଫେପୁସ",
+            "ବାହୁ",
+            "ସ୍ନାୟୁତନ୍ତ୍ର"
+          ],
+          "guidance": "ଶ୍ୱାସ ଅଭ୍ୟାସ ନାଡୀକୁ ସାନ୍ତ୍ୱନା ଦେଇଥାଏ।"
+        },
+        "as": {
+          "name": "Gemini",
+          "element": "বায়ু",
+          "modality": "পরিবর্তনশীল",
+          "bodyParts": [
+            "ফুসফুস",
+            "বাহু",
+            "স্নায়ুতন্ত্ৰ"
+          ],
+          "guidance": "শ্বাস-প্ৰশ্বাসৰ অনুশীলনে স্নায়ুক লৈ শান্ত কৰে।"
         }
       }
     },
@@ -49,8 +424,133 @@
           "name": "Cancer",
           "element": "Water",
           "modality": "Cardinal",
-          "bodyParts": ["chest", "stomach", "breasts"],
+          "bodyParts": [
+            "chest",
+            "stomach",
+            "breasts"
+          ],
           "guidance": "Digestion follows your emotional state."
+        },
+        "hi": {
+          "name": "Cancer",
+          "element": "जल",
+          "modality": "कार्डिनल",
+          "bodyParts": [
+            "छाती",
+            "पेट",
+            "स्तन"
+          ],
+          "guidance": "पाचन आपकी भावनात्मक स्थिति का अनुसरण करता है।"
+        },
+        "ta": {
+          "name": "Cancer",
+          "element": "நீர்",
+          "modality": "முதன்மை",
+          "bodyParts": [
+            "மார்பு",
+            "வயிறு",
+            "மார்பகங்கள்"
+          ],
+          "guidance": "உங்கள் உணர்ச்சி நிலையைப் பின்பற்றி செரிமானம் நடக்கிறது."
+        },
+        "te": {
+          "name": "Cancer",
+          "element": "నీరు",
+          "modality": "కార్డినల్",
+          "bodyParts": [
+            "ఛాతి",
+            "కడుపు",
+            "స్తనాలు"
+          ],
+          "guidance": "జీర్ణక్రియ మీ భావోద్వేగ స్థితిని అనుసరిస్తుంది."
+        },
+        "bn": {
+          "name": "Cancer",
+          "element": "জল",
+          "modality": "কার্ডিনাল",
+          "bodyParts": [
+            "বুক",
+            "পেট",
+            "স্তন"
+          ],
+          "guidance": "আপনার আবেগগত অবস্থার উপর আপনার হজম নির্ভর করে।"
+        },
+        "mr": {
+          "name": "Cancer",
+          "element": "पाणी",
+          "modality": "कार्डिनल",
+          "bodyParts": [
+            "छाती",
+            "पोट",
+            "स्तन"
+          ],
+          "guidance": "पचन तुमच्या भावनिक स्थितीनुसार होते."
+        },
+        "gu": {
+          "name": "Cancer",
+          "element": "પાણી",
+          "modality": "કાર્ડિનલ",
+          "bodyParts": [
+            "છાતી",
+            "પેટ",
+            "સ્તન"
+          ],
+          "guidance": "પાચન તમારી ભાવનાત્મક સ્થિતિને અનુસરે છે."
+        },
+        "kn": {
+          "name": "Cancer",
+          "element": "ನೀರು",
+          "modality": "ಕಾರ್ಡಿನಲ್",
+          "bodyParts": [
+            "ಮೇಲುಮಟ್ಟ",
+            "ಹೊಟ್ಟೆ",
+            "ಸ್ತನಗಳು"
+          ],
+          "guidance": "ಜೀರ್ಣಕ್ರಿಯೆ ನಿಮ್ಮ ಭಾವನಾತ್ಮಕ ಸ್ಥಿತಿಯನ್ನು ಅನುಸರಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "name": "Cancer",
+          "element": "ജലം",
+          "modality": "കാർഡിനൽ",
+          "bodyParts": [
+            "ചെസ്റ്റ്",
+            "വയറ്",
+            "സ്തനങ്ങൾ"
+          ],
+          "guidance": "മനോഭാവം നിങ്ങളുടെ ജീർണ്ണപ്രക്രിയയെ ബാധിക്കുന്നു."
+        },
+        "pa": {
+          "name": "Cancer",
+          "element": "ਪਾਣੀ",
+          "modality": "ਕਾਰਡਿਨਲ",
+          "bodyParts": [
+            "ਛਾਤੀ",
+            "ਪੇਟ",
+            "ਛਾਤੀਆਂ"
+          ],
+          "guidance": "ਹਜ਼ਮ ਹੋਣਾ ਤੁਹਾਡੇ ਭਾਵਨਾਤਮਕ ਹਾਲਤ ਦਾ ਪਾਲਣਾ ਕਰਦਾ ਹੈ।"
+        },
+        "or": {
+          "name": "Cancer",
+          "element": "ଜଳ",
+          "modality": "Cardinal",
+          "bodyParts": [
+            "ଛାତି",
+            "ପେଟ",
+            "ସ୍ତନ"
+          ],
+          "guidance": "ପାଚନ ତୁମର ଭାବନାତ୍ମକ ଅବସ୍ଥାକୁ ଅନୁସରଣ କରେ।"
+        },
+        "as": {
+          "name": "Cancer",
+          "element": "পানী",
+          "modality": "কাৰ্ডিনেল",
+          "bodyParts": [
+            "বক্ষ",
+            "পেট",
+            "স্তন"
+          ],
+          "guidance": "পাচনতন্ত্ৰ আপোনাৰ মানসিক অৱস্থাৰ অনুসৰণ কৰে।"
         }
       }
     },
@@ -62,8 +562,133 @@
           "name": "Leo",
           "element": "Fire",
           "modality": "Fixed",
-          "bodyParts": ["heart", "spine", "upper back"],
+          "bodyParts": [
+            "heart",
+            "spine",
+            "upper back"
+          ],
           "guidance": "Cardiovascular movement and posture care."
+        },
+        "hi": {
+          "name": "Leo",
+          "element": "अग्नि",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "हृदय",
+            "रीढ़",
+            "ऊपरी पीठ"
+          ],
+          "guidance": "हृदय संबंधी गतिविधि और मुद्रा देखभाल।"
+        },
+        "ta": {
+          "name": "Leo",
+          "element": "நெருப்பு",
+          "modality": "நிலையான",
+          "bodyParts": [
+            "இதயம்",
+            "முதுகெலும்பு",
+            "மேல் முதுகு"
+          ],
+          "guidance": "இதய ஆரோக்கியம் மற்றும் நிலைபாடு பராமரிப்பு."
+        },
+        "te": {
+          "name": "Leo",
+          "element": "అగ్ని",
+          "modality": "స్థిరమైన",
+          "bodyParts": [
+            "హృదయం",
+            "నేరుఁడు",
+            "ఎగువ వెన్నెముక"
+          ],
+          "guidance": "హృదయ సంబంధిత కదలికలు మరియు భంగిమా సంరక్షణ."
+        },
+        "bn": {
+          "name": "Leo",
+          "element": "অগ্নি",
+          "modality": "স্থির",
+          "bodyParts": [
+            "হৃদয়",
+            "মেরুদণ্ড",
+            "উপরের পিঠ"
+          ],
+          "guidance": "হৃদরোগ সংক্রান্ত আন্দোলন এবং ভঙ্গির যত্ন।"
+        },
+        "mr": {
+          "name": "Leo",
+          "element": "अग्नी",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "हृदय",
+            "पाठीचा कणा",
+            "वरचा पाठीचा भाग"
+          ],
+          "guidance": "हृदयविकार प्रतिबंधक हालचाल आणि शरीराची स्थिती सांभाळा."
+        },
+        "gu": {
+          "name": "Leo",
+          "element": "અગ્નિ",
+          "modality": "સ્થિર",
+          "bodyParts": [
+            "હૃદય",
+            "રીઢ",
+            "ઉપરનો પીઠ"
+          ],
+          "guidance": "હૃદયસંબંધિત કસરત અને સ્થિતિની કાળજી."
+        },
+        "kn": {
+          "name": "Leo",
+          "element": "ಅಗ್ನಿ",
+          "modality": "ಸ್ಥಿರ",
+          "bodyParts": [
+            "ಹೃದಯ",
+            "ಮೂಳೆಮೂಲಾಗ್ರ",
+            "ಮೇಲಿನ ಬೆನ್ನು"
+          ],
+          "guidance": "ಹೃದಯ ಸಂಬಂಧಿ ಚಲನೆ ಮತ್ತು ಭಂಗಿ ಆರೈಕೆ."
+        },
+        "ml": {
+          "name": "Leo",
+          "element": "അഗ്നി",
+          "modality": "സ്ഥിരം",
+          "bodyParts": [
+            "ഹൃദയം",
+            "നട്ടെല്ല്",
+            "മുകളിലെ പിൻഭാഗം"
+          ],
+          "guidance": "ഹൃദയസംബന്ധമായ ചലനവും ശരീരഭംഗി പരിപാലനവും."
+        },
+        "pa": {
+          "name": "Leo",
+          "element": "ਅੱਗ",
+          "modality": "ਸਥਿਰ",
+          "bodyParts": [
+            "ਦਿਲ",
+            "ਰੀੜ੍ਹ ਦੀ ਹੱਡੀ",
+            "ਉਪਰਲਾ ਪਿੱਠ"
+          ],
+          "guidance": "ਹਿਰਦੇ-ਸਬੰਧੀ ਕਸਰਤ ਅਤੇ ਮੋੜ ਸੰਭਾਲ।"
+        },
+        "or": {
+          "name": "Leo",
+          "element": "ଅଗ୍ନି",
+          "modality": "ସ୍ଥିର",
+          "bodyParts": [
+            "ହୃଦୟ",
+            "ମେଦୁଲା",
+            "ଉପର ଛାତି"
+          ],
+          "guidance": "ହୃଦ୍‌ପରିବାହ ସଂଚାଳନ ଏବଂ ଅସନ୍ଧି ଯତ୍ନ।"
+        },
+        "as": {
+          "name": "Leo",
+          "element": "আগ্নি",
+          "modality": "স্থিৰ",
+          "bodyParts": [
+            "হৃদয়",
+            "মেৰুদণ্ড",
+            "ওপৰ পিঠ"
+          ],
+          "guidance": "হৃদযন্ত্ৰীয় গতি আৰু ভঙ্গীমাৰ যত্ন।"
         }
       }
     },
@@ -75,8 +700,121 @@
           "name": "Virgo",
           "element": "Earth",
           "modality": "Mutable",
-          "bodyParts": ["intestines", "digestive system"],
+          "bodyParts": [
+            "intestines",
+            "digestive system"
+          ],
           "guidance": "Gut health is foundational for you."
+        },
+        "hi": {
+          "name": "Virgo",
+          "element": "पृथ्वी",
+          "modality": "परिवर्ती",
+          "bodyParts": [
+            "आंतें",
+            "पाचन तंत्र"
+          ],
+          "guidance": "आपके लिए आंत का स्वास्थ्य बुनियादी है।"
+        },
+        "ta": {
+          "name": "Virgo",
+          "element": "பூமி",
+          "modality": "மாற்றக்கூடிய",
+          "bodyParts": [
+            "குடல்",
+            "செரிமான அமைப்பு"
+          ],
+          "guidance": "உங்கள் குடல் ஆரோக்கியம் அடிப்படையாகும்."
+        },
+        "te": {
+          "name": "Virgo",
+          "element": "భూమి",
+          "modality": "మార్పు చెందే",
+          "bodyParts": [
+            "పేగులు",
+            "జీర్ణ వ్యవస్థ"
+          ],
+          "guidance": "మీకు గుట్ ఆరోగ్యం ప్రాథమికమైనది."
+        },
+        "bn": {
+          "name": "Virgo",
+          "element": "পৃথিবী",
+          "modality": "পরিবর্তনশীল",
+          "bodyParts": [
+            "অন্ত্র",
+            "পরিপাকতন্ত্র"
+          ],
+          "guidance": "আপনার জন্য অন্ত্রের স্বাস্থ্য মৌলিক।"
+        },
+        "mr": {
+          "name": "Virgo",
+          "element": "पृथ्वी",
+          "modality": "चल",
+          "bodyParts": [
+            "आतडे",
+            "पचनसंस्था"
+          ],
+          "guidance": "तुमच्यासाठी आतड्यांचे आरोग्य मूलभूत आहे."
+        },
+        "gu": {
+          "name": "Virgo",
+          "element": "પૃથ્વી",
+          "modality": "મ્યુટેબલ",
+          "bodyParts": [
+            "આંતરડા",
+            "પાચન તંત્ર"
+          ],
+          "guidance": "તમારા માટે આંતરડાનું આરોગ્ય મૂળભૂત છે."
+        },
+        "kn": {
+          "name": "Virgo",
+          "element": "ಭೂಮಿ",
+          "modality": "ಮಾರ್ಗಸ್ಥ",
+          "bodyParts": [
+            "ಆಂತ್ರಗಳು",
+            "ಜೀರ್ಣಾಂಗ ವ್ಯವಸ್ಥೆ"
+          ],
+          "guidance": "ಜೀರ್ಣಾಂಗ ಆರೋಗ್ಯವು ನಿಮ್ಮಿಗೆ ಮೂಲಭೂತವಾಗಿದೆ."
+        },
+        "ml": {
+          "name": "Virgo",
+          "element": "ഭൂമി",
+          "modality": "മാറ്റം വരുത്തുന്ന",
+          "bodyParts": [
+            "ആമാശയം",
+            "ജീർണ്ണസമ്പ്രദായം"
+          ],
+          "guidance": "ആമാശയാരോഗ്യം നിങ്ങൾക്കു അടിസ്ഥാനപരമാണ്."
+        },
+        "pa": {
+          "name": "Virgo",
+          "element": "ਪ੍ਰਿਥਵੀ",
+          "modality": "ਪਰਿਵਰਤਨੀਯ",
+          "bodyParts": [
+            "ਆਂਤਾਂ",
+            "ਹਜ਼ਮ ਕਰਨ ਦੀ ਪ੍ਰਣਾਲੀ"
+          ],
+          "guidance": "ਆਪਣੇ ਲਈ ਆੰਤਾਂ ਦੀ ਸਿਹਤ ਬੁਨਿਆਦੀ ਹੈ।"
+        },
+        "or": {
+          "name": "Virgo",
+          "element": "ପୃଥିବୀ",
+          "modality": "ପରିବର୍ତନଶୀଳ",
+          "bodyParts": [
+            "ଆନ୍ତ୍ର",
+            "ପାଚନ ତନ୍ତ୍ର"
+          ],
+          "guidance": "ଆପଣଙ୍କ ପାଇଁ ଆନ୍ତ୍ର ସ୍ୱାସ୍ଥ୍ୟ ମୂଳଭୂତ।"
+        },
+        "as": {
+          "name": "Virgo",
+          "element": "পৃথিৱী",
+          "modality": "পরিবৰ্তনশীল",
+          "bodyParts": [
+            "আঁত",
+            "পাচনতন্ত্ৰ"
+          ],
+          "guidance": "আপোনাৰ বাবে অন্ত্ৰৰ স্বাস্থ্য প্ৰাথমিক।"
         }
       }
     },
@@ -88,8 +826,133 @@
           "name": "Libra",
           "element": "Air",
           "modality": "Cardinal",
-          "bodyParts": ["kidneys", "lower back", "skin"],
+          "bodyParts": [
+            "kidneys",
+            "lower back",
+            "skin"
+          ],
           "guidance": "Hydration and balance-based movement help."
+        },
+        "hi": {
+          "name": "Libra",
+          "element": "वायु",
+          "modality": "कार्डिनल",
+          "bodyParts": [
+            "गुर्दे",
+            "निचला हिस्सा",
+            "त्वचा"
+          ],
+          "guidance": "हाइड्रेशन और संतुलन-आधारित गतिविधियाँ मदद करती हैं।"
+        },
+        "ta": {
+          "name": "Libra",
+          "element": "காற்று",
+          "modality": "முதன்மை",
+          "bodyParts": [
+            "சிறுநீரகம்",
+            "கீழ் முதுகு",
+            "தோல்"
+          ],
+          "guidance": "நீரேற்றம் மற்றும் சமநிலையுடன் கூடிய இயக்கம் உதவும்."
+        },
+        "te": {
+          "name": "Libra",
+          "element": "గాలి",
+          "modality": "కార్డినల్",
+          "bodyParts": [
+            "కిడ్నీలు",
+            "తక్కువ వెన్నెముక",
+            "చర్మం"
+          ],
+          "guidance": "హైడ్రేషన్ మరియు సమతుల్యత ఆధారిత కదలిక సహాయపడుతుంది."
+        },
+        "bn": {
+          "name": "Libra",
+          "element": "বায়ু",
+          "modality": "Cardinal",
+          "bodyParts": [
+            "কিডনি",
+            "নিম্ন পিঠ",
+            "ত্বক"
+          ],
+          "guidance": "জলীয়করণ এবং ভারসাম্য-ভিত্তিক আন্দোলন সাহায্য করে।"
+        },
+        "mr": {
+          "name": "Libra",
+          "element": "वायू",
+          "modality": "Cardinal",
+          "bodyParts": [
+            "मूत्रपिंड",
+            "खालचा पाठीचा भाग",
+            "त्वचा"
+          ],
+          "guidance": "हायड्रेशन आणि संतुलनावर आधारित हालचाल मदत करते."
+        },
+        "gu": {
+          "name": "Libra",
+          "element": "હવા",
+          "modality": "કાર્ડિનલ",
+          "bodyParts": [
+            "કિડની",
+            "નીચલો પીઠ",
+            "ચામડી"
+          ],
+          "guidance": "હાઇડ્રેશન અને સંતુલન આધારિત ચળવળ મદદરૂપ છે."
+        },
+        "kn": {
+          "name": "Libra",
+          "element": "ಗಾಳಿ",
+          "modality": "ಕಾರ್ಡಿನಲ್",
+          "bodyParts": [
+            "ಮೂತ್ರಪಿಂಡಗಳು",
+            "ಕೆಳಗಿನ ಬೆನ್ನು",
+            "ಚರ್ಮ"
+          ],
+          "guidance": "ಹೈಡ್ರೇಶನ್ ಮತ್ತು ಸಮತೋಲನ ಆಧಾರಿತ ಚಲನೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ."
+        },
+        "ml": {
+          "name": "Libra",
+          "element": "വായു",
+          "modality": "കാര്ഡിനൽ",
+          "bodyParts": [
+            "വൃക്കകൾ",
+            "താഴത്തെ പുറം",
+            "ചർമ്മം"
+          ],
+          "guidance": "ജലസേചനം, സുതാര്യമായ ചലനം സഹായകരമാണ്."
+        },
+        "pa": {
+          "name": "Libra",
+          "element": "ਹਵਾ",
+          "modality": "ਕਾਰਡਿਨਲ",
+          "bodyParts": [
+            "ਗੁਰਦੇ",
+            "ਹੇਠਲਾ ਪਿੱਠ",
+            "ਚਮੜੀ"
+          ],
+          "guidance": "ਹਾਈਡ੍ਰੇਸ਼ਨ ਅਤੇ ਸੰਤੁਲਨ-ਅਧਾਰਿਤ ਗਤੀਵਿਧੀ ਮਦਦ ਕਰਦੀ ਹੈ।"
+        },
+        "or": {
+          "name": "Libra",
+          "element": "ବାୟୁ",
+          "modality": "Cardinal",
+          "bodyParts": [
+            "ବୃକ୍କ",
+            "ତଳ ପିଠ",
+            "ତ୍ୱଚା"
+          ],
+          "guidance": "ଜଳଯୋଗାନ ଏବଂ ସମତୁଳନାଧିକ ଗତିବିଧି ସାହାଯ୍ୟ କରେ।"
+        },
+        "as": {
+          "name": "Libra",
+          "element": "বায়ু",
+          "modality": "কাৰ্ডিনেল",
+          "bodyParts": [
+            "মূত্ৰাশয়",
+            "তলৰ পিঠি",
+            "ছাল"
+          ],
+          "guidance": "জলীয়তা আৰু সন্থুলিত গতি সহায়ক।"
         }
       }
     },
@@ -101,8 +964,121 @@
           "name": "Scorpio",
           "element": "Water",
           "modality": "Fixed",
-          "bodyParts": ["reproductive organs", "pelvis"],
+          "bodyParts": [
+            "reproductive organs",
+            "pelvis"
+          ],
           "guidance": "Deep rest and detox support the body."
+        },
+        "hi": {
+          "name": "Scorpio",
+          "element": "जल",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "प्रजनन अंग",
+            "श्रोणि"
+          ],
+          "guidance": "गहरी विश्रांति और विषहरण शरीर का समर्थन करते हैं।"
+        },
+        "ta": {
+          "name": "Scorpio",
+          "element": "நீர்",
+          "modality": "நிலையான",
+          "bodyParts": [
+            "பார்ப்புணர்வு உறுப்புகள்",
+            "முதுகெலும்பின் கீழ்பகுதி"
+          ],
+          "guidance": "ஆழமான ஓய்வு மற்றும் நச்சுநீக்க உதவி உடலை ஆதரிக்கின்றன."
+        },
+        "te": {
+          "name": "Scorpio",
+          "element": "నీరు",
+          "modality": "స్థిరమైన",
+          "bodyParts": [
+            "ప్రజనాంగాలు",
+            "పెల్విస్"
+          ],
+          "guidance": "తీవ్ర విశ్రాంతి మరియు డిటాక్స్ శరీరాన్ని మద్దతు ఇస్తాయి."
+        },
+        "bn": {
+          "name": "Scorpio",
+          "element": "জল",
+          "modality": "স্থির",
+          "bodyParts": [
+            "প্রজনন অঙ্গ",
+            "শ্রোণী"
+          ],
+          "guidance": "গভীর বিশ্রাম এবং ডিটক্স শরীরকে সমর্থন করে।"
+        },
+        "mr": {
+          "name": "Scorpio",
+          "element": "पाणी",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "प्रजनन अवयव",
+            "श्रोणि"
+          ],
+          "guidance": "सखोल विश्रांती आणि डिटॉक्स शरीराला समर्थन देतात."
+        },
+        "gu": {
+          "name": "Scorpio",
+          "element": "પાણી",
+          "modality": "સ્થિર",
+          "bodyParts": [
+            "પ્રજનન અંગો",
+            "શરીરનો નીચેનો ભાગ"
+          ],
+          "guidance": "ઊંડો આરામ અને ડિટોક્સ શરીરને ટેકો આપે છે."
+        },
+        "kn": {
+          "name": "Scorpio",
+          "element": "ನೀರು",
+          "modality": "ಸ್ಥಿರ",
+          "bodyParts": [
+            "ಪ್ರಜನನ ಅಂಗಗಳು",
+            "ಶರೀರದ ಮಧ್ಯಭಾಗ"
+          ],
+          "guidance": "ಆಳವಾದ ವಿಶ್ರಾಂತಿ ಮತ್ತು ಡಿಟಾಕ್ಸ್ ದೇಹವನ್ನು ಬೆಂಬಲಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "name": "Scorpio",
+          "element": "ജലം",
+          "modality": "സ്ഥിരം",
+          "bodyParts": [
+            "പ്രജനന അവയവങ്ങൾ",
+            "ശിരോവാസ്തി"
+          ],
+          "guidance": "ആഴത്തിലുള്ള വിശ്രമവും വിഷാംശം നീക്കം ചെയ്യലും ശരീരത്തെ പിന്തുണയ്ക്കുന്നു."
+        },
+        "pa": {
+          "name": "Scorpio",
+          "element": "ਪਾਣੀ",
+          "modality": "ਸਥਿਰ",
+          "bodyParts": [
+            "ਪੁਨਰੁਤਪਾਦਨ ਅੰਗ",
+            "ਪੇਲਵਿਸ"
+          ],
+          "guidance": "ਗਹਿਰੀ ਆਰਾਮ ਅਤੇ ਡਿਟੌਕਸ ਸਹਾਇਤਾ ਸਰੀਰ ਨੂੰ ਸਮਰਥਨ ਦਿੰਦੇ ਹਨ।"
+        },
+        "or": {
+          "name": "Scorpio",
+          "element": "ଜଳ",
+          "modality": "ସ୍ଥିର",
+          "bodyParts": [
+            "ପୁନରୁତ୍ପାଦନ ଅଙ୍ଗଗୁଡ଼ିକ",
+            "ଶରୀରର ତଳ ଭାଗ"
+          ],
+          "guidance": "ଗଭୀର ବିଶ୍ରାମ ଏବଂ ବିଷମୁକ୍ତି ସହାୟତା ଶରୀରକୁ ସମର୍ଥନ କରେ।"
+        },
+        "as": {
+          "name": "Scorpio",
+          "element": "পানী",
+          "modality": "স্থিৰ",
+          "bodyParts": [
+            "প্ৰজনন অংগ",
+            "শ্ৰোণী"
+          ],
+          "guidance": "গভীৰ বিশ্ৰাম আৰু ডিটক্সে শৰীৰক সমৰ্থন কৰে।"
         }
       }
     },
@@ -114,8 +1090,133 @@
           "name": "Sagittarius",
           "element": "Fire",
           "modality": "Mutable",
-          "bodyParts": ["hips", "thighs", "liver"],
+          "bodyParts": [
+            "hips",
+            "thighs",
+            "liver"
+          ],
           "guidance": "Liver-friendly diet and hip mobility."
+        },
+        "hi": {
+          "name": "Sagittarius",
+          "element": "अग्नि",
+          "modality": "परिवर्ती",
+          "bodyParts": [
+            "कूल्हे",
+            "जांघें",
+            "यकृत"
+          ],
+          "guidance": "यकृत के अनुकूल आहार और कूल्हों की गतिशीलता।"
+        },
+        "ta": {
+          "name": "Sagittarius",
+          "element": "அக்னி",
+          "modality": "மாறுபடக்கூடிய",
+          "bodyParts": [
+            "இடுப்புகள்",
+            "தோள்பட்டைகள்",
+            "கல்லீரல்"
+          ],
+          "guidance": "கல்லீரலுக்கு உகந்த உணவு மற்றும் இடுப்பு இயக்கம்."
+        },
+        "te": {
+          "name": "Sagittarius",
+          "element": "అగ్ని",
+          "modality": "మార్పు చెందే",
+          "bodyParts": [
+            "నితంబాలు",
+            "తొడలు",
+            "కాలేయం"
+          ],
+          "guidance": "కాలేయానికి అనుకూలమైన ఆహారం మరియు నితంబాల చలనం."
+        },
+        "bn": {
+          "name": "Sagittarius",
+          "element": "অগ্নি",
+          "modality": "পরিবর্তনশীল",
+          "bodyParts": [
+            "নিতম্ব",
+            "উরু",
+            "যকৃত"
+          ],
+          "guidance": "যকৃত-বান্ধব খাদ্য এবং নিতম্বের গতিশীলতা।"
+        },
+        "mr": {
+          "name": "Sagittarius",
+          "element": "अग्नी",
+          "modality": "चल",
+          "bodyParts": [
+            "खांदे",
+            "मांड्या",
+            "यकृत"
+          ],
+          "guidance": "यकृतासाठी अनुकूल आहार आणि खांद्यांची हालचाल."
+        },
+        "gu": {
+          "name": "Sagittarius",
+          "element": "અગ્નિ",
+          "modality": "મ્યુટેબલ",
+          "bodyParts": [
+            "કમર",
+            "જાંઘો",
+            "યકૃત"
+          ],
+          "guidance": "યકૃતને અનુકૂળ આહાર અને કમરની ચપળતા."
+        },
+        "kn": {
+          "name": "Sagittarius",
+          "element": "ಅಗ್ನಿ",
+          "modality": "ಚರ",
+          "bodyParts": [
+            "ಹೊಟ್ಟೆ",
+            "ತೊಡೆಗಳು",
+            "ಯಕೃತ್"
+          ],
+          "guidance": "ಯಕೃತ್ ಸ್ನೇಹಿ ಆಹಾರ ಮತ್ತು ತೊಡೆಗಳ ಚಲನೆ."
+        },
+        "ml": {
+          "name": "Sagittarius",
+          "element": "അഗ്നി",
+          "modality": "മാറുന്ന",
+          "bodyParts": [
+            "തുടകൾ",
+            "മുടക്കുകൾ",
+            "ലിവർ"
+          ],
+          "guidance": "ലിവർ-സൗഹൃദമായ ഭക്ഷണക്രമവും മുടക്കുകളുടെ ചലനക്ഷമതയും."
+        },
+        "pa": {
+          "name": "Sagittarius",
+          "element": "ਅੱਗ",
+          "modality": "ਬਦਲਣਸ਼ੀਲ",
+          "bodyParts": [
+            "ਕਮਰ",
+            "ਜੰਘਾਂ",
+            "ਜਿਗਰ"
+          ],
+          "guidance": "ਜਿਗਰ-ਦੋਸਤਾਨਾ ਖੁਰਾਕ ਅਤੇ ਕਮਰ ਦੀ ਚੁਸਤਤਾ।"
+        },
+        "or": {
+          "name": "Sagittarius",
+          "element": "ଅଗ୍ନି",
+          "modality": "ଚଞ୍ଚଳ",
+          "bodyParts": [
+            "ଶିପ୍ସ",
+            "ଜଘନ",
+            "ଯକୃତ"
+          ],
+          "guidance": "ଯକୃତ-ବନ୍ଧୁ ଆହାର ଏବଂ ଶିପ୍ସ ଗତିଶୀଳତା।"
+        },
+        "as": {
+          "name": "Sagittarius",
+          "element": "আগ্নেয়",
+          "modality": "পরিবৰ্তনশীল",
+          "bodyParts": [
+            "নিতম্ব",
+            "উৰু",
+            "যকৃত"
+          ],
+          "guidance": "যকৃতৰ বাবে অনুকূল আহাৰ আৰু নিতম্বৰ চলনশীলতা।"
         }
       }
     },
@@ -127,8 +1228,133 @@
           "name": "Capricorn",
           "element": "Earth",
           "modality": "Cardinal",
-          "bodyParts": ["bones", "knees", "joints"],
+          "bodyParts": [
+            "bones",
+            "knees",
+            "joints"
+          ],
           "guidance": "Weight-bearing exercise and calcium."
+        },
+        "hi": {
+          "name": "Capricorn",
+          "element": "पृथ्वी",
+          "modality": "मूर्त",
+          "bodyParts": [
+            "हड्डियाँ",
+            "घुटने",
+            "जोड़"
+          ],
+          "guidance": "भार उठाने वाले व्यायाम और कैल्शियम।"
+        },
+        "ta": {
+          "name": "Capricorn",
+          "element": "பூமி",
+          "modality": "முதன்மை",
+          "bodyParts": [
+            "எலும்புகள்",
+            "முழங்கால்",
+            "சொந்தங்கள்"
+          ],
+          "guidance": "எடை தாங்கும் உடற்பயிற்சி மற்றும் கால்சியம்."
+        },
+        "te": {
+          "name": "Capricorn",
+          "element": "భూమి",
+          "modality": "కార్డినల్",
+          "bodyParts": [
+            "ఎముకలు",
+            "మోకాళ్లు",
+            "కీళ్ళు"
+          ],
+          "guidance": "బరువు మోసే వ్యాయామం మరియు కాల్షియం."
+        },
+        "bn": {
+          "name": "Capricorn",
+          "element": "পৃথিবী",
+          "modality": "কার্ডিনাল",
+          "bodyParts": [
+            "হাড়",
+            "হাঁটু",
+            "জোড়"
+          ],
+          "guidance": "ওজন বহনকারী ব্যায়াম এবং ক্যালসিয়াম।"
+        },
+        "mr": {
+          "name": "Capricorn",
+          "element": "पृथ्वी",
+          "modality": "कार्डिनल",
+          "bodyParts": [
+            "हाडे",
+            "गुडघे",
+            "सांधे"
+          ],
+          "guidance": "वजन उचलण्याचे व्यायाम आणि कॅल्शियम."
+        },
+        "gu": {
+          "name": "Capricorn",
+          "element": "પૃથ્વી",
+          "modality": "કાર્ડિનલ",
+          "bodyParts": [
+            "હાડકાં",
+            "ઘૂંટણ",
+            "સંયોજકો"
+          ],
+          "guidance": "વજન સહન કરનાર વ્યાયામ અને કૅલ્શિયમ."
+        },
+        "kn": {
+          "name": "Capricorn",
+          "element": "ಭೂಮಿ",
+          "modality": "ಕಾರ್ಡಿನಲ್",
+          "bodyParts": [
+            "ಎಲುಬುಗಳು",
+            "ಮಂಡಿಗಳು",
+            "ಸಂಧಿಗಳು"
+          ],
+          "guidance": "ತೂಕದ ವ್ಯಾಯಾಮ ಮತ್ತು ಕ್ಯಾಲ್ಸಿಯಂ."
+        },
+        "ml": {
+          "name": "Capricorn",
+          "element": "ഭൂമി",
+          "modality": "കാര്ഡിനൽ",
+          "bodyParts": [
+            "എല്ലുകൾ",
+            "മുട്ടുകൾ",
+            "സന്ധികൾ"
+          ],
+          "guidance": "ഭാരം സഹിക്കുന്ന വ്യായാമവും കാല്സ്യവും."
+        },
+        "pa": {
+          "name": "Capricorn",
+          "element": "ਧਰਤੀ",
+          "modality": "ਕਾਰਡਿਨਲ",
+          "bodyParts": [
+            "ਹੱਡੀਆਂ",
+            "ਘੁੱਟਣ",
+            "ਜੋੜ"
+          ],
+          "guidance": "ਭਾਰ-ਛਕਣ ਵਾਲੀ ਕਸਰਤ ਅਤੇ ਕੈਲਸ਼ੀਅਮ।"
+        },
+        "or": {
+          "name": "Capricorn",
+          "element": "ପୃଥିବୀ",
+          "modality": "Cardinal",
+          "bodyParts": [
+            "ହାଡ଼",
+            "ଜଙ୍ଘା",
+            "ସନ୍ଧି"
+          ],
+          "guidance": "ଭାର ବହିବା ଅଭ୍ୟାସ ଏବଂ କ୍ୟାଲସିଅମ୍।"
+        },
+        "as": {
+          "name": "Capricorn",
+          "element": "পৃথিৱী",
+          "modality": "কাৰ্ডিনেল",
+          "bodyParts": [
+            "হাড়",
+            "গোৰুহাত",
+            "জয়েন্ট"
+          ],
+          "guidance": "ওজন-বহন কৰা ব্যায়াম আৰু কেলচিয়াম।"
         }
       }
     },
@@ -140,8 +1366,121 @@
           "name": "Aquarius",
           "element": "Air",
           "modality": "Fixed",
-          "bodyParts": ["ankles", "circulation"],
+          "bodyParts": [
+            "ankles",
+            "circulation"
+          ],
           "guidance": "Mind circulation — warm feet, keep moving."
+        },
+        "hi": {
+          "name": "Aquarius",
+          "element": "वायु",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "टखने",
+            "संचार"
+          ],
+          "guidance": "मन का संचार — पैरों को गर्म रखें, चलते रहें।"
+        },
+        "ta": {
+          "name": "Aquarius",
+          "element": "காற்று",
+          "modality": "நிலைத்த",
+          "bodyParts": [
+            "கணுக்கால்",
+            "இரத்த ஓட்டம்"
+          ],
+          "guidance": "மன ஓட்டம் — கால்களை சூடாக வைத்துக் கொள்ளவும், தொடர்ந்து நகரவும்."
+        },
+        "te": {
+          "name": "Aquarius",
+          "element": "గాలి",
+          "modality": "స్థిరం",
+          "bodyParts": [
+            "గోళ్ళు",
+            "రక్తప్రసరణ"
+          ],
+          "guidance": "మనస్సు ప్రసరణ — కాళ్ళను వేడి చేయండి, కదులుతూ ఉండండి."
+        },
+        "bn": {
+          "name": "Aquarius",
+          "element": "বায়ু",
+          "modality": "স্থির",
+          "bodyParts": [
+            "গোড়ালি",
+            "রক্ত সঞ্চালন"
+          ],
+          "guidance": "মন সঞ্চালন — পা গরম রাখুন, চলাফেরা চালিয়ে যান।"
+        },
+        "mr": {
+          "name": "Aquarius",
+          "element": "वायू",
+          "modality": "स्थिर",
+          "bodyParts": [
+            "घोटे",
+            "रक्ताभिसरण"
+          ],
+          "guidance": "मनाची रक्ताभिसरण — पाय उबदार ठेवा, चालत राहा."
+        },
+        "gu": {
+          "name": "Aquarius",
+          "element": "હવા",
+          "modality": "સ્થિર",
+          "bodyParts": [
+            "ટખા",
+            "રક્તસંચાર"
+          ],
+          "guidance": "મનનો રક્તસંચાર — પગને ગરમ રાખો, ચાલતા રહો."
+        },
+        "kn": {
+          "name": "Aquarius",
+          "element": "ಗಾಳಿ",
+          "modality": "ಸ್ಥಿರ",
+          "bodyParts": [
+            "ಕಾಲುಮಣಿಗಳು",
+            "ರಕ್ತಸಂಚಾರ"
+          ],
+          "guidance": "ಮನಸ್ಸಿನ ರಕ್ತಸಂಚಾರ — ಕಾಲುಗಳನ್ನು ಬಿಸಿ ಇಟ್ಟುಕೊಳ್ಳಿ, ಚಲಿಸುತ್ತಿರಿ."
+        },
+        "ml": {
+          "name": "Aquarius",
+          "element": "വായു",
+          "modality": "സ്ഥിരം",
+          "bodyParts": [
+            "കണങ്കാൽ",
+            "രക്തചംക്രമണം"
+          ],
+          "guidance": "മനസ്സിന്റെ ചലനം — കാൽ ചൂടാക്കുക, നീങ്ങിക്കൊണ്ടിരിക്കുക."
+        },
+        "pa": {
+          "name": "Aquarius",
+          "element": "ਹਵਾ",
+          "modality": "ਸਥਿਰ",
+          "bodyParts": [
+            "ਟਖਨੇ",
+            "ਰਕਤ ਸੰਚਾਰ"
+          ],
+          "guidance": "ਮਨ ਦਾ ਸੰਚਾਰ — ਪੈਰ ਗਰਮ ਰੱਖੋ, ਚਲਦੇ ਰਹੋ।"
+        },
+        "or": {
+          "name": "Aquarius",
+          "element": "ବାତାସ",
+          "modality": "ସ୍ଥିର",
+          "bodyParts": [
+            "ଗୋଡ଼ଫୁଲା",
+            "ରକ୍ତସଞ୍ଚାଳନ"
+          ],
+          "guidance": "ମନ ସଞ୍ଚାଳନ — ପାଦଗୁଡ଼ିକୁ ଗରମ ରଖନ୍ତୁ, ଚାଲି ଚାଲି ରହନ୍ତୁ।"
+        },
+        "as": {
+          "name": "Aquarius",
+          "element": "বায়ু",
+          "modality": "স্থিৰ",
+          "bodyParts": [
+            "গোড়ালি",
+            "ৰক্ত সঞ্চালন"
+          ],
+          "guidance": "মস্তিষ্কৰ সঞ্চালন — ভৰিৰ তলত গৰম ৰাখক, সৰবৰাহত থাকক।"
         }
       }
     },
@@ -153,8 +1492,133 @@
           "name": "Pisces",
           "element": "Water",
           "modality": "Mutable",
-          "bodyParts": ["feet", "lymphatic system", "immunity"],
+          "bodyParts": [
+            "feet",
+            "lymphatic system",
+            "immunity"
+          ],
           "guidance": "Foot care and immune-supportive routines."
+        },
+        "hi": {
+          "name": "Pisces",
+          "element": "जल",
+          "modality": "परिवर्ती",
+          "bodyParts": [
+            "पैर",
+            "लसीका तंत्र",
+            "प्रतिरक्षा"
+          ],
+          "guidance": "पैरों की देखभाल और प्रतिरक्षा-सहायक दिनचर्या।"
+        },
+        "ta": {
+          "name": "Pisces",
+          "element": "நீர்",
+          "modality": "மாறுபடக்கூடிய",
+          "bodyParts": [
+            "கால்கள்",
+            "நீர்க்கோஷ அமைப்பு",
+            "நோய் எதிர்ப்பு"
+          ],
+          "guidance": "கால்கள் பராமரிப்பு மற்றும் நோய் எதிர்ப்பு ஆதரவு நடைமுறைகள்."
+        },
+        "te": {
+          "name": "Pisces",
+          "element": "నీరు",
+          "modality": "మార్పు చెందే",
+          "bodyParts": [
+            "పాదాలు",
+            "లింఫాటిక్ సిస్టమ్",
+            "ప్రతిరక్షక శక్తి"
+          ],
+          "guidance": "పాదాల సంరక్షణ మరియు రోగనిరోధక శక్తిని పెంపొందించే పద్ధతులు."
+        },
+        "bn": {
+          "name": "Pisces",
+          "element": "জল",
+          "modality": "পরিবর্তনশীল",
+          "bodyParts": [
+            "পা",
+            "লসিকা সিস্টেম",
+            "রোগ প্রতিরোধ ক্ষমতা"
+          ],
+          "guidance": "পায়ের যত্ন এবং রোগ প্রতিরোধ ক্ষমতা সমর্থনকারী রুটিন।"
+        },
+        "mr": {
+          "name": "Pisces",
+          "element": "पाणी",
+          "modality": "चलनशील",
+          "bodyParts": [
+            "पाय",
+            "लसिका प्रणाली",
+            "प्रतिकारशक्ती"
+          ],
+          "guidance": "पायांची काळजी आणि प्रतिकारशक्तीला समर्थन देणाऱ्या दिनचर्या."
+        },
+        "gu": {
+          "name": "Pisces",
+          "element": "પાણી",
+          "modality": "પરિવર્તનશીલ",
+          "bodyParts": [
+            "પગ",
+            "લસિકા તંત્ર",
+            "રોગપ્રતિકારક શક્તિ"
+          ],
+          "guidance": "પગની સંભાળ અને રોગપ્રતિકારક શક્તિને ટેકો આપતી રીતીઓ."
+        },
+        "kn": {
+          "name": "Pisces",
+          "element": "ನೀರು",
+          "modality": "ಬದಲಾಗುವ",
+          "bodyParts": [
+            "ಪಾದಗಳು",
+            "ಲಿಂಫಾಟಿಕ್ ವ್ಯವಸ್ಥೆ",
+            "ರೋಗನಿರೋಧಕ ಶಕ್ತಿ"
+          ],
+          "guidance": "ಪಾದಗಳ ಆರೈಕೆ ಮತ್ತು ರೋಗನಿರೋಧಕ ಶಕ್ತಿಯನ್ನು ಬೆಂಬಲಿಸುವ ಕ್ರಮಗಳು."
+        },
+        "ml": {
+          "name": "Pisces",
+          "element": "ജലം",
+          "modality": "മാറ്റം ചെയ്യാവുന്ന",
+          "bodyParts": [
+            "പാദങ്ങൾ",
+            "ലിംഫാറ്റിക് സിസ്റ്റം",
+            "പ്രതിരോധശേഷി"
+          ],
+          "guidance": "പാദ സംരക്ഷണവും പ്രതിരോധ ശേഷി വർദ്ധിപ്പിക്കുന്ന രീതികളും."
+        },
+        "pa": {
+          "name": "Pisces",
+          "element": "ਪਾਣੀ",
+          "modality": "ਮਿਊਟੇਬਲ",
+          "bodyParts": [
+            "ਪੈਰ",
+            "ਲਿੰਫੈਟਿਕ ਸਿਸਟਮ",
+            "ਰੋਗ ਪ੍ਰਤੀਰੋਧਕ ਸ਼ਕਤੀ"
+          ],
+          "guidance": "ਪੈਰਾਂ ਦੀ ਦੇਖਭਾਲ ਅਤੇ ਰੋਗ ਪ੍ਰਤੀਰੋਧਕ ਸਮਰਥਨ ਵਾਲੀਆਂ ਰੁਟੀਨਾਂ।"
+        },
+        "or": {
+          "name": "Pisces",
+          "element": "ଜଳ",
+          "modality": "ପରିବର୍ତ୍ତନଶୀଳ",
+          "bodyParts": [
+            "ପାଦ",
+            "ଲିମ୍ଫାଟିକ୍ ପ୍ରଣାଳୀ",
+            "ପ୍ରତିରକ୍ଷା"
+          ],
+          "guidance": "ପାଦ ଯତ୍ନ ଏବଂ ପ୍ରତିରକ୍ଷା ସମର୍ଥନ କାର୍ଯ୍ୟକ୍ରମ।"
+        },
+        "as": {
+          "name": "Pisces",
+          "element": "পানী",
+          "modality": "পৰিৱৰ্তনশীল",
+          "bodyParts": [
+            "ভৰি",
+            "লিম্ফেটিক প্ৰণালী",
+            "ৰোগপ্ৰতিৰোধ ক্ষমতা"
+          ],
+          "guidance": "ভৰিৰ যত্ন আৰু ৰোগপ্ৰতিৰোধ ক্ষমতা সহায়ক নিয়ম।"
         }
       }
     }
