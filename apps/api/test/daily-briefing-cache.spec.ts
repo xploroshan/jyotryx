@@ -3,10 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
-import { mockOpenAIService, mockKnowledgeService, mockConfigService, createMockRedis, mockUser } from './helpers/mocks';
+import { mockOpenAIService, mockKnowledgeService, mockKbService, mockConfigService, createMockRedis, mockUser } from './helpers/mocks';
 
 describe('DailyBriefingService — Cache Split (Item 6)', () => {
   let service: DailyBriefingService;
@@ -30,6 +31,7 @@ describe('DailyBriefingService — Cache Split (Item 6)', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: REDIS_CLIENT, useValue: redis },
       ],

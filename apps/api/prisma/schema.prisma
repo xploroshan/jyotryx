@@ -513,6 +513,30 @@ model KbPaksha {
   @@map("kb_pakshas")
 }
 
+model KbProfessionInsight {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// Composite "{PROFESSION}:{Planet}", e.g. "SOFTWARE:Sun"
+  tradition  String?
+  i18n       Json     /// { en: { insight }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_profession_insights_key_tradition_key", map: "kb_profession_insights_key_tradition_key")
+  @@map("kb_profession_insights")
+}
+
+model KbBriefingPhrase {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// e.g. "greeting.morning", "quality.excellent", "transit.saturn_return", "summary.template"
+  tradition  String?
+  i18n       Json     /// { en: { text }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_briefing_phrases_key_tradition_key", map: "kb_briefing_phrases_key_tradition_key")
+  @@map("kb_briefing_phrases")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

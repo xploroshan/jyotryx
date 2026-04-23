@@ -23,6 +23,14 @@ export interface KbNamedPayload {
   name: string;
 }
 
+export interface KbProfessionInsightPayload {
+  insight: string;
+}
+
+export interface KbBriefingPhrasePayload {
+  text: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -52,6 +60,8 @@ export class KbService {
   private yogaCache = new Map<string, KbRow<KbNamedPayload>>();
   private varaCache = new Map<string, KbRow<KbNamedPayload>>();
   private pakshaCache = new Map<string, KbRow<KbNamedPayload>>();
+  private professionInsightCache = new Map<string, KbRow<KbProfessionInsightPayload>>();
+  private briefingPhraseCache = new Map<string, KbRow<KbBriefingPhrasePayload>>();
 
   private loaded = {
     planet: false,
@@ -60,6 +70,8 @@ export class KbService {
     yoga: false,
     vara: false,
     paksha: false,
+    professionInsight: false,
+    briefingPhrase: false,
   };
 
   constructor(private readonly prisma: PrismaService) {}
@@ -96,6 +108,25 @@ export class KbService {
     return this.lookup(this.pakshaCache, key, null);
   }
 
+  /**
+   * Look up a per-profession × planet insight. Composite key format
+   * `"{PROFESSION}:{Planet}"` — e.g. `getProfessionInsight("SOFTWARE", "Sun")`
+   * resolves `SOFTWARE:Sun`.
+   */
+  async getProfessionInsight(
+    profession: string,
+    planet: string,
+  ): Promise<KbRow<KbProfessionInsightPayload> | null> {
+    await this.ensureLoaded('professionInsight');
+    return this.lookup(this.professionInsightCache, `${profession}:${planet}`, null);
+  }
+
+  /** Look up a UI phrase by key, e.g. "greeting.morning" or "quality.good". */
+  async getBriefingPhrase(key: string): Promise<KbRow<KbBriefingPhrasePayload> | null> {
+    await this.ensureLoaded('briefingPhrase');
+    return this.lookup(this.briefingPhraseCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -116,7 +147,12 @@ export class KbService {
     this.yogaCache.clear();
     this.varaCache.clear();
     this.pakshaCache.clear();
-    this.loaded = { planet: false, nakshatra: false, tithi: false, yoga: false, vara: false, paksha: false };
+    this.professionInsightCache.clear();
+    this.briefingPhraseCache.clear();
+    this.loaded = {
+      planet: false, nakshatra: false, tithi: false, yoga: false,
+      vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
+    };
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────
@@ -133,12 +169,14 @@ export class KbService {
     if (this.loaded[table]) return;
     try {
       switch (table) {
-        case 'planet':   await this.loadPlanets();    break;
-        case 'nakshatra':await this.loadNakshatras(); break;
-        case 'tithi':    await this.loadTithis();     break;
-        case 'yoga':     await this.loadYogas();      break;
-        case 'vara':     await this.loadVaras();      break;
-        case 'paksha':   await this.loadPakshas();    break;
+        case 'planet':            await this.loadPlanets();            break;
+        case 'nakshatra':         await this.loadNakshatras();         break;
+        case 'tithi':             await this.loadTithis();             break;
+        case 'yoga':              await this.loadYogas();              break;
+        case 'vara':              await this.loadVaras();              break;
+        case 'paksha':            await this.loadPakshas();            break;
+        case 'professionInsight': await this.loadProfessionInsights(); break;
+        case 'briefingPhrase':    await this.loadBriefingPhrases();    break;
       }
       this.loaded[table] = true;
     } catch (err) {
@@ -171,6 +209,18 @@ export class KbService {
   private async loadPakshas(): Promise<void> {
     const rows = await this.prisma.kbPaksha.findMany();
     for (const r of rows) this.pakshaCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadProfessionInsights(): Promise<void> {
+    const model: any = (this.prisma as any).kbProfessionInsight;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.professionInsightCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadBriefingPhrases(): Promise<void> {
+    const model: any = (this.prisma as any).kbBriefingPhrase;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.briefingPhraseCache.set(cacheKey(r.key, r.tradition), r as any);
   }
 }
 

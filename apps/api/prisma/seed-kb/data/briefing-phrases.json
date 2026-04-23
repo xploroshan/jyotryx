@@ -1,0 +1,20 @@
+{
+  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts — the timeGreeting branch in computeUserOverlay, the qualityDescriptions map, the getTransitAlert templates, and the summary template. Summary template uses placeholders that the service substitutes at render time: {quality_desc}, {vara}, {day_ruler}, {nakshatra}, {nakshatra_quality}, {insight}. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ text: string }",
+  "rows": [
+    { "key": "greeting.morning",         "tradition": null, "i18n": { "en": { "text": "Good Morning" } } },
+    { "key": "greeting.afternoon",       "tradition": null, "i18n": { "en": { "text": "Good Afternoon" } } },
+    { "key": "greeting.evening",         "tradition": null, "i18n": { "en": { "text": "Good Evening" } } },
+
+    { "key": "quality.excellent",        "tradition": null, "i18n": { "en": { "text": "Stars align beautifully today — seize opportunities with confidence." } } },
+    { "key": "quality.good",             "tradition": null, "i18n": { "en": { "text": "A favorable day with positive energy supporting your endeavors." } } },
+    { "key": "quality.moderate",         "tradition": null, "i18n": { "en": { "text": "A balanced day — focus on steady progress rather than bold moves." } } },
+    { "key": "quality.challenging",      "tradition": null, "i18n": { "en": { "text": "Navigate carefully today — patience and remedies will help you through." } } },
+
+    { "key": "transit.saturn_return",    "tradition": null, "i18n": { "en": { "text": "Saturn Return period active — major career and life restructuring. Embrace discipline and long-term thinking." } } },
+    { "key": "transit.jupiter_return",   "tradition": null, "i18n": { "en": { "text": "Jupiter Return cycle — expansion, growth, and new opportunities. Say yes to big possibilities." } } },
+    { "key": "transit.rahu_ketu",        "tradition": null, "i18n": { "en": { "text": "Rahu-Ketu axis shifting in your chart — expect unconventional opportunities and karmic turns this month." } } },
+
+    { "key": "summary.template",         "tradition": null, "i18n": { "en": { "text": "{quality_desc} Today is {vara} ruled by {day_ruler}. {nakshatra} Nakshatra brings {nakshatra_quality} energy. {insight}" } } }
+  ]
+}

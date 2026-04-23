@@ -6,6 +6,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { AstrologyController } from '../src/modules/astrology/astrology.controller';
@@ -23,6 +24,7 @@ import { EphemerisService } from '../src/ephemeris/ephemeris.service';
 import { StorageService } from '../src/storage/storage.service';
 import {
   mockKnowledgeService,
+  mockKbService,
   mockOpenAIService,
   mockPrismaService,
   mockCacheService,
@@ -367,6 +369,7 @@ describe('E2E: Daily Briefing Endpoints', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
       ],
     })
@@ -554,6 +557,7 @@ describe('E2E: Cross-Feature Consistency', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     }).compile();

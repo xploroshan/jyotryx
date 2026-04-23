@@ -12,6 +12,26 @@ export const mockKnowledgeService = () => ({
   getDocumentCount: jest.fn().mockResolvedValue(100),
 });
 
+/**
+ * Mock KbService whose lookups return null by default (matching prod behaviour
+ * when the migration hasn't been applied). Callers that need seeded rows can
+ * override specific methods via `jest.fn().mockResolvedValueOnce(...)` or
+ * swap the lookups per test.
+ */
+export const mockKbService = () => ({
+  getPlanet:    jest.fn().mockResolvedValue(null),
+  getNakshatra: jest.fn().mockResolvedValue(null),
+  getTithi:     jest.fn().mockResolvedValue(null),
+  getYoga:      jest.fn().mockResolvedValue(null),
+  getVara:      jest.fn().mockResolvedValue(null),
+  getPaksha:    jest.fn().mockResolvedValue(null),
+  getProfessionInsight: jest.fn().mockResolvedValue(null),
+  getBriefingPhrase:    jest.fn().mockResolvedValue(null),
+  render: jest.fn().mockReturnValue(null),
+  renderStatus: jest.fn().mockReturnValue(null),
+  invalidate: jest.fn(),
+});
+
 export const mockOpenAIService = () => ({
   chat: jest.fn().mockResolvedValue(null),
   chatCompletion: jest.fn().mockResolvedValue(null),

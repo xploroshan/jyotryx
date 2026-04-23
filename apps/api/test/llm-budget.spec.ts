@@ -18,8 +18,9 @@ import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefi
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
-import { mockPrismaService, mockKnowledgeService, mockCacheService, mockUser } from './helpers/mocks';
+import { mockPrismaService, mockKnowledgeService, mockKbService, mockCacheService, mockUser } from './helpers/mocks';
 
 interface Baseline {
   scenarios: Record<string, { maxCalls: number; description: string }>;
@@ -75,6 +76,7 @@ describe('LLM cost regression budget', () => {
           { provide: PrismaService, useValue: prisma },
           { provide: OpenAIService, useValue: counter.stub },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
           { provide: MemoryCacheService, useValue: cache },
         ],
       }).compile();

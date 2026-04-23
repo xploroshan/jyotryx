@@ -2,12 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { VectorSearchService } from '../src/knowledge/vector-search.service';
 import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
-import { mockOpenAIService, mockKnowledgeService, mockPrismaService, mockCacheService, mockUser, createMockRedis, mockVectorSearchService, mockEmbeddingService } from './helpers/mocks';
+import { mockOpenAIService, mockKnowledgeService, mockKbService, mockPrismaService, mockCacheService, mockUser, createMockRedis, mockVectorSearchService, mockEmbeddingService } from './helpers/mocks';
 
 // ─── Response Time Benchmarks ────────────────────────────────────────────────
 
@@ -29,6 +30,7 @@ describe('Performance: Response Time Benchmarks', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: cacheService },
       ],
     }).compile();
