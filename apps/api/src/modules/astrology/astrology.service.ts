@@ -1262,7 +1262,10 @@ export class AstrologyService {
     const profectedSign = ALL_SIGNS[(profectedHouse - 1) % 12];
     const lordByIndex = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
     const lordOfYear = lordByIndex[ALL_SIGNS.indexOf(profectedSign as any)];
-    const profTpl = await this.kbService.getBriefingPhrase('hellenistic-profections.interpretation.template');
+    const [profTpl, lordRow] = await Promise.all([
+      this.kbService.getBriefingPhrase('hellenistic-profections.interpretation.template'),
+      this.kbService.getHellenisticPlanet(lordOfYear),
+    ]);
     const profTemplate = this.kbService.render(profTpl, dto.locale)?.text
       ?? 'At age {age} you profect to the {profectedHouse}th house — sign {sign}, ruled by {lord}. Themes of this year follow the natural topics of that house.';
     const localizedInterpretation = profTemplate
@@ -1276,6 +1279,7 @@ export class AstrologyService {
       profectedHouse,
       profectedSign,
       lordOfYear,
+      lordContext: this.kbService.render(lordRow, dto.locale),
       interpretation: localizedInterpretation,
     };
   }
@@ -1296,11 +1300,15 @@ export class AstrologyService {
     });
     const ascSign = natal.ascendant.sign;
     const moonSign = natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown';
-    const [judgmentRow, querentRow, quesitedRow, moonRow] = await Promise.all([
+    const ascIdx = ALL_SIGNS.indexOf(ascSign as any);
+    const querentLord = ascIdx >= 0 ? SIGN_LORDS[ascIdx] : null;
+    const [judgmentRow, querentRow, quesitedRow, moonRow, querentLordRow, moonLordRow] = await Promise.all([
       this.kbService.getBriefingPhrase('horary.judgment.template'),
       this.kbService.getBriefingPhrase('horary.querent.template'),
       this.kbService.getBriefingPhrase('horary.quesited.static'),
       this.kbService.getBriefingPhrase('horary.moon.template'),
+      querentLord ? this.kbService.getHellenisticPlanet(querentLord) : Promise.resolve(null),
+      this.kbService.getHellenisticPlanet('Moon'),
     ]);
     const judgmentTpl = this.kbService.render(judgmentRow, dto.locale)?.text
       ?? 'With the chart cast at {time}, the ascendant in {sign} favours a cautious, methodical approach to your question. Consider the state of the querent\'s and quesited\'s significators before committing.';
@@ -1323,8 +1331,11 @@ export class AstrologyService {
         ascendant: natal.ascendant,
         significators: {
           querent,
+          querentLord,
+          querentLordContext: this.kbService.render(querentLordRow, dto.locale),
           quesited,
           moon: moonSig,
+          moonContext: this.kbService.render(moonLordRow, dto.locale),
         },
       },
       judgment,
@@ -1639,10 +1650,12 @@ export class AstrologyService {
     };
     const majorLord = signLords[majorSign];
     const minorLord = signLords[minorSign];
-    const [majorRow, minorRow, interpRow] = await Promise.all([
+    const [majorRow, minorRow, interpRow, majorLordRow, minorLordRow] = await Promise.all([
       this.kbService.getBriefingPhrase('zodiacal-releasing.major.template'),
       this.kbService.getBriefingPhrase('zodiacal-releasing.minor.template'),
       this.kbService.getBriefingPhrase('zodiacal-releasing.interpretation.template'),
+      this.kbService.getHellenisticPlanet(majorLord),
+      majorLord === minorLord ? Promise.resolve(null) : this.kbService.getHellenisticPlanet(minorLord),
     ]);
     const majorTpl = this.kbService.render(majorRow, dto.locale)?.text
       ?? '12-year general chapter ruled by {lord}.';
@@ -1658,17 +1671,24 @@ export class AstrologyService {
       .replace('{majorLord}', majorLord)
       .replace('{minorSign}', minorSign)
       .replace('{minorLord}', minorLord);
+    const majorLordContext = this.kbService.render(majorLordRow, dto.locale);
+    // When majorLord === minorLord we skipped the second fetch; reuse.
+    const minorLordContext = majorLord === minorLord
+      ? majorLordContext
+      : this.kbService.render(minorLordRow, dto.locale);
     return {
       userId,
       ageYears,
       majorPeriod: {
         sign: majorSign,
         lord: majorLord,
+        lordContext: majorLordContext,
         description: majorDescription,
       },
       minorPeriod: {
         sign: minorSign,
         lord: minorLord,
+        lordContext: minorLordContext,
         description: minorDescription,
       },
       interpretation,

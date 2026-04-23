@@ -36,6 +36,7 @@ export const mockKbService = () => ({
   getFlyingStar:        jest.fn().mockResolvedValue(null),
   getKarana:            jest.fn().mockResolvedValue(null),
   getDosha:             jest.fn().mockResolvedValue(null),
+  getHellenisticPlanet: jest.fn().mockResolvedValue(null),
   render: jest.fn().mockReturnValue(null),
   renderStatus: jest.fn().mockReturnValue(null),
   invalidate: jest.fn(),

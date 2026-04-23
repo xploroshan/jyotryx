@@ -436,9 +436,10 @@ model KnowledgeDocument {
 // Lookups go through `KbService`; see `apps/api/src/knowledge/kb.service.ts`.
 //
 // `tradition` is null when a row is shared across systems (e.g. Sun is one
-// KbPlanet row used by Vedic + Hellenistic). Different entity → separate
-// row with `tradition` set (e.g. Hellenistic sect-aware overlay, not yet
-// wired — see Track B4 in the rollout plan).
+// KbPlanet row used by Vedic + Hellenistic narrative surfaces). Different
+// entity → a separate row with `tradition` set, OR a dedicated table when
+// the payload shape is different enough from the shared case — see
+// `KbHellenisticPlanet` below for the B4 Hellenistic sect-aware overlay.
 
 model KbPlanet {
   id         String   @id @default(uuid()) @db.Uuid
@@ -644,6 +645,18 @@ model KbDosha {
 
   @@unique([key, tradition], name: "kb_doshas_key_tradition_key", map: "kb_doshas_key_tradition_key")
   @@map("kb_doshas")
+}
+
+model KbHellenisticPlanet {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// "Sun".."Saturn" (7 classical planets)
+  tradition  String?
+  i18n       Json     /// { en: { name, sectLabel, joyHouse, joyDescription, sectRoleLabel, description }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_hellenistic_planets_key_tradition_key", map: "kb_hellenistic_planets_key_tradition_key")
+  @@map("kb_hellenistic_planets")
 }
 
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────

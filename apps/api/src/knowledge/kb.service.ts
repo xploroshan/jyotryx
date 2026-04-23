@@ -80,6 +80,15 @@ export interface KbDoshaPayload {
   remedies: string[];
 }
 
+export interface KbHellenisticPlanetPayload {
+  name: string;
+  sectLabel: string;
+  joyHouse: string;
+  joyDescription: string;
+  sectRoleLabel: string;
+  description: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -120,6 +129,7 @@ export class KbService {
   private flyingStarCache = new Map<string, KbRow<KbFlyingStarPayload>>();
   private karanaCache = new Map<string, KbRow<KbNamedPayload>>();
   private doshaCache = new Map<string, KbRow<KbDoshaPayload>>();
+  private hellenisticPlanetCache = new Map<string, KbRow<KbHellenisticPlanetPayload>>();
 
   private loaded = {
     planet: false,
@@ -139,6 +149,7 @@ export class KbService {
     flyingStar: false,
     karana: false,
     dosha: false,
+    hellenisticPlanet: false,
   };
 
   constructor(private readonly prisma: PrismaService) {}
@@ -260,6 +271,18 @@ export class KbService {
     return this.lookup(this.doshaCache, key, null);
   }
 
+  /**
+   * Hellenistic sect-aware planet overlay. Key is the canonical English
+   * planet name ("Sun".."Saturn"). Payload carries the localized sect
+   * label, house of joy, sect role, and prose description — used by the
+   * Hellenistic endpoints in astrology.service.ts to enrich lord-of-year
+   * / major- and minor-period lords / ascendant lord.
+   */
+  async getHellenisticPlanet(key: string): Promise<KbRow<KbHellenisticPlanetPayload> | null> {
+    await this.ensureLoaded('hellenisticPlanet');
+    return this.lookup(this.hellenisticPlanetCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -291,12 +314,13 @@ export class KbService {
     this.flyingStarCache.clear();
     this.karanaCache.clear();
     this.doshaCache.clear();
+    this.hellenisticPlanetCache.clear();
     this.loaded = {
       planet: false, nakshatra: false, tithi: false, yoga: false,
       vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
       numberMeaning: false, businessSector: false, personalYearTheme: false,
       reportSection: false, zodiacSign: false, chineseAnimal: false,
-      flyingStar: false, karana: false, dosha: false,
+      flyingStar: false, karana: false, dosha: false, hellenisticPlanet: false,
     };
   }
 
@@ -331,6 +355,7 @@ export class KbService {
         case 'flyingStar':        await this.loadFlyingStars();        break;
         case 'karana':            await this.loadKaranas();            break;
         case 'dosha':             await this.loadDoshas();             break;
+        case 'hellenisticPlanet': await this.loadHellenisticPlanets(); break;
       }
       this.loaded[table] = true;
     } catch (err) {
@@ -429,6 +454,12 @@ export class KbService {
     if (!model?.findMany) return;
     const rows = await model.findMany();
     for (const r of rows) this.doshaCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadHellenisticPlanets(): Promise<void> {
+    const model: any = (this.prisma as any).kbHellenisticPlanet;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.hellenisticPlanetCache.set(cacheKey(r.key, r.tradition), r as any);
   }
 }
 

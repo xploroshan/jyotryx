@@ -1,0 +1,104 @@
+{
+  "_source": "Classical Hellenistic astrology reference — seven-planet sect alignment (Sun/Jupiter/Saturn diurnal; Moon/Venus/Mars nocturnal; Mercury flexible), planetary joys (Sun=9, Moon=3, Mars=6, Mercury=1, Jupiter=11, Venus=5, Saturn=12), and sect roles (Sun+Moon as sect lights; Jupiter/Venus as sect benefics; Saturn/Mars as sect malefics; Mercury neutral). Canonized by Valens, Dorotheus, Ptolemy; mirrored in modern Hellenistic revival scholarship (Brennan, Hand, George). The fields `sectLabel` and `sectRoleLabel` carry the semantic labels as user-facing strings (translatable). `joyHouse` is a stable numeric token preserved across locales. `joyDescription` + `description` are full prose. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ name: string, sectLabel: string, joyHouse: string, joyDescription: string, sectRoleLabel: string, description: string }",
+  "rows": [
+    {
+      "key": "Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sun",
+          "sectLabel": "Diurnal",
+          "joyHouse": "9",
+          "joyDescription": "The Sun joys in the 9th house of religion, philosophy, travel, and the divine — the place of higher vision where its light illuminates the sacred topics of the chart.",
+          "sectRoleLabel": "Sect light of the day",
+          "description": "In Hellenistic astrology the Sun is the chief luminary of day-born charts, governing authority, vitality, the father, and the public persona. As the diurnal sect light, it coordinates with Jupiter (diurnal benefic) and Saturn (diurnal malefic) to set the tone of the day chart."
+        }
+      }
+    },
+    {
+      "key": "Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Moon",
+          "sectLabel": "Nocturnal",
+          "joyHouse": "3",
+          "joyDescription": "The Moon joys in the 3rd house of siblings, short journeys, and the goddess — a place of daily routine and kin where its reflective light is most at home.",
+          "sectRoleLabel": "Sect light of the night",
+          "description": "In Hellenistic astrology the Moon is the chief luminary of night-born charts, governing the body, emotions, the mother, and the unfolding of life day to day. As the nocturnal sect light, it coordinates with Venus (nocturnal benefic) and Mars (nocturnal malefic) to set the tone of the night chart."
+        }
+      }
+    },
+    {
+      "key": "Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mars",
+          "sectLabel": "Nocturnal",
+          "joyHouse": "6",
+          "joyDescription": "Mars joys in the 6th house of illness, toil, and servitude — topics that align with its martial, striving nature and where its drive finds a useful outlet.",
+          "sectRoleLabel": "Nocturnal malefic",
+          "description": "In Hellenistic astrology Mars is the malefic of the night sect — more temperate in night-born charts and more disruptive in day-born ones. It governs cutting, separation, soldiery, and bold action. Placement and sect status together determine whether its energy is generative or destructive in a given chart."
+        }
+      }
+    },
+    {
+      "key": "Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mercury",
+          "sectLabel": "Flexible",
+          "joyHouse": "1",
+          "joyDescription": "Mercury joys in the 1st house of self and body — the place of the native's appearance, disposition, and the unfolding of identity, where its quick-witted messenger nature orients the whole chart.",
+          "sectRoleLabel": "Neutral",
+          "description": "In Hellenistic astrology Mercury is sect-flexible: it takes on the sect of the luminary it is configured with — diurnal when closer to the Sun, nocturnal when closer to the Moon. It governs speech, commerce, learning, and adaptability, operating as messenger between the other planets rather than taking a fixed side."
+        }
+      }
+    },
+    {
+      "key": "Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Jupiter",
+          "sectLabel": "Diurnal",
+          "joyHouse": "11",
+          "joyDescription": "Jupiter joys in the 11th house of good spirit — the place of friends, patrons, hopes, and received blessings, where its expansive, fortunate nature has the widest field to act.",
+          "sectRoleLabel": "Diurnal benefic",
+          "description": "In Hellenistic astrology Jupiter is the benefic of the day sect — its blessings flow most freely in day-born charts. It governs expansion, wisdom, foreign travel, and the generous patron. Jupiter's sect status tempers how abundantly its gifts materialize through a given life."
+        }
+      }
+    },
+    {
+      "key": "Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Venus",
+          "sectLabel": "Nocturnal",
+          "joyHouse": "5",
+          "joyDescription": "Venus joys in the 5th house of good fortune — the place of children, pleasure, and creative work, where its harmonising, aesthetic nature finds its most delighted expression.",
+          "sectRoleLabel": "Nocturnal benefic",
+          "description": "In Hellenistic astrology Venus is the benefic of the night sect — its gifts arrive most fully in night-born charts. It governs love, art, beauty, and social grace. Like Jupiter, Venus is shaped by sect: in-sect Venus attracts; out-of-sect Venus still blesses, but with more effort."
+        }
+      }
+    },
+    {
+      "key": "Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Saturn",
+          "sectLabel": "Diurnal",
+          "joyHouse": "12",
+          "joyDescription": "Saturn joys in the 12th house of bad spirit — the place of hidden enemies, exile, and loss, where its sober, constricting nature addresses what must be faced away from public view.",
+          "sectRoleLabel": "Diurnal malefic",
+          "description": "In Hellenistic astrology Saturn is the malefic of the day sect — more temperate in day-born charts and harsher in night-born ones. It governs boundaries, ageing, discipline, and enduring work. Sect status determines whether Saturn's weight is steadying maturity or grinding hardship in a given chart."
+        }
+      }
+    }
+  ]
+}
