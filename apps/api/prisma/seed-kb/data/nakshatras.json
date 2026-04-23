@@ -2,32 +2,1463 @@
   "_source": "English quality phrases from getNakshatraQuality() in apps/api/src/modules/daily-briefing/daily-briefing.service.ts. Hindi names mined from apps/web/src/i18n/panchang-terms.ts (HI.nakshatras). Hindi quality phrases mined from HI.nakshatraQualities. Canon: standard 27 sidereal asterisms from BPHS; Lahiri ayanamsa canonical spellings (Mula not Moola — the 'Moola' variant in daily-briefing.service.ts is a drift fixed during A1).",
   "_shape": "{ name: string, quality: string }",
   "rows": [
-    { "key": "Ashwini", "tradition": null, "i18n": { "en": { "name": "Ashwini", "quality": "swift and healing" }, "hi": { "name": "अश्विनी", "quality": "तीव्र और उपचारात्मक" } } },
-    { "key": "Bharani", "tradition": null, "i18n": { "en": { "name": "Bharani", "quality": "transformative" }, "hi": { "name": "भरणी", "quality": "परिवर्तनकारी" } } },
-    { "key": "Krittika", "tradition": null, "i18n": { "en": { "name": "Krittika", "quality": "purifying and sharp" }, "hi": { "name": "कृत्तिका", "quality": "शुद्धिकारक और तीक्ष्ण" } } },
-    { "key": "Rohini", "tradition": null, "i18n": { "en": { "name": "Rohini", "quality": "creative and nurturing" }, "hi": { "name": "रोहिणी", "quality": "रचनात्मक और पोषक" } } },
-    { "key": "Mrigashira", "tradition": null, "i18n": { "en": { "name": "Mrigashira", "quality": "curious and seeking" }, "hi": { "name": "मृगशिरा", "quality": "जिज्ञासु और खोजी" } } },
-    { "key": "Ardra", "tradition": null, "i18n": { "en": { "name": "Ardra", "quality": "intense and cleansing" }, "hi": { "name": "आर्द्रा", "quality": "तीव्र और शुद्धिकारक" } } },
-    { "key": "Punarvasu", "tradition": null, "i18n": { "en": { "name": "Punarvasu", "quality": "renewing and optimistic" }, "hi": { "name": "पुनर्वसु", "quality": "नवीनीकारक और आशावादी" } } },
-    { "key": "Pushya", "tradition": null, "i18n": { "en": { "name": "Pushya", "quality": "nourishing and auspicious" }, "hi": { "name": "पुष्य", "quality": "पोषक और शुभ" } } },
-    { "key": "Ashlesha", "tradition": null, "i18n": { "en": { "name": "Ashlesha", "quality": "mystical and introspective" }, "hi": { "name": "आश्लेषा", "quality": "रहस्यमय और आत्मनिरीक्षी" } } },
-    { "key": "Magha", "tradition": null, "i18n": { "en": { "name": "Magha", "quality": "regal and ancestral" }, "hi": { "name": "मघा", "quality": "राजसी और पैतृक" } } },
-    { "key": "Purva Phalguni", "tradition": null, "i18n": { "en": { "name": "Purva Phalguni", "quality": "pleasurable and creative" }, "hi": { "name": "पूर्व फाल्गुनी", "quality": "सुखद और रचनात्मक" } } },
-    { "key": "Uttara Phalguni", "tradition": null, "i18n": { "en": { "name": "Uttara Phalguni", "quality": "generous and supportive" }, "hi": { "name": "उत्तर फाल्गुनी", "quality": "उदार और सहायक" } } },
-    { "key": "Hasta", "tradition": null, "i18n": { "en": { "name": "Hasta", "quality": "skillful and productive" }, "hi": { "name": "हस्त", "quality": "कुशल और उत्पादक" } } },
-    { "key": "Chitra", "tradition": null, "i18n": { "en": { "name": "Chitra", "quality": "artistic and brilliant" }, "hi": { "name": "चित्रा", "quality": "कलात्मक और तेजस्वी" } } },
-    { "key": "Swati", "tradition": null, "i18n": { "en": { "name": "Swati", "quality": "independent and adaptable" }, "hi": { "name": "स्वाति", "quality": "स्वतंत्र और अनुकूलनीय" } } },
-    { "key": "Vishakha", "tradition": null, "i18n": { "en": { "name": "Vishakha", "quality": "determined and goal-oriented" }, "hi": { "name": "विशाखा", "quality": "दृढ़ और लक्ष्य-केंद्रित" } } },
-    { "key": "Anuradha", "tradition": null, "i18n": { "en": { "name": "Anuradha", "quality": "devotional and friendly" }, "hi": { "name": "अनुराधा", "quality": "भक्तिपूर्ण और मैत्रीपूर्ण" } } },
-    { "key": "Jyeshtha", "tradition": null, "i18n": { "en": { "name": "Jyeshtha", "quality": "protective and senior" }, "hi": { "name": "ज्येष्ठा", "quality": "संरक्षक और ज्येष्ठ" } } },
-    { "key": "Mula", "tradition": null, "i18n": { "en": { "name": "Mula", "quality": "foundational and transformative" }, "hi": { "name": "मूल", "quality": "मौलिक और परिवर्तनकारी" } } },
-    { "key": "Purva Ashadha", "tradition": null, "i18n": { "en": { "name": "Purva Ashadha", "quality": "invincible and confident" }, "hi": { "name": "पूर्वाषाढ़ा", "quality": "अजेय और आत्मविश्वासी" } } },
-    { "key": "Uttara Ashadha", "tradition": null, "i18n": { "en": { "name": "Uttara Ashadha", "quality": "victorious and universal" }, "hi": { "name": "उत्तराषाढ़ा", "quality": "विजयी और सार्वभौमिक" } } },
-    { "key": "Shravana", "tradition": null, "i18n": { "en": { "name": "Shravana", "quality": "learning and listening" }, "hi": { "name": "श्रवण", "quality": "सीखने और सुनने वाली" } } },
-    { "key": "Dhanishta", "tradition": null, "i18n": { "en": { "name": "Dhanishta", "quality": "prosperous and rhythmic" }, "hi": { "name": "धनिष्ठा", "quality": "समृद्ध और लयबद्ध" } } },
-    { "key": "Shatabhisha", "tradition": null, "i18n": { "en": { "name": "Shatabhisha", "quality": "healing and mysterious" }, "hi": { "name": "शतभिषा", "quality": "उपचारात्मक और रहस्यमय" } } },
-    { "key": "Purva Bhadrapada", "tradition": null, "i18n": { "en": { "name": "Purva Bhadrapada", "quality": "fierce and passionate" }, "hi": { "name": "पूर्व भाद्रपद", "quality": "उग्र और भावुक" } } },
-    { "key": "Uttara Bhadrapada", "tradition": null, "i18n": { "en": { "name": "Uttara Bhadrapada", "quality": "wise and deep" }, "hi": { "name": "उत्तर भाद्रपद", "quality": "बुद्धिमान और गहरी" } } },
-    { "key": "Revati", "tradition": null, "i18n": { "en": { "name": "Revati", "quality": "prosperous and completing" }, "hi": { "name": "रेवती", "quality": "समृद्ध और पूर्णकारक" } } }
+    {
+      "key": "Ashwini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ashwini",
+          "quality": "swift and healing"
+        },
+        "hi": {
+          "name": "अश्विनी",
+          "quality": "तीव्र और उपचारात्मक"
+        },
+        "ta": {
+          "name": "Ashwini",
+          "quality": "வேகமான மற்றும் குணப்படுத்தும்"
+        },
+        "te": {
+          "name": "Ashwini",
+          "quality": "త్వరిత మరియు చికిత్స"
+        },
+        "bn": {
+          "name": "Ashwini",
+          "quality": "দ্রুত এবং নিরাময়কারী"
+        },
+        "mr": {
+          "name": "Ashwini",
+          "quality": "वेगवान आणि उपचार करणारा"
+        },
+        "gu": {
+          "name": "Ashwini",
+          "quality": "ઝડપી અને ઉપચારક"
+        },
+        "kn": {
+          "name": "Ashwini",
+          "quality": "ವೇಗದ ಮತ್ತು ಚಿಕಿತ್ಸಕ"
+        },
+        "ml": {
+          "name": "Ashwini",
+          "quality": "വേഗതയും ചികിത്സയും"
+        },
+        "pa": {
+          "name": "Ashwini",
+          "quality": "ਤੇਜ਼ ਅਤੇ ਚੰਗਾ ਕਰਨ ਵਾਲਾ"
+        },
+        "or": {
+          "name": "Ashwini",
+          "quality": "ଦ୍ରୁତ ଏବଂ ଆରୋଗ୍ୟକାରୀ"
+        },
+        "as": {
+          "name": "Ashwini",
+          "quality": "দ্ৰুত আৰু আৰোগ্যকৰ"
+        }
+      }
+    },
+    {
+      "key": "Bharani",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Bharani",
+          "quality": "transformative"
+        },
+        "hi": {
+          "name": "भरणी",
+          "quality": "परिवर्तनकारी"
+        },
+        "ta": {
+          "name": "Bharani",
+          "quality": "மாற்றம் செய்யும்"
+        },
+        "te": {
+          "name": "Bharani",
+          "quality": "మార్పు తీసుకువచ్చే"
+        },
+        "bn": {
+          "name": "Bharani",
+          "quality": "রূপান্তরমূলক"
+        },
+        "mr": {
+          "name": "Bharani",
+          "quality": "परिवर्तनशील"
+        },
+        "gu": {
+          "name": "Bharani",
+          "quality": "પરિવર્તનકારી"
+        },
+        "kn": {
+          "name": "Bharani",
+          "quality": "ಪರಿವರ್ತನಾತ್ಮಕ"
+        },
+        "ml": {
+          "name": "Bharani",
+          "quality": "മാറ്റം വരുത്തുന്ന"
+        },
+        "pa": {
+          "name": "Bharani",
+          "quality": "ਰੂਪਾਂਤਰਕ"
+        },
+        "or": {
+          "name": "Bharani",
+          "quality": "ପରିବର୍ତ୍ତନଶୀଳ"
+        },
+        "as": {
+          "name": "Bharani",
+          "quality": "পৰিবৰ্তনশীল"
+        }
+      }
+    },
+    {
+      "key": "Krittika",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Krittika",
+          "quality": "purifying and sharp"
+        },
+        "hi": {
+          "name": "कृत्तिका",
+          "quality": "शुद्धिकारक और तीक्ष्ण"
+        },
+        "ta": {
+          "name": "Krittika",
+          "quality": "சுத்திகரிக்கும் மற்றும் கூர்மையான"
+        },
+        "te": {
+          "name": "Krittika",
+          "quality": "శుద్ధి చేసే మరియు పదునైన"
+        },
+        "bn": {
+          "name": "Krittika",
+          "quality": "পরিশোধনকারী এবং তীক্ষ্ণ"
+        },
+        "mr": {
+          "name": "Krittika",
+          "quality": "शुद्ध करणारी आणि तीक्ष्ण"
+        },
+        "gu": {
+          "name": "Krittika",
+          "quality": "શુદ્ધિકરણ અને તીક્ષ્ણ"
+        },
+        "kn": {
+          "name": "Krittika",
+          "quality": "ಶುದ್ಧೀಕರಿಸುವ ಮತ್ತು ತೀಕ್ಷ್ಣ"
+        },
+        "ml": {
+          "name": "Krittika",
+          "quality": "ശുദ്ധീകരിക്കുന്നതും മൂർച്ചയുള്ളതും"
+        },
+        "pa": {
+          "name": "Krittika",
+          "quality": "ਸਾਫ਼ ਕਰਨ ਵਾਲਾ ਅਤੇ ਤੀਖ਼ਾ"
+        },
+        "or": {
+          "name": "Krittika",
+          "quality": "ଶୁଦ୍ଧିକରଣ ଏବଂ ତୀକ୍ଷ୍ଣ"
+        },
+        "as": {
+          "name": "Krittika",
+          "quality": "শুদ্ধিকৰণ আৰু তীক্ষ্ণ"
+        }
+      }
+    },
+    {
+      "key": "Rohini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Rohini",
+          "quality": "creative and nurturing"
+        },
+        "hi": {
+          "name": "रोहिणी",
+          "quality": "रचनात्मक और पोषक"
+        },
+        "ta": {
+          "name": "Rohini",
+          "quality": "படைப்பாற்றலும் பராமரிப்பும்"
+        },
+        "te": {
+          "name": "Rohini",
+          "quality": "సృజనాత్మక మరియు పోషణాత్మక"
+        },
+        "bn": {
+          "name": "Rohini",
+          "quality": "সৃজনশীল এবং লালনপালনকারী"
+        },
+        "mr": {
+          "name": "Rohini",
+          "quality": "सर्जनशील आणि पोषण करणारी"
+        },
+        "gu": {
+          "name": "Rohini",
+          "quality": "સર્જનાત્મક અને પોષણકારી"
+        },
+        "kn": {
+          "name": "Rohini",
+          "quality": "ಸೃಜನಾತ್ಮಕ ಮತ್ತು ಪೋಷಕ"
+        },
+        "ml": {
+          "name": "Rohini",
+          "quality": "സൃഷ്ടിപരവും പോഷകവുമാണ്"
+        },
+        "pa": {
+          "name": "Rohini",
+          "quality": "ਰਚਨਾਤਮਕ ਅਤੇ ਪਾਲਣਹਾਰ"
+        },
+        "or": {
+          "name": "Rohini",
+          "quality": "ସୃଜନଶୀଳ ଏବଂ ପାଳନକାରୀ"
+        },
+        "as": {
+          "name": "Rohini",
+          "quality": "সৃষ্টিশীল আৰু লালনপালনকাৰী"
+        }
+      }
+    },
+    {
+      "key": "Mrigashira",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mrigashira",
+          "quality": "curious and seeking"
+        },
+        "hi": {
+          "name": "मृगशिरा",
+          "quality": "जिज्ञासु और खोजी"
+        },
+        "ta": {
+          "name": "Mrigashira",
+          "quality": "ஆர்வமாகவும் தேடுவதிலும்"
+        },
+        "te": {
+          "name": "Mrigashira",
+          "quality": "ఆసక్తి మరియు అన్వేషణ"
+        },
+        "bn": {
+          "name": "Mrigashira",
+          "quality": "কৌতূহলী এবং অনুসন্ধানী"
+        },
+        "mr": {
+          "name": "Mrigashira",
+          "quality": "जिज्ञासू आणि शोधत आहे"
+        },
+        "gu": {
+          "name": "Mrigashira",
+          "quality": "જિજ્ઞાસુ અને શોધી રહ્યા છે"
+        },
+        "kn": {
+          "name": "Mrigashira",
+          "quality": "ಕುತೂಹಲ ಮತ್ತು ಹುಡುಕುವ"
+        },
+        "ml": {
+          "name": "Mrigashira",
+          "quality": "ആസക്തിയും അന്വേഷിക്കുന്നവനും"
+        },
+        "pa": {
+          "name": "Mrigashira",
+          "quality": "ਜਿਗਿਆਸੂ ਅਤੇ ਖੋਜੀ"
+        },
+        "or": {
+          "name": "Mrigashira",
+          "quality": "ଜିଜ୍ଞାସୁ ଏବଂ ଖୋଜୁଥିବା"
+        },
+        "as": {
+          "name": "Mrigashira",
+          "quality": "উৎসুক আৰু সন্ধানী"
+        }
+      }
+    },
+    {
+      "key": "Ardra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ardra",
+          "quality": "intense and cleansing"
+        },
+        "hi": {
+          "name": "आर्द्रा",
+          "quality": "तीव्र और शुद्धिकारक"
+        },
+        "ta": {
+          "name": "Ardra",
+          "quality": "தீவிரமான மற்றும் சுத்திகரிக்கும்"
+        },
+        "te": {
+          "name": "Ardra",
+          "quality": "తీవ్ర మరియు శుభ్రపరిచే"
+        },
+        "bn": {
+          "name": "Ardra",
+          "quality": "তীব্র এবং পরিশোধনকারী"
+        },
+        "mr": {
+          "name": "Ardra",
+          "quality": "तीव्र आणि शुद्ध करणारी"
+        },
+        "gu": {
+          "name": "Ardra",
+          "quality": "તીવ્ર અને શુદ્ધિકરણ"
+        },
+        "kn": {
+          "name": "Ardra",
+          "quality": "ತೀವ್ರ ಮತ್ತು ಶುದ್ಧೀಕರಣ"
+        },
+        "ml": {
+          "name": "Ardra",
+          "quality": "തീവ്രവും ശുദ്ധീകരണവും"
+        },
+        "pa": {
+          "name": "Ardra",
+          "quality": "ਤੀਵ੍ਰ ਅਤੇ ਸਫਾਈ ਕਰਨ ਵਾਲਾ"
+        },
+        "or": {
+          "name": "Ardra",
+          "quality": "ତୀବ୍ର ଏବଂ ପରିଶୋଧନାତ୍ମକ"
+        },
+        "as": {
+          "name": "Ardra",
+          "quality": "তীব্ৰ আৰু পৰিষ্কাৰক"
+        }
+      }
+    },
+    {
+      "key": "Punarvasu",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Punarvasu",
+          "quality": "renewing and optimistic"
+        },
+        "hi": {
+          "name": "पुनर्वसु",
+          "quality": "नवीनीकारक और आशावादी"
+        },
+        "ta": {
+          "name": "Punarvasu",
+          "quality": "மறுபடியும் தொடங்குதல் மற்றும் நம்பிக்கையுடன் இருப்பது"
+        },
+        "te": {
+          "name": "Punarvasu",
+          "quality": "పునరుద్ధరణ మరియు ఆశావాదం"
+        },
+        "bn": {
+          "name": "Punarvasu",
+          "quality": "পুনরুজ্জীবিত এবং আশাবাদী"
+        },
+        "mr": {
+          "name": "Punarvasu",
+          "quality": "नवीन करण्याची आणि आशावादी"
+        },
+        "gu": {
+          "name": "Punarvasu",
+          "quality": "નવું શરૂ કરવું અને આશાવાદી"
+        },
+        "kn": {
+          "name": "Punarvasu",
+          "quality": "ಹೆಚ್ಚುವರಿ ಮತ್ತು ಆಶಾವಾದಿ"
+        },
+        "ml": {
+          "name": "Punarvasu",
+          "quality": "പുതുക്കുന്നതും പ്രത്യാശയോടെയുള്ളതും"
+        },
+        "pa": {
+          "name": "Punarvasu",
+          "quality": "ਨਵੀਂ ਸ਼ੁਰੂਆਤ ਅਤੇ ਆਸ਼ਾਵਾਦੀ"
+        },
+        "or": {
+          "name": "Punarvasu",
+          "quality": "ପୁନଃ ସୃଜନ ଏବଂ ଆଶାବାଦୀ"
+        },
+        "as": {
+          "name": "Punarvasu",
+          "quality": "পুনৰুজ্জীৱিত কৰা আৰু আশাবাদী"
+        }
+      }
+    },
+    {
+      "key": "Pushya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Pushya",
+          "quality": "nourishing and auspicious"
+        },
+        "hi": {
+          "name": "पुष्य",
+          "quality": "पोषक और शुभ"
+        },
+        "ta": {
+          "name": "Pushya",
+          "quality": "போஷிக்கும் மற்றும் மங்களகரமான"
+        },
+        "te": {
+          "name": "Pushya",
+          "quality": "పోషక మరియు శుభప్రదం"
+        },
+        "bn": {
+          "name": "Pushya",
+          "quality": "পুষ্টিকর এবং মঙ্গলময়"
+        },
+        "mr": {
+          "name": "Pushya",
+          "quality": "पोषण करणारा आणि शुभ"
+        },
+        "gu": {
+          "name": "Pushya",
+          "quality": "પોષણકારી અને શુભ"
+        },
+        "kn": {
+          "name": "Pushya",
+          "quality": "ಪೋಷಕ ಮತ್ತು ಶುಭಕರ"
+        },
+        "ml": {
+          "name": "Pushya",
+          "quality": "പോഷകവും മംഗളകരവും"
+        },
+        "pa": {
+          "name": "Pushya",
+          "quality": "ਪੋਸ਼ਣਕ ਅਤੇ ਸ਼ੁਭ"
+        },
+        "or": {
+          "name": "Pushya",
+          "quality": "ପୋଷଣକାରୀ ଏବଂ ଶୁଭ"
+        },
+        "as": {
+          "name": "Pushya",
+          "quality": "পোষণকাৰী আৰু মংগলজনক"
+        }
+      }
+    },
+    {
+      "key": "Ashlesha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ashlesha",
+          "quality": "mystical and introspective"
+        },
+        "hi": {
+          "name": "आश्लेषा",
+          "quality": "रहस्यमय और आत्मनिरीक्षी"
+        },
+        "ta": {
+          "name": "Ashlesha",
+          "quality": "மர்மமான மற்றும் உள்நோக்கமான"
+        },
+        "te": {
+          "name": "Ashlesha",
+          "quality": "రహస్యమైన మరియు ఆత్మపరిశీలన"
+        },
+        "bn": {
+          "name": "Ashlesha",
+          "quality": "রহস্যময় এবং অন্তর্মুখী"
+        },
+        "mr": {
+          "name": "Ashlesha",
+          "quality": "गूढ आणि अंतर्मुख"
+        },
+        "gu": {
+          "name": "Ashlesha",
+          "quality": "રહસ્યમય અને આંતરમુખી"
+        },
+        "kn": {
+          "name": "Ashlesha",
+          "quality": "ಮಾಯಾಮಯ ಮತ್ತು ಆಂತರ್ಮುಖಿ"
+        },
+        "ml": {
+          "name": "Ashlesha",
+          "quality": "മാന്ത്രികവും ആന്തരദർശനപരവും"
+        },
+        "pa": {
+          "name": "Ashlesha",
+          "quality": "ਰਹਸਮਈ ਅਤੇ ਅੰਦਰੂਨੀ ਵਿਚਾਰ ਵਾਲਾ"
+        },
+        "or": {
+          "name": "Ashlesha",
+          "quality": "ରହସ୍ୟମୟ ଏବଂ ଅନ୍ତର୍ମୁଖୀ"
+        },
+        "as": {
+          "name": "Ashlesha",
+          "quality": "ৰহস্যময় আৰু অন্তৰ্দৃষ্টিপূৰ্ণ"
+        }
+      }
+    },
+    {
+      "key": "Magha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Magha",
+          "quality": "regal and ancestral"
+        },
+        "hi": {
+          "name": "मघा",
+          "quality": "राजसी और पैतृक"
+        },
+        "ta": {
+          "name": "Magha",
+          "quality": "அரச மற்றும் மூதாதைய"
+        },
+        "te": {
+          "name": "Magha",
+          "quality": "రాజసిక మరియు పితృపరంపర"
+        },
+        "bn": {
+          "name": "Magha",
+          "quality": "রাজকীয় এবং পূর্বপুরুষ সংক্রান্ত"
+        },
+        "mr": {
+          "name": "Magha",
+          "quality": "राजेशाही आणि पूर्वजांचा"
+        },
+        "gu": {
+          "name": "Magha",
+          "quality": "રાજસી અને પૂર્વજ"
+        },
+        "kn": {
+          "name": "Magha",
+          "quality": "ರಾಜಕೀಯ ಮತ್ತು ಪಿತೃಪಾರಂಪರ್ಯ"
+        },
+        "ml": {
+          "name": "Magha",
+          "quality": "രാജസികവും പാരമ്പര്യപരവും"
+        },
+        "pa": {
+          "name": "Magha",
+          "quality": "ਸ਼ਾਹੀ ਅਤੇ ਪੁਰਖਿਆਂ ਨਾਲ ਸੰਬੰਧਿਤ"
+        },
+        "or": {
+          "name": "Magha",
+          "quality": "ରାଜସିକ ଏବଂ ପୂର୍ବଜ ସମ୍ବନ୍ଧୀ"
+        },
+        "as": {
+          "name": "Magha",
+          "quality": "ৰাজকীয় আৰু পুৰ্বপুৰুষৰ"
+        }
+      }
+    },
+    {
+      "key": "Purva Phalguni",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Purva Phalguni",
+          "quality": "pleasurable and creative"
+        },
+        "hi": {
+          "name": "पूर्व फाल्गुनी",
+          "quality": "सुखद और रचनात्मक"
+        },
+        "ta": {
+          "name": "Purva Phalguni",
+          "quality": "மகிழ்ச்சியூட்டும் மற்றும் படைப்பாற்றல் மிக்க"
+        },
+        "te": {
+          "name": "Purva Phalguni",
+          "quality": "ఆనందదాయకమైన మరియు సృజనాత్మకమైన"
+        },
+        "bn": {
+          "name": "Purva Phalguni",
+          "quality": "আনন্দদায়ক এবং সৃজনশীল"
+        },
+        "mr": {
+          "name": "Purva Phalguni",
+          "quality": "आनंददायक आणि सर्जनशील"
+        },
+        "gu": {
+          "name": "Purva Phalguni",
+          "quality": "આનંદદાયક અને સર્જનાત્મક"
+        },
+        "kn": {
+          "name": "Purva Phalguni",
+          "quality": "ಆನಂದಕರ ಮತ್ತು ಸೃಜನಾತ್ಮಕ"
+        },
+        "ml": {
+          "name": "Purva Phalguni",
+          "quality": "ആനന്ദകരവും സൃഷ്ടിപരവുമുള്ളത്"
+        },
+        "pa": {
+          "name": "Purva Phalguni",
+          "quality": "ਮਨੋਰੰਜਕ ਅਤੇ ਰਚਨਾਤਮਕ"
+        },
+        "or": {
+          "name": "Purva Phalguni",
+          "quality": "ଆନନ୍ଦମୟ ଏବଂ ସୃଜନଶୀଳ"
+        },
+        "as": {
+          "name": "Purva Phalguni",
+          "quality": "আনন্দদায়ক আৰু সৃষ্টিশীল"
+        }
+      }
+    },
+    {
+      "key": "Uttara Phalguni",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Uttara Phalguni",
+          "quality": "generous and supportive"
+        },
+        "hi": {
+          "name": "उत्तर फाल्गुनी",
+          "quality": "उदार और सहायक"
+        },
+        "ta": {
+          "name": "Uttara Phalguni",
+          "quality": "உதாரமான மற்றும் ஆதரவு வழங்கும்"
+        },
+        "te": {
+          "name": "Uttara Phalguni",
+          "quality": "ఉదారంగా మరియు సహాయకరంగా ఉంటుంది"
+        },
+        "bn": {
+          "name": "Uttara Phalguni",
+          "quality": "উদার এবং সহায়ক"
+        },
+        "mr": {
+          "name": "Uttara Phalguni",
+          "quality": "उदार आणि सहायक"
+        },
+        "gu": {
+          "name": "Uttara Phalguni",
+          "quality": "ઉદાર અને સહાયક"
+        },
+        "kn": {
+          "name": "Uttara Phalguni",
+          "quality": "ಉದಾರ ಮತ್ತು ಬೆಂಬಲಕಾರಿ"
+        },
+        "ml": {
+          "name": "Uttara Phalguni",
+          "quality": "ഉദാരവും പിന്തുണയുമായ"
+        },
+        "pa": {
+          "name": "Uttara Phalguni",
+          "quality": "ਦਿਆਲੂ ਅਤੇ ਸਹਾਇਕ"
+        },
+        "or": {
+          "name": "Uttara Phalguni",
+          "quality": "ଦାନଶୀଳ ଏବଂ ସମର୍ଥକ"
+        },
+        "as": {
+          "name": "Uttara Phalguni",
+          "quality": "উদাৰ আৰু সহায়ক"
+        }
+      }
+    },
+    {
+      "key": "Hasta",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Hasta",
+          "quality": "skillful and productive"
+        },
+        "hi": {
+          "name": "हस्त",
+          "quality": "कुशल और उत्पादक"
+        },
+        "ta": {
+          "name": "Hasta",
+          "quality": "திறமையான மற்றும் உற்பத்திவாய்ந்த"
+        },
+        "te": {
+          "name": "Hasta",
+          "quality": "నైపుణ్యం కలిగి ఉత్పాదకంగా ఉంటుంది"
+        },
+        "bn": {
+          "name": "Hasta",
+          "quality": "দক্ষ এবং উৎপাদনশীল"
+        },
+        "mr": {
+          "name": "Hasta",
+          "quality": "कुशल आणि उत्पादक"
+        },
+        "gu": {
+          "name": "Hasta",
+          "quality": "કુશળ અને ઉત્પાદક"
+        },
+        "kn": {
+          "name": "Hasta",
+          "quality": "ಕೌಶಲ್ಯಪೂರ್ಣ ಮತ್ತು ಉತ್ಪಾದಕ"
+        },
+        "ml": {
+          "name": "Hasta",
+          "quality": "കൗശലമുള്ളതും ഉൽപ്പാദനക്ഷമവുമാണ്"
+        },
+        "pa": {
+          "name": "Hasta",
+          "quality": "ਕੁਸ਼ਲ ਅਤੇ ਉਤਪਾਦਕ"
+        },
+        "or": {
+          "name": "Hasta",
+          "quality": "କୌଶଳପୂର୍ଣ୍ଣ ଏବଂ ଉତ୍ପାଦନଶୀଳ"
+        },
+        "as": {
+          "name": "Hasta",
+          "quality": "দক্ষ আৰু উৎপাদনশীল"
+        }
+      }
+    },
+    {
+      "key": "Chitra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Chitra",
+          "quality": "artistic and brilliant"
+        },
+        "hi": {
+          "name": "चित्रा",
+          "quality": "कलात्मक और तेजस्वी"
+        },
+        "ta": {
+          "name": "Chitra",
+          "quality": "கலைநயமும் புத்திசாலித்தனமும்"
+        },
+        "te": {
+          "name": "Chitra",
+          "quality": "కళాత్మక మరియు ప్రతిభావంతుడు"
+        },
+        "bn": {
+          "name": "Chitra",
+          "quality": "শিল্পীসুলভ এবং উজ্জ্বল"
+        },
+        "mr": {
+          "name": "Chitra",
+          "quality": "कलात्मक आणि तेजस्वी"
+        },
+        "gu": {
+          "name": "Chitra",
+          "quality": "કલા પ્રવીણ અને તેજસ્વી"
+        },
+        "kn": {
+          "name": "Chitra",
+          "quality": "ಕಲಾತ್ಮಕ ಮತ್ತು ತೇಜಸ್ವಿ"
+        },
+        "ml": {
+          "name": "Chitra",
+          "quality": "കലാപരവും തിളക്കമുള്ളതും"
+        },
+        "pa": {
+          "name": "Chitra",
+          "quality": "ਕਲਾਤਮਕ ਅਤੇ ਬੇਹਤਰੀਨ"
+        },
+        "or": {
+          "name": "Chitra",
+          "quality": "କଳାପ୍ରିୟ ଏବଂ ଦିପ୍ତିମାନ୍"
+        },
+        "as": {
+          "name": "Chitra",
+          "quality": "শিল্পীসুলভ আৰু উজ্জ্বল"
+        }
+      }
+    },
+    {
+      "key": "Swati",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Swati",
+          "quality": "independent and adaptable"
+        },
+        "hi": {
+          "name": "स्वाति",
+          "quality": "स्वतंत्र और अनुकूलनीय"
+        },
+        "ta": {
+          "name": "Swati",
+          "quality": "சுயாதீனமாகவும் தழுவிக்கொள்ளக்கூடியதாகவும்"
+        },
+        "te": {
+          "name": "Swati",
+          "quality": "స్వతంత్రంగా మరియు అనుకూలంగా ఉండే వ్యక్తిత్వం"
+        },
+        "bn": {
+          "name": "Swati",
+          "quality": "স্বাধীন এবং খাপ খাইয়ে নিতে সক্ষম"
+        },
+        "mr": {
+          "name": "Swati",
+          "quality": "स्वतंत्र आणि अनुकूलनक्षम"
+        },
+        "gu": {
+          "name": "Swati",
+          "quality": "સ્વતંત્ર અને અનુકૂળ"
+        },
+        "kn": {
+          "name": "Swati",
+          "quality": "ಸ್ವತಂತ್ರ ಮತ್ತು ಹೊಂದಿಕೊಳ್ಳುವ"
+        },
+        "ml": {
+          "name": "Swati",
+          "quality": "സ്വതന്ത്രവും അനുകൂലമായും"
+        },
+        "pa": {
+          "name": "Swati",
+          "quality": "ਸਵਤੰਤਰ ਅਤੇ ਅਨੁਕੂਲ"
+        },
+        "or": {
+          "name": "Swati",
+          "quality": "ସ୍ୱାଧୀନ ଏବଂ ଅନୁକୂଳ"
+        },
+        "as": {
+          "name": "Swati",
+          "quality": "স্বাধীন আৰু খাপ খোৱাকৈ চলিব পৰা"
+        }
+      }
+    },
+    {
+      "key": "Vishakha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vishakha",
+          "quality": "determined and goal-oriented"
+        },
+        "hi": {
+          "name": "विशाखा",
+          "quality": "दृढ़ और लक्ष्य-केंद्रित"
+        },
+        "ta": {
+          "name": "Vishakha",
+          "quality": "தீர்மானமாகவும் இலக்குக்கேற்ப செயல்படுபவரும்"
+        },
+        "te": {
+          "name": "Vishakha",
+          "quality": "దృఢమైన మరియు లక్ష్యసాధనపై కేంద్రీకృతమై ఉంటుంది"
+        },
+        "bn": {
+          "name": "Vishakha",
+          "quality": "দৃঢ়প্রতিজ্ঞ এবং লক্ষ্যনিষ্ঠ"
+        },
+        "mr": {
+          "name": "Vishakha",
+          "quality": "दृढनिश्चयी आणि लक्ष्याभिमुख"
+        },
+        "gu": {
+          "name": "Vishakha",
+          "quality": "દૃઢનિશ્ચય અને લક્ષ્યકેન્દ્રિત"
+        },
+        "kn": {
+          "name": "Vishakha",
+          "quality": "ನಿಶ್ಚಯಾತ್ಮಕ ಮತ್ತು ಗುರಿ ಕೇಂದ್ರಿತ"
+        },
+        "ml": {
+          "name": "Vishakha",
+          "quality": "ദൃഢനിശ്ചയവും ലക്ഷ്യസാധനവും"
+        },
+        "pa": {
+          "name": "Vishakha",
+          "quality": "ਦ੍ਰਿੜ ਅਤੇ ਲਕਸ਼-ਕੇਂਦ੍ਰਿਤ"
+        },
+        "or": {
+          "name": "Vishakha",
+          "quality": "ଦୃଢ଼ ସଂକଳ୍ପ ଓ ଲକ୍ଷ୍ୟମୁଖୀ"
+        },
+        "as": {
+          "name": "Vishakha",
+          "quality": "দৃঢ়সংকল্প আৰু লক্ষ্যভিত্তিক"
+        }
+      }
+    },
+    {
+      "key": "Anuradha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Anuradha",
+          "quality": "devotional and friendly"
+        },
+        "hi": {
+          "name": "अनुराधा",
+          "quality": "भक्तिपूर्ण और मैत्रीपूर्ण"
+        },
+        "ta": {
+          "name": "Anuradha",
+          "quality": "பக்தி மற்றும் நட்பு மனப்பான்மை"
+        },
+        "te": {
+          "name": "Anuradha",
+          "quality": "భక్తి మరియు స్నేహపూర్వకంగా"
+        },
+        "bn": {
+          "name": "Anuradha",
+          "quality": "ভক্তিপূর্ণ এবং বন্ধুত্বপূর্ণ"
+        },
+        "mr": {
+          "name": "Anuradha",
+          "quality": "भक्तिपूर्ण आणि मैत्रीपूर्ण"
+        },
+        "gu": {
+          "name": "Anuradha",
+          "quality": "ભક્તિપૂર્ણ અને મિત્રતાપૂર્ણ"
+        },
+        "kn": {
+          "name": "ಅನುರಾಧಾ",
+          "quality": "ಭಕ್ತಿಪರ ಮತ್ತು ಸ್ನೇಹಪರ"
+        },
+        "ml": {
+          "name": "Anuradha",
+          "quality": "ഭക്തിപരവും സൗഹൃദപരവും"
+        },
+        "pa": {
+          "name": "Anuradha",
+          "quality": "ਭਗਤੀਮਈ ਅਤੇ ਦੋਸਤਾਨਾ"
+        },
+        "or": {
+          "name": "Anuradha",
+          "quality": "ଭକ୍ତିମାନ୍ତ ଏବଂ ମିତ୍ରପରାୟଣ"
+        },
+        "as": {
+          "name": "Anuradha",
+          "quality": "ভক্তিপূৰ্ণ আৰু বন্ধুত্বসুলভ"
+        }
+      }
+    },
+    {
+      "key": "Jyeshtha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Jyeshtha",
+          "quality": "protective and senior"
+        },
+        "hi": {
+          "name": "ज्येष्ठा",
+          "quality": "संरक्षक और ज्येष्ठ"
+        },
+        "ta": {
+          "name": "Jyeshtha",
+          "quality": "பாதுகாப்பான மற்றும் மூத்தவர்"
+        },
+        "te": {
+          "name": "Jyeshtha",
+          "quality": "రక్షణాత్మక మరియు సీనియర్"
+        },
+        "bn": {
+          "name": "Jyeshtha",
+          "quality": "রক্ষাকারী এবং জ্যেষ্ঠ"
+        },
+        "mr": {
+          "name": "Jyeshtha",
+          "quality": "संरक्षणात्मक आणि वरिष्ठ"
+        },
+        "gu": {
+          "name": "Jyeshtha",
+          "quality": "રક્ષાત્મક અને વરિષ્ઠ"
+        },
+        "kn": {
+          "name": "Jyeshtha",
+          "quality": "ರಕ್ಷಣಾತ್ಮಕ ಮತ್ತು ಹಿರಿಯ"
+        },
+        "ml": {
+          "name": "Jyeshtha",
+          "quality": "സംരക്ഷണപരവും മുതിർന്നവനും"
+        },
+        "pa": {
+          "name": "Jyeshtha",
+          "quality": "ਸੁਰੱਖਿਆਤਮਕ ਅਤੇ ਵੱਡਾ"
+        },
+        "or": {
+          "name": "Jyeshtha",
+          "quality": "ସୁରକ୍ଷାମୂଳକ ଏବଂ ବୃଦ୍ଧ"
+        },
+        "as": {
+          "name": "Jyeshtha",
+          "quality": "ৰক্ষামূলক আৰু জ্যেষ্ঠ"
+        }
+      }
+    },
+    {
+      "key": "Mula",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Mula",
+          "quality": "foundational and transformative"
+        },
+        "hi": {
+          "name": "मूल",
+          "quality": "मौलिक और परिवर्तनकारी"
+        },
+        "ta": {
+          "name": "Mula",
+          "quality": "அடிப்படை மற்றும் மாற்றம் செய்யும்"
+        },
+        "te": {
+          "name": "Mula",
+          "quality": "ప్రాథమిక మరియు మార్పు కలిగించే"
+        },
+        "bn": {
+          "name": "Mula",
+          "quality": "প্রাথমিক এবং রূপান্তরমূলক"
+        },
+        "mr": {
+          "name": "Mula",
+          "quality": "मूलभूत आणि परिवर्तनशील"
+        },
+        "gu": {
+          "name": "Mula",
+          "quality": "મૂળભૂત અને રૂપાંતરકારી"
+        },
+        "kn": {
+          "name": "ಮೂಲ",
+          "quality": "ಅಡಿಪಾಯ ಮತ್ತು ಪರಿವರ್ತನಾತ್ಮಕ"
+        },
+        "ml": {
+          "name": "Mula",
+          "quality": "അടിസ്ഥാനപരവും രൂപാന്തരപ്പെടുത്തുന്നതുമാണ്"
+        },
+        "pa": {
+          "name": "Mula",
+          "quality": "ਬੁਨਿਆਦੀ ਅਤੇ ਰੂਪਾਂਤਰਕ"
+        },
+        "or": {
+          "name": "Mula",
+          "quality": "ମୂଳଭୂତ ଏବଂ ପରିବର୍ତ୍ତନଶୀଳ"
+        },
+        "as": {
+          "name": "Mula",
+          "quality": "মৌলিক আৰু পৰিৱৰ্তনশীল"
+        }
+      }
+    },
+    {
+      "key": "Purva Ashadha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Purva Ashadha",
+          "quality": "invincible and confident"
+        },
+        "hi": {
+          "name": "पूर्वाषाढ़ा",
+          "quality": "अजेय और आत्मविश्वासी"
+        },
+        "ta": {
+          "name": "Purva Ashadha",
+          "quality": "அஜெயமும் நம்பிக்கையுடனும்"
+        },
+        "te": {
+          "name": "Purva Ashadha",
+          "quality": "అజేయమైన మరియు ఆత్మవిశ్వాసంతో కూడిన"
+        },
+        "bn": {
+          "name": "Purva Ashadha",
+          "quality": "অপরাজেয় এবং আত্মবিশ্বাসী"
+        },
+        "mr": {
+          "name": "Purva Ashadha",
+          "quality": "अजेय आणि आत्मविश्वासू"
+        },
+        "gu": {
+          "name": "Purva Ashadha",
+          "quality": "અજેય અને આત્મવિશ્વાસથી ભરપૂર"
+        },
+        "kn": {
+          "name": "Purva Ashadha",
+          "quality": "ಅಜೇಯ ಮತ್ತು ಆತ್ಮವಿಶ್ವಾಸದಿಂದ ಕೂಡಿದ"
+        },
+        "ml": {
+          "name": "Purva Ashadha",
+          "quality": "അജേയവും ആത്മവിശ്വാസവും നിറഞ്ഞത്"
+        },
+        "pa": {
+          "name": "Purva Ashadha",
+          "quality": "ਅਜੇਯ ਅਤੇ ਆਤਮਵਿਸ਼ਵਾਸੀ"
+        },
+        "or": {
+          "name": "Purva Ashadha",
+          "quality": "ଅଜେୟ ଏବଂ ଆତ୍ମବିଶ୍ୱାସୀ"
+        },
+        "as": {
+          "name": "Purva Ashadha",
+          "quality": "অজেয় আৰু আত্মবিশ্বাসী"
+        }
+      }
+    },
+    {
+      "key": "Uttara Ashadha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Uttara Ashadha",
+          "quality": "victorious and universal"
+        },
+        "hi": {
+          "name": "उत्तराषाढ़ा",
+          "quality": "विजयी और सार्वभौमिक"
+        },
+        "ta": {
+          "name": "Uttara Ashadha",
+          "quality": "வெற்றி மற்றும் உலகளாவிய"
+        },
+        "te": {
+          "name": "Uttara Ashadha",
+          "quality": "విజయవంతమైన మరియు విశ్వవ్యాప్తమైన"
+        },
+        "bn": {
+          "name": "Uttara Ashadha",
+          "quality": "বিজয়ী এবং সর্বজনীন"
+        },
+        "mr": {
+          "name": "Uttara Ashadha",
+          "quality": "विजयी आणि सार्वत्रिक"
+        },
+        "gu": {
+          "name": "Uttara Ashadha",
+          "quality": "વિજયી અને સર્વવ્યાપી"
+        },
+        "kn": {
+          "name": "Uttara Ashadha",
+          "quality": "ವಿಜಯಿ ಮತ್ತು ವಿಶ್ವವ್ಯಾಪಿ"
+        },
+        "ml": {
+          "name": "Uttara Ashadha",
+          "quality": "വിജയിയും സർവ്വവ്യാപിയും"
+        },
+        "pa": {
+          "name": "Uttara Ashadha",
+          "quality": "ਵਿਜੇਤਾ ਅਤੇ ਵਿਸ਼ਵਵਿਆਪੀ"
+        },
+        "or": {
+          "name": "Uttara Ashadha",
+          "quality": "ବିଜୟୀ ଏବଂ ସାର୍ବଜନୀନ"
+        },
+        "as": {
+          "name": "Uttara Ashadha",
+          "quality": "বিজয়ী আৰু বিশ্বজনীন"
+        }
+      }
+    },
+    {
+      "key": "Shravana",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shravana",
+          "quality": "learning and listening"
+        },
+        "hi": {
+          "name": "श्रवण",
+          "quality": "सीखने और सुनने वाली"
+        },
+        "ta": {
+          "name": "Shravana",
+          "quality": "கற்றல் மற்றும் கேட்பது"
+        },
+        "te": {
+          "name": "Shravana",
+          "quality": "చదవడం మరియు వినడం"
+        },
+        "bn": {
+          "name": "Shravana",
+          "quality": "শেখা এবং শোনা"
+        },
+        "mr": {
+          "name": "Shravana",
+          "quality": "शिकणे आणि ऐकणे"
+        },
+        "gu": {
+          "name": "Shravana",
+          "quality": "શીખવું અને સાંભળવું"
+        },
+        "kn": {
+          "name": "Shravana",
+          "quality": "ಕಲಿಕೆ ಮತ್ತು ಕೇಳುವುದು"
+        },
+        "ml": {
+          "name": "Shravana",
+          "quality": "പഠനവും കേൾക്കലും"
+        },
+        "pa": {
+          "name": "Shravana",
+          "quality": "ਸਿੱਖਣ ਅਤੇ ਸੁਣਨ"
+        },
+        "or": {
+          "name": "Shravana",
+          "quality": "ଶିକ୍ଷା ଏବଂ ଶୁଣିବା"
+        },
+        "as": {
+          "name": "Shravana",
+          "quality": "শিকিব আৰু শুনিব"
+        }
+      }
+    },
+    {
+      "key": "Dhanishta",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dhanishta",
+          "quality": "prosperous and rhythmic"
+        },
+        "hi": {
+          "name": "धनिष्ठा",
+          "quality": "समृद्ध और लयबद्ध"
+        },
+        "ta": {
+          "name": "Dhanishta",
+          "quality": "செழிப்பு மற்றும் ஒழுங்கான"
+        },
+        "te": {
+          "name": "Dhanishta",
+          "quality": "సంపన్నమైన మరియు లయబద్ధమైన"
+        },
+        "bn": {
+          "name": "Dhanishta",
+          "quality": "সমৃদ্ধিশালী এবং ছন্দময়"
+        },
+        "mr": {
+          "name": "Dhanishta",
+          "quality": "समृद्ध आणि लयबद्ध"
+        },
+        "gu": {
+          "name": "Dhanishta",
+          "quality": "સમૃદ્ધ અને લયબદ્ધ"
+        },
+        "kn": {
+          "name": "Dhanishta",
+          "quality": "ಸಮೃದ್ಧ ಮತ್ತು ಲಯಬದ್ಧ"
+        },
+        "ml": {
+          "name": "Dhanishta",
+          "quality": "സമൃദ്ധവും താളബദ്ധവുമാണ്"
+        },
+        "pa": {
+          "name": "Dhanishta",
+          "quality": "ਖੁਸ਼ਹਾਲ ਅਤੇ ਲਯਬੱਧ"
+        },
+        "or": {
+          "name": "Dhanishta",
+          "quality": "ସମୃଦ୍ଧିଶାଳୀ ଏବଂ ଲୟବଦ୍ଧ"
+        },
+        "as": {
+          "name": "Dhanishta",
+          "quality": "সমৃদ্ধিশালী আৰু ছন্দোময়"
+        }
+      }
+    },
+    {
+      "key": "Shatabhisha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shatabhisha",
+          "quality": "healing and mysterious"
+        },
+        "hi": {
+          "name": "शतभिषा",
+          "quality": "उपचारात्मक और रहस्यमय"
+        },
+        "ta": {
+          "name": "Shatabhisha",
+          "quality": "சிகிச்சை மற்றும் மர்மமான"
+        },
+        "te": {
+          "name": "Shatabhisha",
+          "quality": "చికిత్స మరియు రహస్యమైన"
+        },
+        "bn": {
+          "name": "Shatabhisha",
+          "quality": "নিরাময় এবং রহস্যময়"
+        },
+        "mr": {
+          "name": "Shatabhisha",
+          "quality": "उपचारात्मक आणि रहस्यमय"
+        },
+        "gu": {
+          "name": "Shatabhisha",
+          "quality": "ઉપચારક અને રહસ્યમય"
+        },
+        "kn": {
+          "name": "Shatabhisha",
+          "quality": "ಚಿಕಿತ್ಸೆ ಮತ್ತು ರಹಸ್ಯಮಯ"
+        },
+        "ml": {
+          "name": "Shatabhisha",
+          "quality": "ചികിത്സയും രഹസ്യമായത്"
+        },
+        "pa": {
+          "name": "Shatabhisha",
+          "quality": "ਚੰਗਾ ਕਰਨ ਵਾਲਾ ਅਤੇ ਰਹੱਸਮਈ"
+        },
+        "or": {
+          "name": "Shatabhisha",
+          "quality": "ଚିକିତ୍ସା ଏବଂ ରହସ୍ୟମୟ"
+        },
+        "as": {
+          "name": "Shatabhisha",
+          "quality": "চিকিৎসা আৰু ৰহস্যময়"
+        }
+      }
+    },
+    {
+      "key": "Purva Bhadrapada",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Purva Bhadrapada",
+          "quality": "fierce and passionate"
+        },
+        "hi": {
+          "name": "पूर्व भाद्रपद",
+          "quality": "उग्र और भावुक"
+        },
+        "ta": {
+          "name": "Purva Bhadrapada",
+          "quality": "கடுமையான மற்றும் தீவிரமான"
+        },
+        "te": {
+          "name": "Purva Bhadrapada",
+          "quality": "ఉగ్రత మరియు ఆతురత"
+        },
+        "bn": {
+          "name": "Purva Bhadrapada",
+          "quality": "উগ্র এবং আবেগপ্রবণ"
+        },
+        "mr": {
+          "name": "Purva Bhadrapada",
+          "quality": "उग्र आणि उत्कट"
+        },
+        "gu": {
+          "name": "Purva Bhadrapada",
+          "quality": "ઉગ્ર અને જુસ્સાદાર"
+        },
+        "kn": {
+          "name": "Purva Bhadrapada",
+          "quality": "ಕಠಿಣ ಮತ್ತು ಉತ್ಸಾಹಭರಿತ"
+        },
+        "ml": {
+          "name": "Purva Bhadrapada",
+          "quality": "കഠിനവും ആവേശഭരിതവും"
+        },
+        "pa": {
+          "name": "Purva Bhadrapada",
+          "quality": "ਤਿੱਖਾ ਅਤੇ ਜਜ਼ਬਾਤੀ"
+        },
+        "or": {
+          "name": "Purva Bhadrapada",
+          "quality": "ଉତ୍ସାହିତ ଏବଂ ଜୋରଦାର"
+        },
+        "as": {
+          "name": "Purva Bhadrapada",
+          "quality": "উগ্ৰ আৰু উচ্ছ্বাসপূৰ্ণ"
+        }
+      }
+    },
+    {
+      "key": "Uttara Bhadrapada",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Uttara Bhadrapada",
+          "quality": "wise and deep"
+        },
+        "hi": {
+          "name": "उत्तर भाद्रपद",
+          "quality": "बुद्धिमान और गहरी"
+        },
+        "ta": {
+          "name": "Uttara Bhadrapada",
+          "quality": "ஞானம் மற்றும் ஆழமான"
+        },
+        "te": {
+          "name": "Uttara Bhadrapada",
+          "quality": "జ్ఞానం మరియు లోతైన"
+        },
+        "bn": {
+          "name": "Uttara Bhadrapada",
+          "quality": "জ্ঞানী এবং গভীর"
+        },
+        "mr": {
+          "name": "Uttara Bhadrapada",
+          "quality": "शहाणे आणि खोल"
+        },
+        "gu": {
+          "name": "Uttara Bhadrapada",
+          "quality": "જ્ઞાની અને ઊંડા"
+        },
+        "kn": {
+          "name": "ಉತ್ತರ ಭಾದ್ರಪದ",
+          "quality": "ಜ್ಞಾನಿ ಮತ್ತು ಆಳವಾದ"
+        },
+        "ml": {
+          "name": "Uttara Bhadrapada",
+          "quality": "ബുദ്ധിമാനും ആഴമുള്ളതും"
+        },
+        "pa": {
+          "name": "Uttara Bhadrapada",
+          "quality": "ਸਿਆਣੇ ਅਤੇ ਗਹਿਰੇ"
+        },
+        "or": {
+          "name": "Uttara Bhadrapada",
+          "quality": "ଜ୍ଞାନୀ ଏବଂ ଗଭୀର"
+        },
+        "as": {
+          "name": "Uttara Bhadrapada",
+          "quality": "জ্ঞানী আৰু গভীৰ"
+        }
+      }
+    },
+    {
+      "key": "Revati",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Revati",
+          "quality": "prosperous and completing"
+        },
+        "hi": {
+          "name": "रेवती",
+          "quality": "समृद्ध और पूर्णकारक"
+        },
+        "ta": {
+          "name": "Revati",
+          "quality": "செழிப்பு மற்றும் நிறைவு"
+        },
+        "te": {
+          "name": "Revati",
+          "quality": "సంపన్నమైన మరియు పూర్తి చేసే"
+        },
+        "bn": {
+          "name": "Revati",
+          "quality": "সমৃদ্ধিশালী এবং সম্পূর্ণকারী"
+        },
+        "mr": {
+          "name": "Revati",
+          "quality": "समृद्ध आणि पूर्ण करणारा"
+        },
+        "gu": {
+          "name": "Revati",
+          "quality": "સમૃદ્ધ અને પૂર્ણ કરતી"
+        },
+        "kn": {
+          "name": "Revati",
+          "quality": "ಸಮೃದ್ಧ ಮತ್ತು ಪೂರ್ಣಗೊಳಿಸುವ"
+        },
+        "ml": {
+          "name": "Revati",
+          "quality": "സമൃദ്ധിയും പൂര്‍ത്തീകരണവും"
+        },
+        "pa": {
+          "name": "Revati",
+          "quality": "ਖੁਸ਼ਹਾਲ ਅਤੇ ਪੂਰਾ ਕਰਨ ਵਾਲਾ"
+        },
+        "or": {
+          "name": "Revati",
+          "quality": "ସମୃଦ୍ଧିମୟ ଏବଂ ସମାପ୍ତିକରୀ"
+        },
+        "as": {
+          "name": "Revati",
+          "quality": "সমৃদ্ধিশালী আৰু সম্পূৰ্ণ কৰা"
+        }
+      }
+    }
   ]
 }
