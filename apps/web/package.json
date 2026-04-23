@@ -12,7 +12,6 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@jyotryx/shared": "*",
     "@sentry/nextjs": "^10.48.0",
     "clsx": "^2.1.1",
     "firebase": "^12.10.0",

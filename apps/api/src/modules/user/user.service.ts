@@ -225,23 +225,28 @@ export class UserService {
   }
 
   async addCredits(userId: string, amount: number, type: string, description: string): Promise<boolean> {
-    await this.prisma.$transaction(async (tx: any) => {
-      await tx.user.update({
-        where: { id: userId },
-        data: { credits: { increment: amount } },
-      });
-
-      await tx.creditTransaction.create({
-        data: {
-          userId,
-          amount,
-          type: type as any,
-          description,
-        },
-      });
-    });
-
-    return true;
+    // Single-SQL CTE: atomically increments credits (only when the user
+    // exists) and inserts the matching credit_transactions row. Mirrors
+    // deductCredits above — one round-trip, PgBouncer-compatible, and
+    // the audit-log insert is linked to the increment by construction
+    // rather than relying on Prisma transaction isolation.
+    const result: { affected: bigint }[] = await this.prisma.$queryRawUnsafe(
+      `WITH credited AS (
+        UPDATE users
+        SET credits = credits + $1, "updatedAt" = NOW()
+        WHERE id = $2::uuid
+        RETURNING id
+      )
+      INSERT INTO credit_transactions (id, "userId", amount, type, description, "createdAt")
+      SELECT gen_random_uuid(), $2::uuid, $1, $3::"CreditTransactionType", $4, NOW()
+      FROM credited
+      RETURNING (SELECT count(*) FROM credited)::int AS affected`,
+      amount,
+      userId,
+      type,
+      description,
+    );
+    return Number(result[0]?.affected ?? 0) > 0;
   }
 
   async findById(userId: string): Promise<UserProfile | null> {

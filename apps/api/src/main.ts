@@ -76,8 +76,12 @@ async function bootstrap() {
   const metricsService = app.get(MetricsService);
   app.useGlobalInterceptors(new MetricsInterceptor(metricsService));
 
-  // Swagger documentation (disabled in production)
-  if (process.env.NODE_ENV !== 'production') {
+  // Swagger documentation — explicitly gated on ENABLE_SWAGGER=true rather
+  // than NODE_ENV !== 'production', so staging / preview deploys don't
+  // inadvertently expose the full API schema (including auth bodies,
+  // admin endpoints, DTO shapes) as reconnaissance material. Dev
+  // setups can set ENABLE_SWAGGER=true in .env.local; CI leaves it off.
+  if (process.env.ENABLE_SWAGGER === 'true') {
     const config = new DocumentBuilder()
       .setTitle('Jyotron API')
       .setDescription('Jyotron Astrology App Backend API')
@@ -104,6 +108,7 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);
+    logger.log('Swagger docs enabled at /api/docs (ENABLE_SWAGGER=true)');
   }
 
   const port = process.env.PORT || 4000;
@@ -113,7 +118,6 @@ async function bootstrap() {
   // that probe over IPv4.
   await app.listen(port, '0.0.0.0');
   logger.log(`Jyotron API running on http://0.0.0.0:${port}`);
-  logger.log(`Swagger docs at http://0.0.0.0:${port}/api/docs`);
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

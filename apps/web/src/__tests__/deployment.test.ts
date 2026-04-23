@@ -69,14 +69,9 @@ describe('Monorepo Structure', () => {
     expect(fs.existsSync(API_DIR)).toBe(true);
   });
 
-  it('should have shared package directory', () => {
-    expect(fs.existsSync(path.join(ROOT, 'packages/shared'))).toBe(true);
-  });
-
-  it('web app should depend on shared package', () => {
-    const webPkg = readJson(path.join(WEB_DIR, 'package.json'));
-    expect(webPkg.dependencies['@jyotryx/shared']).toBeDefined();
-  });
+  // @jyotryx/shared was deleted in the app-review cleanup — the package
+  // had zero importers across the monorepo and both apps had redefined
+  // its enums locally. No replacement is expected.
 });
 
 // ─── Web App (Next.js) Build Config ─────────────────────────────────────────
