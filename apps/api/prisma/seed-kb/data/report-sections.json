@@ -2,46 +2,1949 @@
   "_source": "Lifted from the `getFallbackSections` map in apps/api/src/modules/report/report.service.ts. Composite key '{TYPE}:{order}' — 6 report types (LIFE, CAREER, MARRIAGE, WEALTH, PALM, ANNUAL) × 6 sections each = 36 rows. Content strings use a single `{name}` placeholder substituted at render time; hasBirth conditionals in the original inline map were generalized away so the template works for both cases. English only at seed time; 11 other locales filled by `npm run kb:backfill`. The queue processor (apps/api/src/queue/report.processor.ts) now reads the same rows on its async fallback path — previously it used 3 generic sections, now every report type gets the full 6-section fallback.",
   "_shape": "{ title: string, content: string }",
   "rows": [
-    { "key": "LIFE:1", "tradition": null, "i18n": { "en": { "title": "Birth Chart Overview", "content": "{name}, your Vedic birth chart reveals a person of determination and emotional depth. The Lagna (Ascendant) lord's placement indicates strong self-expression and leadership potential. Your chart shows a balance between material pursuits and spiritual growth." } } },
-    { "key": "LIFE:2", "tradition": null, "i18n": { "en": { "title": "Planetary Analysis", "content": "The key planetary influences in your chart include Jupiter's beneficial aspect on your Kendra houses, suggesting wisdom and prosperity. Saturn's placement indicates disciplined growth through patience. Venus and Mercury's positions favor creative and intellectual pursuits." } } },
-    { "key": "LIFE:3", "tradition": null, "i18n": { "en": { "title": "Current Dasha Period", "content": "The current Mahadasha period brings opportunities for personal transformation. Focus on long-term goals and investments during this transit. The sub-period (Antardasha) highlights relationships and social connections. This is a favorable time for education and skill development." } } },
-    { "key": "LIFE:4", "tradition": null, "i18n": { "en": { "title": "Key Yogas", "content": "Your chart shows the formation of significant Yogas that influence your life path. The presence of beneficial Yogas in Kendra houses suggests prosperity and wisdom. These planetary combinations indicate success through righteous actions and intellectual pursuits." } } },
-    { "key": "LIFE:5", "tradition": null, "i18n": { "en": { "title": "Life Path & Destiny", "content": "{name}, your life path is characterized by a journey of growth, learning, and meaningful contributions. The planetary alignments suggest peaks of achievement interspersed with periods of introspection. Your destiny points toward a life of influence and positive impact on those around you." } } },
-    { "key": "LIFE:6", "tradition": null, "i18n": { "en": { "title": "Remedies & Recommendations", "content": "To strengthen beneficial planetary influences: practice meditation during Brahma Muhurat (4:00-5:30 AM), consult an astrologer for gemstone recommendations suited to your Lagna, perform charitable acts on Saturdays, and chant mantras dedicated to your ruling planet. Regular Surya Namaskar practice will energize the Sun's positive influence in your chart." } } },
-
-    { "key": "CAREER:1", "tradition": null, "i18n": { "en": { "title": "Professional Profile", "content": "{name}, your birth chart indicates strong professional potential. You possess natural leadership abilities and analytical thinking. The 10th house configuration suggests success in fields requiring discipline and strategic planning." } } },
-    { "key": "CAREER:2", "tradition": null, "i18n": { "en": { "title": "Dashamsha Chart Analysis", "content": "The D10 (Dashamsha) chart reveals your career destiny. The 10th lord's placement suggests advancement through merit and persistent effort. Current transits favor professional growth, especially in technology, management, or advisory roles." } } },
-    { "key": "CAREER:3", "tradition": null, "i18n": { "en": { "title": "Current Career Transit", "content": "Jupiter's favorable transit activates your career sector, bringing opportunities for advancement. Saturn's steady influence supports building long-term professional foundations. The next 12 months show promise for promotion or new ventures." } } },
-    { "key": "CAREER:4", "tradition": null, "i18n": { "en": { "title": "Best Career Paths", "content": "Based on your chart, careers in leadership, finance, technology, healthcare, or education align with your planetary strengths. Your Mercury placement particularly favors communication-heavy roles. Creative fields also show promise with Venus's beneficial aspect." } } },
-    { "key": "CAREER:5", "tradition": null, "i18n": { "en": { "title": "Financial Outlook", "content": "The 2nd and 11th house placements indicate steady income growth. Investments made during Jupiter's transit through your wealth houses will yield positive returns. Avoid speculative ventures during Rahu's unfavorable aspects." } } },
-    { "key": "CAREER:6", "tradition": null, "i18n": { "en": { "title": "Career Remedies", "content": "Strengthen your career prospects by: chanting the Gayatri Mantra daily, wearing a Yellow Sapphire (after astrological consultation), donating to educational causes on Thursdays, and beginning important professional undertakings during favorable Muhurat periods." } } },
-
-    { "key": "MARRIAGE:1", "tradition": null, "i18n": { "en": { "title": "Relationship Profile", "content": "{name}, your Navamsa chart reveals your approach to relationships and marriage. Your emotional nature indicates deep loyalty and a desire for meaningful connections. Venus's placement shows your capacity for love and partnership." } } },
-    { "key": "MARRIAGE:2", "tradition": null, "i18n": { "en": { "title": "Navamsa Chart Analysis", "content": "The D9 (Navamsa) chart is crucial for marriage analysis. Your Navamsa Lagna and its lord's placement suggest a harmonious married life with mutual respect. The 7th house configuration indicates a partner who complements your strengths." } } },
-    { "key": "MARRIAGE:3", "tradition": null, "i18n": { "en": { "title": "7th House & Venus Analysis", "content": "Venus's sign and house placement in your chart governs romantic inclinations. The 7th lord's dignity suggests a stable, supportive partner. Any planetary aspects on the 7th house indicate the nature and timing of significant relationships." } } },
-    { "key": "MARRIAGE:4", "tradition": null, "i18n": { "en": { "title": "Marriage Timing", "content": "Based on Dasha periods and transits, favorable periods for marriage align with Jupiter and Venus Dashas. The current transit suggests relationship developments in the coming months. Look for Muhurat periods when Venus and Jupiter aspect your 7th house." } } },
-    { "key": "MARRIAGE:5", "tradition": null, "i18n": { "en": { "title": "Partner Compatibility", "content": "Your ideal partner's Moon sign and Nakshatra should complement your own for Ashtakoota compatibility. The chart suggests compatibility with partners who share intellectual curiosity and emotional depth. A partner with complementary elemental energy will create the most harmonious union." } } },
-    { "key": "MARRIAGE:6", "tradition": null, "i18n": { "en": { "title": "Relationship Remedies", "content": "To attract and maintain healthy relationships: worship Lord Shiva and Parvati together on Mondays, wear a Diamond or White Sapphire (Venus gemstone) after consultation, fast on Fridays, and chant the Shukra Beej Mantra for Venus's blessings." } } },
-
-    { "key": "WEALTH:1", "tradition": null, "i18n": { "en": { "title": "Financial Chart Analysis", "content": "{name}, your birth chart's wealth indicators show promising financial potential. The 2nd house (accumulated wealth) and 11th house (income) configurations suggest steady financial growth through career and investments." } } },
-    { "key": "WEALTH:2", "tradition": null, "i18n": { "en": { "title": "2nd & 11th House Study", "content": "The lords of your 2nd and 11th houses and their planetary dignity determine your wealth trajectory. Benefic aspects on these houses indicate financial stability, while the Dasha of these lords brings peak earning periods." } } },
-    { "key": "WEALTH:3", "tradition": null, "i18n": { "en": { "title": "Dhana Yogas", "content": "Your chart contains wealth-producing Yogas (Dhana Yogas) formed by the conjunction or mutual aspect of specific house lords. These Yogas activate during favorable Dasha periods, bringing financial windfalls and prosperity." } } },
-    { "key": "WEALTH:4", "tradition": null, "i18n": { "en": { "title": "Investment Timing", "content": "The best periods for investments align with Jupiter and Venus transits through your wealth houses. Avoid speculative investments during Rahu-Ketu axis activations. Long-term investments made during favorable Muhurat will yield the best returns." } } },
-    { "key": "WEALTH:5", "tradition": null, "i18n": { "en": { "title": "Wealth Growth Periods", "content": "The coming years show financial growth peaks during specific Dasha transitions. Save and invest during Saturn's productive transits, and expand during Jupiter's wealth-house transits. Real estate investments are particularly favored." } } },
-    { "key": "WEALTH:6", "tradition": null, "i18n": { "en": { "title": "Financial Remedies", "content": "Enhance financial prosperity by: keeping a Kuber Yantra in your safe, chanting the Lakshmi Mantra on Fridays, donating to charity on auspicious days, wearing a Yellow Sapphire for Jupiter's blessings (after consultation), and beginning financial ventures during Pushya Nakshatra." } } },
-
-    { "key": "PALM:1", "tradition": null, "i18n": { "en": { "title": "Palm Lines Overview", "content": "{name}, your palm analysis reveals a fascinating combination of lines and patterns. The major lines on your palm indicate a life of purpose, emotional depth, and intellectual vigor. The clarity and depth of your lines suggest strong life force energy and determination." } } },
-    { "key": "PALM:2", "tradition": null, "i18n": { "en": { "title": "Heart Line Analysis", "content": "Your heart line indicates a passionate and emotionally expressive nature. The length and curvature suggest a balance between emotional openness and thoughtful selectivity in relationships. Deep, unbroken lines point toward meaningful, lasting connections." } } },
-    { "key": "PALM:3", "tradition": null, "i18n": { "en": { "title": "Head Line Analysis", "content": "The head line on your palm shows strong analytical abilities and clear thinking patterns. Its trajectory indicates a blend of logical reasoning and creative imagination. This suggests success in careers requiring both intellectual precision and innovative thinking." } } },
-    { "key": "PALM:4", "tradition": null, "i18n": { "en": { "title": "Life Line Analysis", "content": "Your life line shows strong vitality and resilience. The depth and length indicate a life full of energy and enthusiasm. The curve around the Mount of Venus suggests warmth, generosity, and a zest for living that attracts positive experiences." } } },
-    { "key": "PALM:5", "tradition": null, "i18n": { "en": { "title": "Mount Analysis", "content": "The mounts on your palm reveal key personality traits. Well-developed mounts indicate areas of strength: Jupiter for ambition, Apollo for creativity, and Venus for love and passion. The balance of your mounts suggests a well-rounded personality with multiple talents." } } },
-    { "key": "PALM:6", "tradition": null, "i18n": { "en": { "title": "Overall Reading & Guidance", "content": "{name}, your overall palm reading suggests a life of achievement, meaningful relationships, and personal growth. The combination of your major lines, minor lines, and mount development points toward success through self-effort. Practicing mindfulness and staying true to your values will amplify the positive indications in your palm." } } },
-
-    { "key": "ANNUAL:1", "tradition": null, "i18n": { "en": { "title": "Year Overview", "content": "{name}, the year ahead brings a transformative blend of opportunities and growth. The major planetary transits this year activate key areas of your chart, bringing positive changes in career, relationships, and personal development. Jupiter's beneficial influence highlights expansion and prosperity." } } },
-    { "key": "ANNUAL:2", "tradition": null, "i18n": { "en": { "title": "Quarter 1 Forecast (Jan-Mar)", "content": "The first quarter sets a strong foundation for the year. Saturn's disciplined energy supports goal-setting and planning. Professional opportunities may arise through networking. Focus on health routines and building new habits during this period. Financial planning initiated now will yield rewards later." } } },
-    { "key": "ANNUAL:3", "tradition": null, "i18n": { "en": { "title": "Quarter 2 Forecast (Apr-Jun)", "content": "The second quarter brings dynamic energy with Mars activating your career sector. This is an excellent period for launching new projects and taking calculated risks. Relationships deepen as Venus transits favorably. Travel opportunities may arise, bringing both pleasure and business prospects." } } },
-    { "key": "ANNUAL:4", "tradition": null, "i18n": { "en": { "title": "Quarter 3 Forecast (Jul-Sep)", "content": "Mid-year brings introspection and consolidation. Mercury retrograde periods require careful communication. Focus on completing ongoing projects rather than starting new ones. Family matters take center stage, and property-related decisions are favored. Health improvements show results from earlier efforts." } } },
-    { "key": "ANNUAL:5", "tradition": null, "i18n": { "en": { "title": "Quarter 4 Forecast (Oct-Dec)", "content": "The final quarter brings the year's strongest results. Jupiter's transit supports financial growth and career advancement. Social connections bring unexpected opportunities. This is an excellent period for investments, celebrations, and long-term commitments. End the year with gratitude and forward planning." } } },
-    { "key": "ANNUAL:6", "tradition": null, "i18n": { "en": { "title": "Annual Remedies & Lucky Periods", "content": "To maximize this year's potential: perform Ganesha Puja at the year's start, wear gemstones suited to your Lagna after consultation, observe fasting on days ruled by your chart's weakest planet, and chant the Gayatri Mantra daily. Lucky months include those when Jupiter transits your Trikona houses. Special Muhurat periods will be particularly favorable for major decisions." } } }
+    {
+      "key": "LIFE:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Birth Chart Overview",
+          "content": "{name}, your Vedic birth chart reveals a person of determination and emotional depth. The Lagna (Ascendant) lord's placement indicates strong self-expression and leadership potential. Your chart shows a balance between material pursuits and spiritual growth."
+        },
+        "hi": {
+          "title": "जन्म कुंडली का अवलोकन",
+          "content": "{name}, आपकी वैदिक जन्म कुंडली एक दृढ़ संकल्प और भावनात्मक गहराई वाले व्यक्ति को प्रकट करती है। लग्न (आरोही) स्वामी की स्थिति मजबूत आत्म-अभिव्यक्ति और नेतृत्व क्षमता का संकेत देती है। आपकी कुंडली भौतिक प्रयासों और आध्यात्मिक विकास के बीच संतुलन दिखाती है।"
+        },
+        "ta": {
+          "title": "பிறப்பு வரைபடத்தின் மேலோட்டம்",
+          "content": "{name}, உங்கள் வேத ஜாதகம் ஒரு உறுதியான மற்றும் உணர்ச்சி ஆழமுள்ள நபரை வெளிப்படுத்துகிறது. லக்னா (உயிரோட்டம்) அதிபதியின் இருப்பிடம் வலுவான சுய வெளிப்பாடு மற்றும் தலைமைத்துவ திறனை குறிக்கிறது. உங்கள் ஜாதகம் பொருட்கள் தொடர்பான முயற்சிகள் மற்றும் ஆன்மிக வளர்ச்சி ஆகியவற்றுக்கு இடையில் சமநிலையை காட்டுகிறது."
+        },
+        "te": {
+          "title": "జనన చార్ట్ అవలోకనం",
+          "content": "{name}, మీ వేద జాతక చార్ట్ ఒక నిర్ణయాత్మకత మరియు భావోద్వేగ లోతు కలిగిన వ్యక్తిని సూచిస్తుంది. లగ్న (ఆరోహణ) అధిపతి స్థానం బలమైన స్వయంవ్యక్తీకరణ మరియు నాయకత్వ సామర్థ్యాన్ని సూచిస్తుంది. మీ చార్ట్ భౌతిక ప్రయోజనాలు మరియు ఆధ్యాత్మిక వృద్ధి మధ్య సమతుల్యతను చూపిస్తుంది."
+        },
+        "bn": {
+          "title": "জন্মপত্রিকা সংক্ষিপ্ত বিবরণ",
+          "content": "{name}, আপনার বৈদিক জন্মপত্রিকা দৃঢ় সংকল্প এবং আবেগপূর্ণ গভীরতার একজন ব্যক্তিকে প্রকাশ করে। লগ্ন (উদয়) প্রভুর অবস্থান শক্তিশালী আত্মপ্রকাশ এবং নেতৃত্বের সম্ভাবনা নির্দেশ করে। আপনার চার্টে বস্তুগত সাধনা এবং আধ্যাত্মিক বৃদ্ধির মধ্যে একটি ভারসাম্য প্রদর্শিত হয়।"
+        },
+        "mr": {
+          "title": "जन्म कुंडलीचा आढावा",
+          "content": "{name}, तुमची वैदिक जन्म कुंडली दृढनिश्चय आणि भावनिक खोली असलेल्या व्यक्तीचे दर्शन घडवते. लग्न (उदय) स्वामीची स्थिती मजबूत आत्मप्रकटीकरण आणि नेतृत्व क्षमतेची सूचक आहे. तुमची कुंडली भौतिक प्रयत्न आणि आध्यात्मिक वाढ यांच्यातील संतुलन दर्शवते."
+        },
+        "gu": {
+          "title": "જન્મ કુંડળીની સમીક્ષા",
+          "content": "{name}, તમારી વૈદિક જન્મ કુંડળી દ્રઢ નિર્ધારણ અને ભાવનાત્મક ઊંડાણ ધરાવતી વ્યક્તિને દર્શાવે છે. લગ્ન (અસેન્ડન્ટ) સ્વામીની સ્થિતિ મજબૂત સ્વઅભિવ્યક્તિ અને નેતૃત્વ ક્ષમતાની સંભાવના દર્શાવે છે. તમારી કુંડળી ભૌતિક પ્રવૃત્તિઓ અને આધ્યાત્મિક વૃદ્ધિ વચ્ચે સંતુલન દર્શાવે છે."
+        },
+        "kn": {
+          "title": "ಜನನ ಚಾರ್ಟ್ ಅವಲೋಕನ",
+          "content": "{name}, ನಿಮ್ಮ ವೇದಿಕ ಜನನ ಚಾರ್ಟ್ ದೃಢನಿಶ್ಚಯ ಮತ್ತು ಭಾವನಾತ್ಮಕ ಆಳತೆಯ ವ್ಯಕ್ತಿಯನ್ನು ಬಹಿರಂಗಪಡಿಸುತ್ತದೆ. ಲಗ್ನ (ಆರೋಹಣ) ಸ್ವಾಮಿಯ ಸ್ಥಾನದ ಸೂಚನೆಗಳು ಶಕ್ತಿಯುತ ಸ್ವಯಂ-ಪ್ರಕಟನೆ ಮತ್ತು ನಾಯಕತ್ವ ಸಾಮರ್ಥ್ಯವನ್ನು ಸೂಚಿಸುತ್ತವೆ. ನಿಮ್ಮ ಚಾರ್ಟ್ ಭೌತಿಕ ಕಾರ್ಯಗಳು ಮತ್ತು ಆಧ್ಯಾತ್ಮಿಕ ಬೆಳವಣಿಗೆ ನಡುವಿನ ಸಮತೋಲನವನ್ನು ತೋರಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "ജനന ചാർട്ട് അവലോകനം",
+          "content": "{name}, നിങ്ങളുടെ വെദിക ജനന ചാർട്ട് ഒരു ദൃഢനിശ്ചയവും മാനസിക ആഴവുമുള്ള വ്യക്തിയെ വെളിപ്പെടുത്തുന്നു. ലഗ്ന (അസെൻഡന്റ്) അധിപന്റെ സ്ഥാനം ശക്തമായ സ്വയംപ്രകടനവും നേതൃപാടവവും സൂചിപ്പിക്കുന്നു. നിങ്ങളുടെ ചാർട്ട് ഭൗതിക ശ്രമങ്ങളും ആത്മീയ വളർച്ചയും തമ്മിലുള്ള സമതുലിതാവസ്ഥ കാണിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਜਨਮ ਕੁੰਡਲੀ ਦਾ ਜਾਇਜ਼ਾ",
+          "content": "{name}, ਤੁਹਾਡੀ ਵੇਦਿਕ ਜਨਮ ਕੁੰਡਲੀ ਦ੍ਰਿੜਤਾ ਅਤੇ ਭਾਵਨਾਤਮਕ ਗਹਿਰਾਈ ਵਾਲੇ ਵਿਅਕਤੀ ਨੂੰ ਦਰਸਾਉਂਦੀ ਹੈ। ਲਗਨ (ਚੜ੍ਹਦਾ ਰਾਸ਼ੀ) ਦੇ ਸਵਾਮੀ ਦੀ ਸਥਿਤੀ ਮਜ਼ਬੂਤ ਸਵੈ-ਅਭਿਵਯਕਤੀ ਅਤੇ ਨੇਤ੍ਰਿਤਵ ਦੀ ਸੰਭਾਵਨਾ ਦਰਸਾਉਂਦੀ ਹੈ। ਤੁਹਾਡੀ ਕੁੰਡਲੀ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਅਤੇ ਆਧਿਆਤਮਿਕ ਵਿਕਾਸ ਦੇ ਵਿਚਕਾਰ ਸੰਤੁਲਨ ਦਿਖਾਉਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "title": "ଜନ୍ମ କୁଣ୍ଡଳୀ ସମୀକ୍ଷା",
+          "content": "{name}, ଆପଣଙ୍କ ବେଦିକ ଜନ୍ମ କୁଣ୍ଡଳୀ ଏକ ସଂକଳ୍ପ ଓ ଭାବନାତ୍ମକ ଗଭୀରତାର ବ୍ୟକ୍ତିକୁ ପ୍ରକାଶ କରେ। ଲଗ୍ନ (ଉଦୟ) ଲୋର୍ଡର ସ୍ଥାନ ଦୃଢ଼ ସ୍ୱୟଂ ପ୍ରକାଶ ଓ ନେତୃତ୍ୱ କ୍ଷମତାକୁ ସୂଚିତ କରେ। ଆପଣଙ୍କ କୁଣ୍ଡଳୀ ଭୌତିକ ପ୍ରୟାସ ଓ ଆଧ୍ୟାତ୍ମିକ ବୃଦ୍ଧିର ମଧ୍ୟରେ ସମତାକୁ ଦର୍ଶାଏ।"
+        },
+        "as": {
+          "title": "জন্ম তালিকা পৰ্যালোচনা",
+          "content": "{name}, আপোনাৰ বেদিক জন্ম তালিকাই এটা দৃঢ় সংকল্প আৰু অনুভূতিশীল গভীৰতাৰ ব্যক্তিৰ কথা প্ৰকাশ কৰে। লগ্ন (আসেণ্ডেণ্ট) স্বামীৰ অৱস্থানই শক্তিশালী আত্মপ্ৰকাশ আৰু নেতৃত্বৰ সম্ভাৱনাক সূচায়। আপোনাৰ তালিকাই ভৌতিক সাধনা আৰু আধ্যাত্মিক বৃদ্ধিৰ মাজত এটা সন্তুলন প্ৰদৰ্শন কৰে।"
+        }
+      }
+    },
+    {
+      "key": "LIFE:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Planetary Analysis",
+          "content": "The key planetary influences in your chart include Jupiter's beneficial aspect on your Kendra houses, suggesting wisdom and prosperity. Saturn's placement indicates disciplined growth through patience. Venus and Mercury's positions favor creative and intellectual pursuits."
+        },
+        "hi": {
+          "title": "ग्रहों का विश्लेषण",
+          "content": "आपकी कुंडली में मुख्य ग्रहों के प्रभावों में बृहस्पति का आपके केंद्र घरों पर लाभकारी दृष्टिकोण शामिल है, जो ज्ञान और समृद्धि का संकेत देता है। शनि की स्थिति धैर्य के माध्यम से अनुशासित विकास का संकेत देती है। शुक्र और बुध की स्थितियाँ रचनात्मक और बौद्धिक गतिविधियों का समर्थन करती हैं।"
+        },
+        "ta": {
+          "title": "கிரக பகுப்பாய்வு",
+          "content": "உங்கள் ஜாதகத்தில் முக்கியமான கிரக தாக்கங்கள், உங்கள் கேந்திர வீடுகளில் குருவின் நன்மை தரும் பார்வையை உள்ளடக்கியவை, இது ஞானம் மற்றும் செழிப்பை குறிக்கிறது. சனியின் இருப்பு பொறுமையின் மூலம் ஒழுக்கமான வளர்ச்சியை குறிக்கிறது. சுக்கிரன் மற்றும் புதனின் நிலைகள் படைப்பாற்றல் மற்றும் அறிவாற்றல் முயற்சிகளை ஆதரிக்கின்றன."
+        },
+        "te": {
+          "title": "గ్రహ విశ్లేషణ",
+          "content": "మీ జాతకంలో ప్రధాన గ్రహ ప్రభావాలు జూపిటర్ యొక్క కేంద్రములపై లాభదాయకమైన దృష్టిని కలిగి ఉండటం, జ్ఞానం మరియు శ్రేయస్సును సూచిస్తుంది. శనిగ్రహ స్థానం సహనంతో క్రమశిక్షణతో వృద్ధిని సూచిస్తుంది. శుక్రుడు మరియు బుధుని స్థానాలు సృజనాత్మక మరియు మేధోపరమైన ప్రయత్నాలకు అనుకూలంగా ఉన్నాయి."
+        },
+        "bn": {
+          "title": "গ্রহ বিশ্লেষণ",
+          "content": "আপনার চার্টে প্রধান গ্রহ প্রভাবগুলির মধ্যে রয়েছে আপনার কেন্দ্র ঘরগুলিতে বৃহস্পতির উপকারী দৃষ্টি, যা জ্ঞান এবং সমৃদ্ধি নির্দেশ করে। শনির অবস্থান ধৈর্যের মাধ্যমে শৃঙ্খলাপূর্ণ বৃদ্ধি নির্দেশ করে। শুক্র এবং বুধের অবস্থান সৃজনশীল এবং বুদ্ধিবৃত্তিক প্রচেষ্টাকে সমর্থন করে।"
+        },
+        "mr": {
+          "title": "ग्रह विश्लेषण",
+          "content": "तुमच्या पत्रिकेतील मुख्य ग्रह प्रभावांमध्ये तुमच्या केंद्र घरांवर गुरुचा लाभदायक दृष्टिकोन समाविष्ट आहे, ज्यामुळे शहाणपण आणि समृद्धी सूचित होते. शनीची स्थिती संयमाने शिस्तबद्ध वाढ दर्शवते. शुक्र आणि बुध यांच्या स्थानांमुळे सर्जनशील आणि बौद्धिक उपक्रमांना प्राधान्य दिले जाते."
+        },
+        "gu": {
+          "title": "ગ્રહ વિશ્લેષણ",
+          "content": "તમારા ચાર્ટમાં મુખ્ય ગ્રહ પ્રભાવોમાં કેન્દ્ર ઘરો પર ગુરુનો લાભદાયી દ્રષ્ટિ શામેલ છે, જે જ્ઞાન અને સમૃદ્ધિ સૂચવે છે. શનિનું સ્થાન ધીરજ દ્વારા શિસ્તબદ્ધ વૃદ્ધિ સૂચવે છે. શુક્ર અને બુધની સ્થિતિ સર્જનાત્મક અને બૌદ્ધિક પ્રવૃત્તિઓને અનુકૂળ છે."
+        },
+        "kn": {
+          "title": "ಗ್ರಹ ವಿಶ್ಲೇಷಣೆ",
+          "content": "ನಿಮ್ಮ ಜಾತಕದಲ್ಲಿ ಪ್ರಮುಖ ಗ್ರಹಗಳ ಪ್ರಭಾವಗಳಲ್ಲಿ, ನಿಮ್ಮ ಕೆಂದ್ರ ಮನೆಗಳ ಮೇಲೆ ಗುರುದೇವನ ಅನುಕೂಲಕರ ದೃಷ್ಟಿ, ಜ್ಞಾನ ಮತ್ತು ಸಮೃದ್ಧಿಯನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಶನಿಯ ಸ್ಥಿತಿ ಸಹನಶೀಲತೆಯ ಮೂಲಕ ಶಿಸ್ತಿನ ಬೆಳವಣಿಗೆಯನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಶುಕ್ರ ಮತ್ತು ಬುಧನ ಸ್ಥಿತಿಗಳು ಸೃಜನಾತ್ಮಕ ಮತ್ತು ಬೌದ್ಧಿಕ ಚಟುವಟಿಕೆಗಳನ್ನು ಅನುಕೂಲಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "ഗ്രഹ വിശകലനം",
+          "content": "നിങ്ങളുടെ ജാതകത്തിലെ പ്രധാന ഗ്രഹ സ്വാധീനങ്ങളിൽ, ജ്യുപിറ്ററിന്റെ കെന്ദ്ര വീടുകളിലെ അനുകൂല ദൃഷ്ടി ജ്ഞാനവും സമൃദ്ധിയും സൂചിപ്പിക്കുന്നു. ശനിയുടെ സ്ഥാനം ക്ഷമയിലൂടെ ക്രമബദ്ധമായ വളർച്ചയെ സൂചിപ്പിക്കുന്നു. ശുക്രനും ബുധനും ഉള്ള സ്ഥാനങ്ങൾ സൃഷ്ടിപരവും ബൗദ്ധികവുമായ പ്രവർത്തനങ്ങൾക്ക് അനുകൂലമാണ്."
+        },
+        "pa": {
+          "title": "ਗ੍ਰਹਿ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "ਤੁਹਾਡੇ ਚਾਰਟ ਵਿੱਚ ਮੁੱਖ ਗ੍ਰਹਿ ਪ੍ਰਭਾਵਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਹਨ ਜੁਪਿਟਰ ਦਾ ਲਾਭਕਾਰੀ ਪੱਖ ਤੁਹਾਡੇ ਕੇਂਦਰ ਘਰਾਂ 'ਤੇ, ਜੋ ਕਿ ਸਿਆਣਪ ਅਤੇ ਖੁਸ਼ਹਾਲੀ ਦਾ ਸੁਝਾਅ ਦਿੰਦਾ ਹੈ। ਸ਼ਨੀ ਦੀ ਸਥਿਤੀ ਧੀਰਜ ਰਾਹੀਂ ਅਨੁਸ਼ਾਸਿਤ ਵਿਕਾਸ ਦਰਸਾਉਂਦੀ ਹੈ। ਸ਼ੁਕਰ ਅਤੇ ਬੁੱਧ ਦੀਆਂ ਸਥਿਤੀਆਂ ਰਚਨਾਤਮਕ ਅਤੇ ਬੌਧਿਕ ਕਾਰਜਾਂ ਨੂੰ ਵਧਾਵਾ ਦਿੰਦੀ ਹਨ।"
+        },
+        "or": {
+          "title": "ଗ୍ରହ ବିଶ୍ଲେଷଣ",
+          "content": "ଆପଣଙ୍କ ଚାର୍ଟରେ ପ୍ରମୁଖ ଗ୍ରହ ପ୍ରଭାବରେ ଶାମିଲ ହେଉଛି Jupiter ଙ୍କର ଶୁଭ ପ୍ରଭାବ ଆପଣଙ୍କ କେନ୍ଦ୍ର ଘରଗୁଡିକରେ, ଯାହା ଜ୍ଞାନ ଏବଂ ସମୃଦ୍ଧି ସୂଚିତ କରେ। Saturn ଙ୍କର ସ୍ଥାନ ଧୈର୍ଯ୍ୟ ମାଧ୍ୟମରେ ଶିଷ୍ଟ ଉନ୍ନତି ସୂଚିତ କରେ। Venus ଏବଂ Mercury ଙ୍କର ସ୍ଥାନ ସୃଜନଶୀଳ ଏବଂ ବୁଦ୍ଧିମତାପୂର୍ଣ୍ଣ କାର୍ଯ୍ୟକଳାପକୁ ପସନ୍ଦ କରେ।"
+        },
+        "as": {
+          "title": "গ্ৰহীয় বিশ্লেষণ",
+          "content": "আপোনাৰ চাৰ্টত মুখ্য গ্ৰহীয় প্ৰভাৱসমূহত অন্তৰ্ভুক্ত হৈছে কেন্দ্ৰ ঘৰত বৃহস্পতিৰ অনুকূল দৃষ্টিভংগী, যি জ্ঞান আৰু সমৃদ্ধি সূচায়। শনিৰ অৱস্থান ধৈৰ্য্যৰ জৰিয়তে শৃংখলাবদ্ধ বৃদ্ধি সূচায়। শুক্ৰ আৰু বুধৰ অৱস্থান সৃষ্টিশীল আৰু বুদ্ধিবৃত্তিক প্ৰয়াসক অনুকূল কৰে।"
+        }
+      }
+    },
+    {
+      "key": "LIFE:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Current Dasha Period",
+          "content": "The current Mahadasha period brings opportunities for personal transformation. Focus on long-term goals and investments during this transit. The sub-period (Antardasha) highlights relationships and social connections. This is a favorable time for education and skill development."
+        },
+        "hi": {
+          "title": "वर्तमान दशा अवधि",
+          "content": "वर्तमान महादशा अवधि व्यक्तिगत परिवर्तन के लिए अवसर लाती है। इस गोचर के दौरान दीर्घकालिक लक्ष्यों और निवेशों पर ध्यान केंद्रित करें। उप-अवधि (अंतरदशा) संबंधों और सामाजिक संबंधों को उजागर करती है। यह शिक्षा और कौशल विकास के लिए अनुकूल समय है।"
+        },
+        "ta": {
+          "title": "தற்போதைய தசை காலம்",
+          "content": "தற்போதைய மகாதசை காலம் தனிப்பட்ட மாற்றங்களுக்கு வாய்ப்புகளை கொண்டு வருகிறது. இந்த காலப்பகுதியில் நீண்டகால இலக்குகள் மற்றும் முதலீடுகளில் கவனம் செலுத்துங்கள். உப-காலம் (அந்தர்தசை) உறவுகள் மற்றும் சமூக தொடர்புகளை முக்கியமாகக் காட்டுகிறது. இது கல்வி மற்றும் திறன் மேம்பாட்டிற்கு சாதகமான நேரமாகும்."
+        },
+        "te": {
+          "title": "ప్రస్తుత దశా కాలం",
+          "content": "ప్రస్తుత మహాదశా కాలం వ్యక్తిగత మార్పులకు అవకాశాలను తెస్తుంది. ఈ గమనంలో దీర్ఘకాలిక లక్ష్యాలు మరియు పెట్టుబడులపై దృష్టి పెట్టండి. ఉప-కాలం (అంతర్దశ) సంబంధాలు మరియు సామాజిక సంబంధాలను ప్రధానంగా చూపిస్తుంది. ఇది విద్య మరియు నైపుణ్య అభివృద్ధికి అనుకూలమైన సమయం."
+        },
+        "bn": {
+          "title": "বর্তমান দশা সময়কাল",
+          "content": "বর্তমান মহাদশা সময়কাল ব্যক্তিগত রূপান্তরের সুযোগ নিয়ে আসে। এই গমনকালে দীর্ঘমেয়াদী লক্ষ্য এবং বিনিয়োগের উপর মনোযোগ দিন। উপ-পর্যায় (অন্তর্দশা) সম্পর্ক এবং সামাজিক সংযোগগুলিকে গুরুত্ব দেয়। এটি শিক্ষা এবং দক্ষতা উন্নয়নের জন্য একটি অনুকূল সময়।"
+        },
+        "mr": {
+          "title": "चालू दशा कालावधी",
+          "content": "चालू महादशा कालावधी वैयक्तिक परिवर्तनासाठी संधी आणतो. या गोचरादरम्यान दीर्घकालीन उद्दिष्टे आणि गुंतवणुकींवर लक्ष केंद्रित करा. उप-कालावधी (अंतरदशा) संबंध आणि सामाजिक संबंधांना अधोरेखित करतो. हे शिक्षण आणि कौशल्य विकासासाठी अनुकूल वेळ आहे."
+        },
+        "gu": {
+          "title": "વર્તમાન દશા સમયગાળો",
+          "content": "વર્તમાન મહાદશા સમયગાળો વ્યક્તિગત પરિવર્તન માટે તકો લાવે છે. આ સંક્રમણ દરમિયાન લાંબા ગાળાના લક્ષ્યો અને રોકાણ પર ધ્યાન આપો. ઉપસમયગાળો (અંતરદશા) સંબંધો અને સામાજિક જોડાણોને પ્રકાશિત કરે છે. આ શિક્ષણ અને કુશળતા વિકાસ માટે અનુકૂળ સમય છે."
+        },
+        "kn": {
+          "title": "ಪ್ರಸ್ತುತ ದಶಾ ಅವಧಿ",
+          "content": "ಪ್ರಸ್ತುತ ಮಹಾದಶಾ ಅವಧಿ ವೈಯಕ್ತಿಕ ಪರಿವರ್ತನೆಗೆ ಅವಕಾಶಗಳನ್ನು ತರುತ್ತದೆ. ಈ ಸಂಕ್ರಮಣದ ಸಮಯದಲ್ಲಿ ದೀರ್ಘಕಾಲದ ಗುರಿಗಳು ಮತ್ತು ಹೂಡಿಕೆಗಳ ಮೇಲೆ ಗಮನ ಹರಿಸಿ. ಉಪಅವಧಿ (ಅಂತರದಶಾ) ಸಂಬಂಧಗಳು ಮತ್ತು ಸಾಮಾಜಿಕ ಸಂಪರ್ಕಗಳನ್ನು ಹೈಲೈಟ್ ಮಾಡುತ್ತದೆ. ಇದು ಶಿಕ್ಷಣ ಮತ್ತು ಕೌಶಲ್ಯ ಅಭಿವೃದ್ಧಿಗೆ ಅನುಕೂಲಕರ ಸಮಯವಾಗಿದೆ."
+        },
+        "ml": {
+          "title": "നിലവിലെ ദശാ കാലഘട്ടം",
+          "content": "നിലവിലെ മഹാദശാ കാലഘട്ടം വ്യക്തിപരമായ മാറ്റങ്ങൾക്ക് അവസരങ്ങൾ നൽകുന്നു. ഈ ഗമനത്തിനിടെ ദീർഘകാല ലക്ഷ്യങ്ങൾക്കും നിക്ഷേപങ്ങൾക്കും ശ്രദ്ധ നൽകുക. ഉപകാലഘട്ടം (അന്തരദശ) ബന്ധങ്ങളും സാമൂഹിക ബന്ധങ്ങളും പ്രാധാന്യമർഹിക്കുന്നു. ഇത് വിദ്യാഭ്യാസത്തിനും കഴിവ് വികസനത്തിനും അനുകൂലമായ സമയമാണ്."
+        },
+        "pa": {
+          "title": "ਮੌਜੂਦਾ ਦਸ਼ਾ ਪੀਰੀਅਡ",
+          "content": "ਮੌਜੂਦਾ ਮਹਾਦਸ਼ਾ ਪੀਰੀਅਡ ਨਿੱਜੀ ਬਦਲਾਅ ਲਈ ਮੌਕੇ ਲਿਆਉਂਦਾ ਹੈ। ਇਸ ਗੁਜ਼ਰਾਨ ਦੌਰਾਨ ਲੰਬੇ ਸਮੇਂ ਦੇ ਲਕਸ਼ਾਂ ਅਤੇ ਨਿਵੇਸ਼ਾਂ 'ਤੇ ਧਿਆਨ ਦਿਓ। ਉਪ-ਪੀਰੀਅਡ (ਅੰਤਰਦਸ਼ਾ) ਸੰਬੰਧਾਂ ਅਤੇ ਸਮਾਜਿਕ ਸੰਪਰਕਾਂ ਨੂੰ ਉਜਾਗਰ ਕਰਦਾ ਹੈ। ਇਹ ਸਿੱਖਿਆ ਅਤੇ ਹੁਨਰ ਵਿਕਾਸ ਲਈ ਅਨੁਕੂਲ ਸਮਾਂ ਹੈ।"
+        },
+        "or": {
+          "title": "ବର୍ତ୍ତମାନ ଦଶା ପର୍ଯ୍ୟାୟ",
+          "content": "ବର୍ତ୍ତମାନ ମହାଦଶା ପର୍ଯ୍ୟାୟ ବ୍ୟକ୍ତିଗତ ପରିବର୍ତ୍ତନ ପାଇଁ ସୁଯୋଗ ଆଣେ। ଏହି ଗତିବିଧି ସମୟରେ ଦୀର୍ଘକାଳୀନ ଲକ୍ଷ୍ୟ ଏବଂ ପୁଞ୍ଜିବିନିୟୋଗ ଉପରେ ଧ୍ୟାନ ଦିଅନ୍ତୁ। ଉପ-ପର୍ଯ୍ୟାୟ (ଅନ୍ତରଦଶା) ସମ୍ପର୍କ ଏବଂ ସାମାଜିକ ସମ୍ପର୍କଗୁଡ଼ିକୁ ଆଲୋକିତ କରେ। ଏହା ଶିକ୍ଷା ଏବଂ କୌଶଳ ଉନ୍ନତି ପାଇଁ ଏକ ଶୁଭ ସମୟ।"
+        },
+        "as": {
+          "title": "বৰ্তমান দasha কাল",
+          "content": "বৰ্তমান মহাদasha কালখণ্ডই ব্যক্তিগত পৰিৱৰ্তনৰ বাবে সুযোগ আনিছে। এই গমনকালত দীৰ্ঘম্যাদী লক্ষ্য আৰু বিনিয়োগত মনোনিবেশ কৰক। উপ-কাল (অন্তৰ্দasha)ই সম্পৰ্ক আৰু সামাজিক সংযোগসমূহক প্ৰধান কৰি তোলে। এইটো শিক্ষা আৰু কৌশল বিকাশৰ বাবে অনুকূল সময়।"
+        }
+      }
+    },
+    {
+      "key": "LIFE:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Key Yogas",
+          "content": "Your chart shows the formation of significant Yogas that influence your life path. The presence of beneficial Yogas in Kendra houses suggests prosperity and wisdom. These planetary combinations indicate success through righteous actions and intellectual pursuits."
+        },
+        "hi": {
+          "title": "मुख्य योग",
+          "content": "आपकी कुंडली में महत्वपूर्ण योगों का निर्माण दिखता है जो आपके जीवन पथ को प्रभावित करते हैं। केंद्र घरों में लाभकारी योगों की उपस्थिति समृद्धि और बुद्धिमत्ता का संकेत देती है। ये ग्रह संयोजन धर्मपूर्ण कार्यों और बौद्धिक प्रयासों के माध्यम से सफलता का संकेत देते हैं।"
+        },
+        "ta": {
+          "title": "முக்கிய யோகங்கள்",
+          "content": "உங்கள் ஜாதகத்தில் உங்கள் வாழ்க்கை பாதையை பாதிக்கும் முக்கியமான யோகங்கள் உருவாகியுள்ளன. கேந்திர வீடுகளில் நன்மை பயக்கும் யோகங்கள் இருப்பது செழிப்பு மற்றும் ஞானத்தை குறிக்கிறது. இந்த கிரக சேர்க்கைகள் நீதிமான செயல்கள் மற்றும் அறிவாற்றல் முயற்சிகளின் மூலம் வெற்றியை குறிக்கின்றன."
+        },
+        "te": {
+          "title": "ప్రధాన యోగాలు",
+          "content": "మీ జాతకంలో మీ జీవన మార్గాన్ని ప్రభావితం చేసే ముఖ్యమైన యోగాల ఏర్పాటును చూపిస్తుంది. కేంద్రము గృహాలలో లాభదాయక యోగాల ఉనికి సిరి మరియు జ్ఞానాన్ని సూచిస్తుంది. ఈ గ్రహసమూహాలు ధార్మిక చర్యలు మరియు మేధోపరమైన ప్రయత్నాల ద్వారా విజయాన్ని సూచిస్తాయి."
+        },
+        "bn": {
+          "title": "মূল যোগ",
+          "content": "আপনার চার্টে গুরুত্বপূর্ণ যোগের গঠন দেখা যাচ্ছে যা আপনার জীবনের পথকে প্রভাবিত করে। কেন্দ্র ঘরে শুভ যোগের উপস্থিতি সমৃদ্ধি এবং জ্ঞান নির্দেশ করে। এই গ্রহগত সংমিশ্রণগুলি ন্যায়সঙ্গত কাজ এবং বুদ্ধিবৃত্তিক সাধনার মাধ্যমে সাফল্য নির্দেশ করে।"
+        },
+        "mr": {
+          "title": "मुख्य योग",
+          "content": "तुमच्या पत्रिकेत तुमच्या जीवनमार्गावर प्रभाव टाकणाऱ्या महत्त्वपूर्ण योगांचे निर्माण दिसते. केंद्र घरांमध्ये लाभदायक योगांची उपस्थिती समृद्धी आणि शहाणपण सूचित करते. या ग्रहांच्या संयोजनांमुळे धर्मशील कृती आणि बौद्धिक प्रयत्नांद्वारे यश मिळण्याचे संकेत आहेत."
+        },
+        "gu": {
+          "title": "મુખ્ય યોગ",
+          "content": "તમારા ચાર્ટમાં મહત્વપૂર્ણ યોગોની રચના દર્શાવવામાં આવી છે જે તમારા જીવન માર્ગને પ્રભાવિત કરે છે. કેન્દ્ર ઘરોમાં લાભદાયી યોગોની હાજરી સુખાકારી અને જ્ઞાન સૂચવે છે. આ ગ્રહીય સંયોજનો ધર્મપૂર્ણ ક્રિયાઓ અને બૌદ્ધિક પ્રયત્નો દ્વારા સફળતા સૂચવે છે."
+        },
+        "kn": {
+          "title": "ಮುಖ್ಯ ಯೋಗಗಳು",
+          "content": "ನಿಮ್ಮ ಜಾತಕವು ನಿಮ್ಮ ಜೀವನ ಮಾರ್ಗವನ್ನು ಪ್ರಭಾವಿಸುವ ಪ್ರಮುಖ ಯೋಗಗಳ ರಚನೆಯನ್ನು ತೋರಿಸುತ್ತದೆ. ಕೆಂದ್ರ ಭವನಗಳಲ್ಲಿ ಲಾಭದಾಯಕ ಯೋಗಗಳ ಉಪಸ್ಥಿತಿ ಸಮೃದ್ಧಿ ಮತ್ತು ಜ್ಞಾನವನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಈ ಗ್ರಹ ಸಂಯೋಜನೆಗಳು ಧಾರ್ಮಿಕ ಕ್ರಿಯೆಗಳ ಮತ್ತು ಬೌದ್ಧಿಕ ಪ್ರಯತ್ನಗಳ ಮೂಲಕ ಯಶಸ್ಸನ್ನು ಸೂಚಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "പ്രധാന യോഗങ്ങൾ",
+          "content": "നിങ്ങളുടെ ജാതകത്തിൽ നിങ്ങളുടെ ജീവിതപഥത്തെ സ്വാധീനിക്കുന്ന പ്രധാന യോഗങ്ങളുടെ രൂപീകരണം കാണിക്കുന്നു. കെന്ദ്ര ഭവനങ്ങളിൽ ഗുണകരമായ യോഗങ്ങളുടെ സാന്നിധ്യം സമൃദ്ധിയും ജ്ഞാനവും സൂചിപ്പിക്കുന്നു. ഈ ഗ്രഹസമൂഹങ്ങൾ ധാർമ്മിക പ്രവർത്തനങ്ങളിലൂടെയും ബൗദ്ധിക ശ്രമങ്ങളിലൂടെയും വിജയത്തെ സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਮੁੱਖ ਯੋਗ",
+          "content": "ਤੁਹਾਡੇ ਚਾਰਟ ਵਿੱਚ ਮਹੱਤਵਪੂਰਨ ਯੋਗਾਂ ਦਾ ਗਠਨ ਦਿਖਾਈ ਦਿੰਦਾ ਹੈ ਜੋ ਤੁਹਾਡੇ ਜੀਵਨ ਦੇ ਰਸਤੇ ਨੂੰ ਪ੍ਰਭਾਵਿਤ ਕਰਦਾ ਹੈ। ਕੇਂਦਰ ਘਰਾਂ ਵਿੱਚ ਲਾਭਕਾਰੀ ਯੋਗਾਂ ਦੀ ਮੌਜੂਦਗੀ ਖੁਸ਼ਹਾਲੀ ਅਤੇ ਬੁੱਧੀਮਾਨੀ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀ ਹੈ। ਇਹ ਗ੍ਰਹਿ ਸੰਯੋਗ ਧਾਰਮਿਕ ਕਿਰਿਆਵਾਂ ਅਤੇ ਬੌਧਿਕ ਕੋਸ਼ਿਸ਼ਾਂ ਰਾਹੀਂ ਸਫਲਤਾ ਦਰਸਾਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ଯୋଗଗୁଡିକର ମୁଖ୍ୟତା",
+          "content": "ଆପଣଙ୍କର ଜନ୍ମକୁଣ୍ଡଳୀରେ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ ଯୋଗଗୁଡିକର ଗଠନ ଦେଖାଯାଉଛି ଯାହା ଆପଣଙ୍କ ଜୀବନ ପଥକୁ ପ୍ରଭାବିତ କରେ। କେନ୍ଦ୍ର ଘରଗୁଡିକରେ ଶୁଭ ଯୋଗଗୁଡିକର ଉପସ୍ଥିତି ସମୃଦ୍ଧି ଏବଂ ଜ୍ଞାନର ସୂଚନା ଦେଇଥାଏ। ଏହି ଗ୍ରହ ସଂଯୋଗଗୁଡିକ ଧର୍ମିକ କାର୍ଯ୍ୟ ଏବଂ ବୁଦ୍ଧିମତାପୂର୍ଣ୍ଣ ପ୍ରୟାସ ମାଧ୍ୟମରେ ସଫଳତାର ସୂଚନା ଦେଇଥାଏ।"
+        },
+        "as": {
+          "title": "Key Yogas",
+          "content": "আপোনাৰ তালিকাত গুৰুত্বপূৰ্ণ যোগৰ গঠন প্ৰদৰ্শিত হৈছে যি আপোনাৰ জীৱন পথক প্ৰভাৱিত কৰে। কেন্দ্ৰ ঘৰত উপকাৰী যোগৰ উপস্থিতিয়ে সমৃদ্ধি আৰু জ্ঞান সূচায়। এই গ্ৰহীয় সংযোগবোৰে ন্যায়সংগত কাৰ্য আৰু বুদ্ধিমত্তা সাধনৰ জৰিয়তে সফলতা সূচায়।"
+        }
+      }
+    },
+    {
+      "key": "LIFE:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Life Path & Destiny",
+          "content": "{name}, your life path is characterized by a journey of growth, learning, and meaningful contributions. The planetary alignments suggest peaks of achievement interspersed with periods of introspection. Your destiny points toward a life of influence and positive impact on those around you."
+        },
+        "hi": {
+          "title": "जीवन पथ और भाग्य",
+          "content": "{name}, आपका जीवन पथ विकास, सीखने और सार्थक योगदान की यात्रा से परिभाषित होता है। ग्रहों की स्थिति उपलब्धियों के शिखर के साथ आत्मनिरीक्षण के समय का सुझाव देती है। आपका भाग्य आपके आसपास के लोगों पर प्रभाव और सकारात्मक प्रभाव वाले जीवन की ओर संकेत करता है।"
+        },
+        "ta": {
+          "title": "வாழ்க்கை பாதை & விதி",
+          "content": "{name}, உங்கள் வாழ்க்கை பாதை வளர்ச்சி, கற்றல் மற்றும் அர்த்தமுள்ள பங்களிப்புகளின் பயணமாகக் குறிக்கப்படுகிறது. கிரக நிலைகள் சிந்தனைக்கான காலங்களுடன் இடைவேளைகளில் சாதனையின் உச்சங்களை முன்மொழிகின்றன. உங்கள் விதி உங்களைச் சுற்றியுள்ளவர்களிடம் செல்வாக்கு மற்றும் நேர்மறையான தாக்கம் கொண்ட வாழ்க்கையை நோக்கி சுட்டிக்காட்டுகிறது."
+        },
+        "te": {
+          "title": "జీవిత మార్గం & విధి",
+          "content": "{name}, మీ జీవిత మార్గం వృద్ధి, అభ్యాసం, మరియు అర్థవంతమైన సహకారాల ప్రయాణంగా ఉంటుంది. గ్రహాల అమరికలు సాధన శిఖరాలను సూచిస్తాయి, ఆత్మపరిశీలన కాలాలతో కలిపి. మీ విధి మీ చుట్టూ ఉన్నవారిపై ప్రభావం మరియు సానుకూల ప్రభావం కలిగించే జీవితాన్ని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "জীবন পথ ও নিয়তি",
+          "content": "{name}, আপনার জীবন পথ বৃদ্ধি, শিক্ষা এবং অর্থবহ অবদানের একটি যাত্রা দ্বারা চিহ্নিত। গ্রহের অবস্থানগুলি অর্জনের শিখর এবং আত্মবিশ্লেষণের সময়কাল নির্দেশ করে। আপনার নিয়তি আপনার চারপাশের লোকদের উপর প্রভাব এবং ইতিবাচক প্রভাবের একটি জীবনের দিকে নির্দেশ করে।"
+        },
+        "mr": {
+          "title": "जीवन मार्ग आणि नियती",
+          "content": "{name}, तुमचा जीवन मार्ग वाढ, शिकणे आणि अर्थपूर्ण योगदानाच्या प्रवासाने वैशिष्ट्यीकृत आहे. ग्रहांची स्थिती यशाच्या शिखरांना सूचित करते, ज्यामध्ये चिंतनाच्या कालखंडांचा समावेश आहे. तुमची नियती तुमच्याभोवती असलेल्या लोकांवर प्रभाव आणि सकारात्मक परिणाम असलेल्या जीवनाकडे निर्देश करते."
+        },
+        "gu": {
+          "title": "Life Path & Destiny",
+          "content": "{name}, તમારો જીવન માર્ગ વૃદ્ધિ, શીખવા અને અર્થપૂર્ણ યોગદાનની યાત્રા દ્વારા ચિહ્નિત છે. ગ્રહોની ગોઠવણ સિદ્ધિની ચોટીઓ સૂચવે છે જે અંતર્મુખતાના સમયગાળો સાથે વિખરાયેલી છે. તમારું ભાગ્ય તમારા આસપાસના લોકો પર પ્રભાવ અને સકારાત્મક અસરના જીવન તરફ સંકેત આપે છે."
+        },
+        "kn": {
+          "title": "ಜೀವನ ಪಥ ಮತ್ತು ವಿಧಿ",
+          "content": "{name}, ನಿಮ್ಮ ಜೀವನ ಪಥವು ಬೆಳವಣಿಗೆ, ಕಲಿಕೆ ಮತ್ತು ಅರ್ಥಪೂರ್ಣ ಕೊಡುಗೆಗಳ ಪ್ರಯಾಣದಿಂದ ಗುರುತಿಸಲ್ಪಟ್ಟಿದೆ. ಗ್ರಹಗಳ ಹೊಂದಾಣಿಕೆಗಳು ಸಾಧನೆಯ ಶಿಖರಗಳನ್ನು ಸೂಚಿಸುತ್ತವೆ, ಅವುಗಳ ನಡುವೆ ಆಂತರ್ಮುಖತೆಯ ಅವಧಿಗಳು ಇರುತ್ತವೆ. ನಿಮ್ಮ ವಿಧಿ ನಿಮ್ಮ ಸುತ್ತಲಿನವರ ಮೇಲೆ ಪ್ರಭಾವ ಮತ್ತು ಸಕಾರಾತ್ಮಕ ಪರಿಣಾಮದ ಜೀವನದತ್ತ ಸೂಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "ജീവിതപഥവും വിധിയും",
+          "content": "{name}, നിങ്ങളുടെ ജീവിതപഥം വളർച്ച, പഠനം, അർത്ഥവത്തായ സംഭാവനകൾ എന്നിവയാൽ സവിശേഷമാണ്. ഗ്രഹനിലകൾ ആത്മപരിശോധനയുടെ കാലയളവുകളോട് കൂടിയ നേട്ടങ്ങളുടെ ഉച്ചസ്ഥിതികൾ സൂചിപ്പിക്കുന്നു. നിങ്ങളുടെ വിധി ചുറ്റുമുള്ളവരിൽ സ്വാധീനവും സാന്നിധ്യവും ഉള്ള ഒരു ജീവിതത്തിലേക്ക് സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਜੀਵਨ ਪਥ ਅਤੇ ਕਿਸਮਤ",
+          "content": "{name}, ਤੁਹਾਡਾ ਜੀਵਨ ਪਥ ਵਾਧੇ, ਸਿੱਖਣ ਅਤੇ ਮਹੱਤਵਪੂਰਨ ਯੋਗਦਾਨਾਂ ਦੀ ਯਾਤਰਾ ਨਾਲ ਚਿੰਨ੍ਹਿਤ ਹੈ। ਗ੍ਰਹਿ ਸੰਰਚਨਾਵਾਂ ਉਪਲਬਧੀਆਂ ਦੇ ਚਰਮ ਬਿੰਦੂਆਂ ਨੂੰ ਦਰਸਾਉਂਦੀਆਂ ਹਨ ਜੋ ਵਿਚਾਰਸ਼ੀਲਤਾ ਦੇ ਸਮਿਆਂ ਨਾਲ ਮਿਲਦੀਆਂ ਹਨ। ਤੁਹਾਡੀ ਕਿਸਮਤ ਤੁਹਾਡੇ ਆਸ-ਪਾਸ ਦੇ ਲੋਕਾਂ 'ਤੇ ਪ੍ਰਭਾਵ ਅਤੇ ਸਕਾਰਾਤਮਕ ਅਸਰ ਵਾਲੇ ਜੀਵਨ ਵੱਲ ਇਸ਼ਾਰਾ ਕਰਦੀ ਹੈ।"
+        },
+        "or": {
+          "title": "ଜୀବନ ପଥ ଏବଂ ନିୟତି",
+          "content": "{name}, ତୁମର ଜୀବନ ପଥ ବୃଦ୍ଧି, ଶିକ୍ଷା ଏବଂ ଅର୍ଥପୂର୍ଣ୍ଣ ଅବଦାନର ଯାତ୍ରା ଦ୍ୱାରା ବିଶିଷ୍ଟ। ଗ୍ରହ ସମ୍ମିଳନ ଉପଲବ୍ଧିର ଶିଖରକୁ ସୂଚିତ କରେ ଯାହା ଅନ୍ତର୍ମୁଖୀ ଚିନ୍ତନର ଅବଧି ସହିତ ମିଶିତ। ତୁମର ନିୟତି ତୁମ ଚାରିପାଖରେ ଥିବା ଲୋକମାନଙ୍କ ଉପରେ ପ୍ରଭାବ ଏବଂ ସକାରାତ୍ମକ ପ୍ରଭାବର ଜୀବନକୁ ସୂଚିତ କରେ।"
+        },
+        "as": {
+          "title": "জীৱন পথ আৰু নিয়তি",
+          "content": "{name}, আপোনাৰ জীৱন পথটো বৃদ্ধি, শিক্ষাৰ আৰু অৰ্থপূৰ্ণ অৱদানৰ যাত্ৰাৰ দ্বাৰা চিহ্নিত। গ্ৰহীয় সজ্জাই আত্মবিশ্লেষণৰ সময়ৰ সৈতে সাফল্যৰ শিখৰক সূচিত কৰে। আপোনাৰ নিয়তি আপোনাৰ চাৰিওফালে থকা লোকসকলৰ ওপৰত প্ৰভাৱ আৰু ধনাত্মক প্ৰভাৱৰ জীৱনলৈ লক্ষ্য কৰে।"
+        }
+      }
+    },
+    {
+      "key": "LIFE:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Remedies & Recommendations",
+          "content": "To strengthen beneficial planetary influences: practice meditation during Brahma Muhurat (4:00-5:30 AM), consult an astrologer for gemstone recommendations suited to your Lagna, perform charitable acts on Saturdays, and chant mantras dedicated to your ruling planet. Regular Surya Namaskar practice will energize the Sun's positive influence in your chart."
+        },
+        "hi": {
+          "title": "उपाय और सिफारिशें",
+          "content": "लाभकारी ग्रहों के प्रभाव को मजबूत करने के लिए: ब्रह्म मुहूर्त (4:00-5:30 AM) के दौरान ध्यान का अभ्यास करें, अपने लग्न के अनुसार रत्न सिफारिशों के लिए एक ज्योतिषी से परामर्श करें, शनिवार को दान करें, और अपने सत्तारूढ़ ग्रह को समर्पित मंत्रों का जाप करें। नियमित सूर्य नमस्कार का अभ्यास आपके चार्ट में सूर्य के सकारात्मक प्रभाव को ऊर्जा प्रदान करेगा।"
+        },
+        "ta": {
+          "title": "பரிகாரங்கள் & பரிந்துரைகள்",
+          "content": "நல்ல கிரகங்களின் ஆதரவை வலுப்படுத்த: ப்ரஹ்ம முகூர்த்தத்தில் (4:00-5:30 காலை) தியானம் செய்யவும், உங்கள் லக்னத்திற்கு ஏற்ற ரத்தின பரிந்துரைகளுக்காக ஜோதிடரை அணுகவும், சனிக்கிழமைகளில் தான தர்மங்களை செய்யவும், உங்கள் ஆட்சி கிரகத்திற்கு அர்ப்பணிக்கப்பட்ட மந்திரங்களை ஜபிக்கவும். சூரியனின் நேர்மறை ஆதரவை உங்கள் ஜாதகத்தில் உற்சாகப்படுத்த சூர்ய நமஸ்காரம் முறையாக செய்யவும்."
+        },
+        "te": {
+          "title": "పరిహారాలు & సిఫార్సులు",
+          "content": "ప్రయోజనకరమైన గ్రహ ప్రభావాలను బలపరచడానికి: బ్రహ్మ ముహూర్తంలో (4:00-5:30 AM) ధ్యానం చేయండి, మీ లగ్నానికి అనుకూలమైన రత్నాల సిఫార్సుల కోసం జ్యోతిష్యుడిని సంప్రదించండి, శనివారాల్లో దాన ధర్మాలు చేయండి, మరియు మీ పాలక గ్రహానికి అంకితమైన మంత్రాలను జపించండి. సూర్య నమస్కార సాధనను క్రమం తప్పకుండా చేయడం ద్వారా మీ జాతకంలో సూర్యుని సానుకూల ప్రభావాన్ని ఉత్తేజితం చేయవచ్చు."
+        },
+        "bn": {
+          "title": "প্রতিকার এবং সুপারিশ",
+          "content": "উপকারী গ্রহের প্রভাব শক্তিশালী করতে: ব্রহ্ম মুহূর্তে (৪:০০-৫:৩০ এএম) ধ্যান অনুশীলন করুন, আপনার লগ্ন অনুযায়ী রত্নের সুপারিশের জন্য একজন জ্যোতিষীর সাথে পরামর্শ করুন, শনিবারে দানশীল কাজ করুন, এবং আপনার শাসক গ্রহকে উত্সর্গীকৃত মন্ত্র জপ করুন। নিয়মিত সূর্য নমস্কার অনুশীলন আপনার চার্টে সূর্যের ইতিবাচক প্রভাবকে উদ্দীপিত করবে।"
+        },
+        "mr": {
+          "title": "उपाय आणि शिफारसी",
+          "content": "फायद्याच्या ग्रहांच्या प्रभावांना बळकट करण्यासाठी: ब्रह्म मुहूर्त (४:००-५:३० AM) मध्ये ध्यानाचा सराव करा, आपल्या लग्नासाठी योग्य रत्नांच्या शिफारसींसाठी ज्योतिषीचा सल्ला घ्या, शनिवारी दानधर्माचे कार्य करा, आणि आपल्या अधिपती ग्रहासाठी समर्पित मंत्रांचा जप करा. नियमित सूर्य नमस्काराचा सराव आपल्या पत्रिकेत सूर्याच्या सकारात्मक प्रभावाला उर्जित करेल."
+        },
+        "gu": {
+          "title": "ઉપાય અને ભલામણો",
+          "content": "લાભદાયી ગ્રહીય પ્રભાવોને મજબૂત બનાવવા માટે: બ્રહ્મ મુહૂર્ત (4:00-5:30 AM) દરમિયાન ધ્યાનનો અભ્યાસ કરો, તમારા લગ્ન માટે યોગ્ય રત્નોની ભલામણ માટે જ્યોતિષીનો સંપર્ક કરો, શનિવારે દાન કાર્યો કરો, અને તમારા શાસક ગ્રહને સમર્પિત મંત્રોનો જાપ કરો. નિયમિત સૂર્ય નમસ્કારનો અભ્યાસ તમારા ચાર્ટમાં સૂર્યના સકારાત્મક પ્રભાવને ઉર્જાવાન બનાવશે."
+        },
+        "kn": {
+          "title": "ಉಪಾಯಗಳು ಮತ್ತು ಶಿಫಾರಸುಗಳು",
+          "content": "ಹಿತಕರ ಗ್ರಹ ಪ್ರಭಾವಗಳನ್ನು ಬಲಪಡಿಸಲು: ಬ್ರಹ್ಮ ಮುಹೂರ್ತದಲ್ಲಿ (4:00-5:30 AM) ಧ್ಯಾನ ಅಭ್ಯಾಸ ಮಾಡಿ, ನಿಮ್ಮ ಲಗ್ನಕ್ಕೆ ಹೊಂದುವ ರತ್ನ ಶಿಫಾರಸುಗಳಿಗಾಗಿ ಜ್ಯೋತಿಷ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ, ಶನಿವಾರಗಳಲ್ಲಿ ದಾನ ಕಾರ್ಯಗಳನ್ನು ನಿರ್ವಹಿಸಿ, ಮತ್ತು ನಿಮ್ಮ ಆಡಳಿತ ಗ್ರಹಕ್ಕೆ ಮೀಸಲಾಗಿರುವ ಮಂತ್ರಗಳನ್ನು ಜಪಿಸಿ. ನಿಯಮಿತ ಸೂರ್ಯ ನಮಸ್ಕಾರ ಅಭ್ಯಾಸವು ನಿಮ್ಮ ಜಾತಕದಲ್ಲಿ ಸೂರ್ಯನ ಸಕಾರಾತ್ಮಕ ಪ್ರಭಾವವನ್ನು ಶಕ್ತಗೊಳಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "പരിഹാരങ്ങളും ശുപാർശകളും",
+          "content": "ശുഭകരമായ ഗ്രഹ സ്വാധീനങ്ങളെ ശക്തിപ്പെടുത്താൻ: ബ്രഹ്മ മുഹൂർത്തത്തിൽ (4:00-5:30 AM) ധ്യാനം അഭ്യസിക്കുക, നിങ്ങളുടെ ലഗ്നത്തിന് അനുയോജ്യമായ രത്നങ്ങൾക്കായി ഒരു ജ്യോതിഷിയുമായി പരാമർശിക്കുക, ശനിയാഴ്ചകളിൽ ദാന പ്രവർത്തനങ്ങൾ നടത്തുക, നിങ്ങളുടെ ഭരണഗ്രഹത്തിന് സമർപ്പിച്ച മന്ത്രങ്ങൾ ജപിക്കുക. സ്ഥിരമായ സൂര്യ നമസ്കാര അഭ്യാസം നിങ്ങളുടെ ജാതകത്തിലെ സൂര്യന്റെ പോസിറ്റീവ് സ്വാധീനം ഊർജ്ജസ്വലമാക്കും."
+        },
+        "pa": {
+          "title": "ਉਪਚਾਰ ਅਤੇ ਸਿਫਾਰਸ਼ਾਂ",
+          "content": "ਲਾਭਕਾਰੀ ਗ੍ਰਹਿ ਪ੍ਰਭਾਵਾਂ ਨੂੰ ਮਜ਼ਬੂਤ ਕਰਨ ਲਈ: ਬ੍ਰਹਮਾ ਮੁਹੂਰਤ (4:00-5:30 ਵਜੇ ਸਵੇਰੇ) ਦੌਰਾਨ ਧਿਆਨ ਦਾ ਅਭਿਆਸ ਕਰੋ, ਆਪਣੇ ਲਗਨ ਲਈ ਸੁਝਾਏ ਗਏ ਰਤਨਾਂ ਲਈ ਕਿਸੇ ਜ੍ਯੋਤਿਸ਼ੀ ਨਾਲ ਸਲਾਹ ਕਰੋ, ਸ਼ਨੀਵਾਰ ਨੂੰ ਚੈਰਿਟੀ ਦੇ ਕੰਮ ਕਰੋ, ਅਤੇ ਆਪਣੇ ਸਾਸ਼ਕ ਗ੍ਰਹਿ ਨੂੰ ਸਮਰਪਿਤ ਮੰਤਰ ਜਾਪ ਕਰੋ। ਨਿਯਮਿਤ ਸੂਰਿਆ ਨਮਸਕਾਰ ਦਾ ਅਭਿਆਸ ਤੁਹਾਡੇ ਚਾਰਟ ਵਿੱਚ ਸੂਰਜ ਦੇ ਸਕਾਰਾਤਮਕ ਪ੍ਰਭਾਵ ਨੂੰ ਉਰਜਾਵਾਨ ਕਰੇਗਾ।"
+        },
+        "or": {
+          "title": "ଉପାୟ ଏବଂ ପରାମର୍ଶ",
+          "content": "ଉପକାରକ ଗ୍ରହ ପ୍ରଭାବକୁ ଶକ୍ତିଶାଳୀ କରିବା ପାଇଁ: ବ୍ରହ୍ମ ମୁହୂର୍ତ (4:00-5:30 AM) ସମୟରେ ଧ୍ୟାନ ଅଭ୍ୟାସ କରନ୍ତୁ, ଆପଣଙ୍କ ଲଗ୍ନ ପାଇଁ ଉପଯୁକ୍ତ ରତ୍ନ ପ୍ରସ୍ତାବ ପାଇଁ ଜ୍ୟୋତିଷୀଙ୍କ ସହିତ ପରାମର୍ଶ କରନ୍ତୁ, ଶନିବାର ଦିନ ଦାନ କାର୍ଯ୍ୟ କରନ୍ତୁ, ଏବଂ ଆପଣଙ୍କ ଶାସକ ଗ୍ରହକୁ ଉତ୍ସର୍ଗ କରାଯାଇଥିବା ମନ୍ତ୍ରଗୁଡ଼ିକ ଜପ କରନ୍ତୁ। ନିୟମିତ ସୂର୍ଯ୍ୟ ନମସ୍କାର ଅଭ୍ୟାସ ଆପଣଙ୍କ ଜନ୍ମକୁଣ୍ଡଳୀରେ ସୂର୍ଯ୍ୟଙ୍କ ସକାରାତ୍ମକ ପ୍ରଭାବକୁ ଉର୍ଜାବାନ କରିବ।"
+        },
+        "as": {
+          "title": "উপায়সমূহ আৰু পৰামৰ্শসমূহ",
+          "content": "লাভজনক গ্ৰহীয় প্ৰভাৱ শক্তিশালী কৰিবলৈ: ব্ৰহ্ম মুহূৰ্তত (পুৱা ৪:০০-৫:৩০) ধ্যান অনুশীলন কৰক, আপোনাৰ লগ্নৰ বাবে উপযুক্ত ৰত্নৰ পৰামৰ্শৰ বাবে এজন জ্যোতিষীৰ সৈতে পৰামৰ্শ কৰক, শনিবাৰে দানমূলক কাৰ্য্যসমূহ সম্পন্ন কৰক, আৰু আপোনাৰ শাসক গ্ৰহক উত্সৰ্গিত মন্ত্র উচ্চাৰণ কৰক। নিয়মিত সূৰ্য নমস্কাৰ অনুশীলনে আপোনাৰ ৰাশিচক্ৰত সূৰ্যৰ ধনাত্মক প্ৰভাৱক উৰ্জিত কৰিব।"
+        }
+      }
+    },
+    {
+      "key": "CAREER:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Professional Profile",
+          "content": "{name}, your birth chart indicates strong professional potential. You possess natural leadership abilities and analytical thinking. The 10th house configuration suggests success in fields requiring discipline and strategic planning."
+        },
+        "hi": {
+          "title": "व्यावसायिक प्रोफ़ाइल",
+          "content": "{name}, आपकी जन्म कुंडली मजबूत व्यावसायिक क्षमता का संकेत देती है। आपके पास प्राकृतिक नेतृत्व क्षमताएँ और विश्लेषणात्मक सोच है। 10वें भाव की संरचना अनुशासन और रणनीतिक योजना की आवश्यकता वाले क्षेत्रों में सफलता का सुझाव देती है।"
+        },
+        "ta": {
+          "title": "தொழில்முறை சுயவிவரம்",
+          "content": "{name}, உங்கள் பிறப்பு ஜாதகம் வலுவான தொழில்முறை திறனை குறிக்கிறது. நீங்கள் இயற்கையான தலைமைத்துவ திறன்களையும் பகுப்பாய்வு சிந்தனையையும் கொண்டிருக்கிறீர்கள். 10வது வீட்டின் அமைப்பு ஒழுக்கம் மற்றும் மூலோபாய திட்டமிடல் தேவைப்படும் துறைகளில் வெற்றியை குறிக்கிறது."
+        },
+        "te": {
+          "title": "వృత్తి ప్రొఫైల్",
+          "content": "{name}, మీ జాతక చక్రం బలమైన వృత్తి సామర్థ్యాన్ని సూచిస్తుంది. మీరు సహజమైన నాయకత్వ నైపుణ్యాలు మరియు విశ్లేషణాత్మక ఆలోచనను కలిగి ఉన్నారు. 10వ ఇంటి అమరిక క్రమశిక్షణ మరియు వ్యూహాత్మక ప్రణాళిక అవసరమైన రంగాలలో విజయాన్ని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "পেশাগত প্রোফাইল",
+          "content": "{name}, আপনার জন্মছক শক্তিশালী পেশাগত সম্ভাবনা নির্দেশ করে। আপনার মধ্যে প্রাকৃতিক নেতৃত্বের ক্ষমতা এবং বিশ্লেষণাত্মক চিন্তাভাবনা রয়েছে। ১০ম ঘরের বিন্যাস শৃঙ্খলা এবং কৌশলগত পরিকল্পনা প্রয়োজন এমন ক্ষেত্রে সাফল্য নির্দেশ করে।"
+        },
+        "mr": {
+          "title": "व्यावसायिक प्रोफाइल",
+          "content": "{name}, तुमच्या जन्मपत्रिकेने मजबूत व्यावसायिक क्षमता दर्शविली आहे. तुमच्याकडे नैसर्गिक नेतृत्व क्षमता आणि विश्लेषणात्मक विचार आहेत. 10व्या घराची रचना शिस्त आणि धोरणात्मक नियोजन आवश्यक असलेल्या क्षेत्रांमध्ये यश सूचित करते."
+        },
+        "gu": {
+          "title": "વ્યાવસાયિક પ્રોફાઇલ",
+          "content": "{name}, તમારું જન્મ કુંડળી મજબૂત વ્યાવસાયિક સંભાવનાઓ દર્શાવે છે. તમારી પાસે કુદરતી નેતૃત્વ ક્ષમતા અને વિશ્લેષણાત્મક વિચારશક્તિ છે. 10મું ઘરનું ગોઠવણ શિસ્ત અને વ્યૂહાત્મક આયોજનની જરૂરિયાત ધરાવતા ક્ષેત્રોમાં સફળતા સૂચવે છે."
+        },
+        "kn": {
+          "title": "ವೃತ್ತಿಪರ ಪ್ರೊಫೈಲ್",
+          "content": "{name}, ನಿಮ್ಮ ಜನನ ಚಕ್ರವು ಶಕ್ತಿಯುತ ವೃತ್ತಿಪರ ಸಾಮರ್ಥ್ಯವನ್ನು ಸೂಚಿಸುತ್ತದೆ. ನೀವು ಸಹಜ ನಾಯಕತ್ವ ಸಾಮರ್ಥ್ಯ ಮತ್ತು ವಿಶ್ಲೇಷಣಾತ್ಮಕ ಚಿಂತನೆಯನ್ನು ಹೊಂದಿದ್ದೀರಿ. 10ನೇ ಮನೆಯ ವಿನ್ಯಾಸವು ಶಿಸ್ತು ಮತ್ತು ತಂತ್ರಾತ್ಮಕ ಯೋಜನೆ ಅಗತ್ಯವಿರುವ ಕ್ಷೇತ್ರಗಳಲ್ಲಿ ಯಶಸ್ಸನ್ನು ಸೂಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "പ്രൊഫഷണൽ പ്രൊഫൈൽ",
+          "content": "{name}, നിങ്ങളുടെ ജനന ചാർട്ട് ശക്തമായ പ്രൊഫഷണൽ സാധ്യതകൾ സൂചിപ്പിക്കുന്നു. നിങ്ങൾക്ക് സ്വാഭാവികമായ നേതൃക്ഷമതകളും വിശകലന ചിന്തകളും ഉണ്ട്. 10-ാം ഭാവത്തിന്റെ ക്രമീകരണം ശാസ്ത്രീയമായ ആസൂത്രണം ആവശ്യമായ മേഖലകളിൽ വിജയം സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਪੇਸ਼ੇਵਰ ਪ੍ਰੋਫਾਈਲ",
+          "content": "{name}, ਤੁਹਾਡਾ ਜਨਮ ਚਾਰਟ ਮਜ਼ਬੂਤ ਪੇਸ਼ੇਵਰ ਸੰਭਾਵਨਾ ਦਰਸਾਉਂਦਾ ਹੈ। ਤੁਹਾਡੇ ਕੋਲ ਕੁਦਰਤੀ ਨੇਤ੍ਰਿਤਵ ਦੀਆਂ ਯੋਗਤਾਵਾਂ ਅਤੇ ਵਿਸ਼ਲੇਸ਼ਣਾਤਮਕ ਸੋਚ ਹੈ। 10ਵੇਂ ਘਰ ਦੀ ਸੰਰਚਨਾ ਅਨੁਸ਼ਾਸਨ ਅਤੇ ਰਣਨੀਤਿਕ ਯੋਜਨਾ ਦੀ ਲੋੜ ਵਾਲੇ ਖੇਤਰਾਂ ਵਿੱਚ ਸਫਲਤਾ ਸੁਝਾਉਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "title": "ପେଶାଗତ ପ୍ରୋଫାଇଲ୍",
+          "content": "{name}, ଆପଣଙ୍କ ଜନ୍ମ କୁଣ୍ଡଳୀ ଶକ୍ତିଶାଳୀ ପେଶାଗତ ସମ୍ଭାବନା ସୂଚିତ କରେ। ଆପଣ ସ୍ୱାଭାବିକ ନେତୃତ୍ୱ କ୍ଷମତା ଏବଂ ବିଶ୍ଲେଷଣାତ୍ମକ ଚିନ୍ତାଧାରା ରଖନ୍ତି। 10ମ ଘରର ବିନ୍ୟାସ ଶୃଙ୍ଖଳା ଏବଂ କୌଶଳମୂଳକ ପରିକଳ୍ପନା ଆବଶ୍ୟକ ଥିବା କ୍ଷେତ୍ରରେ ସଫଳତା ସୂଚିତ କରେ।"
+        },
+        "as": {
+          "title": "পেচাদাৰী প্ৰফাইল",
+          "content": "{name}, আপোনাৰ জন্ম কুণ্ডলীত শক্তিশালী পেচাদাৰী সম্ভাৱনাৰ সূচনা কৰে। আপোনাৰ প্ৰাকৃতিক নেতৃত্বৰ ক্ষমতা আৰু বিশ্লেষণাত্মক চিন্তাধাৰা আছে। ১০ম ঘৰৰ বিন্যাসই শৃংখলা আৰু কৌশলগত পৰিকল্পনা প্ৰয়োজন হোৱা ক্ষেত্ৰসমূহত সফলতাৰ সূচনা কৰে।"
+        }
+      }
+    },
+    {
+      "key": "CAREER:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Dashamsha Chart Analysis",
+          "content": "The D10 (Dashamsha) chart reveals your career destiny. The 10th lord's placement suggests advancement through merit and persistent effort. Current transits favor professional growth, especially in technology, management, or advisory roles."
+        },
+        "hi": {
+          "title": "दशमांश चार्ट विश्लेषण",
+          "content": "D10 (दशमांश) चार्ट आपके करियर की नियति को प्रकट करता है। 10वें स्वामी की स्थिति योग्यता और निरंतर प्रयास के माध्यम से उन्नति का सुझाव देती है। वर्तमान गोचर पेशेवर वृद्धि का समर्थन करते हैं, विशेष रूप से प्रौद्योगिकी, प्रबंधन, या सलाहकार भूमिकाओं में।"
+        },
+        "ta": {
+          "title": "தசம்சா சக்கரம் பகுப்பாய்வு",
+          "content": "D10 (தசம்சா) சக்கரம் உங்கள் தொழில் விதியை வெளிப்படுத்துகிறது. 10வது அதிபதியின் இருப்பிடம் திறமையால் மற்றும் நிலைத்த முயற்சியால் முன்னேற்றத்தை குறிப்பிடுகிறது. தற்போதைய கோச்சாரங்கள் தொழில்முன்னேற்றத்திற்கு சாதகமாக உள்ளன, குறிப்பாக தொழில்நுட்பம், மேலாண்மை அல்லது ஆலோசனைப் பணிகளில்."
+        },
+        "te": {
+          "title": "దశాంశ చార్ట్ విశ్లేషణ",
+          "content": "D10 (దశాంశ) చార్ట్ మీ వృత్తి విధిని వెల్లడిస్తుంది. 10వ అధిపతి స్థానం ప్రతిభ మరియు నిరంతర ప్రయత్నం ద్వారా పురోగతిని సూచిస్తుంది. ప్రస్తుత గోచారాలు, ముఖ్యంగా సాంకేతికత, నిర్వహణ లేదా సలహా పాత్రలలో, వృత్తి వృద్ధికి అనుకూలంగా ఉన్నాయి."
+        },
+        "bn": {
+          "title": "দশমাংশ চার্ট বিশ্লেষণ",
+          "content": "ডি১০ (দশমাংশ) চার্ট আপনার ক্যারিয়ারের ভাগ্য প্রকাশ করে। ১০ম অধিপতির অবস্থান যোগ্যতা এবং অবিচল প্রচেষ্টার মাধ্যমে উন্নতির পরামর্শ দেয়। বর্তমান গমন পেশাগত বৃদ্ধির পক্ষে, বিশেষ করে প্রযুক্তি, ব্যবস্থাপনা বা পরামর্শমূলক ভূমিকায়।"
+        },
+        "mr": {
+          "title": "दशमांश चार्ट विश्लेषण",
+          "content": "D10 (दशमांश) चार्ट तुमच्या करिअरचे भविष्य दर्शवते. 10व्या घराचा स्वामी ज्या ठिकाणी आहे, तेथे गुणवत्ता आणि सातत्यपूर्ण प्रयत्नांद्वारे प्रगती सूचित होते. सध्याचे गोचर व्यावसायिक वाढीस अनुकूल आहेत, विशेषतः तंत्रज्ञान, व्यवस्थापन किंवा सल्लागार भूमिकांमध्ये."
+        },
+        "gu": {
+          "title": "દશમાંશ ચાર્ટ વિશ્લેષણ",
+          "content": "D10 (દશમાંશ) ચાર્ટ તમારા કારકિર્દીનો ભાગ્ય પ્રદર્શિત કરે છે. 10મા સ્વામીનું સ્થાન સૂચવે છે કે લાયકાત અને સતત પ્રયત્નો દ્વારા પ્રગતિ થશે. વર્તમાન ગોચર વ્યાવસાયિક વૃદ્ધિ માટે અનુકૂળ છે, ખાસ કરીને ટેક્નોલોજી, મેનેજમેન્ટ અથવા સલાહકાર ભૂમિકાઓમાં."
+        },
+        "kn": {
+          "title": "ದಶಾಂಶ ಚಾರ್ಟ್ ವಿಶ್ಲೇಷಣೆ",
+          "content": "D10 (ದಶಾಂಶ) ಚಾರ್ಟ್ ನಿಮ್ಮ ವೃತ್ತಿ ಭವಿಷ್ಯವನ್ನು ಬಹಿರಂಗಪಡಿಸುತ್ತದೆ. 10ನೇ ಸ್ವಾಮಿಯ ಸ್ಥಿತಿ ಶ್ರೇಯಸ್ಸು ಮತ್ತು ನಿರಂತರ ಪ್ರಯತ್ನಗಳ ಮೂಲಕ ಪ್ರಗತಿಯನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಪ್ರಸ್ತುತ ಸಂಚಾರಗಳು ವೃತ್ತಿಪರ ಬೆಳವಣಿಗೆಗೆ ಅನುಕೂಲಕರವಾಗಿವೆ, ವಿಶೇಷವಾಗಿ ತಂತ್ರಜ್ಞಾನ, ನಿರ್ವಹಣೆ ಅಥವಾ ಸಲಹಾ ಪಾತ್ರಗಳಲ್ಲಿ."
+        },
+        "ml": {
+          "title": "ദശാംശ ചാർട്ട് വിശകലനം",
+          "content": "D10 (ദശാംശ) ചാർട്ട് നിങ്ങളുടെ കരിയർ വിധിയെ വെളിപ്പെടുത്തുന്നു. 10-ാം ഭാവാധിപന്റെ സ്ഥാനം കഴിവും സ്ഥിരമായ പരിശ്രമവും വഴി പുരോഗതി സൂചിപ്പിക്കുന്നു. നിലവിലെ ഗച്ഛതകൾ, പ്രത്യേകിച്ച് സാങ്കേതികവിദ്യ, മാനേജ്മെന്റ്, അല്ലെങ്കിൽ ഉപദേശക സ്ഥാനങ്ങളിൽ, പ്രൊഫഷണൽ വളർച്ചയ്ക്ക് അനുകൂലമാണ്."
+        },
+        "pa": {
+          "title": "ਦਸ਼ਮਾਂਸ਼ ਚਾਰਟ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "D10 (ਦਸ਼ਮਾਂਸ਼) ਚਾਰਟ ਤੁਹਾਡੇ ਕਰੀਅਰ ਦੀ ਕਿਸਮਤ ਦਾ ਖੁਲਾਸਾ ਕਰਦਾ ਹੈ। 10ਵੇਂ ਘਰ ਦੇ ਸਵਾਮੀ ਦੀ ਸਥਿਤੀ ਯੋਗਤਾ ਅਤੇ ਲਗਾਤਾਰ ਕੋਸ਼ਿਸ਼ਾਂ ਰਾਹੀਂ ਤਰੱਕੀ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀ ਹੈ। ਮੌਜੂਦਾ ਗੋਚਰ ਪੇਸ਼ੇਵਰ ਵਿਕਾਸ ਨੂੰ ਪਸੰਦ ਕਰਦੇ ਹਨ, ਖਾਸ ਕਰਕੇ ਤਕਨਾਲੋਜੀ, ਪ੍ਰਬੰਧਨ ਜਾਂ ਸਲਾਹਕਾਰ ਭੂਮਿਕਾਵਾਂ ਵਿੱਚ।"
+        },
+        "or": {
+          "title": "ଦଶାଂଶ ଚକ୍ର ବିଶ୍ଳେଷଣ",
+          "content": "ଡି10 (ଦଶାଂଶ) ଚକ୍ର ଆପଣଙ୍କର ପେଶାଗତ ଭାଗ୍ୟକୁ ପ୍ରକାଶ କରେ। 10ମ ଲୋର୍ଡର ସ୍ଥାନ ଯୋଗ୍ୟତା ଏବଂ ଅବିରତ ପ୍ରୟାସ ମାଧ୍ୟମରେ ଉନ୍ନତି ସୂଚିତ କରେ। ବର୍ତ୍ତମାନ ଗୋଚରଗୁଡ଼ିକ ବୈଶିଷ୍ଟ୍ୟ ଉନ୍ନତିକୁ ପସନ୍ଦ କରେ, ବିଶେଷକରି ପ୍ରଯୁକ୍ତି, ପରିଚାଳନା, କିମ୍ବା ପରାମର୍ଶ ଭୂମିକାରେ।"
+        },
+        "as": {
+          "title": "দশমাংশ চাৰ্ট বিশ্লেষণ",
+          "content": "D10 (দশমাংশ) চাৰ্টে আপোনাৰ ব্যৱসায়িক ভাগ্য প্ৰকাশ কৰে। ১০ম স্বামীৰ অৱস্থানই মেধা আৰু অৱিৰত প্ৰচেষ্টাৰ জৰিয়তে উন্নতিৰ সূচনা কৰে। বৰ্তমানৰ গমনাগমনে ব্যৱসায়িক বৃদ্ধি, বিশেষকৈ প্ৰযুক্তি, ব্যৱস্থাপনা, বা পৰামৰ্শমূলক ভূমিকাত সহায় কৰে।"
+        }
+      }
+    },
+    {
+      "key": "CAREER:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Current Career Transit",
+          "content": "Jupiter's favorable transit activates your career sector, bringing opportunities for advancement. Saturn's steady influence supports building long-term professional foundations. The next 12 months show promise for promotion or new ventures."
+        },
+        "hi": {
+          "title": "वर्तमान करियर गोचर",
+          "content": "Jupiter का अनुकूल गोचर आपके करियर क्षेत्र को सक्रिय करता है, जिससे उन्नति के अवसर मिलते हैं। Saturn का स्थिर प्रभाव दीर्घकालिक पेशेवर नींव बनाने में सहायक है। अगले 12 महीने पदोन्नति या नए उपक्रमों के लिए आशाजनक हैं।"
+        },
+        "ta": {
+          "title": "தற்போதைய தொழில் பெயர்ச்சி",
+          "content": "Jupiter இன் சாதகமான பெயர்ச்சி உங்கள் தொழில் துறையை செயல்படுத்துகிறது, முன்னேற்றத்திற்கான வாய்ப்புகளை கொண்டு வருகிறது. Saturn இன் நிலையான தாக்கம் நீண்டகால தொழில்முறை அடித்தளங்களை உருவாக்க உதவுகிறது. அடுத்த 12 மாதங்கள் பதவி உயர்வு அல்லது புதிய முயற்சிகளுக்கான நம்பிக்கையை காட்டுகின்றன."
+        },
+        "te": {
+          "title": "ప్రస్తుత వృత్తి గోచారం",
+          "content": "Jupiter యొక్క అనుకూల గోచారం మీ వృత్తి రంగాన్ని చురుకుగా చేస్తుంది, పురోగతికి అవకాశాలను తెస్తుంది. Saturn యొక్క స్థిరమైన ప్రభావం దీర్ఘకాలిక వృత్తి పునాది నిర్మాణానికి మద్దతు ఇస్తుంది. వచ్చే 12 నెలలు పదోన్నతి లేదా కొత్త వ్యాపారాలకు ఆశాజనకంగా కనిపిస్తున్నాయి."
+        },
+        "bn": {
+          "title": "বর্তমান ক্যারিয়ার ট্রানজিট",
+          "content": "বৃহস্পতির অনুকূল গমন আপনার ক্যারিয়ার ক্ষেত্রকে সক্রিয় করে, উন্নতির সুযোগ নিয়ে আসে। শনির স্থির প্রভাব দীর্ঘমেয়াদী পেশাদার ভিত্তি গড়ে তোলায় সহায়তা করে। পরবর্তী ১২ মাস পদোন্নতি বা নতুন উদ্যোগের জন্য প্রতিশ্রুতি দেখায়।"
+        },
+        "mr": {
+          "title": "सध्याचा करिअर गोचर",
+          "content": "Jupiter चा अनुकूल गोचर तुमच्या करिअर क्षेत्राला सक्रिय करतो, प्रगतीसाठी संधी आणतो. Saturn चा स्थिर प्रभाव दीर्घकालीन व्यावसायिक पाया घालण्यासाठी समर्थन करतो. पुढील 12 महिने पदोन्नती किंवा नवीन उपक्रमांसाठी आशादायक दिसत आहेत."
+        },
+        "gu": {
+          "title": "વર્તમાન કારકિર્દી સંક્રમણ",
+          "content": "Jupiter નો અનુકૂળ સંક્રમણ તમારી કારકિર્દી ક્ષેત્રને સક્રિય કરે છે, જે પ્રગતિ માટેના અવસરો લાવે છે. Saturn નો સ્થિર પ્રભાવ લાંબા ગાળાના વ્યાવસાયિક પાયો બાંધવામાં સહાય કરે છે. આગામી 12 મહિના પ્રમોશન અથવા નવા ઉપક્રમો માટે વચન આપે છે."
+        },
+        "kn": {
+          "title": "ಪ್ರಸ್ತುತ ವೃತ್ತಿ ಸಂಚಾರ",
+          "content": "ಗುರುನ ಪ್ರೀತಿಕರ ಸಂಚಾರವು ನಿಮ್ಮ ವೃತ್ತಿ ಕ್ಷೇತ್ರವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸುತ್ತದೆ, ಪ್ರಗತಿಯ ಅವಕಾಶಗಳನ್ನು ತರುತ್ತದೆ. ಶನಿಯ ಸ್ಥಿರ ಪ್ರಭಾವವು ದೀರ್ಘಕಾಲಿಕ ವೃತ್ತಿಪರ ಅಸ್ತಿವಾರಗಳನ್ನು ನಿರ್ಮಿಸಲು ಬೆಂಬಲಿಸುತ್ತದೆ. ಮುಂದಿನ 12 ತಿಂಗಳುಗಳು ಉತ್ತರಣ ಅಥವಾ ಹೊಸ ಉದ್ದಿಮೆಗಳಿಗೆ ಭರವಸೆ ತೋರಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "നിലവിലെ കരിയർ ഗതാഗതം",
+          "content": "Jupiterന്റെ അനുകൂലമായ ഗമനം നിങ്ങളുടെ കരിയർ മേഖല സജീവമാക്കുന്നു, പുരോഗതിക്കുള്ള അവസരങ്ങൾ കൊണ്ടുവരുന്നു. Saturnന്റെ സ്ഥിരമായ സ്വാധീനം ദീർഘകാല പ്രൊഫഷണൽ അടിസ്ഥാനം നിർമ്മിക്കുന്നതിനെ പിന്തുണയ്ക്കുന്നു. അടുത്ത 12 മാസം പ്രമോഷൻ അല്ലെങ്കിൽ പുതിയ സംരംഭങ്ങൾക്കുള്ള പ്രതീക്ഷ കാണിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਮੌਜੂਦਾ ਕਰੀਅਰ ਗੁਜ਼ਰ",
+          "content": "Jupiter ਦੀ ਅਨੁਕੂਲ ਗੁਜ਼ਰ ਤੁਹਾਡੇ ਕਰੀਅਰ ਖੇਤਰ ਨੂੰ ਸਰਗਰਮ ਕਰਦੀ ਹੈ, ਉੱਨਤੀ ਲਈ ਮੌਕੇ ਲਿਆਉਂਦੀ ਹੈ। Saturn ਦਾ ਠੋਸ ਪ੍ਰਭਾਵ ਲੰਬੇ ਸਮੇਂ ਦੇ ਪੇਸ਼ੇਵਰ ਅਧਾਰ ਬਣਾਉਣ ਵਿੱਚ ਸਹਾਇਕ ਹੈ। ਅਗਲੇ 12 ਮਹੀਨੇ ਤਰੱਕੀ ਜਾਂ ਨਵੇਂ ਉੱਦਮਾਂ ਲਈ ਵਾਅਦਾ ਦਿਖਾਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "Current Career Transit",
+          "content": "ବ୍ରୁହସ୍ପତିଙ୍କର ଅନୁକୂଳ ଗତିଶୀଳତା ଆପଣଙ୍କର ପେଶାଗତ କ୍ଷେତ୍ରକୁ ସକ୍ରିୟ କରେ, ଉନ୍ନତି ପାଇଁ ସୁଯୋଗ ଆଣିଛି। ଶନିଙ୍କର ସ୍ଥିର ପ୍ରଭାବ ଦୀର୍ଘକାଳୀନ ପେଶାଗତ ଭିତ୍ତି ଗଢ଼ିବାକୁ ସମର୍ଥନ କରେ। ଆଗାମୀ 12 ମାସ ପ୍ରମୋଶନ କିମ୍ବା ନୂତନ ପ୍ରୟାସ ପାଇଁ ପ୍ରତିଶ୍ରୁତି ଦେଉଛି।"
+        },
+        "as": {
+          "title": "বৰ্তমান জীৱিকা গমন",
+          "content": "Jupiterৰ অনুকূল গমনয়ে আপোনাৰ জীৱিকা ক্ষেত্ৰ সক্ৰিয় কৰে, উন্নতিৰ বাবে সুযোগ আনিছে। Saturnৰ স্থিৰ প্ৰভাৱে দীঘলীয়া সময়ৰ ব্যৱসায়িক ভিত্তি নিৰ্মাণত সহায় কৰে। পৰৱৰ্তী ১২ মাহত পদোন্নতি বা নতুন উদ্যোগৰ বাবে আশা দেখুৱায়।"
+        }
+      }
+    },
+    {
+      "key": "CAREER:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Best Career Paths",
+          "content": "Based on your chart, careers in leadership, finance, technology, healthcare, or education align with your planetary strengths. Your Mercury placement particularly favors communication-heavy roles. Creative fields also show promise with Venus's beneficial aspect."
+        },
+        "hi": {
+          "title": "सर्वश्रेष्ठ करियर पथ",
+          "content": "आपकी कुंडली के आधार पर, नेतृत्व, वित्त, प्रौद्योगिकी, स्वास्थ्य सेवा, या शिक्षा में करियर आपके ग्रहों की ताकत के साथ मेल खाते हैं। आपकी बुध की स्थिति विशेष रूप से संचार-प्रधान भूमिकाओं का समर्थन करती है। रचनात्मक क्षेत्रों में भी शुक्र के लाभकारी प्रभाव के साथ संभावनाएं दिखती हैं।"
+        },
+        "ta": {
+          "title": "சிறந்த தொழில் பாதைகள்",
+          "content": "உங்கள் ஜாதகத்தின் அடிப்படையில், தலைமை, நிதி, தொழில்நுட்பம், சுகாதாரம் அல்லது கல்வி தொடர்பான தொழில்கள் உங்கள் கிரக வலிமைகளுடன் பொருந்துகின்றன. உங்கள் புதன் நிலைமையால் குறிப்பாக தொடர்பு மிக்க பங்குகளை நன்கு செய்ய முடியும். சுக்ரனின் நன்மை தரும் பார்வையால் படைப்பாற்றல் கொண்ட துறைகளும் நன்மை தரும்."
+        },
+        "te": {
+          "title": "ఉత్తమ వృత్తి మార్గాలు",
+          "content": "మీ జాతకాన్ని ఆధారంగా, నాయకత్వం, ఆర్థిక, సాంకేతిక, ఆరోగ్య సంరక్షణ లేదా విద్య రంగాలలో వృత్తులు మీ గ్రహ బలాలకు అనుగుణంగా ఉంటాయి. మీ బుధ స్థానం ప్రత్యేకంగా కమ్యూనికేషన్-భారీ పాత్రలను ప్రోత్సహిస్తుంది. సృజనాత్మక రంగాలు కూడా శుక్రుని అనుకూల దృష్టితో మంచి భవిష్యత్తును చూపిస్తాయి."
+        },
+        "bn": {
+          "title": "সেরা ক্যারিয়ার পথ",
+          "content": "আপনার চার্টের ভিত্তিতে, নেতৃত্ব, অর্থনীতি, প্রযুক্তি, স্বাস্থ্যসেবা, বা শিক্ষার ক্ষেত্রে ক্যারিয়ার আপনার গ্রহগত শক্তির সাথে সামঞ্জস্যপূর্ণ। আপনার বুধের অবস্থান বিশেষত যোগাযোগ-ভিত্তিক ভূমিকার পক্ষে। সৃজনশীল ক্ষেত্রগুলিও শুক্রের উপকারী প্রভাবের সাথে প্রতিশ্রুতি দেখায়।"
+        },
+        "mr": {
+          "title": "सर्वोत्तम करिअर मार्ग",
+          "content": "तुमच्या पत्रिकेनुसार, नेतृत्व, वित्त, तंत्रज्ञान, आरोग्यसेवा किंवा शिक्षण क्षेत्रातील करिअर तुमच्या ग्रहांच्या सामर्थ्यांशी जुळतात. तुमच्या बुधाच्या स्थानामुळे विशेषतः संवाद-केंद्रित भूमिकांना अनुकूलता आहे. शुक्राच्या लाभदायक दृष्टिकोनामुळे सर्जनशील क्षेत्रांमध्ये देखील आशादायकता दिसून येते."
+        },
+        "gu": {
+          "title": "સર્વોત્તમ કારકિર્દી માર્ગો",
+          "content": "તમારા ચાર્ટના આધારે, નેતૃત્વ, નાણાંકીય, ટેક્નોલોજી, આરોગ્યસંભાળ, અથવા શિક્ષણમાં કારકિર્દીઓ તમારા ગ્રહીય શક્તિઓ સાથે સુસંગત છે. તમારા બુધની સ્થિતિ ખાસ કરીને સંચાર-ભરપૂર ભૂમિકાઓને અનુકૂળ કરે છે. સર્જનાત્મક ક્ષેત્રો પણ શુક્રના લાભકારી દ્રષ્ટિ સાથે વચન આપે છે."
+        },
+        "kn": {
+          "title": "ಉತ್ತಮ ವೃತ್ತಿ ಮಾರ್ಗಗಳು",
+          "content": "ನಿಮ್ಮ ಚಾರ್ಟ್ ಆಧರಿಸಿ, ನಾಯಕತ್ವ, ಹಣಕಾಸು, ತಂತ್ರಜ್ಞಾನ, ಆರೋಗ್ಯಸೇವೆ ಅಥವಾ ಶಿಕ್ಷಣ ಕ್ಷೇತ್ರಗಳಲ್ಲಿ ವೃತ್ತಿಗಳು ನಿಮ್ಮ ಗ್ರಹ ಶಕ್ತಿಗಳೊಂದಿಗೆ ಹೊಂದಿಕೆಯಾಗುತ್ತವೆ. ನಿಮ್ಮ ಬುಧನ ಸ್ಥಿತಿ ವಿಶೇಷವಾಗಿ ಸಂವಹನ-ಭರಿತ ಪಾತ್ರಗಳನ್ನು ಮೆಚ್ಚುತ್ತದೆ. ಶೃಂಗಾರ ಕ್ಷೇತ್ರಗಳು ಕೂಡ ಶುಕ್ರನ ಅನುಕೂಲಕರ ಅಂಶದಿಂದ ಭರವಸೆ ತೋರಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "മികച്ച കരിയർ പാതകൾ",
+          "content": "നിങ്ങളുടെ ജാതകത്തിന്റെ അടിസ്ഥാനത്തിൽ, നേതൃപാടവം, ധനകാര്യം, സാങ്കേതികവിദ്യ, ആരോഗ്യപരിപാലനം, അല്ലെങ്കിൽ വിദ്യാഭ്യാസം എന്നിവയിൽ കരിയറുകൾ നിങ്ങളുടെ ഗ്രഹ ശക്തികളുമായി പൊരുത്തപ്പെടുന്നു. നിങ്ങളുടെ ബുധന്റെ സ്ഥാനം പ്രത്യേകിച്ച് ആശയവിനിമയത്തിൽ കൂടുതൽ ശ്രദ്ധ ആവശ്യമായ ജോലികൾക്ക് അനുകൂലമാണ്. ശുക്രന്റെ അനുകൂലമായ ദൃഷ്ടിയോടെ സൃഷ്ടിപരമായ മേഖലകളും പ്രതീക്ഷ കാണിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਸਰਵੋਤਮ ਕਰੀਅਰ ਮਾਰਗ",
+          "content": "ਤੁਹਾਡੇ ਚਾਰਟ ਦੇ ਆਧਾਰ 'ਤੇ, ਨੇਤ੍ਰਿਤਵ, ਵਿੱਤ, ਤਕਨਾਲੋਜੀ, ਸਿਹਤ ਸੇਵਾਵਾਂ ਜਾਂ ਸਿੱਖਿਆ ਵਿੱਚ ਕਰੀਅਰ ਤੁਹਾਡੇ ਗ੍ਰਹਿ ਮਜ਼ਬੂਤੀਆਂ ਨਾਲ ਮੇਲ ਖਾਂਦੇ ਹਨ। ਤੁਹਾਡੀ ਬੁੱਧ ਦੀ ਸਥਿਤੀ ਖਾਸ ਤੌਰ 'ਤੇ ਸੰਚਾਰ-ਭਾਰੀ ਭੂਮਿਕਾਵਾਂ ਲਈ ਫਾਇਦੇਮੰਦ ਹੈ। ਕਲਾ ਦੇ ਖੇਤਰ ਵੀ ਸ਼ੁਕਰ ਦੇ ਲਾਭਦਾਇਕ ਪੱਖ ਨਾਲ ਵਾਅਦਾ ਦਿਖਾਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ସର୍ବୋତ୍ତମ କାରିଆର ପଥ",
+          "content": "ଆପଣଙ୍କ ଚାର୍ଟ ଅନୁସାରେ, ନେତୃତ୍ୱ, ଅର୍ଥନୀତି, ପ୍ରଯୁକ୍ତି, ସ୍ୱାସ୍ଥ୍ୟସେବା କିମ୍ବା ଶିକ୍ଷାରେ କାରିଆରଗୁଡ଼ିକ ଆପଣଙ୍କ ଗ୍ରହୀୟ ଶକ୍ତି ସହିତ ସମନ୍ୱୟ ରଖେ। ଆପଣଙ୍କ ମେର୍କୁରୀ ଅବସ୍ଥାନ ବିଶେଷକରି ଯୋଗାଯୋଗ ଭାରି ଭୂମିକାରେ ଲାଭକାରୀ। ଶୃଙ୍ଗାରିକ କ୍ଷେତ୍ରଗୁଡ଼ିକ ମଧ୍ୟ ଶୁକ୍ରଙ୍କ ଲାଭକାରୀ ପ୍ରଭାବ ସହିତ ପ୍ରତିଯୋଗିତା ଦେଖାଏ।"
+        },
+        "as": {
+          "title": "সৰ্বশ্ৰেষ্ঠ জীৱিকা পথ",
+          "content": "আপোনাৰ তালিকা অনুসৰি, নেতৃত্ব, বিত্ত, প্ৰযুক্তি, স্বাস্থ্যসেৱা, বা শিক্ষা ক্ষেত্ৰত জীৱিকা আপোনাৰ গ্ৰহীয় শক্তিসমূহৰ সৈতে সঙ্গতিপূৰ্ণ। আপোনাৰ বুধৰ স্থান বিশেষকৈ যোগাযোগ-ভিত্তিক ভূমিকাসমূহৰ বাবে অনুকূল। শুক্ৰৰ অনুকূল দৃষ্টিৰে সৃষ্টিশীল ক্ষেত্ৰসমূহো সম্ভাৱনা প্ৰদৰ্শন কৰে।"
+        }
+      }
+    },
+    {
+      "key": "CAREER:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Financial Outlook",
+          "content": "The 2nd and 11th house placements indicate steady income growth. Investments made during Jupiter's transit through your wealth houses will yield positive returns. Avoid speculative ventures during Rahu's unfavorable aspects."
+        },
+        "hi": {
+          "title": "वित्तीय दृष्टिकोण",
+          "content": "दूसरे और ग्यारहवें भाव की स्थिति स्थिर आय वृद्धि का संकेत देती है। आपके धन भावों से होकर बृहस्पति के गोचर के दौरान किए गए निवेश सकारात्मक प्रतिफल देंगे। राहु के प्रतिकूल पहलुओं के दौरान सट्टा उद्यमों से बचें।"
+        },
+        "ta": {
+          "title": "நிதி முன்னேற்றம்",
+          "content": "2 மற்றும் 11 ஆம் வீட்டின் நிலைகள் நிலையான வருமான வளர்ச்சியை குறிக்கின்றன. உங்கள் செல்வ வீடுகளில் குருவின் பரிவர்த்தனையின் போது செய்யப்பட்ட முதலீடுகள் நல்ல பலன்களைத் தரும். ராகுவின் அனுகூலமற்ற அம்சங்களின் போது ஊக வணிகங்களை தவிர்க்கவும்."
+        },
+        "te": {
+          "title": "ఆర్థిక దృక్పథం",
+          "content": "2వ మరియు 11వ గృహాల స్థానాలు స్థిరమైన ఆదాయ వృద్ధిని సూచిస్తాయి. మీ సంపద గృహాల ద్వారా బృహస్పతి సంచారం సమయంలో చేసిన పెట్టుబడులు సానుకూల ఫలితాలను ఇస్తాయి. రాహు అననుకూల దృష్టిలో ఉన్నప్పుడు ఊహాత్మక వ్యాపారాలను నివారించండి."
+        },
+        "bn": {
+          "title": "আর্থিক দৃষ্টিভঙ্গি",
+          "content": "২য় এবং ১১তম ঘরের অবস্থানগুলি স্থির আয় বৃদ্ধির ইঙ্গিত দেয়। আপনার সম্পদ ঘরগুলির মাধ্যমে বৃহস্পতির গমনকালে করা বিনিয়োগগুলি ইতিবাচক ফলাফল দেবে। রাহুর প্রতিকূল দৃষ্টিকোণে জল্পনামূলক উদ্যোগগুলি এড়িয়ে চলুন।"
+        },
+        "mr": {
+          "title": "आर्थिक दृष्टिकोन",
+          "content": "द्वितीय आणि एकादश घरातील स्थान स्थिर उत्पन्न वाढ दर्शवतात. तुमच्या संपत्तीच्या घरांमधून गुरुच्या गोचरादरम्यान केलेल्या गुंतवणुकी सकारात्मक परतावा देतील. राहूच्या प्रतिकूल पैलूंमध्ये सट्टा उपक्रम टाळा."
+        },
+        "gu": {
+          "title": "આર્થિક દ્રષ્ટિકોણ",
+          "content": "2મું અને 11મું ઘર સ્થાનો સ્થિર આવક વૃદ્ધિ દર્શાવે છે. તમારા સંપત્તિ ઘરોમાં ગુરુના સંક્રમણ દરમિયાન કરેલી રોકાણો સકારાત્મક વળતર આપશે. રાહુના અનુકૂળ ન હોવા પર કલ્પનાત્મક સાહસો ટાળો."
+        },
+        "kn": {
+          "title": "ಆರ್ಥಿಕ ದೃಷ್ಟಿಕೋನ",
+          "content": "2ನೇ ಮತ್ತು 11ನೇ ಮನೆಯ ಸ್ಥಾನಗಳು ಸ್ಥಿರ ಆದಾಯ ವೃದ್ಧಿಯನ್ನು ಸೂಚಿಸುತ್ತವೆ. ನಿಮ್ಮ ಸಂಪತ್ತಿನ ಮನೆಗಳ ಮೂಲಕ ಗುರುನ ಪ್ರವಾಸದ ಸಮಯದಲ್ಲಿ ಮಾಡಿದ ಹೂಡಿಕೆಗಳು ಸಕಾರಾತ್ಮಕ ಲಾಭಗಳನ್ನು ನೀಡುತ್ತವೆ. ರಾಹುವಿನ ಅನನುಕೂಲಕರ ಅಂಶಗಳ ಸಮಯದಲ್ಲಿ ಊಹಾತ್ಮಕ ಉದ್ಯಮಗಳನ್ನು ತಪ್ಪಿಸಿ."
+        },
+        "ml": {
+          "title": "സാമ്പത്തിക ദൃശ്യം",
+          "content": "2-ാം, 11-ാം ഭവസ്ഥാനം സ്ഥിരമായ വരുമാന വളർച്ച സൂചിപ്പിക്കുന്നു. നിങ്ങളുടെ സമ്പത്ത് ഭവങ്ങളിലൂടെ ബൃഹസ്പതിയുടെ ഗമനം നടക്കുമ്പോൾ നടത്തിയ നിക്ഷേപങ്ങൾ അനുകൂലമായ ലാഭം നൽകും. രാഹുവിന്റെ അനനുകൂലമായ ദൃഷ്ടികളിൽ സങ്കൽപ്പ നിക്ഷേപങ്ങൾ ഒഴിവാക്കുക."
+        },
+        "pa": {
+          "title": "ਵਿੱਤੀ ਦ੍ਰਿਸ਼ਟੀਕੋਣ",
+          "content": "ਦੂਜੇ ਅਤੇ ਗਿਆਰਵੇਂ ਘਰ ਦੀਆਂ ਸਥਿਤੀਆਂ ਸਥਿਰ ਆਮਦਨ ਵਾਧੇ ਨੂੰ ਦਰਸਾਉਂਦੀਆਂ ਹਨ। ਤੁਹਾਡੇ ਧਨ ਘਰਾਂ ਵਿੱਚੋਂ Jupiter ਦੇ ਗੁਜ਼ਰਦੇ ਸਮੇਂ ਕੀਤੀਆਂ ਗਈਆਂ ਨਿਵੇਸ਼ਾਂ ਚੰਗੇ ਮੁਨਾਫੇ ਦੇਣਗੀਆਂ। Rahu ਦੇ ਅਨਕੂਲ ਪੱਖਾਂ ਦੌਰਾਨ ਅਟਕਲਾਂ ਵਾਲੇ ਕਾਰੋਬਾਰਾਂ ਤੋਂ ਬਚੋ।"
+        },
+        "or": {
+          "title": "ଆର୍ଥିକ ଦୃଷ୍ଟିକୋଣ",
+          "content": "ଦ୍ୱିତୀୟ ଏବଂ ଏକାଦଶ ଭାବର ସ୍ଥାନଗୁଡ଼ିକ ନିରନ୍ତର ଆୟ ବୃଦ୍ଧି ସୂଚିତ କରେ। ଆପଣଙ୍କର ଧନ ଭାବ ମାଧ୍ୟମରେ Jupiter ର ଗତିବିଧି ସମୟରେ କରାଯାଇଥିବା ପୁଞ୍ଜିବିନିୟୋଗ ସକାରାତ୍ମକ ଫଳ ଦେବ। Rahu ର ଅନନୁକୂଳ ପ୍ରଭାବ ସମୟରେ ଅଟକାଳ ଉଦ୍ୟମଗୁଡ଼ିକ ଏଡ଼ିବାକୁ।"
+        },
+        "as": {
+          "title": "আৰ্থিক দৃষ্টিভংগী",
+          "content": "২য় আৰু ১১শ গৃহৰ অৱস্থানসমূহে স্থিৰ আয় বৃদ্ধিক সূচায়। আপোনাৰ সম্পত্তিৰ গৃহসমূহৰ জৰিয়তে Jupiterৰ গমনকালে কৰা বিনিয়োগসমূহে ধনাত্মক লাভ প্ৰদান কৰিব। Rahuৰ অপ্ৰিয় দিশসমূহৰ সময়ত অনুমানভিত্তিক উদ্যোগ এৰাই চলিব।"
+        }
+      }
+    },
+    {
+      "key": "CAREER:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Career Remedies",
+          "content": "Strengthen your career prospects by: chanting the Gayatri Mantra daily, wearing a Yellow Sapphire (after astrological consultation), donating to educational causes on Thursdays, and beginning important professional undertakings during favorable Muhurat periods."
+        },
+        "hi": {
+          "title": "कैरियर उपाय",
+          "content": "अपने करियर की संभावनाओं को मजबूत करें: प्रतिदिन गायत्री मंत्र का जाप करें, पीला पुखराज पहनें (ज्योतिषीय परामर्श के बाद), गुरुवार को शैक्षिक कारणों के लिए दान करें, और अनुकूल मुहूर्त अवधि के दौरान महत्वपूर्ण पेशेवर कार्य शुरू करें।"
+        },
+        "ta": {
+          "title": "வாழ்க்கை நலன் பரிகாரங்கள்",
+          "content": "உங்கள் தொழில் வாய்ப்புகளை வலுப்படுத்த: தினமும் Gayatri Mantra ஜபிக்கவும், (ஜோதிட ஆலோசனைக்கு பிறகு) மஞ்சள் புஷ்பராகம் அணியவும், வியாழக்கிழமைகளில் கல்வி காரணங்களுக்கு நன்கொடை அளிக்கவும், மற்றும் சாதகமான முஹூர்த்த காலங்களில் முக்கியமான தொழில் முயற்சிகளை தொடங்கவும்."
+        },
+        "te": {
+          "title": "వృత్తి పరిహారాలు",
+          "content": "మీ వృత్తి అవకాశాలను బలపరచండి: రోజూ గాయత్రి మంత్రం జపించడం, పసుపు పుష్యరాగం ధరించడం (జ్యోతిష్య సలహా తర్వాత), గురువారాల్లో విద్యా కారణాలకు దానం చేయడం, మరియు అనుకూల ముహూర్త సమయంలో ముఖ్యమైన వృత్తి కార్యక్రమాలను ప్రారంభించడం."
+        },
+        "bn": {
+          "title": "ক্যারিয়ার প্রতিকার",
+          "content": "আপনার ক্যারিয়ারের সম্ভাবনা শক্তিশালী করুন: প্রতিদিন গায়ত্রী মন্ত্র জপ করে, জ্যোতিষ পরামর্শের পরে পীত পুষ্পরাজ পরিধান করে, বৃহস্পতিবার শিক্ষামূলক কারণে দান করে, এবং অনুকূল মুহূর্ত সময়ে গুরুত্বপূর্ণ পেশাদার উদ্যোগ শুরু করে।"
+        },
+        "mr": {
+          "title": "करिअर उपाय",
+          "content": "तुमच्या करिअरच्या संधींना बळकट करा: दररोज गायत्री मंत्राचा जप करा, (ज्योतिषीय सल्ल्यानंतर) पिवळा पुखराज धारण करा, गुरुवारी शैक्षणिक कारणांसाठी दान करा, आणि अनुकूल मुहूर्त काळात महत्त्वाची व्यावसायिक उपक्रम सुरू करा."
+        },
+        "gu": {
+          "title": "કેરિયર ઉપાયો",
+          "content": "તમારા કેરિયરની સંભાવનાઓને મજબૂત બનાવો: દરરોજ ગાયત્રી મંત્રનો જાપ કરો, પીળો પોખરાજ પહેરો (જ્યોતિષીય સલાહ બાદ), ગુરુવારે શૈક્ષણિક કાર્યો માટે દાન કરો, અને અનુકૂળ મુહૂર્ત સમયમાં મહત્વપૂર્ણ વ્યાવસાયિક કાર્યો શરૂ કરો."
+        },
+        "kn": {
+          "title": "ವೃತ್ತಿ ಪರಿಹಾರಗಳು",
+          "content": "ನಿಮ್ಮ ವೃತ್ತಿ ಸಾಧ್ಯತೆಗಳನ್ನು ಬಲಪಡಿಸಲು: ಪ್ರತಿದಿನವೂ ಗಾಯತ್ರಿ ಮಂತ್ರವನ್ನು ಜಪಿಸಿ, ಹಳದಿ ಪುಷ್ಪರಾಜವನ್ನು ಧರಿಸಿ (ಜ್ಯೋತಿಷ್ಯ ಸಲಹೆಯ ನಂತರ), ಗುರುವಾರಗಳಲ್ಲಿ ಶೈಕ್ಷಣಿಕ ಕಾರಣಗಳಿಗೆ ದಾನ ಮಾಡಿ, ಮತ್ತು ಅನುಕೂಲಕರ ಮುಹೂರ್ತ ಅವಧಿಗಳಲ್ಲಿ ಪ್ರಮುಖ ವೃತ್ತಿಪರ ಕಾರ್ಯಗಳನ್ನು ಪ್ರಾರಂಭಿಸಿ."
+        },
+        "ml": {
+          "title": "Career Remedies",
+          "content": "നിങ്ങളുടെ കരിയർ സാധ്യതകൾ ശക്തിപ്പെടുത്തുക: ഗായത്രി മന്ത്രം ദിവസേന ജപിക്കുക, (ജ്യോതിഷ്യപരിശോധനയ്ക്ക് ശേഷം) പുഷ്യരാജം ധരിക്കുക, വ്യാഴാഴ്ചകളിൽ വിദ്യാഭ്യാസ കാരണങ്ങൾക്ക് ദാനം ചെയ്യുക, അനുകൂലമായ മുഹൂർത്ത സമയങ്ങളിൽ പ്രധാനപ്പെട്ട പ്രൊഫഷണൽ പ്രവർത്തനങ്ങൾ ആരംഭിക്കുക."
+        },
+        "pa": {
+          "title": "ਕੈਰੀਅਰ ਉਪਾਅ",
+          "content": "ਆਪਣੇ ਕੈਰੀਅਰ ਦੀਆਂ ਸੰਭਾਵਨਾਵਾਂ ਨੂੰ ਮਜ਼ਬੂਤ ਬਣਾਓ: ਰੋਜ਼ਾਨਾ ਗਾਇਤਰੀ ਮੰਤਰ ਦਾ ਜਾਪ ਕਰੋ, ਪੀਲਾ ਪੁਖਰਾਜ ਪਹਿਨੋ (ਜਨਮ ਕੁੰਡਲੀ ਦੀ ਸਲਾਹ ਮਗਰੋਂ), ਵੀਰਵਾਰ ਨੂੰ ਸਿੱਖਿਆ ਸੰਬੰਧੀ ਕਾਰਨਾਂ ਲਈ ਦਾਨ ਕਰੋ, ਅਤੇ ਅਹਿਮ ਪੇਸ਼ੇਵਰ ਕੰਮਾਂ ਦੀ ਸ਼ੁਰੂਆਤ ਸ਼ੁਭ ਮੁਹੂਰਤ ਸਮਿਆਂ ਦੌਰਾਨ ਕਰੋ।"
+        },
+        "or": {
+          "title": "କାରିଯାର ଉପାୟଗୁଡ଼ିକ",
+          "content": "ଆପଣଙ୍କ କାରିଯାର ସମ୍ଭାବନାଗୁଡ଼ିକୁ ଶକ୍ତିଶାଳୀ କରନ୍ତୁ: ଦୈନିକ ଭାବେ Gayatri Mantra ଜପ କରିବା, (ଜ୍ୟୋତିଷୀୟ ପରାମର୍ଶ ପରେ) ପୀତ ସଫାଇର ପିନ୍ଧିବା, ବୁଧବାର ଶିକ୍ଷାତ୍ମକ କାରଣରେ ଦାନ କରିବା, ଏବଂ ଶୁଭ ମୁହୂର୍ତ୍ତ ସମୟରେ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ ବୃତ୍ତିଗତ କାର୍ଯ୍ୟ ଆରମ୍ଭ କରିବା।"
+        },
+        "as": {
+          "title": "কৰ্মজীৱনৰ প্রতিকাৰ",
+          "content": "আপোনাৰ কৰ্মজীৱনৰ সম্ভাৱনাসমূহ শক্তিশালী কৰক: দৈনিক Gayatri Mantra জপ কৰি, (জ্যোতিষীয় পৰামৰ্শৰ পিছত) পীত পুষ্পৰাগ পিন্ধি, বুধবাৰে শিক্ষামূলক কাৰণত দান কৰি, আৰু অনুকূল Muhurat সময়ত গুৰুত্বপূর্ণ পেচাগত কাৰ্য আৰম্ভ কৰি।"
+        }
+      }
+    },
+    {
+      "key": "MARRIAGE:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Relationship Profile",
+          "content": "{name}, your Navamsa chart reveals your approach to relationships and marriage. Your emotional nature indicates deep loyalty and a desire for meaningful connections. Venus's placement shows your capacity for love and partnership."
+        },
+        "hi": {
+          "title": "रिलेशनशिप प्रोफाइल",
+          "content": "{name}, आपकी नवमांश कुंडली आपके रिश्तों और विवाह के प्रति दृष्टिकोण को प्रकट करती है। आपकी भावनात्मक प्रकृति गहरी निष्ठा और सार्थक संबंधों की इच्छा को दर्शाती है। शुक्र की स्थिति आपके प्रेम और साझेदारी की क्षमता को दर्शाती है।"
+        },
+        "ta": {
+          "title": "உறவு சுயவிவரம்",
+          "content": "{name}, உங்கள் நவாம்ச சக்கரம் உறவுகள் மற்றும் திருமணத்திற்கான உங்கள் அணுகுமுறையை வெளிப்படுத்துகிறது. உங்கள் உணர்ச்சி இயல்பு ஆழமான நம்பிக்கை மற்றும் அர்த்தமுள்ள தொடர்புகளுக்கான விருப்பத்தை குறிக்கிறது. Venus இன் இருப்பிடம் உங்கள் காதல் மற்றும் கூட்டாண்மைக்கான திறனை காட்டுகிறது."
+        },
+        "te": {
+          "title": "సంబంధ ప్రొఫైల్",
+          "content": "{name}, మీ నవాంశ చార్ట్ మీ సంబంధాలు మరియు వివాహం పట్ల మీ దృక్పథాన్ని వెల్లడిస్తుంది. మీ భావోద్వేగ స్వభావం లోతైన విశ్వాసాన్ని మరియు అర్థవంతమైన సంబంధాల కోసం కోరికను సూచిస్తుంది. Venus యొక్క స్థానం మీ ప్రేమ మరియు భాగస్వామ్య సామర్థ్యాన్ని చూపిస్తుంది."
+        },
+        "bn": {
+          "title": "সম্পর্ক প্রোফাইল",
+          "content": "{name}, আপনার নবমাংশ চার্ট আপনার সম্পর্ক এবং বিবাহের প্রতি দৃষ্টিভঙ্গি প্রকাশ করে। আপনার আবেগপ্রবণ প্রকৃতি গভীর বিশ্বস্ততা এবং অর্থবহ সংযোগের আকাঙ্ক্ষা নির্দেশ করে। শুক্রের অবস্থান আপনার প্রেম এবং অংশীদারিত্বের ক্ষমতা প্রদর্শন করে।"
+        },
+        "mr": {
+          "title": "नातेसंबंध प्रोफाइल",
+          "content": "{name}, तुमचा नवमांश चार्ट तुमचा नातेसंबंध आणि विवाहाकडे पाहण्याचा दृष्टिकोन उघड करतो. तुमची भावनिक प्रकृती खोल निष्ठा आणि अर्थपूर्ण संबंधांची इच्छा दर्शवते. शुक्राची स्थिती तुमच्या प्रेम आणि भागीदारीच्या क्षमतेचे प्रदर्शन करते."
+        },
+        "gu": {
+          "title": "સંબંધ પ્રોફાઇલ",
+          "content": "{name}, તમારું નવમાંશ ચાર્ટ સંબંધો અને લગ્ન માટે તમારો અભિગમ દર્શાવે છે. તમારું ભાવનાત્મક સ્વભાવ ઊંડો વફાદારી અને અર્થપૂર્ણ જોડાણોની ઇચ્છા દર્શાવે છે. શુક્રની સ્થિતિ તમારા પ્રેમ અને ભાગીદારી માટેની ક્ષમતા દર્શાવે છે."
+        },
+        "kn": {
+          "title": "ಸಂಬಂಧ ಪ್ರೊಫೈಲ್",
+          "content": "{name}, ನಿಮ್ಮ ನವಾಂಶ ಚಾರ್ಟ್ ನಿಮ್ಮ ಸಂಬಂಧಗಳು ಮತ್ತು ವಿವಾಹದತ್ತ ನಿಮ್ಮ ದೃಷ್ಟಿಕೋನವನ್ನು ಬಹಿರಂಗಪಡಿಸುತ್ತದೆ. ನಿಮ್ಮ ಭಾವನಾತ್ಮಕ ಸ್ವಭಾವವು ಆಳವಾದ ನಿಷ್ಠೆಯನ್ನು ಮತ್ತು ಅರ್ಥಪೂರ್ಣ ಸಂಪರ್ಕಗಳಿಗಾಗಿ ಬಯಕೆಯನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಶುಕ್ರನ ಸ್ಥಾನದವು ಪ್ರೀತಿ ಮತ್ತು ಸಹಭಾಗಿತ್ವದ ನಿಮ್ಮ ಸಾಮರ್ಥ್ಯವನ್ನು ತೋರಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "ബന്ധം പ്രൊഫൈൽ",
+          "content": "{name}, നിങ്ങളുടെ നവാംശ ചാർട്ട് ബന്ധങ്ങളോടും വിവാഹത്തോടുമുള്ള നിങ്ങളുടെ സമീപനം വെളിപ്പെടുത്തുന്നു. നിങ്ങളുടെ വികാര സ്വഭാവം ആഴത്തിലുള്ള വിശ്വസ്തതയും അർത്ഥപൂർണ്ണമായ ബന്ധങ്ങളോടുള്ള ആഗ്രഹവും സൂചിപ്പിക്കുന്നു. ശുക്രന്റെ സ്ഥാനം നിങ്ങളുടെ സ്നേഹത്തിന്റെയും പങ്കാളിത്തത്തിന്റെയും ശേഷി കാണിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਸੰਬੰਧ ਪ੍ਰੋਫਾਈਲ",
+          "content": "{name}, ਤੁਹਾਡਾ ਨਵਾਂਸ਼ ਚਾਰਟ ਤੁਹਾਡੇ ਸੰਬੰਧਾਂ ਅਤੇ ਵਿਆਹ ਲਈ ਰਵੱਈਏ ਨੂੰ ਪ੍ਰਗਟ ਕਰਦਾ ਹੈ। ਤੁਹਾਡੀ ਭਾਵਨਾਤਮਕ ਪ੍ਰਕਿਰਤੀ ਡੂੰਘੀ ਵਫ਼ਾਦਾਰੀ ਅਤੇ ਅਰਥਪੂਰਨ ਸੰਬੰਧਾਂ ਦੀ ਇੱਛਾ ਦਰਸਾਉਂਦੀ ਹੈ। ਸ਼ੁਕਰ ਦੀ ਸਥਿਤੀ ਤੁਹਾਡੇ ਪਿਆਰ ਅਤੇ ਭਾਈਚਾਰੇ ਦੀ ਸਮਰੱਥਾ ਦਿਖਾਉਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "title": "ସମ୍ପର୍କ ପ୍ରୋଫାଇଲ୍",
+          "content": "{name}, ତୁମର ନବାଂଶ ଚାର୍ଟ ତୁମର ସମ୍ପର୍କ ଏବଂ ବିବାହ ପ୍ରତି ଆଭିମୁଖ୍ୟକୁ ପ୍ରକାଶ କରେ। ତୁମର ଭାବନାତ୍ମକ ସ୍ୱଭାବ ଗଭୀର ନିଷ୍ଠା ଏବଂ ଅର୍ଥପୂର୍ଣ୍ଣ ସଂଯୋଗର ଇଚ୍ଛାକୁ ସୂଚାଏ। ଶୁକ୍ରର ଅବସ୍ଥାନ ତୁମର ପ୍ରେମ ଏବଂ ସହଭାଗୀତା ପାଇଁ କ୍ଷମତାକୁ ଦର୍ଶାଏ।"
+        },
+        "as": {
+          "title": "সম্পৰ্কৰ প্ৰফাইল",
+          "content": "{name}, আপোনাৰ নবমাংশ চাৰ্টে সম্পৰ্ক আৰু বিবাহৰ প্ৰতি আপোনাৰ দৃষ্টিভংগী প্ৰকাশ কৰে। আপোনাৰ আৱেগিক স্বভাৱে গভীৰ নিষ্ঠা আৰু অৰ্থপূৰ্ণ সংযোগৰ ইচ্ছা সূচায়। শুক্ৰৰ অৱস্থানই প্ৰেম আৰু অংশীদাৰিত্বৰ বাবে আপোনাৰ সক্ষমতা দেখুৱায়।"
+        }
+      }
+    },
+    {
+      "key": "MARRIAGE:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Navamsa Chart Analysis",
+          "content": "The D9 (Navamsa) chart is crucial for marriage analysis. Your Navamsa Lagna and its lord's placement suggest a harmonious married life with mutual respect. The 7th house configuration indicates a partner who complements your strengths."
+        },
+        "hi": {
+          "title": "नवमांश चार्ट विश्लेषण",
+          "content": "D9 (नवमांश) चार्ट विवाह विश्लेषण के लिए महत्वपूर्ण है। आपका नवमांश लग्न और इसके स्वामी की स्थिति एक सामंजस्यपूर्ण वैवाहिक जीवन का संकेत देती है जिसमें पारस्परिक सम्मान है। 7वें घर की संरचना एक ऐसे साथी का संकेत देती है जो आपकी ताकतों को पूरा करता है।"
+        },
+        "ta": {
+          "title": "நவாம்ச சக்கர பகுப்பாய்வு",
+          "content": "D9 (நவாம்ச) சக்கரம் திருமண பகுப்பாய்வுக்கு முக்கியமானது. உங்கள் நவாம்ச லக்னம் மற்றும் அதன் அதிபதியின் இருப்பிடம் பரஸ்பர மரியாதையுடன் கூடிய ஒற்றுமையான திருமண வாழ்க்கையை குறிக்கிறது. 7வது வீட்டின் அமைப்பு உங்கள் வலிமைகளைப் பூர்த்தி செய்யும் துணையை குறிக்கிறது."
+        },
+        "te": {
+          "title": "నవాంశ చార్ట్ విశ్లేషణ",
+          "content": "D9 (నవాంశ) చార్ట్ వివాహ విశ్లేషణకు కీలకం. మీ నవాంశ లగ్నం మరియు దాని అధిపతి స్థానం పరస్పర గౌరవంతో కూడిన సఖ్యతా పూర్వకమైన వివాహ జీవితాన్ని సూచిస్తుంది. 7వ ఇంటి ఆకృతీకరణ మీ బలాలను పూరకంగా ఉండే భాగస్వామిని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "নবমাংশ চার্ট বিশ্লেষণ",
+          "content": "ডি৯ (নবমাংশ) চার্ট বিবাহ বিশ্লেষণের জন্য অত্যন্ত গুরুত্বপূর্ণ। আপনার নবমাংশ লগ্ন এবং এর অধিপতির অবস্থান একটি সুরেলা বিবাহিত জীবনের ইঙ্গিত দেয় যেখানে পারস্পরিক সম্মান বিদ্যমান। সপ্তম ঘরের বিন্যাস একটি সঙ্গীর নির্দেশ করে যিনি আপনার শক্তিকে পরিপূরক করেন।"
+        },
+        "mr": {
+          "title": "नवमांश चार्ट विश्लेषण",
+          "content": "D9 (नवमांश) चार्ट विवाह विश्लेषणासाठी अत्यंत महत्त्वाचा आहे. तुमचा नवमांश लग्न आणि त्याचा स्वामी यांची स्थिती परस्पर आदरासह सुसंवादी वैवाहिक जीवन सूचित करते. ७व्या घराची रचना तुमच्या सामर्थ्यांना पूरक असलेल्या जोडीदाराचे संकेत देते."
+        },
+        "gu": {
+          "title": "નવમાંશ ચાર્ટ વિશ્લેષણ",
+          "content": "D9 (નવમાંશ) ચાર્ટ લગ્ન વિશ્લેષણ માટે મહત્વપૂર્ણ છે. તમારું નવમાંશ લગ્ન અને તેના સ્વામીની સ્થિતિ પરસ્પર સન્માન સાથે સુમેળભર્યું વૈવાહિક જીવન સૂચવે છે. 7મું ઘર ગોઠવણ સૂચવે છે કે તમારો સાથી તમારા શક્તિઓને પૂરક છે."
+        },
+        "kn": {
+          "title": "ನವಾಂಶ ಚಾರ್ಟ್ ವಿಶ್ಲೇಷಣೆ",
+          "content": "D9 (ನವಾಂಶ) ಚಾರ್ಟ್ ವಿವಾಹ ವಿಶ್ಲೇಷಣೆಗೆ ಅತ್ಯಂತ ಮುಖ್ಯವಾಗಿದೆ. ನಿಮ್ಮ ನವಾಂಶ ಲಗ್ನ ಮತ್ತು ಅದರ ಅಧಿಪತಿಯ ಸ್ಥಿತಿ ಪರಸ್ಪರ ಗೌರವದೊಂದಿಗೆ ಸಮರಸವಾದ ವಿವಾಹ ಜೀವನವನ್ನು ಸೂಚಿಸುತ್ತದೆ. 7ನೇ ಮನೆಯ ವಿನ್ಯಾಸವು ನಿಮ್ಮ ಶಕ್ತಿಗಳನ್ನು ಪೂರಕಗೊಳಿಸುವ ಸಂಗಾತಿಯನ್ನು ಸೂಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "നവാംശ ചാർട്ട് വിശകലനം",
+          "content": "D9 (നവാംശ) ചാർട്ട് വിവാഹ വിശകലനത്തിന് നിർണായകമാണ്. നിങ്ങളുടെ നവാംശ ലഗ്നവും അതിന്റെ അധിപന്റെ സ്ഥാനം പരസ്പര ബഹുമാനത്തോടെ സുസ്ഥിരമായ വിവാഹജീവിതം സൂചിപ്പിക്കുന്നു. 7-ാം ഭാവത്തിന്റെ ക്രമീകരണം നിങ്ങളുടെ ശക്തികളെ പൂരിപ്പിക്കുന്ന ഒരു പങ്കാളിയെ സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਨਵਾਂਸਾ ਚਾਰਟ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "D9 (ਨਵਾਂਸਾ) ਚਾਰਟ ਵਿਆਹ ਵਿਸ਼ਲੇਸ਼ਣ ਲਈ ਮਹੱਤਵਪੂਰਨ ਹੈ। ਤੁਹਾਡਾ ਨਵਾਂਸਾ ਲਗਨ ਅਤੇ ਇਸ ਦੇ ਸਵਾਮੀ ਦੀ ਸਥਿਤੀ ਸਨਮਾਨ ਨਾਲ ਭਰਪੂਰ ਸਹਿਮਤੀ ਵਾਲਾ ਵਿਆਹੀ ਜੀਵਨ ਸੁਝਾਉਂਦੀ ਹੈ। 7ਵੇਂ ਘਰ ਦੀ ਬਣਤਰ ਇੱਕ ਸਾਥੀ ਨੂੰ ਦਰਸਾਉਂਦੀ ਹੈ ਜੋ ਤੁਹਾਡੀਆਂ ਤਾਕਤਾਂ ਨੂੰ ਪੂਰਾ ਕਰਦਾ ਹੈ।"
+        },
+        "or": {
+          "title": "ନବାଂଶ ଚାର୍ଟ ବିଶ୍ଳେଷଣ",
+          "content": "ଡି9 (ନବାଂଶ) ଚାର୍ଟ ବିବାହ ବିଶ୍ଳେଷଣ ପାଇଁ ଅତ୍ୟନ୍ତ ଜରୁରୀ। ଆପଣଙ୍କର ନବାଂଶ ଲଗ୍ନ ଏବଂ ଏହାର ଲୋର୍ଡଙ୍କର ସ୍ଥାନ ଏକ ସମ୍ମାନପୂର୍ଣ୍ଣ ବିବାହିତ ଜୀବନ ସୃଷ୍ଟି କରେ। ସପ୍ତମ ଘରର ବିନ୍ୟାସ ଏକ ସହଭାଗୀଙ୍କ ସୂଚନା ଦେଇଥାଏ ଯିଏ ଆପଣଙ୍କର ଶକ୍ତିଗୁଡିକୁ ପୂରକ କରିଥାଏ।"
+        },
+        "as": {
+          "title": "নৱাংশ চাৰ্ট বিশ্লেষণ",
+          "content": "D9 (নৱাংশ) চাৰ্ট বিবাহৰ বিশ্লেষণৰ বাবে অতি গুৰুত্বপূর্ণ। আপোনাৰ নৱাংশ লগ্ন আৰু ইয়াৰ স্বামীৰ অৱস্থান এটা সুমধুৰ বিবাহিত জীৱন আৰু পৰস্পৰ সন্মান সূচায়। সপ্তম ঘৰৰ বিন্যাসে এটা অংশীদাৰক সূচায় যি আপোনাৰ শক্তিসমূহৰ পৰিপূৰক।"
+        }
+      }
+    },
+    {
+      "key": "MARRIAGE:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "7th House & Venus Analysis",
+          "content": "Venus's sign and house placement in your chart governs romantic inclinations. The 7th lord's dignity suggests a stable, supportive partner. Any planetary aspects on the 7th house indicate the nature and timing of significant relationships."
+        },
+        "hi": {
+          "title": "7th House & Venus Analysis",
+          "content": "आपकी कुंडली में शुक्र की राशि और भाव स्थिति रोमांटिक प्रवृत्तियों को नियंत्रित करती है। 7वें स्वामी की गरिमा एक स्थिर, सहायक साथी का संकेत देती है। 7वें भाव पर किसी भी ग्रह की दृष्टि महत्वपूर्ण संबंधों की प्रकृति और समय को दर्शाती है।"
+        },
+        "ta": {
+          "title": "7th House & Venus Analysis",
+          "content": "உங்கள் ஜாதகத்தில் Venus இன் ராசி மற்றும் வீட்டின் இடம் காதல் விருப்பங்களை நிர்வகிக்கிறது. 7வது அதிபதியின் கண்ணியம் ஒரு நிலையான, ஆதரவு தரக்கூடிய துணையை குறிக்கிறது. 7வது வீட்டில் உள்ள எந்த கிரக பார்வைகளும் முக்கியமான உறவுகளின் தன்மை மற்றும் நேரத்தை குறிக்கின்றன."
+        },
+        "te": {
+          "title": "7వ ఇల్లు & Venus విశ్లేషణ",
+          "content": "మీ చార్ట్‌లో Venus యొక్క రాశి మరియు ఇల్లు స్థానాలు రొమాంటిక్ ఆసక్తులను నియంత్రిస్తాయి. 7వ ఇంటి అధిపతి యొక్క గౌరవం స్థిరమైన, మద్దతు ఇచ్చే భాగస్వామిని సూచిస్తుంది. 7వ ఇంటిపై ఏదైనా గ్రహ దృష్టి ముఖ్యమైన సంబంధాల స్వభావం మరియు సమయాన్ని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "৭ম ঘর ও Venus বিশ্লেষণ",
+          "content": "আপনার চার্টে Venus এর রাশি এবং ঘরের অবস্থান রোমান্টিক প্রবণতাগুলি নিয়ন্ত্রণ করে। ৭ম অধিপতির মর্যাদা একটি স্থিতিশীল, সহায়ক সঙ্গীর ইঙ্গিত দেয়। ৭ম ঘরে যে কোনও গ্রহের দৃষ্টি উল্লেখযোগ্য সম্পর্কের প্রকৃতি এবং সময় নির্দেশ করে।"
+        },
+        "mr": {
+          "title": "७वा घर आणि शुक्र विश्लेषण",
+          "content": "तुमच्या पत्रिकेत शुक्राची रास आणि घरातील स्थान तुमच्या प्रेमाच्या प्रवृत्ती नियंत्रित करतात. ७व्या अधिपतीची प्रतिष्ठा स्थिर, सहायक जोडीदार सूचित करते. ७व्या घरावर कोणतेही ग्रहांचे प्रभाव महत्त्वपूर्ण संबंधांची प्रकृती आणि वेळ दर्शवतात."
+        },
+        "gu": {
+          "title": "7th House & Venus Analysis",
+          "content": "તમારા ચાર્ટમાં શુક્રનું રાશિ અને ભાવ સ્થાન રોમેન્ટિક ઝુકાવને નિયંત્રિત કરે છે. 7મા ભાવના સ્વામીની સ્થિતિ એક સ્થિર, સહાયક સાથીદાર સૂચવે છે. 7મા ભાવ પરના કોઈપણ ગ્રહોનો દ્રષ્ટિકોણ મહત્વપૂર્ણ સંબંધોની સ્વભાવ અને સમયસૂચકતા દર્શાવે છે."
+        },
+        "kn": {
+          "title": "7ನೇ ಮನೆ ಮತ್ತು ಶುಕ್ರನ ವಿಶ್ಲೇಷಣೆ",
+          "content": "ನಿಮ್ಮ ಚಾರ್ಟ್‌ನಲ್ಲಿ ಶುಕ್ರನ ಚಿಹ್ನೆ ಮತ್ತು ಮನೆಯ ಸ್ಥಾನ romantic inclinations ಅನ್ನು ನಿಯಂತ್ರಿಸುತ್ತದೆ. 7ನೇ ಸ್ವಾಮಿಯ ಘನತೆ ಸ್ಥಿರ, ಬೆಂಬಲಿಸುವ ಸಂಗಾತಿಯನ್ನು ಸೂಚಿಸುತ್ತದೆ. 7ನೇ ಮನೆಯ ಮೇಲೆ ಯಾವುದೇ ಗ್ರಹಗಳ ಅಂಶಗಳು ಪ್ರಮುಖ ಸಂಬಂಧಗಳ ಸ್ವಭಾವ ಮತ್ತು ಸಮಯವನ್ನು ಸೂಚಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "7th House & Venus Analysis",
+          "content": "നിങ്ങളുടെ ജാതകത്തിലെ ശുക്രന്റെ രാശിയും ഭവനവും പ്രണയാഭിരുചികളെ നിയന്ത്രിക്കുന്നു. 7-ാം ഭവനാധിപന്റെ ഗുണനിലവാരം സ്ഥിരതയുള്ള, പിന്തുണയുള്ള പങ്കാളിയെ സൂചിപ്പിക്കുന്നു. 7-ാം ഭവനത്തിൽ ഏതെങ്കിലും ഗ്രഹങ്ങളുടെ ദൃഷ്ടി പ്രധാനപ്പെട്ട ബന്ധങ്ങളുടെ സ്വഭാവവും സമയവും സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "7ਵੇਂ ਘਰ ਅਤੇ ਸ਼ੁੱਕਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "ਤੁਹਾਡੇ ਚਾਰਟ ਵਿੱਚ ਸ਼ੁੱਕਰ ਦੀ ਰਾਸ਼ੀ ਅਤੇ ਘਰ ਦੀ ਸਥਿਤੀ ਰੋਮਾਂਟਿਕ ਰੁਝਾਨਾਂ ਨੂੰ ਨਿਰਧਾਰਤ ਕਰਦੀ ਹੈ। 7ਵੇਂ ਘਰ ਦੇ ਮਾਲਕ ਦੀ ਸ਼ਾਨਦਾਰਤਾ ਇੱਕ ਸਥਿਰ, ਸਹਾਇਕ ਸਾਥੀ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀ ਹੈ। 7ਵੇਂ ਘਰ 'ਤੇ ਕਿਸੇ ਵੀ ਗ੍ਰਹਿ ਦੇ ਪੱਖ ਸੰਕੇਤ ਮਹੱਤਵਪੂਰਨ ਸੰਬੰਧਾਂ ਦੀ ਪ੍ਰਕਿਰਤੀ ਅਤੇ ਸਮੇਂ ਨੂੰ ਦਰਸਾਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "୭ତମ ଘର ଏବଂ ଶୁକ୍ର ବିଶ୍ଳେଷଣ",
+          "content": "ଆପଣଙ୍କ ଚାର୍ଟରେ ଶୁକ୍ରଙ୍କ ରାଶି ଏବଂ ଘରର ସ୍ଥାନ ରୋମାଣ୍ଟିକ ଆକର୍ଷଣକୁ ନିୟନ୍ତ୍ରଣ କରେ। ୭ତମ ଲୋର୍ଡଙ୍କ ମର୍ଯ୍ୟାଦା ଏକ ସ୍ଥିର, ସହାୟକ ସଂଗୀକୁ ସୂଚିତ କରେ। ୭ତମ ଘର ଉପରେ ଥିବା କୌଣସି ଗ୍ରହ ଦୃଷ୍ଟି ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ ସମ୍ପର୍କର ସ୍ୱଭାବ ଏବଂ ସମୟକୁ ସୂଚିତ କରେ।"
+        },
+        "as": {
+          "title": "৭ম ঘৰ আৰু শুক্ৰৰ বিশ্লেষণ",
+          "content": "আপোনাৰ ৰাশিচক্ৰত শুক্ৰৰ ৰাশি আৰু ঘৰৰ অৱস্থানই ৰোমান্টিক প্ৰৱণতা নিয়ন্ত্ৰণ কৰে। ৭ম স্বামীৰ মর্যাদাই এটা স্থিৰ, সহায়ক অংশীদাৰৰ সূচনা কৰে। ৭ম ঘৰত যিকোনো গ্ৰহীয় দৃষ্টিয়ে গুৰুত্বপূর্ণ সম্পৰ্কৰ প্ৰকৃতি আৰু সময়সূচী সূচায়।"
+        }
+      }
+    },
+    {
+      "key": "MARRIAGE:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Marriage Timing",
+          "content": "Based on Dasha periods and transits, favorable periods for marriage align with Jupiter and Venus Dashas. The current transit suggests relationship developments in the coming months. Look for Muhurat periods when Venus and Jupiter aspect your 7th house."
+        },
+        "hi": {
+          "title": "विवाह का समय",
+          "content": "दशा अवधियों और गोचर के आधार पर, विवाह के लिए अनुकूल अवधि बृहस्पति और शुक्र दशाओं के साथ मेल खाती है। वर्तमान गोचर आने वाले महीनों में संबंध विकास का सुझाव देता है। उन मुहूर्त अवधियों की तलाश करें जब शुक्र और बृहस्पति आपकी 7वीं भाव को दृष्टि करते हैं।"
+        },
+        "ta": {
+          "title": "திருமண நேரம்",
+          "content": "தசா காலங்கள் மற்றும் பெயர்ச்சிகளின் அடிப்படையில், திருமணத்திற்கு சாதகமான காலங்கள் குரு மற்றும் சுக்கிர தசாக்களுடன் பொருந்துகின்றன. தற்போதைய பெயர்ச்சி எதிர்வரும் மாதங்களில் உறவுகள் மேம்படுவதை குறிக்கிறது. சுக்கிரன் மற்றும் குரு உங்கள் 7வது வீட்டை பார்வையிடும் போது முஹூர்த்த காலங்களைப் பாருங்கள்."
+        },
+        "te": {
+          "title": "వివాహ సమయం",
+          "content": "దశా కాలాలు మరియు గోచారాల ఆధారంగా, వివాహానికి అనుకూల కాలాలు గురు మరియు శుక్ర దశలతో సరిపోతాయి. ప్రస్తుత గోచారం రాబోయే నెలల్లో సంబంధ అభివృద్ధులను సూచిస్తుంది. మీ 7వ ఇంటిని శుక్రుడు మరియు గురువు దృష్టి చేసే ముహూర్త కాలాలను చూడండి."
+        },
+        "bn": {
+          "title": "বিবাহের সময়",
+          "content": "দশা সময়কাল এবং গমনাগমনের উপর ভিত্তি করে, বিবাহের জন্য অনুকূল সময়কাল বৃহস্পতি এবং শুক্র দশার সাথে সামঞ্জস্যপূর্ণ। বর্তমান গমনাগমন আগামী মাসগুলিতে সম্পর্কের উন্নয়নের ইঙ্গিত দেয়। আপনার সপ্তম ঘরে শুক্র এবং বৃহস্পতি যখন দৃষ্টিপাত করে তখন মুহূর্তের সময় খুঁজুন।"
+        },
+        "mr": {
+          "title": "विवाहाची वेळ",
+          "content": "दशा कालखंड आणि गोचरांवर आधारित, विवाहासाठी अनुकूल कालखंड गुरु आणि शुक्राच्या दशांशी जुळतात. सध्याचा गोचर येत्या काही महिन्यांत संबंधांच्या विकासाचा सूचक आहे. आपल्या सप्तम भावावर शुक्र आणि गुरुचा दृष्टीयोग असलेल्या मुहूर्त कालखंडांचा शोध घ्या."
+        },
+        "gu": {
+          "title": "લગ્નનો સમય",
+          "content": "દશા સમયગાળો અને ગોચર પર આધારિત, લગ્ન માટે અનુકૂળ સમયગાળો ગુરુ અને શુક્ર દશા સાથે મેળ ખાતો હોય છે. વર્તમાન ગોચર સૂચવે છે કે આવતા મહિનાઓમાં સંબંધ વિકાસ થશે. તે મુહૂર્ત સમયગાળો શોધો જ્યારે શુક્ર અને ગુરુ તમારા 7મા ભાવને દ્રષ્ટિ કરે છે."
+        },
+        "kn": {
+          "title": "ವಿವಾಹ ಸಮಯ",
+          "content": "ದಶಾ ಅವಧಿಗಳು ಮತ್ತು ಸಂಚಾರಗಳ ಆಧಾರದ ಮೇಲೆ, ವಿವಾಹಕ್ಕೆ ಅನುಕೂಲಕರ ಅವಧಿಗಳು ಗುರು ಮತ್ತು ಶುಕ್ರ ದಶಾಗಳೊಂದಿಗೆ ಹೊಂದಿಕೊಳ್ಳುತ್ತವೆ. ಪ್ರಸ್ತುತ ಸಂಚಾರವು ಮುಂದಿನ ತಿಂಗಳುಗಳಲ್ಲಿ ಸಂಬಂಧ ಅಭಿವೃದ್ಧಿಗಳನ್ನು ಸೂಚಿಸುತ್ತದೆ. ನಿಮ್ಮ 7ನೇ ಮನೆಗೆ ಶುಕ್ರ ಮತ್ತು ಗುರು ದೃಷ್ಟಿಯಿರುವ ಮುಹೂರ್ತ ಅವಧಿಗಳನ್ನು ಹುಡುಕಿ."
+        },
+        "ml": {
+          "title": "വിവാഹ സമയക്രമം",
+          "content": "ദശാ കാലയളവുകളും ഗച്ഛാരങ്ങളും അടിസ്ഥാനമാക്കി, വിവാഹത്തിന് അനുകൂലമായ കാലയളവുകൾ ബൃഹസ്പതി, ശുക്ര ദശകളുമായി പൊരുത്തപ്പെടുന്നു. നിലവിലെ ഗച്ഛാരം അടുത്ത മാസങ്ങളിൽ ബന്ധ വികസനങ്ങൾ സൂചിപ്പിക്കുന്നു. ശുക്രനും ബൃഹസ്പതിയും നിങ്ങളുടെ 7-ാം ഭാവത്തെ аспектുചെയ്യുന്ന മുഹൂർത്ത കാലയളവുകൾ നോക്കുക."
+        },
+        "pa": {
+          "title": "ਵਿਆਹ ਦਾ ਸਮਾਂ",
+          "content": "ਦਸ਼ਾ ਪੀਰੀਅਡ ਅਤੇ ਗੋਚਰਾਂ ਦੇ ਆਧਾਰ 'ਤੇ, ਵਿਆਹ ਲਈ ਅਨੁਕੂਲ ਸਮੇਂ ਬ੍ਰਹਸਪਤੀ ਅਤੇ ਸ਼ੁਕਰ ਦਸ਼ਾ ਨਾਲ ਮਿਲਦੇ ਹਨ। ਮੌਜੂਦਾ ਗੋਚਰ ਆਉਣ ਵਾਲੇ ਮਹੀਨਿਆਂ ਵਿੱਚ ਰਿਸ਼ਤਿਆਂ ਦੇ ਵਿਕਾਸ ਦਾ ਸੁਝਾਅ ਦਿੰਦਾ ਹੈ। ਉਹ ਮੁਹੂਰਤ ਪੀਰੀਅਡ ਲੱਭੋ ਜਦੋਂ ਸ਼ੁਕਰ ਅਤੇ ਬ੍ਰਹਸਪਤੀ ਤੁਹਾਡੇ 7ਵੇਂ ਘਰ ਨੂੰ ਦੇਖਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ବିବାହ ସମୟ",
+          "content": "ଦଶା ପରିଚାଳନା ଏବଂ ଗୋଚର ଆଧାରରେ, ବିବାହ ପାଇଁ ଉପଯୁକ୍ତ ସମୟଗୁଡ଼ିକ Jupiter ଏବଂ Venus ଦଶା ସହିତ ସମନ୍ୱୟ ରଖେ। ବର୍ତ୍ତମାନ ଗୋଚର ଆଗାମୀ କିଛି ମାସରେ ସମ୍ପର୍କ ଉନ୍ନତି ସୂଚାଇଛି। ଯେତେବେଳେ Venus ଏବଂ Jupiter ଆପଣଙ୍କ ୭ମ ଘରକୁ ଦୃଷ୍ଟି କରନ୍ତି, ସେତେବେଳେ ମୁହୂର୍ତ୍ତ ସମୟଗୁଡ଼ିକ ଦେଖନ୍ତୁ।"
+        },
+        "as": {
+          "title": "বিবাহৰ সময়",
+          "content": "দশা সময়কাল আৰু গমন অনুসৰি, বিবাহৰ বাবে অনুকূল সময়কাল হৈছে Jupiter আৰু Venus দশাসমূহ। বৰ্তমানৰ গমন সূচায় যে অহা মাহসমূহত সম্পৰ্কৰ বিকাশ হ'ব। Venus আৰু Jupiter-এ আপোনাৰ সপ্তম ঘৰত দৃষ্টিপাত কৰা Muhurat সময়কালৰ সন্ধান কৰক।"
+        }
+      }
+    },
+    {
+      "key": "MARRIAGE:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Partner Compatibility",
+          "content": "Your ideal partner's Moon sign and Nakshatra should complement your own for Ashtakoota compatibility. The chart suggests compatibility with partners who share intellectual curiosity and emotional depth. A partner with complementary elemental energy will create the most harmonious union."
+        },
+        "hi": {
+          "title": "साथी संगतता",
+          "content": "आपके आदर्श साथी का Moon चिन्ह और Nakshatra आपके अपने चिन्ह के साथ Ashtakoota संगतता के लिए पूरक होना चाहिए। चार्ट सुझाव देता है कि उन साथियों के साथ संगतता है जो बौद्धिक जिज्ञासा और भावनात्मक गहराई साझा करते हैं। एक साथी जिसके पास पूरक तत्वीय ऊर्जा है, सबसे सामंजस्यपूर्ण संघ बनाएगा।"
+        },
+        "ta": {
+          "title": "கூட்டாளி பொருத்தம்",
+          "content": "உங்கள் சரியான கூட்டாளியின் Moon sign மற்றும் Nakshatra உங்கள் சொந்த Ashtakoota பொருத்தத்திற்காக இணக்கமாக இருக்க வேண்டும். வரைபடம் அறிவாற்றல் ஆர்வம் மற்றும் உணர்ச்சி ஆழம் பகிரும் கூட்டாளிகளுடன் பொருத்தத்தை முன்மொழைக்கிறது. இணக்கமான மூலக்கூறு ஆற்றல் கொண்ட ஒரு கூட்டாளி மிகவும் ஒத்திசைவு கொண்ட ஒன்றிணையை உருவாக்குவார்."
+        },
+        "te": {
+          "title": "భాగస్వామి అనుకూలత",
+          "content": "మీ ఆదర్శ భాగస్వామి యొక్క Moon రాశి మరియు Nakshatra మీ స్వంత వాటికి అనుకూలంగా ఉండాలి Ashtakoota అనుకూలత కోసం. చార్ట్ బుద్ధిజీవిత ఆసక్తి మరియు భావోద్వేగ లోతు పంచుకునే భాగస్వాములతో అనుకూలత సూచిస్తుంది. అనుకూలమైన మూలక శక్తి ఉన్న భాగస్వామి అత్యంత సఖ్యత కలిగిన సంఘాన్ని సృష్టిస్తారు."
+        },
+        "bn": {
+          "title": "সঙ্গী সামঞ্জস্যতা",
+          "content": "আপনার আদর্শ সঙ্গীর চন্দ্র রাশি এবং নক্ষত্র আপনার নিজের সাথে সম্পূরক হওয়া উচিত অষ্টকূট সামঞ্জস্যতার জন্য। চার্টটি এমন সঙ্গীদের সাথে সামঞ্জস্যতার পরামর্শ দেয় যারা বৌদ্ধিক কৌতূহল এবং আবেগগত গভীরতা ভাগ করে নেয়। একটি সঙ্গী যার সম্পূরক মৌলিক শক্তি রয়েছে সে সবচেয়ে সুরেলা মিলন তৈরি করবে।"
+        },
+        "mr": {
+          "title": "साथीची सुसंगतता",
+          "content": "तुमच्या आदर्श जोडीदाराचे चंद्र राशी आणि नक्षत्र तुमच्या स्वतःच्या साठी अष्टकूट सुसंगततेसाठी पूरक असावे. चार्ट बौद्धिक जिज्ञासा आणि भावनिक खोली सामायिक करणाऱ्या जोडीदारांसोबत सुसंगतता सुचवते. पूरक तत्त्वात्मक ऊर्जा असलेला जोडीदार सर्वात सुसंवादी एकता निर्माण करेल."
+        },
+        "gu": {
+          "title": "સાથી સુસંગતતા",
+          "content": "તમારા આદર્શ સાથીનો Moon રાશિ અને Nakshatra તમારા પોતાના સાથે Ashtakoota સુસંગતતા માટે પૂરક હોવો જોઈએ. ચાર્ટ સૂચવે છે કે એવા સાથીદારો સાથે સુસંગતતા છે જે બુદ્ધિપ્રદ જિજ્ઞાસા અને ભાવનાત્મક ઊંડાઈ શેર કરે છે. પૂરક તત્ત્વીય ઊર્જા ધરાવતા સાથી સાથે સૌથી સુમેળભર્યું સંયોજન સર્જાશે."
+        },
+        "kn": {
+          "title": "ಭಾಗಸಾಧಕ ಹೊಂದಾಣಿಕೆ",
+          "content": "ನಿಮ್ಮ ಆದರ್ಶ ಸಂಗಾತಿಯ ಚಂದ್ರ ರಾಶಿ ಮತ್ತು ನಕ್ಷತ್ರವು ನಿಮ್ಮದನ್ನು ಪೂರಕವಾಗಿರಬೇಕು ಅಷ್ಟಕೂಟ ಹೊಂದಾಣಿಕೆಗೆ. ಚಾರ್ಟ್ ಬುದ್ಧಿವಂತಿಕೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳುವ ಮತ್ತು ಭಾವನಾತ್ಮಕ ಆಳತೆಯನ್ನು ಹೊಂದಿರುವ ಸಂಗಾತಿಗಳೊಂದಿಗೆ ಹೊಂದಾಣಿಕೆಯನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಪೂರಕ ಮೂಲಭೂತ ಶಕ್ತಿಯೊಂದಿಗೆ ಇರುವ ಸಂಗಾತಿ ಅತ್ಯಂತ ಸಮ್ಮಿಲಿತ ಒಕ್ಕೂಟವನ್ನು ರಚಿಸುತ್ತಾನೆ."
+        },
+        "ml": {
+          "title": "പങ്കാളി പൊരുത്തം",
+          "content": "നിങ്ങളുടെ ആശ്ടകൂട്ട പൊരുത്തത്തിനായി നിങ്ങളുടെ അനുയോജ്യമായ പങ്കാളിയുടെ ചന്ദ്രരാശിയും നക്ഷത്രവും നിങ്ങളുടെതിനെ പൂരകമാകണം. ബുദ്ധികൗതുകവും മാനസിക ആഴവും പങ്കിടുന്ന പങ്കാളികളുമായി പൊരുത്തം സൂചിപ്പിക്കുന്നു. പൂരകമായ മൂലക ഊർജമുള്ള പങ്കാളി ഏറ്റവും സമരസമായ ഐക്യം സൃഷ്ടിക്കും."
+        },
+        "pa": {
+          "title": "ਸਾਥੀ ਅਨੁਕੂਲਤਾ",
+          "content": "ਤੁਹਾਡੇ ਆਦਰਸ਼ ਸਾਥੀ ਦੀ Moon ਰਾਸ਼ੀ ਅਤੇ Nakshatra ਤੁਹਾਡੇ ਨਾਲ Ashtakoota ਅਨੁਕੂਲਤਾ ਲਈ ਪੂਰੀ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ। ਚਾਰਟ ਬੁੱਧੀਮਾਨ ਜਿਗਿਆਸਾ ਅਤੇ ਭਾਵਨਾਤਮਕ ਗਹਿਰਾਈ ਨੂੰ ਸਾਂਝਾ ਕਰਨ ਵਾਲੇ ਸਾਥੀਆਂ ਨਾਲ ਅਨੁਕੂਲਤਾ ਦਰਸਾਉਂਦਾ ਹੈ। ਪੂਰੀ ਤਰ੍ਹਾਂ ਮਿਲਦੇ-ਜੁਲਦੇ ਤੱਤਕ ਸ਼ਕਤੀ ਵਾਲਾ ਸਾਥੀ ਸਭ ਤੋਂ ਸਹਿਮਤ ਸੰਯੋਗ ਬਣਾਏਗਾ।"
+        },
+        "or": {
+          "title": "ସହଭାଗୀ ସମନ୍ବନ୍ଧ",
+          "content": "ଆପଣଙ୍କର ଆଦର୍ଶ ସହଭାଗୀଙ୍କ Moon ରାଶି ଏବଂ Nakshatra ଆପଣଙ୍କର ସହିତ Ashtakoota ସମନ୍ବନ୍ଧ ପାଇଁ ପୂରକ ହେବା ଉଚିତ। ଚାର୍ଟ ଦେଖାଉଛି ଯେ ସେହି ସହଭାଗୀଙ୍କ ସହିତ ସମନ୍ବନ୍ଧ ହେଉଛି ଯେଉଁମାନେ ବୁଦ୍ଧିମତା ଉତ୍ସୁକତା ଏବଂ ଭାବନାତ୍ମକ ଗଭୀରତା ଅଂଶୀଦାର କରନ୍ତି। ପୂରକ ମୂଳତ୍ୱ ଶକ୍ତି ସହିତ ଥିବା ସହଭାଗୀ ସବୁଠାରୁ ସମନ୍ୱିତ ଏକତା ସୃଷ୍ଟି କରିବ।"
+        },
+        "as": {
+          "title": "সঙ্গী সামঞ্জস্যতা",
+          "content": "আপোনাৰ আদৰ্শ সঙ্গীৰ Moon ৰাশি আৰু Nakshatra আপোনাৰ নিজৰ সৈতে Ashtakoota সামঞ্জস্যৰ বাবে পৰিপূৰক হ'ব লাগিব। তালিকাখনে বুদ্ধিজীৱী কৌতূহল আৰু অনুভৱী গভীৰতা থকা সঙ্গীৰ সৈতে সামঞ্জস্য সূচাইছে। পৰিপূৰক মৌলিক শক্তি থকা সঙ্গীয়ে আটাইতকৈ সুমধুৰ সংযোগ সৃষ্টি কৰিব।"
+        }
+      }
+    },
+    {
+      "key": "MARRIAGE:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Relationship Remedies",
+          "content": "To attract and maintain healthy relationships: worship Lord Shiva and Parvati together on Mondays, wear a Diamond or White Sapphire (Venus gemstone) after consultation, fast on Fridays, and chant the Shukra Beej Mantra for Venus's blessings."
+        },
+        "hi": {
+          "title": "संबंध उपाय",
+          "content": "स्वस्थ संबंधों को आकर्षित करने और बनाए रखने के लिए: सोमवार को भगवान शिव और पार्वती की एक साथ पूजा करें, परामर्श के बाद हीरा या सफेद नीलम (शुक्र रत्न) पहनें, शुक्रवार को उपवास करें, और शुक्र के आशीर्वाद के लिए शुक्र बीज मंत्र का जाप करें।"
+        },
+        "ta": {
+          "title": "உறவு பரிகாரங்கள்",
+          "content": "ஆரோக்கியமான உறவுகளை ஈர்க்கவும் பராமரிக்கவும்: திங்கள்கிழமைகளில் சிவபெருமான் மற்றும் பார்வதி தேவியை சேர்த்து வழிபடவும், ஆலோசனைக்குப் பிறகு வைர அல்லது வெள்ளை சபைரைக் (சுக்ர கிரக ரத்தினம்) அணியவும், வெள்ளிக்கிழமைகளில் நோன்பு நோற்கவும், சுக்ர கிரகத்தின் ஆசீர்வாதங்களுக்காக சுக்ர பீஜ மந்திரத்தை ஜபிக்கவும்."
+        },
+        "te": {
+          "title": "సంబంధాల పరిహారాలు",
+          "content": "ఆకర్షించడానికి మరియు ఆరోగ్యకరమైన సంబంధాలను కొనసాగించడానికి: సోమవారాలలో శివుడు మరియు పార్వతిని కలిసి పూజించండి, సంప్రదింపుల తర్వాత వజ్రం లేదా తెల్ల నీలమణి (శుక్ర గ్రహ రత్నం) ధరించండి, శుక్రవారాలలో ఉపవాసం ఉండండి, మరియు శుక్ర గ్రహ అనుగ్రహం కోసం శుక్ర బీజ మంత్రం జపించండి."
+        },
+        "bn": {
+          "title": "সম্পর্কের প্রতিকার",
+          "content": "স্বাস্থ্যকর সম্পর্ক আকর্ষণ এবং বজায় রাখতে: সোমবারে একসাথে শিব এবং পার্বতীর পূজা করুন, পরামর্শের পর একটি হীরা বা সাদা নীলা (শুক্র রত্ন) পরিধান করুন, শুক্রবারে উপবাস করুন, এবং শুক্রের আশীর্বাদের জন্য শুক্র বীজ মন্ত্র জপ করুন।"
+        },
+        "mr": {
+          "title": "नातेसंबंध उपाय",
+          "content": "आरोग्यदायी नातेसंबंध आकर्षित करण्यासाठी आणि टिकवण्यासाठी: सोमवारी भगवान शिव आणि पार्वतीची एकत्र पूजा करा, सल्लामसलत करून हिरे किंवा पांढरा नीलम (शुक्र रत्न) धारण करा, शुक्रवारी उपवास करा, आणि शुक्राच्या आशीर्वादासाठी शुक्र बीज मंत्र जपा."
+        },
+        "gu": {
+          "title": "સંબંધ ઉપાય",
+          "content": "આકર્ષિત કરવા અને સ્વસ્થ સંબંધો જાળવવા માટે: સોમવારે ભગવાન શિવ અને પાર્વતીની સાથે પૂજા કરો, સલાહ બાદ હીરા અથવા સફેદ સફાયર (શુક્ર રત્ન) પહેરો, શુક્રવારે ઉપવાસ કરો, અને શુક્રના આશીર્વાદ માટે શુક્ર બીજ મંત્રનો જાપ કરો."
+        },
+        "kn": {
+          "title": "ಸಂಬಂಧ ಪರಿಹಾರಗಳು",
+          "content": "ಆಕರ್ಷಿಸಲು ಮತ್ತು ಆರೋಗ್ಯಕರ ಸಂಬಂಧಗಳನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಲು: ಸೋಮವಾರಗಳಲ್ಲಿ ಶಿವ ಮತ್ತು ಪಾರ್ವತಿಯನ್ನು ಒಟ್ಟಾಗಿ ಪೂಜಿಸಿ, ಸಲಹೆಯ ನಂತರ ವಜ್ರ ಅಥವಾ ಬಿಳಿ ಸಫೈರ್ (ಶುಕ್ರ ಗ್ರಹ ರತ್ನ) ಧರಿಸಿ, ಶುಕ್ರವಾರಗಳಲ್ಲಿ ಉಪವಾಸವಿರಿಸಿ, ಮತ್ತು ಶುಕ್ರನ ಆಶೀರ್ವಾದಕ್ಕಾಗಿ ಶುಕ್ರ ಬೀಜ ಮಂತ್ರ ಜಪಿಸಿ."
+        },
+        "ml": {
+          "title": "ബന്ധം പരിഹാരങ്ങൾ",
+          "content": "ആകർഷിക്കുകയും ആരോഗ്യകരമായ ബന്ധങ്ങൾ നിലനിർത്തുകയും ചെയ്യാൻ: തിങ്കളാഴ്ചകളിൽ ശിവനും പാർവതിയും ഒരുമിച്ച് പൂജിക്കുക, ഉപദേശത്തിന് ശേഷം ഡയമണ്ട് അല്ലെങ്കിൽ വൈറ്റ് സഫയർ (ശുക്രന്റെ രത്‌നം) ധരിക്കുക, വെള്ളിയാഴ്ചകൾ ഉപവസിക്കുക, ശുക്ര ബീജ മന്ത്രം ജപിക്കുക ശുക്രന്റെ അനുഗ്രഹങ്ങൾക്കായി."
+        },
+        "pa": {
+          "title": "ਸੰਬੰਧ ਉਪਚਾਰ",
+          "content": "ਸਿਹਤਮੰਦ ਸੰਬੰਧਾਂ ਨੂੰ ਆਕਰਸ਼ਿਤ ਕਰਨ ਅਤੇ ਕਾਇਮ ਰੱਖਣ ਲਈ: ਸੋਮਵਾਰ ਨੂੰ ਭਗਵਾਨ ਸ਼ਿਵ ਅਤੇ ਪਾਰਵਤੀ ਦੀ ਇਕੱਠੇ ਪੂਜਾ ਕਰੋ, ਸਲਾਹ ਮਸ਼ਵਰੇ ਤੋਂ ਬਾਅਦ ਹੀਰਾ ਜਾਂ ਚਿੱਟਾ ਨੀਲਾ (ਸ਼ੁਕਰ ਰਤਨ) ਪਹਿਨੋ, ਸ਼ੁੱਕਰਵਾਰ ਨੂੰ ਵਰਤ ਰੱਖੋ, ਅਤੇ ਸ਼ੁਕਰ ਦੀ ਕਿਰਪਾ ਲਈ ਸ਼ੁਕਰ ਬੀਜ ਮੰਤਰ ਜਾਪ ਕਰੋ।"
+        },
+        "or": {
+          "title": "ସମ୍ପର୍କ ପରିହାର",
+          "content": "ସ୍ୱସ୍ଥ ସମ୍ପର୍କ ଆକର୍ଷିତ କରିବା ଏବଂ ରକ୍ଷା କରିବା ପାଇଁ: ସୋମବାର ଦିନ ଲୋକଙ୍କୁ ଶିବ ଏବଂ ପାର୍ବତୀଙ୍କୁ ଏକାସାଥେ ପୂଜା କରନ୍ତୁ, ପରାମର୍ଶ ପରେ ହୀରା କିମ୍ବା ଧଳା ପୁଷ୍ପରାଜ (ଶୁକ୍ର ରତ୍ନ) ପିନ୍ଧନ୍ତୁ, ଶୁକ୍ରବାର ଉପବାସ କରନ୍ତୁ, ଏବଂ ଶୁକ୍ରଙ୍କ ଆଶୀର୍ବାଦ ପାଇଁ ଶୁକ୍ର ବୀଜ ମନ୍ତ୍ର ଜପ କରନ୍ତୁ।"
+        },
+        "as": {
+          "title": "সম্পৰ্কৰ প্ৰতিষেধক",
+          "content": "সুস্থ সম্পৰ্ক আকৰ্ষণ আৰু ৰক্ষা কৰিবলৈ: সোমবাৰে শিৱ আৰু পাৰ্বতীক একেলগে পূজা কৰক, পৰামৰ্শ লোৱাৰ পিছত হীৰা বা বগা নীলা (শুক্ৰ ৰত্ন) পৰিধান কৰক, শুক্ৰবাৰে উপবাস কৰক, আৰু শুক্ৰৰ আশীৰ্বাদৰ বাবে শুক্ৰ বীজ মন্ত্র জপ কৰক।"
+        }
+      }
+    },
+    {
+      "key": "WEALTH:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Financial Chart Analysis",
+          "content": "{name}, your birth chart's wealth indicators show promising financial potential. The 2nd house (accumulated wealth) and 11th house (income) configurations suggest steady financial growth through career and investments."
+        },
+        "hi": {
+          "title": "वित्तीय चार्ट विश्लेषण",
+          "content": "{name}, आपकी जन्म कुंडली के धन संकेतक आशाजनक वित्तीय संभावनाएँ दिखाते हैं। 2nd घर (संचित धन) और 11th घर (आय) की संरचनाएँ करियर और निवेश के माध्यम से स्थिर वित्तीय वृद्धि का सुझाव देती हैं।"
+        },
+        "ta": {
+          "title": "நிதி வரைபட பகுப்பாய்வு",
+          "content": "{name}, உங்கள் பிறப்பு ஜாதகத்தின் செல்வக் குறியீடுகள் நம்பிக்கையளிக்கும் நிதி சாத்தியங்களை காட்டுகின்றன. 2வது வீடு (சேகரிக்கப்பட்ட செல்வம்) மற்றும் 11வது வீடு (வருமானம்) அமைப்புகள் தொழில் மற்றும் முதலீடுகள் மூலம் நிலையான நிதி வளர்ச்சியை முன்மொழிகின்றன."
+        },
+        "te": {
+          "title": "ఆర్థిక చార్ట్ విశ్లేషణ",
+          "content": "{name}, మీ జన్మ చార్ట్ యొక్క సంపద సూచికలు ఆశాజనకమైన ఆర్థిక సామర్థ్యాన్ని చూపిస్తున్నాయి. 2వ ఇల్లు (సంకలిత సంపద) మరియు 11వ ఇల్లు (ఆదాయం) అమరికలు వృత్తి మరియు పెట్టుబడుల ద్వారా స్థిరమైన ఆర్థిక వృద్ధిని సూచిస్తున్నాయి."
+        },
+        "bn": {
+          "title": "আর্থিক চার্ট বিশ্লেষণ",
+          "content": "{name}, আপনার জন্ম চার্টের সম্পদ সূচকগুলি প্রতিশ্রুতিশীল আর্থিক সম্ভাবনা প্রদর্শন করে। 2য় ঘর (সংগৃহীত সম্পদ) এবং 11তম ঘর (আয়) এর বিন্যাসগুলি কর্মজীবন এবং বিনিয়োগের মাধ্যমে স্থির আর্থিক বৃদ্ধির পরামর্শ দেয়।"
+        },
+        "mr": {
+          "title": "आर्थिक चार्ट विश्लेषण",
+          "content": "{name}, तुमच्या जन्म कुंडलीतील संपत्तीचे निर्देशक आशादायक आर्थिक क्षमता दर्शवतात. २रे घर (संचित संपत्ती) आणि ११वे घर (उत्पन्न) यांच्या संरचना करिअर आणि गुंतवणुकीद्वारे स्थिर आर्थिक वाढ सूचित करतात."
+        },
+        "gu": {
+          "title": "નાણાકીય ચાર્ટ વિશ્લેષણ",
+          "content": "{name}, તમારા જન્મ ચાર્ટના સંપત્તિ સૂચકાંકો આશાસ્પદ નાણાકીય સંભાવનાઓ દર્શાવે છે. 2મું ઘર (સંચિત સંપત્તિ) અને 11મું ઘર (આવક) ની રચનાઓ કારકિર્દી અને રોકાણો દ્વારા સ્થિર નાણાકીય વૃદ્ધિ સૂચવે છે."
+        },
+        "kn": {
+          "title": "ಆರ್ಥಿಕ ಚಾರ್ಟ್ ವಿಶ್ಲೇಷಣೆ",
+          "content": "{name}, ನಿಮ್ಮ ಜನನ ಚಾರ್ಟ್‌ನ ಸಂಪತ್ತಿನ ಸೂಚಕಗಳು ಭರವಸೆಯ ಆರ್ಥಿಕ ಸಾಮರ್ಥ್ಯವನ್ನು ತೋರಿಸುತ್ತವೆ. 2ನೇ ಮನೆ (ಸಂಗ್ರಹಿತ ಸಂಪತ್ತು) ಮತ್ತು 11ನೇ ಮನೆ (ಆದಾಯ) ವಿನ್ಯಾಸಗಳು ವೃತ್ತಿ ಮತ್ತು ಹೂಡಿಕೆಗಳ ಮೂಲಕ ಸ್ಥಿರ ಆರ್ಥಿಕ ಬೆಳವಣಿಗೆಯನ್ನು ಸೂಚಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "സാമ്പത്തിക ചാർട്ട് വിശകലനം",
+          "content": "{name}, നിങ്ങളുടെ ജനന ചാർട്ടിലെ സമ്പത്തിന്റെ സൂചകങ്ങൾ വാഗ്ദാനപരമായ സാമ്പത്തിക സാധ്യതകൾ കാണിക്കുന്നു. 2-ാം ഭാവം (സമാഹരിച്ച സമ്പത്ത്) കൂടാതെ 11-ാം ഭാവം (വരുമാനം) ക്രമീകരണങ്ങൾ കരിയറിലൂടെയും നിക്ഷേപങ്ങളിലൂടെയും സ്ഥിരമായ സാമ്പത്തിക വളർച്ച സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਵਿੱਤੀ ਚਾਰਟ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "{name}, ਤੁਹਾਡੇ ਜਨਮ ਚਾਰਟ ਦੇ ਧਨ ਸੰਕੇਤ ਵਾਅਦਾ ਕਰਨ ਵਾਲੀ ਵਿੱਤੀ ਸੰਭਾਵਨਾ ਦਰਸਾਉਂਦੇ ਹਨ। ਦੂਜਾ ਘਰ (ਇਕੱਠੀ ਕੀਤੀ ਧਨ-ਸੰਪਤੀ) ਅਤੇ ਗਿਆਰਵਾਂ ਘਰ (ਆਮਦਨ) ਦੀਆਂ ਸੰਰਚਨਾਵਾਂ ਕਰੀਅਰ ਅਤੇ ਨਿਵੇਸ਼ਾਂ ਰਾਹੀਂ ਸਥਿਰ ਵਿੱਤੀ ਵਾਧੇ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀਆਂ ਹਨ।"
+        },
+        "or": {
+          "title": "ଆର୍ଥିକ ଚାର୍ଟ ବିଶ୍ଳେଷଣ",
+          "content": "{name}, ତୁମର ଜନ୍ମ ଚାର୍ଟର ଧନ ସୂଚକଗୁଡ଼ିକ ଆଶାଜନକ ଆର୍ଥିକ ସମ୍ଭାବନା ଦେଖାଉଛି। ଦ୍ୱିତୀୟ ଘର (ସଂଚିତ ଧନ) ଏବଂ ଏକାଦଶ ଘର (ଆୟ) ବିନ୍ୟାସଗୁଡ଼ିକ କାର୍ଯ୍ୟଜୀବନ ଏବଂ ପୁଞ୍ଜିବିନ୍ୟାସ ମାଧ୍ୟମରେ ନିରନ୍ତର ଆର୍ଥିକ ବୃଦ୍ଧି ସୂଚିତ କରେ।"
+        },
+        "as": {
+          "title": "আৰ্থিক চাৰ্ট বিশ্লেষণ",
+          "content": "{name}, আপোনাৰ জন্ম চাৰ্টৰ সম্পত্তিৰ সূচকসমূহে আশা জনক আৰ্থিক সম্ভাৱনা প্ৰদৰ্শন কৰে। ২য় ঘৰ (সংগ্ৰহ কৰা সম্পত্তি) আৰু ১১শ ঘৰ (আয়)ৰ বিন্যাসসমূহে ব্যৱসায় আৰু বিনিয়োগৰ জৰিয়তে স্থিৰ আৰ্থিক বৃদ্ধি সূচায়।"
+        }
+      }
+    },
+    {
+      "key": "WEALTH:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "2nd & 11th House Study",
+          "content": "The lords of your 2nd and 11th houses and their planetary dignity determine your wealth trajectory. Benefic aspects on these houses indicate financial stability, while the Dasha of these lords brings peak earning periods."
+        },
+        "hi": {
+          "title": "द्वितीय और ग्यारहवें भाव का अध्ययन",
+          "content": "आपके द्वितीय और ग्यारहवें भाव के स्वामी और उनकी ग्रह स्थिति आपकी धन की दिशा निर्धारित करते हैं। इन भावों पर शुभ दृष्टि वित्तीय स्थिरता का संकेत देती है, जबकि इन स्वामियों की दशा उच्चतम आय के समय को लाती है।"
+        },
+        "ta": {
+          "title": "2nd & 11th House Study",
+          "content": "உங்கள் 2nd மற்றும் 11th வீடுகளின் அதிபதிகள் மற்றும் அவர்களின் கிரக கண்ணியம் உங்கள் செல்வ பாதையை நிர்ணயிக்கின்றன. இந்த வீடுகளில் நன்மை தரும் பார்வைகள் நிதி நிலைத்தன்மையை குறிக்கின்றன, இந்த அதிபதிகளின் தசை உச்ச வருமான காலங்களை கொண்டு வருகிறது."
+        },
+        "te": {
+          "title": "2వ మరియు 11వ ఇంటి అధ్యయనం",
+          "content": "మీ 2వ మరియు 11వ ఇళ్ల యొక్క అధిపతులు మరియు వారి గ్రహ గౌరవం మీ సంపద పథాన్ని నిర్ణయిస్తాయి. ఈ ఇళ్లపై శుభ దృష్టులు ఆర్థిక స్థిరత్వాన్ని సూచిస్తాయి, ఈ అధిపతుల దశ మీకు అత్యధిక ఆదాయ కాలాలను తెస్తుంది."
+        },
+        "bn": {
+          "title": "২য় ও ১১তম ঘর অধ্যয়ন",
+          "content": "আপনার ২য় এবং ১১তম ঘরের অধিপতি এবং তাদের গ্রহীয় মর্যাদা আপনার সম্পদের গতিপথ নির্ধারণ করে। এই ঘরগুলিতে শুভ দৃষ্টিভঙ্গি আর্থিক স্থিতিশীলতা নির্দেশ করে, যখন এই অধিপতিদের দশা সর্বোচ্চ উপার্জনের সময়কাল নিয়ে আসে।"
+        },
+        "mr": {
+          "title": "२रा आणि ११वा घर अभ्यास",
+          "content": "तुमच्या २ऱ्या आणि ११व्या घरांचे अधिपती आणि त्यांची ग्रहदशा तुमच्या संपत्तीच्या प्रवासाचे निर्धारण करतात. या घरांवरील शुभ दृष्टिकोन आर्थिक स्थिरता दर्शवतात, तर या अधिपतींच्या दशा कमाईच्या शिखर कालखंडांना आणतात."
+        },
+        "gu": {
+          "title": "૨મું અને ૧૧મું ઘર અભ્યાસ",
+          "content": "તમારા ૨મું અને ૧૧મું ઘરના સ્વામી અને તેમની ગ્રહદશા તમારા ધનના માર્ગને નક્કી કરે છે. આ ઘરો પર શુભ દ્રષ્ટિ આર્થિક સ્થિરતા દર્શાવે છે, જ્યારે આ સ્વામિનાં દશા તમારા કમાણીના શિખર સમયને લાવે છે."
+        },
+        "kn": {
+          "title": "2ನೇ ಮತ್ತು 11ನೇ ಮನೆ ಅಧ್ಯಯನ",
+          "content": "ನಿಮ್ಮ 2ನೇ ಮತ್ತು 11ನೇ ಮನೆಗಳ ಅಧಿಪತಿಗಳು ಮತ್ತು ಅವರ ಗ್ರಹಗಳ ಘನತೆ ನಿಮ್ಮ ಸಂಪತ್ತಿನ ಪಥವನ್ನು ನಿರ್ಧರಿಸುತ್ತವೆ. ಈ ಮನೆಗಳ ಮೇಲೆ ಶುಭದೃಷ್ಟಿಗಳು ಆರ್ಥಿಕ ಸ್ಥಿರತೆಯನ್ನು ಸೂಚಿಸುತ್ತವೆ, ಈ ಅಧಿಪತಿಗಳ ದಶಾ ಉಚ್ಚ ಆದಾಯದ ಅವಧಿಗಳನ್ನು ತರುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "2nd & 11th House Study",
+          "content": "നിങ്ങളുടെ 2nd and 11th ഭവനങ്ങളുടെ അധിപന്മാരും അവരുടെ ഗ്രഹമഹിമയും നിങ്ങളുടെ സമ്പത്ത് പഥം നിർണ്ണയിക്കുന്നു. ഈ ഭവനങ്ങളിലെ ശുഭദൃഷ്ടികൾ സാമ്പത്തിക സ്ഥിരത സൂചിപ്പിക്കുന്നു, ഈ അധിപന്മാരുടെ ദശ നിങ്ങളുടെ ഏറ്റവും കൂടുതൽ വരുമാനമുള്ള കാലഘട്ടങ്ങളെ കൊണ്ടുവരുന്നു."
+        },
+        "pa": {
+          "title": "2nd & 11th House Study",
+          "content": "ਤੁਹਾਡੇ 2ਵੇਂ ਅਤੇ 11ਵੇਂ ਘਰਾਂ ਦੇ ਸਵਾਮੀਆਂ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਗ੍ਰਹਿ ਸ਼ਾਨਦਾਰਤਾ ਤੁਹਾਡੇ ਧਨ ਦੇ ਰੁਝਾਨ ਨੂੰ ਨਿਰਧਾਰਤ ਕਰਦੀ ਹੈ। ਇਨ੍ਹਾਂ ਘਰਾਂ 'ਤੇ ਸ਼ੁਭ ਪੱਖ ਵਿੱਤੀ ਸਥਿਰਤਾ ਦਰਸਾਉਂਦੇ ਹਨ, ਜਦਕਿ ਇਨ੍ਹਾਂ ਸਵਾਮੀਆਂ ਦੀ ਦਸ਼ਾ ਉੱਚਮਨੁੱਖੀ ਕਮਾਈ ਦੇ ਸਮੇਂ ਲਿਆਉਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "title": "୨ର୍ଥ ଓ ୧୧ତମ ଘର ଅଧ୍ୟୟନ",
+          "content": "ଆପଣଙ୍କ ୨ର୍ଥ ଓ ୧୧ତମ ଘରର ଲୋକପାଳ ଓ ସେମାନଙ୍କର ଗ୍ରହୀୟ ଗୌରବ ଆପଣଙ୍କ ଧନ ପଥକୁ ନିର୍ଦ୍ଦେଶ କରେ। ଏହି ଘରଗୁଡ଼ିକରେ ଶୁଭ ପ୍ରଭାବ ଆର୍ଥିକ ସ୍ଥିରତା ସୂଚିତ କରେ, ଯେତେବେଳେ ଏହି ଲୋକପାଳଙ୍କ ଦଶା ଶୀର୍ଷ ଆୟକାଳ ଆଣେ।"
+        },
+        "as": {
+          "title": "২য় আৰু ১১শ গৃহ অধ্যয়ন",
+          "content": "আপোনাৰ ২য় আৰু ১১শ গৃহৰ অধিপতি আৰু তেওঁলোকৰ গ্ৰহীয় মর্যাদাই আপোনাৰ সম্পত্তিৰ পথ নিৰ্ধাৰণ কৰে। এই গৃহসমূহত শুভ দৃষ্টিৰে আৰ্থিক স্থিৰতা সূচিত হয়, যেতিয়া এই অধিপতিসকলৰ দাশা আহে তেতিয়া উপাৰ্জনৰ শীৰ্ষ সময় আনে।"
+        }
+      }
+    },
+    {
+      "key": "WEALTH:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Dhana Yogas",
+          "content": "Your chart contains wealth-producing Yogas (Dhana Yogas) formed by the conjunction or mutual aspect of specific house lords. These Yogas activate during favorable Dasha periods, bringing financial windfalls and prosperity."
+        },
+        "hi": {
+          "title": "धन योग",
+          "content": "आपकी कुंडली में धन उत्पन्न करने वाले योग (धन योग) शामिल हैं, जो विशिष्ट भावों के स्वामियों के संयोग या पारस्परिक दृष्टि से बनते हैं। ये योग अनुकूल दशा अवधि के दौरान सक्रिय होते हैं, जिससे वित्तीय लाभ और समृद्धि आती है।"
+        },
+        "ta": {
+          "title": "Dhana Yogas",
+          "content": "உங்கள் ஜாதகத்தில் செல்வத்தை உருவாக்கும் யோகங்கள் (Dhana Yogas) குறிப்பிட்ட வீட்டு அதிபதிகளின் இணைவு அல்லது பரஸ்பர பார்வையால் உருவாகின்றன. இந்த யோகங்கள் சாதகமான தசா காலங்களில் செயல்படுகின்றன, நிதி ஆதாயங்களையும் செழிப்பையும் கொண்டு வருகின்றன."
+        },
+        "te": {
+          "title": "ధన యోగాలు",
+          "content": "మీ జాతకంలో ధనాన్ని ఉత్పత్తి చేసే యోగాలు (ధన యోగాలు) ఉన్నాయి, ఇవి ప్రత్యేకమైన గృహాధిపతుల సంయోగం లేదా పరస్పర దృష్టి ద్వారా ఏర్పడతాయి. ఈ యోగాలు అనుకూలమైన దశా కాలాల్లో సక్రియమవుతాయి, ఆర్థిక లాభాలు మరియు శ్రేయస్సును తీసుకువస్తాయి."
+        },
+        "bn": {
+          "title": "Dhana Yogas",
+          "content": "আপনার চার্টে ধন উৎপাদনকারী যোগ (Dhana Yogas) রয়েছে যা নির্দিষ্ট ঘরের অধিপতিদের সংযোগ বা পারস্পরিক দৃষ্টির মাধ্যমে গঠিত হয়। এই যোগগুলি শুভ দশা সময়কালে সক্রিয় হয়, যা আর্থিক সমৃদ্ধি এবং উন্নতি নিয়ে আসে।"
+        },
+        "mr": {
+          "title": "Dhana Yogas",
+          "content": "तुमच्या पत्रिकेत विशिष्ट घरांच्या अधिपतींच्या संयोगाने किंवा परस्पर दृष्टिने निर्माण होणारे धन निर्माण करणारे योग (धन योग) आहेत. हे योग अनुकूल दशा कालावधीत सक्रिय होतात, ज्यामुळे आर्थिक लाभ आणि समृद्धी येते."
+        },
+        "gu": {
+          "title": "ધન યોગ",
+          "content": "તમારા ચાર્ટમાં ધન ઉત્પન્ન કરનાર યોગ (ધન યોગ) સમાવેશ થાય છે, જે વિશિષ્ટ ઘરોના સ્વામીઓની સંયોગ અથવા પરસ્પર દ્રષ્ટિ દ્વારા બને છે. આ યોગ અનુકૂળ દશા સમયગાળા દરમિયાન સક્રિય થાય છે, જેનાથી નાણાકીય લાભ અને સમૃદ્ધિ મળે છે."
+        },
+        "kn": {
+          "title": "ಧನ ಯೋಗಗಳು",
+          "content": "ನಿಮ್ಮ ಜಾತಕದಲ್ಲಿ ವಿಶೇಷ ಗೃಹಾಧಿಪತಿಗಳ ಸಂಯೋಜನೆ ಅಥವಾ ಪರಸ್ಪರ ದೃಷ್ಟಿಯಿಂದ ರಚಿಸಲಾದ ಸಂಪತ್ತು ಉತ್ಪಾದಕ ಯೋಗಗಳು (ಧನ ಯೋಗಗಳು) ಒಳಗೊಂಡಿವೆ. ಈ ಯೋಗಗಳು ಅನುಕೂಲಕರ ದಶಾ ಅವಧಿಗಳಲ್ಲಿ ಸಕ್ರಿಯಗೊಳ್ಳುತ್ತವೆ, ಆರ್ಥಿಕ ಲಾಭ ಮತ್ತು ಸಮೃದ್ಧಿಯನ್ನು ತರಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "Dhana Yogas",
+          "content": "നിങ്ങളുടെ ജാതകത്തിൽ പ്രത്യേക ഭവാധിപന്മാരുടെ യോജനം അല്ലെങ്കിൽ പരസ്പര ദൃഷ്ടിയാൽ രൂപം കൊണ്ട ധനസമ്പാദന യോഗങ്ങൾ (Dhana Yogas) അടങ്ങിയിരിക്കുന്നു. ഈ യോഗങ്ങൾ അനുകൂലമായ ദശാ കാലങ്ങളിൽ സജീവമാകുമ്പോൾ ധനസമ്പത്ത്‌ വർദ്ധിക്കുകയും സമൃദ്ധി കൊണ്ടുവരുകയും ചെയ്യുന്നു."
+        },
+        "pa": {
+          "title": "ਧਨਾ ਯੋਗ",
+          "content": "ਤੁਹਾਡੇ ਚਾਰਟ ਵਿੱਚ ਧਨ ਉਤਪਾਦਨ ਵਾਲੇ ਯੋਗ (ਧਨਾ ਯੋਗ) ਸ਼ਾਮਲ ਹਨ ਜੋ ਵਿਸ਼ੇਸ਼ ਘਰ ਦੇ ਸਵਾਮੀਆਂ ਦੇ ਸੰਯੋਗ ਜਾਂ ਪਰਸਪਰ ਦ੍ਰਿਸ਼ਟੀ ਨਾਲ ਬਣਦੇ ਹਨ। ਇਹ ਯੋਗ ਅਨੁਕੂਲ ਦਸ਼ਾ ਪੀਰੀਅਡਾਂ ਦੌਰਾਨ ਸਰਗਰਮ ਹੁੰਦੇ ਹਨ, ਜੋ ਵਿੱਤੀ ਲਾਭ ਅਤੇ ਖੁਸ਼ਹਾਲੀ ਲਿਆਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ଧନ ଯୋଗଗୁଡ଼ିକ",
+          "content": "ଆପଣଙ୍କ ଜାତକରେ ଧନ ଉତ୍ପାଦନ କରୁଥିବା ଯୋଗଗୁଡ଼ିକ (ଧନ ଯୋଗଗୁଡ଼ିକ) ରହିଛି, ଯାହା ବିଶେଷ ଘର ପ୍ରଭୁମାନଙ୍କର ସଂଯୋଗ କିମ୍ବା ପରସ୍ପର ଦୃଷ୍ଟି ଦ୍ୱାରା ଗଠିତ ହୁଏ। ଏହି ଯୋଗଗୁଡ଼ିକ ଉପଯୁକ୍ତ ଦଶା କାଳରେ ସକ୍ରିୟ ହୁଏ, ଯାହା ଆର୍ଥିକ ଲାଭ ଏବଂ ସମୃଦ୍ଧି ଆଣେ।"
+        },
+        "as": {
+          "title": "ধন যোগ",
+          "content": "আপোনাৰ ৰাশিচক্ৰত ধন উৎপাদন কৰা যোগ (ধন যোগ) আছে যি বিশেষ ঘৰৰ অধিপতিৰ সংযোগ বা পৰস্পৰ দৃষ্টিৰ দ্বাৰা গঠিত হয়। এই যোগসমূহ অনুকূল দাশা সময়ছোৱাত সক্ৰিয় হয়, যি আৰ্থিক লাভ আৰু সমৃদ্ধি অনা কৰে।"
+        }
+      }
+    },
+    {
+      "key": "WEALTH:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Investment Timing",
+          "content": "The best periods for investments align with Jupiter and Venus transits through your wealth houses. Avoid speculative investments during Rahu-Ketu axis activations. Long-term investments made during favorable Muhurat will yield the best returns."
+        },
+        "hi": {
+          "title": "निवेश का समय",
+          "content": "निवेश के लिए सबसे अच्छे समय वे होते हैं जब बृहस्पति और शुक्र आपके धन भावों से गुजरते हैं। राहु-केतु अक्ष सक्रियण के दौरान सट्टा निवेश से बचें। अनुकूल मुहूर्त के दौरान किए गए दीर्घकालिक निवेश सबसे अच्छे प्रतिफल देंगे।"
+        },
+        "ta": {
+          "title": "முதலீட்டு நேரம்",
+          "content": "முதலீடுகளுக்கான சிறந்த காலங்கள் உங்கள் செல்வ வீடுகளின் வழியாக குரு மற்றும் சுக்கிரன் பெயர்ச்சிகள் ஏற்படும் போது இணைகின்றன. ராகு-கேது அச்சு செயல்பாடுகளின் போது ஊக முதலீடுகளை தவிர்க்கவும். சாதகமான முஹூர்த்தத்தில் செய்யப்படும் நீண்டகால முதலீடுகள் சிறந்த வருமானத்தை அளிக்கும்."
+        },
+        "te": {
+          "title": "నివేశాల సమయం",
+          "content": "నివేశాలకు ఉత్తమ కాలాలు మీ సంపద గృహాల ద్వారా గురు మరియు శుక్ర గ్రహాల సంచారాలతో సరిపోతాయి. రాహు-కేతు అక్షం సక్రియత సమయంలో ఊహాత్మక పెట్టుబడులను నివారించండి. అనుకూల ముహూర్తంలో చేసిన దీర్ఘకాలిక పెట్టుబడులు ఉత్తమ లాభాలను ఇస్తాయి."
+        },
+        "bn": {
+          "title": "বিনিয়োগের সময়",
+          "content": "বিনিয়োগের জন্য সেরা সময়গুলি হল যখন বৃহস্পতি এবং শুক্র আপনার সম্পদ ঘরগুলির মধ্য দিয়ে গমন করে। রাহু-কেতু অক্ষ সক্রিয়করণের সময় জল্পনামূলক বিনিয়োগ এড়িয়ে চলুন। অনুকূল মুহূর্তে করা দীর্ঘমেয়াদী বিনিয়োগগুলি সর্বোত্তম রিটার্ন দেবে।"
+        },
+        "mr": {
+          "title": "गुंतवणुकीची वेळ",
+          "content": "गुंतवणुकीसाठी सर्वोत्तम कालावधी तुमच्या संपत्तीच्या घरांमधून गुरु आणि शुक्राच्या गोचरांशी जुळतो. राहु-केतू अक्ष सक्रियतेच्या वेळी तर्कशुद्ध गुंतवणुकी टाळा. अनुकूल मुहूर्तावर केलेल्या दीर्घकालीन गुंतवणुकी सर्वोत्तम परतावा देतील."
+        },
+        "gu": {
+          "title": "નિવેશ સમય",
+          "content": "નિવેશ માટેના શ્રેષ્ઠ સમયગાળા તમારા સંપત્તિ ઘરોમાં ગુરુ અને શુક્રના સંક્રમણ સાથે મેળ ખાતા હોય છે. રાહુ-કેટુ ધરી સક્રિયતા દરમિયાન કલ્પિત રોકાણોથી બચો. અનુકૂળ મુહૂર્ત દરમિયાન કરેલા લાંબા ગાળાના રોકાણો શ્રેષ્ઠ વળતર આપશે."
+        },
+        "kn": {
+          "title": "ಹೂಡಿಕೆ ಸಮಯ",
+          "content": "ಹೂಡಿಕೆಗಳಿಗೆ ಉತ್ತಮ ಅವಧಿಗಳು ನಿಮ್ಮ ಸಂಪತ್ತು ಮನೆಗಳ ಮೂಲಕ ಗುರು ಮತ್ತು ಶುಕ್ರನ ಸಂಚಾರಗಳೊಂದಿಗೆ ಹೊಂದಿಕೆಯಾಗುತ್ತವೆ. ರಾಹು-ಕೇತು ಅಕ್ಷ ಸಕ್ರಿಯತೆಗಳ ಸಮಯದಲ್ಲಿ ಊಹಾಪೋಹ ಹೂಡಿಕೆಗಳನ್ನು ತಪ್ಪಿಸಿ. ಅನುಕೂಲಕರ ಮುಹೂರ್ತದಲ್ಲಿ ಮಾಡಿದ ದೀರ್ಘಕಾಲೀನ ಹೂಡಿಕೆಗಳು ಉತ್ತಮ ಲಾಭವನ್ನು ನೀಡುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "നിക്ഷേപ സമയക്രമം",
+          "content": "നിക്ഷേപങ്ങൾക്ക് ഏറ്റവും അനുയോജ്യമായ കാലയളവുകൾ നിങ്ങളുടെ സമ്പത്ത് ഭവനങ്ങളിലൂടെ വ്യാഴവും ശുക്രനും സഞ്ചരിക്കുന്ന സമയത്താണ്. രാഹു-കേതു അക്ഷം സജീവമാകുമ്പോൾ അനുമാന നിക്ഷേപങ്ങൾ ഒഴിവാക്കുക. അനുകൂലമായ മുഹൂർത്തത്തിൽ നടത്തിയ ദീർഘകാല നിക്ഷേപങ്ങൾ മികച്ച ലാഭം നൽകും."
+        },
+        "pa": {
+          "title": "ਨਿਵੇਸ਼ ਸਮਾਂ",
+          "content": "ਨਿਵੇਸ਼ਾਂ ਲਈ ਸਭ ਤੋਂ ਵਧੀਆ ਸਮੇਂ ਉਹ ਹਨ ਜਦੋਂ ਬ੍ਰਹਸਪਤੀ ਅਤੇ ਸ਼ੁਕਰ ਤੁਹਾਡੇ ਧਨ ਘਰਾਂ ਵਿੱਚ ਗੁਜ਼ਰ ਰਹੇ ਹੁੰਦੇ ਹਨ। ਰਾਹੁ-ਕੇਤੁ ਅਕਸ ਦੀ ਸਰਗਰਮੀ ਦੌਰਾਨ ਅਟਕਲਾਂ ਵਾਲੇ ਨਿਵੇਸ਼ਾਂ ਤੋਂ ਬਚੋ। ਅਨੁਕੂਲ ਮੁਹੂਰਤ ਦੌਰਾਨ ਕੀਤੇ ਗਏ ਲੰਬੇ ਸਮੇਂ ਦੇ ਨਿਵੇਸ਼ ਸਭ ਤੋਂ ਵਧੀਆ ਵਾਪਸੀ ਦੇਣਗੇ।"
+        },
+        "or": {
+          "title": "ବିନିଯୋଗ ସମୟ",
+          "content": "ବିନିଯୋଗ ପାଇଁ ସର୍ବୋତ୍ତମ ସମୟଗୁଡ଼ିକ ହେଉଛି ଯେତେବେଳେ Jupiter ଏବଂ Venus ଆପଣଙ୍କର ସମ୍ପତ୍ତି ଘର ମାଧ୍ୟମରେ ଗତି କରନ୍ତି। Rahu-Ketu ଅକ୍ଷ ସକ୍ରିୟତା ସମୟରେ ଅନୁମାନ ଭିତ୍ତିକ ବିନିଯୋଗଗୁଡ଼ିକ ଏଡ଼ାନ୍ତୁ। ଉପଯୁକ୍ତ ମୁହୂର୍ତ୍ତରେ କରାଯାଇଥିବା ଦୀର୍ଘକାଳୀନ ବିନିଯୋଗ ଶ୍ରେଷ୍ଠ ଫଳ ଦେବ।"
+        },
+        "as": {
+          "title": "বিনিয়োগৰ সময়",
+          "content": "বিনিয়োগৰ বাবে আটাইতকৈ ভাল সময় হৈছে যেতিয়া বৃহস্পতি আৰু শুক্ৰ আপোনাৰ সম্পত্তিৰ ঘৰত পৰিবহণ কৰে। ৰাহু-কেতু অক্ষ সক্ৰিয় হোৱাৰ সময়ত অনুমানমূলক বিনিয়োগ এৰাই চলিব। অনুকূল মুহূৰতত কৰা দীঘলীয়া বিনিয়োগে আটাইতকৈ ভাল লাভ প্ৰদান কৰিব।"
+        }
+      }
+    },
+    {
+      "key": "WEALTH:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Wealth Growth Periods",
+          "content": "The coming years show financial growth peaks during specific Dasha transitions. Save and invest during Saturn's productive transits, and expand during Jupiter's wealth-house transits. Real estate investments are particularly favored."
+        },
+        "hi": {
+          "title": "धन वृद्धि अवधि",
+          "content": "आने वाले वर्षों में विशेष दशा परिवर्तन के दौरान वित्तीय वृद्धि के शिखर दिखाई देते हैं। शनि के उत्पादक गोचर के दौरान बचत और निवेश करें, और बृहस्पति के धन-भाव गोचर के दौरान विस्तार करें। रियल एस्टेट निवेश विशेष रूप से अनुकूल हैं।"
+        },
+        "ta": {
+          "title": "செல்வ வளர்ச்சி காலங்கள்",
+          "content": "வருகின்ற ஆண்டுகளில் குறிப்பிட்ட தசா மாற்றங்களின் போது நிதி வளர்ச்சி உச்சங்கள் காணப்படுகின்றன. சனி உற்பத்தி மாற்றங்களில் சேமித்து முதலீடு செய்யவும், குருவின் செல்வ-வீட்டு மாற்றங்களில் விரிவாக்கவும். நிலம் முதலீடுகள் குறிப்பாக சாதகமாக உள்ளன."
+        },
+        "te": {
+          "title": "ఆర్థిక వృద్ధి కాలాలు",
+          "content": "రాబోయే సంవత్సరాలు నిర్దిష్ట దశ మార్పుల సమయంలో ఆర్థిక వృద్ధి శిఖరాలను చూపిస్తాయి. శనిగ్రహం యొక్క ఉత్పాదక మార్గాలలో పొదుపు చేసి పెట్టుబడి పెట్టండి, మరియు గురుగ్రహం యొక్క సంపద-భవనం మార్గాలలో విస్తరించండి. రియల్ ఎస్టేట్ పెట్టుబడులు ప్రత్యేకంగా అనుకూలంగా ఉంటాయి."
+        },
+        "bn": {
+          "title": "সম্পদের বৃদ্ধি সময়কাল",
+          "content": "আসন্ন বছরগুলোতে নির্দিষ্ট দশা পরিবর্তনের সময় আর্থিক বৃদ্ধির শিখর দেখা যাচ্ছে। শনি-এর ফলপ্রসূ গমনকালে সঞ্চয় এবং বিনিয়োগ করুন, এবং বৃহস্পতি-এর সম্পদ-ঘর গমনকালে সম্প্রসারণ করুন। রিয়েল এস্টেট বিনিয়োগ বিশেষভাবে অনুকূল।"
+        },
+        "mr": {
+          "title": "संपत्ती वाढीचे कालखंड",
+          "content": "येणाऱ्या वर्षांमध्ये विशिष्ट दशा संक्रमणांदरम्यान आर्थिक वाढीचे शिखर दिसून येते. शनीच्या फलदायी गोचरांदरम्यान बचत आणि गुंतवणूक करा, आणि गुरुच्या धनस्थान गोचरांदरम्यान विस्तार करा. रिअल इस्टेट गुंतवणुकीला विशेषतः प्राधान्य दिले जाते."
+        },
+        "gu": {
+          "title": "સંપત્તિ વૃદ્ધિ સમયગાળો",
+          "content": "આગામી વર્ષોમાં વિશિષ્ટ દશા પરિવર્તન દરમિયાન નાણાકીય વૃદ્ધિ શિખરો દર્શાવે છે. શનિના ઉત્પાદક સંક્રમણ દરમિયાન બચત અને રોકાણ કરો, અને ગુરુના સંપત્તિ-ગૃહ સંક્રમણ દરમિયાન વિસ્તરણ કરો. રિયલ એસ્ટેટમાં રોકાણ ખાસ કરીને અનુકૂળ છે."
+        },
+        "kn": {
+          "title": "ಆರ್ಥಿಕ ಬೆಳವಣಿಗೆಯ ಅವಧಿಗಳು",
+          "content": "ಮುಂದಿನ ವರ್ಷಗಳು ನಿರ್ದಿಷ್ಟ ದಶಾ ಪರಿವರ್ತನೆಗಳ ಸಮಯದಲ್ಲಿ ಆರ್ಥಿಕ ಬೆಳವಣಿಗೆಯ ಶಿಖರಗಳನ್ನು ತೋರಿಸುತ್ತವೆ. ಶನಿಯ ಉತ್ಪಾದಕ ಸಂಕ್ರಮಣಗಳ ಸಮಯದಲ್ಲಿ ಉಳಿಸಿ ಮತ್ತು ಹೂಡಿಕೆ ಮಾಡಿ, ಮತ್ತು ಗುರುನ ಆರ್ಥಿಕ-ಮನೆ ಸಂಕ್ರಮಣಗಳ ಸಮಯದಲ್ಲಿ ವಿಸ್ತರಿಸಿ. ರಿಯಲ್ ಎಸ್ಟೇಟ್ ಹೂಡಿಕೆಗಳನ್ನು ವಿಶೇಷವಾಗಿ ಪ್ರೋತ್ಸಾಹಿಸಲಾಗುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "സമ്പത്ത് വളർച്ചാ കാലഘട്ടങ്ങൾ",
+          "content": "വരാനിരിക്കുന്ന വർഷങ്ങളിൽ പ്രത്യേക ദശാ മാറ്റങ്ങൾക്കിടയിൽ സാമ്പത്തിക വളർച്ചയുടെ ഉച്ചസ്ഥിതികൾ കാണിക്കുന്നു. ശനിയുടെ ഉൽപ്പാദനാത്മക ഗമനകാലത്ത് സംരക്ഷിക്കുകയും നിക്ഷേപിക്കുകയും ചെയ്യുക, വ്യാഴത്തിന്റെ സമ്പത്ത്-ഭവന ഗമനകാലത്ത് വികസിപ്പിക്കുക. റിയൽ എസ്റ്റേറ്റ് നിക്ഷേപങ്ങൾ പ്രത്യേകിച്ച് അനുകൂലമാണ്."
+        },
+        "pa": {
+          "title": "ਧਨ ਵਾਧੇ ਦੇ ਪੀਰੀਅਡ",
+          "content": "ਆਉਣ ਵਾਲੇ ਸਾਲਾਂ ਵਿੱਚ ਖਾਸ ਦਸ਼ਾ ਬਦਲਾਅ ਦੌਰਾਨ ਵਿੱਤੀ ਵਾਧੇ ਦੇ ਚਰਮ ਦਿਖਾਈ ਦੇ ਰਹੇ ਹਨ। ਸ਼ਨੀ ਦੇ ਉਤਪਾਦਕ ਗੁਜ਼ਰਾਂ ਦੌਰਾਨ ਬਚਤ ਕਰੋ ਅਤੇ ਨਿਵੇਸ਼ ਕਰੋ, ਅਤੇ ਬ੍ਰਹਸਪਤਿ ਦੇ ਧਨ-ਘਰ ਦੇ ਗੁਜ਼ਰਾਂ ਦੌਰਾਨ ਵਧਾਓ। ਜਾਇਦਾਦ ਦੇ ਨਿਵੇਸ਼ ਖਾਸ ਤੌਰ 'ਤੇ ਪਸੰਦ ਕੀਤੇ ਜਾਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ଧନ ବୃଦ୍ଧି କାଳ",
+          "content": "ଆସନ୍ତା ବର୍ଷଗୁଡ଼ିକ ନିର୍ଦ୍ଦିଷ୍ଟ ଦଶା ପରିବର୍ତ୍ତନ ସମୟରେ ଆର୍ଥିକ ବୃଦ୍ଧିର ଶିଖର ଦେଖାଏ। ଶନିଙ୍କ ଉତ୍ପାଦନଶୀଳ ଗତିବିଧି ସମୟରେ ସଞ୍ଚୟ ଏବଂ ନିବେଶ କରନ୍ତୁ, ଏବଂ ବୃହସ୍ପତିଙ୍କ ଧନ ଘର ଗତିବିଧି ସମୟରେ ବିସ୍ତାର କରନ୍ତୁ। ଜମିଦାରୀ ନିବେଶଗୁଡ଼ିକ ବିଶେଷ ଭାବେ ପ୍ରତିକୂଳ ଅଟେ।"
+        },
+        "as": {
+          "title": "সম্পত্তি বৃদ্ধিৰ সময়কাল",
+          "content": "আগত বছৰবোৰত বিশেষ দাশা পৰিৱৰ্তনৰ সময়ত আৰ্থিক বৃদ্ধিৰ শীৰ্ষ দেখা যায়। শনিৰ উৎপাদনশীল গমনকালত সংৰক্ষণ আৰু বিনিয়োগ কৰক, আৰু বৃহস্পতিৰ সম্পত্তি-গৃহ গমনকালত বিস্তাৰ কৰক। সম্পত্তি বিনিয়োগ বিশেষভাৱে অনুকূল।"
+        }
+      }
+    },
+    {
+      "key": "WEALTH:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Financial Remedies",
+          "content": "Enhance financial prosperity by: keeping a Kuber Yantra in your safe, chanting the Lakshmi Mantra on Fridays, donating to charity on auspicious days, wearing a Yellow Sapphire for Jupiter's blessings (after consultation), and beginning financial ventures during Pushya Nakshatra."
+        },
+        "hi": {
+          "title": "वित्तीय उपाय",
+          "content": "वित्तीय समृद्धि को बढ़ाने के लिए: अपने तिजोरी में कुबेर यंत्र रखें, शुक्रवार को लक्ष्मी मंत्र का जाप करें, शुभ दिनों पर दान करें, बृहस्पति की कृपा के लिए पीला पुखराज पहनें (सलाह के बाद), और पुष्य नक्षत्र के दौरान वित्तीय उपक्रम शुरू करें।"
+        },
+        "ta": {
+          "title": "நிதி தீர்வுகள்",
+          "content": "நிதி வளத்தை மேம்படுத்த: உங்கள் பாதுகாப்பில் குபேர யந்திரத்தை வைத்திருத்தல், வெள்ளிக்கிழமைகளில் லக்ஷ்மி மந்திரத்தை ஜபித்தல், சுப தினங்களில் தொண்டு செய்வது, வியாழனின் ஆசீர்வாதத்திற்காக மஞ்சள் புஷ்பராகம் அணிதல் (ஆலோசனைக்கு பிறகு), மற்றும் நிதி முயற்சிகளை Pushya Nakshatra இல் தொடங்குதல்."
+        },
+        "te": {
+          "title": "ఆర్థిక పరిష్కారాలు",
+          "content": "ఆర్థిక శ్రేయస్సును పెంచడానికి: మీ సురక్షిత స్థలంలో కుబేర యంత్రాన్ని ఉంచడం, శుక్రవారాల్లో లక్ష్మీ మంత్రాన్ని జపించడం, శుభదినాల్లో దానధర్మాలు చేయడం, గురువు అనుగ్రహం కోసం పుష్యరాగం ధరించడం (సలహా తీసుకున్న తర్వాత), మరియు పుష్య నక్షత్రంలో ఆర్థిక వ్యాపారాలను ప్రారంభించడం."
+        },
+        "bn": {
+          "title": "আর্থিক প্রতিকার",
+          "content": "আর্থিক সমৃদ্ধি বৃদ্ধি করুন: আপনার সিন্দুকে কুবের যন্ত্র রাখুন, শুক্রবারে লক্ষ্মী মন্ত্র জপ করুন, শুভ দিনে দান করুন, বৃহস্পতির আশীর্বাদের জন্য পীত পুষ্পরাজ পরিধান করুন (পরামর্শের পর), এবং পুষ্য নক্ষত্রের সময় আর্থিক উদ্যোগ শুরু করুন।"
+        },
+        "mr": {
+          "title": "आर्थिक उपाय",
+          "content": "आर्थिक समृद्धी वाढवण्यासाठी: आपल्या तिजोरीत कुबेर यंत्र ठेवा, शुक्रवारी लक्ष्मी मंत्राचा जप करा, शुभ दिवशी दानधर्म करा, गुरुच्या आशीर्वादासाठी पिवळा पुखराज धारण करा (सल्ल्यानंतर), आणि पुष्य नक्षत्रात आर्थिक उपक्रम सुरू करा."
+        },
+        "gu": {
+          "title": "આર્થિક ઉપાયો",
+          "content": "આર્થિક સમૃદ્ધિ વધારવા માટે: તમારા તિજોરીમાં કુબેર યંત્ર રાખવું, શુક્રવારે લક્ષ્મી મંત્રનો જાપ કરવો, શુભ દિવસો પર દાન કરવું, ગુરુના આશીર્વાદ માટે પીળો પોખરાજ પહેરવો (પરામર્શ કર્યા પછી), અને પુષ્ય નક્ષત્ર દરમિયાન આર્થિક પ્રવૃત્તિઓ શરૂ કરવી."
+        },
+        "kn": {
+          "title": "ಆರ್ಥಿಕ ಪರಿಹಾರಗಳು",
+          "content": "ಆರ್ಥಿಕ ಸಮೃದ್ಧಿಯನ್ನು ಹೆಚ್ಚಿಸಲು: ನಿಮ್ಮ ಭದ್ರತೆಯಲ್ಲಿ ಕುಬೇರ ಯಂತ್ರವನ್ನು ಇಡುವುದು, ಶುಕ್ರವಾರಗಳಲ್ಲಿ ಲಕ್ಷ್ಮೀ ಮಂತ್ರವನ್ನು ಜಪಿಸುವುದು, ಶುಭ ದಿನಗಳಲ್ಲಿ ದಾನ ಮಾಡುವುದು, ಗುರುನ ಕೃಪೆಗೆ ಹಳದಿ ಪುಷ್ಪರಾಜ ಧರಿಸುವುದು (ಸಲಹೆಯ ನಂತರ), ಮತ್ತು ಪುಷ್ಯ ನಕ್ಷತ್ರದಲ್ಲಿ ಆರ್ಥಿಕ ಉದ್ಯಮಗಳನ್ನು ಪ್ರಾರಂಭಿಸುವುದು."
+        },
+        "ml": {
+          "title": "സാമ്പത്തിക പരിഹാരങ്ങൾ",
+          "content": "സാമ്പത്തിക സമൃദ്ധി വർദ്ധിപ്പിക്കാൻ: നിങ്ങളുടെ സുരക്ഷിത സ്ഥലത്ത് ഒരു കുബേര യന്ത്രം വയ്ക്കുക, വെള്ളിയാഴ്ചകളിൽ ലക്ഷ്മി മന്ത്രം ജപിക്കുക, ശുഭദിനങ്ങളിൽ ദാനധർമ്മം നടത്തുക, വ്യാഴത്തിന്റെ അനുഗ്രഹത്തിനായി (ആലോചനയ്ക്ക് ശേഷം) മഞ്ഞ പുഷ്പരാജം ധരിക്കുക, പുഷ്യ നക്ഷത്രത്തിൽ സാമ്പത്തിക സംരംഭങ്ങൾ ആരംഭിക്കുക."
+        },
+        "pa": {
+          "title": "ਵਿੱਤੀ ਉਪਚਾਰ",
+          "content": "ਵਿੱਤੀ ਖੁਸ਼ਹਾਲੀ ਨੂੰ ਵਧਾਉਣ ਲਈ: ਆਪਣੇ ਤਿਜੋਰੀ ਵਿੱਚ ਕੁਬੇਰ ਯੰਤਰ ਰੱਖੋ, ਸ਼ੁੱਕਰਵਾਰ ਨੂੰ ਲਕਸ਼ਮੀ ਮੰਤਰ ਦਾ ਜਾਪ ਕਰੋ, ਸ਼ੁਭ ਦਿਨਾਂ 'ਤੇ ਚੈਰੀਟੀ ਵਿੱਚ ਦਾਨ ਕਰੋ, ਬ੍ਰਹਸਪਤਿ ਦੀਆਂ ਅਸੀਸਾਂ ਲਈ ਪੀਲਾ ਪੁਖਰਾਜ ਪਹਿਨੋ (ਸਲਾਹ-ਮਸ਼ਵਰੇ ਤੋਂ ਬਾਅਦ), ਅਤੇ ਵਿੱਤੀ ਉਪਰਾਲੇ ਪੂਸ਼ਿਆ ਨਕਸ਼ਤਰ ਦੇ ਦੌਰਾਨ ਸ਼ੁਰੂ ਕਰੋ।"
+        },
+        "or": {
+          "title": "ଆର୍ଥିକ ଉପଚାର",
+          "content": "ଆର୍ଥିକ ସମୃଦ୍ଧି ବୃଦ୍ଧି ପାଇଁ: ଆପଣଙ୍କ ସୁରକ୍ଷିତ ସ୍ଥାନରେ କୁବେର ଯନ୍ତ୍ର ରଖିବା, ଶୁକ୍ରବାର ଦିନ ଲକ୍ଷ୍ମୀ ମନ୍ତ୍ର ଜପ କରିବା, ଶୁଭ ଦିନରେ ଦାନ କରିବା, ଗୁରୁଙ୍କ ଆଶୀର୍ବାଦ ପାଇଁ ପୀତ ସଫାଇର ପିନ୍ଧିବା (ପରାମର୍ଶ ପରେ), ଏବଂ ପୁଷ୍ୟ ନକ୍ଷତ୍ରରେ ଆର୍ଥିକ ପ୍ରୟାସ ଆରମ୍ଭ କରିବା।"
+        },
+        "as": {
+          "title": "আৰ্থিক প্ৰতিকাৰ",
+          "content": "আৰ্থিক সমৃদ্ধি বৃদ্ধি কৰক: আপোনাৰ সুৰক্ষিত ঠাইত কুবেৰ যন্ত্ৰ ৰাখি, শুক্ৰবাৰে লক্ষ্মী মন্ত্র জপ কৰি, শুভ দিনত দান ধ্যান কৰি, বৃহস্পতিৰ আশীৰ্বাদৰ বাবে পীত পুখরাজ পৰিধান কৰি (পৰামৰ্শৰ পাছত), আৰু পুষ্য নক্ষত্ৰত আৰ্থিক উদ্যোগ আৰম্ভ কৰি।"
+        }
+      }
+    },
+    {
+      "key": "PALM:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Palm Lines Overview",
+          "content": "{name}, your palm analysis reveals a fascinating combination of lines and patterns. The major lines on your palm indicate a life of purpose, emotional depth, and intellectual vigor. The clarity and depth of your lines suggest strong life force energy and determination."
+        },
+        "hi": {
+          "title": "हथेली की रेखाओं का अवलोकन",
+          "content": "{name}, आपकी हथेली का विश्लेषण रेखाओं और पैटर्न का एक दिलचस्प संयोजन प्रकट करता है। आपकी हथेली की प्रमुख रेखाएं उद्देश्यपूर्ण जीवन, भावनात्मक गहराई और बौद्धिक उत्साह का संकेत देती हैं। आपकी रेखाओं की स्पष्टता और गहराई मजबूत जीवन शक्ति ऊर्जा और दृढ़ संकल्प का सुझाव देती हैं।"
+        },
+        "ta": {
+          "title": "கைரேகை கண்ணோட்டம்",
+          "content": "{name}, உங்கள் கைரேகை பகுப்பாய்வு கோடுகள் மற்றும் வடிவங்களின் ஒரு சுவாரஸ்யமான சேர்க்கையை வெளிப்படுத்துகிறது. உங்கள் கையில் உள்ள முக்கிய கோடுகள் நோக்கத்துடன் கூடிய வாழ்க்கை, உணர்ச்சி ஆழம், மற்றும் அறிவாற்றல் உற்சாகத்தை குறிக்கின்றன. உங்கள் கோடுகளின் தெளிவு மற்றும் ஆழம் வலுவான வாழ்க்கை சக்தி ஆற்றல் மற்றும் உறுதியை குறிக்கின்றன."
+        },
+        "te": {
+          "title": "చేతి గీతల సమీక్ష",
+          "content": "{name}, మీ చేతి విశ్లేషణ రేఖలు మరియు నమూనాల యొక్క ఆసక్తికరమైన కలయికను వెల్లడిస్తుంది. మీ చేతిపై ప్రధాన రేఖలు లక్ష్యంతో కూడిన జీవితం, భావోద్వేగ లోతు మరియు మేధో సామర్థ్యాన్ని సూచిస్తాయి. మీ రేఖల స్పష్టత మరియు లోతు బలమైన జీవ శక్తి మరియు సంకల్పాన్ని సూచిస్తాయి."
+        },
+        "bn": {
+          "title": "হাতের রেখার সংক্ষিপ্ত বিবরণ",
+          "content": "{name}, আপনার হাতের বিশ্লেষণ একটি চমৎকার রেখা এবং প্যাটার্নের সংমিশ্রণ প্রকাশ করে। আপনার হাতের প্রধান রেখাগুলি একটি উদ্দেশ্যমূলক জীবন, আবেগগত গভীরতা এবং বুদ্ধিবৃত্তিক তেজ নির্দেশ করে। আপনার রেখাগুলির স্বচ্ছতা এবং গভীরতা শক্তিশালী জীবনশক্তি এবং দৃঢ় সংকল্পের ইঙ্গিত দেয়।"
+        },
+        "mr": {
+          "title": "हस्तरेषा अवलोकन",
+          "content": "{name}, तुमच्या हस्तरेषा विश्लेषणात रेषा आणि नमुन्यांचा एक मनोरंजक संगम दिसून येतो. तुमच्या हातावरील प्रमुख रेषा उद्देशपूर्ण जीवन, भावनिक खोली आणि बौद्धिक जोम दर्शवतात. तुमच्या रेषांची स्पष्टता आणि खोली मजबूत जीवनशक्ती आणि दृढनिश्चय सूचित करतात."
+        },
+        "gu": {
+          "title": "હથેળીની રેખાઓનો સમીક્ષા",
+          "content": "{name}, તમારી હથેળીની વિશ્લેષણ રેખાઓ અને પેટર્નનો રસપ્રદ સંયોજન દર્શાવે છે. તમારી હથેળીની મુખ્ય રેખાઓ જીવનના હેતુ, ભાવનાત્મક ઊંડાણ અને બૌદ્ધિક તીવ્રતાનું સંકેત આપે છે. તમારી રેખાઓની સ્પષ્ટતા અને ઊંડાણ મજબૂત જીવનશક્તિ અને દ્રઢ સંકલ્પ સૂચવે છે."
+        },
+        "kn": {
+          "title": "ಹಸ್ತ ರೇಖೆಗಳ ಅವಲೋಕನ",
+          "content": "{name}, ನಿಮ್ಮ ಹಸ್ತ ವಿಶ್ಲೇಷಣೆ ರೋಚಕವಾದ ರೇಖೆಗಳು ಮತ್ತು ಮಾದರಿಗಳ ಸಂಯೋಜನೆಯನ್ನು ಬಹಿರಂಗಪಡಿಸುತ್ತದೆ. ನಿಮ್ಮ ಹಸ್ತ上的 ಪ್ರಮುಖ ರೇಖೆಗಳು ಉದ್ದೇಶಪೂರ್ಣ ಜೀವನ, ಭಾವನಾತ್ಮಕ ಆಳತೆ, ಮತ್ತು ಬೌದ್ಧಿಕ ಚೈತನ್ಯವನ್ನು ಸೂಚಿಸುತ್ತವೆ. ನಿಮ್ಮ ರೇಖೆಗಳ ಸ್ಪಷ್ಟತೆ ಮತ್ತು ಆಳವು ಶಕ್ತಿಯುತ ಜೀವಶಕ್ತಿ ಮತ್ತು ದೃಢಸಂಕಲ್ಪವನ್ನು ಸೂಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "Palm Lines Overview",
+          "content": "{name}, നിങ്ങളുടെ കൈവിരലുകളുടെ വിശകലനം രസകരമായ വരകളും മാതൃകകളും സംയോജനം വെളിപ്പെടുത്തുന്നു. നിങ്ങളുടെ കൈയിലെ പ്രധാന വരകൾ ലക്ഷ്യബോധമുള്ള ജീവിതം, മാനസിക ആഴം, ബൗദ്ധിക ഉത്സാഹം എന്നിവ സൂചിപ്പിക്കുന്നു. നിങ്ങളുടെ വരകളുടെ വ്യക്തതയും ആഴവും ശക്തമായ ജീവശക്തിയും ദൃഢനിശ്ചയവും സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਹਥੇਲੀ ਦੀਆਂ ਰੇਖਾਵਾਂ ਦਾ ਜਾਇਜ਼ਾ",
+          "content": "{name}, ਤੁਹਾਡੀ ਹਥੇਲੀ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਰੇਖਾਵਾਂ ਅਤੇ ਪੈਟਰਨਾਂ ਦਾ ਦਿਲਚਸਪ ਮਿਲਾਪ ਦਰਸਾਉਂਦਾ ਹੈ। ਤੁਹਾਡੀ ਹਥੇਲੀ ਉੱਤੇ ਮੁੱਖ ਰੇਖਾਵਾਂ ਇੱਕ ਉਦੇਸ਼ਪੂਰਨ ਜੀਵਨ, ਭਾਵਨਾਤਮਕ ਗਹਿਰਾਈ, ਅਤੇ ਬੌਧਿਕ ਤੀਬਰਤਾ ਦਾ ਸੰਕੇਤ ਦਿੰਦੀਆਂ ਹਨ। ਤੁਹਾਡੀਆਂ ਰੇਖਾਵਾਂ ਦੀ ਸਾਫ਼ਗਈ ਅਤੇ ਗਹਿਰਾਈ ਮਜ਼ਬੂਤ ਜੀਵਨ ਸ਼ਕਤੀ ਅਤੇ ਦ੍ਰਿੜਤਾ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀਆਂ ਹਨ।"
+        },
+        "or": {
+          "title": "ହସ୍ତରେଖା ସମୀକ୍ଷା",
+          "content": "{name}, ଆପଣଙ୍କ ହସ୍ତରେଖା ବିଶ୍ଳେଷଣ ଏକ ଆକର୍ଷଣୀୟ ସଂଯୋଜନ ରେଖା ଏବଂ ଚିତ୍ର ପ୍ରଦର୍ଶନ କରେ। ଆପଣଙ୍କ ହସ୍ତରେ ମୁଖ୍ୟ ରେଖାଗୁଡ଼ିକ ଜୀବନର ଉଦ୍ଦେଶ୍ୟ, ଭାବନାତ୍ମକ ଗଭୀରତା ଏବଂ ବୁଦ୍ଧିମତାର ଜୋର ଦର୍ଶାଏ। ଆପଣଙ୍କ ରେଖାଗୁଡ଼ିକର ସ୍ପଷ୍ଟତା ଏବଂ ଗଭୀରତା ଶକ୍ତିଶାଳୀ ଜୀବନ ଶକ୍ତି ଏବଂ ସଂକଳ୍ପ ଦର୍ଶାଏ।"
+        },
+        "as": {
+          "title": "হাতৰ রেখা সমীক্ষা",
+          "content": "{name}, আপোনাৰ হাতৰ বিশ্লেষণে ৰেখা আৰু আকৰ্ষণীয় আকাৰসমূহৰ এক মনোমোহা সংমিশ্ৰণ প্ৰদৰ্শন কৰে। আপোনাৰ হাতৰ মুখ্য রেখাসমূহে উদ্দেশ্যপূৰ্ণ জীৱন, অনুভূতিপ্ৰৱণ গভীৰতা আৰু বৌদ্ধিক উজ্জীৱন সূচায়। আপোনাৰ রেখাসমূহৰ স্পষ্টতা আৰু গভীৰতাই শক্তিশালী জীৱন শক্তি আৰু দৃঢ় সংকল্প সূচায়।"
+        }
+      }
+    },
+    {
+      "key": "PALM:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Heart Line Analysis",
+          "content": "Your heart line indicates a passionate and emotionally expressive nature. The length and curvature suggest a balance between emotional openness and thoughtful selectivity in relationships. Deep, unbroken lines point toward meaningful, lasting connections."
+        },
+        "hi": {
+          "title": "हृदय रेखा विश्लेषण",
+          "content": "आपकी हृदय रेखा एक भावुक और भावनात्मक रूप से अभिव्यक्तिपूर्ण स्वभाव को दर्शाती है। लंबाई और वक्रता से पता चलता है कि संबंधों में भावनात्मक खुलेपन और विचारशील चयन के बीच संतुलन है। गहरी, अबाधित रेखाएं सार्थक, स्थायी संबंधों की ओर संकेत करती हैं।"
+        },
+        "ta": {
+          "title": "இதய கோடு பகுப்பாய்வு",
+          "content": "உங்கள் இதய கோடு ஒரு உணர்ச்சிகரமான மற்றும் உணர்ச்சியை வெளிப்படுத்தும் தன்மையை குறிக்கிறது. நீளம் மற்றும் வளைவு உணர்ச்சி திறந்த தன்மை மற்றும் உறவுகளில் சிந்தனைமிக்க தேர்வு ஆகியவற்றுக்கு இடையில் சமநிலையை குறிக்கின்றன. ஆழமான, முறியாத கோடுகள் அர்த்தமுள்ள, நீடித்த தொடர்புகளை நோக்கி சுட்டிக்காட்டுகின்றன."
+        },
+        "te": {
+          "title": "హృదయ రేఖ విశ్లేషణ",
+          "content": "మీ హృదయ రేఖ ఒక ఉత్సాహభరితమైన మరియు భావోద్వేగపూరితమైన వ్యక్తిత్వాన్ని సూచిస్తుంది. దీని పొడవు మరియు వంపు భావోద్వేగ పరంగా తెరవెనుకత మరియు సంబంధాలలో ఆలోచనాత్మక ఎంపిక మధ్య సమతుల్యతను సూచిస్తాయి. లోతైన, విరగని రేఖలు అర్థవంతమైన, దీర్ఘకాలిక సంబంధాల వైపు సూచిస్తాయి."
+        },
+        "bn": {
+          "title": "হৃদয় রেখা বিশ্লেষণ",
+          "content": "আপনার হৃদয় রেখা একটি আবেগপ্রবণ এবং আবেগময় প্রকাশশীল প্রকৃতি নির্দেশ করে। দৈর্ঘ্য এবং বক্রতা সম্পর্কগুলিতে আবেগগত খোলামেলা এবং চিন্তাশীল নির্বাচনের মধ্যে একটি ভারসাম্য নির্দেশ করে। গভীর, অবিচ্ছিন্ন রেখাগুলি অর্থবহ, দীর্ঘস্থায়ী সংযোগের দিকে নির্দেশ করে।"
+        },
+        "mr": {
+          "title": "हृदय रेषेचे विश्लेषण",
+          "content": "तुमची हृदय रेषा एक उत्कट आणि भावनिकदृष्ट्या व्यक्त करणारी स्वभाव दर्शवते. लांबी आणि वक्रता भावनिक उघडपणा आणि नातेसंबंधांमध्ये विचारशील निवडकतेमधील संतुलन सूचित करते. खोल, अखंड रेषा अर्थपूर्ण, दीर्घकालीन संबंधांकडे निर्देश करतात."
+        },
+        "gu": {
+          "title": "હાર્ટ લાઇન વિશ્લેષણ",
+          "content": "તમારી હાર્ટ લાઇન એક ઉત્સાહી અને ભાવનાત્મક રીતે અભિવ્યક્તિ સ્વભાવ દર્શાવે છે. લંબાઈ અને વક્રતા સૂચવે છે કે સંબંધોમાં ભાવનાત્મક ખુલ્લાપણું અને વિચારીને પસંદગી વચ્ચે સંતુલન છે. ઊંડા, અખંડિત રેખાઓ અર્થપૂર્ણ, લાંબા સમય સુધી ચાલતા સંબંધોની તરફેણ કરે છે."
+        },
+        "kn": {
+          "title": "ಹೃದಯ ರೇಖೆಯ ವಿಶ್ಲೇಷಣೆ",
+          "content": "ನಿಮ್ಮ ಹೃದಯ ರೇಖೆ ಉತ್ಸಾಹಭರಿತ ಮತ್ತು ಭಾವನಾತ್ಮಕವಾಗಿ ವ್ಯಕ್ತವಾಗುವ ಸ್ವಭಾವವನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಉದ್ದ ಮತ್ತು ವಕ್ರತೆ ಸಂಬಂಧಗಳಲ್ಲಿ ಭಾವನಾತ್ಮಕ ತೆರೆಯುವಿಕೆ ಮತ್ತು ಚಿಂತಾಜನಕ ಆಯ್ಕೆಯ ನಡುವಿನ ಸಮತೋಲನವನ್ನು ಸೂಚಿಸುತ್ತವೆ. ಆಳವಾದ, ಮುರಿಯದ ರೇಖೆಗಳು ಅರ್ಥಪೂರ್ಣ, ಶಾಶ್ವತ ಸಂಪರ್ಕಗಳತ್ತ ಸೂಚಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "ഹൃദയരേഖ വിശകലനം",
+          "content": "നിങ്ങളുടെ ഹൃദയരേഖ ഒരു ആവേശകരവും വികാരപരമായും പ്രകടനശീലമുള്ള സ്വഭാവത്തെ സൂചിപ്പിക്കുന്നു. ദൈർഘ്യവും വളവും ബന്ധങ്ങളിൽ വികാരപരമായ തുറന്ന മനസ്സും ചിന്താപരമായ തിരഞ്ഞെടുപ്പും തമ്മിലുള്ള സമത്വം സൂചിപ്പിക്കുന്നു. ആഴമുള്ള, മുറിയാത്ത രേഖകൾ അർത്ഥവത്തും ദീർഘകാല ബന്ധങ്ങളും സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਦਿਲ ਦੀ ਰੇਖਾ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "ਤੁਹਾਡੀ ਦਿਲ ਦੀ ਰੇਖਾ ਇੱਕ ਜਜ਼ਬਾਤੀ ਅਤੇ ਭਾਵਨਾਤਮਕ ਤੌਰ 'ਤੇ ਪ੍ਰਗਟਸਿਲਭਾਵ ਦਾ ਸੰਕੇਤ ਦਿੰਦੀ ਹੈ। ਲੰਬਾਈ ਅਤੇ ਵਕਰਤਾ ਸੰਬੰਧਾਂ ਵਿੱਚ ਭਾਵਨਾਤਮਕ ਖੁਲ੍ਹੇਪਣ ਅਤੇ ਸੋਚ-ਵਿਚਾਰ ਵਾਲੀ ਚੋਣਵਾਂ ਵਿੱਚ ਸੰਤੁਲਨ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀ ਹੈ। ਡੂੰਘੀਆਂ, ਅਟੁੱਟ ਰੇਖਾਵਾਂ ਅਰਥਪੂਰਨ, ਲੰਬੇ ਸਮੇਂ ਤੱਕ ਚੱਲਣ ਵਾਲੇ ਸੰਬੰਧਾਂ ਵੱਲ ਇਸ਼ਾਰਾ ਕਰਦੀਆਂ ਹਨ।"
+        },
+        "or": {
+          "title": "ହୃଦୟ ରେଖା ବିଶ୍ଳେଷଣ",
+          "content": "ଆପଣଙ୍କର ହୃଦୟ ରେଖା ଏକ ଉତ୍ସାହିତ ଏବଂ ଭାବନାପୂର୍ଣ୍ଣ ଅଭିବ୍ୟକ୍ତିଶୀଳ ସ୍ୱଭାବକୁ ସୂଚାଏ। ଏହାର ଲମ୍ବ ଏବଂ ବକ୍ରତା ଭାବନାତ୍ମକ ଖୋଲାମନ ଏବଂ ସମ୍ପର୍କରେ ଚିନ୍ତାଶୀଳ ଚୟନଶୀଳତାର ମଧ୍ୟରେ ସମତାକୁ ସୂଚାଏ। ଗଭୀର, ଅଭିଭଜିତ ରେଖାଗୁଡିକ ଅର୍ଥପୂର୍ଣ୍ଣ, ଦୀର୍ଘସ୍ଥାୟୀ ସଂଯୋଗକୁ ସୂଚାଏ।"
+        },
+        "as": {
+          "title": "হৃদয়ৰ ৰেখা বিশ্লেষণ",
+          "content": "আপোনাৰ হৃদয়ৰ ৰেখাই এটা উচ্ছ্বাসপূৰ্ণ আৰু অনুভৱগতভাৱে প্ৰকাশক স্বভাৱ সূচায়। দীঘল আৰু বেঁকা ৰূপই সম্পর্কসমূহত অনুভৱগত খোলামেলা আৰু চিন্তাশীল বাছনিৰ মাজত এটা সমতা সূচায়। গভীৰ, অবিচ্ছিন্ন রেখাবোৰ অৰ্থপূৰ্ণ, দীঘলস্থায়ী সংযোগৰ দিশে ইঙ্গিত দিয়ে।"
+        }
+      }
+    },
+    {
+      "key": "PALM:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Head Line Analysis",
+          "content": "The head line on your palm shows strong analytical abilities and clear thinking patterns. Its trajectory indicates a blend of logical reasoning and creative imagination. This suggests success in careers requiring both intellectual precision and innovative thinking."
+        },
+        "hi": {
+          "title": "मस्तिष्क रेखा विश्लेषण",
+          "content": "आपकी हथेली पर मस्तिष्क रेखा मजबूत विश्लेषणात्मक क्षमताओं और स्पष्ट सोच के पैटर्न को दर्शाती है। इसका मार्ग तर्कसंगत सोच और रचनात्मक कल्पना के मिश्रण को इंगित करता है। यह उन करियर में सफलता का सुझाव देता है जिनमें बौद्धिक सटीकता और नवाचारी सोच दोनों की आवश्यकता होती है।"
+        },
+        "ta": {
+          "title": "தலைவரிசை பகுப்பாய்வு",
+          "content": "உங்கள் கையில் உள்ள தலைவரிசை வலுவான பகுப்பாய்வு திறன்களை மற்றும் தெளிவான சிந்தனை முறைகளை காட்டுகிறது. அதன் பாதை தர்க்கரீதியான காரணத்தையும் படைப்பாற்றல் கற்பனையையும் இணைக்கும் என்பதை குறிக்கிறது. இது அறிவாற்றல் துல்லியத்தையும் புதுமையான சிந்தனையையும் தேவைப்படும் தொழில்களில் வெற்றியை குறிக்கிறது."
+        },
+        "te": {
+          "title": "తల రేఖ విశ్లేషణ",
+          "content": "మీ చేతిలో తల రేఖ బలమైన విశ్లేషణ సామర్థ్యాలను మరియు స్పష్టమైన ఆలోచనా విధానాలను చూపిస్తుంది. దాని గమనం తార్కికమైన తర్కం మరియు సృజనాత్మక ఊహను కలపడం సూచిస్తుంది. ఇది మేధో నైపుణ్యం మరియు వినూత్న ఆలోచన అవసరమయ్యే వృత్తుల్లో విజయాన్ని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "মাথার রেখার বিশ্লেষণ",
+          "content": "আপনার তালুর মাথার রেখাটি শক্তিশালী বিশ্লেষণাত্মক ক্ষমতা এবং স্পষ্ট চিন্তার ধরণ প্রদর্শন করে। এর গতিপথ যৌক্তিক যুক্তি এবং সৃজনশীল কল্পনার মিশ্রণ নির্দেশ করে। এটি এমন পেশায় সাফল্যের ইঙ্গিত দেয় যা বুদ্ধিবৃত্তিক নির্ভুলতা এবং উদ্ভাবনী চিন্তাধারার প্রয়োজন।"
+        },
+        "mr": {
+          "title": "मस्तक रेषेचे विश्लेषण",
+          "content": "तुमच्या तळहातावरील मस्तक रेषा मजबूत विश्लेषणात्मक क्षमता आणि स्पष्ट विचारसरणी दर्शवते. तिचा मार्ग तर्कशुद्ध विचार आणि सर्जनशील कल्पनाशक्ती यांचे मिश्रण दर्शवतो. हे बौद्धिक अचूकता आणि नाविन्यपूर्ण विचारांची आवश्यकता असलेल्या करिअरमध्ये यश सूचित करते."
+        },
+        "gu": {
+          "title": "માથાની રેખા વિશ્લેષણ",
+          "content": "તમારા હાથની માથાની રેખા મજબૂત વિશ્લેષણાત્મક ક્ષમતાઓ અને સ્પષ્ટ વિચારધારાઓ દર્શાવે છે. તેની દિશા તર્કસંગત વિચારસરણી અને સર્જનાત્મક કલ્પનાશક્તિનું મિશ્રણ સૂચવે છે. આ બન્ને બુદ્ધિપ્રધાન ચોકસાઈ અને નવીન વિચારશક્તિની જરૂરિયાત ધરાવતા વ્યવસાયોમાં સફળતા સૂચવે છે."
+        },
+        "kn": {
+          "title": "ತಲೆ ರೇಖೆಯ ವಿಶ್ಲೇಷಣೆ",
+          "content": "ನಿಮ್ಮ ಕೈಯ上的 ತಲೆ ರೇಖೆ ಶಕ್ತಿಯುತ ವಿಶ್ಲೇಷಣಾ ಸಾಮರ್ಥ್ಯಗಳು ಮತ್ತು ಸ್ಪಷ್ಟ ಚಿಂತನೆ ಮಾದರಿಗಳನ್ನು ತೋರಿಸುತ್ತದೆ. ಇದರ ಪಥವು ತಾರ್ಕಿಕ ತರ್ಕ ಮತ್ತು ಸೃಜನಾತ್ಮಕ ಕಲ್ಪನೆಗಳ ಮಿಶ್ರಣವನ್ನು ಸೂಚಿಸುತ್ತದೆ. ಇದು ಬೌದ್ಧಿಕ ನಿಖರತೆ ಮತ್ತು ನಾವೀನ್ಯತೆಯ ಚಿಂತನೆ ಎರಡನ್ನೂ ಅಗತ್ಯವಿರುವ ವೃತ್ತಿಪರ ಜೀವನದಲ್ಲಿ ಯಶಸ್ಸನ್ನು ಸೂಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "തലവര വിശകലനം",
+          "content": "നിങ്ങളുടെ കൈയിലെ തലവര ശക്തമായ വിശകലന ശേഷികളും വ്യക്തമായ ചിന്താ രീതികളും കാണിക്കുന്നു. ഇതിന്റെ പാത തർക്കശേഷിയും സൃഷ്ടിപരമായ സങ്കല്പനങ്ങളും സംയോജിപ്പിക്കുന്നതിനെ സൂചിപ്പിക്കുന്നു. ബുദ്ധിപരമായ കൃത്യതയും നവീന ചിന്തയും ആവശ്യമായ തൊഴിൽ മേഖലകളിൽ വിജയത്തെ ഇത് സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਮੱਥੇ ਦੀ ਰੇਖਾ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "ਤੁਹਾਡੇ ਹਥੇਲੀ ਉੱਤੇ ਮੱਥੇ ਦੀ ਰੇਖਾ ਮਜ਼ਬੂਤ ਵਿਸ਼ਲੇਸ਼ਣੀ ਸਮਰੱਥਾਵਾਂ ਅਤੇ ਸਪਸ਼ਟ ਸੋਚ ਦੇ ਢਾਂਚੇ ਦਰਸਾਉਂਦੀ ਹੈ। ਇਸਦੀ ਦਿਸ਼ਾ ਤਰਕਸੰਗਤ ਵਿਚਾਰ ਅਤੇ ਰਚਨਾਤਮਕ ਕਲਪਨਾ ਦੇ ਮਿਲਾਪ ਨੂੰ ਦਰਸਾਉਂਦੀ ਹੈ। ਇਹ ਉਹਨਾਂ ਪੇਸ਼ਿਆਂ ਵਿੱਚ ਸਫਲਤਾ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀ ਹੈ ਜਿਹਨਾਂ ਵਿੱਚ ਬੌਧਿਕ ਸਟੀਕਤਾ ਅਤੇ ਨਵੀਂ ਸੋਚ ਦੀ ਲੋੜ ਹੁੰਦੀ ਹੈ।"
+        },
+        "or": {
+          "title": "ମୁଣ୍ଡ ରେଖା ବିଶ୍ଳେଷଣ",
+          "content": "ଆପଣଙ୍କ ପାଳିରେ ମୁଣ୍ଡ ରେଖା ଦୃଢ଼ ବିଶ୍ଳେଷଣାତ୍ମକ କ୍ଷମତା ଏବଂ ସ୍ପଷ୍ଟ ଚିନ୍ତା ଧାରାକୁ ପ୍ରଦର୍ଶନ କରେ। ଏହାର ପଥ ଯୁକ୍ତିସଙ୍ଗତ ତର୍କ ଏବଂ ସୃଜନାତ୍ମକ କଳ୍ପନାର ଏକ ମିଶ୍ରଣକୁ ସୂଚାଏ। ଏହା ଦେଖାଏ ଯେ ଦୁଇଥର୍ପ ମନୋଗତ ସଠିକତା ଏବଂ ନୂତନ ଚିନ୍ତାଧାରା ଆବଶ୍ୟକ ଥିବା ପେଶାରେ ସଫଳତା ମିଳିବ।"
+        },
+        "as": {
+          "title": "মাথাৰ ৰেখা বিশ্লেষণ",
+          "content": "আপোনাৰ হাতৰ মূৰত থকা ৰেখাই শক্তিশালী বিশ্লেষণাত্মক ক্ষমতা আৰু পৰিষ্কাৰ চিন্তাধাৰা প্ৰদৰ্শন কৰে। ইয়াৰ গতিৰেখাই যুক্তিসংগত চিন্তা আৰু সৃষ্টিশীল কল্পনাৰ এক মিশ্ৰণ সূচায়। এইটো এনে ব্যৱসায়ত সফলতাৰ সূচনা কৰে য'ত বুদ্ধিবৃত্তিক সঠিকতা আৰু উদ্ভাৱনী চিন্তাধাৰাৰ প্ৰয়োজন।"
+        }
+      }
+    },
+    {
+      "key": "PALM:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Life Line Analysis",
+          "content": "Your life line shows strong vitality and resilience. The depth and length indicate a life full of energy and enthusiasm. The curve around the Mount of Venus suggests warmth, generosity, and a zest for living that attracts positive experiences."
+        },
+        "hi": {
+          "title": "जीवन रेखा विश्लेषण",
+          "content": "आपकी जीवन रेखा मजबूत जीवन शक्ति और लचीलापन दिखाती है। गहराई और लंबाई ऊर्जा और उत्साह से भरे जीवन का संकेत देती है। शुक्र पर्वत के चारों ओर का वक्र गर्मजोशी, उदारता, और जीवन के प्रति एक उत्साह को दर्शाता है जो सकारात्मक अनुभवों को आकर्षित करता है।"
+        },
+        "ta": {
+          "title": "வாழ்க்கை கோடு பகுப்பாய்வு",
+          "content": "உங்கள் வாழ்க்கை கோடு வலிமையான உயிர்ச்சக்தி மற்றும் பொறுமையை காட்டுகிறது. ஆழமும் நீளமும் ஆற்றல் மற்றும் உற்சாகம் நிறைந்த வாழ்க்கையை குறிக்கின்றன. வியாழன் மலைக்கு சுற்றியுள்ள வளைவு, சூடான தன்மை, தாராளம், மற்றும் வாழ்வின் மீது ஆர்வம் ஆகியவற்றை குறிக்கிறது, இது நேர்மறையான அனுபவங்களை ஈர்க்கிறது."
+        },
+        "te": {
+          "title": "జీవిత రేఖ విశ్లేషణ",
+          "content": "మీ జీవిత రేఖ బలమైన జీవశక్తి మరియు సహనాన్ని చూపిస్తుంది. లోతు మరియు పొడవు శక్తి మరియు ఉత్సాహంతో నిండిన జీవితాన్ని సూచిస్తాయి. వీనస్ పర్వతం చుట్టూ వంకర వేడి, ఉదారత, మరియు సానుకూల అనుభవాలను ఆకర్షించే జీవన ఉత్సాహాన్ని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "জীবন রেখা বিশ্লেষণ",
+          "content": "আপনার জীবন রেখা শক্তিশালী জীবনীশক্তি এবং স্থিতিস্থাপকতা প্রদর্শন করে। গভীরতা এবং দৈর্ঘ্য প্রচুর শক্তি এবং উদ্দীপনায় পূর্ণ একটি জীবন নির্দেশ করে। ভেনাস পর্বতের চারপাশের বক্রতা উষ্ণতা, উদারতা এবং জীবনের প্রতি এমন এক উদ্দীপনা নির্দেশ করে যা ইতিবাচক অভিজ্ঞতাকে আকর্ষণ করে।"
+        },
+        "mr": {
+          "title": "जीवनरेषा विश्लेषण",
+          "content": "तुमची जीवनरेषा मजबूत जीवनशक्ती आणि लवचिकता दर्शवते. खोली आणि लांबी ऊर्जा आणि उत्साहाने भरलेले जीवन सूचित करते. शुक्र पर्वताभोवतीचा वळण उबदारपणा, उदारता आणि सकारात्मक अनुभवांना आकर्षित करणारे जीवन जगण्याची आवड दर्शवते."
+        },
+        "gu": {
+          "title": "જીવન રેખા વિશ્લેષણ",
+          "content": "તમારી જીવન રેખા મજબૂત જીવનશક્તિ અને લવચીકતા દર્શાવે છે. ઊંડાઈ અને લંબાઈ ઊર્જા અને ઉત્સાહથી ભરપૂર જીવન સૂચવે છે. શુક્ર પર્વતની આસપાસનો વળાંક ઉષ્મા, ઉદારતા, અને જીવંત જીવન માટેની ઉત્સુકતા સૂચવે છે, જે સકારાત્મક અનુભવોને આકર્ષે છે."
+        },
+        "kn": {
+          "title": "ಜೀವನ ರೇಖಾ ವಿಶ್ಲೇಷಣೆ",
+          "content": "ನಿಮ್ಮ ಜೀವನ ರೇಖೆ ಶಕ್ತಿಯುತ ಜೀವಶಕ್ತಿ ಮತ್ತು ತಾಳ್ಮೆಯನ್ನು ತೋರಿಸುತ್ತದೆ. ಆಳ ಮತ್ತು ಉದ್ದವು ಶಕ್ತಿಯಿಂದ ಮತ್ತು ಉತ್ಸಾಹದಿಂದ ತುಂಬಿದ ಜೀವನವನ್ನು ಸೂಚಿಸುತ್ತವೆ. ಶುಕ್ರನ ಪರ್ವತದ ಸುತ್ತಲಿನ ವಕ್ರತೆ ಸೌಹಾರ್ದತೆ, ಉದಾರತೆ, ಮತ್ತು ಜೀವನವನ್ನು ಆನಂದಿಸುವ ಉತ್ಸಾಹವನ್ನು ಸೂಚಿಸುತ್ತದೆ, ಇದು ಸಕಾರಾತ್ಮಕ ಅನುಭವಗಳನ್ನು ಆಕರ್ಷಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "ജീവിതരേഖ വിശകലനം",
+          "content": "നിങ്ങളുടെ ജീവിതരേഖ ശക്തമായ ജീവശക്തിയും പ്രതിരോധശേഷിയും കാണിക്കുന്നു. ആഴവും നീളവും ഊർജ്ജവും ഉത്സാഹവും നിറഞ്ഞ ഒരു ജീവിതം സൂചിപ്പിക്കുന്നു. ശുക്രപർവ്വതത്തിന് ചുറ്റുമുള്ള വളവ് ചൂടും, ഉദാരതയും, സജീവമായ ജീവിതത്തിനുള്ള ഉത്സാഹവും സൂചിപ്പിക്കുന്നു, ഇത് അനുകൂല അനുഭവങ്ങളെ ആകർഷിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਜੀਵਨ ਰੇਖਾ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "ਤੁਹਾਡੀ ਜੀਵਨ ਰੇਖਾ ਮਜ਼ਬੂਤ ਜੀਵਨਸ਼ਕਤੀ ਅਤੇ ਲਚੀਲਾਪਨ ਦਰਸਾਉਂਦੀ ਹੈ। ਗਹਿਰਾਈ ਅਤੇ ਲੰਬਾਈ ਇੱਕ ਉਰਜਾਵਾਨ ਅਤੇ ਉਤਸ਼ਾਹ ਭਰਪੂਰ ਜੀਵਨ ਦੀ ਸੰਕੇਤਕ ਹੈ। ਸ਼ੁਕਰ ਪਹਾੜ ਦੇ ਆਲੇ-ਦੁਆਲੇ ਦਾ ਵਕਰਤਾ ਗਰਮੀ, ਦਾਨਸ਼ੀਲਤਾ ਅਤੇ ਜੀਵਨ ਦੇ ਪ੍ਰਤੀ ਉਤਸ਼ਾਹ ਦਰਸਾਉਂਦਾ ਹੈ ਜੋ ਸਕਾਰਾਤਮਕ ਅਨੁਭਵਾਂ ਨੂੰ ਆਕਰਸ਼ਿਤ ਕਰਦਾ ਹੈ।"
+        },
+        "or": {
+          "title": "ଜୀବନ ରେଖା ବିଶ୍ଳେଷଣ",
+          "content": "ଆପଣଙ୍କ ଜୀବନ ରେଖା ଶକ୍ତିଶାଳୀ ଜୀବନଶୀଳତା ଏବଂ ପୁନରୁତ୍ଥାନକୁ ପ୍ରଦର୍ଶନ କରେ। ଏହାର ଗଭୀରତା ଏବଂ ଲମ୍ବ ଏକ ଉତ୍ସାହ ଏବଂ ଉତ୍ସାହରେ ପରିପୂର୍ଣ୍ଣ ଜୀବନକୁ ସୂଚିତ କରେ। ଶୁକ୍ର ପର୍ବତର ଚାରିପାଖରେ ଥିବା ବକ୍ରତା ଉଷ୍ମା, ଉଦାରତା, ଏବଂ ସକାରାତ୍ମକ ଅନୁଭବକୁ ଆକର୍ଷିତ କରୁଥିବା ଜୀବନ ପ୍ରତି ଏକ ଉତ୍ସାହକୁ ସୂଚିତ କରେ।"
+        },
+        "as": {
+          "title": "জীৱন ৰেখা বিশ্লেষণ",
+          "content": "আপোনাৰ জীৱন ৰেখাই শক্তিশালী জীৱনীশক্তি আৰু সহনশীলতা প্ৰদৰ্শন কৰে। গভীৰতা আৰু দৈৰ্ঘ্যই শক্তি আৰু উচ্ছ্বাসেৰে ভৰা জীৱন সূচায়। শুক্ৰ পৰ্বতৰ চাৰিওফালে থকা বাঁকটোৱে উষ্ণতা, উদাৰতা, আৰু জীৱনৰ প্ৰতি এক উদ্দীপনা সূচায় যি ধনাত্মক অভিজ্ঞতা আকৰ্ষণ কৰে।"
+        }
+      }
+    },
+    {
+      "key": "PALM:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Mount Analysis",
+          "content": "The mounts on your palm reveal key personality traits. Well-developed mounts indicate areas of strength: Jupiter for ambition, Apollo for creativity, and Venus for love and passion. The balance of your mounts suggests a well-rounded personality with multiple talents."
+        },
+        "hi": {
+          "title": "पर्वत विश्लेषण",
+          "content": "आपकी हथेली पर पर्वत प्रमुख व्यक्तित्व लक्षणों को प्रकट करते हैं। अच्छी तरह से विकसित पर्वत ताकत के क्षेत्रों को इंगित करते हैं: Jupiter महत्वाकांक्षा के लिए, Apollo रचनात्मकता के लिए, और Venus प्रेम और जुनून के लिए। आपके पर्वतों का संतुलन एक बहुमुखी प्रतिभा के साथ संतुलित व्यक्तित्व का सुझाव देता है।"
+        },
+        "ta": {
+          "title": "மலை பகுப்பாய்வு",
+          "content": "உங்கள் கையில் உள்ள மலைகள் முக்கியமான தன்மை அம்சங்களை வெளிப்படுத்துகின்றன. நன்றாக வளர்ந்த மலைகள் பலவீனங்களை குறிக்கின்றன: Jupiter ஆக்கபூர்வத்திற்காக, Apollo படைப்பாற்றலுக்காக, மற்றும் Venus காதல் மற்றும் ஆர்வத்திற்காக. உங்கள் மலைகளின் சமநிலை பல திறமைகளுடன் கூடிய நன்கு வட்டமான தன்மையை குறிக்கிறது."
+        },
+        "te": {
+          "title": "పర్వత విశ్లేషణ",
+          "content": "మీ చేతిలోని పర్వతాలు ముఖ్యమైన వ్యక్తిత్వ లక్షణాలను వెల్లడిస్తాయి. బాగా అభివృద్ధి చెందిన పర్వతాలు బలమైన ప్రాంతాలను సూచిస్తాయి: Jupiter ఆకాంక్ష కోసం, Apollo సృజనాత్మకత కోసం, మరియు Venus ప్రేమ మరియు అభిరుచి కోసం. మీ పర్వతాల సమతుల్యత అనేక ప్రతిభలతో కూడిన సమగ్ర వ్యక్తిత్వాన్ని సూచిస్తుంది."
+        },
+        "bn": {
+          "title": "পাহাড় বিশ্লেষণ",
+          "content": "আপনার হাতের তালুর পাহাড়গুলি মূল ব্যক্তিত্বের বৈশিষ্ট্যগুলি প্রকাশ করে। ভালোভাবে বিকশিত পাহাড়গুলি শক্তির ক্ষেত্রগুলি নির্দেশ করে: Jupiter উচ্চাকাঙ্ক্ষার জন্য, Apollo সৃজনশীলতার জন্য, এবং Venus প্রেম এবং আবেগের জন্য। আপনার পাহাড়গুলির ভারসাম্য একটি সু-গঠিত ব্যক্তিত্ব নির্দেশ করে যা বহু প্রতিভার অধিকারী।"
+        },
+        "mr": {
+          "title": "माउंट विश्लेषण",
+          "content": "तुमच्या तळहातावरील माउंट्स तुमच्या व्यक्तिमत्वाच्या मुख्य गुणधर्मांचे प्रकटीकरण करतात. चांगले विकसित माउंट्स ताकदीच्या क्षेत्रांचे निदर्शक आहेत: Jupiter महत्त्वाकांक्षेसाठी, Apollo सर्जनशीलतेसाठी, आणि Venus प्रेम आणि आवेशासाठी. तुमच्या माउंट्सचा समतोल एक बहुआयामी व्यक्तिमत्व सुचवतो ज्यामध्ये अनेक कौशल्ये आहेत."
+        },
+        "gu": {
+          "title": "માઉન્ટ વિશ્લેષણ",
+          "content": "તમારા હાથની માઉન્ટ્સ મુખ્ય વ્યક્તિગત લક્ષણો દર્શાવે છે. સારી રીતે વિકસિત માઉન્ટ્સ શક્તિના ક્ષેત્રો દર્શાવે છે: Jupiter મહત્ત્વાકાંક્ષા માટે, Apollo સર્જનાત્મકતા માટે, અને Venus પ્રેમ અને જુસ્સા માટે. તમારા માઉન્ટ્સનો સંતુલન સૂચવે છે કે તમારી વ્યક્તિગતતા બહુવિધ પ્રતિભાઓ સાથે સારી રીતે ગોઠવાયેલ છે."
+        },
+        "kn": {
+          "title": "ಪರ್ವತ ವಿಶ್ಲೇಷಣೆ",
+          "content": "ನಿಮ್ಮ ಕೈಯ上的 ಪರ್ವತಗಳು ಪ್ರಮುಖ ವ್ಯಕ್ತಿತ್ವ ಲಕ್ಷಣಗಳನ್ನು ಬಹಿರಂಗಪಡಿಸುತ್ತವೆ. ಚೆನ್ನಾಗಿ ಅಭಿವೃದ್ಧಿಯಾದ ಪರ್ವತಗಳು ಶಕ್ತಿಯ ಪ್ರದೇಶಗಳನ್ನು ಸೂಚಿಸುತ್ತವೆ: Jupiter ಮಹತ್ವಾಕಾಂಕ್ಷೆಗಾಗಿ, Apollo ಸೃಜನಶೀಲತೆಗೆ, ಮತ್ತು Venus ಪ್ರೀತಿ ಮತ್ತು ಉತ್ಸಾಹಕ್ಕಾಗಿ. ನಿಮ್ಮ ಪರ್ವತಗಳ ಸಮತೋಲನವು ಬಹು ಪ್ರತಿಭೆಗಳೊಂದಿಗೆ ಉತ್ತಮವಾಗಿ ಸುತ್ತುವರಿದ ವ್ಯಕ್ತಿತ್ವವನ್ನು ಸೂಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "മുകളിൽ വിശകലനം",
+          "content": "നിങ്ങളുടെ കൈയിലെ മുകളിൽ പ്രധാന വ്യക്തിത്വ ഗുണങ്ങൾ വെളിപ്പെടുത്തുന്നു. നന്നായി വികസിച്ച മുകളിൽ ശക്തിയുടെ മേഖലകൾ സൂചിപ്പിക്കുന്നു: Jupiter ആഗ്രഹത്തിനായി, Apollo സൃഷ്ടിപരത്വത്തിനായി, Venus സ്നേഹത്തിനും ആവേശത്തിനും. നിങ്ങളുടെ മുകളിൽ സമതുലിതാവസ്ഥ പല കഴിവുകളുള്ള ഒരു സമഗ്ര വ്യക്തിത്വം സൂചിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਪਹਾੜੀ ਵਿਸ਼ਲੇਸ਼ਣ",
+          "content": "ਤੁਹਾਡੇ ਹੱਥ ਦੀਆਂ ਪਹਾੜੀਆਂ ਮੁੱਖ ਵਿਅਕਤੀਗਤ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਦਾ ਖੁਲਾਸਾ ਕਰਦੀਆਂ ਹਨ। ਚੰਗੀ ਤਰ੍ਹਾਂ ਵਿਕਸਿਤ ਪਹਾੜੀਆਂ ਤਾਕਤ ਦੇ ਖੇਤਰਾਂ ਨੂੰ ਦਰਸਾਉਂਦੀਆਂ ਹਨ: Jupiter ਮਹੱਤਵਾਕਾਂਖਾ ਲਈ, Apollo ਰਚਨਾਤਮਕਤਾ ਲਈ, ਅਤੇ Venus ਪ੍ਰੇਮ ਅਤੇ ਜਜ਼ਬੇ ਲਈ। ਤੁਹਾਡੇ ਪਹਾੜੀਆਂ ਦਾ ਸੰਤੁਲਨ ਬਹੁ-ਪੱਖੀ ਪ੍ਰਤਿਭਾਵਾਂ ਨਾਲ ਭਰਪੂਰ ਵਿਅਕਤੀਗਤਤਾ ਦਾ ਸੁਝਾਅ ਦਿੰਦਾ ਹੈ।"
+        },
+        "or": {
+          "title": "ପର୍ବତ ବିଶ୍ଳେଷଣ",
+          "content": "ଆପଣଙ୍କ ପାଳିର ପର୍ବତଗୁଡ଼ିକ ମୁଖ୍ୟ ବ୍ୟକ୍ତିତ୍ୱ ଗୁଣଗୁଡ଼ିକୁ ପ୍ରକାଶ କରେ। ଭଲ ଭାବରେ ବିକଶିତ ପର୍ବତଗୁଡ଼ିକ ଶକ୍ତିର କ୍ଷେତ୍ରଗୁଡ଼ିକୁ ସୂଚାଇଥାଏ: Jupiter ଲାଗି ଆକାଂକ୍ଷା, Apollo ଲାଗି ସୃଜନଶୀଳତା, ଏବଂ Venus ଲାଗି ପ୍ରେମ ଏବଂ ଆକର୍ଷଣ। ଆପଣଙ୍କ ପର୍ବତଗୁଡ଼ିକର ସମତୁଳନ ଏକ ଭଲ ଗଠିତ ବ୍ୟକ୍ତିତ୍ୱକୁ ସୂଚାଇଥାଏ ଯାହାର ଅନେକ ପ୍ରତିଭା ରହିଛି।"
+        },
+        "as": {
+          "title": "পৰ্বতৰ বিশ্লেষণ",
+          "content": "আপোনাৰ হাতৰ পৰ্বতসমূহে মুখ্য ব্যক্তিত্বৰ বৈশিষ্ট্যসমূহ প্ৰকাশ কৰে। ভালদৰে বিকশিত পৰ্বতসমূহে শক্তিৰ ক্ষেত্ৰসমূহ সূচায়: Jupiter উচ্চাকাংক্ষাৰ বাবে, Apollo সৃষ্টিশীলতাৰ বাবে, আৰু Venus প্ৰেম আৰু উচ্ছ্বাসৰ বাবে। আপোনাৰ পৰ্বতসমূহৰ সন্থুলিত অৱস্থাই বহু প্ৰতিভাৰে ভৰপূৰ এটা সু-সন্তুলিত ব্যক্তিত্বৰ সূচনা কৰে।"
+        }
+      }
+    },
+    {
+      "key": "PALM:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Overall Reading & Guidance",
+          "content": "{name}, your overall palm reading suggests a life of achievement, meaningful relationships, and personal growth. The combination of your major lines, minor lines, and mount development points toward success through self-effort. Practicing mindfulness and staying true to your values will amplify the positive indications in your palm."
+        },
+        "hi": {
+          "title": "सामान्य पठन और मार्गदर्शन",
+          "content": "{name}, आपकी सामान्य हस्तरेखा पढ़ाई उपलब्धियों, सार्थक संबंधों, और व्यक्तिगत विकास का सुझाव देती है। आपकी प्रमुख रेखाओं, गौण रेखाओं, और पर्वत विकास का संयोजन आत्म-प्रयास के माध्यम से सफलता की ओर संकेत करता है। सचेतनता का अभ्यास करना और अपनी मूल्यों के प्रति सच्चे रहना आपकी हथेली में सकारात्मक संकेतों को बढ़ाएगा।"
+        },
+        "ta": {
+          "title": "மொத்த வாசிப்பு & வழிகாட்டுதல்",
+          "content": "{name}, உங்கள் மொத்த கைரேகை வாசிப்பு சாதனை, அர்த்தமுள்ள உறவுகள் மற்றும் தனிப்பட்ட வளர்ச்சியுடன் கூடிய வாழ்க்கையை குறிக்கிறது. உங்கள் முக்கிய கோடுகள், சிறிய கோடுகள் மற்றும் மலை வளர்ச்சி ஆகியவற்றின் சேர்க்கை சுய முயற்சியின் மூலம் வெற்றியை நோக்கி சுட்டிக்காட்டுகிறது. மனச்சாந்தியைப் பயிற்சி செய்வதும் உங்கள் மதிப்புகளுக்கு உண்மையாக இருப்பதும் உங்கள் கையில் உள்ள நேர்மறை குறிப்புகளை அதிகரிக்கும்."
+        },
+        "te": {
+          "title": "మొత్తం పఠనం & మార్గదర్శకత్వం",
+          "content": "{name}, మీ మొత్తం చేతి రేఖల పఠనం విజయాలు, అర్థవంతమైన సంబంధాలు, మరియు వ్యక్తిగత వృద్ధితో కూడిన జీవితం సూచిస్తుంది. మీ ప్రధాన రేఖలు, చిన్న రేఖలు, మరియు పర్వతాల అభివృద్ధి కలయిక స్వీయప్రయత్నం ద్వారా విజయాన్ని సూచిస్తుంది. మైండ్‌ఫుల్‌నెస్‌ను అభ్యసించడం మరియు మీ విలువలకు నిజంగా ఉండటం మీ చేతిలోని సానుకూల సూచనలను పెంచుతుంది."
+        },
+        "bn": {
+          "title": "সামগ্রিক পাঠ ও নির্দেশনা",
+          "content": "{name}, আপনার সামগ্রিক হস্তরেখা পাঠ একটি সাফল্যমণ্ডিত জীবন, অর্থপূর্ণ সম্পর্ক এবং ব্যক্তিগত বিকাশের ইঙ্গিত দেয়। আপনার প্রধান রেখা, ক্ষুদ্র রেখা এবং পর্বত বিকাশের সংমিশ্রণ স্ব-প্রচেষ্টার মাধ্যমে সাফল্যের দিকে নির্দেশ করে। মননশীলতা অনুশীলন করা এবং আপনার মূল্যবোধের প্রতি সত্য থাকা আপনার হস্তরেখায় ইতিবাচক ইঙ্গিতগুলি বৃদ্ধি করবে।"
+        },
+        "mr": {
+          "title": "सर्वसाधारण वाचन आणि मार्गदर्शन",
+          "content": "{name}, तुमच्या हाताच्या वाचनानुसार तुमचे जीवन यश, अर्थपूर्ण नाती आणि वैयक्तिक वाढ याने भरलेले आहे. तुमच्या प्रमुख रेषा, गौण रेषा आणि पर्वत विकास यांचे संयोजन स्व-प्रयत्नांद्वारे यशाकडे निर्देश करते. जागरूकता साधने आणि तुमच्या मूल्यांशी प्रामाणिक राहणे तुमच्या हातातील सकारात्मक संकेतांना वाढवेल."
+        },
+        "gu": {
+          "title": "Overall Reading & Guidance",
+          "content": "{name}, તમારું કુલ હસ્ત રીડિંગ સિદ્ધિ, અર્થપૂર્ણ સંબંધો અને વ્યક્તિગત વૃદ્ધિનું જીવન સૂચવે છે. તમારી મુખ્ય રેખાઓ, નાની રેખાઓ અને પર્વત વિકાસના સંયોજનથી સ્વપ્રયત્ન દ્વારા સફળતા તરફ ઇશારો થાય છે. સાવચેત રહેવાની પ્રેક્ટિસ કરવી અને તમારી મૂલ્યો પ્રત્યે સત્ય રહેવું તમારા હાથેના સકારાત્મક સંકેતોને વધારશે."
+        },
+        "kn": {
+          "title": "ಒಟ್ಟಾರೆ ಓದು ಮತ್ತು ಮಾರ್ಗದರ್ಶನ",
+          "content": "{name}, ನಿಮ್ಮ ಒಟ್ಟಾರೆ ಕೈರೇಖಾ ಓದು ಸಾಧನೆ, ಅರ್ಥಪೂರ್ಣ ಸಂಬಂಧಗಳು ಮತ್ತು ವೈಯಕ್ತಿಕ ಬೆಳವಣಿಗೆಯ ಜೀವನವನ್ನು ಸೂಚಿಸುತ್ತದೆ. ನಿಮ್ಮ ಮುಖ್ಯ ರೇಖೆಗಳು, ಸಣ್ಣ ರೇಖೆಗಳು ಮತ್ತು ಪರ್ವತ ಅಭಿವೃದ್ಧಿಯ ಸಂಯೋಜನೆ ಸ್ವಯಂಪ್ರಯತ್ನದ ಮೂಲಕ ಯಶಸ್ಸಿನತ್ತ ಸೂಚಿಸುತ್ತದೆ. ಮನೋಯೋಗವನ್ನು ಅಭ್ಯಾಸ ಮಾಡುವುದು ಮತ್ತು ನಿಮ್ಮ ಮೌಲ್ಯಗಳಿಗೆ ನಿಷ್ಠಾವಂತವಾಗಿರುವುದು ನಿಮ್ಮ ಕೈಯಲ್ಲಿ ಇರುವ ಸಕಾರಾತ್ಮಕ ಸೂಚನೆಗಳನ್ನು ಹೆಚ್ಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "ആകെ വായനയും മാർഗ്ഗനിർദ്ദേശവും",
+          "content": "{name}, നിങ്ങളുടെ ആകെ കൈവായന നേട്ടങ്ങളുടെ, അർത്ഥവത്തായ ബന്ധങ്ങളുടെ, വ്യക്തിഗത വളർച്ചയുടെ ജീവിതം സൂചിപ്പിക്കുന്നു. നിങ്ങളുടെ പ്രധാന രേഖകളുടെ, ചെറു രേഖകളുടെ, മലയുടെ വികസനത്തിന്റെ സംയോജനം സ്വയംശ്രമത്തിലൂടെ വിജയത്തിലേക്ക് സൂചിപ്പിക്കുന്നു. മനഃപൂർവ്വമായ ശ്രദ്ധാപൂർവ്വകതയും നിങ്ങളുടെ മൂല്യങ്ങളോടുള്ള സത്യസന്ധതയും പാലിക്കുന്നത് നിങ്ങളുടെ കൈയിലെ പോസിറ്റീവ് സൂചനകളെ വർദ്ധിപ്പിക്കും."
+        },
+        "pa": {
+          "title": "ਕੁੱਲ ਪੜ੍ਹਾਈ ਅਤੇ ਮਾਰਗਦਰਸ਼ਨ",
+          "content": "{name}, ਤੁਹਾਡੀ ਕੁੱਲ ਹਥੇਲੀ ਪੜ੍ਹਾਈ ਉਪਲਬਧੀ, ਅਰਥਪੂਰਨ ਸੰਬੰਧਾਂ ਅਤੇ ਨਿੱਜੀ ਵਿਕਾਸ ਵਾਲੀ ਜ਼ਿੰਦਗੀ ਦਾ ਸੁਝਾਅ ਦਿੰਦੀ ਹੈ। ਤੁਹਾਡੀਆਂ ਮੁੱਖ ਰੇਖਾਵਾਂ, ਛੋਟੀ ਰੇਖਾਵਾਂ ਅਤੇ ਉਭਾਰ ਦੇ ਵਿਕਾਸ ਦੇ ਮਿਲਾਪ ਨਾਲ ਸਵੈ-ਪ੍ਰਯਾਸ ਰਾਹੀਂ ਸਫਲਤਾ ਵੱਲ ਇਸ਼ਾਰਾ ਹੁੰਦਾ ਹੈ। ਸਚੇਤਨਾ ਦਾ ਅਭਿਆਸ ਕਰਨ ਅਤੇ ਆਪਣੇ ਮੁੱਲਾਂ ਪ੍ਰਤੀ ਸੱਚੇ ਰਹਿਣ ਨਾਲ ਤੁਹਾਡੀ ਹਥੇਲੀ ਵਿੱਚ ਮੌਜੂਦ ਸਕਾਰਾਤਮਕ ਸੰਕੇਤਾਂ ਨੂੰ ਵਧਾਇਆ ਜਾ ਸਕਦਾ ਹੈ।"
+        },
+        "or": {
+          "title": "ସମଗ୍ର ପଠନ ଏବଂ ମାର୍ଗଦର୍ଶନ",
+          "content": "{name}, ଆପଣଙ୍କ ସମଗ୍ର ହସ୍ତରେଖା ପଠନ ଏକ ସଫଳତା, ଅର୍ଥପୂର୍ଣ୍ଣ ସମ୍ପର୍କ ଏବଂ ବ୍ୟକ୍ତିଗତ ବୃଦ୍ଧିର ଜୀବନ ସୂଚାଉଛି। ଆପଣଙ୍କର ପ୍ରମୁଖ ରେଖା, ଗୌଣ ରେଖା ଏବଂ ପର୍ବତ ବିକାଶର ସଂଯୋଗ ସ୍ୱୟଂ ପ୍ରୟାସ ଦ୍ୱାରା ସଫଳତାର ପ୍ରତି ଇଙ୍ଗିତ କରେ। ସଚେତନତା ଅଭ୍ୟାସ କରିବା ଏବଂ ଆପଣଙ୍କ ମୂଲ୍ୟବୋଧ ପ୍ରତି ସତ୍ୟ ରହିବା ଆପଣଙ୍କର ହସ୍ତରେଖାର ସକାରାତ୍ମକ ସୂଚନାଗୁଡ଼ିକୁ ବୃଦ୍ଧି କରିବ।"
+        },
+        "as": {
+          "title": "সামগ্ৰিক পঢ়া আৰু পথপ্ৰদৰ্শন",
+          "content": "{name}, আপোনাৰ সামগ্ৰিক হস্তৰেখা পঢ়াই কৃতিত্ব, অৰ্থপূৰ্ণ সম্পৰ্ক আৰু ব্যক্তিগত বৃদ্ধিৰে ভৰপূৰ জীৱনৰ সূচনা কৰে। আপোনাৰ মুখ্য ৰেখা, গৌণ ৰেখা আৰু পৰ্বতৰ বিকাশৰ সংমিশ্ৰণে স্ব-প্ৰচেষ্টাৰ জৰিয়তে সফলতাৰ দিশে ইঙ্গিত দিয়ে। মননশীলতা অনুশীলন কৰা আৰু আপোনাৰ মূল্যবোধৰ প্ৰতি সঁচা থকাই আপোনাৰ হাতৰ ইতিবাচক সূচকবোৰ বৃদ্ধি কৰিব।"
+        }
+      }
+    },
+    {
+      "key": "ANNUAL:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Year Overview",
+          "content": "{name}, the year ahead brings a transformative blend of opportunities and growth. The major planetary transits this year activate key areas of your chart, bringing positive changes in career, relationships, and personal development. Jupiter's beneficial influence highlights expansion and prosperity."
+        },
+        "hi": {
+          "title": "वर्ष का अवलोकन",
+          "content": "{name}, आने वाला वर्ष अवसरों और विकास का एक परिवर्तनकारी मिश्रण लाता है। इस वर्ष के प्रमुख ग्रह गोचर आपके चार्ट के प्रमुख क्षेत्रों को सक्रिय करते हैं, जिससे करियर, संबंधों और व्यक्तिगत विकास में सकारात्मक परिवर्तन आते हैं। बृहस्पति का लाभकारी प्रभाव विस्तार और समृद्धि को उजागर करता है।"
+        },
+        "ta": {
+          "title": "வருட மேலோட்டம்",
+          "content": "{name}, எதிர்வரும் ஆண்டு மாற்றமிக்க வாய்ப்புகள் மற்றும் வளர்ச்சியின் கலவையை கொண்டு வருகிறது. இந்த ஆண்டின் முக்கிய கிரக பெயர்ச்சிகள் உங்கள் ஜாதகத்தின் முக்கிய பகுதிகளை செயல்படுத்தி, தொழில், உறவுகள் மற்றும் தனிப்பட்ட முன்னேற்றத்தில் நேர்மறை மாற்றங்களை கொண்டு வருகிறது. Jupiter இன் நன்மை பயக்கும் தாக்கம் விரிவாக்கம் மற்றும் செழிப்பை வெளிப்படுத்துகிறது."
+        },
+        "te": {
+          "title": "సంవత్సర అవలోకనం",
+          "content": "{name}, ముందున్న సంవత్సరం అవకాశాలు మరియు వృద్ధి యొక్క మార్పు కలయికను తీసుకువస్తుంది. ఈ సంవత్సరం ప్రధాన గ్రహ సంచారాలు మీ చార్ట్ యొక్క కీలక ప్రాంతాలను చైతన్యం చేస్తాయి, కెరీర్, సంబంధాలు మరియు వ్యక్తిగత అభివృద్ధిలో సానుకూల మార్పులను తీసుకువస్తాయి. Jupiter యొక్క లాభదాయక ప్రభావం విస్తరణ మరియు శ్రేయస్సును హైలైట్ చేస్తుంది."
+        },
+        "bn": {
+          "title": "বছরের সংক্ষিপ্ত বিবরণ",
+          "content": "{name}, আসন্ন বছরটি সুযোগ এবং বৃদ্ধির একটি রূপান্তরমূলক মিশ্রণ নিয়ে আসে। এই বছরের প্রধান গ্রহের গমনাগমন আপনার চার্টের মূল এলাকাগুলিকে সক্রিয় করে, কর্মজীবন, সম্পর্ক এবং ব্যক্তিগত বিকাশে ইতিবাচক পরিবর্তন নিয়ে আসে। বৃহস্পতির উপকারী প্রভাব সম্প্রসারণ এবং সমৃদ্ধিকে আলোকিত করে।"
+        },
+        "mr": {
+          "title": "वर्षाचा आढावा",
+          "content": "{name}, पुढील वर्ष संधी आणि वाढीचा एक परिवर्तनशील मिश्रण घेऊन येते. या वर्षीचे प्रमुख ग्रह संक्रमण तुमच्या चार्टच्या मुख्य क्षेत्रांना सक्रिय करतात, करिअर, नाती आणि वैयक्तिक विकासात सकारात्मक बदल आणतात. Jupiter चा लाभदायक प्रभाव विस्तार आणि समृद्धीला अधोरेखित करतो."
+        },
+        "gu": {
+          "title": "વર્ષનો સમીક્ષાવલોકન",
+          "content": "{name}, આગળનું વર્ષ તબદીલી લાવનાર તકો અને વૃદ્ધિનું મિશ્રણ લાવે છે. આ વર્ષે મુખ્ય ગ્રહ પરિવર્તનો તમારા ચાર્ટના મુખ્ય ક્ષેત્રોને સક્રિય કરે છે, જે કારકિર્દી, સંબંધો અને વ્યક્તિગત વિકાસમાં સકારાત્મક ફેરફારો લાવે છે. Jupiterની લાભદાયી અસર વિસ્તરણ અને સમૃદ્ધિને હાઇલાઇટ કરે છે."
+        },
+        "kn": {
+          "title": "ವರ್ಷದ ಅವಲೋಕನ",
+          "content": "{name}, ಮುಂದಿನ ವರ್ಷವು ಅವಕಾಶಗಳು ಮತ್ತು ಬೆಳವಣಿಗೆಯ ಪರಿವರ್ತನಾತ್ಮಕ ಮಿಶ್ರಣವನ್ನು ತರುತ್ತದೆ. ಈ ವರ್ಷ ಪ್ರಮುಖ ಗ್ರಹ ಸಂಚಾರಗಳು ನಿಮ್ಮ ಚಾರ್ಟ್‌ನ ಪ್ರಮುಖ ಪ್ರದೇಶಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸುತ್ತವೆ, ವೃತ್ತಿ, ಸಂಬಂಧಗಳು ಮತ್ತು ವೈಯಕ್ತಿಕ ಅಭಿವೃದ್ಧಿಯಲ್ಲಿ ಸಕಾರಾತ್ಮಕ ಬದಲಾವಣೆಗಳನ್ನು ತರುತ್ತವೆ. Jupiterನ ಲಾಭದಾಯಕ ಪ್ರಭಾವವು ವಿಸ್ತರಣೆ ಮತ್ತು ಸಮೃದ್ಧಿಯನ್ನು ಹೈಲೈಟ್ ಮಾಡುತ್ತದೆ."
+        },
+        "ml": {
+          "title": "വർഷ അവലോകനം",
+          "content": "{name}, മുന്നിലുള്ള വർഷം അവസരങ്ങളും വളർച്ചയും സംയോജിപ്പിക്കുന്ന പരിവർത്തനാത്മകമായ ഒരു സംയോജനം കൊണ്ടുവരുന്നു. ഈ വർഷത്തെ പ്രധാന ഗ്രഹ ഗതികൾ നിങ്ങളുടെ ചാർട്ടിലെ പ്രധാന മേഖലകളെ സജീവമാക്കുന്നു, കരിയർ, ബന്ധങ്ങൾ, വ്യക്തിഗത വികസനം എന്നിവയിൽ അനുകൂലമായ മാറ്റങ്ങൾ കൊണ്ടുവരുന്നു. Jupiterന്റെ ഗുണകരമായ സ്വാധീനം വിപുലീകരണവും സമൃദ്ധിയും പ്രാധാന്യമാക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਸਾਲ ਦਾ ਜਾਇਜ਼ਾ",
+          "content": "{name}, ਆਉਣ ਵਾਲਾ ਸਾਲ ਮੌਕੇ ਅਤੇ ਵਿਕਾਸ ਦਾ ਬਦਲਾਅਕਾਰੀ ਮਿਲਾਪ ਲਿਆਉਂਦਾ ਹੈ। ਇਸ ਸਾਲ ਦੇ ਮੁੱਖ ਗ੍ਰਹਿ ਗੋਚਰ ਤੁਹਾਡੇ ਚਾਰਟ ਦੇ ਮੁੱਖ ਖੇਤਰਾਂ ਨੂੰ ਸਰਗਰਮ ਕਰਦੇ ਹਨ, ਕਰੀਅਰ, ਸੰਬੰਧਾਂ ਅਤੇ ਨਿੱਜੀ ਵਿਕਾਸ ਵਿੱਚ ਸਕਾਰਾਤਮਕ ਬਦਲਾਅ ਲਿਆਉਂਦੇ ਹਨ। Jupiter ਦਾ ਲਾਭਦਾਇਕ ਪ੍ਰਭਾਵ ਵਿਸਥਾਰ ਅਤੇ ਖੁਸ਼ਹਾਲੀ ਨੂੰ ਉਜਾਗਰ ਕਰਦਾ ਹੈ।"
+        },
+        "or": {
+          "title": "ବର୍ଷ ସମୀକ୍ଷା",
+          "content": "{name}, ଆଗାମୀ ବର୍ଷ ଅବସର ଓ ବୃଦ୍ଧିର ଏକ ପରିବର୍ତ୍ତନଶୀଳ ମିଶ୍ରଣ ଆଣିବ। ଏହି ବର୍ଷର ପ୍ରମୁଖ ଗ୍ରହ ଗତିବିଧି ଆପଣଙ୍କ ଚାର୍ଟର ମୁଖ୍ୟ କ୍ଷେତ୍ରଗୁଡ଼ିକୁ ସକ୍ରିୟ କରେ, ଯାହା କାର୍ଯ୍ୟକ୍ଷେତ୍ର, ସମ୍ପର୍କ ଓ ବ୍ୟକ୍ତିଗତ ଉନ୍ନତିରେ ସକାରାତ୍ମକ ପରିବର୍ତ୍ତନ ଆଣେ। Jupiterଙ୍କର ଶୁଭ ପ୍ରଭାବ ବିସ୍ତାର ଓ ସମୃଦ୍ଧିକୁ ଉଦ୍ଧାର କରେ।"
+        },
+        "as": {
+          "title": "বৰ্ষৰ সামগ্ৰিক দৰ্শন",
+          "content": "{name}, আগন্তুক বৰ্ষটো সম্ভাৱনাৰ আৰু বৃদ্ধিৰ এটা পৰিৱৰ্তনশীল মিশ্ৰণ অনা হৈছে। এই বৰ্ষৰ মুখ্য গ্ৰহৰ গতি-প্ৰক্ৰিয়াই আপোনাৰ তালিকাৰ গুৰুত্বপূর্ণ ক্ষেত্ৰসমূহ সক্ৰিয় কৰে, যিয়ে ব্যৱসায়, সম্পৰ্ক আৰু ব্যক্তিগত উন্নয়নত ধনাত্মক পৰিৱৰ্তন আনে। Jupiterৰ অনুকূল প্ৰভাৱে বিস্তাৰ আৰু সমৃদ্ধি প্ৰদৰ্শন কৰে।"
+        }
+      }
+    },
+    {
+      "key": "ANNUAL:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Quarter 1 Forecast (Jan-Mar)",
+          "content": "The first quarter sets a strong foundation for the year. Saturn's disciplined energy supports goal-setting and planning. Professional opportunities may arise through networking. Focus on health routines and building new habits during this period. Financial planning initiated now will yield rewards later."
+        },
+        "hi": {
+          "title": "पहली तिमाही का पूर्वानुमान (जनवरी-मार्च)",
+          "content": "पहली तिमाही वर्ष के लिए एक मजबूत नींव रखती है। शनि की अनुशासित ऊर्जा लक्ष्य निर्धारण और योजना बनाने में सहायता करती है। नेटवर्किंग के माध्यम से पेशेवर अवसर उत्पन्न हो सकते हैं। इस अवधि के दौरान स्वास्थ्य दिनचर्या और नई आदतें बनाने पर ध्यान केंद्रित करें। अब शुरू की गई वित्तीय योजना बाद में लाभ देगी।"
+        },
+        "ta": {
+          "title": "காலாண்டு 1 முன்னறிவிப்பு (ஜனவரி-மார்ச்)",
+          "content": "முதல் காலாண்டு ஆண்டிற்கான ஒரு வலுவான அடித்தளத்தை அமைக்கிறது. சனியின் ஒழுக்கமான ஆற்றல் இலக்குகளை அமைத்தல் மற்றும் திட்டமிடலுக்கு ஆதரவு அளிக்கிறது. தொழில்முறை வாய்ப்புகள் நெட்வொர்க்கிங் மூலம் உருவாகலாம். இந்த காலத்தில் ஆரோக்கிய வழக்கங்களை கவனித்து புதிய பழக்கங்களை உருவாக்க கவனம் செலுத்துங்கள். இப்போது தொடங்கிய நிதி திட்டமிடல் பின்னர் பலன்களை அளிக்கும்."
+        },
+        "te": {
+          "title": "ప్రథమ త్రైమాసిక ఫలితాలు (జనవరి-మార్చి)",
+          "content": "ప్రథమ త్రైమాసికం సంవత్సరానికి బలమైన పునాది వేస్తుంది. శనిగ్రహం యొక్క క్రమశిక్షణా శక్తి లక్ష్యాలను నిర్ధారించడంలో మరియు ప్రణాళికలో మద్దతు ఇస్తుంది. నెట్‌వర్కింగ్ ద్వారా వృత్తిపరమైన అవకాశాలు రావచ్చు. ఈ కాలంలో ఆరోగ్య పద్ధతులపై దృష్టి పెట్టి కొత్త అలవాట్లు నిర్మించండి. ఇప్పుడు ప్రారంభించిన ఆర్థిక ప్రణాళిక భవిష్యత్తులో ఫలితాలను ఇస్తుంది."
+        },
+        "bn": {
+          "title": "প্রথম চতুর্থাংশের পূর্বাভাস (জানুয়ারি-মার্চ)",
+          "content": "প্রথম চতুর্থাংশ বছরের জন্য একটি শক্তিশালী ভিত্তি স্থাপন করে। শনি-এর শৃঙ্খলাবদ্ধ শক্তি লক্ষ্য নির্ধারণ এবং পরিকল্পনায় সহায়তা করে। নেটওয়ার্কিংয়ের মাধ্যমে পেশাগত সুযোগ আসতে পারে। এই সময়ে স্বাস্থ্য রুটিন এবং নতুন অভ্যাস গড়ে তোলার উপর মনোযোগ দিন। এখন শুরু করা আর্থিক পরিকল্পনা পরবর্তীতে পুরস্কার দেবে।"
+        },
+        "mr": {
+          "title": "पहिली तिमाही भविष्यवाणी (जानेवारी-मार्च)",
+          "content": "पहिली तिमाही वर्षासाठी एक मजबूत पाया घालते. शनीची शिस्तबद्ध ऊर्जा लक्ष्यनिर्धारण आणि नियोजनास समर्थन देते. व्यावसायिक संधी नेटवर्किंगद्वारे येऊ शकतात. या काळात आरोग्याच्या दिनचर्यांवर लक्ष केंद्रित करा आणि नवीन सवयी निर्माण करा. आता सुरू केलेले आर्थिक नियोजन नंतर फळ देईल."
+        },
+        "gu": {
+          "title": "પ્રથમ ત્રિમાસિક પૂર્વાનુમાન (જાન્યુઆરી-માર્ચ)",
+          "content": "પ્રથમ ત્રિમાસિક વર્ષ માટે મજબૂત પાયો મૂકે છે. શનિની શિસ્તબદ્ધ ઉર્જા લક્ષ્યાંક નક્કી કરવા અને આયોજનમાં સહાય કરે છે. વ્યાવસાયિક તકો નેટવર્કિંગ દ્વારા આવી શકે છે. આ સમયગાળા દરમિયાન આરોગ્યની રૂટિન અને નવી આદતો બનાવવામાં ધ્યાન કેન્દ્રિત કરો. આર્થિક આયોજન હવે શરૂ કરવાથી પછી ફળ આપશે."
+        },
+        "kn": {
+          "title": "ಕಾಲಾಂತರ 1 ಭವಿಷ್ಯವಾಣಿ (ಜನವರಿ-ಮಾರ್ಚ್)",
+          "content": "ಮೊದಲ ಕಾಲಾಂತರವು ವರ್ಷದ ಶಕ್ತಿಯುತ ಆಧಾರವನ್ನು ಸ್ಥಾಪಿಸುತ್ತದೆ. ಶನಿಯ ಶಿಸ್ತಿನ ಶಕ್ತಿ ಗುರಿ-ನಿರ್ಧಾರ ಮತ್ತು ಯೋಜನೆಗೆ ಬೆಂಬಲ ನೀಡುತ್ತದೆ. ವೃತ್ತಿಪರ ಅವಕಾಶಗಳು ಜಾಲತಾಣದ ಮೂಲಕ ಉದಯಿಸಬಹುದು. ಈ ಅವಧಿಯಲ್ಲಿ ಆರೋಗ್ಯ ಕ್ರಮಗಳು ಮತ್ತು ಹೊಸ ಅಭ್ಯಾಸಗಳನ್ನು ನಿರ್ಮಾಣ ಮಾಡುವುದಕ್ಕೆ ಗಮನ ಕೊಡಿ. ಈಗ ಆರಂಭಿಸಿದ ಹಣಕಾಸು ಯೋಜನೆಗಳು ನಂತರ ಫಲ ನೀಡುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "പ്രഥമ പാദം പ്രവചനം (ജനുവരി-മാർച്ച്)",
+          "content": "പ്രഥമ പാദം വർഷത്തിനായി ശക്തമായ അടിസ്ഥാനം ഒരുക്കുന്നു. ശനിയുടെ ക്രമശീലം നിറഞ്ഞ ഊർജ്ജം ലക്ഷ്യനിർണ്ണയത്തിനും പദ്ധതിയിടലിനും പിന്തുണ നൽകുന്നു. നെറ്റ്വർക്കിംഗിലൂടെ പ്രൊഫഷണൽ അവസരങ്ങൾ ഉണ്ടാകാം. ഈ കാലയളവിൽ ആരോഗ്യപരമായ ശീലങ്ങൾക്കും പുതിയ ശീലങ്ങൾ രൂപപ്പെടുത്തുന്നതിനും ശ്രദ്ധ കേന്ദ്രീകരിക്കുക. ഇപ്പോൾ ആരംഭിക്കുന്ന സാമ്പത്തിക പദ്ധതികൾ പിന്നീട് പ്രതിഫലം നൽകും."
+        },
+        "pa": {
+          "title": "ਪਹਿਲੀ ਤਿਮਾਹੀ ਦੀ ਪੇਸ਼ਗੋਈ (ਜਨ-ਮਾਰ)",
+          "content": "ਪਹਿਲੀ ਤਿਮਾਹੀ ਸਾਲ ਲਈ ਮਜ਼ਬੂਤ ਨੀਂਹ ਰੱਖਦੀ ਹੈ। ਸ਼ਨੀ ਦੀ ਅਨੁਸ਼ਾਸ਼ਿਤ ਊਰਜਾ ਲਕਸ਼ਾਂ ਦੀ ਸੈਟਿੰਗ ਅਤੇ ਯੋਜਨਾ ਬਣਾਉਣ ਵਿੱਚ ਸਹਾਇਕ ਹੈ। ਪੇਸ਼ੇਵਰ ਮੌਕੇ ਨੈੱਟਵਰਕਿੰਗ ਰਾਹੀਂ ਆ ਸਕਦੇ ਹਨ। ਇਸ ਸਮੇਂ ਦੌਰਾਨ ਸਿਹਤ ਦੀਆਂ ਰੁਟੀਨਾਂ ਅਤੇ ਨਵੀਆਂ ਆਦਤਾਂ ਬਣਾਉਣ 'ਤੇ ਧਿਆਨ ਦਿਓ। ਹੁਣ ਸ਼ੁਰੂ ਕੀਤੀ ਗਈ ਵਿੱਤੀ ਯੋਜਨਾ ਬਾਅਦ ਵਿੱਚ ਇਨਾਮ ਲੈ ਕੇ ਆਵੇਗੀ।"
+        },
+        "or": {
+          "title": "ପ୍ରଥମ ତ୍ରୟମାସିକ ପୂର୍ବାଭାସ (ଜାନୁଆରୀ-ମାର୍ଚ୍ଚ)",
+          "content": "ପ୍ରଥମ ତ୍ରୟମାସିକ ବର୍ଷର ପାଇଁ ଏକ ମଜବୁତ ଭିତି ସୃଷ୍ଟି କରେ। ଶନିଙ୍କ ଶିଷ୍ଟ ଶକ୍ତି ଲକ୍ଷ୍ୟ ନିର୍ଣ୍ଣୟ ଏବଂ ପରିକଳ୍ପନାକୁ ସମର୍ଥନ କରେ। ବୃତ୍ତିଗତ ସୁଯୋଗଗୁଡ଼ିକ ନେଟୱର୍କିଂ ମାଧ୍ୟମରେ ଆସିପାରେ। ଏହି ସମୟରେ ସ୍ୱାସ୍ଥ୍ୟ ଅଭ୍ୟାସ ଏବଂ ନୂତନ ଅଭ୍ୟାସ ଗଠନରେ କେନ୍ଦ୍ରିତ ହୁଅନ୍ତୁ। ବର୍ତ୍ତମାନ ଆରମ୍ଭ ହୋଇଥିବା ଆର୍ଥିକ ପରିକଳ୍ପନା ପରେ ପୁରସ୍କାର ଦେବ।"
+        },
+        "as": {
+          "title": "প্ৰথম চতুৰ্থাংশৰ পূৰ্বাভাস (জানুৱাৰী-মাৰ্চ)",
+          "content": "প্ৰথম চতুৰ্থাংশে বৰ্ষৰ বাবে এটা শক্তিশালী ভিত্তি প্ৰস্তুত কৰে। শনিৰ শৃংখলাবদ্ধ শক্তিয়ে লক্ষ্য নিৰ্ধাৰণ আৰু পৰিকল্পনাক সমৰ্থন কৰে। পেচাগত সুযোগসমূহ নেটৱৰ্কিঙৰ জৰিয়তে আহিব পাৰে। এই সময়ছোৱাত স্বাস্থ্যৰ নিয়মাৱলী আৰু নতুন অভ্যাস গঢ়ি তোলাত মনোনিবেশ কৰক। এতিয়া আৰম্ভ কৰা বিত্তীয় পৰিকল্পনাই পাছলৈ লাভ আনিব।"
+        }
+      }
+    },
+    {
+      "key": "ANNUAL:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Quarter 2 Forecast (Apr-Jun)",
+          "content": "The second quarter brings dynamic energy with Mars activating your career sector. This is an excellent period for launching new projects and taking calculated risks. Relationships deepen as Venus transits favorably. Travel opportunities may arise, bringing both pleasure and business prospects."
+        },
+        "hi": {
+          "title": "दूसरी तिमाही का पूर्वानुमान (अप्रैल-जून)",
+          "content": "दूसरी तिमाही गतिशील ऊर्जा लाती है क्योंकि Mars आपके करियर क्षेत्र को सक्रिय करता है। यह नए प्रोजेक्ट शुरू करने और सोच-समझकर जोखिम लेने के लिए एक उत्कृष्ट अवधि है। जैसे ही Venus अनुकूल रूप से गोचर करता है, रिश्ते गहरे होते जाते हैं। यात्रा के अवसर आ सकते हैं, जो आनंद और व्यापारिक संभावनाएं दोनों लाते हैं।"
+        },
+        "ta": {
+          "title": "காலாண்டு 2 முன்னறிவிப்பு (ஏப்-ஜூன்)",
+          "content": "இரண்டாவது காலாண்டு உங்கள் தொழில் துறையைச் செயல்படுத்தும் செவ்வாய் கிரகத்துடன் மாறுபட்ட ஆற்றலைக் கொண்டுவருகிறது. புதிய திட்டங்களைத் தொடங்கவும் கணக்கிட்ட ஆபத்துகளை எடுத்துக்கொள்ளவும் இது ஒரு சிறந்த காலமாகும். சுக்கிரன் சாதகமாகச் செல்கையில் உறவுகள் ஆழமாகின்றன. பயண வாய்ப்புகள் தோன்றலாம், இன்பத்தையும் வணிக வாய்ப்புகளையும் கொண்டுவரலாம்."
+        },
+        "te": {
+          "title": "క్వార్టర్ 2 ఫోరకాస్ట్ (ఏప్రిల్-జూన్)",
+          "content": "రెండవ క్వార్టర్ మీ వృత్తి రంగాన్ని మంగళుడు చురుకుగా చేస్తూ డైనమిక్ శక్తిని తీసుకువస్తుంది. ఇది కొత్త ప్రాజెక్టులను ప్రారంభించడానికి మరియు లెక్కచేసిన ప్రమాదాలను తీసుకోవడానికి అద్భుతమైన కాలం. శుక్రుడు అనుకూలంగా సంచరిస్తున్నప్పుడు సంబంధాలు మరింత లోతుగా మారతాయి. ప్రయాణ అవకాశాలు ఉత్పన్నమవుతాయి, ఇవి ఆనందం మరియు వ్యాపార అవకాశాలను తీసుకువస్తాయి."
+        },
+        "bn": {
+          "title": "দ্বিতীয় ত্রৈমাসিক পূর্বাভাস (এপ্রিল-জুন)",
+          "content": "দ্বিতীয় ত্রৈমাসিকটি গতিশীল শক্তি নিয়ে আসে কারণ Mars আপনার ক্যারিয়ার সেক্টরকে সক্রিয় করে। এটি নতুন প্রকল্প শুরু করার এবং হিসাব করে ঝুঁকি নেওয়ার জন্য একটি চমৎকার সময়। সম্পর্কগুলি গভীর হয় কারণ Venus অনুকূলভাবে গমন করে। ভ্রমণের সুযোগ আসতে পারে, যা আনন্দ এবং ব্যবসার সম্ভাবনা উভয়ই নিয়ে আসে।"
+        },
+        "mr": {
+          "title": "दुसऱ्या तिमाहीचा अंदाज (एप्रिल-जून)",
+          "content": "दुसरी तिमाही गतिशील ऊर्जा आणते कारण Mars तुमच्या करिअर क्षेत्राला सक्रिय करतो. नवीन प्रकल्प सुरू करण्यासाठी आणि विचारपूर्वक धोके घेण्यासाठी हा उत्कृष्ट कालावधी आहे. Venus अनुकूलपणे संक्रमण करत असल्याने संबंध अधिक गहिरे होतात. प्रवासाच्या संधी येऊ शकतात, ज्यामुळे आनंद आणि व्यवसायाच्या संधी दोन्ही मिळू शकतात."
+        },
+        "gu": {
+          "title": "ક્વાર્ટર 2 ભવિષ્યવાણી (એપ્રિલ-જૂન)",
+          "content": "બીજું ક્વાર્ટર ગતિશીલ ઊર્જા લાવે છે કારણ કે મંગળ તમારા કારકિર્દી ક્ષેત્રને સક્રિય કરે છે. નવા પ્રોજેક્ટ શરૂ કરવા અને ગણતરી કરેલા જોખમો લેવા માટે આ એક ઉત્તમ સમયગાળો છે. સંબંધો ઊંડા થાય છે કારણ કે શુક્ર અનુકૂળ રીતે સંક્રમણ કરે છે. પ્રવાસના અવસરો આવી શકે છે, જે આનંદ અને વ્યવસાયિક સંભાવનાઓ બંને લાવે છે."
+        },
+        "kn": {
+          "title": "ಕಾಲಾಂತರ 2 ಭವಿಷ್ಯವಾಣಿ (ಏಪ್ರಿಲ್-ಜೂನ್)",
+          "content": "ಎರಡನೇ ತ್ರೈಮಾಸಿಕವು ನಿಮ್ಮ ವೃತ್ತಿ ಕ್ಷೇತ್ರವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸುವ ಮಂಗಳನೊಂದಿಗೆ ಚುರುಕು ಶಕ್ತಿಯನ್ನು ತರುತ್ತದೆ. ಹೊಸ ಯೋಜನೆಗಳನ್ನು ಪ್ರಾರಂಭಿಸಲು ಮತ್ತು ಲೆಕ್ಕ ಹಾಕಿದ ಅಪಾಯಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳಲು ಇದು ಉತ್ತಮ ಅವಧಿಯಾಗಿದೆ. ಶುಕ್ರನು ಅನುಕೂಲಕರವಾಗಿ ಸಂಚರಿಸುವಂತೆ ಸಂಬಂಧಗಳು ಆಳವಾಗುತ್ತವೆ. ಪ್ರಯಾಣದ ಅವಕಾಶಗಳು ಉದಯಿಸಬಹುದು, ಇವು ಸಂತೋಷ ಮತ್ತು ವ್ಯವಹಾರದ ಅವಕಾಶಗಳನ್ನು ತರಬಹುದು."
+        },
+        "ml": {
+          "title": "Quarter 2 ഫോറ്കാസ്റ്റ് (Apr-Jun)",
+          "content": "മൂന്നാം പാദം നിങ്ങളുടെ കരിയർ മേഖല സജീവമാക്കുന്ന ചൊവ്വയുടെ സാന്നിധ്യത്തോടെ ചലനാത്മകമായ ഊർജ്ജം കൊണ്ടുവരുന്നു. പുതിയ പദ്ധതികൾ ആരംഭിക്കുന്നതിനും കണക്കാക്കിയ റിസ്കുകൾ എടുക്കുന്നതിനും ഇത് ഒരു മികച്ച കാലഘട്ടമാണ്. ശുക്രൻ അനുകൂലമായി സഞ്ചരിക്കുമ്പോൾ ബന്ധങ്ങൾ ആഴത്തിൽ എത്തുന്നു. യാത്രാ അവസരങ്ങൾ ഉണ്ടാകാം, ഇത് സന്തോഷവും ബിസിനസ് സാധ്യതകളും കൊണ്ടുവരും."
+        },
+        "pa": {
+          "title": "ਕਵਾਰਟਰ 2 ਭਵਿੱਖਬਾਣੀ (ਅਪ੍ਰੈਲ-ਜੂਨ)",
+          "content": "ਦੂਜਾ ਕਵਾਰਟਰ ਗਤੀਸ਼ੀਲ ਊਰਜਾ ਲਿਆਉਂਦਾ ਹੈ ਜਦੋਂ Mars ਤੁਹਾਡੇ ਕਰੀਅਰ ਖੇਤਰ ਨੂੰ ਸਰਗਰਮ ਕਰਦਾ ਹੈ। ਇਹ ਨਵੇਂ ਪ੍ਰੋਜੈਕਟ ਸ਼ੁਰੂ ਕਰਨ ਅਤੇ ਸੋਚ-ਵਿਚਾਰ ਕਰਕੇ ਖਤਰੇ ਮੋਲ ਲੈਣ ਲਈ ਸ਼ਾਨਦਾਰ ਸਮਾਂ ਹੈ। ਜਦੋਂ Venus ਅਨੁਕੂਲ ਤੌਰ 'ਤੇ ਗੁਜਰਦਾ ਹੈ ਤਾਂ ਸੰਬੰਧ ਗਹਿਰੇ ਹੁੰਦੇ ਹਨ। ਯਾਤਰਾ ਦੇ ਮੌਕੇ ਆ ਸਕਦੇ ਹਨ, ਜੋ ਦੋਵੇਂ ਖੁਸ਼ੀ ਅਤੇ ਕਾਰੋਬਾਰੀ ਮੌਕੇ ਲਿਆਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ତ୍ରୈମାସିକ 2 ପୂର୍ବାଭାସ (ଅପ୍ରେଲ-ଜୁନ)",
+          "content": "ଦ୍ୱିତୀୟ ତ୍ରୈମାସିକ ଉତ୍ସାହପୂର୍ଣ୍ଣ ଶକ୍ତି ଆଣେ, ଯେଉଁଥିରେ Mars ଆପଣଙ୍କର କ୍ୟାରିୟର କ୍ଷେତ୍ରକୁ ସକ୍ରିୟ କରେ। ନୂତନ ପ୍ରକଳ୍ପ ଆରମ୍ଭ କରିବା ଏବଂ ଗଣନାକୃତ ଜୁଆ ଖେଳିବା ପାଇଁ ଏହା ଏକ ଉତ୍ତମ ସମୟ। Venus ସୁକଳ୍ପିତ ଭାବେ ଗତି କରିବାରୁ ସମ୍ପର୍କଗୁଡ଼ିକ ଗଭୀର ହୁଏ। ଯାତ୍ରା ସୁଯୋଗଗୁଡ଼ିକ ଆସିପାରେ, ଯାହା ଉଭୟ ଆନନ୍ଦ ଏବଂ ବ୍ୟବସାୟ ଅବସର ଆଣିପାରେ।"
+        },
+        "as": {
+          "title": "দ্বিতীয় চতুৰ্থাংশৰ পূৰ্বাভাস (এপ্ৰিল-জুন)",
+          "content": "দ্বিতীয় চতুৰ্থাংশে গতিশীল শক্তি আনিছে যিহেতু Mars-এ আপোনাৰ ব্যৱসায় ক্ষেত্ৰ সক্ৰিয় কৰিছে। এইটো নতুন প্ৰকল্প আৰম্ভ কৰা আৰু পৰিকল্পিত ঝুঁকি লোৱাৰ বাবে এটা উৎকৃষ্ট সময়। Venus অনুকূলভাৱে গমন কৰাৰ লগে লগে সম্পৰ্কবোৰ গভীৰ হয়। ভ্ৰমণৰ সুযোগ উলিয়াব পাৰে, যিয়ে আনন্দ আৰু ব্যৱসায়িক সম্ভাৱনা দুয়ো আনিব।"
+        }
+      }
+    },
+    {
+      "key": "ANNUAL:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Quarter 3 Forecast (Jul-Sep)",
+          "content": "Mid-year brings introspection and consolidation. Mercury retrograde periods require careful communication. Focus on completing ongoing projects rather than starting new ones. Family matters take center stage, and property-related decisions are favored. Health improvements show results from earlier efforts."
+        },
+        "hi": {
+          "title": "तिमाही 3 पूर्वानुमान (जुलाई-सितंबर)",
+          "content": "वर्ष के मध्य में आत्मनिरीक्षण और समेकन आता है। बुध के वक्री होने की अवधि में सावधानीपूर्वक संवाद की आवश्यकता होती है। नए कार्य शुरू करने के बजाय चल रहे प्रोजेक्ट्स को पूरा करने पर ध्यान दें। पारिवारिक मामलों को प्राथमिकता दें, और संपत्ति से संबंधित निर्णयों का समर्थन किया जाता है। स्वास्थ्य में सुधार पहले के प्रयासों के परिणाम दिखाते हैं।"
+        },
+        "ta": {
+          "title": "காலாண்டு 3 முன்னறிவிப்பு (ஜூலை-செப்டம்பர்)",
+          "content": "ஆண்டின் நடுப்பகுதி தன்னிலையறிதல் மற்றும் ஒருங்கிணைப்பை கொண்டு வருகிறது. புதன் பின்செலுத்தல் காலங்கள் கவனமாக தொடர்பாடல் தேவைப்படும். புதியவற்றை தொடங்குவதற்குப் பதிலாக நடப்பில் உள்ள திட்டங்களை முடிக்க கவனம் செலுத்துங்கள். குடும்ப விவகாரங்கள் மையமாக மாறுகின்றன, மற்றும் சொத்து தொடர்பான முடிவுகள் சாதகமாக உள்ளன. முந்தைய முயற்சிகளின் விளைவாக உடல்நல மேம்பாடுகள் தோன்றுகின்றன."
+        },
+        "te": {
+          "title": "మూడవ త్రైమాసికం జోస్యం (జూలై-సెప్టెంబర్)",
+          "content": "సంవత్సరం మధ్యలో ఆత్మపరిశీలన మరియు సమీకరణ వస్తాయి. బుధ గ్రహం వక్రీభవం కాలాలు జాగ్రత్తగా కమ్యూనికేషన్ అవసరం. కొత్త వాటిని ప్రారంభించడానికి బదులుగా కొనసాగుతున్న ప్రాజెక్టులను పూర్తి చేయడంపై దృష్టి పెట్టండి. కుటుంబ విషయాలు ప్రధానంగా ఉంటాయి, మరియు ఆస్తి సంబంధిత నిర్ణయాలు అనుకూలంగా ఉంటాయి. ఆరోగ్య మెరుగుదలలు గత ప్రయత్నాల ఫలితాలను చూపిస్తాయి."
+        },
+        "bn": {
+          "title": "তৃতীয় চতুর্থাংশের পূর্বাভাস (জুলাই-সেপ্টেম্বর)",
+          "content": "বছরের মাঝামাঝি সময়ে অন্তর্দৃষ্টি এবং সংহতি আসে। বুধের বক্রতা সময়কালে সতর্কতার সাথে যোগাযোগ করা প্রয়োজন। নতুন কিছু শুরু করার চেয়ে চলমান প্রকল্পগুলি সম্পূর্ণ করার দিকে মনোনিবেশ করুন। পারিবারিক বিষয়গুলি কেন্দ্রে আসে, এবং সম্পত্তি-সংক্রান্ত সিদ্ধান্তগুলি পছন্দনীয়। স্বাস্থ্যের উন্নতি পূর্ববর্তী প্রচেষ্টার ফলাফল দেখায়।"
+        },
+        "mr": {
+          "title": "तृतीय तिमाहीचे भविष्य (जुलै-सप्टेंबर)",
+          "content": "वर्षाच्या मध्यात आत्मपरीक्षण आणि एकत्रीकरण येते. बुधाच्या प्रतिगामी कालावधीत काळजीपूर्वक संवाद साधणे आवश्यक आहे. नवीन प्रकल्प सुरू करण्याऐवजी चालू प्रकल्प पूर्ण करण्यावर लक्ष केंद्रित करा. कौटुंबिक बाबी केंद्रस्थानी येतात आणि मालमत्तेशी संबंधित निर्णयांना प्राधान्य दिले जाते. आरोग्य सुधारणा पूर्वीच्या प्रयत्नांमुळे परिणाम दाखवतात."
+        },
+        "gu": {
+          "title": "ત્રિમાસિક 3 ભવિષ્યવાણી (જુલાઈ-સપ્ટેમ્બર)",
+          "content": "વર્ષના મધ્યમાં આત્મચિંતન અને સંકલન લાવે છે. બુધના વક્રી ગતિના સમયગાળામાં સંચારમાં કાળજી લેવી જરૂરી છે. નવા પ્રોજેક્ટ શરૂ કરવાને બદલે ચાલુ પ્રોજેક્ટ્સ પૂર્ણ કરવા પર ધ્યાન કેન્દ્રિત કરો. પરિવારના મુદ્દાઓ કેન્દ્રસ્થાને આવે છે, અને સંપત્તિ સંબંધિત નિર્ણયો અનુકૂળ છે. આરોગ્ય સુધારાઓ અગાઉના પ્રયત્નોનું પરિણામ દર્શાવે છે."
+        },
+        "kn": {
+          "title": "ಮೂರನೇ ತ್ರೈಮಾಸಿಕ ಭವಿಷ್ಯವಾಣಿ (ಜುಲೈ-ಸೆಪ್ಟೆಂಬರ್)",
+          "content": "ವರ್ಷದ ಮಧ್ಯಭಾಗವು ಆತ್ಮಪರಿಶೀಲನೆ ಮತ್ತು ಏಕೀಕರಣವನ್ನು ತರುತ್ತದೆ. ಬುಧನ ಅಸ್ತಂಗತ ಅವಧಿಗಳು ಜಾಗರೂಕ ಸಂವಹನವನ್ನು ಅಗತ್ಯವಿರಿಸುತ್ತದೆ. ಹೊಸವುಗಳನ್ನು ಪ್ರಾರಂಭಿಸುವ ಬದಲು ನಡೆಯುತ್ತಿರುವ ಯೋಜನೆಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಲು ಗಮನಹರಿಸಿ. ಕುಟುಂಬದ ವಿಷಯಗಳು ಕೇಂದ್ರಬಿಂದುವಾಗುತ್ತವೆ, ಮತ್ತು ಆಸ್ತಿ ಸಂಬಂಧಿತ ನಿರ್ಧಾರಗಳು ಅನುಕೂಲಕರವಾಗಿವೆ. ಆರೋಗ್ಯ ಸುಧಾರಣೆಗಳು ಹಿಂದಿನ ಪ್ರಯತ್ನಗಳಿಂದ ಫಲಿತಾಂಶಗಳನ್ನು ತೋರಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "മൂന്നാം പാദം പ്രവചനം (ജൂലൈ-സെപ്റ്റംബർ)",
+          "content": "വർഷത്തിന്റെ മധ്യഭാഗം ആത്മപരിശോധനയും ഏകീകരണവും കൊണ്ടുവരുന്നു. ബുധന്റെ വക്രഗതി കാലയളവുകൾ സൂക്ഷ്മമായ ആശയവിനിമയം ആവശ്യപ്പെടുന്നു. പുതിയവയെ തുടങ്ങുന്നതിന് പകരം നിലവിലുള്ള പദ്ധതികൾ പൂർത്തിയാക്കുന്നതിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുക. കുടുംബ കാര്യങ്ങൾ പ്രധാനമാകുന്നു, ഭൂമിയുമായി ബന്ധപ്പെട്ട തീരുമാനങ്ങൾ അനുകൂലമാണ്. മുൻകാല ശ്രമങ്ങളിൽ നിന്നുള്ള ആരോഗ്യ പുരോഗതികൾ ഫലങ്ങൾ കാണിക്കുന്നു."
+        },
+        "pa": {
+          "title": "ਤਿਮਾਹੀ 3 ਦੀ ਭਵਿੱਖਬਾਣੀ (ਜੁਲਾਈ-ਸਤੰਬਰ)",
+          "content": "ਵੱਧੇ ਸਾਲ ਦੇ ਮੱਧ ਵਿੱਚ ਅੰਦਰੂਨੀ ਵਿਚਾਰ ਅਤੇ ਇਕੱਠ ਕਰਨ ਦੀ ਲੋੜ ਹੁੰਦੀ ਹੈ। ਬੁੱਧ ਰੋਮਣੀ ਪੀਰੀਅਡ ਵਿਚ ਸੰਚਾਰ 'ਤੇ ਧਿਆਨ ਦੇਣ ਦੀ ਲੋੜ ਹੈ। ਨਵੇਂ ਪ੍ਰੋਜੈਕਟ ਸ਼ੁਰੂ ਕਰਨ ਦੀ ਬਜਾਏ ਚੱਲ ਰਹੇ ਪ੍ਰੋਜੈਕਟਾਂ ਨੂੰ ਪੂਰਾ ਕਰਨ 'ਤੇ ਧਿਆਨ ਦਿਓ। ਪਰਿਵਾਰਕ ਮਾਮਲੇ ਕੇਂਦਰ ਵਿੱਚ ਰਹਿੰਦੇ ਹਨ, ਅਤੇ ਜਾਇਦਾਦ ਨਾਲ ਸੰਬੰਧਿਤ ਫੈਸਲੇ ਪਸੰਦ ਕੀਤੇ ਜਾਂਦੇ ਹਨ। ਸਿਹਤ ਵਿੱਚ ਸੁਧਾਰ ਪਹਿਲੇ ਯਤਨਾਂ ਦੇ ਨਤੀਜੇ ਦਿਖਾਉਂਦੇ ਹਨ।"
+        },
+        "or": {
+          "title": "ତୃତୀୟ ତ୍ରଇମାସିକ ପୂର୍ବାଭାସ (ଜୁଲାଇ-ସେପ୍ଟେମ୍ବର)",
+          "content": "ବର୍ଷର ମଧ୍ୟଭାଗ ଅନ୍ତର୍ମୁଖୀ ଚିନ୍ତନ ଏବଂ ସଂକଳନ ଆଣେ। Mercury ରେଟ୍ରୋଗ୍ରେଡ୍ ପରିଯାୟଗୁଡିକ ସତର୍କ ସଂଯୋଗ ଆବଶ୍ୟକ କରେ। ନୂଆ କାମ ଆରମ୍ଭ କରିବା ପରିବର୍ତ୍ତେ ଚାଲୁଥିବା ପ୍ରକଳ୍ପଗୁଡିକ ସମାପ୍ତ କରିବାରେ ଧ୍ୟାନ ଦିଅନ୍ତୁ। ପରିବାର ମାମଲାଗୁଡିକ ମୁଖ୍ୟ ହୋଇଯାଏ, ଏବଂ ସମ୍ପତ୍ତି ସମ୍ବନ୍ଧୀୟ ସିଦ୍ଧାନ୍ତଗୁଡିକ ପକ୍ଷପାତୀ ହୋଇଥାଏ। ପୂର୍ବ ଉଦ୍ୟମରୁ ସ୍ୱାସ୍ଥ୍ୟ ସୁଧାର ଫଳ ଦେଖାଏ।"
+        },
+        "as": {
+          "title": "তৃতীয় চতুৰ্থাংশৰ পূৰ্বানুমান (জুলাই-ছেপ্টেম্বৰ)",
+          "content": "বৰ্ষৰ মাজভাগে আত্মসমীক্ষা আৰু সংহতি আনে। বুধৰ বক্ৰগতিৰ সময়ছোৱাত সাৱধানতাৰে যোগাযোগ কৰিব লাগে। নতুন কাম আৰম্ভ কৰাৰ পৰিৱৰ্তে চলি থকা প্ৰকল্পসমূহ সম্পূৰ্ণ কৰাত মনোযোগ দিয়ক। পৰিয়ালৰ বিষয়বস্তু কেন্দ্ৰস্থলত থাকে, আৰু সম্পত্তি-সম্পৰ্কীয় সিদ্ধান্তসমূহক প্ৰাধান্য দিয়া হয়। স্বাস্থ্যৰ উন্নতিসমূহে আগৰ প্ৰচেষ্টাৰ ফলাফল প্ৰদৰ্শন কৰে।"
+        }
+      }
+    },
+    {
+      "key": "ANNUAL:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Quarter 4 Forecast (Oct-Dec)",
+          "content": "The final quarter brings the year's strongest results. Jupiter's transit supports financial growth and career advancement. Social connections bring unexpected opportunities. This is an excellent period for investments, celebrations, and long-term commitments. End the year with gratitude and forward planning."
+        },
+        "hi": {
+          "title": "चौथी तिमाही का पूर्वानुमान (अक्टूबर-दिसंबर)",
+          "content": "अंतिम तिमाही वर्ष के सबसे मजबूत परिणाम लाती है। Jupiter का गोचर वित्तीय वृद्धि और करियर उन्नति का समर्थन करता है। सामाजिक संबंध अप्रत्याशित अवसर लाते हैं। यह निवेश, उत्सव, और दीर्घकालिक प्रतिबद्धताओं के लिए एक उत्कृष्ट अवधि है। वर्ष का अंत कृतज्ञता और भविष्य की योजना के साथ करें।"
+        },
+        "ta": {
+          "title": "காலாண்டு 4 முன்னறிவிப்பு (அக்-டிச)",
+          "content": "இறுதி காலாண்டு ஆண்டின் மிக வலுவான முடிவுகளை கொண்டு வருகிறது. Jupiter இன் பெயர்ச்சி நிதி வளர்ச்சி மற்றும் தொழில் முன்னேற்றத்தை ஆதரிக்கிறது. சமூக தொடர்புகள் எதிர்பாராத வாய்ப்புகளை கொண்டு வருகிறது. முதலீடுகள், கொண்டாட்டங்கள் மற்றும் நீண்டகால உறுதிமொழிகளுக்கு இது ஒரு சிறந்த காலம். ஆண்டை நன்றி மற்றும் எதிர்கால திட்டமிடலுடன் முடிக்கவும்."
+        },
+        "te": {
+          "title": "చతుర్థ త్రైమాసికం జోస్యం (అక్టోబర్-డిసెంబర్)",
+          "content": "చివరి త్రైమాసికం సంవత్సరంలో అత్యంత శక్తివంతమైన ఫలితాలను తీసుకువస్తుంది. Jupiter యొక్క సంచారం ఆర్థిక వృద్ధి మరియు వృత్తి పురోగతికి మద్దతు ఇస్తుంది. సామాజిక సంబంధాలు అనూహ్యమైన అవకాశాలను తెస్తాయి. ఇది పెట్టుబడులు, వేడుకలు, మరియు దీర్ఘకాలిక బంధాలకు అద్భుతమైన కాలం. కృతజ్ఞతతో మరియు ముందస్తు ప్రణాళికతో సంవత్సరాన్ని ముగించండి."
+        },
+        "bn": {
+          "title": "চতুর্থ ত্রৈমাসিক পূর্বাভাস (অক্টোবর-ডিসেম্বর)",
+          "content": "চূড়ান্ত ত্রৈমাসিকটি বছরের সবচেয়ে শক্তিশালী ফলাফল নিয়ে আসে। বৃহস্পতির গমন আর্থিক বৃদ্ধি এবং কর্মজীবনের উন্নতি সমর্থন করে। সামাজিক সংযোগগুলি অপ্রত্যাশিত সুযোগ নিয়ে আসে। এটি বিনিয়োগ, উদযাপন এবং দীর্ঘমেয়াদী প্রতিশ্রুতির জন্য একটি চমৎকার সময়কাল। কৃতজ্ঞতা এবং ভবিষ্যতের পরিকল্পনা নিয়ে বছরটি শেষ করুন।"
+        },
+        "mr": {
+          "title": "चतुर्थ तिमाहीचा अंदाज (ऑक्टोबर-डिसेंबर)",
+          "content": "अंतिम तिमाही वर्षातील सर्वात मजबूत परिणाम आणते. Jupiter चा गोचर आर्थिक वाढ आणि करिअर प्रगतीला समर्थन देतो. सामाजिक संबंध अनपेक्षित संधी आणतात. गुंतवणूक, उत्सव आणि दीर्घकालीन बांधिलकीसाठी हा उत्कृष्ट कालावधी आहे. वर्षाचा शेवट कृतज्ञता आणि पुढील नियोजनाने करा."
+        },
+        "gu": {
+          "title": "ચોથો ત્રિમાસિક પૂર્વાનુમાન (ઓક્ટોબર-ડિસેમ્બર)",
+          "content": "અંતિમ ત્રિમાસિક વર્ષના સૌથી મજબૂત પરિણામો લાવે છે. ગુરુનો સંક્રમણ નાણાકીય વૃદ્ધિ અને કારકિર્દી પ્રગતિને ટેકો આપે છે. સામાજિક સંબંધો અનપેક્ષિત તકો લાવે છે. આ રોકાણો, ઉજવણીઓ અને લાંબા ગાળાના પ્રતિબદ્ધતાઓ માટે ઉત્તમ સમયગાળો છે. વર્ષનો અંત આભાર અને આગળની યોજના સાથે કરો."
+        },
+        "kn": {
+          "title": "ಚತುರ್ಥ ತ್ರೈಮಾಸಿಕ ಭವಿಷ್ಯವಾಣಿ (ಅಕ್ಟೋಬರ್-ಡಿಸೆಂಬರ್)",
+          "content": "ಅಂತಿಮ ತ್ರೈಮಾಸಿಕವು ವರ್ಷದ ಶಕ್ತಿಯುತ ಫಲಿತಾಂಶಗಳನ್ನು ತರುತ್ತದೆ. Jupiterನ ಸಂಚಾರವು ಆರ್ಥಿಕ ಬೆಳವಣಿಗೆ ಮತ್ತು ವೃತ್ತಿ ಪ್ರಗತಿಗೆ ಬೆಂಬಲ ನೀಡುತ್ತದೆ. ಸಾಮಾಜಿಕ ಸಂಪರ್ಕಗಳು ಅಪ್ರತೀಕ್ಷಿತ ಅವಕಾಶಗಳನ್ನು ತರಬಹುದು. ಇದು ಹೂಡಿಕೆಗಳು, ಉತ್ಸವಗಳು ಮತ್ತು ದೀರ್ಘಕಾಲಿಕ ಬದ್ಧತೆಗಳಿಗಾಗಿ ಅತ್ಯುತ್ತಮ ಅವಧಿಯಾಗಿದೆ. ವರ್ಷವನ್ನು ಕೃತಜ್ಞತೆಯೊಂದಿಗೆ ಮತ್ತು ಮುಂದಿನ ಯೋಜನೆಗಳೊಂದಿಗೆ ಮುಗಿಸಿ."
+        },
+        "ml": {
+          "title": "ചതുര്ഥ പാദം പ്രവചനം (ഒക്ടോബർ-ഡിസംബർ)",
+          "content": "അവസാന പാദം വർഷത്തിലെ ഏറ്റവും ശക്തമായ ഫലങ്ങൾ കൊണ്ടുവരുന്നു. വ്യാഴത്തിന്റെ ഗതി സാമ്പത്തിക വളർച്ചക്കും കരിയർ പുരോഗതിക്കും പിന്തുണ നൽകുന്നു. സാമൂഹിക ബന്ധങ്ങൾ അനിയന്ത്രിതമായ അവസരങ്ങൾ കൊണ്ടുവരുന്നു. നിക്ഷേപങ്ങൾ, ആഘോഷങ്ങൾ, ദീർഘകാല പ്രതിബദ്ധതകൾ എന്നിവയ്ക്ക് ഇത് മികച്ച കാലഘട്ടമാണ്. നന്ദിയോടെ വർഷം അവസാനിപ്പിക്കുകയും മുന്നോട്ടുള്ള പദ്ധതികൾ തയ്യാറാക്കുകയും ചെയ്യുക."
+        },
+        "pa": {
+          "title": "ਚੌਥੀ ਤਿਮਾਹੀ ਦੀ ਭਵਿੱਖਬਾਣੀ (ਅਕਤੂਬਰ-ਦਸੰਬਰ)",
+          "content": "ਅੰਤਿਮ ਤਿਮਾਹੀ ਸਾਲ ਦੇ ਸਭ ਤੋਂ ਮਜ਼ਬੂਤ ਨਤੀਜੇ ਲਿਆਉਂਦੀ ਹੈ। Jupiter ਦਾ ਗੋਚਰ ਵਿੱਤੀ ਵਿਕਾਸ ਅਤੇ ਕੈਰੀਅਰ ਉੱਨਤੀ ਦਾ ਸਮਰਥਨ ਕਰਦਾ ਹੈ। ਸਮਾਜਿਕ ਸੰਬੰਧ ਅਣਮਿੱਥੇ ਮੌਕੇ ਲਿਆਉਂਦੇ ਹਨ। ਨਿਵੇਸ਼, ਜਸ਼ਨ ਅਤੇ ਲੰਬੇ ਸਮੇਂ ਦੀਆਂ ਵਚਨਬੱਧਤਾਵਾਂ ਲਈ ਇਹ ਸ਼ਾਨਦਾਰ ਸਮਾਂ ਹੈ। ਸਾਲ ਦਾ ਅੰਤ ਕ੍ਰਿਤਜਤਾ ਅਤੇ ਅੱਗੇ ਦੀ ਯੋਜਨਾ ਨਾਲ ਕਰੋ।"
+        },
+        "or": {
+          "title": "ଚତୁର୍ଥ ତିମାହୀକ ପୂର୍ବାଭାସ (ଅକ୍ଟୋବର-ଡିସେମ୍ବର)",
+          "content": "ଅନ୍ତିମ ତିମାହୀକ ବର୍ଷର ସବୁଠାରୁ ଶକ୍ତିଶାଳୀ ପରିଣାମ ଆଣେ। Jupiter'ର ଗୋଚର ଆର୍ଥିକ ବୃଦ୍ଧି ଏବଂ ପେଶାଗତ ଉନ୍ନତିକୁ ସମର୍ଥନ କରେ। ସାମାଜିକ ସମ୍ପର୍କ ଅପେକ୍ଷା କରାଯାଉଥିବା ଅବସର ଆଣେ। ଏହା ନିବେଶ, ଉତ୍ସବ ଏବଂ ଦୀର୍ଘକାଳୀନ ପ୍ରତିବଦ୍ଧତା ପାଇଁ ଉତ୍କୃଷ୍ଟ ସମୟ। ଋଣଜାଣ ଏବଂ ଆଗାମୀ ପରିକଳ୍ପନା ସହିତ ବର୍ଷର ଶେଷ କରନ୍ତୁ।"
+        },
+        "as": {
+          "title": "চতুৰ্থ প্ৰান্তিকৰ পূৰ্বাভাস (অক্টোবৰ-ডিচেম্বৰ)",
+          "content": "অন্তিম প্ৰান্তিকে বছৰৰ আটাইতকৈ শক্তিশালী ফলাফল অনা হয়। Jupiterৰ গমন ঋণাত্মক বৃদ্ধি আৰু ব্যৱসায়িক উন্নতিৰ সমৰ্থন কৰে। সামাজিক সংযোগসমূহে অপ্রত্যাশিত সুযোগসমূহ আনে। এইটো বিনিয়োগ, উদযাপন, আৰু দীঘলীয়া প্ৰতিশ্ৰুতিসমূহৰ বাবে এটা উৎকৃষ্ট সময়। কৃতজ্ঞতাৰ সৈতে বছৰটো শেষ কৰক আৰু আগলৈ পৰিকল্পনা কৰক।"
+        }
+      }
+    },
+    {
+      "key": "ANNUAL:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "title": "Annual Remedies & Lucky Periods",
+          "content": "To maximize this year's potential: perform Ganesha Puja at the year's start, wear gemstones suited to your Lagna after consultation, observe fasting on days ruled by your chart's weakest planet, and chant the Gayatri Mantra daily. Lucky months include those when Jupiter transits your Trikona houses. Special Muhurat periods will be particularly favorable for major decisions."
+        },
+        "hi": {
+          "title": "वार्षिक उपाय और शुभ अवधि",
+          "content": "इस वर्ष की संभावनाओं को अधिकतम करने के लिए: वर्ष की शुरुआत में गणेश पूजा करें, परामर्श के बाद अपने लग्न के अनुसार रत्न पहनें, अपनी कुंडली के सबसे कमजोर ग्रह द्वारा शासित दिनों पर उपवास रखें, और प्रतिदिन गायत्री मंत्र का जाप करें। भाग्यशाली महीने वे होते हैं जब बृहस्पति आपके त्रिकोण घरों में गोचर करता है। विशेष मुहूर्त अवधि प्रमुख निर्णयों के लिए विशेष रूप से अनुकूल होगी।"
+        },
+        "ta": {
+          "title": "வருடாந்திர பரிகாரங்கள் & அதிர்ஷ்ட காலங்கள்",
+          "content": "இந்த ஆண்டின் முழு திறனை அதிகரிக்க: ஆண்டின் தொடக்கத்தில் Ganesha Puja செய்யவும், உங்கள் லக்னாவிற்கு ஏற்ற ரத்தினங்களை ஆலோசனைக்குப் பிறகு அணியவும், உங்கள் ஜாதகத்தின் பலவீனமான கிரகத்தால் ஆளப்படும் நாட்களில் விரதம் இருக்கவும், Gayatri Mantra தினமும் ஜபிக்கவும். அதிர்ஷ்டமான மாதங்களில் Jupiter உங்கள் திரிகோண வீடுகளில் சஞ்சரிக்கும் காலங்கள் அடங்கும். முக்கிய முடிவுகளுக்கு சிறப்பு Muhurat காலங்கள் மிகவும் சாதகமாக இருக்கும்."
+        },
+        "te": {
+          "title": "వార్షిక పరిహారాలు & అదృష్టకాలం",
+          "content": "ఈ సంవత్సరపు సామర్థ్యాన్ని గరిష్టంగా ఉపయోగించుకోవడానికి: సంవత్సర ప్రారంభంలో గణేశ పూజ చేయండి, మీ లగ్నానికి అనుకూలమైన రత్నాలను సంప్రదింపుల తర్వాత ధరించండి, మీ జాతకంలోని బలహీనమైన గ్రహం పాలించే రోజుల్లో ఉపవాసం పాటించండి, మరియు రోజూ గాయత్రీ మంత్రం జపించండి. బృహస్పతి మీ త్రికోణ గృహాలలో సంచరించే నెలలు అదృష్టకరమైనవిగా ఉంటాయి. ముఖ్యమైన నిర్ణయాలకు ప్రత్యేక ముహూర్త కాలాలు ప్రత్యేకంగా అనుకూలంగా ఉంటాయి."
+        },
+        "bn": {
+          "title": "বার্ষিক প্রতিকার ও শুভ সময়কাল",
+          "content": "এই বছরের সম্ভাবনাকে সর্বাধিক করতে: বছরের শুরুতে গণেশ পূজা করুন, পরামর্শের পর আপনার লগ্নের উপযুক্ত রত্ন পরিধান করুন, আপনার চার্টের সবচেয়ে দুর্বল গ্রহের দ্বারা শাসিত দিনে উপবাস পালন করুন, এবং প্রতিদিন গায়ত্রী মন্ত্র জপ করুন। শুভ মাসগুলির মধ্যে রয়েছে যখন বৃহস্পতি আপনার ত্রিকোণ ঘরগুলিতে গমন করে। বিশেষ মুহূর্তগুলি বড় সিদ্ধান্তের জন্য বিশেষভাবে অনুকূল হবে।"
+        },
+        "mr": {
+          "title": "वार्षिक उपाय आणि शुभ काळ",
+          "content": "या वर्षाच्या संभाव्यतेचा अधिकतम लाभ घेण्यासाठी: वर्षाच्या सुरुवातीला गणेश पूजेचे आयोजन करा, आपल्या लग्नानुसार रत्न परिधान करा (तज्ञांच्या सल्ल्यानंतर), आपल्या पत्रिकेतील सर्वात कमजोर ग्रहाच्या दिवसांवर उपवास पाळा, आणि दररोज गायत्री मंत्राचा जप करा. शुभ महिने ते असतील जेव्हा Jupiter आपल्या त्रिकोण घरांमध्ये प्रवेश करेल. विशेष मुहूर्त काळ मोठ्या निर्णयांसाठी विशेषतः अनुकूल असतील."
+        },
+        "gu": {
+          "title": "વાર્ષિક ઉપાય અને શુભ સમયગાળો",
+          "content": "આ વર્ષની સંભાવનાઓને વધુમાં વધુ કરવા માટે: વર્ષના પ્રારંભમાં ગણેશ પૂજા કરો, પરામર્શ પછી તમારા લગ્ન માટે યોગ્ય રત્નો પહેરો, તમારા ચાર્ટના સૌથી નબળા ગ્રહ દ્વારા શાસિત દિવસોમાં ઉપવાસ રાખો, અને દરરોજ ગાયત્રી મંત્ર જાપ કરો. શુભ મહિનોમાં તે મહિનો શામેલ છે જ્યારે ગુરુ તમારા ત્રિકોણ ઘરોમાં સંક્રમણ કરે છે. વિશેષ મુહૂર્ત સમયગાળો મોટા નિર્ણયો માટે ખાસ કરીને અનુકૂળ રહેશે."
+        },
+        "kn": {
+          "title": "ವಾರ್ಷಿಕ ಪರಿಹಾರಗಳು ಮತ್ತು ಶುಭಕಾಲಗಳು",
+          "content": "ಈ ವರ್ಷದ ಸಾಮರ್ಥ್ಯವನ್ನು ಹೆಚ್ಚಿಸಲು: ವರ್ಷದ ಆರಂಭದಲ್ಲಿ ಗಣೇಶ ಪೂಜೆ ಮಾಡಿರಿ, ನಿಮ್ಮ ಲಗ್ನಕ್ಕೆ ಸೂಕ್ತವಾದ ರತ್ನಗಳನ್ನು ಪರಾಮರ್ಶೆಯ ನಂತರ ಧರಿಸಿರಿ, ನಿಮ್ಮ ಚಾರ್ಟ್‌ನ ದುರ್ಬಲ ಗ್ರಹದ ದಿನಗಳಲ್ಲಿ ಉಪವಾಸವಿರಿರಿ, ಮತ್ತು ದೈನಂದಿನವಾಗಿ ಗಾಯತ್ರಿ ಮಂತ್ರವನ್ನು ಜಪಿಸಿರಿ. ಶುಭ ತಿಂಗಳುಗಳಲ್ಲಿ ಗುರು ನಿಮ್ಮ ತ್ರಿಕೋಣ گھರಗಳಲ್ಲಿ ಸಂಚರಿಸುವ ಸಮಯವನ್ನು ಒಳಗೊಂಡಿರುತ್ತದೆ. ವಿಶೇಷ ಮುಹೂರ್ತ ಅವಧಿಗಳು ಪ್ರಮುಖ ನಿರ್ಣಯಗಳಿಗೆ ವಿಶೇಷವಾಗಿ ಅನುಕೂಲಕರವಾಗಿರುತ್ತವೆ."
+        },
+        "ml": {
+          "title": "വാർഷിക പരിഹാരങ്ങളും ഭാഗ്യകരമായ കാലയളവുകളും",
+          "content": "ഈ വർഷത്തിന്റെ സാധ്യതകൾ പരമാവധി ഉപയോഗപ്പെടുത്താൻ: വർഷത്തിന്റെ തുടക്കത്തിൽ ഗണേശ പൂജ നടത്തുക, ഉപദേശത്തിന് ശേഷം നിങ്ങളുടെ ലഗ്നത്തിന് അനുയോജ്യമായ രത്നങ്ങൾ ധരിക്കുക, നിങ്ങളുടെ ചാർട്ടിലെ ഏറ്റവും ദുർബലമായ ഗ്രഹം ഭരിക്കുന്ന ദിവസങ്ങളിൽ ഉപവാസം ആചരിക്കുക, ഗായത്രി മന്ത്രം ദിവസവും ജപിക്കുക. വ്യാഴം നിങ്ങളുടെ ത്രികോണം വീടുകളിലേക്ക് സഞ്ചരിക്കുന്ന മാസങ്ങൾ ഭാഗ്യകരമായവയാണ്. പ്രധാന തീരുമാനങ്ങൾക്ക് പ്രത്യേക മുഹൂർത്ത കാലയളവുകൾ പ്രത്യേകിച്ച് അനുകൂലമായിരിക്കും."
+        },
+        "pa": {
+          "title": "ਸਾਲਾਨਾ ਉਪਾਅ ਅਤੇ ਖੁਸ਼ਕਿਸਮਤ ਪੀਰੀਅਡ",
+          "content": "ਇਸ ਸਾਲ ਦੀ ਸੰਭਾਵਨਾ ਨੂੰ ਵੱਧ ਤੋਂ ਵੱਧ ਕਰਨ ਲਈ: ਸਾਲ ਦੇ ਸ਼ੁਰੂ ਵਿੱਚ ਗਣੇਸ਼ਾ ਪੂਜਾ ਕਰੋ, ਆਪਣੇ ਲਗਨ ਦੇ ਅਨੁਸਾਰ ਰਤਨ ਪਹਿਨੋ (ਸਲਾਹ ਮਸ਼ਵਰੇ ਤੋਂ ਬਾਅਦ), ਆਪਣੇ ਚਾਰਟ ਦੇ ਸਭ ਤੋਂ ਕਮਜ਼ੋਰ ਗ੍ਰਹਿ ਦੁਆਰਾ ਸ਼ਾਸਿਤ ਦਿਨਾਂ 'ਤੇ ਵਰਤ ਰੱਖੋ, ਅਤੇ ਰੋਜ਼ਾਨਾ ਗਾਇਤਰੀ ਮੰਤਰ ਜਾਪ ਕਰੋ। ਖੁਸ਼ਕਿਸਮਤ ਮਹੀਨੇ ਉਹ ਹਨ ਜਦੋਂ Jupiter ਤੁਹਾਡੇ ਤ੍ਰਿਕੋਣ ਘਰਾਂ ਵਿੱਚ ਗੋਚਰ ਕਰਦਾ ਹੈ। ਵਿਸ਼ੇਸ਼ ਮੁਹੂਰਤ ਪੀਰੀਅਡ ਵੱਡੇ ਫੈਸਲੇ ਲਈ ਖਾਸ ਤੌਰ 'ਤੇ ਲਾਭਦਾਇਕ ਹੋਣਗੇ।"
+        },
+        "or": {
+          "title": "ବାର୍ଷିକ ଉପାୟଗୁଡ଼ିକ ଏବଂ ଭାଗ୍ୟଶାଳୀ ସମୟ",
+          "content": "ଏହି ବର୍ଷର ସମ୍ଭାବନାକୁ ସର୍ବାଧିକ କରିବା ପାଇଁ: ବର୍ଷର ଆରମ୍ଭରେ ଗଣେଶ ପୂଜା କରନ୍ତୁ, ପରାମର୍ଶ ପରେ ଆପଣଙ୍କ ଲଗ୍ନକୁ ଉପଯୁକ୍ତ ରତ୍ନ ପିନ୍ଧନ୍ତୁ, ଆପଣଙ୍କ ଚାର୍ଟର ସବୁଠାରୁ ଦୁର୍ବଳ ଗ୍ରହ ଦ୍ୱାରା ଶାସିତ ଦିନଗୁଡ଼ିକରେ ଉପବାସ କରନ୍ତୁ, ଏବଂ ଦୈନିକ ଗାୟତ୍ରୀ ମନ୍ତ୍ର ଜପ କରନ୍ତୁ। ଭାଗ୍ୟଶାଳୀ ମାସଗୁଡ଼ିକ ହେଉଛି ଯେତେବେଳେ Jupiter ଆପଣଙ୍କ ତ୍ରିକୋଣ ଘରଗୁଡ଼ିକୁ ଗତି କରେ। ବିଶେଷ ମୁହୂର୍ତ୍ତ ସମୟଗୁଡ଼ିକ ମୁଖ୍ୟ ସିଦ୍ଧାନ୍ତଗୁଡ଼ିକ ପାଇଁ ବିଶେଷ ଭାବରେ ଶୁଭ ହେବ।"
+        },
+        "as": {
+          "title": "বৰ্ষিক প্ৰতিকাৰ আৰু ভাগ্যবান সময়সীমা",
+          "content": "এই বৰ্ষৰ সম্ভাৱনাক সৰ্বাধিক কৰিবলৈ: বৰ্ষৰ আৰম্ভণিতে Ganesha Puja সম্পন্ন কৰক, পৰামৰ্শৰ পিছত আপোনাৰ Lagnaৰ উপযুক্ত ৰত্ন পিন্ধক, আপোনাৰ তালিকাৰ আটাইতকৈ দুৰ্বল গ্ৰহৰ দ্বাৰা শাসিত দিনবোৰত উপবাস পালন কৰক, আৰু Gayatri Mantra দৈনিক জপা কৰক। ভাগ্যবান মাহবোৰত অন্তৰ্ভুক্ত হৈছে যেতিয়া Jupiter আপোনাৰ Trikona ঘৰত গমন কৰে। বিশেষ Muhurat সময়সীমাবোৰ বিশেষকৈ গুৰুত্বপূর্ণ সিদ্ধান্তৰ বাবে অনুকূল হ'ব।"
+        }
+      }
+    }
   ]
 }
