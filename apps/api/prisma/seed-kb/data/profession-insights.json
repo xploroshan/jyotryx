@@ -2,84 +2,2945 @@
   "_source": "Lifted verbatim from PROFESSION_INSIGHTS in apps/api/src/modules/daily-briefing/daily-briefing.service.ts. Composite key {PROFESSION}:{Planet} — 10 professions (SOFTWARE, SALES, MARKETING, FINANCE, STUDENT, BUSINESS, HEALTHCARE, CREATIVE, GOVERNMENT, OTHER) × 7 classical planets (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn) = 70 rows. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
   "_shape": "{ insight: string }",
   "rows": [
-    { "key": "SOFTWARE:Sun",        "tradition": null, "i18n": { "en": { "insight": "Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal." } } },
-    { "key": "SOFTWARE:Moon",       "tradition": null, "i18n": { "en": { "insight": "Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming." } } },
-    { "key": "SOFTWARE:Mars",       "tradition": null, "i18n": { "en": { "insight": "High energy for debugging tough issues and performance optimization. Tackle that backlog." } } },
-    { "key": "SOFTWARE:Mercury",    "tradition": null, "i18n": { "en": { "insight": "Peak day for coding, documentation, and technical writing. Ship that PR. API integrations flow smoothly." } } },
-    { "key": "SOFTWARE:Jupiter",    "tradition": null, "i18n": { "en": { "insight": "Great for system design, learning new tech, and mentoring juniors. Think big-picture architecture." } } },
-    { "key": "SOFTWARE:Venus",      "tradition": null, "i18n": { "en": { "insight": "Focus on developer experience, clean code, and collaboration. Good for team standups and demos." } } },
-    { "key": "SOFTWARE:Saturn",     "tradition": null, "i18n": { "en": { "insight": "Ideal for refactoring, writing tests, fixing tech debt, and infrastructure work. Patience pays off." } } },
-
-    { "key": "SALES:Sun",           "tradition": null, "i18n": { "en": { "insight": "Power day for pitching to CXOs and decision-makers. Your confidence is magnetic. Go for the close." } } },
-    { "key": "SALES:Moon",          "tradition": null, "i18n": { "en": { "insight": "Build rapport today — follow-up calls, client nurturing, and relationship building yield results." } } },
-    { "key": "SALES:Mars",          "tradition": null, "i18n": { "en": { "insight": "Competitive edge is sharp. Cold calls, objection handling, and negotiation favored. Push for targets." } } },
-    { "key": "SALES:Mercury",       "tradition": null, "i18n": { "en": { "insight": "Perfect for proposals, presentations, and email outreach. Data-driven pitches win today." } } },
-    { "key": "SALES:Jupiter",       "tradition": null, "i18n": { "en": { "insight": "Ideal for closing big deals and expanding accounts. Upsell opportunities arise naturally." } } },
-    { "key": "SALES:Venus",         "tradition": null, "i18n": { "en": { "insight": "Charm and persuasion peak. Client entertainment, networking events, and referral requests favored." } } },
-    { "key": "SALES:Saturn",        "tradition": null, "i18n": { "en": { "insight": "Focus on pipeline management, CRM updates, and strategic planning. Build foundations for Q targets." } } },
-
-    { "key": "MARKETING:Sun",       "tradition": null, "i18n": { "en": { "insight": "Brand visibility peaks. Launch campaigns, press releases, or thought leadership content today." } } },
-    { "key": "MARKETING:Moon",      "tradition": null, "i18n": { "en": { "insight": "Emotional storytelling resonates. Social media engagement, content creation, and community building favored." } } },
-    { "key": "MARKETING:Mars",      "tradition": null, "i18n": { "en": { "insight": "Aggressive growth tactics work — paid ads, competitive positioning, launch pushes." } } },
-    { "key": "MARKETING:Mercury",   "tradition": null, "i18n": { "en": { "insight": "Data analysis, A/B testing, copywriting, and SEO optimization flow effortlessly today." } } },
-    { "key": "MARKETING:Jupiter",   "tradition": null, "i18n": { "en": { "insight": "Think big — brand partnerships, influencer outreach, and campaign strategy sessions." } } },
-    { "key": "MARKETING:Venus",     "tradition": null, "i18n": { "en": { "insight": "Visual content, brand aesthetics, and creative campaigns shine. Design and photo shoots favored." } } },
-    { "key": "MARKETING:Saturn",    "tradition": null, "i18n": { "en": { "insight": "Marketing analytics, budget reviews, and long-term strategy. Optimize existing funnels." } } },
-
-    { "key": "FINANCE:Sun",         "tradition": null, "i18n": { "en": { "insight": "Government and PSU stocks favored. Leadership in financial decisions. Portfolio review day." } } },
-    { "key": "FINANCE:Moon",        "tradition": null, "i18n": { "en": { "insight": "Market sentiment sensitive — trust your instincts but set stop-losses. FMCG/healthcare sectors active." } } },
-    { "key": "FINANCE:Mars",        "tradition": null, "i18n": { "en": { "insight": "Volatile energy — pharma/defense sectors active. Short-term trades possible but manage risk tightly." } } },
-    { "key": "FINANCE:Mercury",     "tradition": null, "i18n": { "en": { "insight": "IT/tech stocks favored. Day trading conditions good. Data-driven analysis yields profit." } } },
-    { "key": "FINANCE:Jupiter",     "tradition": null, "i18n": { "en": { "insight": "Banking/finance sectors strong. Long-term investments and mutual fund SIPs favored. Wealth grows." } } },
-    { "key": "FINANCE:Venus",       "tradition": null, "i18n": { "en": { "insight": "Luxury/entertainment/FMCG stocks favorable. Gold purchases auspicious. Portfolio diversification day." } } },
-    { "key": "FINANCE:Saturn",      "tradition": null, "i18n": { "en": { "insight": "Infrastructure/real estate sectors. Avoid speculation. Stick to blue-chips and value investing." } } },
-
-    { "key": "STUDENT:Sun",         "tradition": null, "i18n": { "en": { "insight": "Focus on subjects requiring confidence — presentations, vivas, competitive exams. Leadership roles." } } },
-    { "key": "STUDENT:Moon",        "tradition": null, "i18n": { "en": { "insight": "Creative subjects shine — arts, literature, languages. Group study effective today." } } },
-    { "key": "STUDENT:Mars",        "tradition": null, "i18n": { "en": { "insight": "Math, science, and problem-solving peak. Physical exercise boosts mental clarity." } } },
-    { "key": "STUDENT:Mercury",     "tradition": null, "i18n": { "en": { "insight": "Best day for intense study — reading, note-taking, exam prep. Memory retention is high." } } },
-    { "key": "STUDENT:Jupiter",     "tradition": null, "i18n": { "en": { "insight": "Philosophy, law, and higher learning. Seek guidance from mentors. Career planning favored." } } },
-    { "key": "STUDENT:Venus",       "tradition": null, "i18n": { "en": { "insight": "Creative arts, music, design studies excel. Social connections help academically." } } },
-    { "key": "STUDENT:Saturn",      "tradition": null, "i18n": { "en": { "insight": "Revision and practice papers. Discipline in study schedule pays off. Focus on weak subjects." } } },
-
-    { "key": "BUSINESS:Sun",        "tradition": null, "i18n": { "en": { "insight": "Government dealings, licenses, and official work favored. Lead from the front." } } },
-    { "key": "BUSINESS:Moon",       "tradition": null, "i18n": { "en": { "insight": "Customer relationships and team morale. Marketing and public-facing business activities." } } },
-    { "key": "BUSINESS:Mars",       "tradition": null, "i18n": { "en": { "insight": "Expansion moves, competitive strategies, and resource acquisition. Bold decisions pay off." } } },
-    { "key": "BUSINESS:Mercury",    "tradition": null, "i18n": { "en": { "insight": "Contracts, negotiations, accounting, and business communication. Finalize deals today." } } },
-    { "key": "BUSINESS:Jupiter",    "tradition": null, "i18n": { "en": { "insight": "Business growth, bank loans, investor meetings, and strategic partnerships. Abundance flows." } } },
-    { "key": "BUSINESS:Venus",      "tradition": null, "i18n": { "en": { "insight": "Brand building, customer experience, and team celebrations. Retail and service businesses thrive." } } },
-    { "key": "BUSINESS:Saturn",     "tradition": null, "i18n": { "en": { "insight": "Compliance, legal review, and operational efficiency. Build systems that last." } } },
-
-    { "key": "HEALTHCARE:Sun",      "tradition": null, "i18n": { "en": { "insight": "Administrative decisions and leadership in clinical settings. Conference presentations." } } },
-    { "key": "HEALTHCARE:Moon",     "tradition": null, "i18n": { "en": { "insight": "Patient care and empathy peak. Counseling and holistic healing approaches effective." } } },
-    { "key": "HEALTHCARE:Mars",     "tradition": null, "i18n": { "en": { "insight": "Surgical procedures and emergency medicine favored. Physical stamina is high." } } },
-    { "key": "HEALTHCARE:Mercury",  "tradition": null, "i18n": { "en": { "insight": "Diagnostics, research, and medical documentation. Learning new techniques." } } },
-    { "key": "HEALTHCARE:Jupiter",  "tradition": null, "i18n": { "en": { "insight": "Teaching, publishing research, and medical ethics. Seeking advanced certifications." } } },
-    { "key": "HEALTHCARE:Venus",    "tradition": null, "i18n": { "en": { "insight": "Wellness programs, patient relationships, and aesthetic medicine." } } },
-    { "key": "HEALTHCARE:Saturn",   "tradition": null, "i18n": { "en": { "insight": "Long-term treatment plans, chronic care management, and procedural discipline." } } },
-
-    { "key": "CREATIVE:Sun",        "tradition": null, "i18n": { "en": { "insight": "Showcase your work — exhibitions, portfolio reviews, public performances." } } },
-    { "key": "CREATIVE:Moon",       "tradition": null, "i18n": { "en": { "insight": "Raw creativity flows. Writing, composing, painting — let intuition guide you." } } },
-    { "key": "CREATIVE:Mars",       "tradition": null, "i18n": { "en": { "insight": "Action-oriented creativity — filmmaking, dance, physical performance art." } } },
-    { "key": "CREATIVE:Mercury",    "tradition": null, "i18n": { "en": { "insight": "Technical craft — editing, design software, writing drafts, musical arrangements." } } },
-    { "key": "CREATIVE:Jupiter",    "tradition": null, "i18n": { "en": { "insight": "Vision and inspiration. Start ambitious projects. Seek creative mentors." } } },
-    { "key": "CREATIVE:Venus",      "tradition": null, "i18n": { "en": { "insight": "Peak creative day. Beauty, aesthetics, and artistic expression at their finest." } } },
-    { "key": "CREATIVE:Saturn",     "tradition": null, "i18n": { "en": { "insight": "Craft discipline — practice, revision, and perfecting technique." } } },
-
-    { "key": "GOVERNMENT:Sun",      "tradition": null, "i18n": { "en": { "insight": "Official decisions, policy matters, and public appearances favored." } } },
-    { "key": "GOVERNMENT:Moon",     "tradition": null, "i18n": { "en": { "insight": "Public engagement, welfare programs, and community outreach." } } },
-    { "key": "GOVERNMENT:Mars",     "tradition": null, "i18n": { "en": { "insight": "Enforcement, compliance, and administrative restructuring." } } },
-    { "key": "GOVERNMENT:Mercury",  "tradition": null, "i18n": { "en": { "insight": "Documentation, communication, and inter-departmental coordination." } } },
-    { "key": "GOVERNMENT:Jupiter",  "tradition": null, "i18n": { "en": { "insight": "Policy planning, judicial matters, and governance improvements." } } },
-    { "key": "GOVERNMENT:Venus",    "tradition": null, "i18n": { "en": { "insight": "Cultural events, public relations, and diplomatic engagements." } } },
-    { "key": "GOVERNMENT:Saturn",   "tradition": null, "i18n": { "en": { "insight": "Audits, reviews, and systemic improvements. Long-term project milestones." } } },
-
-    { "key": "OTHER:Sun",           "tradition": null, "i18n": { "en": { "insight": "Take charge of your day. Leadership moments arise. Official work favored." } } },
-    { "key": "OTHER:Moon",          "tradition": null, "i18n": { "en": { "insight": "Nurture relationships and creative pursuits. Trust your emotional intelligence." } } },
-    { "key": "OTHER:Mars",          "tradition": null, "i18n": { "en": { "insight": "Channel energy into challenging tasks. Physical activity boosts productivity." } } },
-    { "key": "OTHER:Mercury",       "tradition": null, "i18n": { "en": { "insight": "Communication, analysis, and learning peak. Best day for emails and planning." } } },
-    { "key": "OTHER:Jupiter",       "tradition": null, "i18n": { "en": { "insight": "Growth and expansion. Financial planning and mentorship favored." } } },
-    { "key": "OTHER:Venus",         "tradition": null, "i18n": { "en": { "insight": "Social connections, aesthetics, and collaborative work thrive." } } },
-    { "key": "OTHER:Saturn",        "tradition": null, "i18n": { "en": { "insight": "Discipline and long-term planning. Focus on building lasting foundations." } } }
+    {
+      "key": "SOFTWARE:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Strong day for architecture decisions and code reviews. Your technical leadership shines — present that proposal."
+        },
+        "hi": {
+          "insight": "वास्तुकला निर्णयों और कोड समीक्षाओं के लिए मजबूत दिन। आपकी तकनीकी नेतृत्व क्षमता चमकती है — उस प्रस्ताव को प्रस्तुत करें।"
+        },
+        "ta": {
+          "insight": "கட்டிடக் கலை முடிவுகள் மற்றும் குறியீட்டு மதிப்பீடுகளுக்கு வலுவான நாள். உங்கள் தொழில்நுட்ப தலைமைத் திறன் வெளிப்படுகிறது — அந்த முன்மொழிவை வழங்குங்கள்."
+        },
+        "te": {
+          "insight": "వాస్తుశాస్త్ర నిర్ణయాలు మరియు కోడ్ సమీక్షల కోసం బలమైన రోజు. మీ సాంకేతిక నాయకత్వం మెరిసిపోతుంది — ఆ ప్రతిపాదనను సమర్పించండి."
+        },
+        "bn": {
+          "insight": "স্থাপত্য সিদ্ধান্ত এবং কোড পর্যালোচনার জন্য শক্তিশালী দিন। আপনার প্রযুক্তিগত নেতৃত্ব উজ্জ্বল — সেই প্রস্তাবটি উপস্থাপন করুন।"
+        },
+        "mr": {
+          "insight": "वास्तुकला निर्णय आणि कोड पुनरावलोकनासाठी मजबूत दिवस. तुमचे तांत्रिक नेतृत्व चमकते — ती प्रस्तावना सादर करा."
+        },
+        "gu": {
+          "insight": "વાસ્તુશિલ્પના નિર્ણયો અને કોડ સમીક્ષાઓ માટે મજબૂત દિવસ. તમારું તકનીકી નેતૃત્વ ચમકે છે — તે પ્રસ્તાવ રજૂ કરો."
+        },
+        "kn": {
+          "insight": "ವಾಸ್ತುಶಿಲ್ಪ ನಿರ್ಧಾರಗಳು ಮತ್ತು ಕೋಡ್ ವಿಮರ್ಶೆಗಳಿಗಾಗಿ ಶಕ್ತಿಯುತ ದಿನ. ನಿಮ್ಮ ತಾಂತ್ರಿಕ ನಾಯಕತ್ವ ತೇಜಸ್ಸು ಹೊಳೆಯುತ್ತದೆ — ಆ ಪ್ರಸ್ತಾವವನ್ನು ಮಂಡಿಸಿ."
+        },
+        "ml": {
+          "insight": "വാസ്തു തീരുമാനങ്ങൾക്കും കോഡ് അവലോകനങ്ങൾക്കും ശക്തമായ ദിവസം. നിങ്ങളുടെ സാങ്കേതിക നേതൃത്വം തിളങ്ങുന്നു — ആ നിർദ്ദേശം അവതരിപ്പിക്കുക."
+        },
+        "pa": {
+          "insight": "ਵਾਸਤੂਕਲਾ ਫੈਸਲੇ ਅਤੇ ਕੋਡ ਸਮੀਖਿਆਵਾਂ ਲਈ ਮਜ਼ਬੂਤ ਦਿਨ। ਤੁਹਾਡੀ ਤਕਨੀਕੀ ਨੇਤ੍ਰਿਤਵ ਚਮਕਦਾ ਹੈ — ਉਸ ਪ੍ਰਸਤਾਵ ਨੂੰ ਪੇਸ਼ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ସଂରଚନା ନିର୍ଣ୍ଣୟ ଏବଂ କୋଡ୍ ସମୀକ୍ଷା ପାଇଁ ଶକ୍ତିଶାଳୀ ଦିନ। ଆପଣଙ୍କର ପ୍ରାଯୁକ୍ତିକ ନେତୃତ୍ୱ ଆଲୋକିତ — ସେ ପ୍ରସ୍ତାବଟି ପ୍ରସ୍ତୁତ କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "স্থাপত্য সিদ্ধান্ত আৰু কোড পৰ্যালোচনাৰ বাবে শক্তিশালী দিন। আপোনাৰ প্ৰযুক্তিগত নেতৃত্ব জ্বলজ্বল কৰে — সেই প্ৰস্তাৱটো উপস্থাপন কৰক।"
+        }
+      }
+    },
+    {
+      "key": "SOFTWARE:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Creativity peaks today — ideal for UI/UX work, brainstorming features, and pair programming."
+        },
+        "hi": {
+          "insight": "आज रचनात्मकता चरम पर है — UI/UX कार्य, विशेषताओं के लिए विचार-मंथन, और जोड़ी प्रोग्रामिंग के लिए आदर्श।"
+        },
+        "ta": {
+          "insight": "கற்பனை திறன் இன்று உச்சத்தில் உள்ளது — UI/UX பணிகள், அம்சங்களை மூலோபாயமாக சிந்தித்தல், மற்றும் ஜோடி நிரலாக்கம் செய்ய மிகவும் சிறந்தது."
+        },
+        "te": {
+          "insight": "సృజనాత్మకత నేడు శిఖరానికి చేరుకుంటుంది — UI/UX పనికి, లక్షణాలను ఆలోచించడానికి, మరియు జంట ప్రోగ్రామింగ్‌కు ఇది అనుకూలం."
+        },
+        "bn": {
+          "insight": "সৃজনশীলতা আজ শীর্ষে — UI/UX কাজ, বৈশিষ্ট্য নিয়ে মস্তিষ্ক ঝড়, এবং যুগ্ম প্রোগ্রামিংয়ের জন্য আদর্শ।"
+        },
+        "mr": {
+          "insight": "आज सर्जनशीलता शिखरावर आहे — UI/UX कामासाठी, वैशिष्ट्ये विचारमंथनासाठी, आणि जोडीदारी प्रोग्रामिंगसाठी आदर्श."
+        },
+        "gu": {
+          "insight": "આજનો દિવસ સર્જનાત્મકતાનો શિખર છે — UI/UX કામ, ફીચર્સ માટે મગજમારી, અને જોડે પ્રોગ્રામિંગ માટે આદર્શ છે."
+        },
+        "kn": {
+          "insight": "ಸೃಜನಶೀಲತೆ ಇಂದು ತೀವ್ರವಾಗಿರುತ್ತದೆ — UI/UX ಕೆಲಸ, ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ಚಿಂತನೆ ಮಾಡುವುದು, ಮತ್ತು ಜೋಡಿ ಪ್ರೋಗ್ರಾಮಿಂಗ್‌ಗಾಗಿ ಆದರ್ಶವಾಗಿದೆ."
+        },
+        "ml": {
+          "insight": "സൃഷ്ടിപരമായ കഴിവുകൾ ഇന്ന് പരമാവധി ഉയരും — UI/UX പ്രവർത്തനങ്ങൾ, സവിശേഷതകൾ ചിന്തിച്ചുപിടിക്കൽ, ജോഡികളായി പ്രോഗ്രാമിംഗ് എന്നിവയ്ക്ക് അനുയോജ്യം."
+        },
+        "pa": {
+          "insight": "ਕਲਾਤਮਕਤਾ ਅੱਜ ਚਰਮ 'ਤੇ ਹੈ — UI/UX ਕੰਮ, ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਬਾਰੇ ਵਿਚਾਰ-ਵਟਾਂਦਰਾ ਕਰਨ, ਅਤੇ ਜੋੜੇ ਵਿੱਚ ਪ੍ਰੋਗਰਾਮਿੰਗ ਲਈ ਬਹੁਤ ਵਧੀਆ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଆଜି ସୃଜନଶୀଳତାର ଶିଖର — UI/UX କାମ, ବିଶେଷତା ବିକାଶ ପାଇଁ ମନନ-ଚିନ୍ତନ, ଏବଂ ଯୁଗଳ ପ୍ରୋଗ୍ରାମିଂ ପାଇଁ ଉତ୍ତମ।"
+        },
+        "as": {
+          "insight": "সৃষ্টিশীলতা আজ শীৰ্ষত — UI/UX কাম, বৈশিষ্ট্যসমূহৰ মগজু-মেল, আৰু জোড়া প্ৰগ্ৰামিঙৰ বাবে আদৰ্শ।"
+        }
+      }
+    },
+    {
+      "key": "SOFTWARE:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "High energy for debugging tough issues and performance optimization. Tackle that backlog."
+        },
+        "hi": {
+          "insight": "कठिन मुद्दों और प्रदर्शन अनुकूलन के लिए उच्च ऊर्जा। उस बैकलॉग को निपटाएं।"
+        },
+        "ta": {
+          "insight": "கடினமான பிரச்சினைகளை சரிசெய்தல் மற்றும் செயல்திறன் மேம்பாட்டிற்கான அதிக ஆற்றல். அந்த பின்புறப் பணிகளை கையாளுங்கள்."
+        },
+        "te": {
+          "insight": "కష్టమైన సమస్యలను డీబగ్ చేయడానికి మరియు పనితీరు ఆప్టిమైజేషన్ కోసం అధిక శక్తి. ఆ బ్యాక్‌లాగ్‌ను ఎదుర్కోండి."
+        },
+        "bn": {
+          "insight": "কঠিন সমস্যাগুলি ডিবাগিং এবং কর্মক্ষমতা অপ্টিমাইজেশনের জন্য উচ্চ শক্তি। সেই ব্যাকলগটি মোকাবিলা করুন।"
+        },
+        "mr": {
+          "insight": "कठीण समस्या आणि कार्यक्षमता अनुकूलनासाठी उच्च ऊर्जा. त्या बॅकलॉगला सामोरे जा."
+        },
+        "gu": {
+          "insight": "કઠિન સમસ્યાઓ અને પ્રદર્શન ઑપ્ટિમાઇઝેશનને ડિબગ કરવા માટે ઊર્જા ઊંચી છે. તે બેકલોગને હલ કરો."
+        },
+        "kn": {
+          "insight": "ಕಠಿಣ ಸಮಸ್ಯೆಗಳ ಮತ್ತು ಕಾರ್ಯಕ್ಷಮತೆಯ ಸುಧಾರಣೆಗೆ ಹೆಚ್ಚಿನ ಶಕ್ತಿ. ಆ ಬ್ಯಾಕ್ಲಾಗ್ ಅನ್ನು ಎದುರಿಸಿ."
+        },
+        "ml": {
+          "insight": "ബുദ്ധിമുട്ടുള്ള പ്രശ്നങ്ങളും പ്രകടന മെച്ചപ്പെടുത്തലും ഡീബഗ് ചെയ്യുന്നതിനുള്ള ഉയർന്ന ഊർജ്ജം. ആ ബാക്ക്‌ലോഗ് കൈകാര്യം ചെയ്യുക."
+        },
+        "pa": {
+          "insight": "ਮੁਸ਼ਕਲ ਸਮੱਸਿਆਵਾਂ ਨੂੰ ਡੀਬੱਗ ਕਰਨ ਅਤੇ ਪ੍ਰਦਰਸ਼ਨ ਅਪਟਮਾਈਜ਼ੇਸ਼ਨ ਲਈ ਉੱਚ ਊਰਜਾ। ਉਸ ਬੈਕਲਾਗ ਨੂੰ ਹੱਲ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "କଠିନ ସମସ୍ୟାଗୁଡ଼ିକ ଏବଂ କାର୍ଯ୍ୟଦକ୍ଷତା ଉନ୍ନତି ପାଇଁ ଉଚ୍ଚ ଶକ୍ତି। ସେହି ବ୍ୟାକଲଗକୁ ମୁହଁ ଦିଅ।"
+        },
+        "as": {
+          "insight": "কঠিন সমস্যাৰ ডিবাগিং আৰু কাৰ্যক্ষমতা অপ্টিমাইজেশ্যনৰ বাবে উচ্চ শক্তি। সেই ব্যাকলগটো সমাধান কৰক।"
+        }
+      }
+    },
+    {
+      "key": "SOFTWARE:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Peak day for coding, documentation, and technical writing. Ship that PR. API integrations flow smoothly."
+        },
+        "hi": {
+          "insight": "कोडिंग, प्रलेखन, और तकनीकी लेखन के लिए शिखर दिन। उस पीआर को शिप करें। एपीआई एकीकरण आसानी से प्रवाहित होते हैं।"
+        },
+        "ta": {
+          "insight": "கோடிங், ஆவணப்படுத்தல் மற்றும் தொழில்நுட்ப எழுத்துக்கு உச்ச நாள். அந்த PR ஐ அனுப்பவும். API ஒருங்கிணைப்புகள் மென்மையாக செல்கின்றன."
+        },
+        "te": {
+          "insight": "కోడ్ రాయడానికి, డాక్యుమెంటేషన్ మరియు సాంకేతిక రచనకు శ్రేష్ఠమైన రోజు. ఆ పుల్ల్ రిక్వెస్ట్‌ను పంపించండి. API ఇంటిగ్రేషన్లు సజావుగా సాగుతాయి."
+        },
+        "bn": {
+          "insight": "কোডিং, ডকুমেন্টেশন, এবং প্রযুক্তিগত লেখার জন্য শীর্ষ দিন। সেই পিআর পাঠান। এপিআই ইন্টিগ্রেশনগুলি মসৃণভাবে প্রবাহিত হয়।"
+        },
+        "mr": {
+          "insight": "कोडिंग, दस्तऐवजीकरण, आणि तांत्रिक लेखनासाठी उत्कृष्ट दिवस. तो PR पाठवा. API एकत्रीकरणे सुरळीतपणे चालतात."
+        },
+        "gu": {
+          "insight": "કોડિંગ, દસ્તાવેજીકરણ અને ટેકનિકલ લેખન માટે શ્રેષ્ઠ દિવસ. તે PR મોકલો. API ઇન્ટિગ્રેશન્સ સરળતાથી વહે છે."
+        },
+        "kn": {
+          "insight": "ಕೋಡಿಂಗ್, ಡಾಕ್ಯುಮೆಂಟೇಶನ್, ಮತ್ತು ತಾಂತ್ರಿಕ ಬರವಣಿಗೆಗೆ ಶ್ರೇಷ್ಠ ದಿನ. ಆ PR ಅನ್ನು ಕಳುಹಿಸಿ. API ಸಮಾಗಮಗಳು ಸುಗಮವಾಗಿ ಸಾಗುತ್ತವೆ."
+        },
+        "ml": {
+          "insight": "കോഡിംഗ്, ഡോക്യുമെന്റേഷൻ, സാങ്കേതിക എഴുത്ത് എന്നിവയ്ക്കുള്ള ഉച്ചകോടി ദിവസം. ആ PR അയയ്ക്കുക. API ഇന്റഗ്രേഷനുകൾ മിനുസമാർന്ന രീതിയിൽ പ്രവഹിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਕੋਡਿੰਗ, ਦਸਤਾਵੇਜ਼ੀਕਰਨ ਅਤੇ ਤਕਨੀਕੀ ਲਿਖਤ ਲਈ ਸਿਖਰ ਦਾ ਦਿਨ। ਉਹ ਪੁਲ ਰਿਕਵੇਸਟ ਭੇਜੋ। API ਇੰਟੀਗ੍ਰੇਸ਼ਨ ਸੁਚੱਜੇ ਤਰੀਕੇ ਨਾਲ ਚਲਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "କୋଡିଂ, ଡକ୍ୟୁମେଣ୍ଟେସନ୍, ଏବଂ ପ୍ରାଯୁକ୍ତିକ ଲେଖାର ପାଇଁ ଶ୍ରେଷ୍ଠ ଦିନ। ସେ ପିଆର୍ ମୋଡ଼ିବାକୁ ପଠାନ୍ତୁ। API ସମ୍ମିଳନ ସମ୍ମାନଜସ ଭାବେ ପ୍ରବାହିତ ହୁଏ।"
+        },
+        "as": {
+          "insight": "কোডিং, নথিপত্ৰ আৰু প্ৰযুক্তিগত লিখনৰ বাবে শ্ৰেষ্ঠ দিন। সেই পিআৰখন পঠিয়াওক। এপিআই একত্ৰিকৰণসমূহ সৰলভাৱে বৈ।"
+        }
+      }
+    },
+    {
+      "key": "SOFTWARE:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Great for system design, learning new tech, and mentoring juniors. Think big-picture architecture."
+        },
+        "hi": {
+          "insight": "सिस्टम डिज़ाइन, नई तकनीक सीखने और जूनियर्स को मेंटर करने के लिए बहुत अच्छा है। बड़ी तस्वीर की वास्तुकला के बारे में सोचें।"
+        },
+        "ta": {
+          "insight": "கணினி அமைப்பு வடிவமைப்புக்கு சிறந்தது, புதிய தொழில்நுட்பங்களை கற்றல் மற்றும் இளையவர்களுக்கு வழிகாட்டுதல். பெரிய-படம் கட்டமைப்பை யோசிக்கவும்."
+        },
+        "te": {
+          "insight": "వ్యవస్థ రూపకల్పన, కొత్త సాంకేతికత నేర్చుకోవడం, జూనియర్లకు మార్గనిర్దేశం చేయడానికి గొప్పది. పెద్ద చిత్ర నిర్మాణాన్ని ఆలోచించండి."
+        },
+        "bn": {
+          "insight": "সিস্টেম ডিজাইনের জন্য চমৎকার, নতুন প্রযুক্তি শেখা এবং জুনিয়রদের পরামর্শ দেওয়া। বৃহত্তর চিত্রের স্থাপত্য ভাবুন।"
+        },
+        "mr": {
+          "insight": "प्रणाली डिझाइनसाठी उत्तम, नवीन तंत्रज्ञान शिकणे आणि कनिष्ठांना मार्गदर्शन करणे. मोठ्या चित्रातील आर्किटेक्चरचा विचार करा."
+        },
+        "gu": {
+          "insight": "સિસ્ટમ ડિઝાઇન, નવી ટેક્નોલોજી શીખવા અને જુનિયર્સને માર્ગદર્શન આપવા માટે ઉત્તમ. વિશાળ દ્રષ્ટિકોણ આર્કિટેક્ચર વિશે વિચાર કરો."
+        },
+        "kn": {
+          "insight": "ವ್ಯವಸ್ಥೆಯ ವಿನ್ಯಾಸ, ಹೊಸ ತಂತ್ರಜ್ಞಾನವನ್ನು ಕಲಿಯಲು ಮತ್ತು ಕಿರಿಯರಿಗೆ ಮಾರ್ಗದರ್ಶನ ನೀಡಲು ಉತ್ತಮ. ದೊಡ್ಡ ಚಿತ್ರಕಲೆ معماريಯನ್ನು ಯೋಚಿಸಿ."
+        },
+        "ml": {
+          "insight": "സിസ്റ്റം ഡിസൈൻ, പുതിയ സാങ്കേതികവിദ്യകൾ പഠിക്കൽ, ജൂനിയർമാരെ മാർഗ്ഗനിർദ്ദേശം ചെയ്യൽ എന്നിവയ്ക്ക് ഉത്തമമാണ്. വലിയ ദൃശ്യഭാഗം ആർക്കിടെക്ചർ ചിന്തിക്കുക."
+        },
+        "pa": {
+          "insight": "ਸਿਸਟਮ ਡਿਜ਼ਾਈਨ, ਨਵੀਂ ਤਕਨਾਲੋਜੀ ਸਿੱਖਣ ਅਤੇ ਜੂਨੀਅਰਾਂ ਨੂੰ ਮਾਰਗਦਰਸ਼ਨ ਦੇਣ ਲਈ ਬਹੁਤ ਵਧੀਆ। ਵੱਡੀ ਤਸਵੀਰ ਵਾਲੀ ਆਰਕੀਟੈਕਚਰ ਬਾਰੇ ਸੋਚੋ।"
+        },
+        "or": {
+          "insight": "ପ୍ରଣାଳୀ ଡିଜାଇନ, ନୂତନ ପ୍ରଯୁକ୍ତି ଶିଖିବା, ଏବଂ କନିଷ୍ଠମାନଙ୍କୁ ମାର୍ଗଦର୍ଶନ କରିବା ପାଇଁ ଉତ୍ତମ। ବଡ଼-ଛବି ଆର୍କିଟେକ୍ଚର ବିଚାର କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "পদ্ধতি নক্সা, নতুন প্ৰযুক্তি শিকিবৰ বাবে আৰু কনিষ্ঠসকলক পৰামৰ্শ দিয়াৰ বাবে অতি উত্তম। ডাঙৰ-দৰ্শন স্থাপত্যৰ বিষয়ে ভাবিব।"
+        }
+      }
+    },
+    {
+      "key": "SOFTWARE:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Focus on developer experience, clean code, and collaboration. Good for team standups and demos."
+        },
+        "hi": {
+          "insight": "डेवलपर अनुभव, स्वच्छ कोड, और सहयोग पर ध्यान केंद्रित करें। टीम स्टैंडअप और डेमो के लिए अच्छा है।"
+        },
+        "ta": {
+          "insight": "டெவலப்பர் அனுபவம், சுத்தமான குறியீடு மற்றும் ஒத்துழைப்பில் கவனம் செலுத்துங்கள். குழு நிலைப்பாடுகள் மற்றும் காட்சிப்படுத்தல்களுக்கு நல்லது."
+        },
+        "te": {
+          "insight": "డెవలపర్ అనుభవం, శుభ్రమైన కోడ్, మరియు సహకారంపై దృష్టి పెట్టండి. జట్టు స్టాండప్స్ మరియు డెమోలకు మంచిది."
+        },
+        "bn": {
+          "insight": "ডেভেলপার অভিজ্ঞতা, পরিষ্কার কোড, এবং সহযোগিতার উপর মনোযোগ দিন। দলীয় স্ট্যান্ডআপ এবং ডেমোর জন্য ভালো।"
+        },
+        "mr": {
+          "insight": "विकसक अनुभव, स्वच्छ कोड, आणि सहकार्य यावर लक्ष केंद्रित करा. टीम स्टँडअप्स आणि डेमो साठी चांगले आहे."
+        },
+        "gu": {
+          "insight": "ડેવલપર અનુભવ, સ્વચ્છ કોડ, અને સહકાર પર ધ્યાન કેન્દ્રિત કરો. ટીમ સ્ટેન્ડઅપ્સ અને ડેમોઝ માટે સારું."
+        },
+        "kn": {
+          "insight": "ವಿಕಾಸಕರ ಅನುಭವ, ಶುದ್ಧ ಕೋಡ್, ಮತ್ತು ಸಹಕಾರದ ಮೇಲೆ ಗಮನ ಹರಿಸಿ. ತಂಡದ ಸ್ಟ್ಯಾಂಡ್‌ಅಪ್‌ಗಳು ಮತ್ತು ಡೆಮೋಗಳಿಗೆ ಉತ್ತಮ."
+        },
+        "ml": {
+          "insight": "ഡെവലപ്പർ അനുഭവത്തിൽ, ശുചിത്വമുള്ള കോഡിൽ, സഹകരണത്തിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുക. ടീം സ്റ്റാൻഡപ്പുകൾക്കും ഡെമോകൾക്കും നല്ലത്."
+        },
+        "pa": {
+          "insight": "ਡਿਵੈਲਪਰ ਅਨੁਭਵ, ਸਾਫ ਕੋਡ, ਅਤੇ ਸਹਿਯੋਗ 'ਤੇ ਧਿਆਨ ਦਿਓ। ਟੀਮ ਸਟੈਂਡਅਪਸ ਅਤੇ ਡੈਮੋ ਲਈ ਚੰਗਾ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଡିଭେଲପର୍ ଅନୁଭବ, ସଫା କୋଡ୍, ଏବଂ ସହଯୋଗରେ ଧ୍ୟାନ ଦିଅନ୍ତୁ। ଟିମ୍ ସ୍ଟାଣ୍ଡଅପ୍ସ ଏବଂ ଡେମୋସ୍ ପାଇଁ ଭଲ।"
+        },
+        "as": {
+          "insight": "বিকাশকাৰীৰ অভিজ্ঞতা, পৰিষ্কাৰ ক'ড, আৰু সহযোগিতাত মনোনিবেশ কৰক। দলৰ ষ্টেণ্ডআপ আৰু ডেম'ৰ বাবে ভাল।"
+        }
+      }
+    },
+    {
+      "key": "SOFTWARE:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Ideal for refactoring, writing tests, fixing tech debt, and infrastructure work. Patience pays off."
+        },
+        "hi": {
+          "insight": "पुनर्गठन, परीक्षण लिखने, तकनीकी ऋण को ठीक करने और बुनियादी ढांचे के काम के लिए आदर्श। धैर्य का फल मीठा होता है।"
+        },
+        "ta": {
+          "insight": "மீளாய்வு செய்ய, சோதனைகளை எழுத, தொழில்நுட்ப கடனை சரிசெய்ய, மற்றும் உள்கட்டமைப்பு பணிக்கு சிறந்தது. பொறுமை பலனளிக்கும்."
+        },
+        "te": {
+          "insight": "పునర్వ్యవస్థీకరణ, పరీక్షలు వ్రాయడం, సాంకేతిక అప్పు సరిచేయడం, మరియు మౌలిక సదుపాయాల పనికి అనుకూలం. సహనం ఫలితాన్ని ఇస్తుంది."
+        },
+        "bn": {
+          "insight": "পুনর্গঠন, পরীক্ষা লেখা, প্রযুক্তিগত ঋণ মেরামত এবং অবকাঠামো কাজের জন্য আদর্শ। ধৈর্য ফলপ্রসূ হয়।"
+        },
+        "mr": {
+          "insight": "पुनर्रचना करण्यासाठी, चाचण्या लिहिण्यासाठी, तांत्रिक कर्ज दुरुस्त करण्यासाठी आणि पायाभूत सुविधांच्या कामासाठी आदर्श. संयम फळतो."
+        },
+        "gu": {
+          "insight": "ફેરફાર કરવા, પરીક્ષણો લખવા, ટેક દેવું સુધારવા, અને ઇન્ફ્રાસ્ટ્રક્ચર કાર્ય માટે આદર્શ. ધીરજ ફળ લાવે છે."
+        },
+        "kn": {
+          "insight": "ಪುನರ್ ರಚನೆ, ಪರೀಕ್ಷೆಗಳನ್ನು ಬರೆಯಲು, ತಂತ್ರಜ್ಞಾನ ಸಾಲನ್ನು ಸರಿಪಡಿಸಲು, ಮತ್ತು ಮೂಲಸೌಕರ್ಯ ಕೆಲಸಕ್ಕೆ ಆದರ್ಶ. ಸಹನೆ ಫಲ ನೀಡುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "പുനഃസംഘടിപ്പിക്കുന്നതിനും, ടെസ്റ്റുകൾ എഴുതുന്നതിനും, സാങ്കേതിക കടം പരിഹരിക്കുന്നതിനും, അടിസ്ഥാന സൗകര്യ പ്രവർത്തനത്തിനും അനുയോജ്യം. ക്ഷമ ഫലം കാണിക്കും."
+        },
+        "pa": {
+          "insight": "ਪੁਨਰਗਠਨ, ਟੈਸਟ ਲਿਖਣ, ਤਕਨਾਲੋਜੀ ਕਰਜ਼ੇ ਨੂੰ ਠੀਕ ਕਰਨ ਅਤੇ ਢਾਂਚੇ ਦੇ ਕੰਮ ਲਈ ਉਤਮ ਹੈ। ਧੀਰਜ ਫਲ ਦਿੰਦੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ପୁନଃସଂରଚନା ପାଇଁ ଉପଯୁକ୍ତ, ପରୀକ୍ଷା ଲେଖିବା, ପ୍ରଯୁକ୍ତି ବୋଝ ଠିକ କରିବା, ଏବଂ ଅବସ୍ଥାପନା କାମ ପାଇଁ ଉପଯୁକ୍ତ। ଧୈର୍ଯ୍ୟ ଫଳ ଦେଇଥାଏ।"
+        },
+        "as": {
+          "insight": "পুনৰ গঠন, পৰীক্ষা লিখা, প্ৰযুক্তিগত ঋণ সমাধান, আৰু পৰিকাঠামো কামৰ বাবে উপযুক্ত। ধৈৰ্য্যই সফলতা আনে।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Power day for pitching to CXOs and decision-makers. Your confidence is magnetic. Go for the close."
+        },
+        "hi": {
+          "insight": "CXOs और निर्णय-निर्माताओं को प्रस्तुत करने के लिए शक्ति दिवस। आपका आत्मविश्वास चुंबकीय है। अंतिम निर्णय के लिए आगे बढ़ें।"
+        },
+        "ta": {
+          "insight": "CXOகளுக்கும் முடிவெடுப்பவர்களுக்கும் முன்மொழிவது சிறந்த நாள். உங்கள் நம்பிக்கை காந்தம் போன்றது. முடிவுக்கு செல்லுங்கள்."
+        },
+        "te": {
+          "insight": "CXOs మరియు నిర్ణయాధికారులకు ప్రతిపాదనలు చేయడానికి శక్తివంతమైన రోజు. మీ ఆత్మవిశ్వాసం ఆకర్షణీయంగా ఉంటుంది. ముగింపు కోసం ప్రయత్నించండి."
+        },
+        "bn": {
+          "insight": "CXO এবং সিদ্ধান্ত গ্রহণকারীদের কাছে প্রস্তাব দেওয়ার জন্য শক্তিশালী দিন। আপনার আত্মবিশ্বাস আকর্ষণীয়। চূড়ান্ত করার জন্য এগিয়ে যান।"
+        },
+        "mr": {
+          "insight": "CXOs आणि निर्णय घेणाऱ्यांना प्रस्ताव देण्यासाठी शक्तिशाली दिवस. तुमचा आत्मविश्वास आकर्षक आहे. अंतिम निर्णयासाठी पुढे जा."
+        },
+        "gu": {
+          "insight": "CXOs અને નિર્ણય-નિર્માતાઓને પિચ કરવા માટે શક્તિદાયી દિવસ. તમારો આત્મવિશ્વાસ આકર્ષક છે. સમાપ્તિ માટે આગળ વધો."
+        },
+        "kn": {
+          "insight": "CXOs ಮತ್ತು ನಿರ್ಧಾರಕತೆಗೆ ಪ್ರಸ್ತಾಪಿಸಲು ಶಕ್ತಿ ದಿನ. ನಿಮ್ಮ ಆತ್ಮವಿಶ್ವಾಸ ಆಕರ್ಷಕವಾಗಿದೆ. ಮುಚ್ಚಲು ಹೋಗಿ."
+        },
+        "ml": {
+          "insight": "CXOമാരോടും തീരുമാനമെടുക്കുന്നവരോടും ആശയങ്ങൾ അവതരിപ്പിക്കാൻ ശക്തമായ ദിവസം. നിങ്ങളുടെ ആത്മവിശ്വാസം ആകർഷകമാണ്. അവസാനിപ്പിക്കാൻ മുന്നോട്ട് പോകുക."
+        },
+        "pa": {
+          "insight": "CXOs ਅਤੇ ਫੈਸਲਾ ਲੈਣ ਵਾਲਿਆਂ ਨੂੰ ਪੇਸ਼ ਕਰਨ ਲਈ ਤਾਕਤਵਰ ਦਿਨ। ਤੁਹਾਡਾ ਵਿਸ਼ਵਾਸ ਚੁੰਬਕੀ ਹੈ। ਸਮਾਪਤੀ ਲਈ ਜਾਓ।"
+        },
+        "or": {
+          "insight": "CXO ଏବଂ ନିର୍ଣ୍ଣୟକର୍ତ୍ତାମାନଙ୍କୁ ପିଚ୍ କରିବା ପାଇଁ ଶକ୍ତିଶାଳୀ ଦିନ। ଆପଣଙ୍କର ଆତ୍ମବିଶ୍ୱାସ ଆକର୍ଷଣୀୟ। ନିକଟ ହେବାକୁ ଯାଆନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "CXO আৰু সিদ্ধান্তগ্ৰহণকাৰীসকলক প্ৰস্তাৱ দিয়া বাবে শক্তিশালী দিন। আপোনাৰ আত্মবিশ্বাস চুম্বকীয়। সমাপ্তিৰ বাবে আগবাঢ়ক।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Build rapport today — follow-up calls, client nurturing, and relationship building yield results."
+        },
+        "hi": {
+          "insight": "आज संबंध बनाएं — फॉलो-अप कॉल, ग्राहक पोषण, और संबंध निर्माण परिणाम देंगे।"
+        },
+        "ta": {
+          "insight": "இன்று நெருக்கத்தை உருவாக்குங்கள் — தொடர்ந்த அழைப்புகள், வாடிக்கையாளர் பராமரிப்பு, மற்றும் உறவுகளை உருவாக்குவது பலனை அளிக்கும்."
+        },
+        "te": {
+          "insight": "నేడు అనుబంధాన్ని నిర్మించండి — ఫాలో-అప్ కాల్స్, క్లయింట్ పోషణ, మరియు సంబంధాల నిర్మాణం ఫలితాలను ఇస్తాయి."
+        },
+        "bn": {
+          "insight": "আজ সম্পর্ক গড়ে তুলুন — ফলো-আপ কল, ক্লায়েন্ট পরিচর্যা, এবং সম্পর্ক গড়ে তোলা ফলাফল দেয়।"
+        },
+        "mr": {
+          "insight": "आज संबंध निर्माण करा — फॉलो-अप कॉल्स, ग्राहकांची काळजी घेणे, आणि संबंध निर्माण करणे यामुळे परिणाम मिळतील."
+        },
+        "gu": {
+          "insight": "આજના દિવસે સંબંધ બાંધો — અનુસરણ કૉલ્સ, ક્લાયન્ટની સંભાળ અને સંબંધ બાંધવાનું પરિણામ આપે છે."
+        },
+        "kn": {
+          "insight": "ಇಂದು ಸಂಬಂಧವನ್ನು ನಿರ್ಮಿಸಿ — ಫಾಲೋ-ಅಪ್ ಕರೆಗಳು, ಗ್ರಾಹಕರ ಪೋಷಣೆ, ಮತ್ತು ಸಂಬಂಧ ನಿರ್ಮಾಣ ಫಲಿತಾಂಶಗಳನ್ನು ನೀಡುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ഇന്ന് ബന്ധം സ്ഥാപിക്കുക — ഫോളോ-അപ്പ് കോൾസ്, ക്ലയന്റ് പരിപാലനം, ബന്ധം സ്ഥാപിക്കൽ എന്നിവ ഫലങ്ങൾ നൽകുന്നു."
+        },
+        "pa": {
+          "insight": "ਅੱਜ ਰਿਸ਼ਤੇ ਬਣਾਓ — ਫਾਲੋ-ਅੱਪ ਕਾਲਾਂ, ਕਲਾਇੰਟ ਦੀ ਦੇਖਭਾਲ, ਅਤੇ ਰਿਸ਼ਤੇ ਬਣਾਉਣ ਨਾਲ ਨਤੀਜੇ ਮਿਲਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ଆଜି ସମ୍ପର୍କ ଗଢ଼ିବେ — ଫଲୋ-ଅପ୍ କଲ୍, ଗ୍ରାହକ ପ୍ରତିପାଳନ ଏବଂ ସମ୍ପର୍କ ଗଢ଼ିବା ଫଳ ଦେବ।"
+        },
+        "as": {
+          "insight": "আজিকে সম্পৰ্ক গঢ়ি তোলক — অনুসৰণ কল, গ্ৰাহক পোষণ আৰু সম্পৰ্ক গঢ়ি তোলাৰ কামত ফল পাব।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Competitive edge is sharp. Cold calls, objection handling, and negotiation favored. Push for targets."
+        },
+        "hi": {
+          "insight": "प्रतिस्पर्धात्मक बढ़त तीव्र है। ठंडे कॉल, आपत्ति निपटान, और बातचीत के लिए अनुकूल। लक्ष्यों के लिए जोर दें।"
+        },
+        "ta": {
+          "insight": "போட்டித் திறன் கூர்மையாக உள்ளது. குளிர்ந்த அழைப்புகள், எதிர்ப்பு கையாளுதல் மற்றும் பேச்சுவார்த்தை ஆதரிக்கப்படுகிறது. இலக்குகளை அடைய முயற்சி செய்யவும்."
+        },
+        "te": {
+          "insight": "పోటీ ఆధిక్యం పదునుగా ఉంది. చల్లని కాల్స్, అభ్యంతరాల నిర్వహణ, మరియు చర్చలు అనుకూలంగా ఉంటాయి. లక్ష్యాలను సాధించడానికి ప్రయత్నించండి."
+        },
+        "bn": {
+          "insight": "প্রতিযোগিতামূলক প্রান্ত তীক্ষ্ণ। ঠান্ডা কল, আপত্তি পরিচালনা, এবং আলোচনা পছন্দনীয়। লক্ষ্যগুলির জন্য চাপ দিন।"
+        },
+        "mr": {
+          "insight": "स्पर्धात्मक धार तीव्र आहे. थंड कॉल्स, आक्षेप हाताळणी, आणि वाटाघाटी अनुकूल आहेत. लक्ष्यांसाठी प्रयत्न करा."
+        },
+        "gu": {
+          "insight": "સ્પર્ધાત્મક ધાર તીક્ષ્ણ છે. ઠંડા કૉલ્સ, વાંધા હલ અને વાટાઘાટ અનુકૂળ છે. લક્ષ્યો માટે દબાણ કરો."
+        },
+        "kn": {
+          "insight": "ಸ್ಪರ್ಧಾತ್ಮಕ ಅಂಚು ತೀಕ್ಷ್ಣವಾಗಿದೆ. ಶೀತ ಕರೆಗಳು, ವಿರೋಧ ನಿರ್ವಹಣೆ, ಮತ್ತು ಚರ್ಚೆಗಳಿಗೆ ಅನುಕೂಲಕರವಾಗಿದೆ. ಗುರಿಗಳನ್ನು ತಲುಪಲು ಒತ್ತಿ."
+        },
+        "ml": {
+          "insight": "മത്സര ആനുകൂല്യം മൂർച്ചയുള്ളതാണ്. തണുത്ത കോൾസ്, എതിർപ്പ് കൈകാര്യം ചെയ്യൽ, ചർച്ചകൾക്ക് അനുകൂലമാണ്. ലക്ഷ്യങ്ങൾക്കായി മുന്നോട്ട് പോകുക."
+        },
+        "pa": {
+          "insight": "ਮੁਕਾਬਲੇ ਦੀ ਧਾਰ ਤੇਜ਼ ਹੈ। ਠੰਡੇ ਕਾਲ, ਅਪਤੀਤੀ ਸੰਭਾਲ ਅਤੇ ਗੱਲਬਾਤ ਲਈ ਅਨੁਕੂਲ। ਲਕਸ਼ਾਂ ਲਈ ਦਬਾਅ ਬਣਾਓ।"
+        },
+        "or": {
+          "insight": "ପ୍ରତିଯୋଗୀତାମୂଳକ ଲାଭ ତୀବ୍ର ଅଛି। ଠଣ୍ଡା କଲ୍, ଆପତ୍ତି ହାତଲିଂଗ, ଏବଂ ଚାଲଚିତ୍ର ପସନ୍ଦ କରାଯାଇଛି। ଲକ୍ଷ୍ୟଗୁଡ଼ିକ ପାଇଁ ଚାପ ଦିଅନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "প্ৰতিযোগিতামূলক সুবিধা তীক্ষ্ণ। ঠাণ্ডা কল, আপত্তি ব্যৱস্থাপনা, আৰু আলোচনা অনুকূল। লক্ষ্যসমূহৰ বাবে আগবাঢ়ি যাওক।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Perfect for proposals, presentations, and email outreach. Data-driven pitches win today."
+        },
+        "hi": {
+          "insight": "प्रस्तावों, प्रस्तुतियों, और ईमेल आउटरीच के लिए उत्तम। आज डेटा-आधारित प्रस्तुतियाँ जीतेंगी।"
+        },
+        "ta": {
+          "insight": "முயற்சிகள், விளக்கங்கள் மற்றும் மின்னஞ்சல் அணுகலுக்கு சிறந்தது. தரவுகளின் அடிப்படையில் உள்ள முன்மொழிவுகள் இன்று வெற்றி பெறுகின்றன."
+        },
+        "te": {
+          "insight": "ప్రతిపాదనలు, ప్రజెంటేషన్లు, మరియు ఇమెయిల్ అవుట్‌రీచ్ కోసం అద్భుతంగా ఉంటుంది. డేటా ఆధారిత ప్రపోజల్స్ నేడు విజయం సాధిస్తాయి."
+        },
+        "bn": {
+          "insight": "প্রস্তাবনা, উপস্থাপনা এবং ইমেল যোগাযোগের জন্য উপযুক্ত। তথ্য-চালিত পিচ আজ জয়ী হবে।"
+        },
+        "mr": {
+          "insight": "प्रस्ताव, सादरीकरणे आणि ईमेल संपर्कासाठी उत्तम. आज डेटा-आधारित प्रस्ताव जिंकतात."
+        },
+        "gu": {
+          "insight": "પ્રસ્તાવ, પ્રસ્તુતિઓ અને ઇમેઇલ આઉટરીચ માટે સંપૂર્ણ. આંકડા આધારિત પિચ આજે જીતશે."
+        },
+        "kn": {
+          "insight": "ಪ್ರಸ್ತಾವನೆಗಳು, ಪ್ರಸ್ತುತೀಕರಣಗಳು, ಮತ್ತು ಇಮೇಲ್ ಸಂಪರ್ಕಕ್ಕಾಗಿ ಪರಿಪೂರ್ಣ. ಡೇಟಾ ಆಧಾರಿತ ಪ್ರಸ್ತಾವನೆಗಳು ಇಂದು ಗೆಲ್ಲುತ್ತವೆ."
+        },
+        "ml": {
+          "insight": "പ്രസ്താവനകൾ, അവതരണങ്ങൾ, ഇമെയിൽ ഔട്ട്‌റീച്ച് എന്നിവയ്ക്ക് അനുയോജ്യം. ഡാറ്റ അടിസ്ഥാനമാക്കിയുള്ള പ്രമേയങ്ങൾ ഇന്ന് വിജയിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਪੇਸ਼ਕਸ਼ਾਂ, ਪ੍ਰਸਤਾਵਾਂ ਅਤੇ ਈਮੇਲ ਆਉਟਰੀਚ ਲਈ ਬਿਲਕੁਲ ਢੁੱਕਵਾਂ। ਅੱਜ ਡਾਟਾ-ਚਲਿਤ ਪੇਸ਼ਕਸ਼ਾਂ ਜਿੱਤਣਗੀਆਂ।"
+        },
+        "or": {
+          "insight": "ପ୍ରସ୍ତାବ, ପ୍ରସ୍ତୁତିକରଣ, ଏବଂ ଇମେଲ୍ ପହଞ୍ଚାଣି ପାଇଁ ସଂପୂର୍ଣ୍ଣ ଭାବେ ଉପଯୁକ୍ତ। ଆଜି ତଥ୍ୟ-ଚାଳିତ ପିଚ୍ ଜିତିବ।"
+        },
+        "as": {
+          "insight": "প্ৰস্তাৱ, প্ৰেজেণ্টেশ্বন আৰু ইমেইল প্ৰোৱ্টৰ বাবে উপযুক্ত। তথ্য-চালিত প্ৰস্তাৱসমূহ আজি জিকিব।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Ideal for closing big deals and expanding accounts. Upsell opportunities arise naturally."
+        },
+        "hi": {
+          "insight": "बड़े सौदों को बंद करने और खातों का विस्तार करने के लिए आदर्श। अपसेल के अवसर स्वाभाविक रूप से उत्पन्न होते हैं।"
+        },
+        "ta": {
+          "insight": "பெரிய ஒப்பந்தங்களை முடிக்கவும் கணக்குகளை விரிவுபடுத்தவும் சிறந்தது. மேல்நிலை விற்பனை வாய்ப்புகள் இயற்கையாகவே உருவாகின்றன."
+        },
+        "te": {
+          "insight": "పెద్ద ఒప్పందాలను ముగించడానికి మరియు ఖాతాలను విస్తరించడానికి అనుకూలం. అప్‌సెల్ అవకాశాలు సహజంగా వస్తాయి."
+        },
+        "bn": {
+          "insight": "বড় চুক্তি বন্ধ করা এবং অ্যাকাউন্ট প্রসারিত করার জন্য আদর্শ। আপসেল সুযোগগুলি স্বাভাবিকভাবে আসে।"
+        },
+        "mr": {
+          "insight": "मोठ्या व्यवहारांचे समारोप आणि खात्यांचा विस्तार करण्यासाठी आदर्श. अपसेल संधी नैसर्गिकरित्या उद्भवतात."
+        },
+        "gu": {
+          "insight": "મોટા સોદા બંધ કરવા અને ખાતાઓ વિસ્તૃત કરવા માટે આદર્શ. અપસેલ તકો સ્વાભાવિક રીતે ઊભી થાય છે."
+        },
+        "kn": {
+          "insight": "ದೊಡ್ಡ ಒಪ್ಪಂದಗಳನ್ನು ಮುಚ್ಚಲು ಮತ್ತು ಖಾತೆಗಳನ್ನು ವಿಸ್ತರಿಸಲು ಆದರ್ಶ. ಅಪ್‌ಸೆಲ್ ಅವಕಾಶಗಳು ಸಹಜವಾಗಿ ಉದ್ಭವಿಸುತ್ತವೆ."
+        },
+        "ml": {
+          "insight": "വലിയ ഇടപാടുകൾ പൂർത്തിയാക്കാനും അക്കൗണ്ടുകൾ വികസിപ്പിക്കാനും അനുയോജ്യം. അപ്‌സെൽ അവസരങ്ങൾ സ്വാഭാവികമായി ഉയർന്നുവരുന്നു."
+        },
+        "pa": {
+          "insight": "ਵੱਡੇ ਸੌਦੇ ਬੰਦ ਕਰਨ ਅਤੇ ਖਾਤਿਆਂ ਦਾ ਵਿਸਥਾਰ ਕਰਨ ਲਈ ਆਦਰਸ਼। ਅਪਸੇਲ ਦੇ ਮੌਕੇ ਕੁਦਰਤੀ ਤੌਰ 'ਤੇ ਉਭਰਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ବଡ଼ ଡିଲ୍ ସମାପ୍ତ କରିବା ଏବଂ ଖାତାଗୁଡ଼ିକ ବିସ୍ତାର କରିବା ପାଇଁ ଉପଯୁକ୍ତ। ଅପସେଲ୍ ସୁଯୋଗ ସ୍ୱାଭାବିକ ଭାବେ ଉଦ୍ଭବ ହୁଏ।"
+        },
+        "as": {
+          "insight": "বৃহৎ চুক্তিসমূহ বন্ধ কৰা আৰু একাউণ্টসমূহ বিস্তাৰ কৰাৰ বাবে উপযুক্ত। আপচেলৰ সুযোগসমূহ স্বাভাৱিকভাৱে উদ্ভৱ হয়।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Charm and persuasion peak. Client entertainment, networking events, and referral requests favored."
+        },
+        "hi": {
+          "insight": "आकर्षण और मनाने की क्षमता चरम पर है। ग्राहक मनोरंजन, नेटवर्किंग कार्यक्रम, और संदर्भ अनुरोधों के लिए अनुकूल।"
+        },
+        "ta": {
+          "insight": "மோகமும் கவர்ச்சியும் உச்சத்தில் இருக்கும். வாடிக்கையாளர் பொழுதுபோக்கு, நெட்வொர்க்கிங் நிகழ்வுகள் மற்றும் பரிந்துரை கோரிக்கைகள் சாதகமாக இருக்கும்."
+        },
+        "te": {
+          "insight": "ఆకర్షణ మరియు ఒప్పించడం గరిష్ట స్థాయికి చేరుకుంటాయి. క్లయింట్ వినోదం, నెట్‌వర్కింగ్ ఈవెంట్లు, మరియు సూచన అభ్యర్థనలు అనుకూలంగా ఉంటాయి."
+        },
+        "bn": {
+          "insight": "আকর্ষণ এবং প্রভাবশক্তি শীর্ষে। ক্লায়েন্ট বিনোদন, নেটওয়ার্কিং ইভেন্ট এবং রেফারেল অনুরোধের জন্য উপযুক্ত।"
+        },
+        "mr": {
+          "insight": "आकर्षण आणि मन वळविण्याची क्षमता शिखरावर आहे. ग्राहकांचे मनोरंजन, नेटवर्किंग कार्यक्रम, आणि संदर्भ विनंत्या यांना प्राधान्य द्या."
+        },
+        "gu": {
+          "insight": "મોહકતા અને મનાવવાની ક્ષમતા શિખરે છે. ક્લાયન્ટ મનોરંજન, નેટવર્કિંગ ઇવેન્ટ્સ, અને રેફરલ વિનંતીઓ માટે અનુકૂળ."
+        },
+        "kn": {
+          "insight": "ಮೋಹನೀಯತೆ ಮತ್ತು ಮನವೊಲಿಸುವ ಶಕ್ತಿ ತಲುಪುತ್ತದೆ. ಗ್ರಾಹಕರ ಮನರಂಜನೆ, ಜಾಲತಾಣ ಕಾರ್ಯಕ್ರಮಗಳು ಮತ್ತು ಉಲ್ಲೇಖ ವಿನಂತಿಗಳನ್ನು ಪ್ರೋತ್ಸಾಹಿಸಲಾಗಿದೆ."
+        },
+        "ml": {
+          "insight": "ആകർഷണവും പ്രേരണയും ഉച്ചസ്ഥായിയിലെത്തുന്നു. ക്ലയന്റ് വിനോദം, നെറ്റ്വർക്കിംഗ് ഇവന്റുകൾ, റഫറൽ അഭ്യർത്ഥനകൾ എന്നിവയ്ക്ക് അനുകൂലമാണ്."
+        },
+        "pa": {
+          "insight": "ਆਕਰਸ਼ਣ ਅਤੇ ਮਨਾਉਣ ਦੀ ਕਲਾ ਚਰਮ ਤੇ ਹੈ। ਗਾਹਕ ਮਨੋਰੰਜਨ, ਨੈੱਟਵਰਕਿੰਗ ਸਮਾਗਮ, ਅਤੇ ਰੈਫਰਲ ਬੇਨਤੀ ਲਈ ਵਧੀਆ ਸਮਾਂ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଆକର୍ଷଣ ଏବଂ ପ୍ରଭାବିତ କରିବାର କ୍ଷମତା ଶୀର୍ଷରେ ଅଛି। ଗ୍ରାହକ ମନୋରଞ୍ଜନ, ନେଟୱର୍କିଂ ଘଟଣାବଳୀ, ଏବଂ ସନ୍ଦର୍ଭ ଅନୁରୋଧଗୁଡ଼ିକ ପକ୍ଷପାତି।"
+        },
+        "as": {
+          "insight": "মোহনীয়তা আৰু প্ৰভাৱিত কৰাৰ ক্ষমতা শীৰ্ষত থাকে। গ্ৰাহক বিনোদন, নেটৱৰ্কিং অনুষ্ঠান, আৰু পৰামৰ্শ অনুৰোধসমূহৰ বাবে অনুকূল।"
+        }
+      }
+    },
+    {
+      "key": "SALES:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Focus on pipeline management, CRM updates, and strategic planning. Build foundations for Q targets."
+        },
+        "hi": {
+          "insight": "पाइपलाइन प्रबंधन, सीआरएम अपडेट्स, और रणनीतिक योजना पर ध्यान केंद्रित करें। Q लक्ष्यों के लिए नींव बनाएं।"
+        },
+        "ta": {
+          "insight": "குழாய் மேலாண்மை, CRM புதுப்பிப்புகள் மற்றும் மூலோபாய திட்டமிடலில் கவனம் செலுத்துங்கள். Q இலக்குகளுக்கான அடித்தளங்களை அமைக்கவும்."
+        },
+        "te": {
+          "insight": "పైప్‌లైన్ నిర్వహణ, CRM నవీకరణలు, మరియు వ్యూహాత్మక ప్రణాళికపై దృష్టి పెట్టండి. Q లక్ష్యాల కోసం పునాది నిర్మించండి."
+        },
+        "bn": {
+          "insight": "পাইপলাইন ব্যবস্থাপনা, সিআরএম আপডেট এবং কৌশলগত পরিকল্পনার উপর মনোযোগ দিন। কিউ লক্ষ্যগুলির জন্য ভিত্তি তৈরি করুন।"
+        },
+        "mr": {
+          "insight": "पाईपलाइन व्यवस्थापन, CRM अद्यतने आणि धोरणात्मक नियोजनावर लक्ष केंद्रित करा. Q लक्ष्यांसाठी पाया घाला."
+        },
+        "gu": {
+          "insight": "પાઇપલાઇન મેનેજમેન્ટ, CRM અપડેટ્સ અને વ્યૂહાત્મક આયોજન પર ધ્યાન કેન્દ્રિત કરો. Q લક્ષ્યો માટે પાયો બાંધો."
+        },
+        "kn": {
+          "insight": "ಪೈಪ್‌ಲೈನ್ ನಿರ್ವಹಣೆ, CRM ನವೀಕರಣಗಳು ಮತ್ತು ತಂತ್ರಜ್ಞಾನದ ಯೋಜನೆಗೆ ಗಮನ ಹರಿಸಿ. Q ಗುರಿಗಳಿಗೆ ಅಡಿಪಾಯಗಳನ್ನು ನಿರ್ಮಿಸಿ."
+        },
+        "ml": {
+          "insight": "പൈപ്പ്‌ലൈൻ മാനേജ്മെന്റിൽ, CRM അപ്‌ഡേറ്റുകളിൽ, തന്ത്രപരമായ ആസൂത്രണത്തിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുക. Q ലക്ഷ്യങ്ങൾക്ക് അടിസ്ഥാനങ്ങൾ നിർമ്മിക്കുക."
+        },
+        "pa": {
+          "insight": "ਪਾਈਪਲਾਈਨ ਪ੍ਰਬੰਧਨ, CRM ਅਪਡੇਟਸ, ਅਤੇ ਰਣਨੀਤਿਕ ਯੋਜਨਾ 'ਤੇ ਧਿਆਨ ਦਿਓ। Q ਟਾਰਗਟਾਂ ਲਈ ਨੀਂਹਾਂ ਤਿਆਰ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ପାଇପଲାଇନ ପରିଚାଳନା, CRM ଅଦ୍ୟତନ, ଏବଂ କୌଶଳଗତ ପରିକଳ୍ପନା ଉପରେ ଧ୍ୟାନ ଦିଅନ୍ତୁ। Q ଲକ୍ଷ୍ୟଗୁଡ଼ିକ ପାଇଁ ଭିତ୍ସା ତିଆରି କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "পাইপলাইন পৰিচালনা, CRM আপডেট আৰু কৌশলগত পৰিকল্পনাত মনোনিবেশ কৰক। Q লক্ষ্যসমূহৰ বাবে ভিত্তি নিৰ্মাণ কৰক।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Brand visibility peaks. Launch campaigns, press releases, or thought leadership content today."
+        },
+        "hi": {
+          "insight": "ब्रांड दृश्यता चरम पर है। आज अभियान, प्रेस विज्ञप्ति, या विचार नेतृत्व सामग्री लॉन्च करें।"
+        },
+        "ta": {
+          "insight": "பிராண்ட் காட்சிப்படுத்தல் உச்சத்தில் உள்ளது. இன்று பிரச்சாரங்களை, பத்திரிகை வெளியீடுகளை அல்லது சிந்தனை தலைமை உள்ளடக்கத்தை தொடங்குங்கள்."
+        },
+        "te": {
+          "insight": "బ్రాండ్ గుర్తింపు శిఖరానికి చేరుకుంటుంది. నేడు ప్రచారాలు, ప్రెస్ రిలీజ్‌లు లేదా ఆలోచనాత్మక నాయకత్వ కంటెంట్ ప్రారంభించండి."
+        },
+        "bn": {
+          "insight": "ব্র্যান্ড দৃশ্যমানতা শীর্ষে। আজ প্রচারাভিযান, প্রেস রিলিজ, বা চিন্তাধারা নেতৃত্বের বিষয়বস্তু চালু করুন।"
+        },
+        "mr": {
+          "insight": "ब्रँड दृश्यमानता शिखरावर आहे. आज मोहिमा, प्रेस रिलीज किंवा विचार नेतृत्व सामग्री सुरू करा."
+        },
+        "gu": {
+          "insight": "બ્રાન્ડ દૃશ્યતા શિખરે છે. આજે પ્રચાર અભિયાન, પ્રેસ રિલીઝ, અથવા વિચાર નેતૃત્વ સામગ્રી લોન્ચ કરો."
+        },
+        "kn": {
+          "insight": "ಬ್ರಾಂಡ್ ದೃಶ್ಯತೆ ಶೃಂಗಕ್ಕೆ ತಲುಪುತ್ತದೆ. ಇಂದು ಪ್ರಚಾರ ಅಭಿಯಾನಗಳು, ಪತ್ರಿಕಾ ಪ್ರಕಟಣೆಗಳು ಅಥವಾ ಚಿಂತನೆ ನಾಯಕತ್ವ ವಿಷಯವನ್ನು ಪ್ರಾರಂಭಿಸಿ."
+        },
+        "ml": {
+          "insight": "ബ്രാൻഡ് ദൃശ്യപരത ഉയരുന്നു. പ്രചാരണങ്ങൾ, പത്രക്കുറിപ്പുകൾ, അല്ലെങ്കിൽ ചിന്താ നേതൃ ഉള്ളടക്കം ഇന്ന് ആരംഭിക്കുക."
+        },
+        "pa": {
+          "insight": "ਬ੍ਰਾਂਡ ਦ੍ਰਿਸ਼ਟੀਤਾ ਚਰਮ 'ਤੇ ਹੈ। ਅੱਜ ਮੁਹਿੰਮਾਂ, ਪ੍ਰੈਸ ਰਿਲੀਜ਼ਾਂ ਜਾਂ ਵਿਚਾਰ ਅਗਵਾਈ ਸਮੱਗਰੀ ਸ਼ੁਰੂ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ବ୍ରାଣ୍ଡ ଦୃଶ୍ୟତା ଶିଖରକୁ ପହଞ୍ଚେ। ଆଜି ଅଭିଯାନ, ପ୍ରେସ ବିଜ୍ଞପ୍ତି, କିମ୍ବା ଚିନ୍ତନ ନେତୃତ୍ୱ ସାମଗ୍ରୀ ଆରମ୍ଭ କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "ব্ৰেণ্ডৰ দৃশ্যমানতা শীৰ্ষত থাকে। আজিৰ দিনটোত প্ৰচাৰ অভিযান, প্ৰেছ বিজ্ঞপ্তি, বা চিন্তাশীল নেতৃত্বৰ সামগ্ৰী আৰম্ভ কৰক।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Emotional storytelling resonates. Social media engagement, content creation, and community building favored."
+        },
+        "hi": {
+          "insight": "भावनात्मक कहानी कहने से जुड़ाव होता है। सोशल मीडिया सहभागिता, सामग्री निर्माण, और समुदाय निर्माण को प्राथमिकता दी जाती है।"
+        },
+        "ta": {
+          "insight": "உணர்ச்சி மிக்க கதை சொல்லல் மனதை தொடுகிறது. சமூக ஊடக ஈடுபாடு, உள்ளடக்க உருவாக்கம் மற்றும் சமூக கட்டமைப்பு முன்னேற்றம் பெறுகிறது."
+        },
+        "te": {
+          "insight": "భావోద్వేగ కథనాలు ప్రతిధ్వనిస్తాయి. సామాజిక మాధ్యమాల్లో నిమగ్నత, కంటెంట్ సృష్టి, మరియు సముదాయం నిర్మాణం ప్రాధాన్యత పొందుతాయి."
+        },
+        "bn": {
+          "insight": "আবেগপূর্ণ গল্প বলা অনুরণিত হয়। সামাজিক মিডিয়া সম্পৃক্ততা, বিষয়বস্তু সৃষ্টিকরণ, এবং সম্প্রদায় গঠন পছন্দনীয়।"
+        },
+        "mr": {
+          "insight": "भावनिक गोष्टी सांगणे प्रभावी ठरते. सामाजिक माध्यमांवरील सहभाग, सामग्री निर्मिती, आणि समुदाय बांधणीला प्राधान्य दिले जाते."
+        },
+        "gu": {
+          "insight": "ભાવનાત્મક વાર્તાકથન પ્રભાવિત કરે છે. સામાજિક મીડિયા જોડાણ, સામગ્રી સર્જન, અને સમુદાય નિર્માણને પ્રાધાન્ય આપવામાં આવે છે."
+        },
+        "kn": {
+          "insight": "ಭಾವನಾತ್ಮಕ ಕಥನವು ಪ್ರತಿಧ್ವನಿಸುತ್ತದೆ. ಸಾಮಾಜಿಕ ಮಾಧ್ಯಮ ತೊಡಗಿಸಿಕೊಂಡು, ವಿಷಯ ಸೃಷ್ಟಿ ಮತ್ತು ಸಮುದಾಯ ನಿರ್ಮಾಣಕ್ಕೆ ಆದ್ಯತೆ ನೀಡಲಾಗಿದೆ."
+        },
+        "ml": {
+          "insight": "ഭാവനാത്മകമായ കഥാപ്രസംഗം ഹൃദയസ്പർശിയാണ്. സോഷ്യൽ മീഡിയ ഇടപെടൽ, ഉള്ളടക്ക സൃഷ്ടി, സമൂഹ നിർമ്മാണം പ്രോത്സാഹിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਭਾਵਨਾਤਮਕ ਕਹਾਣੀ ਕਹਿਣਾ ਗੂੰਜਦਾ ਹੈ। ਸੋਸ਼ਲ ਮੀਡੀਆ ਸਾਂਝ, ਸਮੱਗਰੀ ਰਚਨਾ, ਅਤੇ ਕਮਿਊਨਟੀ ਨਿਰਮਾਣ ਨੂੰ ਤਰਜੀਹ ਦਿੱਤੀ ਜਾਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଭାବପ୍ରବଣ କାହାଣୀ କହିବା ହୃଦୟକୁ ସ୍ପର୍ଶ କରେ। ସାମାଜିକ ମାଧ୍ୟମ ଯୋଗାଯୋଗ, ବିଷୟବସ୍ତୁ ସୃଷ୍ଟି, ଏବଂ ସମୁଦାୟ ଗଠନ ପସନ୍ଦ କରାଯାଏ।"
+        },
+        "as": {
+          "insight": "আবেগিক কাহিনী বৰ্ণনা অনুৰণিত হয়। সামাজিক মাধ্যম সম্পৰ্ক, সামগ্ৰী সৃষ্টি, আৰু সম্প্ৰদায় গঠনক আগ্ৰাধিকাৰ দিয়া হৈছে।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Aggressive growth tactics work — paid ads, competitive positioning, launch pushes."
+        },
+        "hi": {
+          "insight": "आक्रामक वृद्धि रणनीतियाँ काम करती हैं — भुगतान किए गए विज्ञापन, प्रतिस्पर्धी स्थिति, लॉन्च धक्का।"
+        },
+        "ta": {
+          "insight": "ஆக்கிரமிப்பு வளர்ச்சி உத்திகள் செயல்படும் — கட்டண விளம்பரங்கள், போட்டி நிலைநிறுத்தம், வெளியீட்டு முயற்சிகள்."
+        },
+        "te": {
+          "insight": "ఆక్రమణాత్మక వృద్ధి వ్యూహాలు పనిచేస్తాయి — చెల్లింపు ప్రకటనలు, పోటీ స్థానం, ప్రారంభ నెట్టింపులు."
+        },
+        "bn": {
+          "insight": "আক্রমণাত্মক বৃদ্ধির কৌশল কাজ করে — অর্থপ্রদত্ত বিজ্ঞাপন, প্রতিযোগিতামূলক অবস্থান, লঞ্চ প্রচেষ্টা।"
+        },
+        "mr": {
+          "insight": "आक्रमक वाढीच्या रणनीती कार्य करतात — सशुल्क जाहिराती, स्पर्धात्मक स्थान, लाँच धक्के."
+        },
+        "gu": {
+          "insight": "આક્રમક વૃદ્ધિની કૌશલ્ય કાર્ય કરે છે — ચૂકવેલ જાહેરાતો, સ્પર્ધાત્મક સ્થિતિ, લોન્ચ ધક્કા."
+        },
+        "kn": {
+          "insight": "ಆಕ್ರಮಣಕಾರಿ ಬೆಳವಣಿಗೆ ತಂತ್ರಗಳು ಕೆಲಸ ಮಾಡುತ್ತವೆ — ಪಾವತಿಸಿದ ಜಾಹೀರಾತುಗಳು, ಸ್ಪರ್ಧಾತ್ಮಕ ಸ್ಥಾನಮಾನ, ಪ್ರಾರಂಭದ ಒತ್ತುವರೆ."
+        },
+        "ml": {
+          "insight": "ആക്രമണാത്മകമായ വളർച്ചാ തന്ത്രങ്ങൾ ഫലപ്രദമാണ് — പണമടച്ചുള്ള പരസ്യങ്ങൾ, മത്സരാത്മകമായ നിലപാട്, ലോഞ്ച് പ്രചാരണങ്ങൾ."
+        },
+        "pa": {
+          "insight": "ਆਗਰਸਿਵ ਵਾਧੂ ਰਣਨੀਤੀਆਂ ਕੰਮ ਕਰਦੀਆਂ ਹਨ — ਭੁਗਤਾਨ ਕੀਤੇ ਵਿਗਿਆਪਨ, ਮੁਕਾਬਲੇ ਵਾਲੀ ਸਥਿਤੀ, ਲਾਂਚ ਧੱਕੇ।"
+        },
+        "or": {
+          "insight": "ଆକ୍ରାମକ ବୃଦ୍ଧି ନୀତିଗୁଡ଼ିକ କାମ କରେ — ପ୍ରଦାନ ଜାହିରାତ, ପ୍ରତିଯୋଗୀତାମୂଳକ ସ୍ଥାନ ନିର୍ଣ୍ଣୟ, ଲଞ୍ଚ ପୁଶଗୁଡ଼ିକ।"
+        },
+        "as": {
+          "insight": "আগ্ৰাসী বৃদ্ধি কৌশলসমূহ কাৰ্যকৰী — মাচুলযুক্ত বিজ্ঞাপন, প্ৰতিযোগিতামূলক অৱস্থান, মুকলি প্ৰচেষ্টা।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Data analysis, A/B testing, copywriting, and SEO optimization flow effortlessly today."
+        },
+        "hi": {
+          "insight": "डेटा विश्लेषण, A/B परीक्षण, कॉपीराइटिंग, और SEO अनुकूलन आज आसानी से प्रवाहित होते हैं।"
+        },
+        "ta": {
+          "insight": "தரவு பகுப்பாய்வு, A/B சோதனை, காப்பிரைட்டிங், மற்றும் SEO மேம்பாடு இன்று எளிதாக நடக்கிறது."
+        },
+        "te": {
+          "insight": "డేటా విశ్లేషణ, A/B పరీక్ష, కాపీరైటింగ్, మరియు SEO ఆప్టిమైజేషన్ నేడు సునాయాసంగా ప్రవహిస్తాయి."
+        },
+        "bn": {
+          "insight": "ডেটা বিশ্লেষণ, এ/বি পরীক্ষা, কপিরাইটিং, এবং এসইও অপ্টিমাইজেশন আজ সহজেই প্রবাহিত হয়।"
+        },
+        "mr": {
+          "insight": "डेटा विश्लेषण, A/B चाचणी, प्रतिलिपी लेखन, आणि SEO ऑप्टिमायझेशन आज सहजतेने प्रवाहित होते."
+        },
+        "gu": {
+          "insight": "આજના દિવસે ડેટા વિશ્લેષણ, A/B પરીક્ષણ, કૉપિરાઇટિંગ, અને SEO ઑપ્ટિમાઇઝેશન સરળતાથી વહે છે."
+        },
+        "kn": {
+          "insight": "ಡೇಟಾ ವಿಶ್ಲೇಷಣೆ, A/B ಪರೀಕ್ಷೆ, ಪ್ರತಿಲಿಪಿ ಬರವಣಿಗೆ, ಮತ್ತು SEO ಆಪ್ಟಿಮೈಸೇಶನ್ ಇಂದು ಸುಲಭವಾಗಿ ಹರಿಯುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ഡാറ്റ വിശകലനം, A/B ടെസ്റ്റിംഗ്, കോപ്പിറൈറ്റിംഗ്, SEO ഓപ്റ്റിമൈസേഷൻ എന്നിവ ഇന്ന് എളുപ്പത്തിൽ പ്രവഹിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਅੱਜ ਡਾਟਾ ਵਿਸ਼ਲੇਸ਼ਣ, A/B ਟੈਸਟਿੰਗ, ਕਾਪੀਰਾਈਟਿੰਗ, ਅਤੇ SEO ਅਪਟੀਮਾਈਜ਼ੇਸ਼ਨ ਬਿਨਾ ਕਿਸੇ ਰੁਕਾਵਟ ਦੇ ਚੱਲਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ଡାଟା ବିଶ୍ଳେଷଣ, A/B ପରୀକ୍ଷା, ପ୍ରତିଲିପି ଲେଖନ, ଏବଂ SEO ଅପ୍ଟିମାଇଜେସନ ଆଜି ସହଜରେ ପ୍ରବାହିତ ହୁଏ।"
+        },
+        "as": {
+          "insight": "ডাটা বিশ্লেষণ, A/B পৰীক্ষণ, কপিৰাইটিং, আৰু SEO অপ্টিমাইজেশ্বন আজি সহজে প্ৰবাহিত হয়।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Think big — brand partnerships, influencer outreach, and campaign strategy sessions."
+        },
+        "hi": {
+          "insight": "बड़ा सोचें — ब्रांड साझेदारियाँ, प्रभावशाली लोगों से संपर्क, और अभियान रणनीति सत्र।"
+        },
+        "ta": {
+          "insight": "பெரியதாக யோசிக்கவும் — பிராண்டு கூட்டாண்மைகள், செல்வாக்கு செலுத்துபவர் அணுகல் மற்றும் பிரச்சார மூலோபாய அமர்வுகள்."
+        },
+        "te": {
+          "insight": "పెద్దగా ఆలోచించండి — బ్రాండ్ భాగస్వామ్యాలు, ప్రభావశీలుల చేరిక, మరియు ప్రచార వ్యూహ సమావేశాలు."
+        },
+        "bn": {
+          "insight": "বড় চিন্তা করুন — ব্র্যান্ড অংশীদারিত্ব, প্রভাবশালী যোগাযোগ, এবং প্রচারাভিযান কৌশল সেশন।"
+        },
+        "mr": {
+          "insight": "मोठा विचार करा — ब्रँड भागीदारी, प्रभावशाली व्यक्तींचा संपर्क, आणि मोहिमेच्या धोरणाच्या सत्रे."
+        },
+        "gu": {
+          "insight": "મોટું વિચારવું — બ્રાન્ડ ભાગીદારી, પ્રભાવક આઉટરીચ, અને અભિયાન વ્યૂહરચના સત્રો."
+        },
+        "kn": {
+          "insight": "ದೊಡ್ಡದಾಗಿ ಯೋಚಿಸಿ — ಬ್ರಾಂಡ್ ಸಹಭಾಗಿತ್ವಗಳು, ಪ್ರಭಾವಶಾಲಿ ಸಂಪರ್ಕ, ಮತ್ತು ಅಭಿಯಾನ ತಂತ್ರಜ್ಞಾನ ಸತ್ರಗಳು."
+        },
+        "ml": {
+          "insight": "വലിയതായ ചിന്തിക്കുക — ബ്രാൻഡ് പങ്കാളിത്തങ്ങൾ, സ്വാധീനക്കാരുടെ സമീപനം, ക്യാമ്പെയ്ൻ തന്ത്രസമിതി സമ്മേളനങ്ങൾ."
+        },
+        "pa": {
+          "insight": "ਵੱਡਾ ਸੋਚੋ — ਬ੍ਰਾਂਡ ਭਾਗੀਦਾਰੀਆਂ, ਪ੍ਰਭਾਵਸ਼ਾਲੀ ਪਹੁੰਚ, ਅਤੇ ਮੁਹਿੰਮ ਰਣਨੀਤੀ ਸੈਸ਼ਨ।"
+        },
+        "or": {
+          "insight": "ବଡ଼ ଭାବନା କରନ୍ତୁ — ବ୍ରାଣ୍ଡ ସହଯୋଗ, ପ୍ରଭାବଶାଳୀ ପହଞ୍ଚ, ଏବଂ ଅଭିଯାନ ଯୋଜନା ସମ୍ମିଳନୀ।"
+        },
+        "as": {
+          "insight": "ডাঙৰকৈ ভাবক — ব্ৰেণ্ড অংশীদাৰিত্ব, প্ৰভাৱশালী ব্যক্তিৰ সৈতে যোগাযোগ, আৰু অভিযান কৌশল সভাসমূহ।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Visual content, brand aesthetics, and creative campaigns shine. Design and photo shoots favored."
+        },
+        "hi": {
+          "insight": "दृश्य सामग्री, ब्रांड सौंदर्यशास्त्र, और रचनात्मक अभियान चमकते हैं। डिज़ाइन और फोटो शूट को प्राथमिकता दी जाती है।"
+        },
+        "ta": {
+          "insight": "காட்சி உள்ளடக்கம், பிராண்டு அழகியல், மற்றும் படைப்பாற்றல் பிரச்சாரங்கள் பிரகாசிக்கின்றன. வடிவமைப்பு மற்றும் புகைப்பட படப்பிடிப்புகள் விரும்பப்படுகின்றன."
+        },
+        "te": {
+          "insight": "దృశ్య కంటెంట్, బ్రాండ్ సౌందర్యం, సృజనాత్మక ప్రచారాలు మెరిసిపోతాయి. డిజైన్ మరియు ఫోటో షూట్లు అనుకూలంగా ఉంటాయి."
+        },
+        "bn": {
+          "insight": "দৃশ্যমান বিষয়বস্তু, ব্র্যান্ড নান্দনিকতা, এবং সৃজনশীল প্রচারাভিযান উজ্জ্বল। নকশা এবং ফটো শুট পছন্দনীয়।"
+        },
+        "mr": {
+          "insight": "दृश्य सामग्री, ब्रँड सौंदर्यशास्त्र, आणि सर्जनशील मोहिमा चमकतात. डिझाइन आणि फोटो शूटला प्राधान्य दिले जाते."
+        },
+        "gu": {
+          "insight": "દ્રશ્ય સામગ્રી, બ્રાન્ડ સૌંદર્યશાસ્ત્ર, અને સર્જનાત્મક અભિયાનો ચમકે છે. ડિઝાઇન અને ફોટો શૂટને પ્રાધાન્ય આપવામાં આવે છે."
+        },
+        "kn": {
+          "insight": "ದೃಶ್ಯ ವಿಷಯ, ಬ್ರಾಂಡ್ ಅಸ್ತೆಟಿಕ್ಸ್, ಮತ್ತು ಸೃಜನಾತ್ಮಕ ಅಭಿಯಾನಗಳು ಹೊಳೆಯುತ್ತವೆ. ವಿನ್ಯಾಸ ಮತ್ತು ಫೋಟೋ ಶೂಟ್‌ಗಳು ಮೆಚ್ಚುಗೆಯಾಗಿವೆ."
+        },
+        "ml": {
+          "insight": "ദൃശ്യ ഉള്ളടക്കം, ബ്രാൻഡ് സൌന്ദര്യം, സൃഷ്ടിപരമായ ക്യാമ്പെയ്‌നുകൾ തിളങ്ങുന്നു. ഡിസൈൻ, ഫോട്ടോ ഷൂട്ട് എന്നിവയ്ക്ക് പ്രാധാന്യം."
+        },
+        "pa": {
+          "insight": "ਦ੍ਰਿਸ਼ਟੀ ਸਮੱਗਰੀ, ਬ੍ਰਾਂਡ ਸੁੰਦਰਤਾ, ਅਤੇ ਰਚਨਾਤਮਕ ਮੁਹਿੰਮਾਂ ਚਮਕਦੀਆਂ ਹਨ। ਡਿਜ਼ਾਈਨ ਅਤੇ ਫੋਟੋ ਸ਼ੂਟਾਂ ਨੂੰ ਤਰਜੀਹ ਦਿੱਤੀ ਜਾਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଦୃଶ୍ୟ ବିଷୟବସ୍ତୁ, ବ୍ରାଣ୍ଡ ରୂପରେଖା, ଏବଂ ସୃଜନଶୀଳ ଅଭିଯାନ ଆକର୍ଷଣୀୟ। ଡିଜାଇନ ଏବଂ ଫଟୋ ଶୁଟ୍ ପସନ୍ଦ।"
+        },
+        "as": {
+          "insight": "দৃশ্য সামগ্ৰী, ব্ৰেণ্ডৰ নান্দনিকতা আৰু সৃষ্টিশীল অভিযানসমূহ উজ্বলিছে। ডিজাইন আৰু ফটো শ্বুটসমূহক প্ৰাধান্য দিয়া হৈছে।"
+        }
+      }
+    },
+    {
+      "key": "MARKETING:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Marketing analytics, budget reviews, and long-term strategy. Optimize existing funnels."
+        },
+        "hi": {
+          "insight": "विपणन विश्लेषण, बजट समीक्षाएँ, और दीर्घकालिक रणनीति। मौजूदा फ़नल को अनुकूलित करें।"
+        },
+        "ta": {
+          "insight": "மார்க்கெட்டிங் பகுப்பாய்வு, பட்ஜெட் மதிப்பீடுகள், மற்றும் நீண்டகால உத்தி. உள்ளமைந்த வழிகளை மேம்படுத்தவும்."
+        },
+        "te": {
+          "insight": "మార్కెటింగ్ విశ్లేషణలు, బడ్జెట్ సమీక్షలు, మరియు దీర్ఘకాలిక వ్యూహం. ఉన్న ఫన్నెల్స్‌ను ఆప్టిమైజ్ చేయండి."
+        },
+        "bn": {
+          "insight": "বিপণন বিশ্লেষণ, বাজেট পর্যালোচনা, এবং দীর্ঘমেয়াদী কৌশল। বিদ্যমান ফানেলগুলি অপ্টিমাইজ করুন।"
+        },
+        "mr": {
+          "insight": "विपणन विश्लेषण, बजेट पुनरावलोकने, आणि दीर्घकालीन धोरण. विद्यमान फनेल्सचा अधिकाधिक वापर करा."
+        },
+        "gu": {
+          "insight": "માર્કેટિંગ વિશ્લેષણ, બજેટ સમીક્ષાઓ, અને લાંબા ગાળાની વ્યૂહરચના. મોજુદા ફનલ્સને ઑપ્ટિમાઇઝ કરો."
+        },
+        "kn": {
+          "insight": "ಮಾರ್ಕೆಟಿಂಗ್ ವಿಶ್ಲೇಷಣೆ, ಬಜೆಟ್ ವಿಮರ್ಶೆಗಳು, ಮತ್ತು ದೀರ್ಘಕಾಲೀನ ತಂತ್ರ. विद्यमान ಮಾರ್ಗಗಳನ್ನು ಉತ್ತಮಗೊಳಿಸಿ."
+        },
+        "ml": {
+          "insight": "മാർക്കറ്റിംഗ് വിശകലനം, ബജറ്റ് അവലോകനങ്ങൾ, ദീർഘകാല തന്ത്രം. നിലവിലുള്ള ഫണലുകൾ മെച്ചപ്പെടുത്തുക."
+        },
+        "pa": {
+          "insight": "ਮਾਰਕੀਟਿੰਗ ਵਿਸ਼ਲੇਸ਼ਣ, ਬਜਟ ਸਮੀਖਿਆਵਾਂ, ਅਤੇ ਲੰਬੇ ਸਮੇਂ ਦੀ ਰਣਨੀਤੀ। ਮੌਜੂਦਾ ਫਨਲਾਂ ਨੂੰ ਵਧੀਆ ਬਣਾਓ।"
+        },
+        "or": {
+          "insight": "ବିପଣନ ବିଶ୍ଲେଷଣ, ବଜେଟ ସମୀକ୍ଷା, ଏବଂ ଦୀର୍ଘକାଳୀନ କୌଶଳ। ଅବସ୍ଥାପନା ଥିବା ଫନେଲଗୁଡ଼ିକୁ ସମାଧାନ କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "বিপণন বিশ্লেষণ, বাজেট পৰ্যালোচনা, আৰু দীঘলীয়া কৌশল। বিদ্যমান ফানেলসমূহক অনুকূলিত কৰক।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Government and PSU stocks favored. Leadership in financial decisions. Portfolio review day."
+        },
+        "hi": {
+          "insight": "सरकारी और पीएसयू शेयरों को प्राथमिकता दी जाती है। वित्तीय निर्णयों में नेतृत्व। पोर्टफोलियो समीक्षा का दिन।"
+        },
+        "ta": {
+          "insight": "அரசு மற்றும் பொதுத்துறை நிறுவன பங்குகள் விரும்பத்தக்கவை. நிதி முடிவுகளில் தலைமைத்துவம். பங்குத் தொகுப்பு மதிப்பீட்டு நாள்."
+        },
+        "te": {
+          "insight": "ప్రభుత్వ మరియు PSU స్టాక్స్ ప్రాధాన్యత. ఆర్థిక నిర్ణయాలలో నాయకత్వం. పోర్ట్ఫోలియో సమీక్షా రోజు."
+        },
+        "bn": {
+          "insight": "সরকারি এবং পাবলিক সেক্টর ইউনিটের শেয়ারগুলি পছন্দনীয়। আর্থিক সিদ্ধান্তে নেতৃত্ব। পোর্টফোলিও পর্যালোচনার দিন।"
+        },
+        "mr": {
+          "insight": "सरकारी आणि सार्वजनिक क्षेत्रातील स्टॉक्सला प्राधान्य. आर्थिक निर्णयांमध्ये नेतृत्व. पोर्टफोलिओ पुनरावलोकनाचा दिवस."
+        },
+        "gu": {
+          "insight": "સરકાર અને પીએસયુ શેરો પ્રાધાન્યમાં. નાણાકીય નિર્ણયો માં નેતૃત્વ. પોર્ટફોલિયો સમીક્ષા દિવસ."
+        },
+        "kn": {
+          "insight": "ಸರ್ಕಾರಿ ಮತ್ತು ಸಾರ್ವಜನಿಕ ಕ್ಷೇತ್ರದ ಷೇರುಗಳು ಮೆಚ್ಚುಗೆಯಾದವು. ಹಣಕಾಸು ನಿರ್ಧಾರಗಳಲ್ಲಿ ನಾಯಕತ್ವ. ಪೋರ್ಟ್ಫೋಲಿಯೊ ಪರಿಶೀಲನೆ ದಿನ."
+        },
+        "ml": {
+          "insight": "സർക്കാർ, പിഎസ്‌യു ഓഹരികൾക്ക് അനുകൂലം. സാമ്പത്തിക തീരുമാനങ്ങളിൽ നേതൃപാടവം. പോർട്ട്ഫോളിയോ അവലോകന ദിനം."
+        },
+        "pa": {
+          "insight": "ਸਰਕਾਰ ਅਤੇ PSU ਸਟਾਕਾਂ ਨੂੰ ਤਰਜੀਹ ਦਿੱਤੀ ਜਾਂਦੀ ਹੈ। ਵਿੱਤੀ ਫੈਸਲਿਆਂ ਵਿੱਚ ਨੇਤ੍ਰਿਤਵ। ਪੋਰਟਫੋਲਿਓ ਸਮੀਖਿਆ ਦਾ ਦਿਨ।"
+        },
+        "or": {
+          "insight": "ସରକାରୀ ଏବଂ PSU ଷ୍ଟକ୍ସ ପସନ୍ଦ କରାଯାଇଛି। ଆର୍ଥିକ ସିଦ୍ଧାନ୍ତଗୁଡ଼ିକରେ ନେତୃତ୍ୱ। ପୋର୍ଟଫୋଲିଓ ପୁନଃପରୀକ୍ଷା ଦିନ।"
+        },
+        "as": {
+          "insight": "চৰকাৰ আৰু ৰাজহুৱা খণ্ডৰ শ্বেয়াৰসমূহ প্ৰিয়। আৰ্থিক সিদ্ধান্তত নেতৃত্ব। পোৰ্টফলিঅ' পৰ্যালোচনাৰ দিন।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Market sentiment sensitive — trust your instincts but set stop-losses. FMCG/healthcare sectors active."
+        },
+        "hi": {
+          "insight": "बाजार भावना संवेदनशील — अपनी प्रवृत्ति पर विश्वास करें लेकिन स्टॉप-लॉस सेट करें। एफएमसीजी/स्वास्थ्य सेवा क्षेत्र सक्रिय।"
+        },
+        "ta": {
+          "insight": "சந்தை உணர்வு உணர்வானது — உங்கள் உள்ளுணர்வை நம்புங்கள் ஆனால் நஷ்டத்தை நிறுத்தும் அளவுகளை அமைக்கவும். FMCG/சுகாதார துறைகள் செயல்பாட்டில் உள்ளன."
+        },
+        "te": {
+          "insight": "మార్కెట్ భావోద్వేగాలు సున్నితంగా ఉంటాయి — మీ అంతఃప్రజ్ఞను నమ్మండి కానీ స్టాప్-లాస్సులను సెట్ చేయండి. ఎఫ్‌ఎంసీజీ/ఆరోగ్య సంరక్షణ రంగాలు చురుకుగా ఉంటాయి."
+        },
+        "bn": {
+          "insight": "বাজারের মনোভাব সংবেদনশীল — আপনার অন্তর্দৃষ্টি বিশ্বাস করুন কিন্তু স্টপ-লস সেট করুন। এফএমসিজি/স্বাস্থ্যসেবা খাত সক্রিয়।"
+        },
+        "mr": {
+          "insight": "बाजार भावना संवेदनशील — आपल्या अंतःप्रेरणांवर विश्वास ठेवा पण स्टॉप-लॉसेस सेट करा. एफएमसीजी/आरोग्य सेवा क्षेत्रे सक्रिय."
+        },
+        "gu": {
+          "insight": "બજારની ભાવના સંવેદનશીલ — તમારી પ્રવૃત્તિઓ પર વિશ્વાસ રાખો પરંતુ સ્ટોપ-લોસ સેટ કરો. FMCG/હેલ્થકેર ક્ષેત્રો સક્રિય."
+        },
+        "kn": {
+          "insight": "ಮಾರುಕಟ್ಟೆ ಭಾವನೆ ಸಂವೇದನಾಶೀಲ — ನಿಮ್ಮ ಅಂತರದೃಷ್ಟಿಯನ್ನು ನಂಬಿ ಆದರೆ ನಷ್ಟನಿರೋಧಕಗಳನ್ನು ಹೊಂದಿಸಿ. FMCG/ಆರೋಗ್ಯಸೇವೆ ಕ್ಷೇತ್ರಗಳು ಸಕ್ರಿಯ."
+        },
+        "ml": {
+          "insight": "വിപണിയുടെ വികാരങ്ങൾ സങ്കീർണ്ണമാണ് — നിങ്ങളുടെ സ്വഭാവബോധത്തെ വിശ്വസിക്കുക, പക്ഷേ നഷ്‌ടപരിധികൾ നിശ്ചയിക്കുക. എഫ്‌എം‌സിജി/ആരോഗ്യപരിഭ്രാന്തി മേഖലകൾ സജീവമാണ്."
+        },
+        "pa": {
+          "insight": "ਬਾਜ਼ਾਰ ਦੀ ਭਾਵਨਾ ਸੰਵੇਦਨਸ਼ੀਲ — ਆਪਣੇ ਸਹੀ ਅਨੁਭਵਾਂ 'ਤੇ ਭਰੋਸਾ ਕਰੋ ਪਰ ਸਟਾਪ-ਲਾਸਜ਼ ਸੈੱਟ ਕਰੋ। ਐਫਐਮਸੀਜੀ/ਹੈਲਥਕੇਅਰ ਸੈਕਟਰ ਸਰਗਰਮ ਹਨ।"
+        },
+        "or": {
+          "insight": "ବଜାର ଭାବନା ସମ୍ବେଦନଶୀଳ — ଆପଣଙ୍କ ଅନ୍ତର୍ଜ୍ଞାନରୁ ଆଶ୍ରୟ ନିଅନ୍ତୁ କିନ୍ତୁ ଷ୍ଟପ୍-ଲସ୍ ସେଟ୍ କରନ୍ତୁ। ଏଫଏମସିଜି/ସ୍ୱାସ୍ଥ୍ୟସେବା ଖାତାରେ କ୍ରିୟାଶୀଳ।"
+        },
+        "as": {
+          "insight": "বজাৰৰ মনোভাৱ সংবেদনশীল — আপোনাৰ অন্তৰ্দৃষ্টি বিশ্বাস কৰক কিন্তু স্টপ-লচ স্থাপন কৰক। FMCG/স্বাস্থ্যসেৱা খণ্ড সক্ৰিয়।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Volatile energy — pharma/defense sectors active. Short-term trades possible but manage risk tightly."
+        },
+        "hi": {
+          "insight": "अस्थिर ऊर्जा — फार्मा/रक्षा क्षेत्र सक्रिय। अल्पकालिक व्यापार संभव लेकिन जोखिम को सख्ती से प्रबंधित करें।"
+        },
+        "ta": {
+          "insight": "மாறுபடும் ஆற்றல் — மருந்து/பாதுகாப்பு துறைகள் செயல்பாட்டில். குறுகிய கால வர்த்தகங்கள் சாத்தியம் ஆனால் அபாயத்தை கடுமையாக நிர்வகிக்கவும்."
+        },
+        "te": {
+          "insight": "అస్థిర శక్తి — ఔషధ/రక్షణ రంగాలు చురుకుగా ఉన్నాయి. తక్షణ వాణిజ్యాలు సాధ్యమే కానీ ప్రమాదాన్ని కట్టుదిట్టంగా నిర్వహించండి."
+        },
+        "bn": {
+          "insight": "অস্থির শক্তি — ফার্মা/প্রতিরক্ষা খাত সক্রিয়। স্বল্পমেয়াদী বাণিজ্য সম্ভব কিন্তু ঝুঁকি কঠোরভাবে পরিচালনা করুন।"
+        },
+        "mr": {
+          "insight": "अस्थिर ऊर्जा — औषधनिर्माण/संरक्षण क्षेत्र सक्रिय. अल्पकालीन व्यापार शक्य परंतु जोखमीचे व्यवस्थापन काटेकोरपणे करा."
+        },
+        "gu": {
+          "insight": "અસ્થિર ઊર્જા — ફાર્મા/રક્ષણ ક્ષેત્રો સક્રિય. ટૂંકા ગાળાના વેપાર શક્ય પરંતુ જોખમને કડક રીતે સંભાળવું."
+        },
+        "kn": {
+          "insight": "ಅಸ್ಥಿರ ಶಕ್ತಿ — ಔಷಧಿ/ರಕ್ಷಣಾ ಕ್ಷೇತ್ರಗಳು ಸಕ್ರಿಯ. ಕಿರುಕಾಲದ ವಹಿವಾಟುಗಳು ಸಾಧ್ಯ ಆದರೆ ಅಪಾಯವನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿರ್ವಹಿಸಿ."
+        },
+        "ml": {
+          "insight": "അസ്ഥിരമായ ഊർജ്ജം — ഫാർമ/പ്രതിരോധ മേഖലകൾ സജീവമാണ്. ചെറുകാല വ്യാപാരങ്ങൾ സാധ്യമാണ് പക്ഷേ അപകടസാധ്യത കൃത്യമായി നിയന്ത്രിക്കുക."
+        },
+        "pa": {
+          "insight": "ਅਸਥਿਰ ਊਰਜਾ — ਫਾਰਮਾ/ਰੱਖਿਆ ਖੇਤਰ ਸਰਗਰਮ। ਛੋਟੇ ਸਮੇਂ ਦੇ ਵਪਾਰ ਸੰਭਵ ਪਰ ਜੋਖਮ ਨੂੰ ਕੜੀ ਤਰ੍ਹਾਂ ਸੰਭਾਲੋ।"
+        },
+        "or": {
+          "insight": "ଅସ୍ଥିର ଉର୍ଜା — ଔଷଧ/ରକ୍ଷା କ୍ଷେତ୍ର ସକ୍ରିୟ। ଅଳ୍ପକାଳୀନ ବ୍ୟବସାୟ ସମ୍ଭବ, କିନ୍ତୁ ଜୁଆଖେଳ ଜୋରଦାର ଭାବେ ପରିଚାଳନା କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "অস্থিৰ শক্তি — ফাৰ্মা/ৰক্ষা খণ্ড সক্ৰিয়। স্বল্পমিয়াদী বাণিজ্য সম্ভৱ কিন্তু বিপদ সাৱধানে পৰিচালনা কৰক।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "IT/tech stocks favored. Day trading conditions good. Data-driven analysis yields profit."
+        },
+        "hi": {
+          "insight": "आईटी/तकनीकी शेयरों को प्राथमिकता दी जाती है। दिन के व्यापार की स्थिति अच्छी है। डेटा-आधारित विश्लेषण से लाभ होता है।"
+        },
+        "ta": {
+          "insight": "ஐடி/தொழில்நுட்ப பங்குகள் ஆதரிக்கப்படுகின்றன. நாள் வர்த்தக நிலைமைகள் நல்லவை. தரவின் அடிப்படையிலான பகுப்பாய்வு லாபத்தை அளிக்கிறது."
+        },
+        "te": {
+          "insight": "ఐటి/టెక్ స్టాక్స్ ప్రాధాన్యం. రోజు ట్రేడింగ్ పరిస్థితులు మంచి. డేటా ఆధారిత విశ్లేషణ లాభాన్ని ఇస్తుంది."
+        },
+        "bn": {
+          "insight": "আইটি/প্রযুক্তি শেয়ারগুলি পছন্দনীয়। দিনের ট্রেডিংয়ের শর্তগুলি ভালো। তথ্য-চালিত বিশ্লেষণ লাভ দেয়।"
+        },
+        "mr": {
+          "insight": "आयटी/तंत्रज्ञान स्टॉक्सला प्राधान्य. दिवसाच्या व्यापाराच्या अटी चांगल्या. डेटा-आधारित विश्लेषण नफा देते."
+        },
+        "gu": {
+          "insight": "આઈટી/ટેક સ્ટોક્સને પ્રાધાન્ય. ડે ટ્રેડિંગની પરિસ્થિતિઓ સારી. ડેટા પર આધારિત વિશ્લેષણ નફો આપે છે."
+        },
+        "kn": {
+          "insight": "ಐಟಿ/ತಂತ್ರಜ್ಞಾನ ಷೇರುಗಳು ಮೆಚ್ಚುಗೆಯಾದವು. ದಿನದ ವ್ಯಾಪಾರ ಪರಿಸ್ಥಿತಿಗಳು ಉತ್ತಮ. ಡೇಟಾ ಆಧಾರಿತ ವಿಶ್ಲೇಷಣೆ ಲಾಭವನ್ನು ತರುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ഐടി/ടെക് ഓഹരികൾക്ക് അനുകൂലമാണ്. ദിന വ്യാപാര സാഹചര്യങ്ങൾ നല്ലതാണ്. ഡാറ്റ അടിസ്ഥാനമാക്കിയുള്ള വിശകലനം ലാഭം നൽകുന്നു."
+        },
+        "pa": {
+          "insight": "ਆਈਟੀ/ਟੈਕ ਸਟਾਕਾਂ ਨੂੰ ਤਰਜੀਹ ਦਿੱਤੀ ਜਾਂਦੀ ਹੈ। ਦਿਨ ਦੇ ਵਪਾਰ ਦੀਆਂ ਸਥਿਤੀਆਂ ਚੰਗੀਆਂ ਹਨ। ਡਾਟਾ-ਚਲਿਤ ਵਿਸ਼ਲੇਸ਼ਣ ਲਾਭ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଆଇଟି/ଟେକ ଷ୍ଟକଗୁଡ଼ିକ ପସନ୍ଦ କରାଯାଇଛି। ଦିନ ଟ୍ରେଡିଂ ପରିସ୍ଥିତି ଭଲ। ତଥ୍ୟ-ଚାଳିତ ବିଶ୍ଳେଷଣ ଲାଭ ଦେଇଥାଏ।"
+        },
+        "as": {
+          "insight": "আইটি/প্ৰযুক্তি ষ্টকসমূহক প্ৰাধান্য দিয়া হৈছে। দিনৰ বেপাৰ কৰাৰ পৰিৱেশ ভাল। তথ্য-চালিত বিশ্লেষণে লাভ প্ৰদান কৰে।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Banking/finance sectors strong. Long-term investments and mutual fund SIPs favored. Wealth grows."
+        },
+        "hi": {
+          "insight": "बैंकिंग/वित्तीय क्षेत्र मजबूत। दीर्घकालिक निवेश और म्यूचुअल फंड SIPs को प्राथमिकता दें। धन में वृद्धि होगी।"
+        },
+        "ta": {
+          "insight": "வங்கி/நிதி துறைகள் வலுவாக உள்ளன. நீண்டகால முதலீடுகள் மற்றும் மியூச்சுவல் பண்ட் SIPகள் விரும்பத்தக்கவை. செல்வம் வளர்கிறது."
+        },
+        "te": {
+          "insight": "బ్యాంకింగ్/ఆర్థిక రంగాలు బలంగా ఉన్నాయి. దీర్ఘకాలిక పెట్టుబడులు మరియు మ్యూచువల్ ఫండ్ SIPలు ప్రోత్సహించబడతాయి. సంపద పెరుగుతుంది."
+        },
+        "bn": {
+          "insight": "ব্যাংকিং/অর্থনীতি খাত শক্তিশালী। দীর্ঘমেয়াদী বিনিয়োগ এবং মিউচুয়াল ফান্ড SIP গুলি পছন্দনীয়। সম্পদ বৃদ্ধি পায়।"
+        },
+        "mr": {
+          "insight": "बँकिंग/वित्त क्षेत्रे मजबूत. दीर्घकालीन गुंतवणूक आणि म्युच्युअल फंड SIP ला प्राधान्य. संपत्ती वाढते."
+        },
+        "gu": {
+          "insight": "બેંકિંગ/વિત્તીય ક્ષેત્રો મજબૂત. લાંબા ગાળાના રોકાણો અને મ્યુચ્યુઅલ ફંડ SIPને પ્રાધાન્ય. સંપત્તિ વધે છે."
+        },
+        "kn": {
+          "insight": "ಬ್ಯಾಂಕಿಂಗ್/ಹಣಕಾಸು ಕ್ಷೇತ್ರಗಳು ಬಲವಾಗಿವೆ. ದೀರ್ಘಕಾಲೀನ ಹೂಡಿಕೆಗಳು ಮತ್ತು ಪರಸ್ಪರ ನಿಧಿ SIPಗಳು ಮೆಚ್ಚುಗೆಯಾಗಿವೆ. ಸಂಪತ್ತು ವೃದ್ಧಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ബാങ്കിംഗ്/ഫിനാൻസ് മേഖലകൾ ശക്തമാണ്. ദീർഘകാല നിക്ഷേപങ്ങളും മ്യൂച്വൽ ഫണ്ട് SIPകളും പ്രാധാന്യമർഹിക്കുന്നു. സമ്പത്ത് വർദ്ധിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਬੈਂਕਿੰਗ/ਵਿੱਤੀ ਸੈਕਟਰ ਮਜ਼ਬੂਤ। ਲੰਬੇ ਸਮੇਂ ਦੀਆਂ ਨਿਵੇਸ਼ੀਆਂ ਅਤੇ ਮਿਊਚੁਅਲ ਫੰਡ SIP ਪਸੰਦ ਕੀਤੀਆਂ ਜਾਂਦੀਆਂ ਹਨ। ਧਨ ਵਧਦਾ ਹੈ।"
+        },
+        "or": {
+          "insight": "ବ୍ୟାଙ୍କିଂ/ଆର୍ଥିକ ଖାତରେ ଶକ୍ତିଶାଳୀ। ଦୀର୍ଘକାଳୀନ ନିବେଶ ଏବଂ ମ୍ୟୁଚୁଆଲ୍ ଫଣ୍ଡ SIP ଗୁଡ଼ିକ ପକ୍ଷପାତିତା ପାଉଛି। ସମ୍ପତ୍ତି ବୃଦ୍ଧି ପାଉଛି।"
+        },
+        "as": {
+          "insight": "ব্যাংকিং/বিত্তীয় ক্ষেত্ৰসমূহ শক্তিশালী। দীঘকালীন বিনিয়োগ আৰু মিউচুৱেল ফাণ্ড SIPs পছন্দনীয়। সম্পত্তি বৃদ্ধি পায়।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Luxury/entertainment/FMCG stocks favorable. Gold purchases auspicious. Portfolio diversification day."
+        },
+        "hi": {
+          "insight": "विलासिता/मनोरंजन/एफएमसीजी शेयर अनुकूल। सोने की खरीदारी शुभ। पोर्टफोलियो विविधीकरण का दिन।"
+        },
+        "ta": {
+          "insight": "ஆடம்பரம்/மகிழ்ச்சி/எஃப்எம்சிஜி பங்குகள் சாதகமானவை. தங்கம் வாங்குதல் மங்களகரமானது. முதலீட்டு பல்வகைப்படுத்தல் நாள்."
+        },
+        "te": {
+          "insight": "ఆభరణాలు/వినోదం/ఎఫ్‌ఎమ్‌సీజీ స్టాక్స్ అనుకూలం. బంగారం కొనుగోళ్లు శుభప్రదం. పోర్ట్‌ఫోలియో వైవిధ్యీకరణ రోజు."
+        },
+        "bn": {
+          "insight": "বিলাসিতা/বিনোদন/এফএমসিজি শেয়ারগুলি অনুকূল। সোনা কেনা শুভ। পোর্টফোলিও বৈচিত্র্যকরণের দিন।"
+        },
+        "mr": {
+          "insight": "लक्झरी/मनोरंजन/FMCG स्टॉक्स अनुकूल. सोनं खरेदी शुभ. पोर्टफोलिओ विविधीकरणाचा दिवस."
+        },
+        "gu": {
+          "insight": "વિલાસિતા/મનોરંજન/FMCG શેર અનુકૂળ. સોનાની ખરીદી શુભ. પોર્ટફોલિયો વિવિધીકરણ દિવસ."
+        },
+        "kn": {
+          "insight": "ಆಡಂಬರ/ಮನೋರಂಜನೆ/FMCG ಷೇರುಗಳು ಅನುಕೂಲಕರ. ಚಿನ್ನದ ಖರೀದಿಗಳು ಶುಭಕರ. ಪೋರ್ಟ್‌ಫೋಲಿಯೊ ವೈವಿಧ್ಯೀಕರಣ ದಿನ."
+        },
+        "ml": {
+          "insight": "ആഡംബര/വിനോദം/എഫ്‌എം‌സിജി ഓഹരികൾ അനുകൂലമാണ്. സ്വർണ്ണം വാങ്ങുന്നത് ശുഭകരമാണ്. നിക്ഷേപപദ്ധതി വൈവിധ്യമാർന്നതാക്കാനുള്ള ദിവസം."
+        },
+        "pa": {
+          "insight": "ਸ਼ਾਨਦਾਰ/ਮਨੋਰੰਜਨ/FMCG ਸਟਾਕਾਂ ਲਈ ਅਨੁਕੂਲ। ਸੋਨੇ ਦੀ ਖਰੀਦ ਸ਼ੁਭ। ਪੋਰਟਫੋਲੀਓ ਵਿਭਿੰਨਤਾ ਦਾ ਦਿਨ।"
+        },
+        "or": {
+          "insight": "ବିଲାସିତା/ମନୋରଞ୍ଜନ/FMCG ଷ୍ଟକ୍ସ ଲାଭଦାୟକ। ସୁନା କିଣିବା ଶୁଭ। ପୋର୍ଟଫୋଲିଓ ବିବିଧୀକରଣ ଦିନ।"
+        },
+        "as": {
+          "insight": "বিলাসিতা/মনোৰঞ্জন/FMCG ষ্টকসমূহ অনুকূল। সোণ ক্ৰয় শুভ। পোৰ্টফলিঅ' বৈচিত্ৰ্যকৰণৰ দিন।"
+        }
+      }
+    },
+    {
+      "key": "FINANCE:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Infrastructure/real estate sectors. Avoid speculation. Stick to blue-chips and value investing."
+        },
+        "hi": {
+          "insight": "बुनियादी ढांचा/रियल एस्टेट क्षेत्र। अटकलों से बचें। ब्लू-चिप्स और मूल्य निवेश पर टिके रहें।"
+        },
+        "ta": {
+          "insight": "கட்டமைப்பு/உரிமைத்துறை துறைகள். ஊகக்கணிப்பை தவிர்க்கவும். நீல-சிப்ஸ் மற்றும் மதிப்பு முதலீட்டில் நிலைத்திருக்கவும்."
+        },
+        "te": {
+          "insight": "మౌలిక సదుపాయాలు/రియల్ ఎస్టేట్ రంగాలు. ఊహాగానాలను నివారించండి. నీలి చిప్స్ మరియు విలువ పెట్టుబడులకు కట్టుబడి ఉండండి."
+        },
+        "bn": {
+          "insight": "অবকাঠামো/রিয়েল এস্টেট খাত। জল্পনা এড়িয়ে চলুন। নীল-চিপ এবং মূল্য বিনিয়োগে লেগে থাকুন।"
+        },
+        "mr": {
+          "insight": "पायाभूत सुविधा/रिअल इस्टेट क्षेत्रे. तर्कशास्त्र टाळा. ब्लू-चिप्स आणि मूल्य गुंतवणुकीला चिकटून रहा."
+        },
+        "gu": {
+          "insight": "મુળભૂત ઢાંચો/રિયલ એસ્ટેટ ક્ષેત્રો. અટકળોથી દૂર રહો. બ્લૂ-ચિપ્સ અને મૂલ્ય રોકાણ સાથે જોડાયેલા રહો."
+        },
+        "kn": {
+          "insight": "ಮೂಲಸೌಕರ್ಯ/ರಿಯಲ್ ಎಸ್ಟೇಟ್ ಕ್ಷೇತ್ರಗಳು. ಊಹಾಪೋಹವನ್ನು ತಪ್ಪಿಸಿ. ಬ್ಲೂ-ಚಿಪ್ಸ್ ಮತ್ತು ಮೌಲ್ಯ ಹೂಡಿಕೆಗೆ ಬದ್ಧರಾಗಿ."
+        },
+        "ml": {
+          "insight": "അവസാന/ഭൂമിസംബന്ധമായ മേഖലകൾ. അനുമാനങ്ങളിൽ ഏർപ്പെടാതിരിക്കുക. വിശ്വസനീയമായ കമ്പനികളിലും മൂല്യ നിക്ഷേപങ്ങളിലും ഉറച്ചുനിൽക്കുക."
+        },
+        "pa": {
+          "insight": "ਬੁਨਿਆਦੀ ਢਾਂਚਾ/ਅਸਲ ਜਾਇਦਾਦ ਖੇਤਰ। ਅਟਕਲਬਾਜ਼ੀ ਤੋਂ ਬਚੋ। ਨੀਲੇ ਚਿੱਪਾਂ ਅਤੇ ਮੁੱਲ ਨਿਵੇਸ਼ 'ਤੇ ਟਿਕੇ ਰਹੋ।"
+        },
+        "or": {
+          "insight": "ଅଧିକାର ଗଠନ/ଅସଳିଲା ସମ୍ପତ୍ତି ଖାତା. ଅନୁମାନକୁ ଏଡ଼ାନ୍ତୁ. ନୀଳ-ଚିପ୍ସ ଏବଂ ମୂଲ୍ୟ ନିବେଶକୁ ଅନୁସରଣ କରନ୍ତୁ."
+        },
+        "as": {
+          "insight": "অৱকাঠামো/ৰিয়েল এষ্টেট খণ্ডসমূহ। অনুমানমূলক বিনিয়োগ এৰাই চলক। নীল-চিপ আৰু মূল্য বিনিয়োগত অৱস্থান ৰাখক।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Focus on subjects requiring confidence — presentations, vivas, competitive exams. Leadership roles."
+        },
+        "hi": {
+          "insight": "उन विषयों पर ध्यान केंद्रित करें जिनके लिए आत्मविश्वास की आवश्यकता होती है — प्रस्तुतियाँ, मौखिक परीक्षाएँ, प्रतियोगी परीक्षाएँ। नेतृत्व की भूमिकाएँ।"
+        },
+        "ta": {
+          "insight": "நம்பிக்கையை தேவைப்படும் பாடங்களில் கவனம் செலுத்துங்கள் — விளக்கவுரைகள், வாய்மொழி தேர்வுகள், போட்டித் தேர்வுகள். தலைமைப் பொறுப்புகள்."
+        },
+        "te": {
+          "insight": "ఆత్మవిశ్వాసం అవసరమైన విషయాలపై దృష్టి పెట్టండి — ప్రదర్శనలు, వివాస్, పోటీ పరీక్షలు. నాయకత్వ పాత్రలు."
+        },
+        "bn": {
+          "insight": "যে বিষয়গুলিতে আত্মবিশ্বাস প্রয়োজন সেগুলিতে মনোযোগ দিন — উপস্থাপনা, মৌখিক পরীক্ষা, প্রতিযোগিতামূলক পরীক্ষা। নেতৃত্বের ভূমিকা।"
+        },
+        "mr": {
+          "insight": "आत्मविश्वास आवश्यक असलेल्या विषयांवर लक्ष केंद्रित करा — सादरीकरणे, मौखिक परीक्षा, स्पर्धात्मक परीक्षा. नेतृत्वाच्या भूमिका."
+        },
+        "gu": {
+          "insight": "વિશ્વાસની જરૂરિયાત ધરાવતા વિષયો પર ધ્યાન આપો — પ્રસ્તુતિઓ, વિવાસ, સ્પર્ધાત્મક પરીક્ષાઓ. નેતૃત્વ ભૂમિકાઓ."
+        },
+        "kn": {
+          "insight": "ಆತ್ಮವಿಶ್ವಾಸವನ್ನು ಅಗತ್ಯವಿರುವ ವಿಷಯಗಳಿಗೆ ಗಮನ ಹರಿಸಿ — ಪ್ರಸ್ತುತಿಗಳು, ವಾಯ್ವಾ, ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷೆಗಳು. ನಾಯಕತ್ವದ ಪಾತ್ರಗಳು."
+        },
+        "ml": {
+          "insight": "ആത്മവിശ്വാസം ആവശ്യമായ വിഷയങ്ങളിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുക — അവതരണങ്ങൾ, വൈവാസ്, മത്സര പരീക്ഷകൾ. നേതൃപദവികൾ."
+        },
+        "pa": {
+          "insight": "ਵਿਸ਼ਵਾਸ ਦੀ ਲੋੜ ਵਾਲੇ ਵਿਸ਼ਿਆਂ 'ਤੇ ਧਿਆਨ ਦਿਓ — ਪ੍ਰਸਤੁਤੀਆਂ, ਵਾਈਵਾਜ਼, ਮੁਕਾਬਲੇ ਵਾਲੇ ਇਮਤਿਹਾਨ। ਨੇਤ੍ਰਿਤਵ ਭੂਮਿਕਾਵਾਂ।"
+        },
+        "or": {
+          "insight": "ଆତ୍ମବିଶ୍ୱାସ ଆବଶ୍ୟକ ଥିବା ବିଷୟଗୁଡ଼ିକରେ କେନ୍ଦ୍ରିତ ହୁଅନ୍ତୁ — ପ୍ରସ୍ତୁତି, ମୁଖାମୁଖି ପରୀକ୍ଷା, ପ୍ରତିଯୋଗିତାମୂଳକ ପରୀକ୍ଷା। ନେତୃତ୍ୱ ଭୂମିକାଗୁଡ଼ିକ।"
+        },
+        "as": {
+          "insight": "বিশ্বাসৰ প্ৰয়োজন হোৱা বিষয়সমূহত মনোনিবেশ কৰক — প্ৰেজেন্টেশ্বন, ভাইভা, প্ৰতিযোগিতামূলক পৰীক্ষা। নেতৃত্বৰ ভূমিকা।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Creative subjects shine — arts, literature, languages. Group study effective today."
+        },
+        "hi": {
+          "insight": "रचनात्मक विषय चमकेंगे — कला, साहित्य, भाषाएँ। समूह अध्ययन आज प्रभावी है।"
+        },
+        "ta": {
+          "insight": "படைப்பாற்றல் கொண்ட பாடங்கள் பிரகாசிக்கின்றன — கலை, இலக்கியம், மொழிகள். குழு படிப்பு இன்று பயனுள்ளதாக இருக்கும்."
+        },
+        "te": {
+          "insight": "సృజనాత్మక విషయాలు మెరిసిపోతాయి — కళలు, సాహిత్యం, భాషలు. సమూహ అధ్యయనం ఈ రోజు ప్రభావవంతంగా ఉంటుంది."
+        },
+        "bn": {
+          "insight": "সৃজনশীল বিষয়গুলি উজ্জ্বল — শিল্প, সাহিত্য, ভাষা। আজ দলগত অধ্যয়ন কার্যকর।"
+        },
+        "mr": {
+          "insight": "सर्जनशील विषय चमकतील — कला, साहित्य, भाषा. गट अभ्यास आज प्रभावी आहे."
+        },
+        "gu": {
+          "insight": "સર્જનાત્મક વિષયો ચમકે છે — કલા, સાહિત્ય, ભાષાઓ. સમૂહ અભ્યાસ આજે અસરકારક છે."
+        },
+        "kn": {
+          "insight": "ಸೃಜನಾತ್ಮಕ ವಿಷಯಗಳು ಹೊಳೆಯುತ್ತವೆ — ಕಲೆ, ಸಾಹಿತ್ಯ, ಭಾಷೆಗಳು. ಗುಂಪು ಅಧ್ಯಯನವು ಇಂದು ಪರಿಣಾಮಕಾರಿ."
+        },
+        "ml": {
+          "insight": "സൃഷ്ടിപരമായ വിഷയങ്ങൾ തിളങ്ങുന്നു — കലകൾ, സാഹിത്യം, ഭാഷകൾ. ഗ്രൂപ്പ് പഠനം ഇന്ന് ഫലപ്രദമാണ്."
+        },
+        "pa": {
+          "insight": "ਰਚਨਾਤਮਕ ਵਿਸ਼ੇ ਚਮਕਦੇ ਹਨ — ਕਲਾ, ਸਾਹਿਤ, ਭਾਸ਼ਾਵਾਂ। ਅੱਜ ਸਮੂਹ ਅਧਿਐਨ ਪ੍ਰਭਾਵਸ਼ਾਲੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ସୃଜନଶୀଳ ବିଷୟଗୁଡ଼ିକ ଆଲୋକିତ — କଳା, ସାହିତ୍ୟ, ଭାଷା। ଆଜି ଗୋଷ୍ଠୀ ଅଧ୍ୟୟନ ପ୍ରଭାବଶାଳୀ।"
+        },
+        "as": {
+          "insight": "সৃষ্টিশীল বিষয়সমূহ উজ্বল — কলা, সাহিত্য, ভাষাসমূহ। গোটেই দলৰ অধ্যয়ন আজিৰ বাবে প্ৰভাৱশালী।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Math, science, and problem-solving peak. Physical exercise boosts mental clarity."
+        },
+        "hi": {
+          "insight": "गणित, विज्ञान, और समस्या-समाधान चरम पर हैं। शारीरिक व्यायाम मानसिक स्पष्टता को बढ़ाता है।"
+        },
+        "ta": {
+          "insight": "கணிதம், அறிவியல் மற்றும் பிரச்சினை தீர்க்கும் திறன் உச்சத்தில் இருக்கும். உடற்பயிற்சி மனதின் தெளிவை மேம்படுத்தும்."
+        },
+        "te": {
+          "insight": "గణితం, శాస్త్రం, మరియు సమస్య పరిష్కారం గరిష్ట స్థాయికి చేరుకుంటాయి. శారీరక వ్యాయామం మానసిక స్పష్టతను పెంచుతుంది."
+        },
+        "bn": {
+          "insight": "গণিত, বিজ্ঞান এবং সমস্যা সমাধানের দক্ষতা শীর্ষে। শারীরিক ব্যায়াম মানসিক স্বচ্ছতা বাড়ায়।"
+        },
+        "mr": {
+          "insight": "गणित, विज्ञान, आणि समस्या सोडवणे शिखरावर आहे. शारीरिक व्यायाम मानसिक स्पष्टता वाढवतो."
+        },
+        "gu": {
+          "insight": "ગણિત, વિજ્ઞાન અને સમસ્યા ઉકેલવાની ક્ષમતા શિખરે છે. શારીરિક કસરત માનસિક સ્પષ્ટતા વધારશે."
+        },
+        "kn": {
+          "insight": "ಗಣಿತ, ವಿಜ್ಞಾನ, ಮತ್ತು ಸಮಸ್ಯೆ-ಪರಿಹಾರಣಾ ಶಕ್ತಿಗಳು ಶೃಂಗಕ್ಕೆ ತಲುಪುತ್ತವೆ. ದೈಹಿಕ ವ್ಯಾಯಾಮವು ಮಾನಸಿಕ ಸ್ಪಷ್ಟತೆಯನ್ನು ಹೆಚ್ಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ഗണിതം, ശാസ്ത്രം, പ്രശ്നപരിഹാരം എന്നിവ ഉയരുന്നു. ശാരീരിക വ്യായാമം മാനസിക വ്യക്തത വർദ്ധിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਗਣਿਤ, ਵਿਗਿਆਨ ਅਤੇ ਸਮੱਸਿਆ ਹੱਲ ਕਰਨ ਦੀ ਯੋਗਤਾ ਚਰਮ ਤੇ ਹੈ। ਸਰੀਰਕ ਕਸਰਤ ਮਾਨਸਿਕ ਸਪਸ਼ਟਤਾ ਨੂੰ ਵਧਾਉਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଗଣିତ, ବିଜ୍ଞାନ ଏବଂ ସମସ୍ୟା ସମାଧାନରେ ଶୀର୍ଷ ସ୍ଥାନ। ଶାରୀରିକ ବ୍ୟାୟାମ ମାନସିକ ସ୍ପଷ୍ଟତାକୁ ବୃଦ୍ଧି କରେ।"
+        },
+        "as": {
+          "insight": "গণিত, বিজ্ঞান, আৰু সমস্যা সমাধানৰ শীৰ্ষত আছে। শাৰীৰিক ব্যায়ামে মানসিক স্পষ্টতা বৃদ্ধি কৰে।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Best day for intense study — reading, note-taking, exam prep. Memory retention is high."
+        },
+        "hi": {
+          "insight": "गहन अध्ययन के लिए सबसे अच्छा दिन — पढ़ाई, नोट्स लेने, परीक्षा की तैयारी। स्मरण शक्ति उच्च है।"
+        },
+        "ta": {
+          "insight": "கடுமையான படிப்பிற்கு சிறந்த நாள் — வாசிப்பு, குறிப்பேடு எடுக்கும், தேர்வு தயாரிப்பு. நினைவாற்றல் அதிகமாக உள்ளது."
+        },
+        "te": {
+          "insight": "తీవ్రమైన అధ్యయనానికి ఉత్తమమైన రోజు — పఠనం, గమనికలు తీసుకోవడం, పరీక్షా సిద్ధత. జ్ఞాపకశక్తి నిలుపుదల అధికంగా ఉంటుంది."
+        },
+        "bn": {
+          "insight": "তীব্র অধ্যয়নের জন্য সেরা দিন — পড়াশোনা, নোট নেওয়া, পরীক্ষা প্রস্তুতি। স্মৃতি ধরে রাখার ক্ষমতা উচ্চ।"
+        },
+        "mr": {
+          "insight": "गंभीर अभ्यासासाठी सर्वोत्तम दिवस — वाचन, नोंदी घेणे, परीक्षेची तयारी. स्मरणशक्ती टिकवून ठेवणे उच्च आहे."
+        },
+        "gu": {
+          "insight": "તીવ્ર અભ્યાસ માટે શ્રેષ્ઠ દિવસ — વાંચન, નોંધ લેવી, પરીક્ષા તૈયારી. સ્મૃતિ જાળવણી ઊંચી છે."
+        },
+        "kn": {
+          "insight": "ತೀವ್ರ ಅಧ್ಯಯನಕ್ಕಾಗಿ ಉತ್ತಮ ದಿನ — ಓದು, ಟಿಪ್ಪಣಿಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳುವುದು, ಪರೀಕ್ಷಾ ತಯಾರಿ. ಸ್ಮರಣೆ ಶಕ್ತಿ ಹೆಚ್ಚು."
+        },
+        "ml": {
+          "insight": "ഗൗരവമായ പഠനത്തിനുള്ള മികച്ച ദിവസം — വായന, കുറിപ്പെടുത്തൽ, പരീക്ഷാ തയ്യാറെടുപ്പ്. ഓർമ്മശക്തി ഉയർന്നിരിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਗਹਿਰੇ ਅਧਿਐਨ ਲਈ ਸਭ ਤੋਂ ਵਧੀਆ ਦਿਨ — ਪੜ੍ਹਾਈ, ਨੋਟ ਲੈਣਾ, ਇਮਤਿਹਾਨ ਦੀ ਤਿਆਰੀ। ਯਾਦਦਾਸ਼ਤ ਦੀ ਧਾਰਨਾ ਉੱਚੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଗଭୀର ଅଧ୍ୟୟନ ପାଇଁ ସର୍ବୋତ୍ତମ ଦିନ — ପଢ଼ା, ଟିପ୍ପଣୀ ନେବା, ପରୀକ୍ଷା ପ୍ରସ୍ତୁତି। ସ୍ମୃତି ଧାରଣ କ୍ଷମତା ଉଚ୍ଚ।"
+        },
+        "as": {
+          "insight": "তীব্ৰ অধ্যয়নৰ বাবে আটাইতকৈ ভাল দিন — পঢ়া, টোকা লোৱা, পৰীক্ষাৰ প্ৰস্তুতি। স্মৃতি সংৰক্ষণ উচ্চ।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Philosophy, law, and higher learning. Seek guidance from mentors. Career planning favored."
+        },
+        "hi": {
+          "insight": "दर्शन, कानून, और उच्च शिक्षा। मार्गदर्शन के लिए सलाहकारों से संपर्क करें। करियर योजना को प्राथमिकता दें।"
+        },
+        "ta": {
+          "insight": "தத்துவம், சட்டம் மற்றும் உயர் கல்வி. வழிகாட்டிகளை அணுகவும். தொழில் திட்டமிடல் சாதகமாகும்."
+        },
+        "te": {
+          "insight": "తత్వశాస్త్రం, చట్టం, మరియు ఉన్నత విద్య. మెంటర్ల నుండి మార్గదర్శనం పొందండి. వృత్తి ప్రణాళికకు అనుకూలం."
+        },
+        "bn": {
+          "insight": "দর্শন, আইন, এবং উচ্চ শিক্ষা। পরামর্শদাতাদের কাছ থেকে পরামর্শ নিন। ক্যারিয়ার পরিকল্পনা অনুকূল।"
+        },
+        "mr": {
+          "insight": "तत्त्वज्ञान, कायदा, आणि उच्च शिक्षण. मार्गदर्शनासाठी गुरूंकडे जा. करिअर नियोजनास प्राधान्य द्या."
+        },
+        "gu": {
+          "insight": "તત્ત્વજ્ઞાન, કાયદો, અને ઉચ્ચ અભ્યાસ. માર્ગદર્શકો પાસેથી માર્ગદર્શન મેળવો. કારકિર્દી આયોજનને પ્રાધાન્ય આપો."
+        },
+        "kn": {
+          "insight": "ತತ್ತ್ವಶಾಸ್ತ್ರ, ಕಾನೂನು, ಮತ್ತು ಉನ್ನತ ಅಧ್ಯಯನ. ಮಾರ್ಗದರ್ಶನಕ್ಕಾಗಿ ಗುರುಗಳಿಂದ ಸಲಹೆ ಪಡೆಯಿರಿ. ವೃತ್ತಿ ಯೋಜನೆ ಅನುಕೂಲಕರವಾಗಿದೆ."
+        },
+        "ml": {
+          "insight": "തത്വചിന്ത, നിയമം, ഉയർന്ന പഠനം. ഉപദേശകരിൽ നിന്ന് മാർഗ്ഗനിർദ്ദേശം തേടുക. കരിയർ പ്ലാനിംഗ് അനുകൂലമാണ്."
+        },
+        "pa": {
+          "insight": "ਦਰਸ਼ਨ, ਕਾਨੂੰਨ, ਅਤੇ ਉੱਚ ਸਿਖਿਆ। ਮਾਰਗਦਰਸ਼ਕਾਂ ਤੋਂ ਸਲਾਹ ਲਵੋ। ਕਰੀਅਰ ਦੀ ਯੋਜਨਾ ਬਣਾਉਣ ਲਈ ਵਧੀਆ ਸਮਾਂ।"
+        },
+        "or": {
+          "insight": "ଦାର୍ଶନିକତା, ଆଇନ, ଏବଂ ଉଚ୍ଚ ଶିକ୍ଷା। ଗୁରୁମାନ୍ୟଙ୍କୁ ନିକଟରେ ଯାଇ ମର୍ଗଦର୍ଶନା ନିବେଦନ କରନ୍ତୁ। ଜୀବନୀ ଯୋଜନା ପ୍ରସ୍ତାବିତ।"
+        },
+        "as": {
+          "insight": "দৰ্শন, আইন, আৰু উচ্চ শিক্ষা। উপদেশৰ বাবে মেণ্টৰৰ পৰা সহায় লওক। ব্যৱসায়িক পৰিকল্পনা অনুকূল।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Creative arts, music, design studies excel. Social connections help academically."
+        },
+        "hi": {
+          "insight": "रचनात्मक कला, संगीत, डिजाइन अध्ययन में उत्कृष्टता। सामाजिक संबंध अकादमिक रूप से मदद करते हैं।"
+        },
+        "ta": {
+          "insight": "படைப்பாற்றல் கலைகள், இசை, வடிவமைப்பு படிப்புகள் சிறந்து விளங்கும். சமூக தொடர்புகள் கல்வியில் உதவுகின்றன."
+        },
+        "te": {
+          "insight": "సృజనాత్మక కళలు, సంగీతం, డిజైన్ అధ్యయనాలు మెరుగ్గా ఉంటాయి. సామాజిక సంబంధాలు విద్యా రంగంలో సహాయపడతాయి."
+        },
+        "bn": {
+          "insight": "সৃজনশীল শিল্প, সঙ্গীত, নকশা অধ্যয়নে উৎকর্ষতা। সামাজিক সংযোগগুলি একাডেমিকভাবে সহায়ক।"
+        },
+        "mr": {
+          "insight": "सर्जनशील कला, संगीत, डिझाइन अभ्यासात प्रगती होते. सामाजिक संबंध शैक्षणिकदृष्ट्या मदत करतात."
+        },
+        "gu": {
+          "insight": "સર્જનાત્મક કલા, સંગીત, ડિઝાઇન અભ્યાસમાં પ્રગતિ. સામાજિક જોડાણો શૈક્ષણિક રીતે મદદરૂપ થાય છે."
+        },
+        "kn": {
+          "insight": "ಸೃಜನಾತ್ಮಕ ಕಲೆಗಳು, ಸಂಗೀತ, ವಿನ್ಯಾಸ ಅಧ್ಯಯನಗಳಲ್ಲಿ ಮೆರುಗು ತರುತ್ತವೆ. ಸಾಮಾಜಿಕ ಸಂಪರ್ಕಗಳು ಶೈಕ್ಷಣಿಕವಾಗಿ ಸಹಾಯ ಮಾಡುತ್ತವೆ."
+        },
+        "ml": {
+          "insight": "സൃഷ്ടിപരമായ കലകൾ, സംഗീതം, ഡിസൈൻ പഠനങ്ങൾ മികവുറ്റവയാണ്. സാമൂഹിക ബന്ധങ്ങൾ അക്കാദമികമായി സഹായിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਰਚਨਾਤਮਕ ਕਲਾ, ਸੰਗੀਤ, ਡਿਜ਼ਾਇਨ ਅਧਿਐਨ ਵਿੱਚ ਕਾਮਯਾਬੀ। ਅਕਾਦਮਿਕ ਤੌਰ 'ਤੇ ਸਮਾਜਿਕ ਸੰਪਰਕ ਮਦਦਗਾਰ ਸਾਬਤ ਹੁੰਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ସୃଜନଶୀଳ କଳା, ସଙ୍ଗୀତ, ଡିଜାଇନ ଅଧ୍ୟୟନ ଉତ୍କୃଷ୍ଟ। ସାମାଜିକ ସମ୍ପର୍କ ଶିକ୍ଷାରେ ସାହାଯ୍ୟ କରେ।"
+        },
+        "as": {
+          "insight": "সৃষ্টি কলা, সংগীত, ডিজাইন অধ্যয়নত উৎকৃষ্ট। সামাজিক সংযোগসমূহ একাডেমিকভাৱে সহায়ক।"
+        }
+      }
+    },
+    {
+      "key": "STUDENT:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Revision and practice papers. Discipline in study schedule pays off. Focus on weak subjects."
+        },
+        "hi": {
+          "insight": "पुनरावलोकन और अभ्यास पत्र। अध्ययन कार्यक्रम में अनुशासन का लाभ मिलता है। कमजोर विषयों पर ध्यान दें।"
+        },
+        "ta": {
+          "insight": "திருத்தம் மற்றும் பயிற்சி தாள்கள். படிப்பு அட்டவணையில் கட்டுப்பாடு பலனளிக்கிறது. பலவீனமான பாடங்களில் கவனம் செலுத்துங்கள்."
+        },
+        "te": {
+          "insight": "పునశ్చరణ మరియు అభ్యాస పత్రాలు. చదువు షెడ్యూల్‌లో క్రమశిక్షణ ఫలితాన్ని ఇస్తుంది. బలహీనమైన విషయాలపై దృష్టి పెట్టండి."
+        },
+        "bn": {
+          "insight": "পুনরাবৃত্তি এবং অনুশীলন পত্র। অধ্যয়ন সময়সূচীতে শৃঙ্খলা ফলপ্রসূ হয়। দুর্বল বিষয়গুলিতে মনোযোগ দিন।"
+        },
+        "mr": {
+          "insight": "पुनरावलोकन आणि सराव पत्रके. अभ्यासाच्या वेळापत्रकातील शिस्त फळ देते. कमजोर विषयांवर लक्ष केंद्रित करा."
+        },
+        "gu": {
+          "insight": "પુનરાવર્તન અને અભ્યાસ પેપર્સ. અભ્યાસ શેડ્યૂલમાં શિસ્ત ફળ આપે છે. નબળા વિષયો પર ધ્યાન આપો."
+        },
+        "kn": {
+          "insight": "ಪುನರಾವೃತ್ತಿ ಮತ್ತು ಅಭ್ಯಾಸ ಪತ್ರಿಕೆಗಳು. ಅಧ್ಯಯನ ವೇಳಾಪಟ್ಟಿಯಲ್ಲಿ ಶಿಸ್ತಿನಿಂದಿರುವುದು ಫಲ ನೀಡುತ್ತದೆ. ದುರ್ಬಲ ವಿಷಯಗಳಿಗೆ ಗಮನ ಕೊಡಿ."
+        },
+        "ml": {
+          "insight": "പുനഃപരിശോധനയും പ്രാക്ടീസ് പേപ്പറുകളും. പഠനക്രമത്തിൽ ശാസ്ത്രീയത ഫലം നൽകുന്നു. ബലഹീനമായ വിഷയങ്ങളിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുക."
+        },
+        "pa": {
+          "insight": "ਦੁਹਰਾਈ ਅਤੇ ਅਭਿਆਸ ਪੱਤਰ। ਪੜ੍ਹਾਈ ਦੇ ਸਮਾਂ-ਸਾਰਣੀ ਵਿੱਚ ਅਨੁਸ਼ਾਸਨ ਫਲ ਦਿੰਦਾ ਹੈ। ਕਮਜ਼ੋਰ ਵਿਸ਼ਿਆਂ 'ਤੇ ਧਿਆਨ ਦਿਓ।"
+        },
+        "or": {
+          "insight": "ପୁନଃତତ୍ତ୍ୱାବଲୋକନ ଏବଂ ଅଭ୍ୟାସ ପତ୍ର। ଅଧ୍ୟୟନ ସୂଚୀରେ ଶିଷ୍ଟାଚାର ଫଳ ଦେଉଛି। ଦୁର୍ବଳ ବିଷୟଗୁଡ଼ିକରେ କେନ୍ଦ୍ରିତ ହୁଅ।"
+        },
+        "as": {
+          "insight": "পুনৰীক্ষণ আৰু অনুশীলন পত্ৰ। অধ্যয়ন সূচীত শৃংখলা লাভজনক। দুৰ্বল বিষয়সমূহত মনোনিবেশ কৰক।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Government dealings, licenses, and official work favored. Lead from the front."
+        },
+        "hi": {
+          "insight": "सरकारी लेन-देन, लाइसेंस, और आधिकारिक कार्यों के लिए अनुकूल। आगे से नेतृत्व करें।"
+        },
+        "ta": {
+          "insight": "அரசாங்க ஒப்பந்தங்கள், உரிமங்கள் மற்றும் அதிகாரப்பூர்வ வேலைகள் சாதகமாக உள்ளன. முன்னணியில் இருந்து வழிநடத்துங்கள்."
+        },
+        "te": {
+          "insight": "ప్రభుత్వ వ్యవహారాలు, లైసెన్సులు మరియు అధికారిక పనులు అనుకూలంగా ఉంటాయి. ముందుండి నడిపించండి."
+        },
+        "bn": {
+          "insight": "সরকারি লেনদেন, লাইসেন্স এবং অফিসিয়াল কাজের জন্য অনুকূল। সামনে থেকে নেতৃত্ব দিন।"
+        },
+        "mr": {
+          "insight": "सरकारी व्यवहार, परवाने, आणि अधिकृत कामे अनुकूल. पुढे राहून नेतृत्व करा."
+        },
+        "gu": {
+          "insight": "સરકારી વ્યવહારો, લાઇસન્સ અને સત્તાવાર કામ માટે અનુકૂળ. આગળથી નેતૃત્વ કરો."
+        },
+        "kn": {
+          "insight": "ಸರ್ಕಾರಿ ವ್ಯವಹಾರಗಳು, ಪರವಾನಗಿಗಳು ಮತ್ತು ಅಧಿಕೃತ ಕೆಲಸಕ್ಕೆ ಅನುಕೂಲಕರ. ಮುಂಚಿನಿಂದ ಮುನ್ನಡೆಸಿ."
+        },
+        "ml": {
+          "insight": "സർക്കാർ ഇടപാടുകൾ, ലൈസൻസുകൾ, ഔദ്യോഗിക പ്രവർത്തനങ്ങൾ അനുകൂലമാണ്. മുന്നിൽ നിന്ന് നയിക്കുക."
+        },
+        "pa": {
+          "insight": "ਸਰਕਾਰੀ ਲੈਣ-ਦੇਣ, ਲਾਇਸੰਸ ਅਤੇ ਅਧਿਕਾਰਤ ਕੰਮ ਪੱਖ ਵਿੱਚ ਹਨ। ਅੱਗੇ ਤੋਂ ਆਗੂ ਬਣੋ।"
+        },
+        "or": {
+          "insight": "ସରକାରୀ କାରବାର, ଲାଇସେନ୍ସ, ଏବଂ ଅଧିକାରିକ କାମ ପକ୍ଷପାତିତା। ସାମ୍ନାରୁ ନେତୃତ୍ୱ କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "চৰকাৰী ব্যৱসায়, অনুজ্ঞাপত্ৰ আৰু চৰকাৰী কামৰ বাবে অনুকূল। আগভাগ লওক।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Customer relationships and team morale. Marketing and public-facing business activities."
+        },
+        "hi": {
+          "insight": "ग्राहक संबंध और टीम मनोबल। विपणन और सार्वजनिक-सामना करने वाली व्यावसायिक गतिविधियाँ।"
+        },
+        "ta": {
+          "insight": "வாடிக்கையாளர் உறவுகள் மற்றும் குழு மனோபாவம். சந்தைப்படுத்தல் மற்றும் பொது முகம் கொண்ட வணிக செயல்பாடுகள்."
+        },
+        "te": {
+          "insight": "వినియోగదారుల సంబంధాలు మరియు బృందం ఉత్సాహం. మార్కెటింగ్ మరియు ప్రజా ముఖ్య వ్యాపార కార్యకలాపాలు."
+        },
+        "bn": {
+          "insight": "গ্রাহক সম্পর্ক এবং দলের মনোবল। বিপণন এবং জনসাধারণের মুখোমুখি ব্যবসায়িক কার্যক্রম।"
+        },
+        "mr": {
+          "insight": "ग्राहक संबंध आणि टीमचे मनोबल. विपणन आणि सार्वजनिक-सामोरे व्यवसाय क्रियाकलाप."
+        },
+        "gu": {
+          "insight": "ગ્રાહક સંબંધો અને ટીમ મોરાલ. માર્કેટિંગ અને જાહેર સામેથી વ્યવસાયિક પ્રવૃત્તિઓ."
+        },
+        "kn": {
+          "insight": "ಗ್ರಾಹಕ ಸಂಬಂಧಗಳು ಮತ್ತು ತಂಡದ ಮನೋಭಾವ. ಮಾರುಕಟ್ಟೆ ಮತ್ತು ಸಾರ್ವಜನಿಕ ಮುಖದ ವ್ಯವಹಾರ ಚಟುವಟಿಕೆಗಳು."
+        },
+        "ml": {
+          "insight": "ഉപഭോക്തൃ ബന്ധങ്ങളും ടീമിന്റെ ആത്മവിശ്വാസവും. വിപണനവും പൊതുജനങ്ങളുമായി ബന്ധപ്പെട്ട ബിസിനസ് പ്രവർത്തനങ്ങളും."
+        },
+        "pa": {
+          "insight": "ਗਾਹਕ ਸੰਬੰਧ ਅਤੇ ਟੀਮ ਦਾ ਮਨੋਬਲ। ਮਾਰਕੀਟਿੰਗ ਅਤੇ ਜਨਤਕ ਮੁਖੀ ਕਾਰੋਬਾਰੀ ਗਤੀਵਿਧੀਆਂ।"
+        },
+        "or": {
+          "insight": "ଗ୍ରାହକ ସମ୍ପର୍କ ଏବଂ ଦଳର ମନୋବଳ। ବିପଣନ ଏବଂ ସାର୍ବଜନିନ ବ୍ୟବସାୟିକ କାର୍ଯ୍ୟକଳାପ।"
+        },
+        "as": {
+          "insight": "গ্ৰাহক সম্পৰ্ক আৰু দলৰ মনোবল। বিপণন আৰু জনসাধাৰণৰ সন্মুখীন ব্যৱসায়িক কাৰ্যকলাপ।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Expansion moves, competitive strategies, and resource acquisition. Bold decisions pay off."
+        },
+        "hi": {
+          "insight": "विस्तार की चालें, प्रतिस्पर्धात्मक रणनीतियाँ, और संसाधन अधिग्रहण। साहसी निर्णय लाभदायक साबित होते हैं।"
+        },
+        "ta": {
+          "insight": "விரிவாக்க நடவடிக்கைகள், போட்டி உத்திகள், மற்றும் வளங்களின் அடைமுதல். துணிச்சலான முடிவுகள் பலனளிக்கின்றன."
+        },
+        "te": {
+          "insight": "విస్తరణ చర్యలు, పోటీ వ్యూహాలు, మరియు వనరుల సేకరణ. ధైర్యమైన నిర్ణయాలు ఫలితాలను ఇస్తాయి."
+        },
+        "bn": {
+          "insight": "বিস্তারের পদক্ষেপ, প্রতিযোগিতামূলক কৌশল, এবং সম্পদ অর্জন। সাহসী সিদ্ধান্তগুলি সফল হয়।"
+        },
+        "mr": {
+          "insight": "विस्ताराच्या हालचाली, स्पर्धात्मक धोरणे, आणि संसाधन संपादन. धाडसी निर्णय फायदेशीर ठरतात."
+        },
+        "gu": {
+          "insight": "વિસ્તરણના પગલાં, સ્પર્ધાત્મક વ્યૂહરચનાઓ, અને સંસાધનોનું અધિગ્રહણ. સાહસિક નિર્ણયો ફળ આપશે."
+        },
+        "kn": {
+          "insight": "ವಿಸ್ತರಣೆ ಚಲನೆಗಳು, ಸ್ಪರ್ಧಾತ್ಮಕ ತಂತ್ರಗಳು, ಮತ್ತು ಸಂಪತ್ತು ಸಂಪಾದನೆ. ಧೈರ್ಯದ ನಿರ್ಧಾರಗಳು ಫಲ ನೀಡುತ್ತವೆ."
+        },
+        "ml": {
+          "insight": "വിപുലീകരണ നീക്കങ്ങൾ, മത്സര തന്ത്രങ്ങൾ, വിഭവ സമാഹരണം. ധൈര്യമായ തീരുമാനങ്ങൾ ഫലം കാണും."
+        },
+        "pa": {
+          "insight": "ਵਿਸਥਾਰਕ ਕਦਮ, ਮੁਕਾਬਲੇ ਦੀਆਂ ਰਣਨੀਤੀਆਂ, ਅਤੇ ਸਰੋਤ ਪ੍ਰਾਪਤੀ। ਹਿੰਮਤੀ ਫੈਸਲੇ ਫਲਦਾਇਕ ਸਾਬਤ ਹੁੰਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ବିସ୍ତାର ଚଳ, ପ୍ରତିଯୋଗୀତାମୂଳକ କୌଶଳ, ଏବଂ ସମ୍ପଦ ଅଧିଗ୍ରହଣ। ସାହସିକ ସିଦ୍ଧାନ୍ତଗୁଡ଼ିକ ଫଳ ଦେଇଥାଏ।"
+        },
+        "as": {
+          "insight": "প্ৰসাৰণ পদক্ষেপ, প্ৰতিযোগিতামূলক কৌশল, আৰু সম্পদ অৰ্জন। সাহসী সিদ্ধান্তে লাভ হয়।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Contracts, negotiations, accounting, and business communication. Finalize deals today."
+        },
+        "hi": {
+          "insight": "अनुबंध, वार्तालाप, लेखांकन, और व्यापार संचार। आज सौदों को अंतिम रूप दें।"
+        },
+        "ta": {
+          "insight": "ஒப்பந்தங்கள், பேச்சுவார்த்தைகள், கணக்கியல் மற்றும் வணிக தொடர்பு. இன்று ஒப்பந்தங்களை இறுதி செய்யுங்கள்."
+        },
+        "te": {
+          "insight": "ఒప్పందాలు, చర్చలు, లెక్కలు, మరియు వ్యాపార కమ్యూనికేషన్. ఒప్పందాలను నేడు తుది రూపం ఇవ్వండి."
+        },
+        "bn": {
+          "insight": "চুক্তি, আলোচনা, হিসাবরক্ষণ, এবং ব্যবসায়িক যোগাযোগ। আজ চুক্তি চূড়ান্ত করুন।"
+        },
+        "mr": {
+          "insight": "करार, वाटाघाटी, लेखा, आणि व्यवसाय संवाद. आज व्यवहार पूर्ण करा."
+        },
+        "gu": {
+          "insight": "કરાર, વાટાઘાટો, હિસાબી અને વ્યવસાયિક સંચાર. આજે સોદા પૂર્ણ કરો."
+        },
+        "kn": {
+          "insight": "ಒಪ್ಪಂದಗಳು, ಮಾತುಕತೆಗಳು, ಲೆಕ್ಕಪತ್ರ ಮತ್ತು ವ್ಯವಹಾರ ಸಂವಹನ. ಇಂದು ಒಪ್ಪಂದಗಳನ್ನು ಅಂತಿಮಗೊಳಿಸಿ."
+        },
+        "ml": {
+          "insight": "കരാറുകൾ, ചർച്ചകൾ, അക്കൗണ്ടിംഗ്, ബിസിനസ് ആശയവിനിമയം. ഇന്ന് ഇടപാടുകൾ അന്തിമമാക്കുക."
+        },
+        "pa": {
+          "insight": "ਠੇਕੇ, ਗੱਲਬਾਤ, ਲੇਖਾ-ਜੋਖਾ, ਅਤੇ ਵਪਾਰਕ ਸੰਚਾਰ। ਅੱਜ ਸੌਦੇ ਪੱਕੇ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ଚୁକ୍ତି, ଆଲୋଚନା, ହିସାବ ଗଣିତ, ଏବଂ ବ୍ୟବସାୟିକ ସଂଯୋଗ। ଆଜି ଚୁକ୍ତିଗୁଡ଼ିକ ଅନ୍ତିମ କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "চুক্তিসমূহ, আলোচনা, হিসাবৰক্ষণ, আৰু ব্যৱসায়িক যোগাযোগ। আজিৰে চুক্তিসমূহ চূড়ান্ত কৰক।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Business growth, bank loans, investor meetings, and strategic partnerships. Abundance flows."
+        },
+        "hi": {
+          "insight": "व्यापार वृद्धि, बैंक ऋण, निवेशक बैठकें, और रणनीतिक साझेदारियाँ। प्रचुरता प्रवाहित होती है।"
+        },
+        "ta": {
+          "insight": "வணிக வளர்ச்சி, வங்கி கடன்கள், முதலீட்டாளர் கூட்டங்கள், மற்றும் மூலோபாய கூட்டாண்மைகள். வளம் பெருகுகிறது."
+        },
+        "te": {
+          "insight": "వ్యాపార వృద్ధి, బ్యాంకు రుణాలు, పెట్టుబడిదారుల సమావేశాలు, మరియు వ్యూహాత్మక భాగస్వామ్యాలు. సమృద్ధి ప్రవహిస్తుంది."
+        },
+        "bn": {
+          "insight": "ব্যবসায়িক বৃদ্ধি, ব্যাংক ঋণ, বিনিয়োগকারী মিটিং, এবং কৌশলগত অংশীদারিত্ব। প্রাচুর্য প্রবাহিত হয়।"
+        },
+        "mr": {
+          "insight": "व्यवसाय वाढ, बँक कर्जे, गुंतवणूकदारांच्या बैठका, आणि धोरणात्मक भागीदारी. समृद्धी वाहते."
+        },
+        "gu": {
+          "insight": "વ્યવસાય વૃદ્ધિ, બેંક લોન, રોકાણકારોની બેઠક, અને વ્યૂહાત્મક ભાગીદારી. સમૃદ્ધિ વહે છે."
+        },
+        "kn": {
+          "insight": "ವ್ಯಾಪಾರ ವೃದ್ಧಿ, ಬ್ಯಾಂಕ್ ಸಾಲಗಳು, ಹೂಡಿಕೆದಾರರ ಸಭೆಗಳು, ಮತ್ತು ತಂತ್ರಜ್ಞಾನದ ಸಹಭಾಗಿತ್ವಗಳು. ಸಮೃದ್ಧಿ ಹರಿಯುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ബിസിനസ് വളർച്ച, ബാങ്ക് വായ്പകൾ, നിക്ഷേപക യോഗങ്ങൾ, തന്ത്രപരമായ പങ്കാളിത്തങ്ങൾ. സമൃദ്ധി ഒഴുകുന്നു."
+        },
+        "pa": {
+          "insight": "ਵਪਾਰ ਵਾਧਾ, ਬੈਂਕ ਲੋਨ, ਨਿਵੇਸ਼ਕ ਮੀਟਿੰਗਾਂ, ਅਤੇ ਰਣਨੀਤਿਕ ਭਾਈਚਾਰੇ। ਪ੍ਰਚੁਰਤਾ ਵਗਦੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ବ୍ୟାପାର ବୃଦ୍ଧି, ବ୍ୟାଙ୍କ ଋଣ, ନିବେଶକ ସଭାମାନେ, ଏବଂ କୌଶଳଗତ ଭାଗୀଦାରୀ। ପ୍ରଚୁରତା ପ୍ରବାହିତ ହୁଏ।"
+        },
+        "as": {
+          "insight": "ব্যৱসায়িক বৃদ্ধি, বেংক ঋণ, বিনিয়োগকাৰীসকলৰ সৈতে বৈঠক, আৰু কৌশলগত অংশীদাৰিত্ব। প্ৰচুৰতা বৈহে।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Brand building, customer experience, and team celebrations. Retail and service businesses thrive."
+        },
+        "hi": {
+          "insight": "ब्रांड निर्माण, ग्राहक अनुभव, और टीम उत्सव। खुदरा और सेवा व्यवसाय फलते-फूलते हैं।"
+        },
+        "ta": {
+          "insight": "பிராண்ட் உருவாக்கம், வாடிக்கையாளர் அனுபவம், மற்றும் குழு கொண்டாட்டங்கள். சில்லறை மற்றும் சேவை தொழில்கள் செழிக்கின்றன."
+        },
+        "te": {
+          "insight": "బ్రాండ్ నిర్మాణం, కస్టమర్ అనుభవం, మరియు జట్టు వేడుకలు. రిటైల్ మరియు సేవా వ్యాపారాలు అభివృద్ధి చెందుతాయి."
+        },
+        "bn": {
+          "insight": "ব্র্যান্ড নির্মাণ, গ্রাহক অভিজ্ঞতা, এবং দলীয় উদযাপন। খুচরা এবং পরিষেবা ব্যবসা সমৃদ্ধ হয়।"
+        },
+        "mr": {
+          "insight": "ब्रँड बांधणी, ग्राहक अनुभव, आणि टीम सेलिब्रेशन्स. किरकोळ आणि सेवा व्यवसाय भरभराटीला येतात."
+        },
+        "gu": {
+          "insight": "બ્રાન્ડ નિર્માણ, ગ્રાહક અનુભવ, અને ટીમ ઉજવણીઓ. રિટેલ અને સેવા વ્યવસાયો ફૂલીફાલે છે."
+        },
+        "kn": {
+          "insight": "ಬ್ರಾಂಡ್ ನಿರ್ಮಾಣ, ಗ್ರಾಹಕ ಅನುಭವ, ಮತ್ತು ತಂಡದ ಆಚರಣೆಗಳು. ಚಿಲ್ಲರೆ ಮತ್ತು ಸೇವಾ ವ್ಯವಹಾರಗಳು ಬೆಳೆಯುತ್ತವೆ."
+        },
+        "ml": {
+          "insight": "ബ്രാൻഡ് നിർമ്മാണം, ഉപഭോക്തൃ അനുഭവം, ടീമിന്റെ ആഘോഷങ്ങൾ. റീട്ടെയിൽ, സേവന വ്യവസായങ്ങൾ വളരുന്നു."
+        },
+        "pa": {
+          "insight": "ਬ੍ਰਾਂਡ ਬਣਾਉਣ, ਗਾਹਕ ਅਨੁਭਵ, ਅਤੇ ਟੀਮ ਜਸ਼ਨ. ਰਿਟੇਲ ਅਤੇ ਸੇਵਾ ਕਾਰੋਬਾਰ ਖਿੜਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ବ୍ରାଣ୍ଡ ନିର୍ମାଣ, ଗ୍ରାହକ ଅନୁଭବ, ଏବଂ ଦଳ ଉତ୍ସବ। ଖୁଚୁରା ଓ ସେବା ବ୍ୟବସାୟ ଫଳିଥାଏ।"
+        },
+        "as": {
+          "insight": "ব্ৰেণ্ড নিৰ্মাণ, গ্ৰাহক অভিজ্ঞতা, আৰু দলৰ উদযাপন। খুচুৰা আৰু সেৱা ব্যৱসায়সমূহে উন্নতি কৰে।"
+        }
+      }
+    },
+    {
+      "key": "BUSINESS:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Compliance, legal review, and operational efficiency. Build systems that last."
+        },
+        "hi": {
+          "insight": "अनुपालन, कानूनी समीक्षा, और संचालन दक्षता। ऐसे सिस्टम बनाएं जो टिकाऊ हों।"
+        },
+        "ta": {
+          "insight": "இணக்கம், சட்ட பரிசீலனை, மற்றும் செயல்பாட்டு திறன். நீடிக்கும் அமைப்புகளை உருவாக்குங்கள்."
+        },
+        "te": {
+          "insight": "అనుసరణ, చట్టపరమైన సమీక్ష, మరియు ఆపరేషనల్ సామర్థ్యం. దీర్ఘకాలం నిలిచే వ్యవస్థలను నిర్మించండి."
+        },
+        "bn": {
+          "insight": "অনুবর্তিতা, আইনগত পর্যালোচনা, এবং কার্যকরী দক্ষতা। এমন সিস্টেম তৈরি করুন যা দীর্ঘস্থায়ী হয়।"
+        },
+        "mr": {
+          "insight": "पालन, कायदेशीर पुनरावलोकन, आणि कार्यक्षमता. टिकणारी प्रणाली तयार करा."
+        },
+        "gu": {
+          "insight": "અનુસરણ, કાનૂની સમીક્ષા, અને કામગીરીની કાર્યક્ષમતા. લાંબા સમય સુધી ચાલે તેવી પ્રણાલીઓ બનાવો."
+        },
+        "kn": {
+          "insight": "ಅನುಸರಣಾ, ಕಾನೂನು ಪರಿಶೀಲನೆ, ಮತ್ತು ಕಾರ್ಯಾಚರಣಾ ದಕ್ಷತೆ. ಶಾಶ್ವತವಾಗಿರುವ ವ್ಯವಸ್ಥೆಗಳನ್ನು ನಿರ್ಮಿಸಿ."
+        },
+        "ml": {
+          "insight": "അനുസരണം, നിയമപരമായ അവലോകനം, പ്രവർത്തനക്ഷമത. ദീർഘകാലം നിലനിൽക്കുന്ന സംവിധാനങ്ങൾ നിർമ്മിക്കുക."
+        },
+        "pa": {
+          "insight": "ਅਨੁਸਾਰਤਾ, ਕਾਨੂੰਨੀ ਸਮੀਖਿਆ, ਅਤੇ ਸਾਂਭਲ ਪ੍ਰਬੰਧਨ ਦੀ ਕੁਸ਼ਲਤਾ। ਸਿਸਟਮ ਬਣਾਓ ਜੋ ਲੰਮੇ ਸਮੇਂ ਤੱਕ ਚੱਲਣ।"
+        },
+        "or": {
+          "insight": "ଅନୁସରଣ, ଆଇନୀ ସମୀକ୍ଷା, ଏବଂ ପରିଚାଳନା କାର୍ଯ୍ୟକୁଷଳତା। ଯେଉଁ ସିଷ୍ଟମ ଗୁଡ଼ିକ ଦୀର୍ଘ ସମୟ ପର୍ଯ୍ୟନ୍ତ ରହିବ, ସେଗୁଡ଼ିକ ତିଆରି କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "অনুগতি, আইনগত পৰ্যালোচনা, আৰু কাৰ্যকৰী দক্ষতা। যি ব্যৱস্থা দীঘলীয়া সময় ধৰি চলিব পাৰে তেনে ব্যৱস্থা গঢ়ি তোলক।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Administrative decisions and leadership in clinical settings. Conference presentations."
+        },
+        "hi": {
+          "insight": "प्रशासनिक निर्णय और नैदानिक सेटिंग्स में नेतृत्व। सम्मेलन प्रस्तुतियाँ।"
+        },
+        "ta": {
+          "insight": "நிர்வாக முடிவுகள் மற்றும் மருத்துவ அமைப்புகளில் தலைமைத்துவம். மாநாட்டு விளக்கவுரைகள்."
+        },
+        "te": {
+          "insight": "నిర్వాహక నిర్ణయాలు మరియు క్లినికల్ సెట్టింగ్స్‌లో నాయకత్వం. సదస్సు ప్రదర్శనలు."
+        },
+        "bn": {
+          "insight": "প্রশাসনিক সিদ্ধান্ত এবং ক্লিনিকাল সেটিংসে নেতৃত্ব। সম্মেলনে উপস্থাপন।"
+        },
+        "mr": {
+          "insight": "प्रशासकीय निर्णय आणि नैदानिक सेटिंग्जमधील नेतृत्व. परिषद सादरीकरणे."
+        },
+        "gu": {
+          "insight": "પ્રશાસનિક નિર્ણયો અને ક્લિનિકલ સેટિંગ્સમાં નેતૃત્વ. પરિષદ પ્રસ્તુતિઓ."
+        },
+        "kn": {
+          "insight": "ನಿರ್ವಹಣಾತ್ಮಕ ನಿರ್ಧಾರಗಳು ಮತ್ತು ಕ್ಲಿನಿಕಲ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನಾಯಕತ್ವ. ಸಮ್ಮೇಳನ ಪ್ರಸ್ತುತಿಗಳು."
+        },
+        "ml": {
+          "insight": "പരിപാലന തീരുമാനങ്ങളും ക്ലിനിക്കൽ സാഹചര്യങ്ങളിലെ നേതൃത്വവും. സമ്മേളന അവതരണങ്ങൾ."
+        },
+        "pa": {
+          "insight": "ਪ੍ਰਸ਼ਾਸਕੀ ਫ਼ੈਸਲੇ ਅਤੇ ਕਲੀਨਿਕਲ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਨੇਤ੍ਰਿਤਵ। ਕਾਨਫਰੰਸ ਪ੍ਰਸਤੁਤੀਆਂ।"
+        },
+        "or": {
+          "insight": "ପ୍ରଶାସନିକ ସିଦ୍ଧାନ୍ତଗୁଡ଼ିକ ଏବଂ ଚିକିତ୍ସା ସେଟିଂରେ ନେତୃତ୍ୱ। ସମ୍ମିଳନୀ ପ୍ରସ୍ତୁତିଗୁଡ଼ିକ।"
+        },
+        "as": {
+          "insight": "প্ৰশাসনিক সিদ্ধান্ত আৰু চিকিৎসা পৰিৱেশত নেতৃত্ব। সন্মিলন প্ৰদৰ্শন।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Patient care and empathy peak. Counseling and holistic healing approaches effective."
+        },
+        "hi": {
+          "insight": "रोगी देखभाल और सहानुभूति चरम पर हैं। परामर्श और समग्र उपचार दृष्टिकोण प्रभावी हैं।"
+        },
+        "ta": {
+          "insight": "நோயாளி பராமரிப்பு மற்றும் பரிவு உச்சமாக இருக்கும். ஆலோசனை மற்றும் முழுமையான குணப்படுத்தும் அணுகுமுறைகள் பயனுள்ளதாக இருக்கும்."
+        },
+        "te": {
+          "insight": "రోగి సంరక్షణ మరియు సహానుభూతి శిఖరానికి చేరుకుంటాయి. సలహాలు మరియు సమగ్ర వైద్యం పద్ధతులు ప్రభావవంతంగా ఉంటాయి."
+        },
+        "bn": {
+          "insight": "রোগীর যত্ন এবং সহানুভূতি শীর্ষে। পরামর্শ এবং সমগ্রিক নিরাময় পদ্ধতি কার্যকর।"
+        },
+        "mr": {
+          "insight": "रुग्णांची काळजी आणि सहानुभूती शिखरावर आहे. समुपदेशन आणि सर्वांगीण उपचार पद्धती प्रभावी आहेत."
+        },
+        "gu": {
+          "insight": "રોગી સંભાળ અને સહાનુભૂતિ શિખરે છે. સલાહકાર અને સમગ્ર ઉપચાર પદ્ધતિઓ અસરકારક."
+        },
+        "kn": {
+          "insight": "ರೋಗಿಗಳ ಆರೈಕೆ ಮತ್ತು ಸಹಾನುಭೂತಿ ಶಿಖರಕ್ಕೆ ತಲುಪುತ್ತದೆ. ಸಮಾಲೋಚನೆ ಮತ್ತು ಸಮಗ್ರ ಚಿಕಿತ್ಸೆ ವಿಧಾನಗಳು ಪರಿಣಾಮಕಾರಿಯಾಗಿವೆ."
+        },
+        "ml": {
+          "insight": "രോഗി പരിചരണം, കരുണ എന്നിവ ഉയരുന്നു. കൗൺസലിംഗ്, സമഗ്ര ചികിത്സാ സമീപനങ്ങൾ ഫലപ്രദമാണ്."
+        },
+        "pa": {
+          "insight": "ਮਰੀਜ਼ ਦੀ ਦੇਖਭਾਲ ਅਤੇ ਹਮਦਰਦੀ ਚਰਮ ਸੀਮਾ 'ਤੇ ਹਨ। ਸਲਾਹਕਾਰ ਅਤੇ ਸਮੂਹਿਕ ਚੰਗਿਆਈ ਦੇ ਤਰੀਕੇ ਪ੍ਰਭਾਵਸ਼ਾਲੀ ਹਨ।"
+        },
+        "or": {
+          "insight": "ରୋଗୀ ସେବା ଏବଂ ସହାନୁଭୂତି ଶିଖରକୁ ପହଞ୍ଚେ। ପରାମର୍ଶ ଏବଂ ସମଗ୍ର ଚିକିତ୍ସା ପ୍ରବଳ ହୋଇଥାଏ।"
+        },
+        "as": {
+          "insight": "ৰোগীৰ যত্ন আৰু সহানুভূতি শীৰ্ষত থাকে। পৰামৰ্শ আৰু সামগ্ৰিক আৰোগ্য পদ্ধতি প্ৰভাৱশালী।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Surgical procedures and emergency medicine favored. Physical stamina is high."
+        },
+        "hi": {
+          "insight": "शल्य चिकित्सा प्रक्रियाएँ और आपातकालीन चिकित्सा को प्राथमिकता दी जाती है। शारीरिक सहनशक्ति उच्च है।"
+        },
+        "ta": {
+          "insight": "அறுவை சிகிச்சைகள் மற்றும் அவசர மருத்துவம் சாதகமாக உள்ளது. உடல் சக்தி அதிகமாக உள்ளது."
+        },
+        "te": {
+          "insight": "శస్త్రచికిత్సా ప్రక్రియలు మరియు అత్యవసర వైద్యం అనుకూలంగా ఉంటాయి. శారీరక స్థైర్యం ఎక్కువగా ఉంటుంది."
+        },
+        "bn": {
+          "insight": "অস্ত্রোপচার প্রক্রিয়া এবং জরুরি চিকিৎসা পছন্দনীয়। শারীরিক সহনশীলতা উচ্চ।"
+        },
+        "mr": {
+          "insight": "शस्त्रक्रिया आणि आपत्कालीन औषधोपचार अनुकूल आहेत. शारीरिक सहनशक्ती उच्च आहे."
+        },
+        "gu": {
+          "insight": "શસ્ત્રક્રિયા પ્રક્રિયાઓ અને તાત્કાલિક દવાઓને પ્રાધાન્ય. શારીરિક સહનશક્તિ ઊંચી છે."
+        },
+        "kn": {
+          "insight": "ಶಸ್ತ್ರಚಿಕಿತ್ಸಾ ಕ್ರಮಗಳು ಮತ್ತು ತುರ್ತು ವೈದ್ಯಕೀಯವನ್ನು ಮೆಚ್ಚಲಾಗಿದೆ. ದೈಹಿಕ ಸಹನಶೀಲತೆ ಹೆಚ್ಚು."
+        },
+        "ml": {
+          "insight": "ശസ്ത്രക്രിയാ നടപടികളും അടിയന്തര വൈദ്യശാസ്ത്രവും അനുകൂലമാണ്. ശാരീരിക സഹിഷ്ണുത ഉയർന്നിരിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਸਰਜਰੀ ਪ੍ਰਕਿਰਿਆਵਾਂ ਅਤੇ ਐਮਰਜੈਂਸੀ ਦਵਾਈ ਪਸੰਦ ਕੀਤੀ ਜਾਂਦੀ ਹੈ। ਸਰੀਰਕ ਸਹਿਨਸ਼ੀਲਤਾ ਉੱਚੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଶଳ୍ୟଚିକିତ୍ସା ପ୍ରକ୍ରିୟା ଏବଂ ଆପତ୍କାଳୀନ ଔଷଧ ଲାଭକାରୀ। ଶାରୀରିକ ସହନଶୀଳତା ଉଚ୍ଚ।"
+        },
+        "as": {
+          "insight": "শল্য চিকিৎসা আৰু জৰুৰী ঔষধৰ প্ৰক্ৰিয়া লাভজনক। শাৰীৰিক সহনশীলতা উচ্চ।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Diagnostics, research, and medical documentation. Learning new techniques."
+        },
+        "hi": {
+          "insight": "निदान, अनुसंधान, और चिकित्सा दस्तावेज़ीकरण। नई तकनीकों को सीखना।"
+        },
+        "ta": {
+          "insight": "நோயறிதல், ஆராய்ச்சி, மற்றும் மருத்துவ ஆவணப்படுத்தல். புதிய நுட்பங்களை கற்றல்."
+        },
+        "te": {
+          "insight": "నిర్ధారణలు, పరిశోధన, మరియు వైద్య పత్రాలు. కొత్త సాంకేతికతలను నేర్చుకోవడం."
+        },
+        "bn": {
+          "insight": "নির্ণয়, গবেষণা এবং চিকিৎসা নথিপত্র। নতুন কৌশল শেখা।"
+        },
+        "mr": {
+          "insight": "निदान, संशोधन, आणि वैद्यकीय दस्तऐवजीकरण. नवीन तंत्र शिकणे."
+        },
+        "gu": {
+          "insight": "નિદાન, સંશોધન, અને ચિકિત્સા દસ્તાવેજીકરણ. નવી તકનીકો શીખવી."
+        },
+        "kn": {
+          "insight": "ನಿದಾನಶಾಸ್ತ್ರ, ಸಂಶೋಧನೆ, ಮತ್ತು ವೈದ್ಯಕೀಯ ದಾಖಲೆ. ಹೊಸ ತಂತ್ರಗಳನ್ನು ಕಲಿಯುವುದು."
+        },
+        "ml": {
+          "insight": "ഡയഗ്നോസ്റ്റിക്സ്, ഗവേഷണം, മെഡിക്കൽ ഡോക്യുമെന്റേഷൻ. പുതിയ സാങ്കേതികവിദ്യകൾ പഠിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਨਿਦਾਨ, ਖੋਜ, ਅਤੇ ਚਿਕਿਤਸਾ ਦਸਤਾਵੇਜ਼ੀਕਰਨ। ਨਵੀਆਂ ਤਕਨੀਕਾਂ ਸਿੱਖਣਾ।"
+        },
+        "or": {
+          "insight": "ନିଦାନ, ଗବେଷଣା, ଏବଂ ଚିକିତ୍ସା ଡକ୍ୟୁମେଣ୍ଟେସନ୍। ନୂତନ ପ୍ରକ୍ରିୟା ଶିଖିବା।"
+        },
+        "as": {
+          "insight": "ৰোগ নিৰ্ণয়, গৱেষণা, আৰু চিকিৎসা নথিপত্ৰ। নতুন প্ৰযুক্তি শিকিব।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Teaching, publishing research, and medical ethics. Seeking advanced certifications."
+        },
+        "hi": {
+          "insight": "शिक्षण, शोध प्रकाशित करना, और चिकित्सा नैतिकता। उन्नत प्रमाणपत्रों की खोज।"
+        },
+        "ta": {
+          "insight": "கற்பித்தல், ஆராய்ச்சி வெளியீடு, மற்றும் மருத்துவ நெறிமுறைகள். மேம்பட்ட சான்றிதழ்களை நாடுதல்."
+        },
+        "te": {
+          "insight": "బోధన, పరిశోధన ప్రచురణ మరియు వైద్య నైతికత. ఉన్నత సర్టిఫికేషన్లను పొందడం."
+        },
+        "bn": {
+          "insight": "শিক্ষাদান, গবেষণা প্রকাশনা, এবং চিকিৎসা নীতি। উন্নত সার্টিফিকেশন অনুসন্ধান।"
+        },
+        "mr": {
+          "insight": "शिक्षण, संशोधन प्रकाशित करणे, आणि वैद्यकीय नैतिकता. प्रगत प्रमाणपत्रे मिळवण्याचा प्रयत्न."
+        },
+        "gu": {
+          "insight": "શિક્ષણ, પ્રકાશન સંશોધન, અને તબીબી નૈતિકતા. ઉચ્ચ પ્રમાણપત્રો મેળવવા માટે પ્રયત્નશીલ."
+        },
+        "kn": {
+          "insight": "ಬೋಧನೆ, ಸಂಶೋಧನೆ ಪ್ರಕಟಿಸುವುದು, ಮತ್ತು ವೈದ್ಯಕೀಯ ನೈತಿಕತೆ. ಉನ್ನತ ಪ್ರಮಾಣಪತ್ರಗಳನ್ನು ಹುಡುಕುವುದು."
+        },
+        "ml": {
+          "insight": "പഠനം, ഗവേഷണം പ്രസിദ്ധീകരിക്കൽ, മെഡിക്കൽ നൈതികത. ഉയർന്ന സർട്ടിഫിക്കേഷനുകൾ തേടുന്നു."
+        },
+        "pa": {
+          "insight": "ਪੜ੍ਹਾਉਣਾ, ਖੋਜ ਪ੍ਰਕਾਸ਼ਿਤ ਕਰਨਾ, ਅਤੇ ਚਿਕਿਤਸਾ ਨੈਤਿਕਤਾ। ਉੱਚਤਮ ਪ੍ਰਮਾਣਪੱਤਰਾਂ ਦੀ ਖੋਜ।"
+        },
+        "or": {
+          "insight": "ଶିକ୍ଷା, ଗବେଷଣା ପ୍ରକାଶନ, ଏବଂ ଚିକିତ୍ସା ନୀତିଶାସ୍ତ୍ର। ଉନ୍ନତ ସନଦ ପ୍ରାପ୍ତି ପାଇଁ ଚେଷ୍ଟା।"
+        },
+        "as": {
+          "insight": "পঢ়োৱা, গৱেষণা প্ৰকাশ কৰা, আৰু চিকিৎসা নীতি-নিয়ম। উন্নত প্ৰমাণপত্ৰ বিচাৰি থকা।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Wellness programs, patient relationships, and aesthetic medicine."
+        },
+        "hi": {
+          "insight": "कल्याण कार्यक्रम, रोगी संबंध, और सौंदर्य चिकित्सा।"
+        },
+        "ta": {
+          "insight": "நலத்திட்டங்கள், நோயாளி உறவுகள், மற்றும் அழகியல் மருத்துவம்."
+        },
+        "te": {
+          "insight": "ఆరోగ్య కార్యక్రమాలు, రోగుల సంబంధాలు, మరియు సౌందర్య వైద్యం."
+        },
+        "bn": {
+          "insight": "সুস্থতা প্রোগ্রাম, রোগীর সম্পর্ক, এবং নান্দনিক চিকিৎসা।"
+        },
+        "mr": {
+          "insight": "कल्याण कार्यक्रम, रुग्ण संबंध, आणि सौंदर्य चिकित्सा."
+        },
+        "gu": {
+          "insight": "સ્વાસ્થ્ય કાર્યક્રમો, દર્દી સંબંધો, અને સૌંદર્ય ચિકિત્સા."
+        },
+        "kn": {
+          "insight": "ಆರೋಗ್ಯ ಕಾರ್ಯಕ್ರಮಗಳು, ರೋಗಿಗಳ ಸಂಬಂಧಗಳು, ಮತ್ತು ಅಂದದ ವೈದ್ಯಕೀಯ."
+        },
+        "ml": {
+          "insight": "ക്ഷേമ പരിപാടികൾ, രോഗികളുമായുള്ള ബന്ധങ്ങൾ, സൌന്ദര്യ വൈദ്യശാസ്ത്രം."
+        },
+        "pa": {
+          "insight": "ਤੰਦਰੁਸਤੀ ਪ੍ਰੋਗਰਾਮ, ਮਰੀਜ਼ਾਂ ਨਾਲ ਸੰਬੰਧ ਅਤੇ ਸੁੰਦਰਤਾ ਚਿਕਿਤਸਾ."
+        },
+        "or": {
+          "insight": "ସୁସ୍ଥତା କାର୍ଯ୍ୟକ୍ରମ, ରୋଗୀ ସମ୍ପର୍କ, ଏବଂ ସୌନ୍ଦର୍ଯ୍ୟ ଚିକିତ୍ସା।"
+        },
+        "as": {
+          "insight": "স্বাস্থ্যকৰ কাৰ্যসূচী, ৰোগীৰ সৈতে সম্পৰ্ক, আৰু সৌন্দৰ্য্য চিকিৎসা।"
+        }
+      }
+    },
+    {
+      "key": "HEALTHCARE:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Long-term treatment plans, chronic care management, and procedural discipline."
+        },
+        "hi": {
+          "insight": "दीर्घकालिक उपचार योजनाएँ, दीर्घकालिक देखभाल प्रबंधन, और प्रक्रियात्मक अनुशासन।"
+        },
+        "ta": {
+          "insight": "நீண்டகால சிகிச்சை திட்டங்கள், நீண்டகால பராமரிப்பு மேலாண்மை, மற்றும் நடைமுறை ஒழுக்கம்."
+        },
+        "te": {
+          "insight": "దీర్ఘకాలిక చికిత్సా ప్రణాళికలు, దీర్ఘకాల సంరక్షణ నిర్వహణ, మరియు విధాన క్రమశిక్షణ."
+        },
+        "bn": {
+          "insight": "দীর্ঘমেয়াদী চিকিৎসা পরিকল্পনা, দীর্ঘস্থায়ী যত্ন ব্যবস্থাপনা, এবং প্রক্রিয়াগত শৃঙ্খলা।"
+        },
+        "mr": {
+          "insight": "दीर्घकालीन उपचार योजना, दीर्घकालीन काळजी व्यवस्थापन, आणि प्रक्रियात्मक शिस्त."
+        },
+        "gu": {
+          "insight": "દીર્ઘકાળીન સારવાર યોજનાઓ, ક્રોનિક કાળજી વ્યવસ્થાપન, અને પ્રક્રિયાત્મક શિસ્ત."
+        },
+        "kn": {
+          "insight": "ದೀರ್ಘಕಾಲದ ಚಿಕಿತ್ಸೆ ಯೋಜನೆಗಳು, ದೀರ್ಘಕಾಲದ ಆರೈಕೆ ನಿರ್ವಹಣೆ, ಮತ್ತು ಕ್ರಮ ಶಿಸ್ತು."
+        },
+        "ml": {
+          "insight": "ദീർഘകാല ചികിത്സാ പദ്ധതികൾ, ദീർഘകാല പരിചരണ മാനേജ്മെന്റ്, പ്രക്രിയാനുസൃതമായ ശാസന."
+        },
+        "pa": {
+          "insight": "ਦੀਰਘਕਾਲੀ ਇਲਾਜ ਯੋਜਨਾਵਾਂ, ਲੰਬੇ ਸਮੇਂ ਦੀ ਦੇਖਭਾਲ ਪ੍ਰਬੰਧਨ, ਅਤੇ ਪ੍ਰਕਿਰਿਆ ਅਨੁਸ਼ਾਸਨ।"
+        },
+        "or": {
+          "insight": "ଦୀର୍ଘକାଳୀନ ଚିକିତ୍ସା ପରିକଳ୍ପନା, ଦୀର୍ଘକାଳୀନ ସେବା ପରିଚାଳନା, ଏବଂ ପ୍ରକ୍ରିୟାତ୍ମକ ଶୃଙ୍ଖଳା।"
+        },
+        "as": {
+          "insight": "দীৰ্ঘম্যাদী চিকিৎসা পৰিকল্পনা, দীৰ্ঘস্থায়ী যত্ন ব্যৱস্থাপনা, আৰু প্ৰক্ৰিয়াগত শৃংখলা।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Showcase your work — exhibitions, portfolio reviews, public performances."
+        },
+        "hi": {
+          "insight": "अपने काम को प्रदर्शित करें — प्रदर्शनियाँ, पोर्टफोलियो समीक्षाएँ, सार्वजनिक प्रदर्शन।"
+        },
+        "ta": {
+          "insight": "உங்கள் பணியை வெளிப்படுத்துங்கள் — கண்காட்சிகள், போர்ட்ஃபோலியோ மதிப்பீடுகள், பொது நிகழ்ச்சிகள்."
+        },
+        "te": {
+          "insight": "మీ పనిని ప్రదర్శించండి — ప్రదర్శనలు, పోర్ట్ఫోలియో సమీక్షలు, ప్రజా ప్రదర్శనలు."
+        },
+        "bn": {
+          "insight": "আপনার কাজ প্রদর্শন করুন — প্রদর্শনী, পোর্টফোলিও পর্যালোচনা, জনসাধারণের সামনে প্রদর্শন।"
+        },
+        "mr": {
+          "insight": "आपले काम प्रदर्शित करा — प्रदर्शन, पोर्टफोलिओ पुनरावलोकन, सार्वजनिक सादरीकरण."
+        },
+        "gu": {
+          "insight": "તમારું કામ પ્રદર્શિત કરો — પ્રદર્શન, પોર્ટફોલિયો સમીક્ષાઓ, જાહેર પ્રદર્શન."
+        },
+        "kn": {
+          "insight": "ನಿಮ್ಮ ಕೆಲಸವನ್ನು ಪ್ರದರ್ಶಿಸಿ — ಪ್ರದರ್ಶನಗಳು, ಪೋರ್ಟ್ಫೋಲಿಯೊ ವಿಮರ್ಶೆಗಳು, ಸಾರ್ವಜನಿಕ ಪ್ರದರ್ಶನಗಳು."
+        },
+        "ml": {
+          "insight": "നിങ്ങളുടെ പ്രവർത്തനം പ്രദർശിപ്പിക്കുക — പ്രദർശനങ്ങൾ, പോർട്ട്ഫോളിയോ അവലോകനങ്ങൾ, പൊതു പ്രകടനങ്ങൾ."
+        },
+        "pa": {
+          "insight": "ਆਪਣੇ ਕੰਮ ਨੂੰ ਪ੍ਰਦਰਸ਼ਿਤ ਕਰੋ — ਪ੍ਰਦਰਸ਼ਨੀਆਂ, ਪੋਰਟਫੋਲਿਓ ਸਮੀਖਿਆਵਾਂ, ਜਨਤਕ ਪ੍ਰਦਰਸ਼ਨ।"
+        },
+        "or": {
+          "insight": "ଆପଣଙ୍କ କାମକୁ ପ୍ରଦର୍ଶନ କରନ୍ତୁ — ପ୍ରଦର୍ଶନୀଗୁଡ଼ିକ, ପୋର୍ଟଫୋଲିଓ ସମୀକ୍ଷା, ସାର୍ବଜନିକ ପ୍ରଦର୍ଶନଗୁଡ଼ିକ।"
+        },
+        "as": {
+          "insight": "আপোনাৰ কাম প্ৰদৰ্শন কৰক — প্ৰদৰ্শনীসমূহ, প'ৰ্টফ'লিঅ' পৰ্যালোচনা, ৰাজহুৱা প্ৰদৰ্শন।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Raw creativity flows. Writing, composing, painting — let intuition guide you."
+        },
+        "hi": {
+          "insight": "कच्ची रचनात्मकता प्रवाहित होती है। लेखन, संगीत रचना, चित्रकला — अपनी अंतर्दृष्टि को मार्गदर्शन करने दें।"
+        },
+        "ta": {
+          "insight": "மூல கற்பனை ஓடுகிறது. எழுதுதல், இசை அமைத்தல், ஓவியம் — உளவுத்திறன் உங்களை வழிநடத்த அனுமதிக்கவும்."
+        },
+        "te": {
+          "insight": "అసంపూర్ణ సృజనాత్మకత ప్రవహిస్తుంది. రచన, స్వరరచన, చిత్రకళ — అంతఃప్రేరణను మీకు మార్గనిర్దేశం చేయనివ్వండి."
+        },
+        "bn": {
+          "insight": "কাঁচা সৃজনশীলতা প্রবাহিত হয়। লেখা, সুর তৈরি, চিত্রাঙ্কন — অন্তর্দৃষ্টি আপনাকে পথ দেখাক।"
+        },
+        "mr": {
+          "insight": "मूळ सर्जनशीलता वाहते. लेखन, संगीत रचना, चित्रकला — अंतःप्रेरणा तुम्हाला मार्गदर्शन करू दे."
+        },
+        "gu": {
+          "insight": "કાચી સર્જનાત્મકતા વહે છે. લેખન, સંગીત રચના, ચિત્રકામ — તમારી આંતરિક પ્રેરણા તમને માર્ગદર્શન આપે."
+        },
+        "kn": {
+          "insight": "ಮೂಲ ಸೃಜನಶೀಲತೆ ಹರಿಯುತ್ತದೆ. ಬರವಣಿಗೆ, ಸಂಯೋಜನೆ, ಚಿತ್ರಕಲೆ — ಒಳನೋಟವು ನಿಮ್ಮನ್ನು ಮಾರ್ಗದರ್ಶನ ಮಾಡಲಿ."
+        },
+        "ml": {
+          "insight": "അസംസ്കൃത സൃഷ്ടിപരമായതിന്റെ ഒഴുക്ക്. എഴുത്ത്, സംഗീതരചന, ചിത്രരചന — അന്തർദൃഷ്ടി നിങ്ങളെ നയിക്കട്ടെ."
+        },
+        "pa": {
+          "insight": "ਕੱਚੀ ਰਚਨਾਤਮਕਤਾ ਵਗਦੀ ਹੈ। ਲਿਖਣ, ਰਚਨਾ ਕਰਨ, ਚਿੱਤਰਕਲਾ — ਆਪਣੀ ਅੰਦਰੂਨੀ ਪ੍ਰੇਰਣਾ ਨੂੰ ਮਾਰਗਦਰਸ਼ਨ ਕਰਨ ਦਿਓ।"
+        },
+        "or": {
+          "insight": "ଅଶୁଦ୍ଧ ସୃଜନଶୀଳତା ପ୍ରବାହିତ ହୁଏ। ଲେଖନ, ସଂଗୀତ ସୃଷ୍ଟି, ଚିତ୍ରାଙ୍କନ — ଆପଣଙ୍କର ଅନ୍ତର୍ଜ୍ଞାନକୁ ନିୟମ କରିବାକୁ ଦିଅନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "কাঁচা সৃষ্টিশীলতা বৈহে। লেখা, সুৰৰচনা, চিত্ৰাঙ্কন — অন্তৰ্দৃষ্টি আপোনাক পথ দেখুৱাওক।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Action-oriented creativity — filmmaking, dance, physical performance art."
+        },
+        "hi": {
+          "insight": "क्रियाशील रचनात्मकता — फिल्म निर्माण, नृत्य, शारीरिक प्रदर्शन कला।"
+        },
+        "ta": {
+          "insight": "செயல் சார்ந்த படைப்பாற்றல் — திரைப்படம் தயாரித்தல், நடனம், உடல் செயல்திறன் கலை."
+        },
+        "te": {
+          "insight": "క్రియాశీలతతో కూడిన సృజనాత్మకత — సినిమా నిర్మాణం, నృత్యం, శారీరక ప్రదర్శన కళ."
+        },
+        "bn": {
+          "insight": "কর্মমুখী সৃজনশীলতা — চলচ্চিত্র নির্মাণ, নৃত্য, শারীরিক পারফরম্যান্স শিল্প।"
+        },
+        "mr": {
+          "insight": "क्रियाशील सर्जनशीलता — चित्रपट निर्मिती, नृत्य, शारीरिक प्रदर्शन कला."
+        },
+        "gu": {
+          "insight": "ક્રિયાપ્રધાન સર્જનાત્મકતા — ફિલ્મમેકિંગ, નૃત્ય, શારીરિક પ્રદર્શન કલા."
+        },
+        "kn": {
+          "insight": "ಕ್ರಿಯಾಶೀಲ ಸೃಜನಶೀಲತೆ — ಚಲನಚಿತ್ರ ನಿರ್ಮಾಣ, ನೃತ್ಯ, ಶಾರೀರಿಕ ಪ್ರದರ್ಶನ ಕಲೆ."
+        },
+        "ml": {
+          "insight": "പ്രവർത്തനോന്മുഖമായ സൃഷ്ടിപരത — സിനിമാ നിർമ്മാണം, നൃത്തം, ശാരീരിക പ്രകടന കല."
+        },
+        "pa": {
+          "insight": "ਕਾਰਵਾਈ-ਕੇਂਦ੍ਰਿਤ ਰਚਨਾਤਮਕਤਾ — ਫਿਲਮ ਨਿਰਮਾਣ, ਨ੍ਰਿਤ੍ਯ, ਭੌਤਿਕ ਪ੍ਰਦਰਸ਼ਨ ਕਲਾ।"
+        },
+        "or": {
+          "insight": "କାର୍ଯ୍ୟମୁଖୀ ସୃଜନଶୀଳତା — ଚଳଚ୍ଚିତ୍ର ନିର୍ମାଣ, ନୃତ୍ୟ, ଶାରୀରିକ ପ୍ରଦର୍ଶନ କଳା।"
+        },
+        "as": {
+          "insight": "কৰ্য্যপৰায়ণ সৃষ্টিশীলতা — চলচ্চিত্ৰ নিৰ্মাণ, নৃত্য, শাৰীৰিক প্ৰদৰ্শন কলা।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Technical craft — editing, design software, writing drafts, musical arrangements."
+        },
+        "hi": {
+          "insight": "तकनीकी शिल्प — संपादन, डिज़ाइन सॉफ़्टवेयर, लेखन प्रारूप, संगीत व्यवस्था।"
+        },
+        "ta": {
+          "insight": "தொழில்நுட்ப கைவினை — திருத்துதல், வடிவமைப்பு மென்பொருள், வரைவு எழுதுதல், இசை ஒழுங்குகள்."
+        },
+        "te": {
+          "insight": "సాంకేతిక నైపుణ్యం — ఎడిటింగ్, డిజైన్ సాఫ్ట్‌వేర్, రచనా ముసాయిదాలు, సంగీత ఏర్పాట్లు."
+        },
+        "bn": {
+          "insight": "প্রযুক্তিগত কারিগরি — সম্পাদনা, ডিজাইন সফটওয়্যার, খসড়া লেখা, সঙ্গীতের বিন্যাস।"
+        },
+        "mr": {
+          "insight": "तांत्रिक कौशल्य — संपादन, डिझाइन सॉफ्टवेअर, लेखन मसुदे, संगीत संयोजन."
+        },
+        "gu": {
+          "insight": "તકનિકી હસ્તકલા — સંપાદન, ડિઝાઇન સોફ્ટવેર, લેખન ડ્રાફ્ટ, સંગીતની વ્યવસ્થા."
+        },
+        "kn": {
+          "insight": "ತಾಂತ್ರಿಕ ಕೌಶಲ್ಯ — ಸಂಪಾದನೆ, ವಿನ್ಯಾಸ ಸಾಫ್ಟ್‌ವೇರ್, ಕರಡು ಬರವಣಿಗೆ, ಸಂಗೀತ ವ್ಯವಸ್ಥೆಗಳು."
+        },
+        "ml": {
+          "insight": "സാങ്കേതിക ശില്പം — എഡിറ്റിംഗ്, ഡിസൈൻ സോഫ്റ്റ്വെയർ, കരടുകൾ എഴുതൽ, സംഗീത ക്രമീകരണങ്ങൾ."
+        },
+        "pa": {
+          "insight": "ਤਕਨੀਕੀ ਕਲਾ — ਸੰਪਾਦਨ, ਡਿਜ਼ਾਈਨ ਸਾਫਟਵੇਅਰ, ਲਿਖਤ ਮਸੌਦੇ, ਸੰਗੀਤਕ ਪ੍ਰਬੰਧ।"
+        },
+        "or": {
+          "insight": "ପ୍ରାଯୋଗିକ କୌଶଳ — ସମ୍ପାଦନା, ଡିଜାଇନ ସଫ୍ଟୱେର, ଖସଡା ଲେଖନ, ସଙ୍ଗୀତ ଆୟୋଜନ।"
+        },
+        "as": {
+          "insight": "প্ৰযুক্তিগত কলা — সম্পাদনা, ডিজাইন ছফ্টৱেৰ, খচৰা লিখা, সংগীতৰ বিন্যাস।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Vision and inspiration. Start ambitious projects. Seek creative mentors."
+        },
+        "hi": {
+          "insight": "दृष्टि और प्रेरणा। महत्वाकांक्षी परियोजनाएँ शुरू करें। रचनात्मक मार्गदर्शकों की तलाश करें।"
+        },
+        "ta": {
+          "insight": "காட்சி மற்றும் ஊக்கம். பெரிய திட்டங்களைத் தொடங்குங்கள். படைப்பாற்றல் உள்ள வழிகாட்டிகளைத் தேடுங்கள்."
+        },
+        "te": {
+          "insight": "దృష్టి మరియు ప్రేరణ. మహత్తరమైన ప్రాజెక్టులను ప్రారంభించండి. సృజనాత్మక మార్గదర్శకులను వెతకండి."
+        },
+        "bn": {
+          "insight": "দৃষ্টি এবং অনুপ্রেরণা। উচ্চাকাঙ্ক্ষী প্রকল্প শুরু করুন। সৃজনশীল পরামর্শদাতাদের সন্ধান করুন।"
+        },
+        "mr": {
+          "insight": "दृष्टी आणि प्रेरणा. महत्त्वाकांक्षी प्रकल्प सुरू करा. सर्जनशील मार्गदर्शकांचा शोध घ्या."
+        },
+        "gu": {
+          "insight": "દ્રષ્ટિ અને પ્રેરણા. મહત્ત્વાકાંક્ષી પ્રોજેક્ટ્સ શરૂ કરો. સર્જનાત્મક માર્ગદર્શકોની શોધ કરો."
+        },
+        "kn": {
+          "insight": "ದೃಷ್ಟಿ ಮತ್ತು ಪ್ರೇರಣೆ. ಮಹತ್ವಾಕಾಂಕ್ಷಿ ಯೋಜನೆಗಳನ್ನು ಪ್ರಾರಂಭಿಸಿ. ಸೃಜನಾತ್ಮಕ ಮಾರ್ಗದರ್ಶಕರನ್ನು ಹುಡುಕಿ."
+        },
+        "ml": {
+          "insight": "ദർശനം കൂടാതെ പ്രചോദനം. മഹത്തായ പദ്ധതികൾ ആരംഭിക്കുക. സൃഷ്ടിപരമായ മാർഗ്ഗദർശകരെ അന്വേഷിക്കുക."
+        },
+        "pa": {
+          "insight": "ਦ੍ਰਿਸ਼ਟੀ ਅਤੇ ਪ੍ਰੇਰਣਾ। ਮਹੱਤਵਕਾਂਕਸ਼ੀ ਪ੍ਰੋਜੈਕਟ ਸ਼ੁਰੂ ਕਰੋ। ਰਚਨਾਤਮਕ ਮਾਰਗਦਰਸ਼ਕਾਂ ਦੀ ਖੋਜ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ଦୃଷ୍ଟିକୋଣ ଏବଂ ପ୍ରେରଣା। ମହାକାଂକ୍ଷୀ ପ୍ରକଳ୍ପ ଆରମ୍ଭ କରନ୍ତୁ। ସୃଜନଶୀଳ ମେଣ୍ଟରମାନଙ୍କୁ ଖୋଜନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "দৃষ্টিভংগী আৰু অনুপ্ৰেৰণা। উচ্চাকাংক্ষী প্ৰকল্প আৰম্ভ কৰক। সৃষ্টিশীল উপদেশদাতাক বিচাৰক।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Peak creative day. Beauty, aesthetics, and artistic expression at their finest."
+        },
+        "hi": {
+          "insight": "उत्कृष्ट रचनात्मक दिन। सुंदरता, सौंदर्यशास्त्र, और कलात्मक अभिव्यक्ति अपने चरम पर।"
+        },
+        "ta": {
+          "insight": "உச்சமான படைப்பாற்றல் நாள். அழகு, அழகியல் மற்றும் கலை வெளிப்பாடு மிகச்சிறந்ததாக இருக்கும்."
+        },
+        "te": {
+          "insight": "అత్యుత్తమ సృజనాత్మక దినం. అందం, సౌందర్యం, మరియు కళాత్మక వ్యక్తీకరణ అత్యుత్తమంగా ఉంటాయి."
+        },
+        "bn": {
+          "insight": "সৃজনশীলতার শীর্ষ দিন। সৌন্দর্য, নান্দনিকতা এবং শিল্পী প্রকাশের সর্বোত্তম রূপ।"
+        },
+        "mr": {
+          "insight": "सर्जनशीलतेचा शिखर दिवस. सौंदर्य, सौंदर्यशास्त्र, आणि कलात्मक अभिव्यक्ती त्यांच्या सर्वोत्तम रूपात."
+        },
+        "gu": {
+          "insight": "શ્રેષ્ઠ સર્જનાત્મક દિવસ. સૌંદર્ય, સૌંદર્યશાસ્ત્ર, અને કળાત્મક અભિવ્યક્તિ તેમના શ્રેષ્ઠ સ્વરૂપમાં."
+        },
+        "kn": {
+          "insight": "ಅತ್ಯುತ್ತಮ ಸೃಜನಾತ್ಮಕ ದಿನ. ಸೌಂದರ್ಯ, ಅಂದ ಮತ್ತು ಕಲಾತ್ಮಕ ಅಭಿವ್ಯಕ್ತಿ ತಮ್ಮ ಶ್ರೇಷ್ಠತೆಯಲ್ಲಿ."
+        },
+        "ml": {
+          "insight": "ഉച്ചസ്ഥായിയിലെ സൃഷ്ടിപരമായ ദിവസം. സൗന്ദര്യം, സൌന്ദര്യബോധം, കലാത്മക പ്രകടനം അതിന്റെ ഉന്നതിയിൽ."
+        },
+        "pa": {
+          "insight": "ਸਰਵੋਤਮ ਰਚਨਾਤਮਕ ਦਿਨ। ਸੁੰਦਰਤਾ, ਸੌੰਦਰਯ, ਅਤੇ ਕਲਾਤਮਕ ਅਭਿਵਿਅਕਤੀ ਆਪਣੇ ਸ਼੍ਰੇਸ਼ਠ ਰੂਪ ਵਿੱਚ।"
+        },
+        "or": {
+          "insight": "ଶୃଷ୍ଟିଶୀଳତାର ଶିଖର ଦିନ। ସୌନ୍ଦର୍ଯ୍ୟ, ରୂଚି, ଏବଂ କଳାତ୍ମକ ପ୍ରକାଶର ସର୍ବୋତ୍କୃଷ୍ଟ ଅଭିବ୍ୟକ୍ତି।"
+        },
+        "as": {
+          "insight": "শৃংখলিত সৃষ্টিশীল দিন। সৌন্দর্য, নান্দনিকতা, আৰু কলাময় অভিব্যক্তি সৰ্বোত্তম।"
+        }
+      }
+    },
+    {
+      "key": "CREATIVE:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Craft discipline — practice, revision, and perfecting technique."
+        },
+        "hi": {
+          "insight": "शिल्प अनुशासन — अभ्यास, संशोधन, और तकनीक को पूर्ण करना।"
+        },
+        "ta": {
+          "insight": "கைவினை ஒழுக்கத்தை உருவாக்குங்கள் — பயிற்சி, திருத்தம், மற்றும் நுட்பத்தை மேம்படுத்துதல்."
+        },
+        "te": {
+          "insight": "క్రమశిక్షణను అలవరచుకోండి — సాధన, సవరణ, మరియు సాంకేతికతను మెరుగుపరచడం."
+        },
+        "bn": {
+          "insight": "শিল্পে শৃঙ্খলা — অনুশীলন, সংশোধন, এবং কৌশল নিখুঁত করা।"
+        },
+        "mr": {
+          "insight": "शिस्त तयार करा — सराव, पुनरावलोकन, आणि तंत्र सुधारणे."
+        },
+        "gu": {
+          "insight": "કલા શિસ્ત — અભ્યાસ, સુધારણા, અને તકનીકને સંપૂર્ણ બનાવવી."
+        },
+        "kn": {
+          "insight": "ಶಿಸ್ತನ್ನು ರೂಪಿಸು — ಅಭ್ಯಾಸ, ಪರಿಷ್ಕರಣೆ, ಮತ್ತು ತಂತ್ರವನ್ನು ಪರಿಪೂರ್ಣಗೊಳಿಸುವುದು."
+        },
+        "ml": {
+          "insight": "കൈവൃത്തശാസ്ത്രം — അഭ്യാസം, തിരുത്തൽ, സാങ്കേതികതയുടെ മികവ് നേടൽ."
+        },
+        "pa": {
+          "insight": "ਹੁਨਰ ਵਿੱਚ ਅਨੁਸ਼ਾਸਨ — ਅਭਿਆਸ, ਸਮੀਖਿਆ, ਅਤੇ ਤਕਨੀਕ ਨੂੰ ਸੁਧਾਰਨਾ।"
+        },
+        "or": {
+          "insight": "ଶିଳ୍ପ ଶିଷ୍ଟାଚାର — ଅଭ୍ୟାସ, ପୁନଃସମୀକ୍ଷା, ଏବଂ ପ୍ରବିଧିର ସଂପୂର୍ଣ୍ଣତା।"
+        },
+        "as": {
+          "insight": "শৃংখলাবদ্ধতা গঠন কৰক — অনুশীলন, সংশোধন, আৰু কৌশল নিখুঁত কৰা।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Official decisions, policy matters, and public appearances favored."
+        },
+        "hi": {
+          "insight": "आधिकारिक निर्णय, नीतिगत मामले, और सार्वजनिक उपस्थिति के लिए अनुकूल।"
+        },
+        "ta": {
+          "insight": "அதிகாரப்பூர்வமான முடிவுகள், கொள்கை விஷயங்கள் மற்றும் பொது தோற்றங்கள் சாதகமாக உள்ளன."
+        },
+        "te": {
+          "insight": "అధికారిక నిర్ణయాలు, విధాన విషయాలు, మరియు ప్రజా ప్రదర్శనలు అనుకూలంగా ఉంటాయి."
+        },
+        "bn": {
+          "insight": "সরকারি সিদ্ধান্ত, নীতি বিষয়ক বিষয় এবং জনসমক্ষে উপস্থিতি পক্ষে।"
+        },
+        "mr": {
+          "insight": "अधिकृत निर्णय, धोरण विषयक बाबी, आणि सार्वजनिक उपस्थिती अनुकूल आहेत."
+        },
+        "gu": {
+          "insight": "સત્તાવાર નિર્ણયો, નીતિ મુદ્દાઓ, અને જાહેર દેખાવ માટે અનુકૂળ."
+        },
+        "kn": {
+          "insight": "ಅಧಿಕೃತ ನಿರ್ಧಾರಗಳು, ನೀತಿ ವಿಷಯಗಳು ಮತ್ತು ಸಾರ್ವಜನಿಕ ಹಾಜರಾತಿಗಳು ಅನುಕೂಲಕರ."
+        },
+        "ml": {
+          "insight": "ഔദ്യോഗിക തീരുമാനങ്ങൾ, നയ വിഷയങ്ങൾ, പൊതുപ്രകടനങ്ങൾ അനുകൂലമാണ്."
+        },
+        "pa": {
+          "insight": "ਸਰਕਾਰੀ ਫੈਸਲੇ, ਨੀਤੀ ਮਾਮਲੇ, ਅਤੇ ਜਨਤਕ ਦਿਖਾਈਆਂ ਪੱਖ ਵਿੱਚ ਹਨ।"
+        },
+        "or": {
+          "insight": "ଆଧିକାରିକ ସିଦ୍ଧାନ୍ତଗୁଡ଼ିକ, ନୀତି ସମ୍ବନ୍ଧୀୟ ବିଷୟଗୁଡ଼ିକ ଏବଂ ସାର୍ବଜନିକ ଦେଖାଶୁଣା ପକ୍ଷରେ ରହିଛି।"
+        },
+        "as": {
+          "insight": "আধিকাৰিক সিদ্ধান্তসমূহ, নীতি বিষয়সমূহ, আৰু জনসাধাৰণৰ আগত উপস্থিতি অনুকূল।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Public engagement, welfare programs, and community outreach."
+        },
+        "hi": {
+          "insight": "सार्वजनिक जुड़ाव, कल्याण कार्यक्रम, और सामुदायिक पहुंच।"
+        },
+        "ta": {
+          "insight": "பொது ஈடுபாடு, நலத்திட்டங்கள் மற்றும் சமூக அணுகல்."
+        },
+        "te": {
+          "insight": "ప్రజా నిమగ్నత, సంక్షేమ కార్యక్రమాలు, మరియు సమాజ సేవా కార్యక్రమాలు."
+        },
+        "bn": {
+          "insight": "সর্বজনীন সম্পৃক্ততা, কল্যাণমূলক কর্মসূচি, এবং সম্প্রদায়িক প্রচারাভিযান।"
+        },
+        "mr": {
+          "insight": "सार्वजनिक सहभाग, कल्याणकारी कार्यक्रम आणि समुदाय पोहोच."
+        },
+        "gu": {
+          "insight": "જાહેર સગવડ, કલ્યાણ કાર્યક્રમો, અને સમુદાય પહોંચ."
+        },
+        "kn": {
+          "insight": "ಸಾರ್ವಜನಿಕ ತೊಡಕು, ಕಲ್ಯಾಣ ಕಾರ್ಯಕ್ರಮಗಳು, ಮತ್ತು ಸಮುದಾಯ ಸಂಪರ್ಕ."
+        },
+        "ml": {
+          "insight": "പൊതു പങ്കാളിത്തം, ക്ഷേമ പരിപാടികൾ, സമൂഹത്തിലെത്താനുള്ള പ്രവർത്തനങ്ങൾ."
+        },
+        "pa": {
+          "insight": "ਜਨਤਕ ਸਹਿਭਾਗਤਾ, ਭਲਾਈ ਪ੍ਰੋਗਰਾਮ, ਅਤੇ ਕਮਿਊਨਿਟੀ ਪਹੁੰਚ।"
+        },
+        "or": {
+          "insight": "ସାଧାରଣ ଲୋକଙ୍କ ସହ ଯୋଗାଯୋଗ, କଳ୍ୟାଣ କାର୍ଯ୍ୟକ୍ରମ, ଏବଂ ସମୁଦାୟ ଆଗ୍ରହୀତା।"
+        },
+        "as": {
+          "insight": "সাৰ্বজনীন সম্পৰ্ক, কল্যাণ কাৰ্যসূচী, আৰু সমাজিক সম্প্ৰসাৰণ।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Enforcement, compliance, and administrative restructuring."
+        },
+        "hi": {
+          "insight": "प्रवर्तन, अनुपालन, और प्रशासनिक पुनर्गठन।"
+        },
+        "ta": {
+          "insight": "செயலாக்கம், இணக்கம், மற்றும் நிர்வாக மறுசீரமைப்பு."
+        },
+        "te": {
+          "insight": "అమలు, అనుసరణ, మరియు పరిపాలనా పునర్వ్యవస్థీకరణ."
+        },
+        "bn": {
+          "insight": "প্রয়োগ, সম্মতি, এবং প্রশাসনিক পুনর্গঠন।"
+        },
+        "mr": {
+          "insight": "अंमलबजावणी, अनुपालन, आणि प्रशासकीय पुनर्रचना."
+        },
+        "gu": {
+          "insight": "લાગુ કરવું, પાલન કરવું, અને વહીવટી પુનઃરચના."
+        },
+        "kn": {
+          "insight": "ಕಾರ್ಯಗತಗೊಳಿಸುವಿಕೆ, ಅನುಸರಣಾ, ಮತ್ತು ಆಡಳಿತ ಪುನಾರಚನೆ."
+        },
+        "ml": {
+          "insight": "പ്രാബല്യത്തിൽ വരുത്തൽ, അനുസരണം, ഭരണപുനഃസംഘടന."
+        },
+        "pa": {
+          "insight": "ਲਾਗੂ ਕਰਨ, ਅਨੁਕੂਲਤਾ, ਅਤੇ ਪ੍ਰਸ਼ਾਸਕੀ ਪੁਨਰਗਠਨ।"
+        },
+        "or": {
+          "insight": "ବଳପୂର୍ବକ କାର୍ଯ୍ୟାନ୍ବୟନ, ଅନୁସରଣ, ଏବଂ ପ୍ରଶାସନିକ ପୁନଃଗଠନ।"
+        },
+        "as": {
+          "insight": "বলবৎ কৰা, পালন কৰা, আৰু প্ৰশাসনিক পুনৰ্নিমাণ।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Documentation, communication, and inter-departmental coordination."
+        },
+        "hi": {
+          "insight": "दस्तावेज़ीकरण, संचार, और अंतर-विभागीय समन्वय।"
+        },
+        "ta": {
+          "insight": "ஆவணப்படுத்தல், தொடர்பு, மற்றும் துறைமுக இடையேயான ஒருங்கிணைப்பு."
+        },
+        "te": {
+          "insight": "పత్రాల నిర్వహణ, కమ్యూనికేషన్, మరియు విభాగాల మధ్య సమన్వయం."
+        },
+        "bn": {
+          "insight": "নথিপত্র, যোগাযোগ, এবং আন্তঃবিভাগীয় সমন্বয়।"
+        },
+        "mr": {
+          "insight": "दस्तऐवजीकरण, संवाद, आणि आंतरविभागीय समन्वय."
+        },
+        "gu": {
+          "insight": "દસ્તાવેજીકરણ, સંચાર, અને આંતરવિભાગીય સંકલન."
+        },
+        "kn": {
+          "insight": "ದಾಖಲೆ, ಸಂವಹನ, ಮತ್ತು ವಿಭಾಗಾಂತರ ಸಹಕಾರ."
+        },
+        "ml": {
+          "insight": "പ്രമാണീകരണം, ആശയവിനിമയം, അന്തർവിഭാഗ ഏകീകരണം."
+        },
+        "pa": {
+          "insight": "ਦਸਤਾਵੇਜ਼ੀਕਰਨ, ਸੰਚਾਰ, ਅਤੇ ਵਿਭਾਗਾਂ ਦੇ ਵਿਚਕਾਰ ਸਹਿਯੋਗ।"
+        },
+        "or": {
+          "insight": "ଦଲିଲପତ୍ର, ସଂଯୋଗ, ଏବଂ ବିଭାଗ ମଧ୍ୟର ସମନ୍ୱୟ।"
+        },
+        "as": {
+          "insight": "নথিপত্ৰ, যোগাযোগ, আৰু আন্তঃবিভাগীয় সমন্বয়।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Policy planning, judicial matters, and governance improvements."
+        },
+        "hi": {
+          "insight": "नीति योजना, न्यायिक मामले, और शासन में सुधार।"
+        },
+        "ta": {
+          "insight": "கொள்கை திட்டமிடல், நீதித்துறை விவகாரங்கள் மற்றும் ஆட்சி மேம்பாடுகள்."
+        },
+        "te": {
+          "insight": "పాలసీ ప్రణాళిక, న్యాయ వ్యవహారాలు, మరియు పాలనలో మెరుగుదలలు."
+        },
+        "bn": {
+          "insight": "নীতিনির্ধারণ, বিচারিক বিষয়াবলী, এবং শাসন ব্যবস্থার উন্নতি।"
+        },
+        "mr": {
+          "insight": "धोरण नियोजन, न्यायिक बाबी, आणि शासन सुधारणा."
+        },
+        "gu": {
+          "insight": "નીતિ આયોજન, ન્યાયિક બાબતો, અને શાસન સુધારાઓ."
+        },
+        "kn": {
+          "insight": "ನೀತಿ ಯೋಜನೆ, ನ್ಯಾಯಾಂಗ ವಿಷಯಗಳು, ಮತ್ತು ಆಡಳಿತ ಸುಧಾರಣೆಗಳು."
+        },
+        "ml": {
+          "insight": "നയ ആസൂത്രണം, നീതിന്യായ കാര്യങ്ങൾ, ഭരണ മെച്ചപ്പെടുത്തലുകൾ."
+        },
+        "pa": {
+          "insight": "ਨੀਤੀ ਦੀ ਯੋਜਨਾ, ਨਿਆਇਕ ਮਾਮਲੇ, ਅਤੇ ਸਰਕਾਰ ਦੇ ਸੁਧਾਰ।"
+        },
+        "or": {
+          "insight": "ନୀତି ଯୋଜନା, ନ୍ୟାୟିକ ବିଷୟ, ଏବଂ ଶାସନ ସୁଧାରଣା।"
+        },
+        "as": {
+          "insight": "নীতিনিৰ্দেশনা পৰিকল্পনা, ন্যায়িক বিষয়সমূহ, আৰু শাসন ব্যৱস্থাৰ উন্নতি।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Cultural events, public relations, and diplomatic engagements."
+        },
+        "hi": {
+          "insight": "सांस्कृतिक कार्यक्रम, जनसंपर्क, और कूटनीतिक सहभागिता।"
+        },
+        "ta": {
+          "insight": "கலாச்சார நிகழ்வுகள், பொது தொடர்புகள் மற்றும் தூதரக நடவடிக்கைகள்."
+        },
+        "te": {
+          "insight": "సాంస్కృతిక కార్యక్రమాలు, ప్రజాసంబంధాలు, మరియు దౌత్య సంబంధాలు."
+        },
+        "bn": {
+          "insight": "সাংস্কৃতিক অনুষ্ঠান, জনসংযোগ, এবং কূটনৈতিক সম্পৃক্ততা।"
+        },
+        "mr": {
+          "insight": "सांस्कृतिक कार्यक्रम, जनसंपर्क, आणि राजनैतिक कार्यक्रम."
+        },
+        "gu": {
+          "insight": "સાંસ્કૃતિક કાર્યક્રમો, જાહેર સંબંધો, અને રાજદ્વારી પ્રવૃત્તિઓ."
+        },
+        "kn": {
+          "insight": "ಸಾಂಸ್ಕೃತಿಕ ಕಾರ್ಯಕ್ರಮಗಳು, ಸಾರ್ವಜನಿಕ ಸಂಬಂಧಗಳು, ಮತ್ತು ರಾಜತಾಂತ್ರಿಕ ತೊಡಕುಗಳು."
+        },
+        "ml": {
+          "insight": "സാംസ്കാരിക പരിപാടികൾ, പബ്ലിക് റിലേഷൻസ്, ഡിപ്ലോമാറ്റിക് ഇടപെടലുകൾ."
+        },
+        "pa": {
+          "insight": "ਸੰਸਕ੍ਰਿਤਿਕ ਪ੍ਰੋਗਰਾਮ, ਜਨਸੰਪਰਕ, ਅਤੇ ਕੂਟਨੀਤਿਕ ਮੀਟਿੰਗਾਂ।"
+        },
+        "or": {
+          "insight": "ସାଂସ୍କୃତିକ କାର୍ଯ୍ୟକ୍ରମ, ସାର୍ବଜନୀନ ସମ୍ପର୍କ, ଏବଂ ରାଜନୈତିକ ଲାଗିଲାଗି।"
+        },
+        "as": {
+          "insight": "সাংস্কৃতিক অনুষ্ঠান, জনসংযোগ, আৰু কূটনৈতিক সম্পৰ্ক।"
+        }
+      }
+    },
+    {
+      "key": "GOVERNMENT:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Audits, reviews, and systemic improvements. Long-term project milestones."
+        },
+        "hi": {
+          "insight": "लेखापरीक्षा, समीक्षाएं, और प्रणालीगत सुधार। दीर्घकालिक परियोजना मील के पत्थर।"
+        },
+        "ta": {
+          "insight": "தணிக்கைகள், மதிப்பீடுகள் மற்றும் அமைப்புசார்ந்த மேம்பாடுகள். நீண்டகால திட்ட மைல்கற்கள்."
+        },
+        "te": {
+          "insight": "ఆడిట్లు, సమీక్షలు, మరియు వ్యవస్థాపక మెరుగుదలలు. దీర్ఘకాలిక ప్రాజెక్ట్ మైలురాళ్లు."
+        },
+        "bn": {
+          "insight": "নিরীক্ষা, পর্যালোচনা, এবং পদ্ধতিগত উন্নতি। দীর্ঘমেয়াদী প্রকল্পের মাইলফলক।"
+        },
+        "mr": {
+          "insight": "लेखा परीक्षण, पुनरावलोकने, आणि प्रणालीगत सुधारणा. दीर्घकालीन प्रकल्प मैलाचे दगड."
+        },
+        "gu": {
+          "insight": "તપાસ, સમીક્ષાઓ, અને પ્રણાલીકૃત સુધારાઓ. લાંબા ગાળાના પ્રોજેક્ટ માઇલસ્ટોન."
+        },
+        "kn": {
+          "insight": "ಆಡಿಟ್‌ಗಳು, ವಿಮರ್ಶೆಗಳು, ಮತ್ತು ವ್ಯವಸ್ಥಾತ್ಮಕ ಸುಧಾರಣೆಗಳು. ದೀರ್ಘಕಾಲಿಕ ಯೋಜನೆ ಮೈಲಿಗಲ್ಲುಗಳು."
+        },
+        "ml": {
+          "insight": "ഓഡിറ്റുകൾ, അവലോകനങ്ങൾ, സിസ്റ്റമാറ്റിക് മെച്ചപ്പെടുത്തലുകൾ. ദീർഘകാല പദ്ധതിയുടെ മൈൽസ്റ്റോണുകൾ."
+        },
+        "pa": {
+          "insight": "ਆਡਿਟ, ਸਮੀਖਿਆਵਾਂ, ਅਤੇ ਪ੍ਰਣਾਲੀਕ ਤੌਰ 'ਤੇ ਸੁਧਾਰ। ਲੰਬੇ ਸਮੇਂ ਦੇ ਪ੍ਰੋਜੈਕਟ ਮੀਲ ਪੱਥਰ।"
+        },
+        "or": {
+          "insight": "ପରୀକ୍ଷା, ସମୀକ୍ଷା, ଏବଂ ପ୍ରଣାଳୀଗତ ସୁଧାର। ଦୀର୍ଘକାଳୀନ ପ୍ରକଳ୍ପ ମାଇଲସ୍ଟୋନଗୁଡ଼ିକ।"
+        },
+        "as": {
+          "insight": "পৰীক্ষা, পৰ্যালোচনা, আৰু পদ্ধতিগত উন্নতি। দীৰ্ঘম্যাদী প্ৰকল্পৰ মাইলষ্ট'নসমূহ।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Take charge of your day. Leadership moments arise. Official work favored."
+        },
+        "hi": {
+          "insight": "अपने दिन की बागडोर संभालें। नेतृत्व के क्षण उत्पन्न होते हैं। आधिकारिक कार्यों के लिए अनुकूल।"
+        },
+        "ta": {
+          "insight": "உங்கள் நாளை பொறுப்பேற்கவும். தலைமை தருணங்கள் உருவாகின்றன. அதிகாரப்பூர்வ வேலைக்கு சாதகமாக இருக்கும்."
+        },
+        "te": {
+          "insight": "మీ రోజు మీరే బాధ్యత వహించండి. నాయకత్వ క్షణాలు వస్తాయి. అధికారిక పని అనుకూలంగా ఉంటుంది."
+        },
+        "bn": {
+          "insight": "আপনার দিনের দায়িত্ব নিন। নেতৃত্বের মুহূর্তগুলি উদ্ভাসিত হয়। অফিসিয়াল কাজের জন্য অনুকূল।"
+        },
+        "mr": {
+          "insight": "तुमच्या दिवसाची जबाबदारी घ्या. नेतृत्वाचे क्षण येतात. अधिकृत कामास प्राधान्य दिले जाते."
+        },
+        "gu": {
+          "insight": "તમારા દિવસની જવાબદારી લો. નેતૃત્વના ક્ષણો આવે છે. સત્તાવાર કામને પ્રાધાન્ય આપો."
+        },
+        "kn": {
+          "insight": "ನಿಮ್ಮ ದಿನವನ್ನು ಹಸ್ತಗತ ಮಾಡಿ. ನಾಯಕತ್ವ ಕ್ಷಣಗಳು ಉದ್ಭವಿಸುತ್ತವೆ. ಅಧಿಕೃತ ಕೆಲಸಕ್ಕೆ ಆದ್ಯತೆ."
+        },
+        "ml": {
+          "insight": "നിങ്ങളുടെ ദിവസത്തെ നിയന്ത്രിക്കുക. നേതൃമാഹാത്മ്യം ഉയരുന്നു. ഔദ്യോഗിക ജോലികൾക്ക് അനുകൂലമാണ്."
+        },
+        "pa": {
+          "insight": "ਆਪਣੇ ਦਿਨ ਦੀ ਕਮਾਨ ਸੰਭਾਲੋ। ਨੇਤ੍ਰਿਤਵ ਦੇ ਮੌਕੇ ਆਉਂਦੇ ਹਨ। ਸਰਕਾਰੀ ਕੰਮ ਪਸੰਦ ਕੀਤਾ ਜਾਂਦਾ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଆପଣଙ୍କ ଦିନର ଦାୟିତ୍ୱ ନିଜେ ନିଅନ୍ତୁ। ନେତୃତ୍ୱ ମୁହୂର୍ତ୍ତଗୁଡିକ ଉପସ୍ଥିତ ହୁଏ। ସରକାରୀ କାମକାଜ ପକ୍ଷପାତ କରାଯାଏ।"
+        },
+        "as": {
+          "insight": "আপোনাৰ দিনটোৰ দায়িত্ব লওক। নেতৃত্বৰ ক্ষণসমূহ উদয় হয়। চৰকাৰী কামৰ বাবে অনুকূল।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Nurture relationships and creative pursuits. Trust your emotional intelligence."
+        },
+        "hi": {
+          "insight": "संबंधों और रचनात्मक प्रयासों का पोषण करें। अपनी भावनात्मक बुद्धिमत्ता पर विश्वास करें।"
+        },
+        "ta": {
+          "insight": "உறவுகளையும் படைப்பாற்றல் முயற்சிகளையும் பேணி வளர்க்கவும். உங்கள் உணர்ச்சி நுண்ணறிவை நம்புங்கள்."
+        },
+        "te": {
+          "insight": "సంబంధాలను మరియు సృజనాత్మక ప్రయత్నాలను పోషించండి. మీ భావోద్వేగ బుద్ధిపై నమ్మకం ఉంచండి."
+        },
+        "bn": {
+          "insight": "সম্পর্ক এবং সৃজনশীল প্রচেষ্টাকে লালন করুন। আপনার আবেগীয় বুদ্ধিমত্তার উপর বিশ্বাস রাখুন।"
+        },
+        "mr": {
+          "insight": "संबंध आणि सर्जनशील उपक्रम जोपासा. आपल्या भावनिक बुद्धिमत्तेवर विश्वास ठेवा."
+        },
+        "gu": {
+          "insight": "સંબંધો અને સર્જનાત્મક પ્રવૃત્તિઓને પોષણ આપો. તમારી ભાવનાત્મક બુદ્ધિમત્તા પર વિશ્વાસ રાખો."
+        },
+        "kn": {
+          "insight": "ಸಂಬಂಧಗಳನ್ನು ಮತ್ತು ಸೃಜನಾತ್ಮಕ ಕಾರ್ಯಗಳನ್ನು ಪೋಷಿಸಿ. ನಿಮ್ಮ ಭಾವನಾತ್ಮಕ ಬುದ್ಧಿಮತ್ತೆಯನ್ನು ನಂಬಿ."
+        },
+        "ml": {
+          "insight": "ബന്ധങ്ങൾക്കും സൃഷ്ടിപരമായ ശ്രമങ്ങൾക്കും പോഷണം നൽകുക. നിങ്ങളുടെ മാനസിക ബുദ്ധിമുട്ടിൽ വിശ്വസിക്കുക."
+        },
+        "pa": {
+          "insight": "ਸੰਬੰਧਾਂ ਅਤੇ ਰਚਨਾਤਮਕ ਕੋਸ਼ਿਸ਼ਾਂ ਦੀ ਸੰਭਾਲ ਕਰੋ। ਆਪਣੀ ਭਾਵਨਾਤਮਕ ਬੁੱਧੀ 'ਤੇ ਭਰੋਸਾ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ସମ୍ପର୍କଗୁଡ଼ିକ ଏବଂ ସୃଜନଶୀଳ ପ୍ରୟାସଗୁଡ଼ିକୁ ପୋଷଣ କରନ୍ତୁ। ଆପଣଙ୍କ ଭାବନାତ୍ମକ ବୁଦ୍ଧିମତ୍ତାରେ ଭରସା କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "সম্পৰ্ক আৰু সৃষ্টিশীল প্ৰয়াসবোৰ লালন-পালন কৰক। আপোনাৰ অনুভৱী বুদ্ধিমত্তাত বিশ্বাস কৰক।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Channel energy into challenging tasks. Physical activity boosts productivity."
+        },
+        "hi": {
+          "insight": "ऊर्जा को चुनौतीपूर्ण कार्यों में लगाएं। शारीरिक गतिविधि उत्पादकता बढ़ाती है।"
+        },
+        "ta": {
+          "insight": "சவாலான பணிகளில் ஆற்றலை செலுத்துங்கள். உடல் செயல்பாடு உற்பத்தித்திறனை அதிகரிக்கிறது."
+        },
+        "te": {
+          "insight": "సవాలుతో కూడిన పనులలో శక్తిని చానల్ చేయండి. శారీరక కార్యకలాపం ఉత్పాదకతను పెంచుతుంది."
+        },
+        "bn": {
+          "insight": "চ্যালেঞ্জিং কাজগুলিতে শক্তি প্রবাহিত করুন। শারীরিক কার্যকলাপ উৎপাদনশীলতা বাড়ায়।"
+        },
+        "mr": {
+          "insight": "ऊर्जेला आव्हानात्मक कामांमध्ये वळवा. शारीरिक क्रियाकलाप उत्पादकता वाढवतो."
+        },
+        "gu": {
+          "insight": "ઊર્જાને પડકારજનક કાર્યોમાં વહીત કરો. શારીરિક પ્રવૃત્તિ ઉત્પાદનક્ષમતા વધારશે."
+        },
+        "kn": {
+          "insight": "ಚಾಲೆಂಜಿಂಗ್ ಕಾರ್ಯಗಳಲ್ಲಿ ಶಕ್ತಿ ಹರಿಸಲು. ದೈಹಿಕ ಚಟುವಟಿಕೆ ಉತ್ಪಾದಕತೆಯನ್ನು ಹೆಚ್ಚಿಸುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "ചെല്ലഞ്ച് ചെയ്യുന്ന ജോലികളിലേക്ക് ഊർജ്ജം ചാനൽ ചെയ്യുക. ശാരീരിക പ്രവർത്തനം ഉൽപ്പാദനക്ഷമത വർദ്ധിപ്പിക്കുന്നു."
+        },
+        "pa": {
+          "insight": "ਚੁਣੌਤੀਪੂਰਨ ਕੰਮਾਂ ਵਿੱਚ ਊਰਜਾ ਨੂੰ ਕੇਂਦਰਿਤ ਕਰੋ। ਸ਼ਾਰੀਰਕ ਗਤੀਵਿਧੀ ਉਤਪਾਦਕਤਾ ਨੂੰ ਵਧਾਉਂਦੀ ਹੈ।"
+        },
+        "or": {
+          "insight": "ଚାଲେଞ୍ଜିଙ୍ଗ୍ କାମରେ ଶକ୍ତିକୁ ନିୟୋଜିତ କରନ୍ତୁ। ଶାରୀରିକ କାର୍ଯ୍ୟକଳାପ ଉତ୍ପାଦନକ୍ଷମତାକୁ ବୃଦ୍ଧି କରେ।"
+        },
+        "as": {
+          "insight": "শক্তি কঠিন কাৰ্যসমূহত কেন্দ্ৰীভূত কৰক। শাৰীৰিক ক্ৰিয়াকলাপে উৎপাদনশীলতা বৃদ্ধি কৰে।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Communication, analysis, and learning peak. Best day for emails and planning."
+        },
+        "hi": {
+          "insight": "संचार, विश्लेषण, और सीखने की चरम सीमा। ईमेल और योजना बनाने के लिए सबसे अच्छा दिन।"
+        },
+        "ta": {
+          "insight": "தொடர்பு, பகுப்பாய்வு மற்றும் கற்றல் உச்சத்தில் இருக்கும். மின்னஞ்சல்கள் மற்றும் திட்டமிடலுக்கு சிறந்த நாள்."
+        },
+        "te": {
+          "insight": "సంవాదం, విశ్లేషణ, మరియు నేర్చుకోవడం గరిష్ట స్థాయికి చేరుకుంటాయి. ఇమెయిల్స్ మరియు ప్రణాళిక కోసం ఉత్తమమైన రోజు."
+        },
+        "bn": {
+          "insight": "যোগাযোগ, বিশ্লেষণ, এবং শেখার শীর্ষে। ইমেইল এবং পরিকল্পনার জন্য সেরা দিন।"
+        },
+        "mr": {
+          "insight": "संवाद, विश्लेषण आणि शिकण्याची शिखरे. ईमेल्स आणि नियोजनासाठी सर्वोत्तम दिवस."
+        },
+        "gu": {
+          "insight": "સંવાદ, વિશ્લેષણ અને શીખવાની ચરમસીમા. ઇમેઇલ્સ અને આયોજન માટેનો શ્રેષ્ઠ દિવસ."
+        },
+        "kn": {
+          "insight": "ಸಂವಹನ, ವಿಶ್ಲೇಷಣೆ, ಮತ್ತು ಕಲಿಕೆ ತೀವ್ರವಾಗುತ್ತವೆ. ಇಮೇಲ್‌ಗಳು ಮತ್ತು ಯೋಜನೆಗೆ ಉತ್ತಮ ದಿನ."
+        },
+        "ml": {
+          "insight": "സംവാദം, വിശകലനം, പഠനം ഉച്ചസ്ഥായിയിലെത്തുന്നു. ഇമെയിലുകൾക്കും പദ്ധതികൾക്കും ഏറ്റവും നല്ല ദിവസം."
+        },
+        "pa": {
+          "insight": "ਸੰਚਾਰ, ਵਿਸ਼ਲੇਸ਼ਣ ਅਤੇ ਸਿੱਖਣ ਚਰਮ ਤੇ ਹਨ। ਈਮੇਲ ਅਤੇ ਯੋਜਨਾ ਬਣਾਉਣ ਲਈ ਸਭ ਤੋਂ ਵਧੀਆ ਦਿਨ।"
+        },
+        "or": {
+          "insight": "ଯୋଗାଯୋଗ, ବିଶ୍ଳେଷଣ ଏବଂ ଶିଖଣାର ସର୍ବୋଚ୍ଚ ସମୟ। ଇମେଲ୍ ଏବଂ ପରିକଳ୍ପନା ପାଇଁ ସର୍ବୋତ୍ତମ ଦିନ।"
+        },
+        "as": {
+          "insight": "যোগাযোগ, বিশ্লেষণ, আৰু শিক্ষাৰ শিখৰত। ই-মেইল আৰু পৰিকল্পনাৰ বাবে আটাইতকৈ ভাল দিন।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Growth and expansion. Financial planning and mentorship favored."
+        },
+        "hi": {
+          "insight": "विकास और विस्तार। वित्तीय योजना और परामर्श को प्राथमिकता दी जाती है।"
+        },
+        "ta": {
+          "insight": "வளர்ச்சி மற்றும் விரிவாக்கம். நிதி திட்டமிடல் மற்றும் வழிகாட்டல் ஆதரிக்கப்படுகிறது."
+        },
+        "te": {
+          "insight": "వృద్ధి మరియు విస్తరణ. ఆర్థిక ప్రణాళిక మరియు మార్గదర్శకత్వం అనుకూలంగా ఉంటుంది."
+        },
+        "bn": {
+          "insight": "বৃদ্ধি এবং সম্প্রসারণ। আর্থিক পরিকল্পনা এবং পরামর্শদানের পক্ষে অনুকূল।"
+        },
+        "mr": {
+          "insight": "वाढ आणि विस्तार. आर्थिक नियोजन आणि मार्गदर्शनास प्राधान्य दिले जाते."
+        },
+        "gu": {
+          "insight": "વિકાસ અને વિસ્તરણ. નાણાકીય આયોજન અને માર્ગદર્શનને પ્રાધાન્ય આપવામાં આવે છે."
+        },
+        "kn": {
+          "insight": "ವೃದ್ಧಿ ಮತ್ತು ವಿಸ್ತರಣೆ. ಹಣಕಾಸು ಯೋಜನೆ ಮತ್ತು ಮಾರ್ಗದರ್ಶನಕ್ಕೆ ಆದ್ಯತೆ ನೀಡಲಾಗಿದೆ."
+        },
+        "ml": {
+          "insight": "വളർച്ചയും വികസനവും. സാമ്പത്തിക പദ്ധതിയിടലും ഉപദേശവും അനുകൂലമാണ്."
+        },
+        "pa": {
+          "insight": "ਵਿਕਾਸ ਅਤੇ ਵਿਸਥਾਰ। ਵਿੱਤੀ ਯੋਜਨਾ ਅਤੇ ਮਾਰਗਦਰਸ਼ਨ ਪਸੰਦ ਕੀਤਾ ਜਾਂਦਾ ਹੈ।"
+        },
+        "or": {
+          "insight": "ବୃଦ୍ଧି ଏବଂ ପ୍ରସାର। ଆର୍ଥିକ ପରିକଳ୍ପନା ଏବଂ ମେଣ୍ଟରଶିପ୍ ପକ୍ଷପାତିତା ପାଇଛି।"
+        },
+        "as": {
+          "insight": "বৃদ্ধি আৰু বিস্তাৰ। আৰ্থিক পৰিকল্পনা আৰু পৰামৰ্শ প্ৰদানক আগ্ৰাধকাৰ দিয়া হৈছে।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Social connections, aesthetics, and collaborative work thrive."
+        },
+        "hi": {
+          "insight": "सामाजिक संबंध, सौंदर्यशास्त्र, और सहयोगात्मक कार्य फलते-फूलते हैं।"
+        },
+        "ta": {
+          "insight": "சமூக தொடர்புகள், அழகியல், மற்றும் கூட்டுறவு வேலை சிறக்கின்றன."
+        },
+        "te": {
+          "insight": "సామాజిక సంబంధాలు, సౌందర్యం, మరియు సహకార పనులు వికసిస్తాయి."
+        },
+        "bn": {
+          "insight": "সামাজিক সংযোগ, নান্দনিকতা এবং সহযোগিতামূলক কাজ সমৃদ্ধ হয়।"
+        },
+        "mr": {
+          "insight": "सामाजिक संबंध, सौंदर्यशास्त्र, आणि सहकार्यात्मक काम फुलते."
+        },
+        "gu": {
+          "insight": "સામાજિક જોડાણો, સૌંદર્યશાસ્ત્ર, અને સહકાર્ય સફળ થાય છે."
+        },
+        "kn": {
+          "insight": "ಸಾಮಾಜಿಕ ಸಂಪರ್ಕಗಳು, ಅಂದ, ಮತ್ತು ಸಹಕಾರದ ಕೆಲಸವು ಬೆಳೆಯುತ್ತದೆ."
+        },
+        "ml": {
+          "insight": "സാമൂഹിക ബന്ധങ്ങൾ, സൌന്ദര്യം, സഹകരണ പ്രവർത്തനം വളരുന്നു."
+        },
+        "pa": {
+          "insight": "ਸਮਾਜਿਕ ਸੰਬੰਧ, ਸੁੰਦਰਤਾ, ਅਤੇ ਸਹਿਯੋਗੀ ਕੰਮ ਖਿੜਦੇ ਹਨ।"
+        },
+        "or": {
+          "insight": "ସାମାଜିକ ସଂଯୋଗ, ସୌନ୍ଦର୍ଯ୍ୟ, ଏବଂ ସହଯୋଗୀ କାର୍ଯ୍ୟ ସଫଳ ହୁଏ।"
+        },
+        "as": {
+          "insight": "সামাজিক সংযোগ, নান্দনিকতা, আৰু সহযোগী কামৰ উন্নতি হয়।"
+        }
+      }
+    },
+    {
+      "key": "OTHER:Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "insight": "Discipline and long-term planning. Focus on building lasting foundations."
+        },
+        "hi": {
+          "insight": "अनुशासन और दीर्घकालिक योजना। स्थायी नींव बनाने पर ध्यान केंद्रित करें।"
+        },
+        "ta": {
+          "insight": "ஒழுக்கம் மற்றும் நீண்டகால திட்டமிடல். நிலைத்த அடித்தளங்களை உருவாக்குவதில் கவனம் செலுத்துங்கள்."
+        },
+        "te": {
+          "insight": "క్రమశిక్షణ మరియు దీర్ఘకాలిక ప్రణాళిక. శాశ్వతమైన పునాది నిర్మాణంపై దృష్టి పెట్టండి."
+        },
+        "bn": {
+          "insight": "শৃঙ্খলা এবং দীর্ঘমেয়াদী পরিকল্পনা। স্থায়ী ভিত্তি নির্মাণে মনোযোগ দিন।"
+        },
+        "mr": {
+          "insight": "शिस्त आणि दीर्घकालीन नियोजन. टिकाऊ पाया घालण्यावर लक्ष केंद्रित करा."
+        },
+        "gu": {
+          "insight": "શિસ્ત અને લાંબા ગાળાની યોજના. ટકાઉ પાયો બાંધવા પર ધ્યાન કેન્દ્રિત કરો."
+        },
+        "kn": {
+          "insight": "ಶಿಸ್ತು ಮತ್ತು ದೀರ್ಘಕಾಲಿಕ ಯೋಜನೆ. ಶಾಶ್ವತವಾದ ಅಸ್ತಿವಾರಗಳನ್ನು ನಿರ್ಮಿಸಲು ಗಮನ ಹರಿಸಿ."
+        },
+        "ml": {
+          "insight": "ശാസനം കൂടാതെ ദീർഘകാല പദ്ധതികൾ. സ്ഥിരമായ അടിസ്ഥാനങ്ങൾ നിർമ്മിക്കുന്നതിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുക."
+        },
+        "pa": {
+          "insight": "ਅਨੁਸ਼ਾਸਨ ਅਤੇ ਲੰਬੇ ਸਮੇਂ ਦੀ ਯੋਜਨਾ। ਟਿਕਾਊ ਬੁਨਿਆਦਾਂ ਬਣਾਉਣ 'ਤੇ ਧਿਆਨ ਕੇਂਦਰਿਤ ਕਰੋ।"
+        },
+        "or": {
+          "insight": "ଶିଷ୍ଟାଚାର ଏବଂ ଦୀର୍ଘକାଳୀନ ପରିକଳ୍ପନା। ଦୀର୍ଘସ୍ଥାୟୀ ଭିତ୍ତି ତିଆରି କରିବାରେ ଧ୍ୟାନ କେନ୍ଦ୍ରିତ କରନ୍ତୁ।"
+        },
+        "as": {
+          "insight": "শৃংখলা আৰু দীৰ্ঘম্যাদী পৰিকল্পনা। স্থায়ী ভিত্তি গঢ়ি তোলাত মনোনিবেশ কৰক।"
+        }
+      }
+    }
   ]
 }
