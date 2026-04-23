@@ -20,6 +20,8 @@ import * as tithisData from './data/tithis.json';
 import * as yogasData from './data/yogas.json';
 import * as varasData from './data/varas.json';
 import * as pakshasData from './data/pakshas.json';
+import * as professionInsightsData from './data/profession-insights.json';
+import * as briefingPhrasesData from './data/briefing-phrases.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -31,14 +33,25 @@ export interface RawSeedRow {
 
 export interface SeedTable {
   /** Prisma model name on PrismaService, e.g. "kbPlanet". */
-  modelName: 'kbPlanet' | 'kbNakshatra' | 'kbTithi' | 'kbYoga' | 'kbVara' | 'kbPaksha';
+  modelName:
+    | 'kbPlanet'
+    | 'kbNakshatra'
+    | 'kbTithi'
+    | 'kbYoga'
+    | 'kbVara'
+    | 'kbPaksha'
+    | 'kbProfessionInsight'
+    | 'kbBriefingPhrase';
   /** Compound-unique index key for upsert `where`. */
-  uniqueKey: 'kb_planets_key_tradition_key'
-           | 'kb_nakshatras_key_tradition_key'
-           | 'kb_tithis_key_tradition_key'
-           | 'kb_yogas_key_tradition_key'
-           | 'kb_varas_key_tradition_key'
-           | 'kb_pakshas_key_tradition_key';
+  uniqueKey:
+    | 'kb_planets_key_tradition_key'
+    | 'kb_nakshatras_key_tradition_key'
+    | 'kb_tithis_key_tradition_key'
+    | 'kb_yogas_key_tradition_key'
+    | 'kb_varas_key_tradition_key'
+    | 'kb_pakshas_key_tradition_key'
+    | 'kb_profession_insights_key_tradition_key'
+    | 'kb_briefing_phrases_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -86,5 +99,17 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_pakshas_key_tradition_key',
     dataFile: 'data/pakshas.json',
     rows: rowsOf(pakshasData),
+  },
+  {
+    modelName: 'kbProfessionInsight',
+    uniqueKey: 'kb_profession_insights_key_tradition_key',
+    dataFile: 'data/profession-insights.json',
+    rows: rowsOf(professionInsightsData),
+  },
+  {
+    modelName: 'kbBriefingPhrase',
+    uniqueKey: 'kb_briefing_phrases_key_tradition_key',
+    dataFile: 'data/briefing-phrases.json',
+    rows: rowsOf(briefingPhrasesData),
   },
 ];

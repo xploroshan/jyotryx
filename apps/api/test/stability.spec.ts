@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { AstrologyService } from '../src/modules/astrology/astrology.service';
 import { ChatService } from '../src/modules/chat/chat.service';
 import { ReportService } from '../src/modules/report/report.service';
@@ -17,6 +18,7 @@ import { StorageService } from '../src/storage/storage.service';
 import {
   mockOpenAIService,
   mockKnowledgeService,
+  mockKbService,
   mockPrismaService,
   mockCacheService,
   mockUserService,
@@ -46,6 +48,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: PrismaService, useValue: prisma },
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
           { provide: MemoryCacheService, useValue: mockCacheService() },
         ],
       }).compile();
@@ -275,6 +278,7 @@ describe('Stability: Knowledge Service Failures', () => {
           { provide: PrismaService, useValue: prisma },
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: failingKB },
+          { provide: KbService, useValue: mockKbService() },
           { provide: MemoryCacheService, useValue: mockCacheService() },
         ],
       }).compile();
@@ -401,6 +405,7 @@ describe('Stability: Error Recovery', () => {
           { provide: PrismaService, useValue: prisma },
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
           { provide: MemoryCacheService, useValue: cacheService },
         ],
       }).compile();

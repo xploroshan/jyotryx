@@ -19,6 +19,7 @@ import { TRANSIT_DASHA_DATA } from '../src/knowledge/seed-data/transits-dasha';
 import { HEALTH_ASTROLOGY_DATA } from '../src/knowledge/seed-data/health-astrology';
 import { ASHTAKVARGA_DATA } from '../src/knowledge/seed-data/ashtakvarga';
 import { SHADBALA_DATA } from '../src/knowledge/seed-data/shadbala';
+import { SEED_TABLES } from './seed-kb';
 
 const prisma = new PrismaClient();
 
@@ -93,6 +94,35 @@ async function seedKnowledge() {
   console.log(`Knowledge base seeded with ${count} documents.`);
 }
 
+async function seedKbTables() {
+  // Upsert every row from the SEED_TABLES registry. Safe to rerun — keyed
+  // on (key, tradition) compound-unique, so existing rows get their
+  // `i18n` refreshed and new rows are inserted. Skips tables whose Prisma
+  // model isn't generated yet (e.g. migration not applied in the
+  // environment running the seed) by catching the model-access error.
+  for (const table of SEED_TABLES) {
+    const model = (prisma as any)[table.modelName];
+    if (!model || typeof model.upsert !== 'function') {
+      console.warn(`SEED_TABLES: Prisma model ${table.modelName} not available, skipping.`);
+      continue;
+    }
+    let upserted = 0;
+    for (const row of table.rows) {
+      try {
+        await model.upsert({
+          where: { [table.uniqueKey]: { key: row.key, tradition: row.tradition ?? null } },
+          create: { key: row.key, tradition: row.tradition ?? null, i18n: row.i18n as any },
+          update: { i18n: row.i18n as any },
+        });
+        upserted++;
+      } catch (err) {
+        console.warn(`SEED_TABLES: ${table.modelName}.${row.key} upsert failed — ${(err as Error).message}`);
+      }
+    }
+    console.log(`SEED_TABLES: ${table.modelName} — upserted ${upserted}/${table.rows.length}`);
+  }
+}
+
 async function main() {
   console.log('Seeding database...');
 
@@ -132,6 +162,9 @@ async function main() {
 
   // Seed knowledge base
   await seedKnowledge();
+
+  // Seed Kb* entity tables (deterministic, i18n-backed)
+  await seedKbTables();
 
   console.log('Seeding complete.');
 }

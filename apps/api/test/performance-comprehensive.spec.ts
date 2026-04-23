@@ -8,6 +8,7 @@ import { ReportService } from '../src/modules/report/report.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { VectorSearchService } from '../src/knowledge/vector-search.service';
 import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -17,6 +18,7 @@ import { REDIS_CLIENT } from '../src/redis/redis.module';
 import { LlmService } from '../src/llm/llm.service';
 import {
   mockKnowledgeService,
+  mockKbService,
   mockOpenAIService,
   mockPrismaService,
   mockConfigService,
@@ -459,6 +461,7 @@ describe('Performance: Daily Briefing', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
       ],
     }).compile();

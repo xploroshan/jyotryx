@@ -3,8 +3,9 @@ import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefi
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
-import { mockPrismaService, mockOpenAIService, mockKnowledgeService, mockCacheService, mockUser } from './helpers/mocks';
+import { mockPrismaService, mockOpenAIService, mockKnowledgeService, mockKbService, mockCacheService, mockUser } from './helpers/mocks';
 
 describe('DailyBriefingService', () => {
   let service: DailyBriefingService;
@@ -25,6 +26,7 @@ describe('DailyBriefingService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: knowledgeService },
+        { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: cacheService },
       ],
     }).compile();
