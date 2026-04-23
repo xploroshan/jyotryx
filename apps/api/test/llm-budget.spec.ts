@@ -3,19 +3,18 @@
  *
  * Boots each covered service with a counting stub instead of a real LLM
  * client, then asserts that the number of `chatCompletion` calls stays
- * within `tests/baseline/llm-budget.json`. Each scenario has a
- * `maxCalls` ceiling — Track A work LOWERS these ceilings as features
- * migrate to the KB. A PR that raises any ceiling must justify it in
- * review.
+ * within `tests/baseline/llm-budget.json`. A PR that raises any ceiling
+ * must justify it in review.
  *
  * Coverage: daily briefing (A1b), numerology (A2b), report fallback (A3b),
  * astrology (A4 — Chinese zodiac / medical body-zodiac / flying stars /
  * panchang localization / sade-sati localization / muhurat fallback;
  * A5a — horary / zodiacal-releasing / decumbiture / dosha; A5b — bazi /
  * western-natal / hellenistic-profections / western-synastry /
- * western-transits). translateFields + translateText are fully retired
- * from astrology.service.ts as of A5b; every non-primary LLM astrology
- * call is budgeted here.
+ * western-transits). The full translate-after migration (Track A) is
+ * closed; the only non-zero astrology budget that remains is
+ * muhuratFallback = 1, which is the primary LLM attempt for the AI path,
+ * not a localization call.
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -53,9 +52,9 @@ function countingOpenAI() {
     chat: jest.fn().mockResolvedValue(null),
     chatCompletion: jest.fn(async (opts: any) => {
       calls.push({ feature: opts?.feature });
-      // Return empty object so translateFields treats it as a miss and
-      // falls back to the English input. This preserves behaviour without
-      // letting real LLM I/O leak into the test.
+      // Return an empty object so callers treat the response as a miss and
+      // fall back to their deterministic output. This preserves behaviour
+      // without letting real LLM I/O leak into the test.
       return {};
     }),
     chatWithImage: jest.fn().mockResolvedValue(null),
@@ -295,8 +294,8 @@ describe('LLM cost regression budget', () => {
     });
 
     it('astrology.muhuratFallback.hi.fresh stays within budget', async () => {
-      // getMuhurat always makes one primary LLM attempt; the translateFields
-      // call for localizing fallback reasons has been removed in A4.
+      // getMuhurat always makes one primary LLM attempt for the AI path;
+      // A4 removed the post-translation over the fallback reasons.
       await service.getMuhurat({
         purpose: 'Wedding ceremony',
         fromDate: '2026-05-01',
@@ -308,8 +307,9 @@ describe('LLM cost regression budget', () => {
     });
 
     it('astrology.horaryAsk.hi.fresh stays within budget', async () => {
-      // Budget is 1 because getWesternNatal's translateText (A5b scope)
-      // still fires. The horary translateFields call itself is gone.
+      // A5a flipped the horary judgment/significator strings to KB
+      // templates; A5b retired the nested getWesternNatal translateText.
+      // Budget is 0.
       await service.getHoraryAsk('test-uuid', { question: 'Will I succeed?', locale: 'hi' });
       expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.horaryAsk.hi.fresh'));
     });
@@ -320,8 +320,9 @@ describe('LLM cost regression budget', () => {
     });
 
     it('astrology.decumbiture.hi.fresh stays within budget', async () => {
-      // Same shape as horaryAsk — budget 1 for the nested getWesternNatal
-      // translateText; A5a removed the decumbiture translateFields call.
+      // Same shape as horaryAsk — A5a flipped the guidance/interpretation
+      // strings; A5b retired the nested getWesternNatal translateText.
+      // Budget is 0.
       await service.getDecumbiture('test-uuid', { decumbitureDate: '2026-04-23', decumbitureTime: '10:00', locale: 'hi' });
       expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.decumbiture.hi.fresh'));
     });
