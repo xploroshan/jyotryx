@@ -9,11 +9,11 @@
  * review.
  *
  * Coverage: daily briefing (A1b), numerology (A2b), report fallback (A3b),
- * astrology partial (A4 — Chinese zodiac / medical body-zodiac / flying stars
- * / panchang localization / sade-sati localization / muhurat fallback
- * reasons). Remaining astrology surface (horary, zodiacal-releasing,
- * decumbiture, dosha, plus all `translateText` sites) stays under future
- * Track A phases.
+ * astrology (A4 — Chinese zodiac / medical body-zodiac / flying stars /
+ * panchang localization / sade-sati localization / muhurat fallback;
+ * A5a — horary / zodiacal-releasing / decumbiture / dosha). The 5
+ * `translateText` sites (bazi, western-natal, hellenistic-profections,
+ * western-synastry, western-transits) remain under A5b.
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -303,6 +303,46 @@ describe('LLM cost regression budget', () => {
         locale: 'hi',
       } as any);
       expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.muhuratFallback.hi.fresh'));
+    });
+
+    it('astrology.horaryAsk.hi.fresh stays within budget', async () => {
+      // Budget is 1 because getWesternNatal's translateText (A5b scope)
+      // still fires. The horary translateFields call itself is gone.
+      await service.getHoraryAsk('test-uuid', { question: 'Will I succeed?', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.horaryAsk.hi.fresh'));
+    });
+
+    it('astrology.zodiacalReleasing.hi.fresh stays within budget', async () => {
+      await service.getZodiacalReleasing('test-uuid', { dateOfBirth: '1990-05-15', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.zodiacalReleasing.hi.fresh'));
+    });
+
+    it('astrology.decumbiture.hi.fresh stays within budget', async () => {
+      // Same shape as horaryAsk — budget 1 for the nested getWesternNatal
+      // translateText; A5a removed the decumbiture translateFields call.
+      await service.getDecumbiture('test-uuid', { decumbitureDate: '2026-04-23', decumbitureTime: '10:00', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.decumbiture.hi.fresh'));
+    });
+
+    it('astrology.dosha.hi.fresh stays within budget', async () => {
+      // Stub user.findUnique so getDosha takes the primary Swiss Eph path
+      // (deterministic, no LLM). A5a flipped localizeDoshas to KB.
+      const prisma = (service as any).prisma;
+      prisma.user.findUnique.mockResolvedValueOnce({
+        dateOfBirth: new Date('1990-05-15'),
+        timeOfBirth: '06:00',
+        placeOfBirth: { name: 'Delhi', lat: 28.6139, lng: 77.2090 },
+      });
+      await service.getDosha('test-uuid', 'hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.dosha.hi.fresh'));
+    });
+
+    it('astrology.doshaFallback.hi.fresh stays within budget', async () => {
+      // Default prisma.user.findUnique returns undefined, so getDosha
+      // takes the no-birth-details branch — 3 fallback doshas localized
+      // from `dosha.*.birth_required` KbBriefingPhrase templates.
+      await service.getDosha('test-uuid', 'hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.doshaFallback.hi.fresh'));
     });
   });
 });

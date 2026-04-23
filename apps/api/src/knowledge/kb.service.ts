@@ -75,6 +75,11 @@ export interface KbFlyingStarPayload {
   meaning: string;
 }
 
+export interface KbDoshaPayload {
+  name: string;
+  remedies: string[];
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -114,6 +119,7 @@ export class KbService {
   private chineseAnimalCache = new Map<string, KbRow<KbChineseAnimalPayload>>();
   private flyingStarCache = new Map<string, KbRow<KbFlyingStarPayload>>();
   private karanaCache = new Map<string, KbRow<KbNamedPayload>>();
+  private doshaCache = new Map<string, KbRow<KbDoshaPayload>>();
 
   private loaded = {
     planet: false,
@@ -132,6 +138,7 @@ export class KbService {
     chineseAnimal: false,
     flyingStar: false,
     karana: false,
+    dosha: false,
   };
 
   constructor(private readonly prisma: PrismaService) {}
@@ -242,6 +249,17 @@ export class KbService {
     return this.lookup(this.karanaCache, key, null);
   }
 
+  /**
+   * Vedic dosha. Key is the dosha identifier: "mangal" | "kaal_sarp" |
+   * "nadi" | "pitra". Payload carries the localized name + 4-item
+   * remedies list; per-chart descriptions are looked up separately via
+   * `dosha.{key}.{branch}` briefing phrases.
+   */
+  async getDosha(key: string): Promise<KbRow<KbDoshaPayload> | null> {
+    await this.ensureLoaded('dosha');
+    return this.lookup(this.doshaCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -272,12 +290,13 @@ export class KbService {
     this.chineseAnimalCache.clear();
     this.flyingStarCache.clear();
     this.karanaCache.clear();
+    this.doshaCache.clear();
     this.loaded = {
       planet: false, nakshatra: false, tithi: false, yoga: false,
       vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
       numberMeaning: false, businessSector: false, personalYearTheme: false,
       reportSection: false, zodiacSign: false, chineseAnimal: false,
-      flyingStar: false, karana: false,
+      flyingStar: false, karana: false, dosha: false,
     };
   }
 
@@ -311,6 +330,7 @@ export class KbService {
         case 'chineseAnimal':     await this.loadChineseAnimals();     break;
         case 'flyingStar':        await this.loadFlyingStars();        break;
         case 'karana':            await this.loadKaranas();            break;
+        case 'dosha':             await this.loadDoshas();             break;
       }
       this.loaded[table] = true;
     } catch (err) {
@@ -403,6 +423,12 @@ export class KbService {
     if (!model?.findMany) return;
     const rows = await model.findMany();
     for (const r of rows) this.karanaCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadDoshas(): Promise<void> {
+    const model: any = (this.prisma as any).kbDosha;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.doshaCache.set(cacheKey(r.key, r.tradition), r as any);
   }
 }
 

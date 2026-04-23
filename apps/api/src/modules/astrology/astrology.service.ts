@@ -7,7 +7,7 @@ import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
-import { getLocaleInstruction, translateFields, translateText } from '../../common/locale';
+import { getLocaleInstruction, translateText } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import * as path from 'path';
 
@@ -158,6 +158,22 @@ export interface DoshaResult {
     description: string;
     remedies: string[];
   }[];
+}
+
+// Internal shape produced by detectDoshas(): carries the template key +
+// placeholder vars so localizeDoshas() can compose the final description
+// from KbBriefingPhrase templates. The public DoshaResult shape falls out
+// after localization strips the underscore-prefixed fields.
+type DoshaKey = 'mangal' | 'kaal_sarp' | 'nadi' | 'pitra';
+interface InternalDosha {
+  key: DoshaKey;
+  name: string;
+  present: boolean;
+  severity: 'none' | 'mild' | 'moderate' | 'severe';
+  descriptionKey: string;
+  descriptionVars: Record<string, string | number>;
+  hadRemedies: boolean;
+  appendSevere?: boolean;
 }
 
 @Injectable()
@@ -425,8 +441,12 @@ export class AstrologyService {
   }
 
   // ─── Deterministic Dosha Detection ──────────────────────────────────────────
-  private detectDoshas(positions: PlanetPosition[]): DoshaResult['doshas'] {
-    const doshas: DoshaResult['doshas'] = [];
+  // Emits InternalDosha[] — description is represented as
+  // `descriptionKey + descriptionVars` so localizeDoshas() can compose the
+  // final string from KbBriefingPhrase templates. Severity + present flags
+  // are the same shape the public DoshaResult carries.
+  private detectDoshas(positions: PlanetPosition[]): InternalDosha[] {
+    const doshas: InternalDosha[] = [];
     const findHouse = (name: string) => positions.find(p => p.planet === name)?.house;
     const findSign = (name: string) => positions.find(p => p.planet === name)?.sign;
     const signIndex = (sign: string) => ALL_SIGNS.indexOf(sign as any);
@@ -451,19 +471,31 @@ export class AstrologyService {
         if (jupAspects.includes(marsHouse)) manglikCancelled = true;
       }
     }
-    const manglikSeverity = !isManglik ? 'none' : manglikCancelled ? 'mild' : (marsHouse === 7 || marsHouse === 8) ? 'severe' : 'moderate';
+    const manglikSeverity: InternalDosha['severity'] = !isManglik ? 'none' : manglikCancelled ? 'mild' : (marsHouse === 7 || marsHouse === 8) ? 'severe' : 'moderate';
+
+    let mangalDescKey: string;
+    const mangalVars: Record<string, string | number> = {};
+    if (!isManglik) {
+      mangalDescKey = 'dosha.mangal.absent';
+    } else if (manglikCancelled) {
+      mangalVars.house = marsHouse!;
+      mangalDescKey = marsSignIdx === EXALTATION.Mars
+        ? 'dosha.mangal.cancelled_exalted'
+        : 'dosha.mangal.cancelled_jupiter';
+    } else {
+      mangalVars.houseOrdinal = `${marsHouse}${marsHouse === 1 ? 'st' : marsHouse === 2 ? 'nd' : 'th'}`;
+      mangalDescKey = 'dosha.mangal.present';
+    }
+    const mangalPresent = isManglik && !manglikCancelled;
     doshas.push({
+      key: 'mangal',
       name: 'Mangal Dosha (Manglik)',
-      present: isManglik && !manglikCancelled,
+      present: mangalPresent,
       severity: manglikSeverity,
-      description: !isManglik
-        ? 'No Mangal Dosha detected. Mars is well-placed in your chart.'
-        : manglikCancelled
-          ? `Mars is in house ${marsHouse} (Manglik position) but the dosha is cancelled due to ${marsSignIdx === EXALTATION.Mars ? 'Mars being exalted' : 'Jupiter\'s benefic influence'}.`
-          : `Mars is placed in the ${marsHouse}${marsHouse === 1 ? 'st' : marsHouse === 2 ? 'nd' : 'th'} house, creating Mangal Dosha. This may affect marital harmony.${marsHouse === 7 ? ' Mars in 7th house is the most severe form.' : ''}`,
-      remedies: isManglik && !manglikCancelled
-        ? ['Perform Mangal Shanti Puja on Tuesdays', 'Chant Hanuman Chalisa on Tuesdays', 'Wear red coral gemstone (consult astrologer first)', 'Kumbh Vivah ritual before marriage']
-        : [],
+      descriptionKey: mangalDescKey,
+      descriptionVars: mangalVars,
+      hadRemedies: mangalPresent,
+      appendSevere: mangalPresent && marsHouse === 7,
     });
 
     // ── Kaal Sarp Dosha ──
@@ -485,15 +517,13 @@ export class AstrologyService {
       isKaalSarp = allBetween || allBetweenReverse;
     }
     doshas.push({
+      key: 'kaal_sarp',
       name: 'Kaal Sarp Dosha',
       present: isKaalSarp,
       severity: isKaalSarp ? 'moderate' : 'none',
-      description: isKaalSarp
-        ? `All planets are hemmed between Rahu (house ${rahuHouse}) and Ketu (house ${ketuHouse}), forming Kaal Sarp Dosha. This may cause sudden ups and downs in life. The dosha weakens after age 33.`
-        : 'No Kaal Sarp Dosha present. Planets are well-distributed across the chart.',
-      remedies: isKaalSarp
-        ? ['Perform Kaal Sarp Dosha Nivaran Puja at Trimbakeshwar', 'Chant Rahu Beej Mantra on Saturdays', 'Donate black sesame seeds on Saturdays', 'Worship Lord Shiva with Abhishekam on Mondays']
-        : [],
+      descriptionKey: isKaalSarp ? 'dosha.kaal_sarp.present' : 'dosha.kaal_sarp.absent',
+      descriptionVars: isKaalSarp ? { rahuHouse: rahuHouse!, ketuHouse: ketuHouse! } : {},
+      hadRemedies: isKaalSarp,
     });
 
     // ── Nadi Dosha ──
@@ -503,14 +533,15 @@ export class AstrologyService {
       const moonLng = moonPos.degree + (ALL_SIGNS.indexOf(moonPos.sign as any) * 30);
       const moonNakIdx = Math.floor(((moonLng % 360 + 360) % 360) / (360 / 27)) % 27;
       const nadiTypes = ['Aadi (Vata)', 'Madhya (Pitta)', 'Antya (Kapha)'];
-      const nadiIdx = moonNakIdx % 3;
-      const nadiType = nadiTypes[nadiIdx];
+      const nadiType = nadiTypes[moonNakIdx % 3];
       doshas.push({
+        key: 'nadi',
         name: 'Nadi Dosha',
         present: false, // Standalone detection — presence determined during matching
         severity: 'none',
-        description: `Your Nadi type is ${nadiType}, derived from Moon nakshatra. Nadi Dosha occurs when both partners share the same Nadi type in matching.`,
-        remedies: [],
+        descriptionKey: 'dosha.nadi.template',
+        descriptionVars: { nadiType },
+        hadRemedies: false,
       });
     }
 
@@ -518,19 +549,45 @@ export class AstrologyService {
     const sunHouse = findHouse('Sun');
     const sunRahuConjunct = sunHouse != null && rahuHouse != null && sunHouse === rahuHouse;
     doshas.push({
+      key: 'pitra',
       name: 'Pitra Dosha',
       present: sunRahuConjunct,
       severity: sunRahuConjunct ? 'mild' : 'none',
-      description: sunRahuConjunct
-        ? `Sun-Rahu conjunction in house ${sunHouse} indicates ancestral karmic debt. This may affect family harmony and career growth.`
-        : 'No significant Pitra Dosha detected in your chart.',
-      remedies: sunRahuConjunct
-        ? ['Perform Pitra Shanti Puja on Amavasya', 'Offer Tarpan for ancestors during Pitru Paksha', 'Donate food to Brahmins on Saturdays', 'Plant a Peepal tree and water it regularly']
-        : [],
+      descriptionKey: sunRahuConjunct ? 'dosha.pitra.present' : 'dosha.pitra.absent',
+      descriptionVars: sunRahuConjunct ? { sunHouse: sunHouse! } : {},
+      hadRemedies: sunRahuConjunct,
     });
 
     return doshas;
   }
+
+  // English fallbacks for KbDosha.remedies (used when the KB cache is
+  // cold — migration not applied / DB unavailable). Source of truth is
+  // prisma/seed-kb/data/doshas.json.
+  private static readonly DOSHA_EN_REMEDIES: Record<DoshaKey, string[]> = {
+    mangal:    ['Perform Mangal Shanti Puja on Tuesdays', 'Chant Hanuman Chalisa on Tuesdays', 'Wear red coral gemstone (consult astrologer first)', 'Kumbh Vivah ritual before marriage'],
+    kaal_sarp: ['Perform Kaal Sarp Dosha Nivaran Puja at Trimbakeshwar', 'Chant Rahu Beej Mantra on Saturdays', 'Donate black sesame seeds on Saturdays', 'Worship Lord Shiva with Abhishekam on Mondays'],
+    nadi:      ['Perform Maha Mrityunjaya Jaap before marriage', 'Offer prayers at a Shiva temple on Mondays', 'Consult an astrologer for Nadi-compatibility-specific remedies', 'Donate milk and white items on Mondays'],
+    pitra:     ['Perform Pitra Shanti Puja on Amavasya', 'Offer Tarpan for ancestors during Pitru Paksha', 'Donate food to Brahmins on Saturdays', 'Plant a Peepal tree and water it regularly'],
+  };
+
+  // English fallbacks for the per-branch dosha.* description templates.
+  // Mirrors prisma/seed-kb/data/briefing-phrases.json (dosha.* keys).
+  private static readonly DOSHA_EN_DESCRIPTIONS: Record<string, string> = {
+    'dosha.mangal.absent':             'No Mangal Dosha detected. Mars is well-placed in your chart.',
+    'dosha.mangal.cancelled_exalted':  'Mars is in house {house} (Manglik position) but the dosha is cancelled due to Mars being exalted.',
+    'dosha.mangal.cancelled_jupiter':  'Mars is in house {house} (Manglik position) but the dosha is cancelled due to Jupiter\'s benefic influence.',
+    'dosha.mangal.present':            'Mars is placed in the {houseOrdinal} house, creating Mangal Dosha. This may affect marital harmony.',
+    'dosha.mangal.severe_suffix':      ' Mars in 7th house is the most severe form.',
+    'dosha.mangal.birth_required':     'Birth details required for accurate Mangal Dosha analysis. Please update your profile.',
+    'dosha.kaal_sarp.present':         'All planets are hemmed between Rahu (house {rahuHouse}) and Ketu (house {ketuHouse}), forming Kaal Sarp Dosha. This may cause sudden ups and downs in life. The dosha weakens after age 33.',
+    'dosha.kaal_sarp.absent':          'No Kaal Sarp Dosha present. Planets are well-distributed across the chart.',
+    'dosha.kaal_sarp.birth_required':  'Birth details required for accurate Kaal Sarp Dosha analysis. Please update your profile.',
+    'dosha.nadi.template':             'Your Nadi type is {nadiType}, derived from Moon nakshatra. Nadi Dosha occurs when both partners share the same Nadi type in matching.',
+    'dosha.pitra.present':             'Sun-Rahu conjunction in house {sunHouse} indicates ancestral karmic debt. This may affect family harmony and career growth.',
+    'dosha.pitra.absent':              'No significant Pitra Dosha detected in your chart.',
+    'dosha.pitra.birth_required':      'Birth details required for accurate Pitra Dosha analysis. Please update your profile.',
+  };
 
   // ─── Primary Kundli generation using Swiss Ephemeris (deterministic) ────────
   private async generateSwissEphKundliAsync(birthDetails: BirthDetails): Promise<any> {
@@ -1224,18 +1281,27 @@ export class AstrologyService {
       dateOfBirth: now.toISOString().slice(0, 10),
       timeOfBirth: now.toISOString().slice(11, 16),
     });
-    const judgment = `With the chart cast at ${now.toISOString()}, the ascendant in ` +
-      `${natal.ascendant.sign} favours a cautious, methodical approach to your question. ` +
-      `Consider the state of the querent's and quesited's significators before committing.`;
-    const querent = `Lord of ${natal.ascendant.sign} (Ascendant)`;
-    const quesited = 'Lord of the 7th house';
-    const moonSig = `Moon in ${natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown'}`;
-    const translated = await translateFields(
-      this.openaiService,
-      { judgment, querent, quesited, moon: moonSig },
-      dto.locale,
-      'horary',
-    );
+    const ascSign = natal.ascendant.sign;
+    const moonSign = natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown';
+    const [judgmentRow, querentRow, quesitedRow, moonRow] = await Promise.all([
+      this.kbService.getBriefingPhrase('horary.judgment.template'),
+      this.kbService.getBriefingPhrase('horary.querent.template'),
+      this.kbService.getBriefingPhrase('horary.quesited.static'),
+      this.kbService.getBriefingPhrase('horary.moon.template'),
+    ]);
+    const judgmentTpl = this.kbService.render(judgmentRow, dto.locale)?.text
+      ?? 'With the chart cast at {time}, the ascendant in {sign} favours a cautious, methodical approach to your question. Consider the state of the querent\'s and quesited\'s significators before committing.';
+    const querentTpl = this.kbService.render(querentRow, dto.locale)?.text
+      ?? 'Lord of {sign} (Ascendant)';
+    const quesited = this.kbService.render(quesitedRow, dto.locale)?.text
+      ?? 'Lord of the 7th house';
+    const moonTpl = this.kbService.render(moonRow, dto.locale)?.text
+      ?? 'Moon in {sign}';
+    const judgment = judgmentTpl
+      .replace('{time}', now.toISOString())
+      .replace('{sign}', ascSign);
+    const querent = querentTpl.replace('{sign}', ascSign);
+    const moonSig = moonTpl.replace('{sign}', moonSign);
     return {
       userId,
       question: dto.question.trim(),
@@ -1243,12 +1309,12 @@ export class AstrologyService {
       chart: {
         ascendant: natal.ascendant,
         significators: {
-          querent: translated.querent,
-          quesited: translated.quesited,
-          moon: translated.moon,
+          querent,
+          quesited,
+          moon: moonSig,
         },
       },
-      judgment: translated.judgment,
+      judgment,
     };
   }
 
@@ -1541,31 +1607,41 @@ export class AstrologyService {
       Leo: 'Sun', Virgo: 'Mercury', Libra: 'Venus', Scorpio: 'Mars',
       Sagittarius: 'Jupiter', Capricorn: 'Saturn', Aquarius: 'Saturn', Pisces: 'Jupiter',
     };
-    const majorDescription = `12-year general chapter ruled by ${signLords[majorSign]}.`;
-    const minorDescription = `Annual sub-period ruled by ${signLords[minorSign]}.`;
-    const interpretation = `At age ${ageYears} you are in a ${majorSign} general period (lord: ${signLords[majorSign]}) ` +
-      `with an annual ${minorSign} sub-period (lord: ${signLords[minorSign]}). ` +
-      `Themes of the major sign's topics dominate the chapter; the minor colours this year.`;
-    const translated = await translateFields(
-      this.openaiService,
-      { majorDescription, minorDescription, interpretation },
-      dto.locale,
-      'zodiacal-releasing',
-    );
+    const majorLord = signLords[majorSign];
+    const minorLord = signLords[minorSign];
+    const [majorRow, minorRow, interpRow] = await Promise.all([
+      this.kbService.getBriefingPhrase('zodiacal-releasing.major.template'),
+      this.kbService.getBriefingPhrase('zodiacal-releasing.minor.template'),
+      this.kbService.getBriefingPhrase('zodiacal-releasing.interpretation.template'),
+    ]);
+    const majorTpl = this.kbService.render(majorRow, dto.locale)?.text
+      ?? '12-year general chapter ruled by {lord}.';
+    const minorTpl = this.kbService.render(minorRow, dto.locale)?.text
+      ?? 'Annual sub-period ruled by {lord}.';
+    const interpTpl = this.kbService.render(interpRow, dto.locale)?.text
+      ?? 'At age {age} you are in a {majorSign} general period (lord: {majorLord}) with an annual {minorSign} sub-period (lord: {minorLord}). Themes of the major sign\'s topics dominate the chapter; the minor colours this year.';
+    const majorDescription = majorTpl.replace('{lord}', majorLord);
+    const minorDescription = minorTpl.replace('{lord}', minorLord);
+    const interpretation = interpTpl
+      .replace('{age}', String(ageYears))
+      .replace('{majorSign}', majorSign)
+      .replace('{majorLord}', majorLord)
+      .replace('{minorSign}', minorSign)
+      .replace('{minorLord}', minorLord);
     return {
       userId,
       ageYears,
       majorPeriod: {
         sign: majorSign,
-        lord: signLords[majorSign],
-        description: translated.majorDescription ?? majorDescription,
+        lord: majorLord,
+        description: majorDescription,
       },
       minorPeriod: {
         sign: minorSign,
-        lord: signLords[minorSign],
-        description: translated.minorDescription ?? minorDescription,
+        lord: minorLord,
+        description: minorDescription,
       },
-      interpretation: translated.interpretation ?? interpretation,
+      interpretation,
     };
   }
 
@@ -1601,23 +1677,30 @@ export class AstrologyService {
     // 6th house from ascendant (whole-sign).
     const ascIdx = ALL_SIGNS.indexOf(natal.ascendant.sign as any);
     const sixthSign = ascIdx >= 0 ? ALL_SIGNS[(ascIdx + 5) % 12] : 'Unknown';
-    const elementGuidance: Record<string, string> = {
-      Fire: 'Hot, inflammatory — cooling herbs and hydration indicated.',
+    // English fallbacks retained for when the KB cache is cold. Source of
+    // truth is KbBriefingPhrase (`decumbiture.element.*.guidance` + the
+    // interpretation template).
+    const fallbackGuidance: Record<string, string> = {
+      Fire:  'Hot, inflammatory — cooling herbs and hydration indicated.',
       Earth: 'Slow, chronic — steady restorative care and routine.',
-      Air: 'Nervous, fluctuating — calming practices and regular rest.',
+      Air:   'Nervous, fluctuating — calming practices and regular rest.',
       Water: 'Emotional, moist — lymphatic support and gentle movement.',
     };
-    const guidance = elementGuidance[ascElement] ?? 'Balanced care indicated.';
-    const interpretation =
-      `Decumbiture ascendant ${natal.ascendant.sign} (${ascElement}). ` +
-      `The 6th house of illness is ${sixthSign}. The Moon in ${moonSign} ` +
-      `shows the immediate course — ${elementGuidance[ascElement] ?? ''}`;
-    const translated = await translateFields(
-      this.openaiService,
-      { guidance, interpretation },
-      dto.locale,
-      'decumbiture',
-    );
+    const guidanceKey = `decumbiture.element.${(ascElement || 'Unknown').toLowerCase()}.guidance`;
+    const [guidanceRow, interpRow] = await Promise.all([
+      this.kbService.getBriefingPhrase(guidanceKey),
+      this.kbService.getBriefingPhrase('decumbiture.interpretation.template'),
+    ]);
+    const guidance = this.kbService.render(guidanceRow, dto.locale)?.text
+      ?? fallbackGuidance[ascElement] ?? 'Balanced care indicated.';
+    const interpTpl = this.kbService.render(interpRow, dto.locale)?.text
+      ?? 'Decumbiture ascendant {sign} ({element}). The 6th house of illness is {sixthSign}. The Moon in {moonSign} shows the immediate course — {guidance}';
+    const interpretation = interpTpl
+      .replace('{sign}', natal.ascendant.sign)
+      .replace('{element}', ascElement)
+      .replace('{sixthSign}', sixthSign)
+      .replace('{moonSign}', moonSign)
+      .replace('{guidance}', guidance);
     return {
       userId,
       decumbitureAt: new Date(`${dateStr}T${timeStr}:00`).toISOString(),
@@ -1626,8 +1709,8 @@ export class AstrologyService {
       ascendantElement: ascElement,
       sixthHouseSign: sixthSign,
       moon: moon ? { sign: moon.sign, degree: moon.degree } : null,
-      guidance: translated.guidance ?? guidance,
-      interpretation: translated.interpretation ?? interpretation,
+      guidance,
+      interpretation,
     };
   }
 
@@ -1961,46 +2044,54 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       return { userId, doshas: await this.localizeDoshas(doshas, locale) };
     }
 
-    // No birth details available — return empty analysis
-    const fallback: DoshaResult['doshas'] = [
-      { name: 'Mangal Dosha (Manglik)', present: false, severity: 'none', description: 'Birth details required for accurate Mangal Dosha analysis. Please update your profile.', remedies: [] },
-      { name: 'Kaal Sarp Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Kaal Sarp Dosha analysis. Please update your profile.', remedies: [] },
-      { name: 'Pitra Dosha', present: false, severity: 'none', description: 'Birth details required for accurate Pitra Dosha analysis. Please update your profile.', remedies: [] },
+    // No birth details available — emit the `birth_required` branch per
+    // dosha. Nadi has no standalone birth-required message (it's only
+    // meaningful during matching), so it's omitted here.
+    const fallback: InternalDosha[] = [
+      { key: 'mangal',    name: 'Mangal Dosha (Manglik)', present: false, severity: 'none', descriptionKey: 'dosha.mangal.birth_required',    descriptionVars: {}, hadRemedies: false },
+      { key: 'kaal_sarp', name: 'Kaal Sarp Dosha',        present: false, severity: 'none', descriptionKey: 'dosha.kaal_sarp.birth_required', descriptionVars: {}, hadRemedies: false },
+      { key: 'pitra',     name: 'Pitra Dosha',            present: false, severity: 'none', descriptionKey: 'dosha.pitra.birth_required',     descriptionVars: {}, hadRemedies: false },
     ];
     return { userId, doshas: await this.localizeDoshas(fallback, locale) };
   }
 
   private async localizeDoshas(
-    doshas: DoshaResult['doshas'],
+    doshas: InternalDosha[],
     locale?: string,
   ): Promise<DoshaResult['doshas']> {
-    if (!locale || locale === 'en' || doshas.length === 0) return doshas;
-    const names = doshas.map(d => d.name);
-    const descriptions = doshas.map(d => d.description);
-    const remedyLengths = doshas.map(d => d.remedies.length);
-    const flatRemedies: string[] = doshas.flatMap(d => d.remedies);
-    const translated = await translateFields(
-      this.openaiService,
-      { names, descriptions, remedies: flatRemedies },
-      locale,
-      'dosha',
-    );
-    const tNames = Array.isArray((translated as any).names) ? (translated as any).names as string[] : names;
-    const tDescriptions = Array.isArray((translated as any).descriptions) ? (translated as any).descriptions as string[] : descriptions;
-    const tRemedies = Array.isArray((translated as any).remedies) ? (translated as any).remedies as string[] : flatRemedies;
-    let offset = 0;
-    return doshas.map((d, i) => {
-      const take = remedyLengths[i];
-      const rs = tRemedies.slice(offset, offset + take);
-      offset += take;
+    if (doshas.length === 0) return [];
+    return Promise.all(doshas.map(async (d) => {
+      const [doshaRow, descRow, suffixRow] = await Promise.all([
+        this.kbService.getDosha(d.key),
+        this.kbService.getBriefingPhrase(d.descriptionKey),
+        d.appendSevere
+          ? this.kbService.getBriefingPhrase('dosha.mangal.severe_suffix')
+          : Promise.resolve(null),
+      ]);
+      const localizedDosha = this.kbService.render(doshaRow, locale);
+      const name = localizedDosha?.name ?? d.name;
+      const remedies = d.hadRemedies
+        ? (localizedDosha?.remedies ?? AstrologyService.DOSHA_EN_REMEDIES[d.key])
+        : [];
+      let description = this.kbService.render(descRow, locale)?.text
+        ?? AstrologyService.DOSHA_EN_DESCRIPTIONS[d.descriptionKey]
+        ?? '';
+      for (const [k, v] of Object.entries(d.descriptionVars)) {
+        description = description.replace(`{${k}}`, String(v));
+      }
+      if (d.appendSevere) {
+        const suffix = this.kbService.render(suffixRow, locale)?.text
+          ?? AstrologyService.DOSHA_EN_DESCRIPTIONS['dosha.mangal.severe_suffix'];
+        description += suffix;
+      }
       return {
-        name: tNames[i] ?? d.name,
+        name,
         present: d.present,
         severity: d.severity,
-        description: tDescriptions[i] ?? d.description,
-        remedies: rs,
+        description,
+        remedies,
       };
-    });
+    }));
   }
 
   // ─── Sade Sati Detection ─────────────────────────────────────────────────────
