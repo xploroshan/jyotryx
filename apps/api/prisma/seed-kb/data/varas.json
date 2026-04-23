@@ -2,12 +2,299 @@
   "_source": "Transliterated Sanskrit day names (Ravivaar..Shanivaar) from apps/web/src/i18n/panchang-terms.ts (HI.varas). These are the canonical keys; the briefing's 'Ravivaar (Sunday)' display format is a composition handled by the render layer, not by the KB row. Canon: 7-day week aligned with the 7 classical planets.",
   "_shape": "{ name: string }",
   "rows": [
-    { "key": "Ravivaar",    "tradition": null, "i18n": { "en": { "name": "Sunday" },    "hi": { "name": "रविवार" } } },
-    { "key": "Somvaar",     "tradition": null, "i18n": { "en": { "name": "Monday" },    "hi": { "name": "सोमवार" } } },
-    { "key": "Mangalvaar",  "tradition": null, "i18n": { "en": { "name": "Tuesday" },   "hi": { "name": "मंगलवार" } } },
-    { "key": "Budhvaar",    "tradition": null, "i18n": { "en": { "name": "Wednesday" }, "hi": { "name": "बुधवार" } } },
-    { "key": "Guruvaar",    "tradition": null, "i18n": { "en": { "name": "Thursday" },  "hi": { "name": "गुरुवार" } } },
-    { "key": "Shukravaar",  "tradition": null, "i18n": { "en": { "name": "Friday" },    "hi": { "name": "शुक्रवार" } } },
-    { "key": "Shanivaar",   "tradition": null, "i18n": { "en": { "name": "Saturday" },  "hi": { "name": "शनिवार" } } }
+    {
+      "key": "Ravivaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sunday"
+        },
+        "hi": {
+          "name": "रविवार"
+        },
+        "ta": {
+          "name": "ஞாயிற்றுக்கிழமை"
+        },
+        "te": {
+          "name": "ఆదివారం"
+        },
+        "bn": {
+          "name": "রবিবার"
+        },
+        "mr": {
+          "name": "रविवार"
+        },
+        "gu": {
+          "name": "રવિવાર"
+        },
+        "kn": {
+          "name": "ಭಾನುವಾರ"
+        },
+        "ml": {
+          "name": "ഞായറാഴ്ച"
+        },
+        "pa": {
+          "name": "ਐਤਵਾਰ"
+        },
+        "or": {
+          "name": "ରବିବାର"
+        },
+        "as": {
+          "name": "দেওবাৰ"
+        }
+      }
+    },
+    {
+      "key": "Somvaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Monday"
+        },
+        "hi": {
+          "name": "सोमवार"
+        },
+        "ta": {
+          "name": "திங்கள்"
+        },
+        "te": {
+          "name": "సోమవారం"
+        },
+        "bn": {
+          "name": "সোমবার"
+        },
+        "mr": {
+          "name": "सोमवार"
+        },
+        "gu": {
+          "name": "સોમવાર"
+        },
+        "kn": {
+          "name": "ಸೋಮವಾರ"
+        },
+        "ml": {
+          "name": "തിങ്കളാഴ്ച"
+        },
+        "pa": {
+          "name": "ਸੋਮਵਾਰ"
+        },
+        "or": {
+          "name": "ସୋମବାର"
+        },
+        "as": {
+          "name": "সোমবাৰ"
+        }
+      }
+    },
+    {
+      "key": "Mangalvaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Tuesday"
+        },
+        "hi": {
+          "name": "मंगलवार"
+        },
+        "ta": {
+          "name": "செவ்வாய்"
+        },
+        "te": {
+          "name": "మంగళవారం"
+        },
+        "bn": {
+          "name": "মঙ্গলবার"
+        },
+        "mr": {
+          "name": "मंगळवार"
+        },
+        "gu": {
+          "name": "મંગળવાર"
+        },
+        "kn": {
+          "name": "ಮಂಗಳವಾರ"
+        },
+        "ml": {
+          "name": "ചൊവ്വാഴ്ച"
+        },
+        "pa": {
+          "name": "ਮੰਗਲਵਾਰ"
+        },
+        "or": {
+          "name": "ମଙ୍ଗଳବାର"
+        },
+        "as": {
+          "name": "মঙ্গলবাৰ"
+        }
+      }
+    },
+    {
+      "key": "Budhvaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Wednesday"
+        },
+        "hi": {
+          "name": "बुधवार"
+        },
+        "ta": {
+          "name": "புதன் கிழமை"
+        },
+        "te": {
+          "name": "బుధవారం"
+        },
+        "bn": {
+          "name": "বুধবার"
+        },
+        "mr": {
+          "name": "बुधवार"
+        },
+        "gu": {
+          "name": "બુધવાર"
+        },
+        "kn": {
+          "name": "ಬುಧವಾರ"
+        },
+        "ml": {
+          "name": "ബുധൻ"
+        },
+        "pa": {
+          "name": "ਬੁੱਧਵਾਰ"
+        },
+        "or": {
+          "name": "ବୁଧବାର"
+        },
+        "as": {
+          "name": "বুধবাৰ"
+        }
+      }
+    },
+    {
+      "key": "Guruvaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Thursday"
+        },
+        "hi": {
+          "name": "गुरुवार"
+        },
+        "ta": {
+          "name": "வியாழக்கிழமை"
+        },
+        "te": {
+          "name": "గురువారం"
+        },
+        "bn": {
+          "name": "বৃহস্পতিবার"
+        },
+        "mr": {
+          "name": "गुरुवार"
+        },
+        "gu": {
+          "name": "ગુરુવાર"
+        },
+        "kn": {
+          "name": "ಗುರುವಾರ"
+        },
+        "ml": {
+          "name": "വ്യാഴാഴ്ച"
+        },
+        "pa": {
+          "name": "ਵੀਰਵਾਰ"
+        },
+        "or": {
+          "name": "ଗୁରୁବାର"
+        },
+        "as": {
+          "name": "বৃহস্পতিবাৰ"
+        }
+      }
+    },
+    {
+      "key": "Shukravaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Friday"
+        },
+        "hi": {
+          "name": "शुक्रवार"
+        },
+        "ta": {
+          "name": "வெள்ளிக்கிழமை"
+        },
+        "te": {
+          "name": "శుక్రవారం"
+        },
+        "bn": {
+          "name": "শুক্রবার"
+        },
+        "mr": {
+          "name": "शुक्रवार"
+        },
+        "gu": {
+          "name": "શુક્રવાર"
+        },
+        "kn": {
+          "name": "ಶುಕ್ರವಾರ"
+        },
+        "ml": {
+          "name": "വെള്ളി"
+        },
+        "pa": {
+          "name": "ਸ਼ੁੱਕਰਵਾਰ"
+        },
+        "or": {
+          "name": "ଶୁକ୍ରବାର"
+        },
+        "as": {
+          "name": "শুক্ৰবাৰ"
+        }
+      }
+    },
+    {
+      "key": "Shanivaar",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Saturday"
+        },
+        "hi": {
+          "name": "शनिवार"
+        },
+        "ta": {
+          "name": "சனிக்கிழமை"
+        },
+        "te": {
+          "name": "శనివారం"
+        },
+        "bn": {
+          "name": "শনিবার"
+        },
+        "mr": {
+          "name": "शनिवार"
+        },
+        "gu": {
+          "name": "શનિવાર"
+        },
+        "kn": {
+          "name": "ಶನಿವಾರ"
+        },
+        "ml": {
+          "name": "ശനി"
+        },
+        "pa": {
+          "name": "ਸ਼ਨੀਵਾਰ"
+        },
+        "or": {
+          "name": "ଶନିବାର"
+        },
+        "as": {
+          "name": "শনিবাৰ"
+        }
+      }
+    }
   ]
 }

@@ -2,21 +2,677 @@
   "_source": "Canonical names from panchang lookup in apps/api/src/modules/daily-briefing/daily-briefing.service.ts getBasicPanchang(). Hindi names mined from apps/web/src/i18n/panchang-terms.ts (HI.tithis). Amavasya is the new-moon tithi (not in briefing's tithis array but emitted elsewhere by the offline panchang engine). Canon: standard 16-tithi cycle (15 lunar days + Amavasya).",
   "_shape": "{ name: string }",
   "rows": [
-    { "key": "Pratipada",   "tradition": null, "i18n": { "en": { "name": "Pratipada" },   "hi": { "name": "प्रतिपदा" } } },
-    { "key": "Dwitiya",     "tradition": null, "i18n": { "en": { "name": "Dwitiya" },     "hi": { "name": "द्वितीया" } } },
-    { "key": "Tritiya",     "tradition": null, "i18n": { "en": { "name": "Tritiya" },     "hi": { "name": "तृतीया" } } },
-    { "key": "Chaturthi",   "tradition": null, "i18n": { "en": { "name": "Chaturthi" },   "hi": { "name": "चतुर्थी" } } },
-    { "key": "Panchami",    "tradition": null, "i18n": { "en": { "name": "Panchami" },    "hi": { "name": "पंचमी" } } },
-    { "key": "Shashthi",    "tradition": null, "i18n": { "en": { "name": "Shashthi" },    "hi": { "name": "षष्ठी" } } },
-    { "key": "Saptami",     "tradition": null, "i18n": { "en": { "name": "Saptami" },     "hi": { "name": "सप्तमी" } } },
-    { "key": "Ashtami",     "tradition": null, "i18n": { "en": { "name": "Ashtami" },     "hi": { "name": "अष्टमी" } } },
-    { "key": "Navami",      "tradition": null, "i18n": { "en": { "name": "Navami" },      "hi": { "name": "नवमी" } } },
-    { "key": "Dashami",     "tradition": null, "i18n": { "en": { "name": "Dashami" },     "hi": { "name": "दशमी" } } },
-    { "key": "Ekadashi",    "tradition": null, "i18n": { "en": { "name": "Ekadashi" },    "hi": { "name": "एकादशी" } } },
-    { "key": "Dwadashi",    "tradition": null, "i18n": { "en": { "name": "Dwadashi" },    "hi": { "name": "द्वादशी" } } },
-    { "key": "Trayodashi",  "tradition": null, "i18n": { "en": { "name": "Trayodashi" },  "hi": { "name": "त्रयोदशी" } } },
-    { "key": "Chaturdashi", "tradition": null, "i18n": { "en": { "name": "Chaturdashi" }, "hi": { "name": "चतुर्दशी" } } },
-    { "key": "Purnima",     "tradition": null, "i18n": { "en": { "name": "Purnima" },     "hi": { "name": "पूर्णिमा" } } },
-    { "key": "Amavasya",    "tradition": null, "i18n": { "en": { "name": "Amavasya" },    "hi": { "name": "अमावस्या" } } }
+    {
+      "key": "Pratipada",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Pratipada"
+        },
+        "hi": {
+          "name": "प्रतिपदा"
+        },
+        "ta": {
+          "name": "Pratipada"
+        },
+        "te": {
+          "name": "ప్రతిపద"
+        },
+        "bn": {
+          "name": "প্রতিপদা"
+        },
+        "mr": {
+          "name": "प्रतिपदा"
+        },
+        "gu": {
+          "name": "પ્રતિપદા"
+        },
+        "kn": {
+          "name": "ಪ್ರತಿಪದ"
+        },
+        "ml": {
+          "name": "പ്രതിപദ"
+        },
+        "pa": {
+          "name": "ਪ੍ਰਤਿਪਦਾ"
+        },
+        "or": {
+          "name": "ପ୍ରତିପଦା"
+        },
+        "as": {
+          "name": "প্ৰতিপদা"
+        }
+      }
+    },
+    {
+      "key": "Dwitiya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dwitiya"
+        },
+        "hi": {
+          "name": "द्वितीया"
+        },
+        "ta": {
+          "name": "த்விதீயா"
+        },
+        "te": {
+          "name": "ద్వితీయ"
+        },
+        "bn": {
+          "name": "দ্বিতীয়া"
+        },
+        "mr": {
+          "name": "द्वितीया"
+        },
+        "gu": {
+          "name": "દ્વિતિયા"
+        },
+        "kn": {
+          "name": "ದ್ವಿತೀಯ"
+        },
+        "ml": {
+          "name": "ദ്വിതീയ"
+        },
+        "pa": {
+          "name": "ਦ੍ਵਿਤੀਆ"
+        },
+        "or": {
+          "name": "ଦ୍ୱିତୀୟା"
+        },
+        "as": {
+          "name": "দ্বিতীয়া"
+        }
+      }
+    },
+    {
+      "key": "Tritiya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Tritiya"
+        },
+        "hi": {
+          "name": "तृतीया"
+        },
+        "ta": {
+          "name": "த்ரிதியா"
+        },
+        "te": {
+          "name": "తృతీయ"
+        },
+        "bn": {
+          "name": "তৃতীয়া"
+        },
+        "mr": {
+          "name": "तृतीया"
+        },
+        "gu": {
+          "name": "તૃતીયા"
+        },
+        "kn": {
+          "name": "ತೃತೀಯ"
+        },
+        "ml": {
+          "name": "തൃതീയ"
+        },
+        "pa": {
+          "name": "ਤ੍ਰਿਤੀਆ"
+        },
+        "or": {
+          "name": "ତୃତୀୟା"
+        },
+        "as": {
+          "name": "তৃতীয়া"
+        }
+      }
+    },
+    {
+      "key": "Chaturthi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Chaturthi"
+        },
+        "hi": {
+          "name": "चतुर्थी"
+        },
+        "ta": {
+          "name": "சதுர்த்தி"
+        },
+        "te": {
+          "name": "చతుర్థి"
+        },
+        "bn": {
+          "name": "Chaturthi"
+        },
+        "mr": {
+          "name": "चतुर्थी"
+        },
+        "gu": {
+          "name": "ચતુર્થી"
+        },
+        "kn": {
+          "name": "ಚತುರ್ಥಿ"
+        },
+        "ml": {
+          "name": "ചതുര്ഥി"
+        },
+        "pa": {
+          "name": "ਚਤੁਰਥੀ"
+        },
+        "or": {
+          "name": "ଚତୁର୍ଥୀ"
+        },
+        "as": {
+          "name": "চতুৰ্থী"
+        }
+      }
+    },
+    {
+      "key": "Panchami",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Panchami"
+        },
+        "hi": {
+          "name": "पंचमी"
+        },
+        "ta": {
+          "name": "பஞ்சமி"
+        },
+        "te": {
+          "name": "పంచమి"
+        },
+        "bn": {
+          "name": "পঞ্চমী"
+        },
+        "mr": {
+          "name": "पंचमी"
+        },
+        "gu": {
+          "name": "પંચમી"
+        },
+        "kn": {
+          "name": "ಪಂಚಮಿ"
+        },
+        "ml": {
+          "name": "പഞ്ചമി"
+        },
+        "pa": {
+          "name": "ਪੰਚਮੀ"
+        },
+        "or": {
+          "name": "ପଞ୍ଚମୀ"
+        },
+        "as": {
+          "name": "পঞ্চমী"
+        }
+      }
+    },
+    {
+      "key": "Shashthi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shashthi"
+        },
+        "hi": {
+          "name": "षष्ठी"
+        },
+        "ta": {
+          "name": "ஷஷ்டி"
+        },
+        "te": {
+          "name": "షష్ఠి"
+        },
+        "bn": {
+          "name": "ষষ্ঠী"
+        },
+        "mr": {
+          "name": "षष्ठी"
+        },
+        "gu": {
+          "name": "ષષ્ઠિ"
+        },
+        "kn": {
+          "name": "ಷಷ್ಠಿ"
+        },
+        "ml": {
+          "name": "ഷഷ്ഠി"
+        },
+        "pa": {
+          "name": "਷ਸ਼ਠੀ"
+        },
+        "or": {
+          "name": "ଷଷ୍ଠୀ"
+        },
+        "as": {
+          "name": "ষষ্ঠী"
+        }
+      }
+    },
+    {
+      "key": "Saptami",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Saptami"
+        },
+        "hi": {
+          "name": "सप्तमी"
+        },
+        "ta": {
+          "name": "சப்தமி"
+        },
+        "te": {
+          "name": "సప్తమి"
+        },
+        "bn": {
+          "name": "সপ্তমী"
+        },
+        "mr": {
+          "name": "सप्तमी"
+        },
+        "gu": {
+          "name": "સપ્તમી"
+        },
+        "kn": {
+          "name": "ಸಪ್ತಮಿ"
+        },
+        "ml": {
+          "name": "സപ്തമി"
+        },
+        "pa": {
+          "name": "ਸਪਤਮੀ"
+        },
+        "or": {
+          "name": "ସପ୍ତମୀ"
+        },
+        "as": {
+          "name": "সপ্তমী"
+        }
+      }
+    },
+    {
+      "key": "Ashtami",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ashtami"
+        },
+        "hi": {
+          "name": "अष्टमी"
+        },
+        "ta": {
+          "name": "அஷ்டமி"
+        },
+        "te": {
+          "name": "అష్టమి"
+        },
+        "bn": {
+          "name": "অষ্টমী"
+        },
+        "mr": {
+          "name": "अष्टमी"
+        },
+        "gu": {
+          "name": "અષ્ટમી"
+        },
+        "kn": {
+          "name": "ಅಷ್ಟಮಿ"
+        },
+        "ml": {
+          "name": "അഷ്ടമി"
+        },
+        "pa": {
+          "name": "ਅੱਠਵੀਂ"
+        },
+        "or": {
+          "name": "ଅଷ୍ଟମୀ"
+        },
+        "as": {
+          "name": "অষ্টমী"
+        }
+      }
+    },
+    {
+      "key": "Navami",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Navami"
+        },
+        "hi": {
+          "name": "नवमी"
+        },
+        "ta": {
+          "name": "நவமி"
+        },
+        "te": {
+          "name": "నవమి"
+        },
+        "bn": {
+          "name": "নবমী"
+        },
+        "mr": {
+          "name": "नवमी"
+        },
+        "gu": {
+          "name": "નવમી"
+        },
+        "kn": {
+          "name": "ನವಮಿ"
+        },
+        "ml": {
+          "name": "നവമി"
+        },
+        "pa": {
+          "name": "ਨਵਮੀ"
+        },
+        "or": {
+          "name": "ନବମୀ"
+        },
+        "as": {
+          "name": "নৱমী"
+        }
+      }
+    },
+    {
+      "key": "Dashami",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dashami"
+        },
+        "hi": {
+          "name": "दशमी"
+        },
+        "ta": {
+          "name": "தசமி"
+        },
+        "te": {
+          "name": "దశమి"
+        },
+        "bn": {
+          "name": "দশমী"
+        },
+        "mr": {
+          "name": "दशमी"
+        },
+        "gu": {
+          "name": "દશમી"
+        },
+        "kn": {
+          "name": "ದಶಮಿ"
+        },
+        "ml": {
+          "name": "ദശമി"
+        },
+        "pa": {
+          "name": "ਦਸਮੀ"
+        },
+        "or": {
+          "name": "ଦଶମୀ"
+        },
+        "as": {
+          "name": "দশমী"
+        }
+      }
+    },
+    {
+      "key": "Ekadashi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ekadashi"
+        },
+        "hi": {
+          "name": "एकादशी"
+        },
+        "ta": {
+          "name": "ஏகாதசி"
+        },
+        "te": {
+          "name": "ఏకాదశి"
+        },
+        "bn": {
+          "name": "Ekadashi"
+        },
+        "mr": {
+          "name": "एकादशी"
+        },
+        "gu": {
+          "name": "એકાદશી"
+        },
+        "kn": {
+          "name": "ಏಕಾದಶಿ"
+        },
+        "ml": {
+          "name": "ഏകാദശി"
+        },
+        "pa": {
+          "name": "ਏਕਾਦਸ਼ੀ"
+        },
+        "or": {
+          "name": "ଏକାଦଶୀ"
+        },
+        "as": {
+          "name": "একাদশী"
+        }
+      }
+    },
+    {
+      "key": "Dwadashi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dwadashi"
+        },
+        "hi": {
+          "name": "द्वादशी"
+        },
+        "ta": {
+          "name": "த்வாதசி"
+        },
+        "te": {
+          "name": "ద్వాదశి"
+        },
+        "bn": {
+          "name": "দ্বাদশী"
+        },
+        "mr": {
+          "name": "द्वादशी"
+        },
+        "gu": {
+          "name": "દ્વાદશી"
+        },
+        "kn": {
+          "name": "ದ್ವಾದಶಿ"
+        },
+        "ml": {
+          "name": "ദ്വാദശി"
+        },
+        "pa": {
+          "name": "ਦਵਾਦਸ਼ੀ"
+        },
+        "or": {
+          "name": "ଦ୍ୱାଦଶୀ"
+        },
+        "as": {
+          "name": "দ্বাদশী"
+        }
+      }
+    },
+    {
+      "key": "Trayodashi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Trayodashi"
+        },
+        "hi": {
+          "name": "त्रयोदशी"
+        },
+        "ta": {
+          "name": "த்ரயோதசி"
+        },
+        "te": {
+          "name": "త్రయోదశి"
+        },
+        "bn": {
+          "name": "ত্রয়োদশী"
+        },
+        "mr": {
+          "name": "त्रयोदशी"
+        },
+        "gu": {
+          "name": "ત્રયોદશી"
+        },
+        "kn": {
+          "name": "ತ್ರಯೋದಶಿ"
+        },
+        "ml": {
+          "name": "ത്രയോദശി"
+        },
+        "pa": {
+          "name": "ਤ੍ਰਯੋਦਸ਼ੀ"
+        },
+        "or": {
+          "name": "ତ୍ରୟୋଦଶୀ"
+        },
+        "as": {
+          "name": "ত্রয়োদশী"
+        }
+      }
+    },
+    {
+      "key": "Chaturdashi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Chaturdashi"
+        },
+        "hi": {
+          "name": "चतुर्दशी"
+        },
+        "ta": {
+          "name": "Chaturdashi"
+        },
+        "te": {
+          "name": "చతుర్దశి"
+        },
+        "bn": {
+          "name": "Chaturdashi"
+        },
+        "mr": {
+          "name": "चतुर्दशी"
+        },
+        "gu": {
+          "name": "ચતુર્દશી"
+        },
+        "kn": {
+          "name": "ಚತುರ್ದಶಿ"
+        },
+        "ml": {
+          "name": "ചതുര്ദശി"
+        },
+        "pa": {
+          "name": "ਚਤੁਰਦਸ਼ੀ"
+        },
+        "or": {
+          "name": "ଚତୁର୍ଦ୍ଦଶୀ"
+        },
+        "as": {
+          "name": "চতুৰ্দশী"
+        }
+      }
+    },
+    {
+      "key": "Purnima",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Purnima"
+        },
+        "hi": {
+          "name": "पूर्णिमा"
+        },
+        "ta": {
+          "name": "பூர்ணிமா"
+        },
+        "te": {
+          "name": "పూర్ణిమ"
+        },
+        "bn": {
+          "name": "পূর্ণিমা"
+        },
+        "mr": {
+          "name": "पूर्णिमा"
+        },
+        "gu": {
+          "name": "પૂર્ણિમા"
+        },
+        "kn": {
+          "name": "ಪೌರ್ಣಿಮಾ"
+        },
+        "ml": {
+          "name": "പൗർണ്ണമി"
+        },
+        "pa": {
+          "name": "ਪੂਰਨਿਮਾ"
+        },
+        "or": {
+          "name": "ପୂର୍ଣ୍ଣିମା"
+        },
+        "as": {
+          "name": "পূৰ্ণিমা"
+        }
+      }
+    },
+    {
+      "key": "Amavasya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Amavasya"
+        },
+        "hi": {
+          "name": "अमावस्या"
+        },
+        "ta": {
+          "name": "அமாவாசை"
+        },
+        "te": {
+          "name": "అమావాస్య"
+        },
+        "bn": {
+          "name": "অমাবস্যা"
+        },
+        "mr": {
+          "name": "अमावस्या"
+        },
+        "gu": {
+          "name": "અમાવસ્યા"
+        },
+        "kn": {
+          "name": "ಅಮಾವಾಸ್ಯೆ"
+        },
+        "ml": {
+          "name": "അമാവാസ്യ"
+        },
+        "pa": {
+          "name": "ਅਮਾਵਸਿਆ"
+        },
+        "or": {
+          "name": "ଅମାବାସ୍ୟା"
+        },
+        "as": {
+          "name": "অমাৱস্যা"
+        }
+      }
+    }
   ]
 }

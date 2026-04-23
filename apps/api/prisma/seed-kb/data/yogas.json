@@ -2,32 +2,1139 @@
   "_source": "Names mined from apps/web/src/i18n/panchang-terms.ts (HI.yogas). These spellings (Priti, Sukarman, Shula) are canonical — the variants in daily-briefing.service.ts (Preeti, Sukarma, Shoola) are drift fixed during A1. Canon: classical 27-yoga cycle derived from Sun+Moon longitudes.",
   "_shape": "{ name: string }",
   "rows": [
-    { "key": "Vishkambha", "tradition": null, "i18n": { "en": { "name": "Vishkambha" }, "hi": { "name": "विष्कम्भ" } } },
-    { "key": "Priti",      "tradition": null, "i18n": { "en": { "name": "Priti" },      "hi": { "name": "प्रीति" } } },
-    { "key": "Ayushman",   "tradition": null, "i18n": { "en": { "name": "Ayushman" },   "hi": { "name": "आयुष्मान" } } },
-    { "key": "Saubhagya",  "tradition": null, "i18n": { "en": { "name": "Saubhagya" },  "hi": { "name": "सौभाग्य" } } },
-    { "key": "Shobhana",   "tradition": null, "i18n": { "en": { "name": "Shobhana" },   "hi": { "name": "शोभन" } } },
-    { "key": "Atiganda",   "tradition": null, "i18n": { "en": { "name": "Atiganda" },   "hi": { "name": "अतिगण्ड" } } },
-    { "key": "Sukarman",   "tradition": null, "i18n": { "en": { "name": "Sukarman" },   "hi": { "name": "सुकर्मा" } } },
-    { "key": "Dhriti",     "tradition": null, "i18n": { "en": { "name": "Dhriti" },     "hi": { "name": "धृति" } } },
-    { "key": "Shula",      "tradition": null, "i18n": { "en": { "name": "Shula" },      "hi": { "name": "शूल" } } },
-    { "key": "Ganda",      "tradition": null, "i18n": { "en": { "name": "Ganda" },      "hi": { "name": "गण्ड" } } },
-    { "key": "Vriddhi",    "tradition": null, "i18n": { "en": { "name": "Vriddhi" },    "hi": { "name": "वृद्धि" } } },
-    { "key": "Dhruva",     "tradition": null, "i18n": { "en": { "name": "Dhruva" },     "hi": { "name": "ध्रुव" } } },
-    { "key": "Vyaghata",   "tradition": null, "i18n": { "en": { "name": "Vyaghata" },   "hi": { "name": "व्याघात" } } },
-    { "key": "Harshana",   "tradition": null, "i18n": { "en": { "name": "Harshana" },   "hi": { "name": "हर्षण" } } },
-    { "key": "Vajra",      "tradition": null, "i18n": { "en": { "name": "Vajra" },      "hi": { "name": "वज्र" } } },
-    { "key": "Siddhi",     "tradition": null, "i18n": { "en": { "name": "Siddhi" },     "hi": { "name": "सिद्धि" } } },
-    { "key": "Vyatipata",  "tradition": null, "i18n": { "en": { "name": "Vyatipata" },  "hi": { "name": "व्यतीपात" } } },
-    { "key": "Variyan",    "tradition": null, "i18n": { "en": { "name": "Variyan" },    "hi": { "name": "वरीयान्" } } },
-    { "key": "Parigha",    "tradition": null, "i18n": { "en": { "name": "Parigha" },    "hi": { "name": "परिघ" } } },
-    { "key": "Shiva",      "tradition": null, "i18n": { "en": { "name": "Shiva" },      "hi": { "name": "शिव" } } },
-    { "key": "Siddha",     "tradition": null, "i18n": { "en": { "name": "Siddha" },     "hi": { "name": "सिद्ध" } } },
-    { "key": "Sadhya",     "tradition": null, "i18n": { "en": { "name": "Sadhya" },     "hi": { "name": "साध्य" } } },
-    { "key": "Shubha",     "tradition": null, "i18n": { "en": { "name": "Shubha" },     "hi": { "name": "शुभ" } } },
-    { "key": "Shukla",     "tradition": null, "i18n": { "en": { "name": "Shukla" },     "hi": { "name": "शुक्ल" } } },
-    { "key": "Brahma",     "tradition": null, "i18n": { "en": { "name": "Brahma" },     "hi": { "name": "ब्रह्म" } } },
-    { "key": "Indra",      "tradition": null, "i18n": { "en": { "name": "Indra" },      "hi": { "name": "इन्द्र" } } },
-    { "key": "Vaidhriti",  "tradition": null, "i18n": { "en": { "name": "Vaidhriti" },  "hi": { "name": "वैधृति" } } }
+    {
+      "key": "Vishkambha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vishkambha"
+        },
+        "hi": {
+          "name": "विष्कम्भ"
+        },
+        "ta": {
+          "name": "விஷ்கம்பா"
+        },
+        "te": {
+          "name": "విష్కంభ"
+        },
+        "bn": {
+          "name": "বিষ্কম্ভ"
+        },
+        "mr": {
+          "name": "विष्कंभ"
+        },
+        "gu": {
+          "name": "વિષ્કંભ"
+        },
+        "kn": {
+          "name": "ವಿಷ್ಕಂಭ"
+        },
+        "ml": {
+          "name": "വിഷ്കംഭ"
+        },
+        "pa": {
+          "name": "ਵਿਸ਼ਕੰਭਾ"
+        },
+        "or": {
+          "name": "ବିଷ୍କମ୍ଭ"
+        },
+        "as": {
+          "name": "বিষ্কম্ভ"
+        }
+      }
+    },
+    {
+      "key": "Priti",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Priti"
+        },
+        "hi": {
+          "name": "प्रीति"
+        },
+        "ta": {
+          "name": "ப்ரிதி"
+        },
+        "te": {
+          "name": "Priti"
+        },
+        "bn": {
+          "name": "প্রীতি"
+        },
+        "mr": {
+          "name": "Priti"
+        },
+        "gu": {
+          "name": "પ્રિતી"
+        },
+        "kn": {
+          "name": "ಪ್ರೀತಿ"
+        },
+        "ml": {
+          "name": "Priti"
+        },
+        "pa": {
+          "name": "ਪ੍ਰੀਤੀ"
+        },
+        "or": {
+          "name": "ପ୍ରିତି"
+        },
+        "as": {
+          "name": "প্ৰীতি"
+        }
+      }
+    },
+    {
+      "key": "Ayushman",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ayushman"
+        },
+        "hi": {
+          "name": "आयुष्मान"
+        },
+        "ta": {
+          "name": "ஆயுஷ்மான்"
+        },
+        "te": {
+          "name": "ఆయుష్మాన్"
+        },
+        "bn": {
+          "name": "আয়ুষ্মান"
+        },
+        "mr": {
+          "name": "आयुष्मान"
+        },
+        "gu": {
+          "name": "આયુષ્માન"
+        },
+        "kn": {
+          "name": "ಆಯುಷ್ಮಾನ್"
+        },
+        "ml": {
+          "name": "ആയുഷ്മാൻ"
+        },
+        "pa": {
+          "name": "ਆਯੁਸ਼ਮਾਨ"
+        },
+        "or": {
+          "name": "ଆୟୁଷ୍ମାନ"
+        },
+        "as": {
+          "name": "আয়ুষ্মান"
+        }
+      }
+    },
+    {
+      "key": "Saubhagya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Saubhagya"
+        },
+        "hi": {
+          "name": "सौभाग्य"
+        },
+        "ta": {
+          "name": "சௌபாக்ய"
+        },
+        "te": {
+          "name": "సౌభాగ్య"
+        },
+        "bn": {
+          "name": "সৌভাগ্য"
+        },
+        "mr": {
+          "name": "सौभाग्य"
+        },
+        "gu": {
+          "name": "સૌભાગ્ય"
+        },
+        "kn": {
+          "name": "ಸೌಭಾಗ್ಯ"
+        },
+        "ml": {
+          "name": "സൗഭാഗ്യ"
+        },
+        "pa": {
+          "name": "ਸੌਭਾਗਿਆ"
+        },
+        "or": {
+          "name": "ସୌଭାଗ୍ୟ"
+        },
+        "as": {
+          "name": "সৌভাগ্য"
+        }
+      }
+    },
+    {
+      "key": "Shobhana",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shobhana"
+        },
+        "hi": {
+          "name": "शोभन"
+        },
+        "ta": {
+          "name": "ஷோபனா"
+        },
+        "te": {
+          "name": "శోభన"
+        },
+        "bn": {
+          "name": "শোভনা"
+        },
+        "mr": {
+          "name": "शोभना"
+        },
+        "gu": {
+          "name": "શોભના"
+        },
+        "kn": {
+          "name": "ಶೋಭನಾ"
+        },
+        "ml": {
+          "name": "Shobhana"
+        },
+        "pa": {
+          "name": "ਸ਼ੋਭਨਾ"
+        },
+        "or": {
+          "name": "ଶୋଭନା"
+        },
+        "as": {
+          "name": "শোভনা"
+        }
+      }
+    },
+    {
+      "key": "Atiganda",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Atiganda"
+        },
+        "hi": {
+          "name": "अतिगण्ड"
+        },
+        "ta": {
+          "name": "அதிகண்ட"
+        },
+        "te": {
+          "name": "అతిగండ"
+        },
+        "bn": {
+          "name": "আতিগণ্ড"
+        },
+        "mr": {
+          "name": "अतिगंड"
+        },
+        "gu": {
+          "name": "અતિગંડ"
+        },
+        "kn": {
+          "name": "ಅತಿಗಂಡ"
+        },
+        "ml": {
+          "name": "അതിഗണ്ഡ"
+        },
+        "pa": {
+          "name": "ਅਤਿਗੰਡ"
+        },
+        "or": {
+          "name": "ଅତିଗଣ୍ଡ"
+        },
+        "as": {
+          "name": "অতিগণ্ড"
+        }
+      }
+    },
+    {
+      "key": "Sukarman",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sukarman"
+        },
+        "hi": {
+          "name": "सुकर्मा"
+        },
+        "ta": {
+          "name": "சுகர்மன்"
+        },
+        "te": {
+          "name": "సుకర్మన్"
+        },
+        "bn": {
+          "name": "সুকর্মা"
+        },
+        "mr": {
+          "name": "सुकर्मण"
+        },
+        "gu": {
+          "name": "સુકર્મન"
+        },
+        "kn": {
+          "name": "ಸುಕರ್ಮನ್"
+        },
+        "ml": {
+          "name": "സുകർമൻ"
+        },
+        "pa": {
+          "name": "ਸੁਕਰਮਨ"
+        },
+        "or": {
+          "name": "ଶୁଭକର୍ମା"
+        },
+        "as": {
+          "name": "সুকৰ্ম্মন"
+        }
+      }
+    },
+    {
+      "key": "Dhriti",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dhriti"
+        },
+        "hi": {
+          "name": "धृति"
+        },
+        "ta": {
+          "name": "த்ரிதி"
+        },
+        "te": {
+          "name": "ధృతి"
+        },
+        "bn": {
+          "name": "ধৃতি"
+        },
+        "mr": {
+          "name": "धृति"
+        },
+        "gu": {
+          "name": "ધૃતિ"
+        },
+        "kn": {
+          "name": "ಧೃತಿ"
+        },
+        "ml": {
+          "name": "ധൃതി"
+        },
+        "pa": {
+          "name": "ਧ੍ਰਿਤਿ"
+        },
+        "or": {
+          "name": "ଧୃତି"
+        },
+        "as": {
+          "name": "ধৃতি"
+        }
+      }
+    },
+    {
+      "key": "Shula",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shula"
+        },
+        "hi": {
+          "name": "शूल"
+        },
+        "ta": {
+          "name": "Shula"
+        },
+        "te": {
+          "name": "Shula"
+        },
+        "bn": {
+          "name": "শুলা"
+        },
+        "mr": {
+          "name": "शुला"
+        },
+        "gu": {
+          "name": "શૂલા"
+        },
+        "kn": {
+          "name": "ಶೂಲ"
+        },
+        "ml": {
+          "name": "ശൂല"
+        },
+        "pa": {
+          "name": "ਸ਼ੂਲਾ"
+        },
+        "or": {
+          "name": "ଶୂଳ"
+        },
+        "as": {
+          "name": "শুলা"
+        }
+      }
+    },
+    {
+      "key": "Ganda",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ganda"
+        },
+        "hi": {
+          "name": "गण्ड"
+        },
+        "ta": {
+          "name": "கண்ட"
+        },
+        "te": {
+          "name": "గండ"
+        },
+        "bn": {
+          "name": "গণ্ড"
+        },
+        "mr": {
+          "name": "गंडा"
+        },
+        "gu": {
+          "name": "ગંડ"
+        },
+        "kn": {
+          "name": "ಗಂಡ"
+        },
+        "ml": {
+          "name": "ഗണ്ഡ"
+        },
+        "pa": {
+          "name": "ਗੰਡ"
+        },
+        "or": {
+          "name": "ଗଣ୍ଡ"
+        },
+        "as": {
+          "name": "গণ্ড"
+        }
+      }
+    },
+    {
+      "key": "Vriddhi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vriddhi"
+        },
+        "hi": {
+          "name": "वृद्धि"
+        },
+        "ta": {
+          "name": "விருத்தி"
+        },
+        "te": {
+          "name": "వృద్ధి"
+        },
+        "bn": {
+          "name": "বৃদ্ধি"
+        },
+        "mr": {
+          "name": "वृद्धी"
+        },
+        "gu": {
+          "name": "વૃદ્ધિ"
+        },
+        "kn": {
+          "name": "ವೃದ್ಧಿ"
+        },
+        "ml": {
+          "name": "വൃദ്ധി"
+        },
+        "pa": {
+          "name": "ਵ੍ਰਿੱਧਿ"
+        },
+        "or": {
+          "name": "ବୃଦ୍ଧି"
+        },
+        "as": {
+          "name": "বৃদ্ধি"
+        }
+      }
+    },
+    {
+      "key": "Dhruva",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dhruva"
+        },
+        "hi": {
+          "name": "ध्रुव"
+        },
+        "ta": {
+          "name": "த்ருவா"
+        },
+        "te": {
+          "name": "ధ్రువ"
+        },
+        "bn": {
+          "name": "ধ্রুব"
+        },
+        "mr": {
+          "name": "ध्रुव"
+        },
+        "gu": {
+          "name": "ધ્રુવ"
+        },
+        "kn": {
+          "name": "ಧ್ರುವ"
+        },
+        "ml": {
+          "name": "ധ്രുവ"
+        },
+        "pa": {
+          "name": "ਧ੍ਰੁਵ"
+        },
+        "or": {
+          "name": "ଧ୍ରୁବ"
+        },
+        "as": {
+          "name": "ধ্ৰুৱ"
+        }
+      }
+    },
+    {
+      "key": "Vyaghata",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vyaghata"
+        },
+        "hi": {
+          "name": "व्याघात"
+        },
+        "ta": {
+          "name": "வ்யாகதா"
+        },
+        "te": {
+          "name": "వ్యాఘాత"
+        },
+        "bn": {
+          "name": "ব্যাঘাত"
+        },
+        "mr": {
+          "name": "व्याघात"
+        },
+        "gu": {
+          "name": "વ્યાઘાત"
+        },
+        "kn": {
+          "name": "ವ್ಯಾಘಾತ"
+        },
+        "ml": {
+          "name": "വ്യാഘാത"
+        },
+        "pa": {
+          "name": "ਵਿਆਘਾਤ"
+        },
+        "or": {
+          "name": "ଵ୍ୟାଘାତ"
+        },
+        "as": {
+          "name": "ব্যাঘাত"
+        }
+      }
+    },
+    {
+      "key": "Harshana",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Harshana"
+        },
+        "hi": {
+          "name": "हर्षण"
+        },
+        "ta": {
+          "name": "ஹர்ஷனா"
+        },
+        "te": {
+          "name": "హర్షణ"
+        },
+        "bn": {
+          "name": "হার্শানা"
+        },
+        "mr": {
+          "name": "हर्षणा"
+        },
+        "gu": {
+          "name": "હર્ષણા"
+        },
+        "kn": {
+          "name": "ಹರ್ಷಣ"
+        },
+        "ml": {
+          "name": "ഹർഷണ"
+        },
+        "pa": {
+          "name": "ਹਰਸ਼ਨਾ"
+        },
+        "or": {
+          "name": "ହର୍ଷଣା"
+        },
+        "as": {
+          "name": "হৰ্ষণা"
+        }
+      }
+    },
+    {
+      "key": "Vajra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vajra"
+        },
+        "hi": {
+          "name": "वज्र"
+        },
+        "ta": {
+          "name": "வஜ்ரா"
+        },
+        "te": {
+          "name": "వజ్ర"
+        },
+        "bn": {
+          "name": "বজ্র"
+        },
+        "mr": {
+          "name": "वज्र"
+        },
+        "gu": {
+          "name": "વજ્ર"
+        },
+        "kn": {
+          "name": "ವಜ್ರ"
+        },
+        "ml": {
+          "name": "വജ്ര"
+        },
+        "pa": {
+          "name": "ਵਜ੍ਰ"
+        },
+        "or": {
+          "name": "ବଜ୍ର"
+        },
+        "as": {
+          "name": "বজ্ৰ"
+        }
+      }
+    },
+    {
+      "key": "Siddhi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Siddhi"
+        },
+        "hi": {
+          "name": "सिद्धि"
+        },
+        "ta": {
+          "name": "சித்தி"
+        },
+        "te": {
+          "name": "సిద్ధి"
+        },
+        "bn": {
+          "name": "সিদ্ধি"
+        },
+        "mr": {
+          "name": "सिद्धी"
+        },
+        "gu": {
+          "name": "સિદ્ધિ"
+        },
+        "kn": {
+          "name": "ಸಿದ್ಧಿ"
+        },
+        "ml": {
+          "name": "സിദ്ധി"
+        },
+        "pa": {
+          "name": "ਸਿੱਧੀ"
+        },
+        "or": {
+          "name": "ସିଦ୍ଧି"
+        },
+        "as": {
+          "name": "সিদ্ধি"
+        }
+      }
+    },
+    {
+      "key": "Vyatipata",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vyatipata"
+        },
+        "hi": {
+          "name": "व्यतीपात"
+        },
+        "ta": {
+          "name": "வ்யதிபாத"
+        },
+        "te": {
+          "name": "వ్యతిపాత"
+        },
+        "bn": {
+          "name": "ব্যতিপাত"
+        },
+        "mr": {
+          "name": "व्यतीपात"
+        },
+        "gu": {
+          "name": "વ્યતિપાત"
+        },
+        "kn": {
+          "name": "ವ್ಯತಿಪಾತ"
+        },
+        "ml": {
+          "name": "വ്യതിപാത"
+        },
+        "pa": {
+          "name": "ਵਿਆਤਿਪਾਤ"
+        },
+        "or": {
+          "name": "ଵ୍ୟତୀପାତ"
+        },
+        "as": {
+          "name": "ব্যতীপাত"
+        }
+      }
+    },
+    {
+      "key": "Variyan",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Variyan"
+        },
+        "hi": {
+          "name": "वरीयान्"
+        },
+        "ta": {
+          "name": "வரியன்"
+        },
+        "te": {
+          "name": "వర్యాన్"
+        },
+        "bn": {
+          "name": "ভরিয়ান"
+        },
+        "mr": {
+          "name": "वऱियान"
+        },
+        "gu": {
+          "name": "વર્યન"
+        },
+        "kn": {
+          "name": "ವರಿಯನ್"
+        },
+        "ml": {
+          "name": "വരിയൻ"
+        },
+        "pa": {
+          "name": "ਵਰੀਅਨ"
+        },
+        "or": {
+          "name": "ଭାରିୟନ୍"
+        },
+        "as": {
+          "name": "ভাৰিয়ান"
+        }
+      }
+    },
+    {
+      "key": "Parigha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Parigha"
+        },
+        "hi": {
+          "name": "परिघ"
+        },
+        "ta": {
+          "name": "பரிக"
+        },
+        "te": {
+          "name": "పరిఘ"
+        },
+        "bn": {
+          "name": "পরিঘ"
+        },
+        "mr": {
+          "name": "परिघ"
+        },
+        "gu": {
+          "name": "પરિઘ"
+        },
+        "kn": {
+          "name": "ಪರಿಘ"
+        },
+        "ml": {
+          "name": "പരിഘ"
+        },
+        "pa": {
+          "name": "ਪਰਿਘਾ"
+        },
+        "or": {
+          "name": "ପରିଘ"
+        },
+        "as": {
+          "name": "পৰিঘ"
+        }
+      }
+    },
+    {
+      "key": "Shiva",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shiva"
+        },
+        "hi": {
+          "name": "शिव"
+        },
+        "ta": {
+          "name": "Shiva"
+        },
+        "te": {
+          "name": "శివ"
+        },
+        "bn": {
+          "name": "শিবা"
+        },
+        "mr": {
+          "name": "शिव"
+        },
+        "gu": {
+          "name": "શિવ"
+        },
+        "kn": {
+          "name": "ಶಿವ"
+        },
+        "ml": {
+          "name": "ശിവ"
+        },
+        "pa": {
+          "name": "ਸ਼ਿਵਾ"
+        },
+        "or": {
+          "name": "ଶିବ"
+        },
+        "as": {
+          "name": "শিৱা"
+        }
+      }
+    },
+    {
+      "key": "Siddha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Siddha"
+        },
+        "hi": {
+          "name": "सिद्ध"
+        },
+        "ta": {
+          "name": "சித்த"
+        },
+        "te": {
+          "name": "సిద్ధ"
+        },
+        "bn": {
+          "name": "সিদ্ধ"
+        },
+        "mr": {
+          "name": "सिद्ध"
+        },
+        "gu": {
+          "name": "સિદ્ધ"
+        },
+        "kn": {
+          "name": "ಸಿದ್ಧ"
+        },
+        "ml": {
+          "name": "സിദ്ധ"
+        },
+        "pa": {
+          "name": "ਸਿੱਧਾ"
+        },
+        "or": {
+          "name": "ସିଦ୍ଧ"
+        },
+        "as": {
+          "name": "সিদ্ধ"
+        }
+      }
+    },
+    {
+      "key": "Sadhya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sadhya"
+        },
+        "hi": {
+          "name": "साध्य"
+        },
+        "ta": {
+          "name": "சாத்யா"
+        },
+        "te": {
+          "name": "సాధ్య"
+        },
+        "bn": {
+          "name": "সাধ্য"
+        },
+        "mr": {
+          "name": "साध्य"
+        },
+        "gu": {
+          "name": "સાધ્ય"
+        },
+        "kn": {
+          "name": "ಸಾಧ್ಯ"
+        },
+        "ml": {
+          "name": "സാധ്യ"
+        },
+        "pa": {
+          "name": "ਸਾਧਿਆ"
+        },
+        "or": {
+          "name": "ସାଧ୍ୟ"
+        },
+        "as": {
+          "name": "সাধ্য"
+        }
+      }
+    },
+    {
+      "key": "Shubha",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shubha"
+        },
+        "hi": {
+          "name": "शुभ"
+        },
+        "ta": {
+          "name": "சுபா"
+        },
+        "te": {
+          "name": "శుభ"
+        },
+        "bn": {
+          "name": "শুভ"
+        },
+        "mr": {
+          "name": "शुभा"
+        },
+        "gu": {
+          "name": "શુભ"
+        },
+        "kn": {
+          "name": "ಶುಭ"
+        },
+        "ml": {
+          "name": "ശുഭ"
+        },
+        "pa": {
+          "name": "ਸ਼ੁਭਾ"
+        },
+        "or": {
+          "name": "ଶୁଭ"
+        },
+        "as": {
+          "name": "শুভ"
+        }
+      }
+    },
+    {
+      "key": "Shukla",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shukla"
+        },
+        "hi": {
+          "name": "शुक्ल"
+        },
+        "ta": {
+          "name": "சுக்லா"
+        },
+        "te": {
+          "name": "శుక్ల"
+        },
+        "bn": {
+          "name": "Shukla"
+        },
+        "mr": {
+          "name": "शुक्ल"
+        },
+        "gu": {
+          "name": "શુક્લ"
+        },
+        "kn": {
+          "name": "ಶುಕ್ಲ"
+        },
+        "ml": {
+          "name": "ശുക്ല"
+        },
+        "pa": {
+          "name": "ਸ਼ੁਕਲਾ"
+        },
+        "or": {
+          "name": "ଶୁକ୍ଲ"
+        },
+        "as": {
+          "name": "শুক্লা"
+        }
+      }
+    },
+    {
+      "key": "Brahma",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Brahma"
+        },
+        "hi": {
+          "name": "ब्रह्म"
+        },
+        "ta": {
+          "name": "பிரம்மா"
+        },
+        "te": {
+          "name": "బ్రహ్మ"
+        },
+        "bn": {
+          "name": "ব্রহ্মা"
+        },
+        "mr": {
+          "name": "ब्रह्मा"
+        },
+        "gu": {
+          "name": "બ્રહ્મા"
+        },
+        "kn": {
+          "name": "ಬ್ರಹ್ಮ"
+        },
+        "ml": {
+          "name": "ബ്രഹ്മ"
+        },
+        "pa": {
+          "name": "ਬ੍ਰਹਮਾ"
+        },
+        "or": {
+          "name": "ବ୍ରହ୍ମା"
+        },
+        "as": {
+          "name": "ব্ৰহ্মা"
+        }
+      }
+    },
+    {
+      "key": "Indra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Indra"
+        },
+        "hi": {
+          "name": "इन्द्र"
+        },
+        "ta": {
+          "name": "இந்திரா"
+        },
+        "te": {
+          "name": "ఇంద్ర"
+        },
+        "bn": {
+          "name": "ইন্দ্র"
+        },
+        "mr": {
+          "name": "इंद्र"
+        },
+        "gu": {
+          "name": "ઇન્દ્ર"
+        },
+        "kn": {
+          "name": "ಇಂದ್ರ"
+        },
+        "ml": {
+          "name": "ഇന്ദ്ര"
+        },
+        "pa": {
+          "name": "ਇੰਦਰ"
+        },
+        "or": {
+          "name": "ଇନ୍ଦ୍ର"
+        },
+        "as": {
+          "name": "ইন্দ্ৰ"
+        }
+      }
+    },
+    {
+      "key": "Vaidhriti",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vaidhriti"
+        },
+        "hi": {
+          "name": "वैधृति"
+        },
+        "ta": {
+          "name": "வைத்ரிதி"
+        },
+        "te": {
+          "name": "వైధృతి"
+        },
+        "bn": {
+          "name": "বৈধৃতি"
+        },
+        "mr": {
+          "name": "वैधृति"
+        },
+        "gu": {
+          "name": "वैधृति"
+        },
+        "kn": {
+          "name": "ವೈಧೃತಿ"
+        },
+        "ml": {
+          "name": "വൈധൃതി"
+        },
+        "pa": {
+          "name": "ਵੈਧ੍ਰਿਤਿ"
+        },
+        "or": {
+          "name": "ୱୈଧୃତି"
+        },
+        "as": {
+          "name": "বৈধৃতি"
+        }
+      }
+    }
   ]
 }
