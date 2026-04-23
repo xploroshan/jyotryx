@@ -1,5 +1,5 @@
 {
-  "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Phase A work should reduce these; bumps up require explicit user approval in review. Regenerate with: npm test -- llm-budget.spec.ts -- --update-baseline (TODO: implement flag).",
+  "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Track A (A1b..A5b) retired the translate-after pattern across daily-briefing, numerology, report fallback, and astrology — any ceiling above 0 now represents a *primary* LLM call (e.g. the AI-generation attempt inside getMuhurat), not a localization call. Bumps up require explicit user approval in review.",
   "version": 7,
   "scenarios": {
     "daily-briefing.en.fresh": {

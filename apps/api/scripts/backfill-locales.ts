@@ -53,7 +53,11 @@ async function main() {
             `PRESERVE as-is (do NOT translate): Sanskrit proper nouns (nakshatra names, yoga names, ` +
             `tithi names, planet names like Sun/Moon/Mars, zodiac signs), English-origin mantra ` +
             `transliterations like "Om Suryaya Namaha", and English technical terms already in the ` +
-            `text (e.g. "Gayatri Mantra"). Translate narrative phrases, activity descriptions, ` +
+            `text (e.g. "Gayatri Mantra"). PRESERVE ASCII digits (0-9) verbatim — NEVER convert to ` +
+            `native numerals (e.g. keep "9" as "9", not "৯"/"९"/"௯"/"٩"). This applies to numeric ` +
+            `token fields like "joyHouse" and to numbers embedded inside narrative sentences. ` +
+            `PRESERVE placeholder tokens like {name}, {house}, {planet} unchanged — they are ` +
+            `substituted by code at render time. Translate narrative phrases, activity descriptions, ` +
             `color names, and advice sentences fully. Preserve the exact JSON shape — same keys, ` +
             `same array lengths, same nested structure. Return ONLY the translated JSON object.`,
         },
