@@ -1,0 +1,96 @@
+{
+  "_source": "Lifted from BUSINESS_SECTORS in apps/api/src/modules/numerology/numerology.service.ts. Keyed by numerology name-number (1..9). Drives the `suitableFor` / `avoidFor` fields in the brand-analysis result. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ suitable: string[], avoid: string[] }",
+  "rows": [
+    {
+      "key": "1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Tech startups", "Leadership consulting", "Innovation labs", "Government"],
+          "avoid": ["Partnership businesses", "Service-oriented firms"]
+        }
+      }
+    },
+    {
+      "key": "2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Counseling", "Hospitality", "Healthcare", "Partnerships"],
+          "avoid": ["Aggressive sales", "Competitive industries"]
+        }
+      }
+    },
+    {
+      "key": "3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Media", "Entertainment", "Advertising", "Education"],
+          "avoid": ["Manufacturing", "Heavy industry"]
+        }
+      }
+    },
+    {
+      "key": "4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Construction", "IT services", "Manufacturing", "Real estate"],
+          "avoid": ["Creative agencies", "Fast-moving industries"]
+        }
+      }
+    },
+    {
+      "key": "5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Trading", "Travel", "E-commerce", "Stock market", "Marketing"],
+          "avoid": ["Slow-paced industries", "Government jobs"]
+        }
+      }
+    },
+    {
+      "key": "6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Fashion", "Beauty", "Food", "Luxury brands", "Interior design"],
+          "avoid": ["Military", "Heavy machinery"]
+        }
+      }
+    },
+    {
+      "key": "7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Research", "Technology", "Spiritual services", "Analytics", "Pharma"],
+          "avoid": ["Mass retail", "Entertainment"]
+        }
+      }
+    },
+    {
+      "key": "8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["Banking", "Real estate", "Large corporations", "Mining", "Law"],
+          "avoid": ["Small-scale retail", "Creative startups"]
+        }
+      }
+    },
+    {
+      "key": "9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "suitable": ["NGOs", "Defense", "Sports", "Healthcare", "Fire-related industries"],
+          "avoid": ["Passive income businesses"]
+        }
+      }
+    }
+  ]
+}

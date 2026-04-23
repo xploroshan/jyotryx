@@ -22,6 +22,9 @@ import * as varasData from './data/varas.json';
 import * as pakshasData from './data/pakshas.json';
 import * as professionInsightsData from './data/profession-insights.json';
 import * as briefingPhrasesData from './data/briefing-phrases.json';
+import * as numberMeaningsData from './data/number-meanings.json';
+import * as businessSectorsData from './data/business-sectors.json';
+import * as personalYearThemesData from './data/personal-year-themes.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -41,7 +44,10 @@ export interface SeedTable {
     | 'kbVara'
     | 'kbPaksha'
     | 'kbProfessionInsight'
-    | 'kbBriefingPhrase';
+    | 'kbBriefingPhrase'
+    | 'kbNumberMeaning'
+    | 'kbBusinessSector'
+    | 'kbPersonalYearTheme';
   /** Compound-unique index key for upsert `where`. */
   uniqueKey:
     | 'kb_planets_key_tradition_key'
@@ -51,7 +57,10 @@ export interface SeedTable {
     | 'kb_varas_key_tradition_key'
     | 'kb_pakshas_key_tradition_key'
     | 'kb_profession_insights_key_tradition_key'
-    | 'kb_briefing_phrases_key_tradition_key';
+    | 'kb_briefing_phrases_key_tradition_key'
+    | 'kb_number_meanings_key_tradition_key'
+    | 'kb_business_sectors_key_tradition_key'
+    | 'kb_personal_year_themes_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -111,5 +120,23 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_briefing_phrases_key_tradition_key',
     dataFile: 'data/briefing-phrases.json',
     rows: rowsOf(briefingPhrasesData),
+  },
+  {
+    modelName: 'kbNumberMeaning',
+    uniqueKey: 'kb_number_meanings_key_tradition_key',
+    dataFile: 'data/number-meanings.json',
+    rows: rowsOf(numberMeaningsData),
+  },
+  {
+    modelName: 'kbBusinessSector',
+    uniqueKey: 'kb_business_sectors_key_tradition_key',
+    dataFile: 'data/business-sectors.json',
+    rows: rowsOf(businessSectorsData),
+  },
+  {
+    modelName: 'kbPersonalYearTheme',
+    uniqueKey: 'kb_personal_year_themes_key_tradition_key',
+    dataFile: 'data/personal-year-themes.json',
+    rows: rowsOf(personalYearThemesData),
   },
 ];

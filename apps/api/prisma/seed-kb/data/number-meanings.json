@@ -1,0 +1,174 @@
+{
+  "_source": "Lifted from NUMBER_MEANINGS in apps/api/src/modules/numerology/numerology.service.ts. Keyed by numerology number (1..9, 11, 22, 33). Canon: Chaldean/Pythagorean synthesis — the 9 single-digit numbers plus the three master numbers (11, 22, 33). English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ planet: string, meaning: string, strengths: string[], cautions: string[], colors: string[], days: string[] }",
+  "rows": [
+    {
+      "key": "1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Sun",
+          "meaning": "Leadership, independence, originality, and pioneering spirit. The number of creators and innovators.",
+          "strengths": ["Natural leader", "Independent thinker", "Creative force", "Strong willpower"],
+          "cautions": ["Avoid arrogance", "Balance independence with collaboration", "Watch for stubbornness"],
+          "colors": ["Gold", "Orange", "Ruby Red"],
+          "days": ["Sunday"]
+        }
+      }
+    },
+    {
+      "key": "2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Moon",
+          "meaning": "Diplomacy, partnership, sensitivity, and cooperation. The number of peacemakers and mediators.",
+          "strengths": ["Excellent diplomat", "Strong intuition", "Team player", "Emotionally intelligent"],
+          "cautions": ["Avoid indecisiveness", "Set boundaries", "Don't suppress emotions"],
+          "colors": ["White", "Silver", "Light Green"],
+          "days": ["Monday"]
+        }
+      }
+    },
+    {
+      "key": "3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Jupiter",
+          "meaning": "Expression, creativity, joy, and expansion. The number of communicators and artists.",
+          "strengths": ["Creative expression", "Optimistic nature", "Social magnetism", "Excellent communicator"],
+          "cautions": ["Avoid scattered energy", "Follow through on projects", "Watch for overindulgence"],
+          "colors": ["Yellow", "Gold", "Purple"],
+          "days": ["Thursday"]
+        }
+      }
+    },
+    {
+      "key": "4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Rahu",
+          "meaning": "Stability, hard work, structure, and foundation. The number of builders and organizers.",
+          "strengths": ["Disciplined worker", "Practical thinker", "Reliable partner", "Detail-oriented"],
+          "cautions": ["Avoid rigidity", "Embrace change", "Don't overwork", "Unexpected events possible"],
+          "colors": ["Blue", "Grey", "Khaki"],
+          "days": ["Saturday", "Sunday"]
+        }
+      }
+    },
+    {
+      "key": "5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Mercury",
+          "meaning": "Freedom, versatility, adventure, and change. The number of travelers and communicators.",
+          "strengths": ["Adaptable mind", "Quick thinker", "Versatile skills", "Excellent in business"],
+          "cautions": ["Avoid restlessness", "Commit to decisions", "Don't spread too thin"],
+          "colors": ["Green", "Turquoise", "Light Grey"],
+          "days": ["Wednesday"]
+        }
+      }
+    },
+    {
+      "key": "6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Venus",
+          "meaning": "Harmony, love, responsibility, and beauty. The number of nurturers and caretakers.",
+          "strengths": ["Loving nature", "Artistic talent", "Sense of responsibility", "Magnetic personality"],
+          "cautions": ["Avoid self-sacrifice", "Set healthy boundaries", "Don't neglect self-care"],
+          "colors": ["Pink", "White", "Light Blue"],
+          "days": ["Friday"]
+        }
+      }
+    },
+    {
+      "key": "7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Ketu",
+          "meaning": "Spirituality, analysis, wisdom, and introspection. The number of seekers and researchers.",
+          "strengths": ["Deep thinker", "Spiritual awareness", "Analytical mind", "Research ability"],
+          "cautions": ["Avoid isolation", "Balance analysis with action", "Trust others more"],
+          "colors": ["Violet", "Grey", "Light Yellow"],
+          "days": ["Monday"]
+        }
+      }
+    },
+    {
+      "key": "8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Saturn",
+          "meaning": "Power, abundance, karma, and material mastery. The number of executives and achievers.",
+          "strengths": ["Business acumen", "Executive ability", "Material success", "Karmic wisdom"],
+          "cautions": ["Avoid ruthlessness", "Balance material and spiritual", "Watch for delays"],
+          "colors": ["Dark Blue", "Black", "Dark Grey"],
+          "days": ["Saturday"]
+        }
+      }
+    },
+    {
+      "key": "9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Mars",
+          "meaning": "Completion, humanitarianism, wisdom, and universal love. The number of warriors and healers.",
+          "strengths": ["Compassionate leader", "Universal outlook", "Courageous spirit", "Inspirational presence"],
+          "cautions": ["Avoid aggression", "Don't neglect personal needs", "Channel anger constructively"],
+          "colors": ["Red", "Crimson", "Scarlet"],
+          "days": ["Tuesday"]
+        }
+      }
+    },
+    {
+      "key": "11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Moon (Master)",
+          "meaning": "Master intuition, spiritual illumination, and visionary leadership. The number of enlightened teachers and healers.",
+          "strengths": ["Visionary insight", "Spiritual teacher", "Inspirational leader", "Heightened intuition"],
+          "cautions": ["Avoid nervous tension", "Ground your visions in reality", "Don't fear your own power"],
+          "colors": ["Silver", "White", "Pale Gold"],
+          "days": ["Monday"]
+        }
+      }
+    },
+    {
+      "key": "22",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Rahu (Master)",
+          "meaning": "Master builder, turning dreams into reality, and large-scale achievement. The number of architects and visionaries.",
+          "strengths": ["Master organizer", "Practical visionary", "Large-scale thinker", "Disciplined creator"],
+          "cautions": ["Avoid overwhelming yourself", "Delegate responsibilities", "Balance ambition with patience"],
+          "colors": ["Dark Gold", "Coral", "Cream"],
+          "days": ["Saturday", "Sunday"]
+        }
+      }
+    },
+    {
+      "key": "33",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "planet": "Jupiter (Master)",
+          "meaning": "Master teacher, selfless service, and cosmic compassion. The number of spiritual healers and uplifters.",
+          "strengths": ["Selfless service", "Cosmic healer", "Inspiring mentor", "Unconditional love"],
+          "cautions": ["Avoid martyrdom", "Care for yourself too", "Set healthy boundaries"],
+          "colors": ["Indigo", "Rose", "Deep Purple"],
+          "days": ["Thursday"]
+        }
+      }
+    }
+  ]
+}
