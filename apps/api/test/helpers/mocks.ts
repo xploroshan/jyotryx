@@ -39,7 +39,6 @@ export const mockKbService = () => ({
   getHellenisticPlanet: jest.fn().mockResolvedValue(null),
   render: jest.fn().mockReturnValue(null),
   renderStatus: jest.fn().mockReturnValue(null),
-  invalidate: jest.fn(),
 });
 
 export const mockOpenAIService = () => ({

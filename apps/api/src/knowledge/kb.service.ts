@@ -152,6 +152,11 @@ export class KbService {
     hellenisticPlanet: false,
   };
 
+  // Coalesces concurrent loads of the same table onto a single promise so
+  // burst traffic on a cold cache doesn't fire N `findMany` calls. Entry
+  // is deleted once the promise settles; subsequent calls see loaded=true.
+  private loading = new Map<keyof typeof this.loaded, Promise<void>>();
+
   constructor(private readonly prisma: PrismaService) {}
 
   // ─── Public API ─────────────────────────────────────────────────────────
@@ -295,35 +300,6 @@ export class KbService {
     return trStatus(row.i18n, locale);
   }
 
-  /** Invalidate all caches. Called after seed runs or admin updates. */
-  invalidate(): void {
-    this.planetCache.clear();
-    this.nakshatraCache.clear();
-    this.tithiCache.clear();
-    this.yogaCache.clear();
-    this.varaCache.clear();
-    this.pakshaCache.clear();
-    this.professionInsightCache.clear();
-    this.briefingPhraseCache.clear();
-    this.numberMeaningCache.clear();
-    this.businessSectorCache.clear();
-    this.personalYearThemeCache.clear();
-    this.reportSectionCache.clear();
-    this.zodiacSignCache.clear();
-    this.chineseAnimalCache.clear();
-    this.flyingStarCache.clear();
-    this.karanaCache.clear();
-    this.doshaCache.clear();
-    this.hellenisticPlanetCache.clear();
-    this.loaded = {
-      planet: false, nakshatra: false, tithi: false, yoga: false,
-      vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
-      numberMeaning: false, businessSector: false, personalYearTheme: false,
-      reportSection: false, zodiacSign: false, chineseAnimal: false,
-      flyingStar: false, karana: false, dosha: false, hellenisticPlanet: false,
-    };
-  }
-
   // ─── Internals ──────────────────────────────────────────────────────────
 
   private lookup<T>(cache: Map<string, KbRow<T>>, key: string, tradition?: string | null): KbRow<T> | null {
@@ -336,131 +312,75 @@ export class KbService {
 
   private async ensureLoaded(table: keyof typeof this.loaded): Promise<void> {
     if (this.loaded[table]) return;
-    try {
-      switch (table) {
-        case 'planet':            await this.loadPlanets();            break;
-        case 'nakshatra':         await this.loadNakshatras();         break;
-        case 'tithi':             await this.loadTithis();             break;
-        case 'yoga':              await this.loadYogas();              break;
-        case 'vara':              await this.loadVaras();              break;
-        case 'paksha':            await this.loadPakshas();            break;
-        case 'professionInsight': await this.loadProfessionInsights(); break;
-        case 'briefingPhrase':    await this.loadBriefingPhrases();    break;
-        case 'numberMeaning':     await this.loadNumberMeanings();     break;
-        case 'businessSector':    await this.loadBusinessSectors();    break;
-        case 'personalYearTheme': await this.loadPersonalYearThemes(); break;
-        case 'reportSection':     await this.loadReportSections();     break;
-        case 'zodiacSign':        await this.loadZodiacSigns();        break;
-        case 'chineseAnimal':     await this.loadChineseAnimals();     break;
-        case 'flyingStar':        await this.loadFlyingStars();        break;
-        case 'karana':            await this.loadKaranas();            break;
-        case 'dosha':             await this.loadDoshas();             break;
-        case 'hellenisticPlanet': await this.loadHellenisticPlanets(); break;
+    const inflight = this.loading.get(table);
+    if (inflight) return inflight;
+    const p = (async () => {
+      try {
+        switch (table) {
+          case 'planet':            await this.loadPlanets();            break;
+          case 'nakshatra':         await this.loadNakshatras();         break;
+          case 'tithi':             await this.loadTithis();             break;
+          case 'yoga':              await this.loadYogas();              break;
+          case 'vara':              await this.loadVaras();              break;
+          case 'paksha':            await this.loadPakshas();            break;
+          case 'professionInsight': await this.loadProfessionInsights(); break;
+          case 'briefingPhrase':    await this.loadBriefingPhrases();    break;
+          case 'numberMeaning':     await this.loadNumberMeanings();     break;
+          case 'businessSector':    await this.loadBusinessSectors();    break;
+          case 'personalYearTheme': await this.loadPersonalYearThemes(); break;
+          case 'reportSection':     await this.loadReportSections();     break;
+          case 'zodiacSign':        await this.loadZodiacSigns();        break;
+          case 'chineseAnimal':     await this.loadChineseAnimals();     break;
+          case 'flyingStar':        await this.loadFlyingStars();        break;
+          case 'karana':            await this.loadKaranas();            break;
+          case 'dosha':             await this.loadDoshas();             break;
+          case 'hellenisticPlanet': await this.loadHellenisticPlanets(); break;
+        }
+        this.loaded[table] = true;
+      } catch (err) {
+        // DB unavailable or migration not applied yet — fail open. Callers
+        // treat a null lookup as "not in KB, fall back to legacy path".
+        // `loaded` stays false so a subsequent request will retry.
+        this.logger.warn(`KB ${table} load failed: ${(err as Error).message}`);
+      } finally {
+        this.loading.delete(table);
       }
-      this.loaded[table] = true;
-    } catch (err) {
-      // DB unavailable or migration not applied yet — fail open. Callers
-      // treat a null lookup as "not in KB, fall back to legacy path".
-      this.logger.warn(`KB ${table} load failed: ${(err as Error).message}`);
-    }
+    })();
+    this.loading.set(table, p);
+    return p;
   }
 
-  private async loadPlanets(): Promise<void> {
-    const rows = await this.prisma.kbPlanet.findMany();
-    for (const r of rows) this.planetCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadNakshatras(): Promise<void> {
-    const rows = await this.prisma.kbNakshatra.findMany();
-    for (const r of rows) this.nakshatraCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadTithis(): Promise<void> {
-    const rows = await this.prisma.kbTithi.findMany();
-    for (const r of rows) this.tithiCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadYogas(): Promise<void> {
-    const rows = await this.prisma.kbYoga.findMany();
-    for (const r of rows) this.yogaCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadVaras(): Promise<void> {
-    const rows = await this.prisma.kbVara.findMany();
-    for (const r of rows) this.varaCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadPakshas(): Promise<void> {
-    const rows = await this.prisma.kbPaksha.findMany();
-    for (const r of rows) this.pakshaCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadProfessionInsights(): Promise<void> {
-    const model: any = (this.prisma as any).kbProfessionInsight;
-    if (!model?.findMany) return;
+  // Generic loader: all Kb* tables share the same {key, tradition, i18n}
+  // row shape, so `findMany` → bulk-populate is identical across tables.
+  // The `as any` casts bridge Prisma's JSON-typed i18n column with the
+  // strongly-typed cache entries — shape correctness is asserted by
+  // integrity.spec.ts at CI time.
+  private async loadInto<T>(
+    model: { findMany: () => Promise<any[]> },
+    cache: Map<string, KbRow<T>>,
+  ): Promise<void> {
     const rows = await model.findMany();
-    for (const r of rows) this.professionInsightCache.set(cacheKey(r.key, r.tradition), r as any);
+    for (const r of rows) cache.set(cacheKey(r.key, r.tradition), r as any);
   }
-  private async loadBriefingPhrases(): Promise<void> {
-    const model: any = (this.prisma as any).kbBriefingPhrase;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.briefingPhraseCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadNumberMeanings(): Promise<void> {
-    const model: any = (this.prisma as any).kbNumberMeaning;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.numberMeaningCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadBusinessSectors(): Promise<void> {
-    const model: any = (this.prisma as any).kbBusinessSector;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.businessSectorCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadPersonalYearThemes(): Promise<void> {
-    const model: any = (this.prisma as any).kbPersonalYearTheme;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.personalYearThemeCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadReportSections(): Promise<void> {
-    const model: any = (this.prisma as any).kbReportSection;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.reportSectionCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadZodiacSigns(): Promise<void> {
-    const model: any = (this.prisma as any).kbZodiacSign;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.zodiacSignCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadChineseAnimals(): Promise<void> {
-    const model: any = (this.prisma as any).kbChineseAnimal;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.chineseAnimalCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadFlyingStars(): Promise<void> {
-    const model: any = (this.prisma as any).kbFlyingStar;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.flyingStarCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadKaranas(): Promise<void> {
-    const model: any = (this.prisma as any).kbKarana;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.karanaCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadDoshas(): Promise<void> {
-    const model: any = (this.prisma as any).kbDosha;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.doshaCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
-  private async loadHellenisticPlanets(): Promise<void> {
-    const model: any = (this.prisma as any).kbHellenisticPlanet;
-    if (!model?.findMany) return;
-    const rows = await model.findMany();
-    for (const r of rows) this.hellenisticPlanetCache.set(cacheKey(r.key, r.tradition), r as any);
-  }
+
+  private loadPlanets()            { return this.loadInto(this.prisma.kbPlanet,            this.planetCache); }
+  private loadNakshatras()         { return this.loadInto(this.prisma.kbNakshatra,         this.nakshatraCache); }
+  private loadTithis()             { return this.loadInto(this.prisma.kbTithi,             this.tithiCache); }
+  private loadYogas()              { return this.loadInto(this.prisma.kbYoga,              this.yogaCache); }
+  private loadVaras()              { return this.loadInto(this.prisma.kbVara,              this.varaCache); }
+  private loadPakshas()            { return this.loadInto(this.prisma.kbPaksha,            this.pakshaCache); }
+  private loadProfessionInsights() { return this.loadInto(this.prisma.kbProfessionInsight, this.professionInsightCache); }
+  private loadBriefingPhrases()    { return this.loadInto(this.prisma.kbBriefingPhrase,    this.briefingPhraseCache); }
+  private loadNumberMeanings()     { return this.loadInto(this.prisma.kbNumberMeaning,     this.numberMeaningCache); }
+  private loadBusinessSectors()    { return this.loadInto(this.prisma.kbBusinessSector,    this.businessSectorCache); }
+  private loadPersonalYearThemes() { return this.loadInto(this.prisma.kbPersonalYearTheme, this.personalYearThemeCache); }
+  private loadReportSections()     { return this.loadInto(this.prisma.kbReportSection,     this.reportSectionCache); }
+  private loadZodiacSigns()        { return this.loadInto(this.prisma.kbZodiacSign,        this.zodiacSignCache); }
+  private loadChineseAnimals()     { return this.loadInto(this.prisma.kbChineseAnimal,     this.chineseAnimalCache); }
+  private loadFlyingStars()        { return this.loadInto(this.prisma.kbFlyingStar,        this.flyingStarCache); }
+  private loadKaranas()            { return this.loadInto(this.prisma.kbKarana,            this.karanaCache); }
+  private loadDoshas()             { return this.loadInto(this.prisma.kbDosha,             this.doshaCache); }
+  private loadHellenisticPlanets() { return this.loadInto(this.prisma.kbHellenisticPlanet, this.hellenisticPlanetCache); }
 }
 
 function cacheKey(key: string, tradition: string | null | undefined): string {

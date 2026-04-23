@@ -483,7 +483,7 @@ export class AstrologyService {
         ? 'dosha.mangal.cancelled_exalted'
         : 'dosha.mangal.cancelled_jupiter';
     } else {
-      mangalVars.houseOrdinal = `${marsHouse}${marsHouse === 1 ? 'st' : marsHouse === 2 ? 'nd' : 'th'}`;
+      mangalVars.house = marsHouse!;
       mangalDescKey = 'dosha.mangal.present';
     }
     const mangalPresent = isManglik && !manglikCancelled;
@@ -577,7 +577,7 @@ export class AstrologyService {
     'dosha.mangal.absent':             'No Mangal Dosha detected. Mars is well-placed in your chart.',
     'dosha.mangal.cancelled_exalted':  'Mars is in house {house} (Manglik position) but the dosha is cancelled due to Mars being exalted.',
     'dosha.mangal.cancelled_jupiter':  'Mars is in house {house} (Manglik position) but the dosha is cancelled due to Jupiter\'s benefic influence.',
-    'dosha.mangal.present':            'Mars is placed in the {houseOrdinal} house, creating Mangal Dosha. This may affect marital harmony.',
+    'dosha.mangal.present':            'Mars is placed in the {house}th house, creating Mangal Dosha. This may affect marital harmony.',
     'dosha.mangal.severe_suffix':      ' Mars in 7th house is the most severe form.',
     'dosha.mangal.birth_required':     'Birth details required for accurate Mangal Dosha analysis. Please update your profile.',
     'dosha.kaal_sarp.present':         'All planets are hemmed between Rahu (house {rahuHouse}) and Ketu (house {ketuHouse}), forming Kaal Sarp Dosha. This may cause sudden ups and downs in life. The dosha weakens after age 33.',
