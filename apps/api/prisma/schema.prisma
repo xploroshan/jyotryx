@@ -573,6 +573,18 @@ model KbPersonalYearTheme {
   @@map("kb_personal_year_themes")
 }
 
+model KbReportSection {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// Composite "{TYPE}:{order}", e.g. "LIFE:1", "MARRIAGE:4"
+  tradition  String?
+  i18n       Json     /// { en: { title, content }, hi: {...}, ... }; `content` may carry a `{name}` placeholder
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_report_sections_key_tradition_key", map: "kb_report_sections_key_tradition_key")
+  @@map("kb_report_sections")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

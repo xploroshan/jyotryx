@@ -196,6 +196,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: UserService, useValue: mockUserService() },
           { provide: OpenAIService, useValue: failingOpenAI },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
         ],
       }).compile();
 

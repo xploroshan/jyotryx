@@ -5,8 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
 import { LlmService } from '../llm/llm.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
+import { KbService, KbReportSectionPayload } from '../knowledge/kb.service';
 import { UserService } from '../modules/user/user.service';
-import { getLocaleInstruction, translateFields } from '../common/locale';
+import { getLocaleInstruction } from '../common/locale';
 import { REPORT_QUEUE } from './queue.constants';
 
 export interface ReportJobData {
@@ -30,6 +31,7 @@ export class ReportProcessor extends WorkerHost {
     private readonly openaiService: OpenAIService,
     private readonly llmService: LlmService,
     private readonly knowledgeService: KnowledgeService,
+    private readonly kbService: KbService,
     private readonly userService: UserService,
   ) {
     super();
@@ -79,7 +81,7 @@ export class ReportProcessor extends WorkerHost {
     locale?: string,
   ) {
     if (!birthDetails.dateOfBirth) {
-      return this.localizeSections(this.getFallbackSections(type, name), locale);
+      return this.loadFallbackSections(type, name, locale);
     }
 
     const kbCategoryMap: Record<string, string> = {
@@ -169,29 +171,33 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
       return result.sections;
     }
 
-    return this.localizeSections(this.getFallbackSections(type, name), locale);
+    return this.loadFallbackSections(type, name, locale);
   }
 
-  private async localizeSections(
-    sections: { title: string; content: string; order: number }[],
+  /**
+   * Render the 6-section fallback in the user's locale from
+   * KbReportSection. Falls back to English titles + a stub content when
+   * the KB cache is cold. Both the service's sync path and this queue
+   * processor's async path go through the same KB rows, so users get a
+   * consistent fallback regardless of which path generated the report.
+   */
+  private async loadFallbackSections(
+    type: string,
+    name: string,
     locale?: string,
   ): Promise<{ title: string; content: string; order: number }[]> {
-    if (!locale || locale === 'en' || sections.length === 0) return sections;
-    const titles = sections.map(s => s.title);
-    const contents = sections.map(s => s.content);
-    const translated = await translateFields(
-      this.openaiService,
-      { titles, contents },
-      locale,
-      'report-fallback',
+    const titles = this.getSectionTitles(type);
+    const rows = await Promise.all(
+      titles.map((_, i) => this.kbService.getReportSection(type, i + 1)),
     );
-    const tTitles = Array.isArray((translated as any).titles) ? (translated as any).titles as string[] : titles;
-    const tContents = Array.isArray((translated as any).contents) ? (translated as any).contents as string[] : contents;
-    return sections.map((s, i) => ({
-      title: tTitles[i] ?? s.title,
-      content: tContents[i] ?? s.content,
-      order: s.order,
-    }));
+    return titles.map((fallbackTitle, i) => {
+      const payload: KbReportSectionPayload | null = this.kbService.render(rows[i], locale);
+      const title = payload?.title ?? fallbackTitle;
+      const content = (payload?.content
+        ?? `${name}, your ${type.toLowerCase()} report has been generated based on Vedic astrological principles.`
+      ).replace(/\{name\}/g, name);
+      return { title, content, order: i + 1 };
+    });
   }
 
   private getSectionTitles(type: string): string[] {
@@ -204,13 +210,5 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
       ANNUAL: ['Year Overview', 'Quarter 1 Forecast (Jan-Mar)', 'Quarter 2 Forecast (Apr-Jun)', 'Quarter 3 Forecast (Jul-Sep)', 'Quarter 4 Forecast (Oct-Dec)', 'Annual Remedies & Lucky Periods'],
     };
     return titles[type] || titles.LIFE;
-  }
-
-  private getFallbackSections(type: string, name: string) {
-    return [
-      { title: 'Overview', content: `${name}, your ${type.toLowerCase()} report has been generated based on Vedic astrological principles. The planetary positions at your time of birth reveal important insights about your life path.`, order: 1 },
-      { title: 'Analysis', content: `The current planetary transits and Dasha periods indicate significant developments ahead. Jupiter and Saturn's influences suggest a period of growth and consolidation.`, order: 2 },
-      { title: 'Recommendations', content: `To strengthen beneficial planetary influences, practice meditation, observe fasting on days ruled by your chart's key planets, and consider consulting an astrologer for personalized gemstone recommendations.`, order: 3 },
-    ];
   }
 }

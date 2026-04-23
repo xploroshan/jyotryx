@@ -54,6 +54,11 @@ export interface KbPersonalYearThemePayload {
   health: string;
 }
 
+export interface KbReportSectionPayload {
+  title: string;
+  content: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -88,6 +93,7 @@ export class KbService {
   private numberMeaningCache = new Map<string, KbRow<KbNumberMeaningPayload>>();
   private businessSectorCache = new Map<string, KbRow<KbBusinessSectorPayload>>();
   private personalYearThemeCache = new Map<string, KbRow<KbPersonalYearThemePayload>>();
+  private reportSectionCache = new Map<string, KbRow<KbReportSectionPayload>>();
 
   private loaded = {
     planet: false,
@@ -101,6 +107,7 @@ export class KbService {
     numberMeaning: false,
     businessSector: false,
     personalYearTheme: false,
+    reportSection: false,
   };
 
   constructor(private readonly prisma: PrismaService) {}
@@ -174,6 +181,15 @@ export class KbService {
     return this.lookup(this.personalYearThemeCache, key, null);
   }
 
+  /**
+   * Report fallback section. Composite key `"{TYPE}:{order}"` — e.g.
+   * `getReportSection("LIFE", 3)` resolves `"LIFE:3"`.
+   */
+  async getReportSection(type: string, order: number): Promise<KbRow<KbReportSectionPayload> | null> {
+    await this.ensureLoaded('reportSection');
+    return this.lookup(this.reportSectionCache, `${type}:${order}`, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -199,10 +215,12 @@ export class KbService {
     this.numberMeaningCache.clear();
     this.businessSectorCache.clear();
     this.personalYearThemeCache.clear();
+    this.reportSectionCache.clear();
     this.loaded = {
       planet: false, nakshatra: false, tithi: false, yoga: false,
       vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
       numberMeaning: false, businessSector: false, personalYearTheme: false,
+      reportSection: false,
     };
   }
 
@@ -231,6 +249,7 @@ export class KbService {
         case 'numberMeaning':     await this.loadNumberMeanings();     break;
         case 'businessSector':    await this.loadBusinessSectors();    break;
         case 'personalYearTheme': await this.loadPersonalYearThemes(); break;
+        case 'reportSection':     await this.loadReportSections();     break;
       }
       this.loaded[table] = true;
     } catch (err) {
@@ -293,6 +312,12 @@ export class KbService {
     if (!model?.findMany) return;
     const rows = await model.findMany();
     for (const r of rows) this.personalYearThemeCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadReportSections(): Promise<void> {
+    const model: any = (this.prisma as any).kbReportSection;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.reportSectionCache.set(cacheKey(r.key, r.tradition), r as any);
   }
 }
 

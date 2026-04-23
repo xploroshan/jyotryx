@@ -8,20 +8,23 @@
  * migrate to the KB. A PR that raises any ceiling must justify it in
  * review.
  *
- * Coverage: daily briefing (A1b) and numerology (A2b). Report-section
- * translation and chat land under future Track A phases.
+ * Coverage: daily briefing (A1b), numerology (A2b), report fallback (A3b).
+ * Astrology + chat land under future Track A phases.
  */
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
+import { ReportService } from '../src/modules/report/report.service';
+import { UserService } from '../src/modules/user/user.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
-import { mockPrismaService, mockKnowledgeService, mockKbService, mockCacheService, mockUser } from './helpers/mocks';
+import { mockPrismaService, mockKnowledgeService, mockKbService, mockCacheService, mockUser, mockUserService, mockConfigService } from './helpers/mocks';
 
 interface Baseline {
   scenarios: Record<string, { maxCalls: number; description: string }>;
@@ -168,6 +171,53 @@ describe('LLM cost regression budget', () => {
       await service.getPersonalYear('1990-05-15', 'hi');
       const budget = scenarioBudget('numerology.personalYear.hi.fresh');
       expect(counter.calls.length).toBeLessThanOrEqual(budget);
+    });
+  });
+
+  describe('report fallback', () => {
+    let service: ReportService;
+    let counter: ReturnType<typeof countingOpenAI>;
+
+    beforeEach(async () => {
+      counter = countingOpenAI();
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          ReportService,
+          { provide: PrismaService, useValue: mockPrismaService() },
+          { provide: ConfigService, useValue: mockConfigService() },
+          { provide: UserService, useValue: mockUserService() },
+          { provide: OpenAIService, useValue: counter.stub },
+          { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
+        ],
+      }).compile();
+      service = module.get(ReportService);
+    });
+
+    // Both scenarios exercise the fallback path by passing an empty
+    // birthDate, so `generateAIReportSections` skips the LLM call and
+    // goes straight to KbReportSection. The normal (LLM-generated) path
+    // is already locale-aware via getLocaleInstruction and costs
+    // exactly 1 LLM call for the generation itself regardless of locale,
+    // so it doesn't need a separate budget scenario here.
+    const run = (locale: string) =>
+      (service as any).generateAIReportSections(
+        'LIFE',
+        { dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' },
+        'Test User',
+        'Male',
+        'test-uuid',
+        locale,
+      );
+
+    it('report.fallback.en.fresh stays within budget', async () => {
+      await run('en');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('report.fallback.en.fresh'));
+    });
+
+    it('report.fallback.hi.fresh stays within budget', async () => {
+      await run('hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('report.fallback.hi.fresh'));
     });
   });
 });

@@ -4,9 +4,10 @@ import { PalmistryProcessor } from '../src/queue/palmistry.processor';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { UserService } from '../src/modules/user/user.service';
 import { StorageService } from '../src/storage/storage.service';
-import { mockOpenAIService, mockKnowledgeService, mockUserService } from './helpers/mocks';
+import { mockOpenAIService, mockKnowledgeService, mockKbService, mockUserService } from './helpers/mocks';
 
 describe('ReportProcessor (Item 2 — BullMQ)', () => {
   let processor: ReportProcessor;
@@ -36,6 +37,7 @@ describe('ReportProcessor (Item 2 — BullMQ)', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: openaiService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: UserService, useValue: userService },
       ],
     }).compile();
@@ -150,6 +152,7 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: UserService, useValue: userService },
         { provide: StorageService, useValue: storageService },
       ],
