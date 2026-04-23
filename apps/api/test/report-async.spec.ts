@@ -6,8 +6,9 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { REPORT_QUEUE } from '../src/queue/queue.module';
-import { mockOpenAIService, mockKnowledgeService, mockUserService, mockUser } from './helpers/mocks';
+import { mockOpenAIService, mockKnowledgeService, mockKbService, mockUserService, mockUser } from './helpers/mocks';
 
 describe('ReportService — Async Queue Path (Item 2)', () => {
   let service: ReportService;
@@ -56,6 +57,7 @@ describe('ReportService — Async Queue Path (Item 2)', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: openaiService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
         { provide: getQueueToken(REPORT_QUEUE), useValue: reportQueue },
       ],
     }).compile();
@@ -178,6 +180,7 @@ describe('ReportService — Sync Fallback', () => {
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: openaiService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 

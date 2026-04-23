@@ -10,10 +10,12 @@ import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
 import {
   mockKnowledgeService,
+  mockKbService,
   mockOpenAIService,
   mockPrismaService,
   mockConfigService,
@@ -51,6 +53,7 @@ describe('E2E: Auth → Chat Flow', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 
@@ -190,6 +193,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 
@@ -248,6 +252,7 @@ describe('E2E: Chat Session Lifecycle', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 
@@ -496,6 +501,7 @@ describe('E2E: Report Flow', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 
@@ -590,6 +596,7 @@ describe('E2E: Report Flow', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 
@@ -982,6 +989,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 

@@ -310,6 +310,7 @@ describe('Performance: Report Operations', () => {
         { provide: UserService, useValue: mockUserService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 

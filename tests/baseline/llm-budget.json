@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Phase A work should reduce these; bumps up require explicit user approval in review. Regenerate with: npm test -- llm-budget.spec.ts -- --update-baseline (TODO: implement flag).",
-  "version": 3,
+  "version": 4,
   "scenarios": {
     "daily-briefing.en.fresh": {
       "maxCalls": 0,
@@ -29,6 +29,14 @@
     "numerology.personalYear.hi.fresh": {
       "maxCalls": 0,
       "description": "Hindi personal-year analysis. A2b flipped yearly theme + monthly focuses + month names to KbPersonalYearTheme + KbBriefingPhrase."
+    },
+    "report.fallback.en.fresh": {
+      "maxCalls": 0,
+      "description": "English report fallback path (no birth details OR LLM generation failed). A3b flipped fallback titles/contents to KbReportSection — no LLM calls on this path."
+    },
+    "report.fallback.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi report fallback path. A3b removed translateFields from report.service.ts + report.processor.ts. The normal LLM-generation path was already locale-aware via getLocaleInstruction in the system prompt, so no additional flips needed there."
     }
   }
 }

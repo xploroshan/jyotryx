@@ -25,6 +25,7 @@ import * as briefingPhrasesData from './data/briefing-phrases.json';
 import * as numberMeaningsData from './data/number-meanings.json';
 import * as businessSectorsData from './data/business-sectors.json';
 import * as personalYearThemesData from './data/personal-year-themes.json';
+import * as reportSectionsData from './data/report-sections.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -47,7 +48,8 @@ export interface SeedTable {
     | 'kbBriefingPhrase'
     | 'kbNumberMeaning'
     | 'kbBusinessSector'
-    | 'kbPersonalYearTheme';
+    | 'kbPersonalYearTheme'
+    | 'kbReportSection';
   /** Compound-unique index key for upsert `where`. */
   uniqueKey:
     | 'kb_planets_key_tradition_key'
@@ -60,7 +62,8 @@ export interface SeedTable {
     | 'kb_briefing_phrases_key_tradition_key'
     | 'kb_number_meanings_key_tradition_key'
     | 'kb_business_sectors_key_tradition_key'
-    | 'kb_personal_year_themes_key_tradition_key';
+    | 'kb_personal_year_themes_key_tradition_key'
+    | 'kb_report_sections_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -138,5 +141,11 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_personal_year_themes_key_tradition_key',
     dataFile: 'data/personal-year-themes.json',
     rows: rowsOf(personalYearThemesData),
+  },
+  {
+    modelName: 'kbReportSection',
+    uniqueKey: 'kb_report_sections_key_tradition_key',
+    dataFile: 'data/report-sections.json',
+    rows: rowsOf(reportSectionsData),
   },
 ];

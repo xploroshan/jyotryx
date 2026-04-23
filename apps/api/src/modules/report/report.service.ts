@@ -6,7 +6,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
-import { getLocaleInstruction, translateFields } from '../../common/locale';
+import { KbService } from '../../knowledge/kb.service';
+import { getLocaleInstruction } from '../../common/locale';
 import { REPORT_QUEUE } from '../../queue/queue.constants';
 import type { ReportJobData } from '../../queue/report.processor';
 
@@ -52,6 +53,7 @@ export class ReportService {
     private userService: UserService,
     private openaiService: OpenAIService,
     private knowledgeService: KnowledgeService,
+    private kbService: KbService,
     @Optional() @InjectQueue(REPORT_QUEUE) private reportQueue?: Queue<ReportJobData>,
   ) {
     this.queueEnabled = this.configService.get<string>('QUEUE_ENABLED', 'false') === 'true' && !!this.reportQueue;
@@ -185,7 +187,7 @@ export class ReportService {
     locale?: string,
   ): Promise<ReportSection[]> {
     if (!birthDetails.dateOfBirth) {
-      return this.localizeSections(this.getFallbackSections(type, birthDetails, name), locale);
+      return this.loadFallbackSections(type, name, locale);
     }
 
     try {
@@ -234,26 +236,26 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
       this.logger.error('OpenAI report generation failed, using fallback', error);
     }
 
-    return this.localizeSections(this.getFallbackSections(type, birthDetails, name), locale);
+    return this.loadFallbackSections(type, name, locale);
   }
 
-  private async localizeSections(sections: ReportSection[], locale?: string): Promise<ReportSection[]> {
-    if (!locale || locale === 'en' || sections.length === 0) return sections;
-    const titles = sections.map(s => s.title);
-    const contents = sections.map(s => s.content);
-    const translated = await translateFields(
-      this.openaiService,
-      { titles, contents },
-      locale,
-      'report-fallback',
+  /**
+   * Render the 6-section fallback for `type` in the user's locale from
+   * KbReportSection. Falls back to the inline English templates when the
+   * KB cache is cold (migration not applied / DB unavailable). Both the
+   * sync service path and the queue processor go through this.
+   */
+  private async loadFallbackSections(type: string, name: string, locale?: string): Promise<ReportSection[]> {
+    const fallback = this.getFallbackSections(type, name);
+    const rows = await Promise.all(
+      fallback.map((s) => this.kbService.getReportSection(type, s.order)),
     );
-    const tTitles = Array.isArray((translated as any).titles) ? (translated as any).titles as string[] : titles;
-    const tContents = Array.isArray((translated as any).contents) ? (translated as any).contents as string[] : contents;
-    return sections.map((s, i) => ({
-      title: tTitles[i] ?? s.title,
-      content: tContents[i] ?? s.content,
-      order: s.order,
-    }));
+    return fallback.map((s, i) => {
+      const payload = this.kbService.render(rows[i], locale);
+      const title = payload?.title ?? s.title;
+      const content = (payload?.content ?? s.content).replace(/\{name\}/g, name);
+      return { title, content, order: s.order };
+    });
   }
 
   private mapReportTypeToKB(type: string): string {
@@ -323,70 +325,60 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
     return structures[type] || structures.LIFE;
   }
 
-  private getFallbackSections(
-    type: string,
-    birthDetails: { dateOfBirth: string; timeOfBirth: string; placeOfBirth: string },
-    name: string,
-  ): ReportSection[] {
-    const hasBirth = !!birthDetails.dateOfBirth;
-    const dob = birthDetails.dateOfBirth ? new Date(birthDetails.dateOfBirth) : new Date();
-    const month = dob.getMonth();
-    const day = dob.getDate();
-
-    // Derive basic chart info for personalization
-    const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-    const signIdx = month;
-    const sign = signs[signIdx];
-    const moonSign = signs[(signIdx + Math.floor(day / 2.5)) % 12];
-
+  // English fallback sections — used only when the KB cache is cold
+  // (migration not applied / DB unavailable). Authoritative data is in
+  // KbReportSection; `{name}` placeholders are substituted by
+  // loadFallbackSections at render time.
+  private getFallbackSections(type: string, name: string): ReportSection[] {
+    const sub = (content: string) => content.replace(/\{name\}/g, name);
     const sections: Record<string, ReportSection[]> = {
       LIFE: [
-        { title: 'Birth Chart Overview', content: `${name}, your Vedic birth chart with ${hasBirth ? `Sun in ${sign} and Moon in ${moonSign}` : 'your planetary positions'} reveals a person of determination and emotional depth. The Lagna (Ascendant) lord's placement indicates strong self-expression and leadership potential. Your chart shows a balance between material pursuits and spiritual growth.`, order: 1 },
-        { title: 'Planetary Analysis', content: `The key planetary influences in your chart include Jupiter's beneficial aspect on your Kendra houses, suggesting wisdom and prosperity. Saturn's placement indicates disciplined growth through patience. ${hasBirth ? `Being born under ${moonSign} Rashi, your emotional intelligence is a core strength.` : ''} Venus and Mercury's positions favor creative and intellectual pursuits.`, order: 2 },
-        { title: 'Current Dasha Period', content: `The current Mahadasha period brings opportunities for personal transformation. Focus on long-term goals and investments during this transit. The sub-period (Antardasha) highlights relationships and social connections. This is a favorable time for education and skill development.`, order: 3 },
-        { title: 'Key Yogas', content: `Your chart shows the formation of significant Yogas that influence your life path. The presence of beneficial Yogas in Kendra houses suggests prosperity and wisdom. These planetary combinations indicate success through righteous actions and intellectual pursuits.`, order: 4 },
-        { title: 'Life Path & Destiny', content: `${name}, your life path is characterized by a journey of growth, learning, and meaningful contributions. The planetary alignments suggest peaks of achievement interspersed with periods of introspection. Your destiny points toward a life of influence and positive impact on those around you.`, order: 5 },
-        { title: 'Remedies & Recommendations', content: `To strengthen beneficial planetary influences: practice meditation during Brahma Muhurat (4:00-5:30 AM), ${hasBirth ? `wear gemstones suited to your ${sign} Lagna after consulting an astrologer,` : 'consult an astrologer for gemstone recommendations,'} perform charitable acts on Saturdays, and chant mantras dedicated to your ruling planet. Regular Surya Namaskar practice will energize the Sun's positive influence in your chart.`, order: 6 },
+        { title: 'Birth Chart Overview', content: sub("{name}, your Vedic birth chart reveals a person of determination and emotional depth. The Lagna (Ascendant) lord's placement indicates strong self-expression and leadership potential. Your chart shows a balance between material pursuits and spiritual growth."), order: 1 },
+        { title: 'Planetary Analysis', content: sub("The key planetary influences in your chart include Jupiter's beneficial aspect on your Kendra houses, suggesting wisdom and prosperity. Saturn's placement indicates disciplined growth through patience. Venus and Mercury's positions favor creative and intellectual pursuits."), order: 2 },
+        { title: 'Current Dasha Period', content: sub("The current Mahadasha period brings opportunities for personal transformation. Focus on long-term goals and investments during this transit. The sub-period (Antardasha) highlights relationships and social connections. This is a favorable time for education and skill development."), order: 3 },
+        { title: 'Key Yogas', content: sub("Your chart shows the formation of significant Yogas that influence your life path. The presence of beneficial Yogas in Kendra houses suggests prosperity and wisdom. These planetary combinations indicate success through righteous actions and intellectual pursuits."), order: 4 },
+        { title: 'Life Path & Destiny', content: sub("{name}, your life path is characterized by a journey of growth, learning, and meaningful contributions. The planetary alignments suggest peaks of achievement interspersed with periods of introspection. Your destiny points toward a life of influence and positive impact on those around you."), order: 5 },
+        { title: 'Remedies & Recommendations', content: sub("To strengthen beneficial planetary influences: practice meditation during Brahma Muhurat (4:00-5:30 AM), consult an astrologer for gemstone recommendations suited to your Lagna, perform charitable acts on Saturdays, and chant mantras dedicated to your ruling planet. Regular Surya Namaskar practice will energize the Sun's positive influence in your chart."), order: 6 },
       ],
       CAREER: [
-        { title: 'Professional Profile', content: `${name}, your birth chart indicates strong professional potential. ${hasBirth ? `With your ${sign} influence` : 'Your planetary positions'}, you possess natural leadership abilities and analytical thinking. The 10th house configuration suggests success in fields requiring discipline and strategic planning.`, order: 1 },
-        { title: 'Dashamsha Chart Analysis', content: `The D10 (Dashamsha) chart reveals your career destiny. The 10th lord's placement suggests advancement through merit and persistent effort. Current transits favor professional growth, especially in technology, management, or advisory roles.`, order: 2 },
-        { title: 'Current Career Transit', content: `Jupiter's favorable transit activates your career sector, bringing opportunities for advancement. Saturn's steady influence supports building long-term professional foundations. The next 12 months show promise for promotion or new ventures.`, order: 3 },
-        { title: 'Best Career Paths', content: `Based on your chart, careers in leadership, finance, technology, healthcare, or education align with your planetary strengths. Your Mercury placement particularly favors communication-heavy roles. Creative fields also show promise with Venus's beneficial aspect.`, order: 4 },
-        { title: 'Financial Outlook', content: `The 2nd and 11th house placements indicate steady income growth. Investments made during Jupiter's transit through your wealth houses will yield positive returns. Avoid speculative ventures during Rahu's unfavorable aspects.`, order: 5 },
-        { title: 'Career Remedies', content: `Strengthen your career prospects by: chanting the Gayatri Mantra daily, wearing a Yellow Sapphire (after astrological consultation), donating to educational causes on Thursdays, and beginning important professional undertakings during favorable Muhurat periods.`, order: 6 },
+        { title: 'Professional Profile', content: sub("{name}, your birth chart indicates strong professional potential. You possess natural leadership abilities and analytical thinking. The 10th house configuration suggests success in fields requiring discipline and strategic planning."), order: 1 },
+        { title: 'Dashamsha Chart Analysis', content: sub("The D10 (Dashamsha) chart reveals your career destiny. The 10th lord's placement suggests advancement through merit and persistent effort. Current transits favor professional growth, especially in technology, management, or advisory roles."), order: 2 },
+        { title: 'Current Career Transit', content: sub("Jupiter's favorable transit activates your career sector, bringing opportunities for advancement. Saturn's steady influence supports building long-term professional foundations. The next 12 months show promise for promotion or new ventures."), order: 3 },
+        { title: 'Best Career Paths', content: sub("Based on your chart, careers in leadership, finance, technology, healthcare, or education align with your planetary strengths. Your Mercury placement particularly favors communication-heavy roles. Creative fields also show promise with Venus's beneficial aspect."), order: 4 },
+        { title: 'Financial Outlook', content: sub("The 2nd and 11th house placements indicate steady income growth. Investments made during Jupiter's transit through your wealth houses will yield positive returns. Avoid speculative ventures during Rahu's unfavorable aspects."), order: 5 },
+        { title: 'Career Remedies', content: sub("Strengthen your career prospects by: chanting the Gayatri Mantra daily, wearing a Yellow Sapphire (after astrological consultation), donating to educational causes on Thursdays, and beginning important professional undertakings during favorable Muhurat periods."), order: 6 },
       ],
       MARRIAGE: [
-        { title: 'Relationship Profile', content: `${name}, your Navamsa chart reveals your approach to relationships and marriage. ${hasBirth ? `The ${moonSign} Moon sign` : 'Your emotional nature'} indicates deep loyalty and a desire for meaningful connections. Venus's placement shows your capacity for love and partnership.`, order: 1 },
-        { title: 'Navamsa Chart Analysis', content: `The D9 (Navamsa) chart is crucial for marriage analysis. Your Navamsa Lagna and its lord's placement suggest a harmonious married life with mutual respect. The 7th house configuration indicates a partner who complements your strengths.`, order: 2 },
-        { title: '7th House & Venus Analysis', content: `Venus's sign and house placement in your chart governs romantic inclinations. The 7th lord's dignity suggests a stable, supportive partner. Any planetary aspects on the 7th house indicate the nature and timing of significant relationships.`, order: 3 },
-        { title: 'Marriage Timing', content: `Based on Dasha periods and transits, favorable periods for marriage align with Jupiter and Venus Dashas. The current transit suggests relationship developments in the coming months. Look for Muhurat periods when Venus and Jupiter aspect your 7th house.`, order: 4 },
-        { title: 'Partner Compatibility', content: `Your ideal partner's Moon sign and Nakshatra should complement your own for Ashtakoota compatibility. The chart suggests compatibility with partners who share intellectual curiosity and emotional depth. A partner with complementary elemental energy will create the most harmonious union.`, order: 5 },
-        { title: 'Relationship Remedies', content: `To attract and maintain healthy relationships: worship Lord Shiva and Parvati together on Mondays, wear a Diamond or White Sapphire (Venus gemstone) after consultation, fast on Fridays, and chant the Shukra Beej Mantra for Venus's blessings.`, order: 6 },
+        { title: 'Relationship Profile', content: sub("{name}, your Navamsa chart reveals your approach to relationships and marriage. Your emotional nature indicates deep loyalty and a desire for meaningful connections. Venus's placement shows your capacity for love and partnership."), order: 1 },
+        { title: 'Navamsa Chart Analysis', content: sub("The D9 (Navamsa) chart is crucial for marriage analysis. Your Navamsa Lagna and its lord's placement suggest a harmonious married life with mutual respect. The 7th house configuration indicates a partner who complements your strengths."), order: 2 },
+        { title: '7th House & Venus Analysis', content: sub("Venus's sign and house placement in your chart governs romantic inclinations. The 7th lord's dignity suggests a stable, supportive partner. Any planetary aspects on the 7th house indicate the nature and timing of significant relationships."), order: 3 },
+        { title: 'Marriage Timing', content: sub("Based on Dasha periods and transits, favorable periods for marriage align with Jupiter and Venus Dashas. The current transit suggests relationship developments in the coming months. Look for Muhurat periods when Venus and Jupiter aspect your 7th house."), order: 4 },
+        { title: 'Partner Compatibility', content: sub("Your ideal partner's Moon sign and Nakshatra should complement your own for Ashtakoota compatibility. The chart suggests compatibility with partners who share intellectual curiosity and emotional depth. A partner with complementary elemental energy will create the most harmonious union."), order: 5 },
+        { title: 'Relationship Remedies', content: sub("To attract and maintain healthy relationships: worship Lord Shiva and Parvati together on Mondays, wear a Diamond or White Sapphire (Venus gemstone) after consultation, fast on Fridays, and chant the Shukra Beej Mantra for Venus's blessings."), order: 6 },
       ],
       WEALTH: [
-        { title: 'Financial Chart Analysis', content: `${name}, your birth chart's wealth indicators show promising financial potential. The 2nd house (accumulated wealth) and 11th house (income) configurations suggest steady financial growth through career and investments.`, order: 1 },
-        { title: '2nd & 11th House Study', content: `The lords of your 2nd and 11th houses and their planetary dignity determine your wealth trajectory. Benefic aspects on these houses indicate financial stability, while the Dasha of these lords brings peak earning periods.`, order: 2 },
-        { title: 'Dhana Yogas', content: `Your chart contains wealth-producing Yogas (Dhana Yogas) formed by the conjunction or mutual aspect of specific house lords. These Yogas activate during favorable Dasha periods, bringing financial windfalls and prosperity.`, order: 3 },
-        { title: 'Investment Timing', content: `The best periods for investments align with Jupiter and Venus transits through your wealth houses. Avoid speculative investments during Rahu-Ketu axis activations. Long-term investments made during favorable Muhurat will yield the best returns.`, order: 4 },
-        { title: 'Wealth Growth Periods', content: `The coming years show financial growth peaks during specific Dasha transitions. Save and invest during Saturn's productive transits, and expand during Jupiter's wealth-house transits. Real estate investments are particularly favored.`, order: 5 },
-        { title: 'Financial Remedies', content: `Enhance financial prosperity by: keeping a Kuber Yantra in your safe, chanting the Lakshmi Mantra on Fridays, donating to charity on auspicious days, wearing a Yellow Sapphire for Jupiter's blessings (after consultation), and beginning financial ventures during Pushya Nakshatra.`, order: 6 },
+        { title: 'Financial Chart Analysis', content: sub("{name}, your birth chart's wealth indicators show promising financial potential. The 2nd house (accumulated wealth) and 11th house (income) configurations suggest steady financial growth through career and investments."), order: 1 },
+        { title: '2nd & 11th House Study', content: sub("The lords of your 2nd and 11th houses and their planetary dignity determine your wealth trajectory. Benefic aspects on these houses indicate financial stability, while the Dasha of these lords brings peak earning periods."), order: 2 },
+        { title: 'Dhana Yogas', content: sub("Your chart contains wealth-producing Yogas (Dhana Yogas) formed by the conjunction or mutual aspect of specific house lords. These Yogas activate during favorable Dasha periods, bringing financial windfalls and prosperity."), order: 3 },
+        { title: 'Investment Timing', content: sub("The best periods for investments align with Jupiter and Venus transits through your wealth houses. Avoid speculative investments during Rahu-Ketu axis activations. Long-term investments made during favorable Muhurat will yield the best returns."), order: 4 },
+        { title: 'Wealth Growth Periods', content: sub("The coming years show financial growth peaks during specific Dasha transitions. Save and invest during Saturn's productive transits, and expand during Jupiter's wealth-house transits. Real estate investments are particularly favored."), order: 5 },
+        { title: 'Financial Remedies', content: sub("Enhance financial prosperity by: keeping a Kuber Yantra in your safe, chanting the Lakshmi Mantra on Fridays, donating to charity on auspicious days, wearing a Yellow Sapphire for Jupiter's blessings (after consultation), and beginning financial ventures during Pushya Nakshatra."), order: 6 },
       ],
       PALM: [
-        { title: 'Palm Lines Overview', content: `${name}, your palm analysis reveals a fascinating combination of lines and patterns. ${hasBirth ? `Being born under ${sign}` : 'Your palm lines'}, the major lines on your palm indicate a life of purpose, emotional depth, and intellectual vigor. The clarity and depth of your lines suggest strong life force energy and determination.`, order: 1 },
-        { title: 'Heart Line Analysis', content: `Your heart line indicates a passionate and emotionally expressive nature. The length and curvature suggest a balance between emotional openness and thoughtful selectivity in relationships. Deep, unbroken lines point toward meaningful, lasting connections.`, order: 2 },
-        { title: 'Head Line Analysis', content: `The head line on your palm shows strong analytical abilities and clear thinking patterns. Its trajectory indicates a blend of logical reasoning and creative imagination. This suggests success in careers requiring both intellectual precision and innovative thinking.`, order: 3 },
-        { title: 'Life Line Analysis', content: `Your life line shows strong vitality and resilience. The depth and length indicate a life full of energy and enthusiasm. The curve around the Mount of Venus suggests warmth, generosity, and a zest for living that attracts positive experiences.`, order: 4 },
-        { title: 'Mount Analysis', content: `The mounts on your palm reveal key personality traits. Well-developed mounts indicate areas of strength: Jupiter for ambition, Apollo for creativity, and Venus for love and passion. The balance of your mounts suggests a well-rounded personality with multiple talents.`, order: 5 },
-        { title: 'Overall Reading & Guidance', content: `${name}, your overall palm reading suggests a life of achievement, meaningful relationships, and personal growth. The combination of your major lines, minor lines, and mount development points toward success through self-effort. Practicing mindfulness and staying true to your values will amplify the positive indications in your palm.`, order: 6 },
+        { title: 'Palm Lines Overview', content: sub("{name}, your palm analysis reveals a fascinating combination of lines and patterns. The major lines on your palm indicate a life of purpose, emotional depth, and intellectual vigor. The clarity and depth of your lines suggest strong life force energy and determination."), order: 1 },
+        { title: 'Heart Line Analysis', content: sub("Your heart line indicates a passionate and emotionally expressive nature. The length and curvature suggest a balance between emotional openness and thoughtful selectivity in relationships. Deep, unbroken lines point toward meaningful, lasting connections."), order: 2 },
+        { title: 'Head Line Analysis', content: sub("The head line on your palm shows strong analytical abilities and clear thinking patterns. Its trajectory indicates a blend of logical reasoning and creative imagination. This suggests success in careers requiring both intellectual precision and innovative thinking."), order: 3 },
+        { title: 'Life Line Analysis', content: sub("Your life line shows strong vitality and resilience. The depth and length indicate a life full of energy and enthusiasm. The curve around the Mount of Venus suggests warmth, generosity, and a zest for living that attracts positive experiences."), order: 4 },
+        { title: 'Mount Analysis', content: sub("The mounts on your palm reveal key personality traits. Well-developed mounts indicate areas of strength: Jupiter for ambition, Apollo for creativity, and Venus for love and passion. The balance of your mounts suggests a well-rounded personality with multiple talents."), order: 5 },
+        { title: 'Overall Reading & Guidance', content: sub("{name}, your overall palm reading suggests a life of achievement, meaningful relationships, and personal growth. The combination of your major lines, minor lines, and mount development points toward success through self-effort. Practicing mindfulness and staying true to your values will amplify the positive indications in your palm."), order: 6 },
       ],
       ANNUAL: [
-        { title: 'Year Overview', content: `${name}, the year ahead brings a transformative blend of opportunities and growth. ${hasBirth ? `With your ${sign} Sun sign and ${moonSign} Moon sign` : 'The planetary transits'}, the major planetary transits this year activate key areas of your chart, bringing positive changes in career, relationships, and personal development. Jupiter's beneficial influence highlights expansion and prosperity.`, order: 1 },
-        { title: 'Quarter 1 Forecast (Jan-Mar)', content: `The first quarter sets a strong foundation for the year. Saturn's disciplined energy supports goal-setting and planning. Professional opportunities may arise through networking. Focus on health routines and building new habits during this period. Financial planning initiated now will yield rewards later.`, order: 2 },
-        { title: 'Quarter 2 Forecast (Apr-Jun)', content: `The second quarter brings dynamic energy with Mars activating your career sector. This is an excellent period for launching new projects and taking calculated risks. Relationships deepen as Venus transits favorably. Travel opportunities may arise, bringing both pleasure and business prospects.`, order: 3 },
-        { title: 'Quarter 3 Forecast (Jul-Sep)', content: `Mid-year brings introspection and consolidation. Mercury retrograde periods require careful communication. Focus on completing ongoing projects rather than starting new ones. Family matters take center stage, and property-related decisions are favored. Health improvements show results from earlier efforts.`, order: 4 },
-        { title: 'Quarter 4 Forecast (Oct-Dec)', content: `The final quarter brings the year's strongest results. Jupiter's transit supports financial growth and career advancement. Social connections bring unexpected opportunities. This is an excellent period for investments, celebrations, and long-term commitments. End the year with gratitude and forward planning.`, order: 5 },
-        { title: 'Annual Remedies & Lucky Periods', content: `To maximize this year's potential: perform Ganesha Puja at the year's start, wear gemstones suited to your Lagna after consultation, observe fasting on days ruled by your chart's weakest planet, and chant the Gayatri Mantra daily. Lucky months include those when Jupiter transits your Trikona houses. Special Muhurat periods will be particularly favorable for major decisions.`, order: 6 },
+        { title: 'Year Overview', content: sub("{name}, the year ahead brings a transformative blend of opportunities and growth. The major planetary transits this year activate key areas of your chart, bringing positive changes in career, relationships, and personal development. Jupiter's beneficial influence highlights expansion and prosperity."), order: 1 },
+        { title: 'Quarter 1 Forecast (Jan-Mar)', content: sub("The first quarter sets a strong foundation for the year. Saturn's disciplined energy supports goal-setting and planning. Professional opportunities may arise through networking. Focus on health routines and building new habits during this period. Financial planning initiated now will yield rewards later."), order: 2 },
+        { title: 'Quarter 2 Forecast (Apr-Jun)', content: sub("The second quarter brings dynamic energy with Mars activating your career sector. This is an excellent period for launching new projects and taking calculated risks. Relationships deepen as Venus transits favorably. Travel opportunities may arise, bringing both pleasure and business prospects."), order: 3 },
+        { title: 'Quarter 3 Forecast (Jul-Sep)', content: sub("Mid-year brings introspection and consolidation. Mercury retrograde periods require careful communication. Focus on completing ongoing projects rather than starting new ones. Family matters take center stage, and property-related decisions are favored. Health improvements show results from earlier efforts."), order: 4 },
+        { title: 'Quarter 4 Forecast (Oct-Dec)', content: sub("The final quarter brings the year's strongest results. Jupiter's transit supports financial growth and career advancement. Social connections bring unexpected opportunities. This is an excellent period for investments, celebrations, and long-term commitments. End the year with gratitude and forward planning."), order: 5 },
+        { title: 'Annual Remedies & Lucky Periods', content: sub("To maximize this year's potential: perform Ganesha Puja at the year's start, wear gemstones suited to your Lagna after consultation, observe fasting on days ruled by your chart's weakest planet, and chant the Gayatri Mantra daily. Lucky months include those when Jupiter transits your Trikona houses. Special Muhurat periods will be particularly favorable for major decisions."), order: 6 },
       ],
     };
 

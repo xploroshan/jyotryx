@@ -30,6 +30,7 @@ export const mockKbService = () => ({
   getNumberMeaning:     jest.fn().mockResolvedValue(null),
   getBusinessSector:    jest.fn().mockResolvedValue(null),
   getPersonalYearTheme: jest.fn().mockResolvedValue(null),
+  getReportSection:     jest.fn().mockResolvedValue(null),
   render: jest.fn().mockReturnValue(null),
   renderStatus: jest.fn().mockReturnValue(null),
   invalidate: jest.fn(),
