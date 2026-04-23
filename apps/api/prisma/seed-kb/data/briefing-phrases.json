@@ -1,5 +1,5 @@
 {
-  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts — the timeGreeting branch in computeUserOverlay, the qualityDescriptions map, the getTransitAlert templates, and the summary template. Summary template uses placeholders that the service substitutes at render time: {quality_desc}, {vara}, {day_ruler}, {nakshatra}, {nakshatra_quality}, {insight}. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts (greeting/quality/transit/summary) and apps/api/src/modules/numerology/numerology.service.ts (compatibility/suggestion/brand.recommendation/soulMeaning/personalityMeaning/invalidName/month names). A4 extends this with astrology.service.ts templates: flying-stars interpretation, 5 fallback muhurat reasons, and the Sade Sati phase+description set. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
   "_shape": "{ text: string }",
   "rows": [
     {
@@ -1427,6 +1427,150 @@
         },
         "as": {
           "text": "ডিচেম্বৰ"
+        }
+      }
+    },
+    {
+      "key": "flying-stars.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "In {year} the #{star} Star sits at the center palace: {meaning}."
+        }
+      }
+    },
+    {
+      "key": "muhurat.reason.siddhi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Siddhi Yoga active with benefic planetary hour - highly favorable for new beginnings"
+        }
+      }
+    },
+    {
+      "key": "muhurat.reason.amrit",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Amrit Kaal period with Moon in auspicious Nakshatra - excellent for commitments"
+        }
+      }
+    },
+    {
+      "key": "muhurat.reason.abhijit",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Abhijit Muhurat - the most auspicious mid-day period ruled by Vishnu"
+        }
+      }
+    },
+    {
+      "key": "muhurat.reason.shubh",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Shubh Choghadiya with Jupiter hora - prosperity and success indicated"
+        }
+      }
+    },
+    {
+      "key": "muhurat.reason.brahma",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Brahma Muhurat approaching, Pushya Nakshatra active - sacred and auspicious timing"
+        }
+      }
+    },
+    {
+      "key": "sade-sati.phase.rising",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Rising (Ascending)"
+        }
+      }
+    },
+    {
+      "key": "sade-sati.phase.peak",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Peak"
+        }
+      }
+    },
+    {
+      "key": "sade-sati.phase.setting",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Setting (Descending)"
+        }
+      }
+    },
+    {
+      "key": "sade-sati.phase.not_active",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Not Active"
+        }
+      }
+    },
+    {
+      "key": "sade-sati.phase.unknown",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Unknown"
+        }
+      }
+    },
+    {
+      "key": "sade-sati.description.rising",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn is transiting the 12th house from your Moon sign, beginning the Sade Sati period. You may experience increased responsibilities, introspection, and gradual changes. This phase lasts approximately 2.5 years."
+        }
+      }
+    },
+    {
+      "key": "sade-sati.description.peak",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn is transiting over your natal Moon sign — the peak phase of Sade Sati. This is the most intense period, bringing transformation, emotional challenges, and karmic lessons. Patience and discipline are key."
+        }
+      }
+    },
+    {
+      "key": "sade-sati.description.setting",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn is transiting the 2nd house from your Moon sign, the final phase of Sade Sati. Financial pressures may ease, and lessons learned during this period begin to integrate. Relief is approaching."
+        }
+      }
+    },
+    {
+      "key": "sade-sati.description.not_active",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Sade Sati is not currently active for your chart. Saturn is well-placed relative to your Moon sign."
+        }
+      }
+    },
+    {
+      "key": "sade-sati.description.birth_required",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Birth details required for Sade Sati analysis."
         }
       }
     }

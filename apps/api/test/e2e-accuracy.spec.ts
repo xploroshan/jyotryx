@@ -1202,7 +1202,9 @@ describe('9. AstrologyService Integration', () => {
     const { OpenAIService } = require('../src/openai/openai.service');
     const { MemoryCacheService } = require('../src/common/cache.service');
     const { KnowledgeService } = require('../src/knowledge/knowledge.service');
+    const { KbService } = require('../src/knowledge/kb.service');
     const { EphemerisService } = require('../src/ephemeris/ephemeris.service');
+    const { mockKbService } = require('./helpers/mocks');
 
     const module = await Test.createTestingModule({
       providers: [
@@ -1247,6 +1249,7 @@ describe('9. AstrologyService Integration', () => {
           }),
           computePanchang: jest.fn().mockResolvedValue({ tithi: { name: 'Shukla Panchami' }, nakshatra: { name: 'Rohini' }, yoga: { name: 'Shobhana' }, karana: { name: 'Balava' }, vara: 'Friday' }),
         }},
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
     service = module.get(AstrologyService);

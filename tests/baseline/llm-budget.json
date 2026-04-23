@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Phase A work should reduce these; bumps up require explicit user approval in review. Regenerate with: npm test -- llm-budget.spec.ts -- --update-baseline (TODO: implement flag).",
-  "version": 4,
+  "version": 5,
   "scenarios": {
     "daily-briefing.en.fresh": {
       "maxCalls": 0,
@@ -37,6 +37,30 @@
     "report.fallback.hi.fresh": {
       "maxCalls": 0,
       "description": "Hindi report fallback path. A3b removed translateFields from report.service.ts + report.processor.ts. The normal LLM-generation path was already locale-aware via getLocaleInstruction in the system prompt, so no additional flips needed there."
+    },
+    "astrology.chineseZodiac.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Chinese zodiac lookup. A4 flipped the CHINESE_ANIMAL_TRAITS_TABLE path to KbChineseAnimal — traits come from the KB with an English fallback; no LLM call."
+    },
+    "astrology.medicalBodyZodiac.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi medical body-zodiac mapping. A4 flipped the 12-sign static table to KbZodiacSign — bodyParts/element/guidance come from the KB; no LLM call."
+    },
+    "astrology.flyingStars.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Feng Shui Flying Stars. A4 flipped the 9 star meanings to KbFlyingStar and the interpretation template to KbBriefingPhrase; no LLM call."
+    },
+    "astrology.localizePanchang.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Panchang localization (private localizePanchang()). A4 flipped tithi/nakshatra/yoga/karana/vara/paksha lookups to the existing Kb* tables + new KbKarana. getPanchang itself still makes a primary LLM attempt for the computation — that is a separate budget (not asserted here)."
+    },
+    "astrology.localizeSadeSati.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Sade Sati localization (private localizeSadeSati()). A4 flipped the 5 phase labels + 5 descriptions to KbBriefingPhrase; no LLM call."
+    },
+    "astrology.muhuratFallback.hi.fresh": {
+      "maxCalls": 1,
+      "description": "Hindi Muhurat fallback path. getMuhurat makes one primary LLM attempt; A4 flipped the 5 canned fallback reasons to KbBriefingPhrase so the localization step no longer adds a translateFields call. Budget is 1 (the primary attempt)."
     }
   }
 }

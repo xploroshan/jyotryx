@@ -92,6 +92,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: MemoryCacheService, useValue: mockCacheService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
           { provide: EphemerisService, useValue: mockEphemerisService() },
+          { provide: KbService, useValue: mockKbService() },
         ],
       }).compile();
 

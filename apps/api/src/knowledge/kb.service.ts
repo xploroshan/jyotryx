@@ -59,6 +59,22 @@ export interface KbReportSectionPayload {
   content: string;
 }
 
+export interface KbZodiacSignPayload {
+  name: string;
+  element: string;
+  modality: string;
+  bodyParts: string[];
+  guidance: string;
+}
+
+export interface KbChineseAnimalPayload {
+  traits: string[];
+}
+
+export interface KbFlyingStarPayload {
+  meaning: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -94,6 +110,10 @@ export class KbService {
   private businessSectorCache = new Map<string, KbRow<KbBusinessSectorPayload>>();
   private personalYearThemeCache = new Map<string, KbRow<KbPersonalYearThemePayload>>();
   private reportSectionCache = new Map<string, KbRow<KbReportSectionPayload>>();
+  private zodiacSignCache = new Map<string, KbRow<KbZodiacSignPayload>>();
+  private chineseAnimalCache = new Map<string, KbRow<KbChineseAnimalPayload>>();
+  private flyingStarCache = new Map<string, KbRow<KbFlyingStarPayload>>();
+  private karanaCache = new Map<string, KbRow<KbNamedPayload>>();
 
   private loaded = {
     planet: false,
@@ -108,6 +128,10 @@ export class KbService {
     businessSector: false,
     personalYearTheme: false,
     reportSection: false,
+    zodiacSign: false,
+    chineseAnimal: false,
+    flyingStar: false,
+    karana: false,
   };
 
   constructor(private readonly prisma: PrismaService) {}
@@ -190,6 +214,34 @@ export class KbService {
     return this.lookup(this.reportSectionCache, `${type}:${order}`, null);
   }
 
+  /**
+   * Western zodiac sign. Canonical English key ("Aries".."Pisces"); payload
+   * carries name, element, modality, bodyParts and medical guidance — used
+   * by medical-body-zodiac today.
+   */
+  async getZodiacSign(key: string, tradition?: string | null): Promise<KbRow<KbZodiacSignPayload> | null> {
+    await this.ensureLoaded('zodiacSign');
+    return this.lookup(this.zodiacSignCache, key, tradition);
+  }
+
+  /** Chinese zodiac animal. Key is the animal name, e.g. "Rat".."Pig". */
+  async getChineseAnimal(key: string): Promise<KbRow<KbChineseAnimalPayload> | null> {
+    await this.ensureLoaded('chineseAnimal');
+    return this.lookup(this.chineseAnimalCache, key, null);
+  }
+
+  /** Feng Shui Flying Star. Key is the star number as a string: "1".."9". */
+  async getFlyingStar(key: string): Promise<KbRow<KbFlyingStarPayload> | null> {
+    await this.ensureLoaded('flyingStar');
+    return this.lookup(this.flyingStarCache, key, null);
+  }
+
+  /** Panchang Karana (half-tithi). Key is the canonical name, e.g. "Bava". */
+  async getKarana(key: string): Promise<KbRow<KbNamedPayload> | null> {
+    await this.ensureLoaded('karana');
+    return this.lookup(this.karanaCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -216,11 +268,16 @@ export class KbService {
     this.businessSectorCache.clear();
     this.personalYearThemeCache.clear();
     this.reportSectionCache.clear();
+    this.zodiacSignCache.clear();
+    this.chineseAnimalCache.clear();
+    this.flyingStarCache.clear();
+    this.karanaCache.clear();
     this.loaded = {
       planet: false, nakshatra: false, tithi: false, yoga: false,
       vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
       numberMeaning: false, businessSector: false, personalYearTheme: false,
-      reportSection: false,
+      reportSection: false, zodiacSign: false, chineseAnimal: false,
+      flyingStar: false, karana: false,
     };
   }
 
@@ -250,6 +307,10 @@ export class KbService {
         case 'businessSector':    await this.loadBusinessSectors();    break;
         case 'personalYearTheme': await this.loadPersonalYearThemes(); break;
         case 'reportSection':     await this.loadReportSections();     break;
+        case 'zodiacSign':        await this.loadZodiacSigns();        break;
+        case 'chineseAnimal':     await this.loadChineseAnimals();     break;
+        case 'flyingStar':        await this.loadFlyingStars();        break;
+        case 'karana':            await this.loadKaranas();            break;
       }
       this.loaded[table] = true;
     } catch (err) {
@@ -318,6 +379,30 @@ export class KbService {
     if (!model?.findMany) return;
     const rows = await model.findMany();
     for (const r of rows) this.reportSectionCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadZodiacSigns(): Promise<void> {
+    const model: any = (this.prisma as any).kbZodiacSign;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.zodiacSignCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadChineseAnimals(): Promise<void> {
+    const model: any = (this.prisma as any).kbChineseAnimal;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.chineseAnimalCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadFlyingStars(): Promise<void> {
+    const model: any = (this.prisma as any).kbFlyingStar;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.flyingStarCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadKaranas(): Promise<void> {
+    const model: any = (this.prisma as any).kbKarana;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.karanaCache.set(cacheKey(r.key, r.tradition), r as any);
   }
 }
 

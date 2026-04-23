@@ -12,9 +12,10 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { EphemerisService } from '../src/ephemeris/ephemeris.service';
-import { mockKnowledgeService, mockEphemerisService } from './helpers/mocks';
+import { mockKnowledgeService, mockKbService, mockEphemerisService } from './helpers/mocks';
 import {
   TRADITION_CONFIGS,
   AVAILABLE_TRADITIONS,
@@ -314,6 +315,7 @@ describe('AstrologyService — Tradition Features', () => {
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 

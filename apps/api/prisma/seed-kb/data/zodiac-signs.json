@@ -1,0 +1,162 @@
+{
+  "_source": "Lifted from apps/api/src/modules/astrology/astrology.service.ts — the `mapping` table inside getMedicalBodyZodiac() plus the element/modality/elementOf-elementGuidance lookups reused by horary / zodiacal-releasing / decumbiture / synastry. `element` and `modality` stay English (technical proper nouns preserved across locales, matching how planet/zodiac names are handled elsewhere). English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ name: string, element: string, modality: string, bodyParts: string[], guidance: string }",
+  "rows": [
+    {
+      "key": "Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Aries",
+          "element": "Fire",
+          "modality": "Cardinal",
+          "bodyParts": ["head", "brain", "face"],
+          "guidance": "Watch for headaches, eye strain; keep the head cool."
+        }
+      }
+    },
+    {
+      "key": "Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Taurus",
+          "element": "Earth",
+          "modality": "Fixed",
+          "bodyParts": ["neck", "throat", "thyroid"],
+          "guidance": "Support vocal health and thyroid function."
+        }
+      }
+    },
+    {
+      "key": "Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Gemini",
+          "element": "Air",
+          "modality": "Mutable",
+          "bodyParts": ["lungs", "arms", "nervous system"],
+          "guidance": "Breathing practices calm the nerves."
+        }
+      }
+    },
+    {
+      "key": "Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Cancer",
+          "element": "Water",
+          "modality": "Cardinal",
+          "bodyParts": ["chest", "stomach", "breasts"],
+          "guidance": "Digestion follows your emotional state."
+        }
+      }
+    },
+    {
+      "key": "Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Leo",
+          "element": "Fire",
+          "modality": "Fixed",
+          "bodyParts": ["heart", "spine", "upper back"],
+          "guidance": "Cardiovascular movement and posture care."
+        }
+      }
+    },
+    {
+      "key": "Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Virgo",
+          "element": "Earth",
+          "modality": "Mutable",
+          "bodyParts": ["intestines", "digestive system"],
+          "guidance": "Gut health is foundational for you."
+        }
+      }
+    },
+    {
+      "key": "Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Libra",
+          "element": "Air",
+          "modality": "Cardinal",
+          "bodyParts": ["kidneys", "lower back", "skin"],
+          "guidance": "Hydration and balance-based movement help."
+        }
+      }
+    },
+    {
+      "key": "Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Scorpio",
+          "element": "Water",
+          "modality": "Fixed",
+          "bodyParts": ["reproductive organs", "pelvis"],
+          "guidance": "Deep rest and detox support the body."
+        }
+      }
+    },
+    {
+      "key": "Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sagittarius",
+          "element": "Fire",
+          "modality": "Mutable",
+          "bodyParts": ["hips", "thighs", "liver"],
+          "guidance": "Liver-friendly diet and hip mobility."
+        }
+      }
+    },
+    {
+      "key": "Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Capricorn",
+          "element": "Earth",
+          "modality": "Cardinal",
+          "bodyParts": ["bones", "knees", "joints"],
+          "guidance": "Weight-bearing exercise and calcium."
+        }
+      }
+    },
+    {
+      "key": "Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Aquarius",
+          "element": "Air",
+          "modality": "Fixed",
+          "bodyParts": ["ankles", "circulation"],
+          "guidance": "Mind circulation — warm feet, keep moving."
+        }
+      }
+    },
+    {
+      "key": "Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Pisces",
+          "element": "Water",
+          "modality": "Mutable",
+          "bodyParts": ["feet", "lymphatic system", "immunity"],
+          "guidance": "Foot care and immune-supportive routines."
+        }
+      }
+    }
+  ]
+}
