@@ -585,6 +585,55 @@ model KbReportSection {
   @@map("kb_report_sections")
 }
 
+model KbZodiacSign {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// Canonical English sign, e.g. "Aries".."Pisces"
+  tradition  String?
+  i18n       Json     /// { en: { name, element, modality, bodyParts: string[], guidance }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_zodiac_signs_key_tradition_key", map: "kb_zodiac_signs_key_tradition_key")
+  @@index([tradition])
+  @@map("kb_zodiac_signs")
+}
+
+model KbChineseAnimal {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// 12 Chinese animals: "Rat".."Pig"
+  tradition  String?
+  i18n       Json     /// { en: { traits: string[] }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_chinese_animals_key_tradition_key", map: "kb_chinese_animals_key_tradition_key")
+  @@map("kb_chinese_animals")
+}
+
+model KbFlyingStar {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// "1".."9"
+  tradition  String?
+  i18n       Json     /// { en: { meaning }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_flying_stars_key_tradition_key", map: "kb_flying_stars_key_tradition_key")
+  @@map("kb_flying_stars")
+}
+
+model KbKarana {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// Canonical Karana name, e.g. "Bava", "Kimstughna"
+  tradition  String?
+  i18n       Json     /// { en: { name }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_karanas_key_tradition_key", map: "kb_karanas_key_tradition_key")
+  @@map("kb_karanas")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

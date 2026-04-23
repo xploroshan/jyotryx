@@ -1,0 +1,87 @@
+{
+  "_source": "Lifted from apps/api/src/modules/astrology/astrology.service.ts — the `starMeanings` map inside getFlyingStars(). English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ meaning: string }",
+  "rows": [
+    {
+      "key": "1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Career & opportunity (Water)"
+        }
+      }
+    },
+    {
+      "key": "2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Illness (Earth) — caution"
+        }
+      }
+    },
+    {
+      "key": "3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Arguments (Wood) — temper"
+        }
+      }
+    },
+    {
+      "key": "4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Romance & scholarship (Wood)"
+        }
+      }
+    },
+    {
+      "key": "5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Misfortune (Earth) — avoid disturbance"
+        }
+      }
+    },
+    {
+      "key": "6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Authority & helpful people (Metal)"
+        }
+      }
+    },
+    {
+      "key": "7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Loss & betrayal (Metal) — caution"
+        }
+      }
+    },
+    {
+      "key": "8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Wealth & prosperity (Earth)"
+        }
+      }
+    },
+    {
+      "key": "9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "meaning": "Future prosperity, fame (Fire)"
+        }
+      }
+    }
+  ]
+}

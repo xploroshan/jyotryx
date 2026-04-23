@@ -402,6 +402,7 @@ describe('Kundli (Birth Chart) — Astronomical Correctness', () => {
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: ephemeris },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -618,6 +619,7 @@ describe('Matching (Ashtakoota) — Rule Correctness', () => {
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -731,6 +733,7 @@ describe('Panchang — Calendar & Astronomical Correctness', () => {
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -852,6 +855,7 @@ describe('Horoscope — Differentiation & Correctness', () => {
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);
@@ -965,6 +969,7 @@ describe('Muhurat — Auspicious Time Correctness', () => {
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
     service = module.get<AstrologyService>(AstrologyService);

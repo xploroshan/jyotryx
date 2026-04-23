@@ -1,0 +1,114 @@
+{
+  "_source": "Lifted from apps/api/src/modules/astrology/astrology.service.ts — the CHINESE_ANIMAL_TRAITS_TABLE static map used by getChineseZodiac(). English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ traits: string[] }",
+  "rows": [
+    {
+      "key": "Rat",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["clever", "resourceful", "quick-witted", "adaptable"]
+        }
+      }
+    },
+    {
+      "key": "Ox",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["dependable", "strong", "determined", "methodical"]
+        }
+      }
+    },
+    {
+      "key": "Tiger",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["brave", "confident", "competitive", "charismatic"]
+        }
+      }
+    },
+    {
+      "key": "Rabbit",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["gentle", "compassionate", "elegant", "responsible"]
+        }
+      }
+    },
+    {
+      "key": "Dragon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["ambitious", "energetic", "charismatic", "natural leader"]
+        }
+      }
+    },
+    {
+      "key": "Snake",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["wise", "intuitive", "graceful", "mysterious"]
+        }
+      }
+    },
+    {
+      "key": "Horse",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["independent", "energetic", "adventurous", "optimistic"]
+        }
+      }
+    },
+    {
+      "key": "Goat",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["creative", "gentle", "empathetic", "artistic"]
+        }
+      }
+    },
+    {
+      "key": "Monkey",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["inventive", "curious", "playful", "sharp"]
+        }
+      }
+    },
+    {
+      "key": "Rooster",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["observant", "hardworking", "courageous", "meticulous"]
+        }
+      }
+    },
+    {
+      "key": "Dog",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["loyal", "honest", "protective", "responsible"]
+        }
+      }
+    },
+    {
+      "key": "Pig",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "traits": ["generous", "sincere", "diligent", "optimistic"]
+        }
+      }
+    }
+  ]
+}

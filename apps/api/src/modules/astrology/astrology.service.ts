@@ -5,6 +5,7 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { KbService } from '../../knowledge/kb.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction, translateFields, translateText } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
@@ -171,6 +172,7 @@ export class AstrologyService {
     private cacheService: MemoryCacheService,
     private knowledgeService: KnowledgeService,
     private ephemerisService: EphemerisService,
+    private kbService: KbService,
   ) {}
 
   private async callOpenAI(
@@ -1066,22 +1068,15 @@ export class AstrologyService {
     const elementIndex = Math.floor(((birthYear - 4) % 10) / 2);
     const element = CHINESE_ELEMENTS[elementIndex >= 0 ? elementIndex : elementIndex + 5];
     const yinYang = birthYear % 2 === 0 ? 'Yang' : 'Yin';
-    const traits = AstrologyService.CHINESE_ANIMAL_TRAITS_TABLE[animal] ?? [];
-    if (!locale || locale === 'en' || traits.length === 0) {
-      return { animal, element, yinYang, year: birthYear, traits };
-    }
-    const translated = await translateFields(
-      this.openaiService,
-      { traits },
-      locale,
-      'chinese-zodiac',
-    );
-    const tTraits = Array.isArray((translated as any).traits) ? (translated as any).traits as string[] : traits;
-    return { animal, element, yinYang, year: birthYear, traits: tTraits };
+    const fallbackTraits = AstrologyService.CHINESE_ANIMAL_TRAITS_TABLE[animal] ?? [];
+    const row = await this.kbService.getChineseAnimal(animal);
+    const traits = this.kbService.render(row, locale)?.traits ?? fallbackTraits;
+    return { animal, element, yinYang, year: birthYear, traits };
   }
 
-  // Trait keywords per Chinese zodiac animal (compact lookup; used by
-  // getChineseZodiac above so the UI can render a traits list).
+  // Trait keywords per Chinese zodiac animal — retained solely as an
+  // English fallback when the KB cache is cold (migration not applied /
+  // DB unavailable). The source of truth is KbChineseAnimal.
   private static readonly CHINESE_ANIMAL_TRAITS_TABLE: Record<string, string[]> = {
     Rat: ['clever', 'resourceful', 'quick-witted', 'adaptable'],
     Ox: ['dependable', 'strong', 'determined', 'methodical'],
@@ -1262,38 +1257,34 @@ export class AstrologyService {
    * short element-based guidance. Pure lookup, no ephemeris.
    */
   async getMedicalBodyZodiac(locale?: string) {
-    const mapping = [
-      { sign: 'Aries', bodyParts: ['head', 'brain', 'face'], element: 'Fire', guidance: 'Watch for headaches, eye strain; keep the head cool.' },
-      { sign: 'Taurus', bodyParts: ['neck', 'throat', 'thyroid'], element: 'Earth', guidance: 'Support vocal health and thyroid function.' },
-      { sign: 'Gemini', bodyParts: ['lungs', 'arms', 'nervous system'], element: 'Air', guidance: 'Breathing practices calm the nerves.' },
-      { sign: 'Cancer', bodyParts: ['chest', 'stomach', 'breasts'], element: 'Water', guidance: 'Digestion follows your emotional state.' },
-      { sign: 'Leo', bodyParts: ['heart', 'spine', 'upper back'], element: 'Fire', guidance: 'Cardiovascular movement and posture care.' },
-      { sign: 'Virgo', bodyParts: ['intestines', 'digestive system'], element: 'Earth', guidance: 'Gut health is foundational for you.' },
-      { sign: 'Libra', bodyParts: ['kidneys', 'lower back', 'skin'], element: 'Air', guidance: 'Hydration and balance-based movement help.' },
-      { sign: 'Scorpio', bodyParts: ['reproductive organs', 'pelvis'], element: 'Water', guidance: 'Deep rest and detox support the body.' },
-      { sign: 'Sagittarius', bodyParts: ['hips', 'thighs', 'liver'], element: 'Fire', guidance: 'Liver-friendly diet and hip mobility.' },
-      { sign: 'Capricorn', bodyParts: ['bones', 'knees', 'joints'], element: 'Earth', guidance: 'Weight-bearing exercise and calcium.' },
-      { sign: 'Aquarius', bodyParts: ['ankles', 'circulation'], element: 'Air', guidance: 'Mind circulation — warm feet, keep moving.' },
-      { sign: 'Pisces', bodyParts: ['feet', 'lymphatic system', 'immunity'], element: 'Water', guidance: 'Foot care and immune-supportive routines.' },
-    ];
-    if (!locale || locale === 'en') return { mapping };
-    const bodyPartsFlat = mapping.flatMap(m => m.bodyParts);
-    const guidanceList = mapping.map(m => m.guidance);
-    const translated = await translateFields(
-      this.openaiService,
-      { bodyParts: bodyPartsFlat, guidance: guidanceList },
-      locale,
-      'medical-body-zodiac',
-    );
-    const tBody = Array.isArray((translated as any).bodyParts) ? (translated as any).bodyParts as string[] : bodyPartsFlat;
-    const tGuidance = Array.isArray((translated as any).guidance) ? (translated as any).guidance as string[] : guidanceList;
-    let cursor = 0;
-    const localizedMapping = mapping.map((m, i) => {
-      const parts = tBody.slice(cursor, cursor + m.bodyParts.length);
-      cursor += m.bodyParts.length;
-      return { ...m, bodyParts: parts.length === m.bodyParts.length ? parts : m.bodyParts, guidance: tGuidance[i] ?? m.guidance };
-    });
-    return { mapping: localizedMapping };
+    // English fallback retained for when the KB cache is cold (migration
+    // not applied / DB unavailable). Source of truth is KbZodiacSign.
+    const fallback: Record<string, { bodyParts: string[]; element: string; guidance: string }> = {
+      Aries:       { bodyParts: ['head', 'brain', 'face'],                element: 'Fire',  guidance: 'Watch for headaches, eye strain; keep the head cool.' },
+      Taurus:      { bodyParts: ['neck', 'throat', 'thyroid'],            element: 'Earth', guidance: 'Support vocal health and thyroid function.' },
+      Gemini:      { bodyParts: ['lungs', 'arms', 'nervous system'],      element: 'Air',   guidance: 'Breathing practices calm the nerves.' },
+      Cancer:      { bodyParts: ['chest', 'stomach', 'breasts'],          element: 'Water', guidance: 'Digestion follows your emotional state.' },
+      Leo:         { bodyParts: ['heart', 'spine', 'upper back'],         element: 'Fire',  guidance: 'Cardiovascular movement and posture care.' },
+      Virgo:       { bodyParts: ['intestines', 'digestive system'],       element: 'Earth', guidance: 'Gut health is foundational for you.' },
+      Libra:       { bodyParts: ['kidneys', 'lower back', 'skin'],        element: 'Air',   guidance: 'Hydration and balance-based movement help.' },
+      Scorpio:     { bodyParts: ['reproductive organs', 'pelvis'],        element: 'Water', guidance: 'Deep rest and detox support the body.' },
+      Sagittarius: { bodyParts: ['hips', 'thighs', 'liver'],              element: 'Fire',  guidance: 'Liver-friendly diet and hip mobility.' },
+      Capricorn:   { bodyParts: ['bones', 'knees', 'joints'],             element: 'Earth', guidance: 'Weight-bearing exercise and calcium.' },
+      Aquarius:    { bodyParts: ['ankles', 'circulation'],                element: 'Air',   guidance: 'Mind circulation — warm feet, keep moving.' },
+      Pisces:      { bodyParts: ['feet', 'lymphatic system', 'immunity'], element: 'Water', guidance: 'Foot care and immune-supportive routines.' },
+    };
+    const mapping = await Promise.all(ALL_SIGNS.map(async (sign) => {
+      const row = await this.kbService.getZodiacSign(sign);
+      const localized = this.kbService.render(row, locale);
+      const fb = fallback[sign];
+      return {
+        sign,
+        bodyParts: localized?.bodyParts ?? fb.bodyParts,
+        element:   localized?.element   ?? fb.element,
+        guidance:  localized?.guidance  ?? fb.guidance,
+      };
+    }));
+    return { mapping };
   }
 
   /**
@@ -1490,7 +1481,9 @@ export class AstrologyService {
         return v;
       }),
     );
-    const starMeanings: Record<number, string> = {
+    // English fallback retained for when the KB cache is cold. Source of
+    // truth is KbFlyingStar (keys "1".."9").
+    const fallbackMeanings: Record<number, string> = {
       1: 'Career & opportunity (Water)',
       2: 'Illness (Earth) — caution',
       3: 'Arguments (Wood) — temper',
@@ -1501,29 +1494,28 @@ export class AstrologyService {
       8: 'Wealth & prosperity (Earth)',
       9: 'Future prosperity, fame (Fire)',
     };
-    const interpretation = `In ${y} the #${centerStar} Star sits at the center palace: ${starMeanings[centerStar]}.`;
-    if (!locale || locale === 'en') {
-      return { year: y, centerStar, centerMeaning: starMeanings[centerStar], grid, meanings: starMeanings, interpretation };
-    }
-    const meaningsArr = Object.values(starMeanings);
-    const translated = await translateFields(
-      this.openaiService,
-      { meanings: meaningsArr, interpretation },
-      locale,
-      'flying-stars',
-    );
-    const tMeanings = Array.isArray((translated as any).meanings) ? (translated as any).meanings as string[] : meaningsArr;
-    const localizedMeanings: Record<number, string> = {};
-    Object.keys(starMeanings).forEach((k, i) => {
-      localizedMeanings[Number(k)] = tMeanings[i] ?? starMeanings[Number(k)];
+    const starNums = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+    const [starRows, interpRow] = await Promise.all([
+      Promise.all(starNums.map((n) => this.kbService.getFlyingStar(String(n)))),
+      this.kbService.getBriefingPhrase('flying-stars.interpretation.template'),
+    ]);
+    const meanings: Record<number, string> = {};
+    starNums.forEach((n, i) => {
+      meanings[n] = this.kbService.render(starRows[i], locale)?.meaning ?? fallbackMeanings[n];
     });
+    const template = this.kbService.render(interpRow, locale)?.text
+      ?? 'In {year} the #{star} Star sits at the center palace: {meaning}.';
+    const interpretation = template
+      .replace('{year}', String(y))
+      .replace('{star}', String(centerStar))
+      .replace('{meaning}', meanings[centerStar]);
     return {
       year: y,
       centerStar,
-      centerMeaning: localizedMeanings[centerStar],
+      centerMeaning: meanings[centerStar],
       grid,
-      meanings: localizedMeanings,
-      interpretation: translated.interpretation ?? interpretation,
+      meanings,
+      interpretation,
     };
   }
 
@@ -1837,19 +1829,43 @@ export class AstrologyService {
 
   private async localizePanchang(result: PanchangResult, locale?: string): Promise<PanchangResult> {
     if (!locale || locale === 'en') return result;
-    const translated = await translateFields(
-      this.openaiService,
-      {
-        tithi: result.tithi,
-        nakshatra: result.nakshatra,
-        yoga: result.yoga,
-        karana: result.karana,
-        vara: result.vara,
-      },
-      locale,
-      'panchang',
-    );
-    return { ...result, ...translated };
+
+    // `result.tithi` is composed as `${paksha} ${tithiName}` by the fallback
+    // (e.g. "Shukla Pratipada"). Split it so each half can be localized
+    // independently via KbPaksha + KbTithi. AI-generated results may use a
+    // different format — leave those untouched if the split doesn't match.
+    const tithiParts = result.tithi.split(' ');
+    const [pakshaKey, ...rest] = tithiParts;
+    const tithiKey = rest.join(' ');
+    const canSplitTithi = tithiParts.length >= 2 && (pakshaKey === 'Shukla' || pakshaKey === 'Krishna');
+
+    const [pakshaRow, tithiRow, nakRow, yogaRow, karanaRow, varaRow, wholeTithiRow] = await Promise.all([
+      canSplitTithi ? this.kbService.getPaksha(pakshaKey) : Promise.resolve(null),
+      canSplitTithi ? this.kbService.getTithi(tithiKey) : Promise.resolve(null),
+      this.kbService.getNakshatra(result.nakshatra),
+      this.kbService.getYoga(result.yoga),
+      this.kbService.getKarana(result.karana),
+      this.kbService.getVara(result.vara),
+      canSplitTithi ? Promise.resolve(null) : this.kbService.getTithi(result.tithi),
+    ]);
+
+    let localizedTithi = result.tithi;
+    if (canSplitTithi) {
+      const pakL = this.kbService.render(pakshaRow, locale)?.name ?? pakshaKey;
+      const titL = this.kbService.render(tithiRow, locale)?.name ?? tithiKey;
+      localizedTithi = `${pakL} ${titL}`;
+    } else {
+      localizedTithi = this.kbService.render(wholeTithiRow, locale)?.name ?? result.tithi;
+    }
+
+    return {
+      ...result,
+      tithi:     localizedTithi,
+      nakshatra: this.kbService.render(nakRow,    locale)?.name ?? result.nakshatra,
+      yoga:      this.kbService.render(yogaRow,   locale)?.name ?? result.yoga,
+      karana:    this.kbService.render(karanaRow, locale)?.name ?? result.karana,
+      vara:      this.kbService.render(varaRow,   locale)?.name ?? result.vara,
+    };
   }
 
   async getMuhurat(dto: MuhuratRequest): Promise<MuhuratResult> {
@@ -1903,17 +1919,22 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     });
 
     if (dto.locale && dto.locale !== 'en') {
-      const reasonTexts = auspiciousTimes.map((t) => t.reason);
-      const translated = await translateFields(
-        this.openaiService,
-        { reasons: reasonTexts },
-        dto.locale,
-        'muhurat',
-      );
-      const translatedReasons = Array.isArray((translated as any).reasons) ? (translated as any).reasons as string[] : reasonTexts;
-      auspiciousTimes.forEach((t, i) => {
-        t.reason = translatedReasons[i] ?? t.reason;
-      });
+      // Each fallback reason is a canned phrase; look up the matching
+      // KbBriefingPhrase entry keyed off the English text.
+      const reasonKeyByText: Record<string, string> = {
+        'Siddhi Yoga active with benefic planetary hour - highly favorable for new beginnings': 'muhurat.reason.siddhi',
+        'Amrit Kaal period with Moon in auspicious Nakshatra - excellent for commitments':     'muhurat.reason.amrit',
+        'Abhijit Muhurat - the most auspicious mid-day period ruled by Vishnu':                'muhurat.reason.abhijit',
+        'Shubh Choghadiya with Jupiter hora - prosperity and success indicated':               'muhurat.reason.shubh',
+        'Brahma Muhurat approaching, Pushya Nakshatra active - sacred and auspicious timing':  'muhurat.reason.brahma',
+      };
+      await Promise.all(auspiciousTimes.map(async (t) => {
+        const key = reasonKeyByText[t.reason];
+        if (!key) return;
+        const row = await this.kbService.getBriefingPhrase(key);
+        const localized = this.kbService.render(row, dto.locale)?.text;
+        if (localized) t.reason = localized;
+      }));
     }
 
     return { purpose: dto.purpose, auspiciousTimes };
@@ -2044,16 +2065,26 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     locale?: string,
   ): Promise<{ active: boolean; phase: string; description: string }> {
     if (!locale || locale === 'en') return sadeSati;
-    const translated = await translateFields(
-      this.openaiService,
-      { phase: sadeSati.phase, description: sadeSati.description },
-      locale,
-      'sade-sati',
-    );
+    // Sade Sati has a fixed 4-phase taxonomy plus the "birth-details
+    // missing" branch; each phase maps to a pair of briefing phrases
+    // (phase label + description body) seeded in the KB.
+    const keysByPhase: Record<string, { phase: string; description: string }> = {
+      'Rising (Ascending)':  { phase: 'sade-sati.phase.rising',     description: 'sade-sati.description.rising' },
+      'Peak':                { phase: 'sade-sati.phase.peak',       description: 'sade-sati.description.peak' },
+      'Setting (Descending)':{ phase: 'sade-sati.phase.setting',    description: 'sade-sati.description.setting' },
+      'Not Active':          { phase: 'sade-sati.phase.not_active', description: 'sade-sati.description.not_active' },
+      'Unknown':             { phase: 'sade-sati.phase.unknown',    description: 'sade-sati.description.birth_required' },
+    };
+    const keys = keysByPhase[sadeSati.phase];
+    if (!keys) return sadeSati;
+    const [phaseRow, descRow] = await Promise.all([
+      this.kbService.getBriefingPhrase(keys.phase),
+      this.kbService.getBriefingPhrase(keys.description),
+    ]);
     return {
       active: sadeSati.active,
-      phase: typeof (translated as any).phase === 'string' ? (translated as any).phase : sadeSati.phase,
-      description: typeof (translated as any).description === 'string' ? (translated as any).description : sadeSati.description,
+      phase:       this.kbService.render(phaseRow, locale)?.text ?? sadeSati.phase,
+      description: this.kbService.render(descRow,  locale)?.text ?? sadeSati.description,
     };
   }
 

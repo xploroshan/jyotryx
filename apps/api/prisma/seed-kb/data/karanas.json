@@ -1,0 +1,61 @@
+{
+  "_source": "Lifted from apps/api/src/modules/astrology/astrology.service.ts — the karanaNames array inside getPanchang() fallback. Completes the Panchang KB set alongside the existing Tithi/Yoga/Vara/Nakshatra/Paksha tables. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ name: string }",
+  "rows": [
+    {
+      "key": "Bava",
+      "tradition": null,
+      "i18n": { "en": { "name": "Bava" } }
+    },
+    {
+      "key": "Balava",
+      "tradition": null,
+      "i18n": { "en": { "name": "Balava" } }
+    },
+    {
+      "key": "Kaulava",
+      "tradition": null,
+      "i18n": { "en": { "name": "Kaulava" } }
+    },
+    {
+      "key": "Taitila",
+      "tradition": null,
+      "i18n": { "en": { "name": "Taitila" } }
+    },
+    {
+      "key": "Garaja",
+      "tradition": null,
+      "i18n": { "en": { "name": "Garaja" } }
+    },
+    {
+      "key": "Vanija",
+      "tradition": null,
+      "i18n": { "en": { "name": "Vanija" } }
+    },
+    {
+      "key": "Vishti",
+      "tradition": null,
+      "i18n": { "en": { "name": "Vishti" } }
+    },
+    {
+      "key": "Shakuni",
+      "tradition": null,
+      "i18n": { "en": { "name": "Shakuni" } }
+    },
+    {
+      "key": "Chatushpada",
+      "tradition": null,
+      "i18n": { "en": { "name": "Chatushpada" } }
+    },
+    {
+      "key": "Nagava",
+      "tradition": null,
+      "i18n": { "en": { "name": "Nagava" } }
+    },
+    {
+      "key": "Kimstughna",
+      "tradition": null,
+      "i18n": { "en": { "name": "Kimstughna" } }
+    }
+  ]
+}

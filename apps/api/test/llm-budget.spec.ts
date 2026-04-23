@@ -8,8 +8,12 @@
  * migrate to the KB. A PR that raises any ceiling must justify it in
  * review.
  *
- * Coverage: daily briefing (A1b), numerology (A2b), report fallback (A3b).
- * Astrology + chat land under future Track A phases.
+ * Coverage: daily briefing (A1b), numerology (A2b), report fallback (A3b),
+ * astrology partial (A4 — Chinese zodiac / medical body-zodiac / flying stars
+ * / panchang localization / sade-sati localization / muhurat fallback
+ * reasons). Remaining astrology surface (horary, zodiacal-releasing,
+ * decumbiture, dosha, plus all `translateText` sites) stays under future
+ * Track A phases.
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -18,13 +22,15 @@ import * as fs from 'fs';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { ReportService } from '../src/modules/report/report.service';
+import { AstrologyService } from '../src/modules/astrology/astrology.service';
 import { UserService } from '../src/modules/user/user.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
-import { mockPrismaService, mockKnowledgeService, mockKbService, mockCacheService, mockUser, mockUserService, mockConfigService } from './helpers/mocks';
+import { EphemerisService } from '../src/ephemeris/ephemeris.service';
+import { mockPrismaService, mockKnowledgeService, mockKbService, mockCacheService, mockUser, mockUserService, mockConfigService, mockEphemerisService } from './helpers/mocks';
 
 interface Baseline {
   scenarios: Record<string, { maxCalls: number; description: string }>;
@@ -218,6 +224,85 @@ describe('LLM cost regression budget', () => {
     it('report.fallback.hi.fresh stays within budget', async () => {
       await run('hi');
       expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('report.fallback.hi.fresh'));
+    });
+  });
+
+  describe('astrology', () => {
+    let service: AstrologyService;
+    let counter: ReturnType<typeof countingOpenAI>;
+
+    beforeEach(async () => {
+      counter = countingOpenAI();
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          AstrologyService,
+          { provide: PrismaService, useValue: mockPrismaService() },
+          { provide: ConfigService, useValue: mockConfigService() },
+          { provide: UserService, useValue: mockUserService() },
+          { provide: OpenAIService, useValue: counter.stub },
+          { provide: MemoryCacheService, useValue: mockCacheService() },
+          { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
+          { provide: EphemerisService, useValue: mockEphemerisService() },
+        ],
+      }).compile();
+      service = module.get(AstrologyService);
+    });
+
+    it('astrology.chineseZodiac.hi.fresh stays within budget', async () => {
+      await service.getChineseZodiac(1990, 'hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.chineseZodiac.hi.fresh'));
+    });
+
+    it('astrology.medicalBodyZodiac.hi.fresh stays within budget', async () => {
+      await service.getMedicalBodyZodiac('hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.medicalBodyZodiac.hi.fresh'));
+    });
+
+    it('astrology.flyingStars.hi.fresh stays within budget', async () => {
+      await service.getFlyingStars(2026, 'hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.flyingStars.hi.fresh'));
+    });
+
+    it('astrology.localizePanchang.hi.fresh stays within budget', async () => {
+      // Exercise localizePanchang directly — getPanchang makes a primary
+      // LLM call that is orthogonal to what A4 changed.
+      await (service as any).localizePanchang({
+        date: '2026-04-23',
+        tithi: 'Shukla Pratipada',
+        nakshatra: 'Rohini',
+        yoga: 'Siddhi',
+        karana: 'Bava',
+        vara: 'Ravivaar',
+        sunrise: '06:00 AM',
+        sunset: '06:30 PM',
+        moonrise: '07:00 AM',
+        rahukaal: '04:30 PM - 06:00 PM',
+        gulikakaal: '03:00 PM - 04:30 PM',
+        yamakantaka: '12:00 PM - 01:30 PM',
+      }, 'hi');
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.localizePanchang.hi.fresh'));
+    });
+
+    it('astrology.localizeSadeSati.hi.fresh stays within budget', async () => {
+      await (service as any).localizeSadeSati(
+        { active: true, phase: 'Peak', description: 'Saturn is transiting over your natal Moon sign — the peak phase of Sade Sati. This is the most intense period, bringing transformation, emotional challenges, and karmic lessons. Patience and discipline are key.' },
+        'hi',
+      );
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.localizeSadeSati.hi.fresh'));
+    });
+
+    it('astrology.muhuratFallback.hi.fresh stays within budget', async () => {
+      // getMuhurat always makes one primary LLM attempt; the translateFields
+      // call for localizing fallback reasons has been removed in A4.
+      await service.getMuhurat({
+        purpose: 'Wedding ceremony',
+        fromDate: '2026-05-01',
+        toDate: '2026-05-05',
+        location: 'Delhi',
+        locale: 'hi',
+      } as any);
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.muhuratFallback.hi.fresh'));
     });
   });
 });

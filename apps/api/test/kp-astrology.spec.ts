@@ -7,6 +7,7 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { KbService } from '../src/knowledge/kb.service';
 import { EphemerisService } from '../src/ephemeris/ephemeris.service';
 import {
   mockPrismaService,
@@ -15,6 +16,7 @@ import {
   mockOpenAIService,
   mockCacheService,
   mockKnowledgeService,
+  mockKbService,
   mockBirthDetails,
   mockEphemerisService,
 } from './helpers/mocks';
@@ -41,6 +43,7 @@ describe('AstrologyService – KP Astrology', () => {
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 

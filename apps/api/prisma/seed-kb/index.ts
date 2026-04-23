@@ -26,6 +26,10 @@ import * as numberMeaningsData from './data/number-meanings.json';
 import * as businessSectorsData from './data/business-sectors.json';
 import * as personalYearThemesData from './data/personal-year-themes.json';
 import * as reportSectionsData from './data/report-sections.json';
+import * as zodiacSignsData from './data/zodiac-signs.json';
+import * as chineseAnimalsData from './data/chinese-animals.json';
+import * as flyingStarsData from './data/flying-stars.json';
+import * as karanasData from './data/karanas.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -49,7 +53,11 @@ export interface SeedTable {
     | 'kbNumberMeaning'
     | 'kbBusinessSector'
     | 'kbPersonalYearTheme'
-    | 'kbReportSection';
+    | 'kbReportSection'
+    | 'kbZodiacSign'
+    | 'kbChineseAnimal'
+    | 'kbFlyingStar'
+    | 'kbKarana';
   /** Compound-unique index key for upsert `where`. */
   uniqueKey:
     | 'kb_planets_key_tradition_key'
@@ -63,7 +71,11 @@ export interface SeedTable {
     | 'kb_number_meanings_key_tradition_key'
     | 'kb_business_sectors_key_tradition_key'
     | 'kb_personal_year_themes_key_tradition_key'
-    | 'kb_report_sections_key_tradition_key';
+    | 'kb_report_sections_key_tradition_key'
+    | 'kb_zodiac_signs_key_tradition_key'
+    | 'kb_chinese_animals_key_tradition_key'
+    | 'kb_flying_stars_key_tradition_key'
+    | 'kb_karanas_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -147,5 +159,29 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_report_sections_key_tradition_key',
     dataFile: 'data/report-sections.json',
     rows: rowsOf(reportSectionsData),
+  },
+  {
+    modelName: 'kbZodiacSign',
+    uniqueKey: 'kb_zodiac_signs_key_tradition_key',
+    dataFile: 'data/zodiac-signs.json',
+    rows: rowsOf(zodiacSignsData),
+  },
+  {
+    modelName: 'kbChineseAnimal',
+    uniqueKey: 'kb_chinese_animals_key_tradition_key',
+    dataFile: 'data/chinese-animals.json',
+    rows: rowsOf(chineseAnimalsData),
+  },
+  {
+    modelName: 'kbFlyingStar',
+    uniqueKey: 'kb_flying_stars_key_tradition_key',
+    dataFile: 'data/flying-stars.json',
+    rows: rowsOf(flyingStarsData),
+  },
+  {
+    modelName: 'kbKarana',
+    uniqueKey: 'kb_karanas_key_tradition_key',
+    dataFile: 'data/karanas.json',
+    rows: rowsOf(karanasData),
   },
 ];
