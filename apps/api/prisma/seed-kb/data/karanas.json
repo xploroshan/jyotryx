@@ -5,57 +5,464 @@
     {
       "key": "Bava",
       "tradition": null,
-      "i18n": { "en": { "name": "Bava" } }
+      "i18n": {
+        "en": {
+          "name": "Bava"
+        },
+        "hi": {
+          "name": "भव"
+        },
+        "ta": {
+          "name": "பவா"
+        },
+        "te": {
+          "name": "భవ"
+        },
+        "bn": {
+          "name": "বব"
+        },
+        "mr": {
+          "name": "बव"
+        },
+        "gu": {
+          "name": "બવ"
+        },
+        "kn": {
+          "name": "ಭವ"
+        },
+        "ml": {
+          "name": "ഭവ"
+        },
+        "pa": {
+          "name": "ਬਾਵਾ"
+        },
+        "or": {
+          "name": "ବବ"
+        },
+        "as": {
+          "name": "বৱ"
+        }
+      }
     },
     {
       "key": "Balava",
       "tradition": null,
-      "i18n": { "en": { "name": "Balava" } }
+      "i18n": {
+        "en": {
+          "name": "Balava"
+        },
+        "hi": {
+          "name": "बालव"
+        },
+        "ta": {
+          "name": "பாலவ"
+        },
+        "te": {
+          "name": "బవ"
+        },
+        "bn": {
+          "name": "বলব"
+        },
+        "mr": {
+          "name": "बालव"
+        },
+        "gu": {
+          "name": "બલવ"
+        },
+        "kn": {
+          "name": "ಬಾಲವ"
+        },
+        "ml": {
+          "name": "ബവ"
+        },
+        "pa": {
+          "name": "ਬਲਵ"
+        },
+        "or": {
+          "name": "ବଳବ"
+        },
+        "as": {
+          "name": "বলৱ"
+        }
+      }
     },
     {
       "key": "Kaulava",
       "tradition": null,
-      "i18n": { "en": { "name": "Kaulava" } }
+      "i18n": {
+        "en": {
+          "name": "Kaulava"
+        },
+        "hi": {
+          "name": "कौलव"
+        },
+        "ta": {
+          "name": "கௌலவ"
+        },
+        "te": {
+          "name": "కౌలవ"
+        },
+        "bn": {
+          "name": "কৌলব"
+        },
+        "mr": {
+          "name": "कौलव"
+        },
+        "gu": {
+          "name": "કૌલવ"
+        },
+        "kn": {
+          "name": "ಕೌಲವ"
+        },
+        "ml": {
+          "name": "കൗലവ"
+        },
+        "pa": {
+          "name": "ਕੌਲਵ"
+        },
+        "or": {
+          "name": "କୌଳବ"
+        },
+        "as": {
+          "name": "কৌলৱ"
+        }
+      }
     },
     {
       "key": "Taitila",
       "tradition": null,
-      "i18n": { "en": { "name": "Taitila" } }
+      "i18n": {
+        "en": {
+          "name": "Taitila"
+        },
+        "hi": {
+          "name": "तैतिल"
+        },
+        "ta": {
+          "name": "தைதில"
+        },
+        "te": {
+          "name": "తైతిల"
+        },
+        "bn": {
+          "name": "তৈতিল"
+        },
+        "mr": {
+          "name": "तैतिल"
+        },
+        "gu": {
+          "name": "તૈતિલ"
+        },
+        "kn": {
+          "name": "ತೈತಿಲ"
+        },
+        "ml": {
+          "name": "തൈതില"
+        },
+        "pa": {
+          "name": "ਤੈਤਿਲਾ"
+        },
+        "or": {
+          "name": "ତୈତିଲା"
+        },
+        "as": {
+          "name": "তৈতিল"
+        }
+      }
     },
     {
       "key": "Garaja",
       "tradition": null,
-      "i18n": { "en": { "name": "Garaja" } }
+      "i18n": {
+        "en": {
+          "name": "Garaja"
+        },
+        "hi": {
+          "name": "गरजा"
+        },
+        "ta": {
+          "name": "Garaja"
+        },
+        "te": {
+          "name": "గరజ"
+        },
+        "bn": {
+          "name": "Garaja"
+        },
+        "mr": {
+          "name": "गरज"
+        },
+        "gu": {
+          "name": "ગરજ"
+        },
+        "kn": {
+          "name": "ಗರಜ"
+        },
+        "ml": {
+          "name": "ഗരജ"
+        },
+        "pa": {
+          "name": "ਗਰਜਾ"
+        },
+        "or": {
+          "name": "ଗରଜା"
+        },
+        "as": {
+          "name": "গৰজ"
+        }
+      }
     },
     {
       "key": "Vanija",
       "tradition": null,
-      "i18n": { "en": { "name": "Vanija" } }
+      "i18n": {
+        "en": {
+          "name": "Vanija"
+        },
+        "hi": {
+          "name": "वणिजा"
+        },
+        "ta": {
+          "name": "வணிஜா"
+        },
+        "te": {
+          "name": "వణిజా"
+        },
+        "bn": {
+          "name": "বণিজা"
+        },
+        "mr": {
+          "name": "वणिजा"
+        },
+        "gu": {
+          "name": "વણિજ"
+        },
+        "kn": {
+          "name": "ವಣಿಜಾ"
+        },
+        "ml": {
+          "name": "വണിജ"
+        },
+        "pa": {
+          "name": "ਵਣਿਜਾ"
+        },
+        "or": {
+          "name": "ବଣିଜା"
+        },
+        "as": {
+          "name": "বণিজা"
+        }
+      }
     },
     {
       "key": "Vishti",
       "tradition": null,
-      "i18n": { "en": { "name": "Vishti" } }
+      "i18n": {
+        "en": {
+          "name": "Vishti"
+        },
+        "hi": {
+          "name": "विष्टि"
+        },
+        "ta": {
+          "name": "விஷ்டி"
+        },
+        "te": {
+          "name": "విష్టి"
+        },
+        "bn": {
+          "name": "Vishti"
+        },
+        "mr": {
+          "name": "विष्टि"
+        },
+        "gu": {
+          "name": "વિષ્ટિ"
+        },
+        "kn": {
+          "name": "ವಿಷ್ಟಿ"
+        },
+        "ml": {
+          "name": "വിഷ്ടി"
+        },
+        "pa": {
+          "name": "ਵਿਸ਼ਟੀ"
+        },
+        "or": {
+          "name": "ବିଷ୍ଟି"
+        },
+        "as": {
+          "name": "বিষ্টি"
+        }
+      }
     },
     {
       "key": "Shakuni",
       "tradition": null,
-      "i18n": { "en": { "name": "Shakuni" } }
+      "i18n": {
+        "en": {
+          "name": "Shakuni"
+        },
+        "hi": {
+          "name": "शकुनि"
+        },
+        "ta": {
+          "name": "Shakuni"
+        },
+        "te": {
+          "name": "శకుని"
+        },
+        "bn": {
+          "name": "শকুনি"
+        },
+        "mr": {
+          "name": "Shakuni"
+        },
+        "gu": {
+          "name": "શકુની"
+        },
+        "kn": {
+          "name": "ಶಕುನಿ"
+        },
+        "ml": {
+          "name": "ശകുനി"
+        },
+        "pa": {
+          "name": "ਸ਼ਕੁਨੀ"
+        },
+        "or": {
+          "name": "ଶକୁନି"
+        },
+        "as": {
+          "name": "শকুনি"
+        }
+      }
     },
     {
       "key": "Chatushpada",
       "tradition": null,
-      "i18n": { "en": { "name": "Chatushpada" } }
+      "i18n": {
+        "en": {
+          "name": "Chatushpada"
+        },
+        "hi": {
+          "name": "चतुष्पद"
+        },
+        "ta": {
+          "name": "சதுஷ்பதா"
+        },
+        "te": {
+          "name": "చతుష్పద"
+        },
+        "bn": {
+          "name": "চতুষ্পদা"
+        },
+        "mr": {
+          "name": "चतुष्पद"
+        },
+        "gu": {
+          "name": "ચતુષ્પદ"
+        },
+        "kn": {
+          "name": "ಚತುಷ್ಪಾದ"
+        },
+        "ml": {
+          "name": "ചതുഷ്പാദ"
+        },
+        "pa": {
+          "name": "ਚਤੁਸ਼ਪਦਾ"
+        },
+        "or": {
+          "name": "ଚତୁଷ୍ପଦ"
+        },
+        "as": {
+          "name": "চতুষ্পদ"
+        }
+      }
     },
     {
       "key": "Nagava",
       "tradition": null,
-      "i18n": { "en": { "name": "Nagava" } }
+      "i18n": {
+        "en": {
+          "name": "Nagava"
+        },
+        "hi": {
+          "name": "नागव"
+        },
+        "ta": {
+          "name": "நாகவா"
+        },
+        "te": {
+          "name": "నాగవ"
+        },
+        "bn": {
+          "name": "নাগব"
+        },
+        "mr": {
+          "name": "नागव"
+        },
+        "gu": {
+          "name": "નાગવા"
+        },
+        "kn": {
+          "name": "ನಾಗವ"
+        },
+        "ml": {
+          "name": "നാഗവ"
+        },
+        "pa": {
+          "name": "ਨਾਗਵ"
+        },
+        "or": {
+          "name": "ନାଗଭା"
+        },
+        "as": {
+          "name": "নাগৱ"
+        }
+      }
     },
     {
       "key": "Kimstughna",
       "tradition": null,
-      "i18n": { "en": { "name": "Kimstughna" } }
+      "i18n": {
+        "en": {
+          "name": "Kimstughna"
+        },
+        "hi": {
+          "name": "किमस्थुघ्न"
+        },
+        "ta": {
+          "name": "கிம்ஸ்துக்ன"
+        },
+        "te": {
+          "name": "కిమ్స్తుఘ్న"
+        },
+        "bn": {
+          "name": "কিমস্টুঘ্ন"
+        },
+        "mr": {
+          "name": "किमस्थुघ्न"
+        },
+        "gu": {
+          "name": "કિમ્સ્તુઘ્ન"
+        },
+        "kn": {
+          "name": "ಕಿಮ್ಸ್ತುಘ್ನ"
+        },
+        "ml": {
+          "name": "കിംസ്തുഘ്ന"
+        },
+        "pa": {
+          "name": "ਕਿਮਸ੍ਤੁਘਨਾ"
+        },
+        "or": {
+          "name": "କିମ୍ସ୍ତୁଘ୍ନ"
+        },
+        "as": {
+          "name": "কিমষ্টুঘ্ন"
+        }
+      }
     }
   ]
 }
