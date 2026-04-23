@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Phase A work should reduce these; bumps up require explicit user approval in review. Regenerate with: npm test -- llm-budget.spec.ts -- --update-baseline (TODO: implement flag).",
-  "version": 2,
+  "version": 3,
   "scenarios": {
     "daily-briefing.en.fresh": {
       "maxCalls": 0,
@@ -13,6 +13,22 @@
     "daily-briefing.en.cached": {
       "maxCalls": 0,
       "description": "English briefing with warm cache. Must be zero."
+    },
+    "numerology.name.en.fresh": {
+      "maxCalls": 0,
+      "description": "English name analysis. Deterministic — must never hit LLM."
+    },
+    "numerology.name.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi name analysis. A2b flipped number meanings + suggestion/compatibility templates + soul/personality prefixes to KbNumberMeaning + KbBriefingPhrase. translateFields removed from numerology.service.ts."
+    },
+    "numerology.brand.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi brand analysis. A2b flipped number meanings + business sectors + brand recommendation templates to KbNumberMeaning + KbBusinessSector + KbBriefingPhrase."
+    },
+    "numerology.personalYear.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi personal-year analysis. A2b flipped yearly theme + monthly focuses + month names to KbPersonalYearTheme + KbBriefingPhrase."
     }
   }
 }

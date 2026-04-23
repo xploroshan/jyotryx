@@ -1,0 +1,132 @@
+{
+  "_source": "Lifted from the inline `themes` map in getPersonalYear() in apps/api/src/modules/numerology/numerology.service.ts. Keyed by the computed personal-year number (1..9). Drives the theme/description/career/finance/relationships/health narrative. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_shape": "{ theme: string, description: string, career: string, finance: string, relationships: string, health: string }",
+  "rows": [
+    {
+      "key": "1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "New Beginnings",
+          "description": "A year of fresh starts, independence, and planting seeds. Take initiative on projects you've been dreaming about.",
+          "career": "Launch new ventures, seek promotions, or pivot careers. Leadership opportunities arise.",
+          "finance": "Start new investments. Bold financial moves are favored. Avoid debt.",
+          "relationships": "New connections form. Existing bonds deepen through honest communication.",
+          "health": "Start new fitness routines. Energy is high — channel it positively."
+        }
+      }
+    },
+    {
+      "key": "2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Partnership & Patience",
+          "description": "A year of cooperation, diplomacy, and nurturing relationships. Patience brings rewards.",
+          "career": "Collaborate, don't compete. Partnerships and team projects succeed.",
+          "finance": "Steady growth through partnerships. Avoid risky solo investments.",
+          "relationships": "Deep bonding year. Marriage or commitment decisions favored.",
+          "health": "Focus on emotional wellness. Meditation and yoga balance your energy."
+        }
+      }
+    },
+    {
+      "key": "3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Expression & Creativity",
+          "description": "A year of self-expression, joy, and social expansion. Your creativity peaks.",
+          "career": "Creative projects shine. Public speaking, writing, and media opportunities.",
+          "finance": "Income through creative channels. Marketing investments pay off.",
+          "relationships": "Social life blooms. New friendships and romance possibilities.",
+          "health": "Good vitality. Watch for overindulgence in food and drink."
+        }
+      }
+    },
+    {
+      "key": "4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Foundation & Hard Work",
+          "description": "A year of building solid foundations through discipline and persistence.",
+          "career": "Steady work pays off. Focus on systems, processes, and skill-building.",
+          "finance": "Save and invest conservatively. Build financial foundations.",
+          "relationships": "Stability in relationships. Work through challenges with patience.",
+          "health": "Establish consistent health routines. Don't neglect rest."
+        }
+      }
+    },
+    {
+      "key": "5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Change & Freedom",
+          "description": "A year of major changes, travel, and breaking free from limitations.",
+          "career": "Career shifts likely. Embrace change — it leads to growth. Travel for work.",
+          "finance": "Variable income. Trading and quick returns possible. Diversify.",
+          "relationships": "Dynamic energy in relationships. Avoid impulsive commitments.",
+          "health": "Stay active. Adventure sports and travel rejuvenate you."
+        }
+      }
+    },
+    {
+      "key": "6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Love & Responsibility",
+          "description": "A year centered on home, family, love, and taking responsibility.",
+          "career": "Service-oriented work thrives. Real estate and home-based businesses favored.",
+          "finance": "Home-related expenses. Investments in property or family businesses.",
+          "relationships": "Marriage, engagement, or deepening family bonds. Love blooms.",
+          "health": "Focus on nutrition and home cooking. Domestic harmony heals."
+        }
+      }
+    },
+    {
+      "key": "7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Spiritual Growth & Analysis",
+          "description": "A year of inner wisdom, research, and spiritual development.",
+          "career": "Research, analysis, and specialization. Quality over quantity.",
+          "finance": "Avoid major financial risks. Study investments carefully.",
+          "relationships": "Introspection in relationships. Quality connections over quantity.",
+          "health": "Mental health priority. Meditation, therapy, and nature walks."
+        }
+      }
+    },
+    {
+      "key": "8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Power & Abundance",
+          "description": "A year of material achievement, power, and karmic rewards.",
+          "career": "Big career moves. Promotions, business expansion, and authority.",
+          "finance": "Financial breakthrough year. Large transactions and investments.",
+          "relationships": "Power dynamics in relationships. Balance giving and receiving.",
+          "health": "Strong constitution. Watch for stress-related issues."
+        }
+      }
+    },
+    {
+      "key": "9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "theme": "Completion & Release",
+          "description": "A year of endings, humanitarian service, and preparing for a new cycle.",
+          "career": "Complete major projects. Mentor others. Philanthropy expands influence.",
+          "finance": "Charitable giving. Release what no longer serves you financially.",
+          "relationships": "Forgiveness and closure. Some relationships may naturally end.",
+          "health": "Detox and renewal. Let go of unhealthy habits."
+        }
+      }
+    }
+  ]
+}

@@ -463,6 +463,31 @@
           "text": "{quality_desc} আজ {vara} যাৰ শাসক হৈছে {day_ruler}। {nakshatra} নক্ষত্ৰই আনে {nakshatra_quality} শক্তি। {insight}"
         }
       }
-    }
+    },
+
+    { "key": "numerology.compatibility.template",        "tradition": null, "i18n": { "en": { "text": "Best compatible with names vibrating to numbers {numbers}" } } },
+    { "key": "numerology.suggestion.favorable",          "tradition": null, "i18n": { "en": { "text": "This name carries strong positive vibrations. Use it confidently for {planet} energy." } } },
+    { "key": "numerology.suggestion.neutral",            "tradition": null, "i18n": { "en": { "text": "This name has balanced energy. Consider strengthening it by adding or modifying a letter to align with numbers 1, 3, 5, or 9." } } },
+    { "key": "numerology.suggestion.unfavorable",        "tradition": null, "i18n": { "en": { "text": "This name may bring challenges due to {planet} influence. Consider consulting a numerologist for spelling adjustments." } } },
+    { "key": "numerology.brand.recommendation.strong",        "tradition": null, "i18n": { "en": { "text": "\"{name}\" carries strong {planet} energy — excellent for business growth and recognition." } } },
+    { "key": "numerology.brand.recommendation.balanced",      "tradition": null, "i18n": { "en": { "text": "\"{name}\" has balanced energy. Consider adding a letter to shift to number {alt} for stronger vibration." } } },
+    { "key": "numerology.brand.recommendation.challenging",   "tradition": null, "i18n": { "en": { "text": "\"{name}\" may face challenges. Consider modifying spelling to align with numbers {alt1} or {alt2}." } } },
+    { "key": "numerology.soulMeaning.prefix",            "tradition": null, "i18n": { "en": { "text": "Inner desire" } } },
+    { "key": "numerology.personalityMeaning.prefix",     "tradition": null, "i18n": { "en": { "text": "Outward impression" } } },
+    { "key": "numerology.invalidName.meaning",           "tradition": null, "i18n": { "en": { "text": "Please enter a valid name with alphabetic characters for analysis." } } },
+    { "key": "numerology.invalidName.suggestion",        "tradition": null, "i18n": { "en": { "text": "Enter a valid name to receive numerological analysis." } } },
+
+    { "key": "month.january",   "tradition": null, "i18n": { "en": { "text": "January" } } },
+    { "key": "month.february",  "tradition": null, "i18n": { "en": { "text": "February" } } },
+    { "key": "month.march",     "tradition": null, "i18n": { "en": { "text": "March" } } },
+    { "key": "month.april",     "tradition": null, "i18n": { "en": { "text": "April" } } },
+    { "key": "month.may",       "tradition": null, "i18n": { "en": { "text": "May" } } },
+    { "key": "month.june",      "tradition": null, "i18n": { "en": { "text": "June" } } },
+    { "key": "month.july",      "tradition": null, "i18n": { "en": { "text": "July" } } },
+    { "key": "month.august",    "tradition": null, "i18n": { "en": { "text": "August" } } },
+    { "key": "month.september", "tradition": null, "i18n": { "en": { "text": "September" } } },
+    { "key": "month.october",   "tradition": null, "i18n": { "en": { "text": "October" } } },
+    { "key": "month.november",  "tradition": null, "i18n": { "en": { "text": "November" } } },
+    { "key": "month.december",  "tradition": null, "i18n": { "en": { "text": "December" } } }
   ]
 }

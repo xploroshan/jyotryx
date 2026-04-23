@@ -537,6 +537,42 @@ model KbBriefingPhrase {
   @@map("kb_briefing_phrases")
 }
 
+model KbNumberMeaning {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// "1".."9", "11", "22", "33"
+  tradition  String?
+  i18n       Json     /// { en: { planet, meaning, strengths[], cautions[], colors[], days[] }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_number_meanings_key_tradition_key", map: "kb_number_meanings_key_tradition_key")
+  @@map("kb_number_meanings")
+}
+
+model KbBusinessSector {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// "1".."9"
+  tradition  String?
+  i18n       Json     /// { en: { suitable[], avoid[] }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_business_sectors_key_tradition_key", map: "kb_business_sectors_key_tradition_key")
+  @@map("kb_business_sectors")
+}
+
+model KbPersonalYearTheme {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   /// "1".."9"
+  tradition  String?
+  i18n       Json     /// { en: { theme, description, career, finance, relationships, health }, hi: {...}, ... }
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_personal_year_themes_key_tradition_key", map: "kb_personal_year_themes_key_tradition_key")
+  @@map("kb_personal_year_themes")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

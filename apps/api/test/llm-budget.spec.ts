@@ -8,13 +8,14 @@
  * migrate to the KB. A PR that raises any ceiling must justify it in
  * review.
  *
- * Today this covers just the daily briefing. Numerology, report section
- * translation, and chat are added as each Track A phase lands.
+ * Coverage: daily briefing (A1b) and numerology (A2b). Report-section
+ * translation and chat land under future Track A phases.
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
+import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
@@ -124,6 +125,48 @@ describe('LLM cost regression budget', () => {
 
       await service.getDailyBriefing('test-uuid', 'en');
       const budget = scenarioBudget('daily-briefing.en.cached');
+      expect(counter.calls.length).toBeLessThanOrEqual(budget);
+    });
+  });
+
+  describe('numerology', () => {
+    let service: NumerologyService;
+    let counter: ReturnType<typeof countingOpenAI>;
+
+    beforeEach(async () => {
+      counter = countingOpenAI();
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NumerologyService,
+          { provide: OpenAIService, useValue: counter.stub },
+          { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
+        ],
+      }).compile();
+      service = module.get(NumerologyService);
+    });
+
+    it('numerology.name.en.fresh stays within budget', async () => {
+      await service.analyzeName('Arjun Sharma', 'en');
+      const budget = scenarioBudget('numerology.name.en.fresh');
+      expect(counter.calls.length).toBeLessThanOrEqual(budget);
+    });
+
+    it('numerology.name.hi.fresh stays within budget', async () => {
+      await service.analyzeName('Arjun Sharma', 'hi');
+      const budget = scenarioBudget('numerology.name.hi.fresh');
+      expect(counter.calls.length).toBeLessThanOrEqual(budget);
+    });
+
+    it('numerology.brand.hi.fresh stays within budget', async () => {
+      await service.analyzeBrand('Acme Labs', 'tech', 'hi');
+      const budget = scenarioBudget('numerology.brand.hi.fresh');
+      expect(counter.calls.length).toBeLessThanOrEqual(budget);
+    });
+
+    it('numerology.personalYear.hi.fresh stays within budget', async () => {
+      await service.getPersonalYear('1990-05-15', 'hi');
+      const budget = scenarioBudget('numerology.personalYear.hi.fresh');
       expect(counter.calls.length).toBeLessThanOrEqual(budget);
     });
   });

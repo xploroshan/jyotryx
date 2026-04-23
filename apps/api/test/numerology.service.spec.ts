@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
-import { mockOpenAIService, mockKnowledgeService } from './helpers/mocks';
+import { KbService } from '../src/knowledge/kb.service';
+import { mockOpenAIService, mockKnowledgeService, mockKbService } from './helpers/mocks';
 
 describe('NumerologyService', () => {
   let service: NumerologyService;
@@ -13,6 +14,7 @@ describe('NumerologyService', () => {
         NumerologyService,
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 

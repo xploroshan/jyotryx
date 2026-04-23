@@ -223,6 +223,7 @@ describe('E2E: Numerology Endpoints', () => {
         NumerologyService,
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     })
       .overrideGuard(JwtAuthGuard)

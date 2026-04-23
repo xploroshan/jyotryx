@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
-import { translateFields } from '../../common/locale';
+import { KbService, KbNumberMeaningPayload, KbBusinessSectorPayload, KbPersonalYearThemePayload } from '../../knowledge/kb.service';
 
 export interface NameAnalysisResult {
   name: string;
@@ -60,106 +60,27 @@ const PYTHAGOREAN_VALUES: Record<string, number> = {
 
 const VOWELS = new Set('aeiou');
 
-const NUMBER_MEANINGS: Record<number, { planet: string; meaning: string; strengths: string[]; cautions: string[]; colors: string[]; days: string[] }> = {
-  1: {
-    planet: 'Sun',
-    meaning: 'Leadership, independence, originality, and pioneering spirit. The number of creators and innovators.',
-    strengths: ['Natural leader', 'Independent thinker', 'Creative force', 'Strong willpower'],
-    cautions: ['Avoid arrogance', 'Balance independence with collaboration', 'Watch for stubbornness'],
-    colors: ['Gold', 'Orange', 'Ruby Red'],
-    days: ['Sunday'],
-  },
-  2: {
-    planet: 'Moon',
-    meaning: 'Diplomacy, partnership, sensitivity, and cooperation. The number of peacemakers and mediators.',
-    strengths: ['Excellent diplomat', 'Strong intuition', 'Team player', 'Emotionally intelligent'],
-    cautions: ['Avoid indecisiveness', 'Set boundaries', 'Don\'t suppress emotions'],
-    colors: ['White', 'Silver', 'Light Green'],
-    days: ['Monday'],
-  },
-  3: {
-    planet: 'Jupiter',
-    meaning: 'Expression, creativity, joy, and expansion. The number of communicators and artists.',
-    strengths: ['Creative expression', 'Optimistic nature', 'Social magnetism', 'Excellent communicator'],
-    cautions: ['Avoid scattered energy', 'Follow through on projects', 'Watch for overindulgence'],
-    colors: ['Yellow', 'Gold', 'Purple'],
-    days: ['Thursday'],
-  },
-  4: {
-    planet: 'Rahu',
-    meaning: 'Stability, hard work, structure, and foundation. The number of builders and organizers.',
-    strengths: ['Disciplined worker', 'Practical thinker', 'Reliable partner', 'Detail-oriented'],
-    cautions: ['Avoid rigidity', 'Embrace change', 'Don\'t overwork', 'Unexpected events possible'],
-    colors: ['Blue', 'Grey', 'Khaki'],
-    days: ['Saturday', 'Sunday'],
-  },
-  5: {
-    planet: 'Mercury',
-    meaning: 'Freedom, versatility, adventure, and change. The number of travelers and communicators.',
-    strengths: ['Adaptable mind', 'Quick thinker', 'Versatile skills', 'Excellent in business'],
-    cautions: ['Avoid restlessness', 'Commit to decisions', 'Don\'t spread too thin'],
-    colors: ['Green', 'Turquoise', 'Light Grey'],
-    days: ['Wednesday'],
-  },
-  6: {
-    planet: 'Venus',
-    meaning: 'Harmony, love, responsibility, and beauty. The number of nurturers and caretakers.',
-    strengths: ['Loving nature', 'Artistic talent', 'Sense of responsibility', 'Magnetic personality'],
-    cautions: ['Avoid self-sacrifice', 'Set healthy boundaries', 'Don\'t neglect self-care'],
-    colors: ['Pink', 'White', 'Light Blue'],
-    days: ['Friday'],
-  },
-  7: {
-    planet: 'Ketu',
-    meaning: 'Spirituality, analysis, wisdom, and introspection. The number of seekers and researchers.',
-    strengths: ['Deep thinker', 'Spiritual awareness', 'Analytical mind', 'Research ability'],
-    cautions: ['Avoid isolation', 'Balance analysis with action', 'Trust others more'],
-    colors: ['Violet', 'Grey', 'Light Yellow'],
-    days: ['Monday'],
-  },
-  8: {
-    planet: 'Saturn',
-    meaning: 'Power, abundance, karma, and material mastery. The number of executives and achievers.',
-    strengths: ['Business acumen', 'Executive ability', 'Material success', 'Karmic wisdom'],
-    cautions: ['Avoid ruthlessness', 'Balance material and spiritual', 'Watch for delays'],
-    colors: ['Dark Blue', 'Black', 'Dark Grey'],
-    days: ['Saturday'],
-  },
-  9: {
-    planet: 'Mars',
-    meaning: 'Completion, humanitarianism, wisdom, and universal love. The number of warriors and healers.',
-    strengths: ['Compassionate leader', 'Universal outlook', 'Courageous spirit', 'Inspirational presence'],
-    cautions: ['Avoid aggression', 'Don\'t neglect personal needs', 'Channel anger constructively'],
-    colors: ['Red', 'Crimson', 'Scarlet'],
-    days: ['Tuesday'],
-  },
-  11: {
-    planet: 'Moon (Master)',
-    meaning: 'Master intuition, spiritual illumination, and visionary leadership. The number of enlightened teachers and healers.',
-    strengths: ['Visionary insight', 'Spiritual teacher', 'Inspirational leader', 'Heightened intuition'],
-    cautions: ['Avoid nervous tension', 'Ground your visions in reality', 'Don\'t fear your own power'],
-    colors: ['Silver', 'White', 'Pale Gold'],
-    days: ['Monday'],
-  },
-  22: {
-    planet: 'Rahu (Master)',
-    meaning: 'Master builder, turning dreams into reality, and large-scale achievement. The number of architects and visionaries.',
-    strengths: ['Master organizer', 'Practical visionary', 'Large-scale thinker', 'Disciplined creator'],
-    cautions: ['Avoid overwhelming yourself', 'Delegate responsibilities', 'Balance ambition with patience'],
-    colors: ['Dark Gold', 'Coral', 'Cream'],
-    days: ['Saturday', 'Sunday'],
-  },
-  33: {
-    planet: 'Jupiter (Master)',
-    meaning: 'Master teacher, selfless service, and cosmic compassion. The number of spiritual healers and uplifters.',
-    strengths: ['Selfless service', 'Cosmic healer', 'Inspiring mentor', 'Unconditional love'],
-    cautions: ['Avoid martyrdom', 'Care for yourself too', 'Set healthy boundaries'],
-    colors: ['Indigo', 'Rose', 'Deep Purple'],
-    days: ['Thursday'],
-  },
+// ─── English fallbacks ───────────────────────────────────────────────────────
+// Authoritative data lives in KbNumberMeaning / KbBusinessSector /
+// KbPersonalYearTheme / KbBriefingPhrase. These inline maps are consulted
+// only when the KB cache is cold (migration not applied / DB unavailable).
+
+const DEFAULT_NUMBER_MEANINGS: Record<number, KbNumberMeaningPayload> = {
+  1:  { planet: 'Sun',     meaning: 'Leadership, independence, originality, and pioneering spirit. The number of creators and innovators.', strengths: ['Natural leader', 'Independent thinker', 'Creative force', 'Strong willpower'], cautions: ['Avoid arrogance', 'Balance independence with collaboration', 'Watch for stubbornness'], colors: ['Gold', 'Orange', 'Ruby Red'], days: ['Sunday'] },
+  2:  { planet: 'Moon',    meaning: 'Diplomacy, partnership, sensitivity, and cooperation. The number of peacemakers and mediators.',        strengths: ['Excellent diplomat', 'Strong intuition', 'Team player', 'Emotionally intelligent'], cautions: ['Avoid indecisiveness', 'Set boundaries', "Don't suppress emotions"], colors: ['White', 'Silver', 'Light Green'], days: ['Monday'] },
+  3:  { planet: 'Jupiter', meaning: 'Expression, creativity, joy, and expansion. The number of communicators and artists.',                   strengths: ['Creative expression', 'Optimistic nature', 'Social magnetism', 'Excellent communicator'], cautions: ['Avoid scattered energy', 'Follow through on projects', 'Watch for overindulgence'], colors: ['Yellow', 'Gold', 'Purple'], days: ['Thursday'] },
+  4:  { planet: 'Rahu',    meaning: 'Stability, hard work, structure, and foundation. The number of builders and organizers.',                strengths: ['Disciplined worker', 'Practical thinker', 'Reliable partner', 'Detail-oriented'], cautions: ['Avoid rigidity', 'Embrace change', "Don't overwork", 'Unexpected events possible'], colors: ['Blue', 'Grey', 'Khaki'], days: ['Saturday', 'Sunday'] },
+  5:  { planet: 'Mercury', meaning: 'Freedom, versatility, adventure, and change. The number of travelers and communicators.',                strengths: ['Adaptable mind', 'Quick thinker', 'Versatile skills', 'Excellent in business'], cautions: ['Avoid restlessness', 'Commit to decisions', "Don't spread too thin"], colors: ['Green', 'Turquoise', 'Light Grey'], days: ['Wednesday'] },
+  6:  { planet: 'Venus',   meaning: 'Harmony, love, responsibility, and beauty. The number of nurturers and caretakers.',                     strengths: ['Loving nature', 'Artistic talent', 'Sense of responsibility', 'Magnetic personality'], cautions: ['Avoid self-sacrifice', 'Set healthy boundaries', "Don't neglect self-care"], colors: ['Pink', 'White', 'Light Blue'], days: ['Friday'] },
+  7:  { planet: 'Ketu',    meaning: 'Spirituality, analysis, wisdom, and introspection. The number of seekers and researchers.',              strengths: ['Deep thinker', 'Spiritual awareness', 'Analytical mind', 'Research ability'], cautions: ['Avoid isolation', 'Balance analysis with action', 'Trust others more'], colors: ['Violet', 'Grey', 'Light Yellow'], days: ['Monday'] },
+  8:  { planet: 'Saturn',  meaning: 'Power, abundance, karma, and material mastery. The number of executives and achievers.',                 strengths: ['Business acumen', 'Executive ability', 'Material success', 'Karmic wisdom'], cautions: ['Avoid ruthlessness', 'Balance material and spiritual', 'Watch for delays'], colors: ['Dark Blue', 'Black', 'Dark Grey'], days: ['Saturday'] },
+  9:  { planet: 'Mars',    meaning: 'Completion, humanitarianism, wisdom, and universal love. The number of warriors and healers.',           strengths: ['Compassionate leader', 'Universal outlook', 'Courageous spirit', 'Inspirational presence'], cautions: ['Avoid aggression', "Don't neglect personal needs", 'Channel anger constructively'], colors: ['Red', 'Crimson', 'Scarlet'], days: ['Tuesday'] },
+  11: { planet: 'Moon (Master)',    meaning: 'Master intuition, spiritual illumination, and visionary leadership. The number of enlightened teachers and healers.', strengths: ['Visionary insight', 'Spiritual teacher', 'Inspirational leader', 'Heightened intuition'], cautions: ['Avoid nervous tension', 'Ground your visions in reality', "Don't fear your own power"], colors: ['Silver', 'White', 'Pale Gold'], days: ['Monday'] },
+  22: { planet: 'Rahu (Master)',    meaning: 'Master builder, turning dreams into reality, and large-scale achievement. The number of architects and visionaries.', strengths: ['Master organizer', 'Practical visionary', 'Large-scale thinker', 'Disciplined creator'], cautions: ['Avoid overwhelming yourself', 'Delegate responsibilities', 'Balance ambition with patience'], colors: ['Dark Gold', 'Coral', 'Cream'], days: ['Saturday', 'Sunday'] },
+  33: { planet: 'Jupiter (Master)', meaning: 'Master teacher, selfless service, and cosmic compassion. The number of spiritual healers and uplifters.',             strengths: ['Selfless service', 'Cosmic healer', 'Inspiring mentor', 'Unconditional love'], cautions: ['Avoid martyrdom', 'Care for yourself too', 'Set healthy boundaries'], colors: ['Indigo', 'Rose', 'Deep Purple'], days: ['Thursday'] },
 };
 
-const BUSINESS_SECTORS: Record<number, { suitable: string[]; avoid: string[] }> = {
+const DEFAULT_BUSINESS_SECTORS: Record<number, KbBusinessSectorPayload> = {
   1: { suitable: ['Tech startups', 'Leadership consulting', 'Innovation labs', 'Government'], avoid: ['Partnership businesses', 'Service-oriented firms'] },
   2: { suitable: ['Counseling', 'Hospitality', 'Healthcare', 'Partnerships'], avoid: ['Aggressive sales', 'Competitive industries'] },
   3: { suitable: ['Media', 'Entertainment', 'Advertising', 'Education'], avoid: ['Manufacturing', 'Heavy industry'] },
@@ -171,6 +92,40 @@ const BUSINESS_SECTORS: Record<number, { suitable: string[]; avoid: string[] }> 
   9: { suitable: ['NGOs', 'Defense', 'Sports', 'Healthcare', 'Fire-related industries'], avoid: ['Passive income businesses'] },
 };
 
+const DEFAULT_PERSONAL_YEAR_THEMES: Record<number, KbPersonalYearThemePayload> = {
+  1: { theme: 'New Beginnings',              description: "A year of fresh starts, independence, and planting seeds. Take initiative on projects you've been dreaming about.", career: 'Launch new ventures, seek promotions, or pivot careers. Leadership opportunities arise.', finance: 'Start new investments. Bold financial moves are favored. Avoid debt.', relationships: 'New connections form. Existing bonds deepen through honest communication.', health: 'Start new fitness routines. Energy is high — channel it positively.' },
+  2: { theme: 'Partnership & Patience',      description: 'A year of cooperation, diplomacy, and nurturing relationships. Patience brings rewards.', career: "Collaborate, don't compete. Partnerships and team projects succeed.", finance: 'Steady growth through partnerships. Avoid risky solo investments.', relationships: 'Deep bonding year. Marriage or commitment decisions favored.', health: 'Focus on emotional wellness. Meditation and yoga balance your energy.' },
+  3: { theme: 'Expression & Creativity',     description: 'A year of self-expression, joy, and social expansion. Your creativity peaks.', career: 'Creative projects shine. Public speaking, writing, and media opportunities.', finance: 'Income through creative channels. Marketing investments pay off.', relationships: 'Social life blooms. New friendships and romance possibilities.', health: 'Good vitality. Watch for overindulgence in food and drink.' },
+  4: { theme: 'Foundation & Hard Work',      description: 'A year of building solid foundations through discipline and persistence.', career: 'Steady work pays off. Focus on systems, processes, and skill-building.', finance: 'Save and invest conservatively. Build financial foundations.', relationships: 'Stability in relationships. Work through challenges with patience.', health: "Establish consistent health routines. Don't neglect rest." },
+  5: { theme: 'Change & Freedom',            description: 'A year of major changes, travel, and breaking free from limitations.', career: 'Career shifts likely. Embrace change — it leads to growth. Travel for work.', finance: 'Variable income. Trading and quick returns possible. Diversify.', relationships: 'Dynamic energy in relationships. Avoid impulsive commitments.', health: 'Stay active. Adventure sports and travel rejuvenate you.' },
+  6: { theme: 'Love & Responsibility',       description: 'A year centered on home, family, love, and taking responsibility.', career: 'Service-oriented work thrives. Real estate and home-based businesses favored.', finance: 'Home-related expenses. Investments in property or family businesses.', relationships: 'Marriage, engagement, or deepening family bonds. Love blooms.', health: 'Focus on nutrition and home cooking. Domestic harmony heals.' },
+  7: { theme: 'Spiritual Growth & Analysis', description: 'A year of inner wisdom, research, and spiritual development.', career: 'Research, analysis, and specialization. Quality over quantity.', finance: 'Avoid major financial risks. Study investments carefully.', relationships: 'Introspection in relationships. Quality connections over quantity.', health: 'Mental health priority. Meditation, therapy, and nature walks.' },
+  8: { theme: 'Power & Abundance',           description: 'A year of material achievement, power, and karmic rewards.', career: 'Big career moves. Promotions, business expansion, and authority.', finance: 'Financial breakthrough year. Large transactions and investments.', relationships: 'Power dynamics in relationships. Balance giving and receiving.', health: 'Strong constitution. Watch for stress-related issues.' },
+  9: { theme: 'Completion & Release',        description: 'A year of endings, humanitarian service, and preparing for a new cycle.', career: 'Complete major projects. Mentor others. Philanthropy expands influence.', finance: 'Charitable giving. Release what no longer serves you financially.', relationships: 'Forgiveness and closure. Some relationships may naturally end.', health: 'Detox and renewal. Let go of unhealthy habits.' },
+};
+
+const MONTH_KEYS = [
+  'month.january', 'month.february', 'month.march', 'month.april',
+  'month.may', 'month.june', 'month.july', 'month.august',
+  'month.september', 'month.october', 'month.november', 'month.december',
+];
+const DEFAULT_MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const DEFAULT_COMPATIBILITY_TEMPLATE = 'Best compatible with names vibrating to numbers {numbers}';
+const DEFAULT_SUGGESTION_FAVORABLE = 'This name carries strong positive vibrations. Use it confidently for {planet} energy.';
+const DEFAULT_SUGGESTION_NEUTRAL = 'This name has balanced energy. Consider strengthening it by adding or modifying a letter to align with numbers 1, 3, 5, or 9.';
+const DEFAULT_SUGGESTION_UNFAVORABLE = 'This name may bring challenges due to {planet} influence. Consider consulting a numerologist for spelling adjustments.';
+const DEFAULT_BRAND_REC_STRONG = '"{name}" carries strong {planet} energy — excellent for business growth and recognition.';
+const DEFAULT_BRAND_REC_BALANCED = '"{name}" has balanced energy. Consider adding a letter to shift to number {alt} for stronger vibration.';
+const DEFAULT_BRAND_REC_CHALLENGING = '"{name}" may face challenges. Consider modifying spelling to align with numbers {alt1} or {alt2}.';
+const DEFAULT_SOUL_PREFIX = 'Inner desire';
+const DEFAULT_PERSONALITY_PREFIX = 'Outward impression';
+const DEFAULT_INVALID_MEANING = 'Please enter a valid name with alphabetic characters for analysis.';
+const DEFAULT_INVALID_SUGGESTION = 'Enter a valid name to receive numerological analysis.';
+
 @Injectable()
 export class NumerologyService {
   private readonly logger = new Logger(NumerologyService.name);
@@ -178,27 +133,36 @@ export class NumerologyService {
   constructor(
     private readonly openaiService: OpenAIService,
     private readonly knowledgeService: KnowledgeService,
+    private readonly kbService: KbService,
   ) {}
 
   async analyzeName(name: string, locale?: string): Promise<NameAnalysisResult> {
     const cleanName = name.toLowerCase().replace(/[^a-z]/g, '');
     if (cleanName.length === 0) {
       // Non-Latin names: transliterate to closest Latin equivalent for analysis
-      const transliterated = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+      const transliterated = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
       if (transliterated.length > 0) {
-        const result = await this.analyzeName(transliterated);
-        return this.localizeNameResult({ ...result, name }, locale);
+        const result = await this.analyzeName(transliterated, locale);
+        return { ...result, name };
       }
-      return this.localizeNameResult(this.getDefaultNameResult(name), locale);
+      return this.getInvalidNameResult(name, locale);
     }
 
     const destinyNumber = this.reduceToSingle(this.calculateChaldean(cleanName));
     const soulNumber = this.reduceToSingle(this.calculateVowels(cleanName));
     const personalityNumber = this.reduceToSingle(this.calculateConsonants(cleanName));
 
-    const destiny = NUMBER_MEANINGS[destinyNumber] || NUMBER_MEANINGS[1];
-    const soul = NUMBER_MEANINGS[soulNumber] || NUMBER_MEANINGS[1];
-    const personality = NUMBER_MEANINGS[personalityNumber] || NUMBER_MEANINGS[1];
+    const [destiny, soul, personality, compatTpl, suggestionFav, suggestionNeu, suggestionUnfav, soulPrefix, personalityPrefix] = await Promise.all([
+      this.loadNumberMeaning(destinyNumber, locale),
+      this.loadNumberMeaning(soulNumber, locale),
+      this.loadNumberMeaning(personalityNumber, locale),
+      this.loadPhrase('numerology.compatibility.template', DEFAULT_COMPATIBILITY_TEMPLATE, locale),
+      this.loadPhrase('numerology.suggestion.favorable', DEFAULT_SUGGESTION_FAVORABLE, locale),
+      this.loadPhrase('numerology.suggestion.neutral', DEFAULT_SUGGESTION_NEUTRAL, locale),
+      this.loadPhrase('numerology.suggestion.unfavorable', DEFAULT_SUGGESTION_UNFAVORABLE, locale),
+      this.loadPhrase('numerology.soulMeaning.prefix', DEFAULT_SOUL_PREFIX, locale),
+      this.loadPhrase('numerology.personalityMeaning.prefix', DEFAULT_PERSONALITY_PREFIX, locale),
+    ]);
 
     // Determine overall verdict
     const favorableNumbers = [1, 3, 5, 6, 9];
@@ -215,31 +179,36 @@ export class NumerologyService {
     // Compatibility
     const compatibleNumbers = this.getCompatibleNumbers(destinyNumber);
 
-    const result: NameAnalysisResult = {
+    return {
       name,
       destinyNumber,
       soulNumber,
       personalityNumber,
       destinyMeaning: destiny.meaning,
-      soulMeaning: `Inner desire: ${soul.meaning.split('.')[0]}.`,
-      personalityMeaning: `Outward impression: ${personality.meaning.split('.')[0]}.`,
+      soulMeaning: `${soulPrefix}: ${soul.meaning.split('.')[0]}.`,
+      personalityMeaning: `${personalityPrefix}: ${personality.meaning.split('.')[0]}.`,
       overallVerdict,
       strengths: [...destiny.strengths.slice(0, 2), ...soul.strengths.slice(0, 1)],
       cautions: destiny.cautions,
       bestDaysToUse: destiny.days,
       luckyColors: destiny.colors,
       rulingPlanet: destiny.planet,
-      compatibility: `Best compatible with names vibrating to numbers ${compatibleNumbers.join(', ')}`,
-      suggestion: this.getNameSuggestion(destinyNumber, overallVerdict),
+      compatibility: compatTpl.replace('{numbers}', compatibleNumbers.join(', ')),
+      suggestion: this.renderSuggestion(overallVerdict, destiny.planet, suggestionFav, suggestionNeu, suggestionUnfav),
     };
-    return this.localizeNameResult(result, locale);
   }
 
   async analyzeBrand(brandName: string, industry?: string, locale?: string): Promise<BrandAnalysisResult> {
     const cleanName = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const nameNumber = this.reduceToSingle(this.calculateChaldean(cleanName.replace(/[0-9]/g, '')));
-    const data = NUMBER_MEANINGS[nameNumber] || NUMBER_MEANINGS[1];
-    const sectors = BUSINESS_SECTORS[nameNumber] || BUSINESS_SECTORS[1];
+
+    const [data, sectors, recStrong, recBalanced, recChallenging] = await Promise.all([
+      this.loadNumberMeaning(nameNumber, locale),
+      this.loadBusinessSector(nameNumber, locale),
+      this.loadPhrase('numerology.brand.recommendation.strong', DEFAULT_BRAND_REC_STRONG, locale),
+      this.loadPhrase('numerology.brand.recommendation.balanced', DEFAULT_BRAND_REC_BALANCED, locale),
+      this.loadPhrase('numerology.brand.recommendation.challenging', DEFAULT_BRAND_REC_CHALLENGING, locale),
+    ]);
 
     // Score 1-10 based on number favorability for business
     const businessFavorable: Record<number, number> = { 1: 8, 2: 6, 3: 9, 4: 5, 5: 9, 6: 8, 7: 6, 8: 7, 9: 8 };
@@ -247,7 +216,19 @@ export class NumerologyService {
 
     const alternativeNumbers = [1, 3, 5, 6, 9].filter((n) => n !== nameNumber);
 
-    const result: BrandAnalysisResult = {
+    let recommendation: string;
+    if (overallScore >= 7) {
+      recommendation = recStrong.replace('{name}', brandName).replace('{planet}', data.planet);
+    } else if (overallScore >= 5) {
+      recommendation = recBalanced.replace('{name}', brandName).replace('{alt}', String(alternativeNumbers[0]));
+    } else {
+      recommendation = recChallenging
+        .replace('{name}', brandName)
+        .replace('{alt1}', String(alternativeNumbers[0]))
+        .replace('{alt2}', String(alternativeNumbers[1]));
+    }
+
+    return {
       brandName,
       nameNumber,
       vibration: data.meaning.split('.')[0],
@@ -255,16 +236,11 @@ export class NumerologyService {
       suitableFor: sectors.suitable,
       avoidFor: sectors.avoid,
       overallScore,
-      recommendation: overallScore >= 7
-        ? `"${brandName}" carries strong ${data.planet} energy — excellent for business growth and recognition.`
-        : overallScore >= 5
-          ? `"${brandName}" has balanced energy. Consider adding a letter to shift to number ${alternativeNumbers[0]} for stronger vibration.`
-          : `"${brandName}" may face challenges. Consider modifying spelling to align with numbers ${alternativeNumbers.slice(0, 2).join(' or ')}.`,
+      recommendation,
       alternativeNumbers,
       bestLaunchDays: data.days,
       luckyColors: data.colors,
     };
-    return this.localizeBrandResult(result, locale);
   }
 
   async getPersonalYear(dateOfBirth: string, locale?: string): Promise<PersonalYearResult> {
@@ -274,113 +250,75 @@ export class NumerologyService {
       dob.getDate() + (dob.getMonth() + 1) + this.reduceToSingle(currentYear),
     );
 
-    const themes: Record<number, { theme: string; desc: string; career: string; finance: string; relationships: string; health: string }> = {
-      1: { theme: 'New Beginnings', desc: 'A year of fresh starts, independence, and planting seeds. Take initiative on projects you\'ve been dreaming about.', career: 'Launch new ventures, seek promotions, or pivot careers. Leadership opportunities arise.', finance: 'Start new investments. Bold financial moves are favored. Avoid debt.', relationships: 'New connections form. Existing bonds deepen through honest communication.', health: 'Start new fitness routines. Energy is high — channel it positively.' },
-      2: { theme: 'Partnership & Patience', desc: 'A year of cooperation, diplomacy, and nurturing relationships. Patience brings rewards.', career: 'Collaborate, don\'t compete. Partnerships and team projects succeed.', finance: 'Steady growth through partnerships. Avoid risky solo investments.', relationships: 'Deep bonding year. Marriage or commitment decisions favored.', health: 'Focus on emotional wellness. Meditation and yoga balance your energy.' },
-      3: { theme: 'Expression & Creativity', desc: 'A year of self-expression, joy, and social expansion. Your creativity peaks.', career: 'Creative projects shine. Public speaking, writing, and media opportunities.', finance: 'Income through creative channels. Marketing investments pay off.', relationships: 'Social life blooms. New friendships and romance possibilities.', health: 'Good vitality. Watch for overindulgence in food and drink.' },
-      4: { theme: 'Foundation & Hard Work', desc: 'A year of building solid foundations through discipline and persistence.', career: 'Steady work pays off. Focus on systems, processes, and skill-building.', finance: 'Save and invest conservatively. Build financial foundations.', relationships: 'Stability in relationships. Work through challenges with patience.', health: 'Establish consistent health routines. Don\'t neglect rest.' },
-      5: { theme: 'Change & Freedom', desc: 'A year of major changes, travel, and breaking free from limitations.', career: 'Career shifts likely. Embrace change — it leads to growth. Travel for work.', finance: 'Variable income. Trading and quick returns possible. Diversify.', relationships: 'Dynamic energy in relationships. Avoid impulsive commitments.', health: 'Stay active. Adventure sports and travel rejuvenate you.' },
-      6: { theme: 'Love & Responsibility', desc: 'A year centered on home, family, love, and taking responsibility.', career: 'Service-oriented work thrives. Real estate and home-based businesses favored.', finance: 'Home-related expenses. Investments in property or family businesses.', relationships: 'Marriage, engagement, or deepening family bonds. Love blooms.', health: 'Focus on nutrition and home cooking. Domestic harmony heals.' },
-      7: { theme: 'Spiritual Growth & Analysis', desc: 'A year of inner wisdom, research, and spiritual development.', career: 'Research, analysis, and specialization. Quality over quantity.', finance: 'Avoid major financial risks. Study investments carefully.', relationships: 'Introspection in relationships. Quality connections over quantity.', health: 'Mental health priority. Meditation, therapy, and nature walks.' },
-      8: { theme: 'Power & Abundance', desc: 'A year of material achievement, power, and karmic rewards.', career: 'Big career moves. Promotions, business expansion, and authority.', finance: 'Financial breakthrough year. Large transactions and investments.', relationships: 'Power dynamics in relationships. Balance giving and receiving.', health: 'Strong constitution. Watch for stress-related issues.' },
-      9: { theme: 'Completion & Release', desc: 'A year of endings, humanitarian service, and preparing for a new cycle.', career: 'Complete major projects. Mentor others. Philanthropy expands influence.', finance: 'Charitable giving. Release what no longer serves you financially.', relationships: 'Forgiveness and closure. Some relationships may naturally end.', health: 'Detox and renewal. Let go of unhealthy habits.' },
-    };
+    const data = await this.loadPersonalYearTheme(personalYear, locale);
 
-    const data = themes[personalYear] || themes[1];
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const monthFocuses = months.map((month, i) => {
-      const monthNum = this.reduceToSingle(personalYear + i + 1);
-      const focus = themes[monthNum]?.theme || 'Balanced Energy';
-      return { month, focus };
-    });
+    // Each month gets its own focus-theme (the theme of the month's own
+    // reduced number), plus the localized month name from KbBriefingPhrase.
+    const monthThemes = await Promise.all(
+      MONTH_KEYS.map((_, i) => this.loadPersonalYearTheme(this.reduceToSingle(personalYear + i + 1), locale)),
+    );
+    const monthNames = await Promise.all(
+      MONTH_KEYS.map((key, i) => this.loadPhrase(key, DEFAULT_MONTH_NAMES[i], locale)),
+    );
+    const months = MONTH_KEYS.map((_, i) => ({
+      month: monthNames[i],
+      focus: monthThemes[i].theme,
+    }));
 
-    const result: PersonalYearResult = {
+    return {
       personalYear,
       theme: data.theme,
-      description: data.desc,
+      description: data.description,
       career: data.career,
       finance: data.finance,
       relationships: data.relationships,
       health: data.health,
-      months: monthFocuses,
+      months,
     };
-    return this.localizePersonalYearResult(result, locale);
   }
 
-  // ─── Private Helpers ──────────────────────────────────────────────
+  // ─── Private helpers ────────────────────────────────────────────────────
 
-  private async localizeNameResult(result: NameAnalysisResult, locale?: string): Promise<NameAnalysisResult> {
-    if (!locale || locale === 'en') return result;
-    const translated = await translateFields(
-      this.openaiService,
-      {
-        destinyMeaning: result.destinyMeaning,
-        soulMeaning: result.soulMeaning,
-        personalityMeaning: result.personalityMeaning,
-        strengths: result.strengths,
-        cautions: result.cautions,
-        bestDaysToUse: result.bestDaysToUse,
-        luckyColors: result.luckyColors,
-        rulingPlanet: result.rulingPlanet,
-        compatibility: result.compatibility,
-        suggestion: result.suggestion,
-      },
-      locale,
-      'numerology-name',
-    );
-    return { ...result, ...translated };
+  private async loadNumberMeaning(num: number, locale?: string): Promise<KbNumberMeaningPayload> {
+    const row = await this.kbService.getNumberMeaning(String(num));
+    return this.kbService.render(row, locale)
+      ?? DEFAULT_NUMBER_MEANINGS[num]
+      ?? DEFAULT_NUMBER_MEANINGS[1];
   }
 
-  private async localizeBrandResult(result: BrandAnalysisResult, locale?: string): Promise<BrandAnalysisResult> {
-    if (!locale || locale === 'en') return result;
-    const translated = await translateFields(
-      this.openaiService,
-      {
-        vibration: result.vibration,
-        planetaryRuler: result.planetaryRuler,
-        suitableFor: result.suitableFor,
-        avoidFor: result.avoidFor,
-        recommendation: result.recommendation,
-        bestLaunchDays: result.bestLaunchDays,
-        luckyColors: result.luckyColors,
-      },
-      locale,
-      'numerology-brand',
-    );
-    return { ...result, ...translated };
+  private async loadBusinessSector(num: number, locale?: string): Promise<KbBusinessSectorPayload> {
+    const row = await this.kbService.getBusinessSector(String(num));
+    return this.kbService.render(row, locale)
+      ?? DEFAULT_BUSINESS_SECTORS[num]
+      ?? DEFAULT_BUSINESS_SECTORS[1];
   }
 
-  private async localizePersonalYearResult(result: PersonalYearResult, locale?: string): Promise<PersonalYearResult> {
-    if (!locale || locale === 'en') return result;
-    const monthNames = result.months.map((m) => m.month);
-    const monthFocuses = result.months.map((m) => m.focus);
-    const translated = await translateFields(
-      this.openaiService,
-      {
-        theme: result.theme,
-        description: result.description,
-        career: result.career,
-        finance: result.finance,
-        relationships: result.relationships,
-        health: result.health,
-        monthNames,
-        monthFocuses,
-      },
-      locale,
-      'numerology-personal-year',
-    );
-    const translatedNames = Array.isArray((translated as any).monthNames) ? (translated as any).monthNames as string[] : monthNames;
-    const translatedFocuses = Array.isArray((translated as any).monthFocuses) ? (translated as any).monthFocuses as string[] : monthFocuses;
-    return {
-      ...result,
-      theme: translated.theme ?? result.theme,
-      description: translated.description ?? result.description,
-      career: translated.career ?? result.career,
-      finance: translated.finance ?? result.finance,
-      relationships: translated.relationships ?? result.relationships,
-      health: translated.health ?? result.health,
-      months: result.months.map((m, i) => ({ month: translatedNames[i] ?? m.month, focus: translatedFocuses[i] ?? m.focus })),
-    };
+  private async loadPersonalYearTheme(num: number, locale?: string): Promise<KbPersonalYearThemePayload> {
+    const row = await this.kbService.getPersonalYearTheme(String(num));
+    return this.kbService.render(row, locale)
+      ?? DEFAULT_PERSONAL_YEAR_THEMES[num]
+      ?? DEFAULT_PERSONAL_YEAR_THEMES[1];
+  }
+
+  private async loadPhrase(key: string, fallback: string, locale?: string): Promise<string> {
+    const row = await this.kbService.getBriefingPhrase(key);
+    return this.kbService.render(row, locale)?.text ?? fallback;
+  }
+
+  private renderSuggestion(
+    verdict: NameAnalysisResult['overallVerdict'],
+    planet: string,
+    favorable: string,
+    neutral: string,
+    unfavorable: string,
+  ): string {
+    if (verdict === 'highly_favorable' || verdict === 'favorable') {
+      return favorable.replace('{planet}', planet);
+    }
+    if (verdict === 'neutral') {
+      return neutral;
+    }
+    return unfavorable.replace('{planet}', planet);
   }
 
   private calculateChaldean(text: string): number {
@@ -418,23 +356,17 @@ export class NumerologyService {
     return compatibility[num] || [1, 5, 9];
   }
 
-  private getNameSuggestion(destinyNumber: number, verdict: string): string {
-    if (verdict === 'highly_favorable' || verdict === 'favorable') {
-      return `This name carries strong positive vibrations. Use it confidently for ${NUMBER_MEANINGS[destinyNumber]?.planet || 'planetary'} energy.`;
-    }
-    if (verdict === 'neutral') {
-      return 'This name has balanced energy. Consider strengthening it by adding or modifying a letter to align with numbers 1, 3, 5, or 9.';
-    }
-    return `This name may bring challenges due to ${NUMBER_MEANINGS[destinyNumber]?.planet || 'planetary'} influence. Consider consulting a numerologist for spelling adjustments.`;
-  }
-
-  private getDefaultNameResult(name: string): NameAnalysisResult {
+  private async getInvalidNameResult(name: string, locale?: string): Promise<NameAnalysisResult> {
+    const [meaning, suggestion] = await Promise.all([
+      this.loadPhrase('numerology.invalidName.meaning', DEFAULT_INVALID_MEANING, locale),
+      this.loadPhrase('numerology.invalidName.suggestion', DEFAULT_INVALID_SUGGESTION, locale),
+    ]);
     return {
       name,
       destinyNumber: 1,
       soulNumber: 1,
       personalityNumber: 1,
-      destinyMeaning: 'Please enter a valid name with alphabetic characters for analysis.',
+      destinyMeaning: meaning,
       soulMeaning: '',
       personalityMeaning: '',
       overallVerdict: 'neutral',
@@ -444,7 +376,7 @@ export class NumerologyService {
       luckyColors: [],
       rulingPlanet: 'Sun',
       compatibility: '',
-      suggestion: 'Enter a valid name to receive numerological analysis.',
+      suggestion,
     };
   }
 }

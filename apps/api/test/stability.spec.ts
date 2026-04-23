@@ -348,6 +348,7 @@ describe('Stability: Error Recovery', () => {
           NumerologyService,
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+          { provide: KbService, useValue: mockKbService() },
         ],
       }).compile();
 

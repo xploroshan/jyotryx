@@ -31,6 +31,29 @@ export interface KbBriefingPhrasePayload {
   text: string;
 }
 
+export interface KbNumberMeaningPayload {
+  planet: string;
+  meaning: string;
+  strengths: string[];
+  cautions: string[];
+  colors: string[];
+  days: string[];
+}
+
+export interface KbBusinessSectorPayload {
+  suitable: string[];
+  avoid: string[];
+}
+
+export interface KbPersonalYearThemePayload {
+  theme: string;
+  description: string;
+  career: string;
+  finance: string;
+  relationships: string;
+  health: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -62,6 +85,9 @@ export class KbService {
   private pakshaCache = new Map<string, KbRow<KbNamedPayload>>();
   private professionInsightCache = new Map<string, KbRow<KbProfessionInsightPayload>>();
   private briefingPhraseCache = new Map<string, KbRow<KbBriefingPhrasePayload>>();
+  private numberMeaningCache = new Map<string, KbRow<KbNumberMeaningPayload>>();
+  private businessSectorCache = new Map<string, KbRow<KbBusinessSectorPayload>>();
+  private personalYearThemeCache = new Map<string, KbRow<KbPersonalYearThemePayload>>();
 
   private loaded = {
     planet: false,
@@ -72,6 +98,9 @@ export class KbService {
     paksha: false,
     professionInsight: false,
     briefingPhrase: false,
+    numberMeaning: false,
+    businessSector: false,
+    personalYearTheme: false,
   };
 
   constructor(private readonly prisma: PrismaService) {}
@@ -127,6 +156,24 @@ export class KbService {
     return this.lookup(this.briefingPhraseCache, key, null);
   }
 
+  /** Numerology number meaning. Key is the number as a string: "1".."9","11","22","33". */
+  async getNumberMeaning(key: string): Promise<KbRow<KbNumberMeaningPayload> | null> {
+    await this.ensureLoaded('numberMeaning');
+    return this.lookup(this.numberMeaningCache, key, null);
+  }
+
+  /** Business-sector mapping per numerology name-number. Key is "1".."9". */
+  async getBusinessSector(key: string): Promise<KbRow<KbBusinessSectorPayload> | null> {
+    await this.ensureLoaded('businessSector');
+    return this.lookup(this.businessSectorCache, key, null);
+  }
+
+  /** Personal-year narrative theme per computed year number. Key is "1".."9". */
+  async getPersonalYearTheme(key: string): Promise<KbRow<KbPersonalYearThemePayload> | null> {
+    await this.ensureLoaded('personalYearTheme');
+    return this.lookup(this.personalYearThemeCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -149,9 +196,13 @@ export class KbService {
     this.pakshaCache.clear();
     this.professionInsightCache.clear();
     this.briefingPhraseCache.clear();
+    this.numberMeaningCache.clear();
+    this.businessSectorCache.clear();
+    this.personalYearThemeCache.clear();
     this.loaded = {
       planet: false, nakshatra: false, tithi: false, yoga: false,
       vara: false, paksha: false, professionInsight: false, briefingPhrase: false,
+      numberMeaning: false, businessSector: false, personalYearTheme: false,
     };
   }
 
@@ -177,6 +228,9 @@ export class KbService {
         case 'paksha':            await this.loadPakshas();            break;
         case 'professionInsight': await this.loadProfessionInsights(); break;
         case 'briefingPhrase':    await this.loadBriefingPhrases();    break;
+        case 'numberMeaning':     await this.loadNumberMeanings();     break;
+        case 'businessSector':    await this.loadBusinessSectors();    break;
+        case 'personalYearTheme': await this.loadPersonalYearThemes(); break;
       }
       this.loaded[table] = true;
     } catch (err) {
@@ -221,6 +275,24 @@ export class KbService {
     if (!model?.findMany) return;
     const rows = await model.findMany();
     for (const r of rows) this.briefingPhraseCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadNumberMeanings(): Promise<void> {
+    const model: any = (this.prisma as any).kbNumberMeaning;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.numberMeaningCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadBusinessSectors(): Promise<void> {
+    const model: any = (this.prisma as any).kbBusinessSector;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.businessSectorCache.set(cacheKey(r.key, r.tradition), r as any);
+  }
+  private async loadPersonalYearThemes(): Promise<void> {
+    const model: any = (this.prisma as any).kbPersonalYearTheme;
+    if (!model?.findMany) return;
+    const rows = await model.findMany();
+    for (const r of rows) this.personalYearThemeCache.set(cacheKey(r.key, r.tradition), r as any);
   }
 }
 

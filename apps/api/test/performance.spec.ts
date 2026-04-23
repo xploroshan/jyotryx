@@ -167,6 +167,7 @@ describe('Performance: Concurrent Requests', () => {
         NumerologyService,
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
 
