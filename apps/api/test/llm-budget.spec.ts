@@ -11,9 +11,11 @@
  * Coverage: daily briefing (A1b), numerology (A2b), report fallback (A3b),
  * astrology (A4 — Chinese zodiac / medical body-zodiac / flying stars /
  * panchang localization / sade-sati localization / muhurat fallback;
- * A5a — horary / zodiacal-releasing / decumbiture / dosha). The 5
- * `translateText` sites (bazi, western-natal, hellenistic-profections,
- * western-synastry, western-transits) remain under A5b.
+ * A5a — horary / zodiacal-releasing / decumbiture / dosha; A5b — bazi /
+ * western-natal / hellenistic-profections / western-synastry /
+ * western-transits). translateFields + translateText are fully retired
+ * from astrology.service.ts as of A5b; every non-primary LLM astrology
+ * call is budgeted here.
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -343,6 +345,35 @@ describe('LLM cost regression budget', () => {
       // from `dosha.*.birth_required` KbBriefingPhrase templates.
       await service.getDosha('test-uuid', 'hi');
       expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.doshaFallback.hi.fresh'));
+    });
+
+    it('astrology.bazi.hi.fresh stays within budget', async () => {
+      await service.getBazi('test-uuid', { dateOfBirth: '1990-05-15', timeOfBirth: '14:30', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.bazi.hi.fresh'));
+    });
+
+    it('astrology.westernNatal.hi.fresh stays within budget', async () => {
+      await service.getWesternNatal('test-uuid', { dateOfBirth: '1990-05-15', timeOfBirth: '14:30', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.westernNatal.hi.fresh'));
+    });
+
+    it('astrology.hellenisticProfections.hi.fresh stays within budget', async () => {
+      await service.getHellenisticProfections('test-uuid', { dateOfBirth: '1990-05-15', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.hellenisticProfections.hi.fresh'));
+    });
+
+    it('astrology.westernSynastry.hi.fresh stays within budget', async () => {
+      await service.getWesternSynastry('test-uuid', {
+        partner1: { dateOfBirth: '1990-05-15', timeOfBirth: '14:30' },
+        partner2: { dateOfBirth: '1992-07-20', timeOfBirth: '09:00' },
+        locale: 'hi',
+      });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.westernSynastry.hi.fresh'));
+    });
+
+    it('astrology.westernTransits.hi.fresh stays within budget', async () => {
+      await service.getWesternTransits('test-uuid', { dateOfBirth: '1990-05-15', timeOfBirth: '14:30', locale: 'hi' });
+      expect(counter.calls.length).toBeLessThanOrEqual(scenarioBudget('astrology.westernTransits.hi.fresh'));
     });
   });
 });

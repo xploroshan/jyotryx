@@ -7,7 +7,7 @@ import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
-import { getLocaleInstruction, translateText } from '../../common/locale';
+import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import * as path from 'path';
 
@@ -1181,13 +1181,17 @@ export class AstrologyService {
       if (p.element in elementBalance) elementBalance[p.element]++;
     }
 
-    const interpretation = `Your Day Master is ${dayPillar.heavenlyStem} (${dayPillar.element}). ` +
-      `Year pillar: ${yearPillar.animal} · ${yearPillar.element}. ` +
-      `This suggests a ${dayPillar.element.toLowerCase()}-led character with ` +
-      `${Object.entries(elementBalance).sort((a, b) => b[1] - a[1])[0][0].toLowerCase()} as the ` +
-      `dominant element across your chart.`;
-
-    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'bazi');
+    const dominantElement = Object.entries(elementBalance).sort((a, b) => b[1] - a[1])[0][0];
+    const tmpl = await this.kbService.getBriefingPhrase('bazi.interpretation.template');
+    const template = this.kbService.render(tmpl, dto.locale)?.text
+      ?? 'Your Day Master is {stem} ({element}). Year pillar: {yearAnimal} · {yearElement}. This suggests a {elementLower}-led character with {dominantElement} as the dominant element across your chart.';
+    const localizedInterpretation = template
+      .replace('{stem}', dayPillar.heavenlyStem)
+      .replace('{element}', dayPillar.element)
+      .replace('{yearAnimal}', yearPillar.animal)
+      .replace('{yearElement}', yearPillar.element)
+      .replace('{elementLower}', dayPillar.element.toLowerCase())
+      .replace('{dominantElement}', dominantElement.toLowerCase());
 
     return {
       userId,
@@ -1218,10 +1222,14 @@ export class AstrologyService {
     const jupiterLon = this.tropicalLongitude(jd, swisseph.SE_JUPITER);
     const saturnLon = this.tropicalLongitude(jd, swisseph.SE_SATURN);
     const ascSignIndex = Math.floor(sunLon / 30); // placeholder until asc is wired
-    const interpretation = `A tropical natal snapshot with Sun in ${ALL_SIGNS[Math.floor(sunLon / 30)]}, ` +
-      `Moon in ${ALL_SIGNS[Math.floor(moonLon / 30)]}. House placements use the placeholder ` +
-      `whole-sign scheme until the location-aware Placidus engine ships.`;
-    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'western-natal');
+    const sunSign = ALL_SIGNS[Math.floor(sunLon / 30)];
+    const moonSign = ALL_SIGNS[Math.floor(moonLon / 30)];
+    const natalTpl = await this.kbService.getBriefingPhrase('western-natal.interpretation.template');
+    const natalTemplate = this.kbService.render(natalTpl, dto.locale)?.text
+      ?? 'A tropical natal snapshot with Sun in {sunSign}, Moon in {moonSign}. House placements use the placeholder whole-sign scheme until the location-aware Placidus engine ships.';
+    const localizedInterpretation = natalTemplate
+      .replace('{sunSign}', sunSign)
+      .replace('{moonSign}', moonSign);
     return {
       userId,
       ascendant: { sign: ALL_SIGNS[ascSignIndex], degree: sunLon % 30 },
@@ -1254,9 +1262,14 @@ export class AstrologyService {
     const profectedSign = ALL_SIGNS[(profectedHouse - 1) % 12];
     const lordByIndex = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'];
     const lordOfYear = lordByIndex[ALL_SIGNS.indexOf(profectedSign as any)];
-    const interpretation = `At age ${ageYears} you profect to the ${profectedHouse}th house — sign ${profectedSign}, ` +
-      `ruled by ${lordOfYear}. Themes of this year follow the natural topics of that house.`;
-    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'hellenistic-profections');
+    const profTpl = await this.kbService.getBriefingPhrase('hellenistic-profections.interpretation.template');
+    const profTemplate = this.kbService.render(profTpl, dto.locale)?.text
+      ?? 'At age {age} you profect to the {profectedHouse}th house — sign {sign}, ruled by {lord}. Themes of this year follow the natural topics of that house.';
+    const localizedInterpretation = profTemplate
+      .replace('{age}', String(ageYears))
+      .replace('{profectedHouse}', String(profectedHouse))
+      .replace('{sign}', profectedSign)
+      .replace('{lord}', lordOfYear);
     return {
       userId,
       ageYears,
@@ -1427,12 +1440,18 @@ export class AstrologyService {
     const totalPossible = Math.max(aspects.length, 1);
     const score = Math.round((harmonious / totalPossible) * 100);
 
-    const summary = score >= 60
-      ? 'Strong harmonious resonance between the two charts.'
+    const summaryKey = score >= 60
+      ? 'western-synastry.summary.harmonious'
       : score >= 40
-        ? 'Mixed dynamics with both flowing and growth-oriented contacts.'
-        : 'Notable friction points that call for conscious understanding.';
-    const localizedSummary = await translateText(this.openaiService, summary, dto.locale, 'western-synastry');
+        ? 'western-synastry.summary.mixed'
+        : 'western-synastry.summary.challenging';
+    const summaryFallbacks: Record<string, string> = {
+      'western-synastry.summary.harmonious':  'Strong harmonious resonance between the two charts.',
+      'western-synastry.summary.mixed':       'Mixed dynamics with both flowing and growth-oriented contacts.',
+      'western-synastry.summary.challenging': 'Notable friction points that call for conscious understanding.',
+    };
+    const summaryRow = await this.kbService.getBriefingPhrase(summaryKey);
+    const localizedSummary = this.kbService.render(summaryRow, dto.locale)?.text ?? summaryFallbacks[summaryKey];
     return {
       userId,
       partner1: {
@@ -1513,10 +1532,21 @@ export class AstrologyService {
       }
     }
 
-    const interpretation = aspects.length
-      ? `Today ${aspects.length} significant transit aspects shape the day — pay attention to ${aspects[0].transiting}/${aspects[0].natal} ${aspects[0].aspect.toLowerCase()}.`
-      : 'A quiet transit window today — no major exact aspects between transiting and natal planets.';
-    const localizedInterpretation = await translateText(this.openaiService, interpretation, dto.locale, 'western-transits');
+    let localizedInterpretation: string;
+    if (aspects.length) {
+      const tpl = await this.kbService.getBriefingPhrase('western-transits.interpretation.template');
+      const template = this.kbService.render(tpl, dto.locale)?.text
+        ?? 'Today {count} significant transit aspects shape the day — pay attention to {transiting}/{natal} {aspect}.';
+      localizedInterpretation = template
+        .replace('{count}', String(aspects.length))
+        .replace('{transiting}', aspects[0].transiting)
+        .replace('{natal}', aspects[0].natal)
+        .replace('{aspect}', aspects[0].aspect.toLowerCase());
+    } else {
+      const quietRow = await this.kbService.getBriefingPhrase('western-transits.interpretation.quiet');
+      localizedInterpretation = this.kbService.render(quietRow, dto.locale)?.text
+        ?? 'A quiet transit window today — no major exact aspects between transiting and natal planets.';
+    }
     return {
       userId,
       date: now.toISOString().slice(0, 10),
