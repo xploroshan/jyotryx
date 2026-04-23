@@ -1,5 +1,5 @@
 {
-  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts (greeting/quality/transit/summary), apps/api/src/modules/numerology/numerology.service.ts (compatibility/suggestion/brand.recommendation/soulMeaning/personalityMeaning/invalidName/month names), and apps/api/src/modules/astrology/astrology.service.ts. A4 added flying-stars interpretation + muhurat reasons + sade-sati phases/descriptions. A5a extends with the horary / zodiacal-releasing / decumbiture / dosha templates needed to retire the last 4 translateFields sites in astrology.service.ts. Dosha descriptions use many placeholders ({house}, {rahuHouse}, {ketuHouse}, {sunHouse}, {nadiType}, {houseOrdinal}) substituted at render time. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
+  "_source": "Lifted from apps/api/src/modules/daily-briefing/daily-briefing.service.ts (greeting/quality/transit/summary) and apps/api/src/modules/numerology/numerology.service.ts (compatibility/suggestion/brand.recommendation/soulMeaning/personalityMeaning/invalidName/month names). A4 extended this with astrology.service.ts templates: flying-stars interpretation, 5 fallback muhurat reasons, and the Sade Sati phase+description set. A5a added horary / zodiacal-releasing / decumbiture / dosha templates. A5b adds bazi / western-natal / hellenistic-profections / western-synastry (3 score bands) / western-transits (active + quiet) templates, closing out the last translateText sites in astrology. English only at seed time; 11 other locales filled by `npm run kb:backfill`.",
   "_shape": "{ text: string }",
   "rows": [
     {
@@ -3191,6 +3191,78 @@
         },
         "as": {
           "text": "সঠিক পিত্ৰ দোষ বিশ্লেষণৰ বাবে জন্মৰ বিৱৰণ প্ৰয়োজন। অনুগ্ৰহ কৰি আপোনাৰ প্ৰফাইল আপডেট কৰক।"
+        }
+      }
+    },
+    {
+      "key": "bazi.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your Day Master is {stem} ({element}). Year pillar: {yearAnimal} · {yearElement}. This suggests a {elementLower}-led character with {dominantElement} as the dominant element across your chart."
+        }
+      }
+    },
+    {
+      "key": "western-natal.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A tropical natal snapshot with Sun in {sunSign}, Moon in {moonSign}. House placements use the placeholder whole-sign scheme until the location-aware Placidus engine ships."
+        }
+      }
+    },
+    {
+      "key": "hellenistic-profections.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "At age {age} you profect to the {profectedHouse}th house — sign {sign}, ruled by {lord}. Themes of this year follow the natural topics of that house."
+        }
+      }
+    },
+    {
+      "key": "western-synastry.summary.harmonious",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Strong harmonious resonance between the two charts."
+        }
+      }
+    },
+    {
+      "key": "western-synastry.summary.mixed",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mixed dynamics with both flowing and growth-oriented contacts."
+        }
+      }
+    },
+    {
+      "key": "western-synastry.summary.challenging",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Notable friction points that call for conscious understanding."
+        }
+      }
+    },
+    {
+      "key": "western-transits.interpretation.template",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Today {count} significant transit aspects shape the day — pay attention to {transiting}/{natal} {aspect}."
+        }
+      }
+    },
+    {
+      "key": "western-transits.interpretation.quiet",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A quiet transit window today — no major exact aspects between transiting and natal planets."
         }
       }
     }

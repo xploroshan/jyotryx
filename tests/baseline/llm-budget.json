@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline LLM call counts for the regression suite. Each number is the MAXIMUM allowed chatCompletion calls for the given scenario. Phase A work should reduce these; bumps up require explicit user approval in review. Regenerate with: npm test -- llm-budget.spec.ts -- --update-baseline (TODO: implement flag).",
-  "version": 6,
+  "version": 7,
   "scenarios": {
     "daily-briefing.en.fresh": {
       "maxCalls": 0,
@@ -63,16 +63,16 @@
       "description": "Hindi Muhurat fallback path. getMuhurat makes one primary LLM attempt; A4 flipped the 5 canned fallback reasons to KbBriefingPhrase so the localization step no longer adds a translateFields call. Budget is 1 (the primary attempt)."
     },
     "astrology.horaryAsk.hi.fresh": {
-      "maxCalls": 1,
-      "description": "Hindi Horary. A5a flipped the judgment/querent/quesited/moon translateFields block to KbBriefingPhrase templates. The remaining 1 LLM call is the nested getWesternNatal translateText (scoped as A5b). Budget is 1."
+      "maxCalls": 0,
+      "description": "Hindi Horary. A5a flipped the judgment/querent/quesited/moon translateFields block to KbBriefingPhrase templates; A5b retired the nested getWesternNatal translateText. Budget is 0."
     },
     "astrology.zodiacalReleasing.hi.fresh": {
       "maxCalls": 0,
       "description": "Hindi Zodiacal Releasing. A5a flipped the major/minor/interpretation translateFields block to KbBriefingPhrase templates. No nested LLM calls — signLords is an inline constant map. Budget is 0."
     },
     "astrology.decumbiture.hi.fresh": {
-      "maxCalls": 1,
-      "description": "Hindi Decumbiture. A5a flipped the guidance/interpretation translateFields block to KbBriefingPhrase templates (5 element guidances + 1 interpretation template). The remaining 1 LLM call is the nested getWesternNatal translateText (scoped as A5b). Budget is 1."
+      "maxCalls": 0,
+      "description": "Hindi Decumbiture. A5a flipped the guidance/interpretation translateFields block to KbBriefingPhrase templates (5 element guidances + 1 interpretation template); A5b retired the nested getWesternNatal translateText. Budget is 0."
     },
     "astrology.dosha.hi.fresh": {
       "maxCalls": 0,
@@ -81,6 +81,26 @@
     "astrology.doshaFallback.hi.fresh": {
       "maxCalls": 0,
       "description": "Hindi Dosha with no birth details. A5a flipped the 3 birth-required fallback descriptions to KbBriefingPhrase templates. Budget is 0."
+    },
+    "astrology.bazi.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi BaZi. A5b flipped the Day-Master / Year-pillar / elementBalance interpretation to a bazi.interpretation.template KbBriefingPhrase with 6 placeholders substituted at render time. Budget is 0."
+    },
+    "astrology.westernNatal.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Western tropical natal. A5b flipped the Sun/Moon snapshot interpretation to western-natal.interpretation.template. Budget is 0."
+    },
+    "astrology.hellenisticProfections.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Hellenistic annual profections. A5b flipped the profected-house/sign/lord interpretation to hellenistic-profections.interpretation.template with 4 placeholders. Budget is 0."
+    },
+    "astrology.westernSynastry.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Western synastry. A5b flipped the 3 score-band summary strings to western-synastry.summary.{harmonious,mixed,challenging} KbBriefingPhrase rows. Getting the partner charts via getWesternNatal used to add 2 LLM calls; A5b removed those as well. Budget is 0."
+    },
+    "astrology.westernTransits.hi.fresh": {
+      "maxCalls": 0,
+      "description": "Hindi Western transits. A5b flipped both branches of the interpretation (active aspects template + quiet fallback) to KbBriefingPhrase rows. The nested getWesternNatal translateText is also gone. Budget is 0."
     }
   }
 }
