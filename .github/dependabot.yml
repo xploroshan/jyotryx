@@ -1,0 +1,69 @@
+# Dependabot configuration — weekly scan for vulnerable / out-of-date
+# dependencies across both apps and the GitHub Actions workflow.
+#
+# Runs on a schedule rather than per-commit to avoid churn; security
+# advisories are opened immediately regardless of schedule by GitHub's
+# security advisory system.
+version: 2
+updates:
+  # Root package.json — workspace orchestration (turbo, etc.)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+
+  # API (NestJS backend)
+  - package-ecosystem: npm
+    directory: /apps/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 8
+    labels:
+      - dependencies
+      - api
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+
+  # Web (Next.js frontend)
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 8
+    labels:
+      - dependencies
+      - web
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+
+  # GitHub Actions versions (checkout, setup-node, lighthouse-ci-action, etc.)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - ci

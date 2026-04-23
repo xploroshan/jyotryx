@@ -61,6 +61,30 @@ jobs:
         run: cd apps/api && npx nest build
       - name: Test API
         run: cd apps/api && npm test
+      - name: Integration test API
+        run: cd apps/api && npm run test:int
+
+  security-audit:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: npm audit (high + critical)
+        # `|| true` so low/moderate advisories don't block merges; we want
+        # the report in the job log for triage, but only high/critical
+        # fails the build. Gate can tighten once the noise floor is known.
+        run: |
+          npm audit --omit=dev --audit-level=high || AUDIT_EXIT=$?
+          if [ "${AUDIT_EXIT:-0}" = "0" ]; then
+            echo "No high/critical advisories."
+          else
+            echo "::error::npm audit found high/critical advisories"
+            exit $AUDIT_EXIT
+          fi
 
   build-and-test-web:
     name: Web — Build & Test

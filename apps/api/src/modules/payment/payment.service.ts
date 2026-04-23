@@ -10,6 +10,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto } from './dto';
 
+/**
+ * Constant-time HMAC-signature comparison. Razorpay signatures are hex
+ * strings of fixed length (64 chars for SHA-256), but we defensively
+ * bail on length mismatch before calling `timingSafeEqual` (which itself
+ * throws on unequal-length buffers).
+ */
+function safeSignatureEqual(expected: string, actual: string | undefined): boolean {
+  if (!actual || expected.length !== actual.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(actual, 'hex'));
+}
+
 export interface RazorpayOrder {
   id: string;
   entity: string;
@@ -152,48 +163,57 @@ export class PaymentService {
   async verifyPayment(userId: string, dto: VerifyPaymentDto): Promise<PaymentVerificationResult> {
     this.logger.log(`Verifying payment for user: ${userId}, order: ${dto.razorpayOrderId}`);
 
+    // Signature verification — fail-CLOSED when no secret is configured.
+    // Previous behaviour fell through if both `razorpay.webhookSecret` and
+    // `razorpay.keySecret` were missing; that turned the verification
+    // endpoint into a free credit faucet on a misconfigured deploy.
     const webhookSecret = this.configService.get<string>('razorpay.webhookSecret')
                        || this.configService.get<string>('razorpay.keySecret');
-
-    if (webhookSecret) {
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(`${dto.razorpayOrderId}|${dto.razorpayPaymentId}`)
-        .digest('hex');
-
-      if (expectedSignature !== dto.razorpaySignature) {
-        throw new BadRequestException('Payment verification failed: invalid signature');
-      }
+    if (!webhookSecret) {
+      this.logger.error('verifyPayment: no Razorpay secret configured — refusing to verify');
+      throw new InternalServerErrorException('Payment verification is not configured');
     }
 
-    // Update payment in DB — validate ownership
-    const payment = await this.prisma.payment.findFirst({
-      where: { razorpayOrderId: dto.razorpayOrderId, userId },
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(`${dto.razorpayOrderId}|${dto.razorpayPaymentId}`)
+      .digest('hex');
+
+    // Constant-time comparison. Plain `!==` short-circuits on the first
+    // differing byte which leaks a timing side channel — a classic HMAC
+    // verification bug. timingSafeEqual requires equal-length buffers;
+    // the length check is still branchy but gives no useful signal.
+    if (!safeSignatureEqual(expectedSignature, dto.razorpaySignature)) {
+      throw new BadRequestException('Payment verification failed: invalid signature');
+    }
+
+    // Claim the payment atomically: updateMany with `status != SUCCESS`
+    // guard in the WHERE clause. Returns count=1 only for the caller that
+    // actually transitioned the row; concurrent duplicates (client retry
+    // OR client-verify + server-webhook racing) see count=0 and skip the
+    // credit grant. Prevents double-credit bugs.
+    const { count } = await this.prisma.payment.updateMany({
+      where: {
+        razorpayOrderId: dto.razorpayOrderId,
+        userId,
+        status: { not: 'SUCCESS' },
+      },
+      data: {
+        status: 'SUCCESS',
+        razorpayPaymentId: dto.razorpayPaymentId,
+      },
     });
 
-    if (payment) {
-      // Only add credits if payment hasn't already been processed (prevents double credit from webhook + verify)
-      if (payment.status !== 'SUCCESS') {
-        await this.prisma.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: 'SUCCESS',
-            razorpayPaymentId: dto.razorpayPaymentId,
-          },
-        });
-
-        const creditsToAdd = this.calculateCredits(Number(payment.amount));
-        await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
-
-        return {
-          verified: true,
-          paymentId: dto.razorpayPaymentId,
-          orderId: dto.razorpayOrderId,
-          creditsAdded: creditsToAdd,
-        };
+    if (count === 0) {
+      // Either the order doesn't exist for this user, or another call
+      // already claimed it (idempotent success from the user's POV).
+      const existing = await this.prisma.payment.findFirst({
+        where: { razorpayOrderId: dto.razorpayOrderId, userId },
+        select: { id: true },
+      });
+      if (!existing) {
+        throw new BadRequestException('Payment record not found for this order');
       }
-
-      // Already processed (likely by webhook) — return success without adding credits again
       return {
         verified: true,
         paymentId: dto.razorpayPaymentId,
@@ -202,8 +222,20 @@ export class PaymentService {
       };
     }
 
-    // No matching payment record found
-    throw new BadRequestException('Payment record not found for this order');
+    // We won the update — safe to grant credits exactly once.
+    const payment = await this.prisma.payment.findFirstOrThrow({
+      where: { razorpayOrderId: dto.razorpayOrderId, userId },
+      select: { amount: true },
+    });
+    const creditsToAdd = this.calculateCredits(Number(payment.amount));
+    await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
+
+    return {
+      verified: true,
+      paymentId: dto.razorpayPaymentId,
+      orderId: dto.razorpayOrderId,
+      creditsAdded: creditsToAdd,
+    };
   }
 
   async createSubscription(userId: string, dto: CreateSubscriptionDto): Promise<SubscriptionResult> {
@@ -257,22 +289,28 @@ export class PaymentService {
   }
 
   async handleWebhook(payload: Record<string, any>, signatureHeader?: string): Promise<{ received: boolean }> {
-    // Verify webhook signature if secret is configured
+    // Signature verification — fail-CLOSED when secret missing (same as
+    // verifyPayment). A webhook endpoint with no signature check is a
+    // public credit-grant API; refuse to run without configuration.
     const webhookSecret = this.configService.get<string>('razorpay.webhookSecret') ||
                           this.configService.get<string>('razorpay.keySecret');
-    if (webhookSecret && signatureHeader) {
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(JSON.stringify(payload))
-        .digest('hex');
-
-      if (expectedSignature !== signatureHeader) {
-        this.logger.warn('Webhook signature verification failed');
-        throw new BadRequestException('Invalid webhook signature');
-      }
-    } else if (webhookSecret && !signatureHeader) {
+    if (!webhookSecret) {
+      this.logger.error('handleWebhook: no Razorpay secret configured — refusing to process');
+      throw new InternalServerErrorException('Webhook processing is not configured');
+    }
+    if (!signatureHeader) {
       this.logger.warn('Webhook received without signature header - rejecting');
       throw new BadRequestException('Missing webhook signature');
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(JSON.stringify(payload))
+      .digest('hex');
+
+    if (!safeSignatureEqual(expectedSignature, signatureHeader)) {
+      this.logger.warn('Webhook signature verification failed');
+      throw new BadRequestException('Invalid webhook signature');
     }
 
     this.logger.log(`Webhook received: ${payload?.event || 'unknown event'}`);
@@ -285,29 +323,36 @@ export class PaymentService {
         case 'payment.captured':
           if (paymentEntity?.order_id) {
             await this.prisma.$transaction(async (tx: any) => {
-              const payment = await tx.payment.findFirst({
-                where: { razorpayOrderId: paymentEntity.order_id },
+              // Claim the payment atomically: updateMany with the
+              // status guard in WHERE. Without this, a concurrent
+              // client-side verify + webhook can both pass the
+              // status check and double-grant credits (same race as
+              // verifyPayment before the fix).
+              const { count } = await tx.payment.updateMany({
+                where: {
+                  razorpayOrderId: paymentEntity.order_id,
+                  status: { not: 'SUCCESS' },
+                },
+                data: { status: 'SUCCESS', razorpayPaymentId: paymentEntity.id },
               });
-              if (payment && payment.status !== 'SUCCESS') {
-                await tx.payment.update({
-                  where: { id: payment.id },
-                  data: { status: 'SUCCESS', razorpayPaymentId: paymentEntity.id },
-                });
-                // Add credits atomically within the same transaction
-                const creditsToAdd = this.calculateCredits(Number(payment.amount));
-                await tx.user.update({
-                  where: { id: payment.userId },
-                  data: { credits: { increment: creditsToAdd } },
-                });
-                await tx.creditTransaction.create({
-                  data: {
-                    userId: payment.userId,
-                    amount: creditsToAdd,
-                    type: 'PURCHASE',
-                    description: `Webhook: purchased ${creditsToAdd} credits`,
-                  },
-                });
-              }
+              if (count === 0) return; // lost the race or not our order
+              const payment = await tx.payment.findFirstOrThrow({
+                where: { razorpayOrderId: paymentEntity.order_id },
+                select: { userId: true, amount: true },
+              });
+              const creditsToAdd = this.calculateCredits(Number(payment.amount));
+              await tx.user.update({
+                where: { id: payment.userId },
+                data: { credits: { increment: creditsToAdd } },
+              });
+              await tx.creditTransaction.create({
+                data: {
+                  userId: payment.userId,
+                  amount: creditsToAdd,
+                  type: 'PURCHASE',
+                  description: `Webhook: purchased ${creditsToAdd} credits`,
+                },
+              });
             });
           }
           break;
