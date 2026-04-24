@@ -26,6 +26,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@next/bundle-analyzer": "^16.2.3",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.0.0",
