@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, wakeUpBackend, ApiError } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { Toast } from "@/components/ui/Toast";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { LogoMark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -62,6 +63,10 @@ function AuthPageContent() {
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  // Once the user has typed 6 digits we auto-submit exactly once. The ref
+  // prevents re-triggering the verify call if the user edits and retypes
+  // the last digit, or if React re-runs the effect for other reasons.
+  const otpAutoSubmittedRef = useRef(false);
   // Tracks whether the current OTP session used Firebase (client-side
   // confirmation) or the backend /auth/otp/* fallback, so `handleVerifyOtp`
   // knows which verify flow to run.
@@ -98,6 +103,12 @@ function AuthPageContent() {
     return () => { cancelled = true; };
   }, []);
 
+  // Reset the one-shot auto-submit flag whenever a new OTP is requested, so
+  // that each freshly-sent OTP gets exactly one auto-verify attempt.
+  useEffect(() => {
+    if (!otpSent) otpAutoSubmittedRef.current = false;
+  }, [otpSent]);
+
   /**
    * Translate an ApiError/FirebaseError/Error into a user-facing string and
    * decide whether the failure is "retryable" (network/timeout). When it is,
@@ -126,7 +137,9 @@ function AuthPageContent() {
     const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken }, { timeoutMs: 30_000 });
     setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
     applyUserLanguage(res.user?.preferredLanguage);
-    router.push(res.user?.profileComplete ? "/my-day" : "/profile");
+    // Profile onboarding needs to open with `?complete=1` so the guided
+    // two-step flow kicks in, not the "edit profile" view.
+    router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
   }, [setAuth, router, applyUserLanguage]);
 
   const setupRecaptcha = useCallback(() => {
@@ -250,7 +263,7 @@ function AuthPageContent() {
         );
         setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
         applyUserLanguage(res.user?.preferredLanguage);
-        router.push(res.user?.profileComplete ? "/my-day" : "/profile");
+        router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
         return;
       }
 
@@ -259,6 +272,8 @@ function AuthPageContent() {
       const idToken = await credential.user.getIdToken();
       await authenticateWithBackend(idToken);
     } catch (err: any) {
+      // Allow the user to retry auto-submit by clearing and re-entering the OTP
+      otpAutoSubmittedRef.current = false;
       if (err.code === "auth/invalid-verification-code") {
         setError(t.auth.errInvalidOtp);
       } else if (err.code === "auth/code-expired") {
@@ -306,7 +321,7 @@ function AuthPageContent() {
       const res = await api.post<any>(endpoint, body, { timeoutMs: 30_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       applyUserLanguage(res.user?.preferredLanguage);
-      router.push(res.user?.profileComplete ? "/my-day" : "/profile");
+      router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
     } catch (err: any) {
       // Fall back to Firebase email/password ONLY when the backend rejected
       // the credentials (HTTP 401). We skip the fallback on timeouts, network
@@ -430,12 +445,12 @@ function AuthPageContent() {
               </p>
 
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start justify-between gap-2">
+                <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start justify-between gap-2">
                   <span className="flex-1">{error}</span>
                   {lastAction && (
                     <button
                       onClick={() => { const fn = lastAction; setLastAction(null); fn(); }}
-                      className="shrink-0 underline text-red-300 hover:text-red-200"
+                      className="focus-ring rounded shrink-0 underline text-red-200 hover:text-red-100"
                     >
                       {t.auth.retry}
                     </button>
@@ -443,16 +458,18 @@ function AuthPageContent() {
                 </div>
               )}
               {success && (
-                <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+                <div role="status" aria-live="polite" className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
                   {success}
                 </div>
               )}
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-white/40 mb-1.5">{t.auth.emailLabel}</label>
+                  <label htmlFor="reset-email" className="block text-xs text-white/60 mb-1.5">{t.auth.emailLabel}</label>
                   <input
+                    id="reset-email"
                     type="email"
+                    autoComplete="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     placeholder={t.auth.emailPlaceholder}
@@ -463,7 +480,7 @@ function AuthPageContent() {
                 <button
                   onClick={handleForgotPassword}
                   disabled={loading}
-                  className="w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50"
+                  className="focus-ring w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? t.auth.sending : t.auth.sendResetLink}
                 </button>
@@ -472,28 +489,32 @@ function AuthPageContent() {
           ) : (
             <>
               {/* Tabs */}
-              <div className="flex mb-6 p-1 rounded-lg bg-white/[0.04]">
+              <div role="tablist" aria-label="Authentication mode" className="flex mb-6 p-1 rounded-lg bg-white/[0.04]">
                 <button
+                  role="tab"
+                  aria-selected={tab === "login"}
                   onClick={() => { setTab("login"); setError(""); setSuccess(""); }}
-                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "login" ? "bg-primary-600 text-white" : "text-white/40 hover:text-white/60"}`}
+                  className={`focus-ring flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "login" ? "bg-primary-600 text-white" : "text-white/60 hover:text-white/80"}`}
                 >
                   {t.auth.tabLogin}
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={tab === "signup"}
                   onClick={() => { setTab("signup"); setError(""); setSuccess(""); }}
-                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "signup" ? "bg-primary-600 text-white" : "text-white/40 hover:text-white/60"}`}
+                  className={`focus-ring flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "signup" ? "bg-primary-600 text-white" : "text-white/60 hover:text-white/80"}`}
                 >
                   {t.auth.tabSignup}
                 </button>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start justify-between gap-2">
+                <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start justify-between gap-2">
                   <span className="flex-1">{error}</span>
                   {lastAction && (
                     <button
                       onClick={() => { const fn = lastAction; setLastAction(null); fn(); }}
-                      className="shrink-0 underline text-red-300 hover:text-red-200"
+                      className="focus-ring rounded shrink-0 underline text-red-200 hover:text-red-100"
                     >
                       {t.auth.retry}
                     </button>
@@ -501,7 +522,7 @@ function AuthPageContent() {
                 </div>
               )}
               {success && (
-                <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+                <div role="status" aria-live="polite" className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
                   {success}
                 </div>
               )}
@@ -514,7 +535,7 @@ function AuthPageContent() {
 
               {/* Google */}
               <button onClick={handleGoogleClick} disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-lg btn-secondary text-sm mb-4 disabled:opacity-50">
+                className="focus-ring w-full flex items-center justify-center gap-2.5 py-2.5 rounded-lg btn-secondary text-sm mb-4 disabled:opacity-50">
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -531,16 +552,20 @@ function AuthPageContent() {
               </div>
 
               {/* Method Toggle */}
-              <div className="flex gap-1.5 mb-4">
+              <div role="tablist" aria-label="Sign-in method" className="flex gap-1.5 mb-4">
                 <button
+                  role="tab"
+                  aria-selected={authMethod === "phone"}
                   onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); setSuccess(""); }}
-                  className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "phone" ? "bg-white/[0.08] text-white" : "text-white/30 hover:text-white/50"}`}
+                  className={`focus-ring flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "phone" ? "bg-white/[0.08] text-white" : "text-white/60 hover:text-white/80"}`}
                 >
                   {t.auth.phoneOtp}
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={authMethod === "email"}
                   onClick={() => { setAuthMethod("email"); setError(""); setSuccess(""); }}
-                  className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "email" ? "bg-white/[0.08] text-white" : "text-white/30 hover:text-white/50"}`}
+                  className={`focus-ring flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "email" ? "bg-white/[0.08] text-white" : "text-white/60 hover:text-white/80"}`}
                 >
                   {t.auth.emailMethod}
                 </button>
@@ -550,8 +575,8 @@ function AuthPageContent() {
               <div className="space-y-3">
                 {tab === "signup" && (
                   <div>
-                    <label className="block text-xs text-white/40 mb-1.5">{t.auth.fullNameLabel}</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.auth.fullNamePlaceholder}
+                    <label htmlFor="auth-name" className="block text-xs text-white/60 mb-1.5">{t.auth.fullNameLabel}</label>
+                    <input id="auth-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.auth.fullNamePlaceholder}
                       className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
                   </div>
                 )}
@@ -559,58 +584,99 @@ function AuthPageContent() {
                 {authMethod === "phone" ? (
                   <>
                     <div>
-                      <label className="block text-xs text-white/40 mb-1.5">{t.auth.phoneNumberLabel}</label>
+                      <label htmlFor="auth-phone" className="flex items-center justify-between text-xs text-white/60 mb-1.5">
+                        <span>{t.auth.phoneNumberLabel}</span>
+                        <span className="text-[10px] tabular-nums text-white/40" aria-live="polite">{phone.length}/10</span>
+                      </label>
                       <div className="flex gap-2">
-                        <span className="flex items-center px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/30 text-sm">+91</span>
-                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder={t.auth.phoneNumberPlaceholder}
-                          disabled={otpSent} className="flex-1 px-3 py-2.5 rounded-lg surface-input text-sm disabled:opacity-40" />
+                        <span className="flex items-center px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/60 text-sm">+91</span>
+                        <input
+                          id="auth-phone"
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                          aria-describedby="auth-phone-hint"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          placeholder={t.auth.phoneNumberPlaceholder}
+                          disabled={otpSent}
+                          className="flex-1 px-3 py-2.5 rounded-lg surface-input text-sm disabled:opacity-40"
+                        />
                       </div>
+                      <p id="auth-phone-hint" className="text-[10px] text-white/40 mt-1">10-digit Indian mobile number.</p>
                     </div>
 
                     {otpSent && (
                       <div>
-                        <label className="block text-xs text-white/40 mb-1.5">{t.auth.enterOtpLabel}</label>
-                        <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder={t.auth.enterOtpPlaceholder} maxLength={6}
+                        <label htmlFor="auth-otp" className="block text-xs text-white/60 mb-1.5">{t.auth.enterOtpLabel}</label>
+                        <input
+                          id="auth-otp"
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          autoFocus
+                          value={otp}
+                          onChange={(e) => {
+                            const next = e.target.value.replace(/\D/g, "").slice(0, 6);
+                            setOtp(next);
+                            // Auto-verify once the user reaches 6 digits; guarded so
+                            // retyping the last digit after a rejected attempt doesn't
+                            // loop.
+                            if (next.length === 6 && !loading && !otpAutoSubmittedRef.current) {
+                              otpAutoSubmittedRef.current = true;
+                              handleVerifyOtp();
+                            }
+                          }}
+                          placeholder={t.auth.enterOtpPlaceholder}
+                          maxLength={6}
                           className="w-full px-3 py-2.5 rounded-lg surface-input text-sm tracking-[0.3em] text-center"
-                          onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()} />
+                          onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()}
+                        />
                         <div className="flex items-center justify-between mt-2">
-                          <button onClick={handleSendOtp} disabled={loading} className="text-[11px] text-primary-400 hover:text-primary-300">{t.auth.resendOtp}</button>
-                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="text-[11px] text-white/30 hover:text-white/50">{t.auth.changeNumber}</button>
+                          <button onClick={handleSendOtp} disabled={loading} className="focus-ring rounded text-[11px] text-primary-400 hover:text-primary-300">{t.auth.resendOtp}</button>
+                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); otpAutoSubmittedRef.current = false; confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="focus-ring rounded text-[11px] text-white/50 hover:text-white/70">{t.auth.changeNumber}</button>
                         </div>
                       </div>
                     )}
 
                     <button onClick={otpSent ? handleVerifyOtp : handleSendOtp} disabled={loading}
-                      className="w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50">
+                      className="focus-ring w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                       {loading ? t.auth.pleaseWait : otpSent ? t.auth.verifyContinue : t.auth.sendOtp}
                     </button>
                   </>
                 ) : (
                   <>
                     <div>
-                      <label className="block text-xs text-white/40 mb-1.5">{t.auth.emailLabel}</label>
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.auth.emailPlaceholder}
+                      <label htmlFor="auth-email" className="block text-xs text-white/60 mb-1.5">{t.auth.emailLabel}</label>
+                      <input id="auth-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.auth.emailPlaceholder}
                         className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-white/40 mb-1.5">{t.auth.passwordLabel}</label>
+                      <label htmlFor="auth-password" className="block text-xs text-white/60 mb-1.5">{t.auth.passwordLabel}</label>
                       <div className="relative">
-                        <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.auth.passwordPlaceholder}
+                        <input id="auth-password" type={showPassword ? "text" : "password"} autoComplete={tab === "signup" ? "new-password" : "current-password"} aria-describedby={tab === "signup" ? "auth-password-rules" : undefined} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.auth.passwordPlaceholder}
                           className="w-full px-3 py-2.5 pr-14 rounded-lg surface-input text-sm"
                           onKeyDown={(e) => e.key === "Enter" && handleEmailAuth()} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 text-xs">
+                          aria-label={showPassword ? t.auth.hide : t.auth.show}
+                          aria-pressed={showPassword}
+                          className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-white/50 hover:text-white/80 text-xs px-1">
                           {showPassword ? t.auth.hide : t.auth.show}
                         </button>
                       </div>
+                      {tab === "signup" && (
+                        <p id="auth-password-rules" className="mt-1.5 text-[10px] text-white/50 leading-relaxed">
+                          At least 8 characters. Mix upper + lower case, a number, and a symbol for a strong password.
+                        </p>
+                      )}
                       {tab === "signup" && password.length > 0 && (
                         <div className="mt-2">
-                          <div className="flex gap-0.5 mb-1">
+                          <div className="flex gap-0.5 mb-1" aria-hidden>
                             {[1, 2, 3, 4, 5].map((i) => (
                               <div key={i} className={`h-0.5 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-white/[0.06]"}`} />
                             ))}
                           </div>
-                          <p className={`text-[11px] ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`}>
+                          <p className={`text-[11px] ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`} aria-live="polite">
                             {strengthLabel}
                           </p>
                         </div>
@@ -629,8 +695,11 @@ function AuthPageContent() {
                       </div>
                     )}
 
-                    <button onClick={handleEmailAuth} disabled={loading}
-                      className="w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50">
+                    <button
+                      onClick={handleEmailAuth}
+                      disabled={loading}
+                      className="focus-ring w-full py-2.5 rounded-lg btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       {loading ? t.auth.pleaseWait : tab === "login" ? t.auth.loginButton : t.auth.createAccount}
                     </button>
                   </>

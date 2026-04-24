@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
+import { RequiredMark } from "@/components/ui/Toast";
 
 interface KundliData {
   id: string;
@@ -85,6 +86,14 @@ export default function KundliPage() {
     });
   }, [user]);
 
+  // Surface which specific fields are missing so the disabled Generate button
+  // is self-explanatory — previously it was a silent `disabled` with no clue.
+  const missingFields: string[] = [];
+  if (!form.name.trim()) missingFields.push(t.kundli.fullName);
+  if (!form.dob) missingFields.push(t.form.dateOfBirth);
+  if (!form.time) missingFields.push(t.form.timeOfBirth);
+  if (!form.place.trim()) missingFields.push(t.form.placeOfBirth);
+
   const handleGenerate = async () => {
     if (!form.name || !form.dob || !form.time || !form.place) return;
     setGenerating(true);
@@ -161,7 +170,7 @@ export default function KundliPage() {
             {t.kundli.title}{" "}
             <span className="text-gradient">{t.kundli.titleHighlight}</span>
           </h1>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-white/60 max-w-xl mx-auto">
             {t.kundli.description}
           </p>
         </div>
@@ -187,9 +196,12 @@ export default function KundliPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-white/40 mb-1.5">{t.kundli.fullName}</label>
+                  <label htmlFor="kundli-name" className="flex items-center text-sm text-white/70 mb-1.5">{t.kundli.fullName}<RequiredMark /></label>
                   <input
+                    id="kundli-name"
                     type="text"
+                    autoComplete="name"
+                    required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder={t.kundli.enterName}
@@ -198,18 +210,22 @@ export default function KundliPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-white/40 mb-1.5">{t.form.dateOfBirth}</label>
+                    <label htmlFor="kundli-dob" className="flex items-center text-sm text-white/70 mb-1.5">{t.form.dateOfBirth}<RequiredMark /></label>
                     <input
+                      id="kundli-dob"
                       type="date"
+                      required
                       value={form.dob}
                       onChange={(e) => setForm({ ...form, dob: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-white/40 mb-1.5">{t.form.timeOfBirth}</label>
+                    <label htmlFor="kundli-tob" className="flex items-center text-sm text-white/70 mb-1.5">{t.form.timeOfBirth}<RequiredMark /></label>
                     <input
+                      id="kundli-tob"
                       type="time"
+                      required
                       value={form.time}
                       onChange={(e) => setForm({ ...form, time: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]"
@@ -217,20 +233,29 @@ export default function KundliPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-white/40 mb-1.5">{t.form.placeOfBirth}</label>
+                  <label htmlFor="kundli-pob" className="flex items-center text-sm text-white/70 mb-1.5">{t.form.placeOfBirth}<RequiredMark /></label>
                   <input
+                    id="kundli-pob"
                     type="text"
+                    required
                     value={form.place}
                     onChange={(e) => setForm({ ...form, place: e.target.value })}
                     placeholder={t.kundli.searchCity}
+                    aria-describedby="kundli-pob-hint"
                     className="w-full px-4 py-3 rounded-xl surface-input"
                   />
-                  <p className="text-xs text-white/20 mt-1">{t.kundli.birthCityNote}</p>
+                  <p id="kundli-pob-hint" className="text-xs text-white/50 mt-1">{t.kundli.birthCityNote}</p>
                 </div>
+                {missingFields.length > 0 && (
+                  <p id="kundli-generate-hint" className="text-[11px] text-white/60 -mt-1">
+                    Fill in {missingFields.join(", ")} to continue.
+                  </p>
+                )}
                 <button
                   onClick={handleGenerate}
-                  disabled={generating || !form.name || !form.dob || !form.time || !form.place}
-                  className="w-full py-3.5 rounded-xl btn-primary disabled:opacity-50"
+                  disabled={generating || missingFields.length > 0}
+                  aria-describedby={missingFields.length > 0 ? "kundli-generate-hint" : undefined}
+                  className="focus-ring w-full py-3.5 rounded-xl btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generating ? (
                     <span className="flex items-center justify-center gap-2">
@@ -268,25 +293,28 @@ export default function KundliPage() {
               </div>
               <button
                 onClick={() => { setKundli(null); setDoshas(null); setForm({ name: "", dob: "", time: "", place: "" }); setError(""); }}
-                className="px-4 py-2 rounded-xl btn-secondary text-sm"
+                className="focus-ring px-4 py-2 rounded-xl btn-secondary text-sm"
               >
                 {t.kundli.newKundli}
               </button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1 overflow-x-auto">
-              {tabs.map((t) => (
+            {/* Tabs — on mobile scroll horizontally so all 6 stay reachable;
+                on md+ they stretch to equal widths. */}
+            <div role="tablist" aria-label={t.kundli.birthChart} className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1 overflow-x-auto no-scrollbar snap-x">
+              {tabs.map((tab) => (
                 <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`flex-shrink-0 flex-1 py-2.5 px-3 rounded-lg text-xs font-medium transition-all ${
-                    activeTab === t.id
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`focus-ring flex-shrink-0 snap-start md:flex-1 py-2.5 px-4 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                    activeTab === tab.id
                       ? "btn-primary"
-                      : "text-white/40 hover:text-white"
+                      : "text-white/70 hover:text-white"
                   }`}
                 >
-                  {t.label}
+                  {tab.label}
                 </button>
               ))}
             </div>
