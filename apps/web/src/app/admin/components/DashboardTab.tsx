@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "./helpers";
-import type { DashboardStats } from "./types";
+import type { DashboardStats, MrrSnapshot } from "./types";
 
 interface StuckUser {
   userId: string;
@@ -16,16 +16,19 @@ interface StuckUser {
 export function DashboardTab({ token, onTabChange }: { token: string; onTabChange: (tab: string) => void }) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [stuck, setStuck] = useState<StuckUser[]>([]);
+  const [mrr, setMrr] = useState<MrrSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      // Fire the two fetches in parallel — stuck-onboarding is a
-      // nice-to-have, shouldn't block the hero stats if it fails.
-      const [statsRes, stuckRes] = await Promise.allSettled([
+      // Fire all three fetches in parallel — MRR and stuck-onboarding
+      // are nice-to-haves, neither should block the hero stats if they
+      // fail (e.g. fresh deploy with empty stats_daily rollup).
+      const [statsRes, stuckRes, mrrRes] = await Promise.allSettled([
         api.get<DashboardStats>("/admin/dashboard", { token }),
         api.get<StuckUser[]>("/admin/onboarding/stuck", { token }),
+        api.get<MrrSnapshot>("/admin/mrr", { token }),
       ]);
       if (statsRes.status === "fulfilled") setStats(statsRes.value);
       // Defensive — a misconfigured mock or a backend returning
@@ -33,6 +36,9 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
       // response when it's actually an array.
       if (stuckRes.status === "fulfilled" && Array.isArray(stuckRes.value)) {
         setStuck(stuckRes.value);
+      }
+      if (mrrRes.status === "fulfilled" && mrrRes.value) {
+        setMrr(mrrRes.value);
       }
       setLoading(false);
     })();
@@ -74,11 +80,52 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
         ))}
       </div>
 
+      {/* Growth tiles — MRR / ARR / LTV / ARPU. Rendered only when the
+          /admin/mrr endpoint returned something; on a fresh deploy
+          with no stats_daily rows the tiles stay hidden rather than
+          showing $0 and spooking the operator. */}
+      {mrr && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" data-testid="growth-tiles">
+          <GrowthTile
+            label="MRR (USD)"
+            primary={`$${mrr.mrrUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+            secondary={`${mrr.momDelta >= 0 ? "+" : ""}${(mrr.momDelta * 100).toFixed(1)}% MoM`}
+            tone={mrr.momDelta >= 0 ? "text-emerald-400" : "text-red-400"}
+            icon="\uD83D\uDCC8"
+          />
+          <GrowthTile
+            label="ARR (USD)"
+            primary={`$${mrr.arrUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            secondary={`6m proj. $${mrr.projection6m.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            tone="text-cyan-400"
+            icon="\uD83D\uDCCA"
+          />
+          <GrowthTile
+            label="ARPU (USD)"
+            primary={`$${mrr.arpuUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+            secondary={`${mrr.subscriberCount.toLocaleString()} paying`}
+            tone="text-amber-400"
+            icon="\uD83E\uDDFE"
+          />
+          <GrowthTile
+            label="LTV (USD)"
+            primary={`$${mrr.ltvUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+            secondary={`Lifetime $${mrr.totalRevenueUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+            tone="text-purple-400"
+            icon="\uD83D\uDCB0"
+          />
+        </div>
+      )}
+
       <h2 className="text-lg font-bold text-white mb-4">Quick Actions</h2>
-      <div className="grid sm:grid-cols-5 gap-4">
+      <div className="grid sm:grid-cols-6 gap-4">
         <button onClick={() => onTabChange("users")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
           <p className="text-sm font-medium text-white">Manage Users</p>
           <p className="text-xs text-white/30 mt-1">View, edit, delete users</p>
+        </button>
+        <button onClick={() => onTabChange("funnel")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
+          <p className="text-sm font-medium text-white">Funnel & cohorts</p>
+          <p className="text-xs text-white/30 mt-1">Retention by locale</p>
         </button>
         <button onClick={() => onTabChange("activity")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
           <p className="text-sm font-medium text-white">Activity Log</p>
@@ -152,6 +199,31 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function GrowthTile({
+  label,
+  primary,
+  secondary,
+  tone,
+  icon,
+}: {
+  label: string;
+  primary: string;
+  secondary: string;
+  tone: string;
+  icon: string;
+}) {
+  return (
+    <div className="surface-card p-6">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-white/30">{label}</p>
+        <span className="text-lg">{icon}</span>
+      </div>
+      <p className={`text-2xl font-bold ${tone} tabular-nums`}>{primary}</p>
+      <p className="text-xs text-white/40 mt-1">{secondary}</p>
     </div>
   );
 }

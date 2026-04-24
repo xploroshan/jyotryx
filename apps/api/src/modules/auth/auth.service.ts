@@ -25,6 +25,7 @@ import {
   FirebaseAuthDto,
 } from './dto';
 import { isProfileComplete } from '../user/user.service';
+import { SignupContext } from './signup-context';
 import * as admin from 'firebase-admin';
 
 type PrismaUser = {
@@ -166,7 +167,7 @@ export class AuthService {
     }
   }
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
+  async register(dto: RegisterDto, signupContext?: SignupContext): Promise<AuthResponse> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -203,6 +204,13 @@ export class AuthService {
         timeOfBirth: dto.timeOfBirth,
         placeOfBirth: dto.placeOfBirth ? { name: dto.placeOfBirth } : undefined,
         credits: this.signupCredits,
+        // Phase 2 growth-analytics dimensions. Null-safe: the client can
+        // omit the header / body fields and the user simply lands
+        // un-tagged, which shows up as an "unknown" bucket in funnel
+        // views rather than breaking the insert.
+        locale:       signupContext?.locale ?? undefined,
+        country:      signupContext?.country ?? undefined,
+        signupSource: signupContext?.signupSource ?? undefined,
       },
     });
 
@@ -392,7 +400,7 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponse> {
+  async verifyOtp(dto: VerifyOtpDto, signupContext?: SignupContext): Promise<AuthResponse> {
     const phone = this.normalizePhone(dto.phone);
     const stored = await this.redis.get(`otp:${phone}`);
 
@@ -419,6 +427,9 @@ export class AuthService {
           email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
           phone,
           credits: this.signupCredits,
+          locale:       signupContext?.locale ?? undefined,
+          country:      signupContext?.country ?? undefined,
+          signupSource: signupContext?.signupSource ?? undefined,
         },
       });
       this.logger.log(`New user created via OTP: ${phone}`);
@@ -502,7 +513,7 @@ export class AuthService {
     this.logger.log(`SMS OTP delivered via Twilio to ${phone}`);
   }
 
-  async googleAuth(dto: GoogleAuthDto): Promise<AuthResponse> {
+  async googleAuth(dto: GoogleAuthDto, signupContext?: SignupContext): Promise<AuthResponse> {
     // Verify Google ID token via Google's tokeninfo endpoint
     let googlePayload: { sub: string; email: string; name: string; picture?: string; email_verified?: string };
 
@@ -564,6 +575,9 @@ export class AuthService {
           provider: 'GOOGLE',
           providerId: googlePayload.sub,
           credits: this.signupCredits,
+          locale:       signupContext?.locale ?? undefined,
+          country:      signupContext?.country ?? undefined,
+          signupSource: signupContext?.signupSource ?? undefined,
         },
       });
       this.logger.log(`New user created via Google: ${user.email}`);
@@ -578,7 +592,7 @@ export class AuthService {
     };
   }
 
-  async firebaseAuth(dto: FirebaseAuthDto): Promise<AuthResponse> {
+  async firebaseAuth(dto: FirebaseAuthDto, signupContext?: SignupContext): Promise<AuthResponse> {
     if (!admin.apps.length) {
       throw new UnauthorizedException('Firebase is not configured on the server');
     }
@@ -641,6 +655,9 @@ export class AuthService {
           provider: isGoogle ? 'GOOGLE' : 'PHONE',
           providerId: uid,
           credits: this.signupCredits,
+          locale:       signupContext?.locale ?? undefined,
+          country:      signupContext?.country ?? undefined,
+          signupSource: signupContext?.signupSource ?? undefined,
         },
       });
       this.logger.log(`New user created via Firebase (${sign_in_provider}): ${user.email}`);

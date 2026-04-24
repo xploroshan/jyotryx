@@ -17,10 +17,11 @@ const AnalyticsTab = dynamic(() => import("./components/AnalyticsTab").then(m =>
 const LlmTab = dynamic(() => import("./components/LlmTab").then(m => ({ default: m.LlmTab })), { ssr: false });
 const ContentTab = dynamic(() => import("./components/ContentTab").then(m => ({ default: m.ContentTab })), { ssr: false });
 const CostTab = dynamic(() => import("./components/CostTab").then(m => ({ default: m.CostTab })), { ssr: false });
+const FunnelTab = dynamic(() => import("./components/FunnelTab").then(m => ({ default: m.FunnelTab })), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────��──
 
-type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost";
+type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost" | "funnel";
 
 // ─── Main Admin Page ─────────────────────────────────────────────────────────
 
@@ -88,6 +89,7 @@ export default function AdminPage() {
 
   const tabs: { id: TabId; label: string; icon: string }[] = [
     { id: "dashboard", label: "Dashboard", icon: "\uD83D\uDCCA" },
+    { id: "funnel", label: "Funnel", icon: "\uD83C\uDFAF" },
     { id: "cost", label: "Cost", icon: "\uD83D\uDCB8" },
     { id: "users", label: "Users", icon: "\uD83D\uDC65" },
     { id: "activity", label: "Activity", icon: "\uD83D\uDDD3" },
@@ -148,6 +150,10 @@ export default function AdminPage() {
 
         {activeTab === "cost" && accessToken && (
           <CostTab token={accessToken} />
+        )}
+
+        {activeTab === "funnel" && accessToken && (
+          <FunnelTab token={accessToken} />
         )}
 
         {activeTab === "users" && accessToken && (

@@ -146,6 +146,16 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  // ─── Phase 2 growth-analytics dimensions ──────────────────────────────
+  // All nullable so the ALTER TABLE is non-blocking and historical rows
+  // stay valid. Populated at signup from Accept-Language (locale), the
+  // first two subtags of Accept-Language (country hint), and a
+  // client-supplied utm/source tag (signupSource). Funnel + cohort
+  // queries group by these columns.
+  locale            String?   @db.VarChar(10)
+  country           String?   @db.VarChar(2)
+  signupSource      String?   @db.VarChar(32)
+
   lastCreditReset    DateTime?
 
   subscriptions      Subscription[]
@@ -164,6 +174,8 @@ model User {
   @@index([email])
   @@index([phone])
   @@index([provider, providerId])
+  @@index([locale])
+  @@index([createdAt, locale])
   @@map("users")
 }
 
@@ -688,6 +700,18 @@ model StatDaily {
   llmCalls            Int      @default(0)
   llmCostUsd          Decimal  @default(0) @db.Decimal(12, 6)
   llmTokens           Int      @default(0)
+  // ─── Phase 2 growth-analytics rollups ────────────────────────────────
+  // mrrUsd        — normalized monthly recurring revenue from all
+  //                 ACTIVE subscriptions on this date (annual plans
+  //                 contribute annualPrice / 12).
+  // churnedCount  — subscriptions that moved out of ACTIVE status
+  //                 on this date (status != ACTIVE AND endDate falls
+  //                 within the day window).
+  // paymentFails  — payments in FAILED or REFUNDED status created
+  //                 on this date.
+  mrrUsd              Decimal  @default(0) @db.Decimal(12, 2)
+  churnedCount        Int      @default(0)
+  paymentFails        Int      @default(0)
   createdAt           DateTime @default(now())
 
   @@id([date])

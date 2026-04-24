@@ -117,10 +117,13 @@ export const mockPrismaService = () => ({
     count: jest.fn().mockResolvedValue(0),
     findMany: jest.fn().mockResolvedValue([]),
     aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 }, _count: 0 }),
+    groupBy: jest.fn().mockResolvedValue([]),
   },
   payment: {
+    count: jest.fn().mockResolvedValue(0),
     aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 }, _count: 0 }),
     findMany: jest.fn().mockResolvedValue([]),
+    groupBy: jest.fn().mockResolvedValue([]),
   },
   tarotReading: {
     count: jest.fn().mockResolvedValue(0),

@@ -138,3 +138,61 @@ export interface ActivityLog {
   undoneAt: string | null;
   createdAt: string;
 }
+
+// ─── Phase 2 growth & retention ─────────────────────────────────────────
+
+export interface FunnelStage {
+  stage: "signup" | "profile_complete" | "first_chat" | "first_payment" | "renewal";
+  label: string;
+  count: number;
+  conversionFromPrev: number;
+  conversionFromSignup: number;
+}
+
+export interface FunnelCounts {
+  windowDays: number;
+  locale: string | null;
+  totalSignups: number;
+  stages: FunnelStage[];
+}
+
+export interface CohortRow {
+  cohortWeek: string;
+  size: number;
+  retention: number[];
+}
+
+export interface MrrSnapshot {
+  mrrUsd: number;
+  arrUsd: number;
+  momDelta: number;
+  projection6m: number;
+  asOf: string | null;
+  totalRevenueUsd: number;
+  subscriberCount: number;
+  arpuUsd: number;
+  ltvUsd: number;
+}
+
+export interface ChurnRiskRow {
+  userId: string;
+  email: string;
+  name: string;
+  subscriptionId: string;
+  plan: string;
+  endDate: string | null;
+  lastChatAt: string | null;
+  daysSinceLastChat: number | null;
+}
+
+export interface PaymentFailureRow {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  amount: number;
+  currency: string;
+  status: string;
+  type: string;
+  createdAt: string;
+}

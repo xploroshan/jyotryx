@@ -3,6 +3,71 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaReadReplicaService } from '../prisma/prisma-read-replica.service';
 
+// ────────────────────────────────────────────────────────────────────────
+// MRR helpers
+// ────────────────────────────────────────────────────────────────────────
+// Pricing is stored per-currency in site_settings (INR today). A single
+// FX rate converts to USD so MRR is comparable across locales. The
+// default rate is a conservative INR→USD approximation that keeps the
+// projection numerically stable when the setting is missing — callers
+// that want accuracy should configure `pricing.fx.inr_to_usd`.
+const DEFAULT_INR_TO_USD = 0.012;
+
+/**
+ * Convert a per-plan subscription count into a normalized monthly USD
+ * MRR number. MONTHLY plans contribute their sticker price; ANNUAL plans
+ * contribute annualPrice / 12 (amortized). FREE plans contribute 0.
+ *
+ * Exported so funnel/MRR admin endpoints can re-use the same math
+ * against live data (not just the StatDaily rollup).
+ */
+export function computeMrrUsd(
+  activeByPlan: Array<{ plan: string; _count: { _all: number } }>,
+  pricingSettings: Array<{ key: string; value: string }>,
+): number {
+  const byKey = new Map(pricingSettings.map((s) => [s.key, s.value]));
+  const toNum = (v: string | undefined, fallback = 0) => {
+    if (!v || v.trim() === '') return fallback;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  const monthlyInr = toNum(byKey.get('pricing.monthly.price'), 0);
+  const annualInr  = toNum(byKey.get('pricing.annual.price'), 0);
+  const fx         = toNum(byKey.get('pricing.fx.inr_to_usd'), DEFAULT_INR_TO_USD);
+
+  let mrrInr = 0;
+  for (const row of activeByPlan) {
+    const count = row._count?._all ?? 0;
+    if (row.plan === 'MONTHLY') mrrInr += count * monthlyInr;
+    else if (row.plan === 'ANNUAL') mrrInr += count * (annualInr / 12);
+    // FREE contributes nothing to MRR by definition.
+  }
+
+  // Round to 2 decimals so the Decimal(12,2) column has a clean value.
+  return Math.round(mrrInr * fx * 100) / 100;
+}
+
+/**
+ * Month-over-month growth rate from two MRR values. Returns 0 when
+ * the prior month is zero — avoids infinite "∞% growth" on bootstrap.
+ */
+export function computeMomDelta(currentMrr: number, priorMrr: number): number {
+  if (!priorMrr || priorMrr <= 0) return 0;
+  return (currentMrr - priorMrr) / priorMrr;
+}
+
+/**
+ * Naive 6-month linear projection from the MoM delta. Compounds the
+ * monthly growth rate to give the MRR number owners can quote as
+ * "where we'll be in 6 months if growth holds". The caller clips
+ * negative MRR to zero — a business can't owe MRR.
+ */
+export function projectMrrSixMonths(currentMrr: number, momDelta: number): number {
+  const projected = currentMrr * Math.pow(1 + momDelta, 6);
+  return Math.max(0, Math.round(projected * 100) / 100);
+}
+
 @Injectable()
 export class StatsService {
   private readonly logger = new Logger(StatsService.name);
@@ -54,6 +119,10 @@ export class StatsService {
         reportCount,
         tarotCount,
         llmAgg,
+        activeByPlan,
+        churnedCount,
+        paymentFails,
+        pricingSettings,
       ] = await Promise.all([
         this.readPrisma.user.count({ where: { createdAt: { lt: dayEnd } } }),
         this.readPrisma.user.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
@@ -83,7 +152,46 @@ export class StatsService {
           _sum: { costUsd: true, totalTokens: true },
           _count: true,
         }),
+        // ─── Phase 2: MRR inputs ────────────────────────────────────
+        // Group active subs by plan so we can blend monthly + annual
+        // rates into one normalized MRR figure.
+        this.readPrisma.subscription.groupBy({
+          by: ['plan'],
+          where: { status: 'ACTIVE', startDate: { lt: dayEnd } },
+          _count: { _all: true },
+        }),
+        // Subscriptions whose ACTIVE run ended today — either cancelled
+        // explicitly or expired by endDate crossing the day boundary.
+        this.readPrisma.subscription.count({
+          where: {
+            status: { in: ['CANCELLED', 'EXPIRED'] },
+            endDate: { gte: dayStart, lt: dayEnd },
+          },
+        }),
+        this.readPrisma.payment.count({
+          where: {
+            status: { in: ['FAILED', 'REFUNDED'] },
+            createdAt: { gte: dayStart, lt: dayEnd },
+          },
+        }),
+        // Pricing is configured per-currency in site_settings. We read
+        // INR prices + the INR→USD FX rate once so MRR is reported in
+        // a single stable currency across locales.
+        this.readPrisma.siteSetting.findMany({
+          where: {
+            key: {
+              in: [
+                'pricing.monthly.price',
+                'pricing.annual.price',
+                'pricing.fx.inr_to_usd',
+              ],
+            },
+          },
+          select: { key: true, value: true },
+        }),
       ]);
+
+      const mrrUsd = computeMrrUsd(activeByPlan as Array<{ plan: string; _count: { _all: number } }>, pricingSettings as Array<{ key: string; value: string }>);
 
       await this.prisma.statDaily.upsert({
         where: { date: dayStart },
@@ -105,6 +213,9 @@ export class StatsService {
           llmCalls: llmAgg._count,
           llmCostUsd: Number(llmAgg._sum.costUsd ?? 0),
           llmTokens: Number(llmAgg._sum.totalTokens ?? 0),
+          mrrUsd,
+          churnedCount,
+          paymentFails,
         },
         create: {
           date: dayStart,
@@ -125,6 +236,9 @@ export class StatsService {
           llmCalls: llmAgg._count,
           llmCostUsd: Number(llmAgg._sum.costUsd ?? 0),
           llmTokens: Number(llmAgg._sum.totalTokens ?? 0),
+          mrrUsd,
+          churnedCount,
+          paymentFails,
         },
       });
 
