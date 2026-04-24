@@ -6,6 +6,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
@@ -80,6 +81,9 @@ describe('E2E: Astrology Endpoints', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: EphemerisService, useValue: mockEphemerisService() },
       ],
     })
@@ -224,6 +228,8 @@ describe('E2E: Numerology Endpoints', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: KbService, useValue: mockKbService() },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -305,6 +311,8 @@ describe('E2E: Palmistry Endpoint', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: StorageService, useValue: mockStorageService() },
       ],
     })
@@ -370,6 +378,8 @@ describe('E2E: Daily Briefing Endpoints', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
       ],
@@ -467,6 +477,8 @@ describe('E2E: Chat (Consult) Endpoints', () => {
         { provide: OpenAIService, useValue: openai },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -558,6 +570,8 @@ describe('E2E: Cross-Feature Consistency', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
         { provide: EphemerisService, useValue: mockEphemerisService() },
       ],

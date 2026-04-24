@@ -51,7 +51,7 @@ describe('StatsService', () => {
         _count: 100,
       });
       // Phase 2 MRR rollup inputs: 10 MONTHLY + 2 ANNUAL @ ₹499 / ₹4999,
-      // INR→USD 0.012 → ≈ (10*499 + 2*4999/12) * 0.012 = $69.87
+      // INR→USD 0.012 → (10 × 499 + 2 × 4999/12) × 0.012 = $69.88
       prisma.subscription.groupBy.mockResolvedValue([
         { plan: 'MONTHLY', _count: { _all: 10 } },
         { plan: 'ANNUAL', _count: { _all: 2 } },
@@ -97,7 +97,7 @@ describe('StatsService', () => {
       expect(call.create.llmCalls).toBe(100);
       expect(call.create.llmCostUsd).toBe(12.5);
       // Phase 2 rollups
-      expect(call.create.mrrUsd).toBeCloseTo(69.87, 2);
+      expect(call.create.mrrUsd).toBeCloseTo(69.88, 2);
       expect(call.create.churnedCount).toBe(15); // from subscription.count mock
       expect(call.create.paymentFails).toBe(3);
     });

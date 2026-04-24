@@ -17,7 +17,10 @@ export interface SignupContext {
   signupSource: string | null;
 }
 
-const LOCALE_RE = /^[a-z]{2,3}(-[A-Z]{2})?$/;
+// Accept both `hi-IN` (browser canonical) and `hi-in` (some older
+// browsers + CDN defaults). We normalise the region to uppercase in
+// the return shape regardless of input casing.
+const LOCALE_RE = /^[a-zA-Z]{2,3}(-[a-zA-Z]{2})?$/;
 
 /**
  * Pull the primary locale + region out of an Accept-Language header.

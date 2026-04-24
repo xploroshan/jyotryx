@@ -6,6 +6,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { LlmService } from '../src/llm/llm.service';
 import { mockKnowledgeService, mockLlmService } from './helpers/mocks';
 
@@ -91,6 +92,7 @@ describe('ChatService', () => {
         { provide: OpenAIService, useValue: openaiService },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 

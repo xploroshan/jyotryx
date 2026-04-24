@@ -8,6 +8,7 @@ import { ReportService } from '../src/modules/report/report.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { VectorSearchService } from '../src/knowledge/vector-search.service';
 import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
@@ -204,6 +205,7 @@ describe('Performance: Chat Operations', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 

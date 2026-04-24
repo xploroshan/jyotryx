@@ -10,6 +10,7 @@ import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
@@ -53,6 +54,8 @@ describe('E2E: Auth → Chat Flow', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -193,6 +196,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -252,6 +256,7 @@ describe('E2E: Chat Session Lifecycle', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -369,15 +374,20 @@ describe('E2E: Payment Flow', () => {
   beforeEach(async () => {
     prisma = mockPrismaService();
     prisma.payment = {
-      create: jest.fn().mockResolvedValue({ id: 'pay-1' }),
-      findFirst: jest.fn(),
+      create: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'u-1', amount: 100, type: 'CREDITS', status: 'SUCCESS', metadata: {} }),
+      findFirst: jest.fn().mockResolvedValue(null),
+      findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'u-1', amount: 100, type: 'CREDITS', status: 'SUCCESS', metadata: {}, razorpayOrderId: 'order-1' }),
+      findUnique: jest.fn().mockResolvedValue(null),
       findMany: jest.fn().mockResolvedValue([]),
-      update: jest.fn(),
-      updateMany: jest.fn(),
+      update: jest.fn().mockResolvedValue({ id: 'pay-1' }),
+      // Phase 1 atomic-claim updateMany must return { count } — bare
+      // jest.fn() resolves to undefined which blows up destructuring
+      // in payment.service.verifyPayment.
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     prisma.subscription = {
       create: jest.fn(),
-      updateMany: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     };
     prisma.siteSetting = {
       findMany: jest.fn().mockResolvedValue([]),
@@ -501,6 +511,7 @@ describe('E2E: Report Flow', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -596,6 +607,7 @@ describe('E2E: Report Flow', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -637,7 +649,7 @@ describe('E2E: User Profile & Credits', () => {
       user: {
         findUnique: jest.fn(),
         update: jest.fn(),
-        updateMany: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       creditTransaction: {
         aggregate: jest.fn().mockResolvedValue({ _sum: { amount: -5 } }),
@@ -721,10 +733,10 @@ describe('E2E: Webhook Processing', () => {
       findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
       update: jest.fn(),
-      updateMany: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     prisma.subscription = {
-      updateMany: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     prisma.siteSetting = {
       findMany: jest.fn().mockResolvedValue([]),
@@ -762,7 +774,10 @@ describe('E2E: Webhook Processing', () => {
       .update(JSON.stringify(payload))
       .digest('hex');
 
-    // Mock the transaction
+    // Mock the transaction. payment.service.handleWebhook claims the
+    // payment via updateMany + findFirstOrThrow inside a $transaction
+    // (Phase 1 atomic-claim path), so both have to exist on the txPayment
+    // mock or the `{ count }` destructure blows up.
     prisma.$transaction.mockImplementation(async (fn: any) => {
       const txPayment = {
         findFirst: jest.fn().mockResolvedValue({
@@ -772,7 +787,12 @@ describe('E2E: Webhook Processing', () => {
           status: 'PENDING',
           razorpayOrderId: 'order_webhook_1',
         }),
+        findFirstOrThrow: jest.fn().mockResolvedValue({
+          userId: 'test-uuid',
+          amount: 99,
+        }),
         update: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       };
       return fn({
         payment: txPayment,
@@ -989,6 +1009,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -1045,6 +1066,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: OpenAIService, useValue: openaiMock },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: knowledgeMock },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 

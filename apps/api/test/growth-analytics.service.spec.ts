@@ -181,4 +181,108 @@ describe('GrowthAnalyticsService', () => {
       }
     });
   });
+
+  // ──────────────────────────────────────────────────────────────────
+  // 4. Churn risk — inactive + Phase 4 payment-fail signals
+  // ──────────────────────────────────────────────────────────────────
+  describe('getChurnRisk', () => {
+    it('returns inactive premium users renewing in ≤14d with no recent chat', async () => {
+      const in7d = new Date(Date.now() + 7 * 86400 * 1000);
+      prisma.subscription.findMany.mockResolvedValue([
+        {
+          id: 'sub-1',
+          plan: 'MONTHLY',
+          endDate: in7d,
+          user: {
+            id: 'u-1',
+            email: 'alice@example.com',
+            name: 'Alice',
+            chatSessions: [],
+          },
+        },
+      ]);
+      prisma.payment.groupBy.mockResolvedValue([]);
+
+      const rows = await service.getChurnRisk({ limit: 10 });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        userId: 'u-1',
+        reason: 'inactive',
+        plan: 'MONTHLY',
+        lastChatAt: null,
+        daysSinceLastChat: null,
+      });
+    });
+
+    it('excludes a user whose last chat is within the 14-day cutoff', async () => {
+      const recent = new Date(Date.now() - 5 * 86400 * 1000);
+      prisma.subscription.findMany.mockResolvedValue([
+        {
+          id: 'sub-2',
+          plan: 'ANNUAL',
+          endDate: new Date(Date.now() + 3 * 86400 * 1000),
+          user: {
+            id: 'u-2',
+            email: 'bob@example.com',
+            name: 'Bob',
+            chatSessions: [{ updatedAt: recent }],
+          },
+        },
+      ]);
+      prisma.payment.groupBy.mockResolvedValue([]);
+
+      const rows = await service.getChurnRisk({ limit: 10 });
+      expect(rows).toHaveLength(0);
+    });
+
+    it('surfaces Phase 4 payment-fail users (≥2 FAILED in 30d)', async () => {
+      prisma.subscription.findMany.mockResolvedValue([]);
+      prisma.payment.groupBy.mockResolvedValue([
+        { userId: 'u-3', _count: { _all: 3 } },
+      ]);
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u-3', email: 'carol@example.com', name: 'Carol' },
+      ]);
+
+      const rows = await service.getChurnRisk({ limit: 10 });
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        userId: 'u-3',
+        email: 'carol@example.com',
+        reason: 'payment_fail',
+        recentFailedPayments: 3,
+        subscriptionId: null,
+        plan: null,
+      });
+    });
+
+    it('deduplicates — a user on the inactive list is not also listed for payment-fail', async () => {
+      // Same userId appears in both signals; only the inactive row
+      // (more context) should be kept.
+      const in2d = new Date(Date.now() + 2 * 86400 * 1000);
+      prisma.subscription.findMany.mockResolvedValue([
+        {
+          id: 'sub-4',
+          plan: 'MONTHLY',
+          endDate: in2d,
+          user: {
+            id: 'u-4',
+            email: 'dan@example.com',
+            name: 'Dan',
+            chatSessions: [],
+          },
+        },
+      ]);
+      prisma.payment.groupBy.mockResolvedValue([
+        { userId: 'u-4', _count: { _all: 2 } },
+      ]);
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u-4', email: 'dan@example.com', name: 'Dan' },
+      ]);
+
+      const rows = await service.getChurnRisk({ limit: 10 });
+      expect(rows).toHaveLength(1);
+      expect(rows[0].reason).toBe('inactive');
+    });
+  });
 });

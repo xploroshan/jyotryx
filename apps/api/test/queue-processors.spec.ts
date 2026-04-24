@@ -3,6 +3,7 @@ import { ReportProcessor } from '../src/queue/report.processor';
 import { PalmistryProcessor } from '../src/queue/palmistry.processor';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
+import { LlmService } from '../src/llm/llm.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { UserService } from '../src/modules/user/user.service';
@@ -36,6 +37,7 @@ describe('ReportProcessor (Item 2 — BullMQ)', () => {
         ReportProcessor,
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: openaiService },
+        { provide: LlmService, useValue: { chatCompletion: jest.fn().mockResolvedValue({ sections: [] }), chatCompletionStream: jest.fn().mockReturnValue(null), getModel: jest.fn().mockReturnValue('gpt-4o-mini'), getModelForFeature: jest.fn().mockReturnValue('gpt-4o'), batchCompletion: jest.fn().mockResolvedValue(null), getBatchResult: jest.fn().mockResolvedValue(null), computeCost: jest.fn().mockReturnValue(0), isProviderEnabled: jest.fn().mockReturnValue(true) } },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
         { provide: UserService, useValue: userService },
@@ -151,6 +153,7 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
         PalmistryProcessor,
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: LlmService, useValue: { chatCompletion: jest.fn().mockResolvedValue({ sections: [] }), chatCompletionStream: jest.fn().mockReturnValue(null), getModel: jest.fn().mockReturnValue('gpt-4o-mini'), getModelForFeature: jest.fn().mockReturnValue('gpt-4o'), batchCompletion: jest.fn().mockResolvedValue(null), getBatchResult: jest.fn().mockResolvedValue(null), computeCost: jest.fn().mockReturnValue(0), isProviderEnabled: jest.fn().mockReturnValue(true) } },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
         { provide: UserService, useValue: userService },
