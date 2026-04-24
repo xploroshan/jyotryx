@@ -5,7 +5,7 @@
  * catching visual bugs like the \u2013 literal text issue.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
 // ─── Mock next/navigation ───────────────────────────────────────────────────
@@ -178,6 +178,10 @@ describe('My Day Page: Rendering', () => {
   it('should show all planet names in planetary hours section', async () => {
     render(<MyDayPage />);
     await screen.findByText('Good Morning, Test!');
+    // The section opens with a wall-clock-anchored window showing the
+    // current hour + a few future hours. Expand to "View all 24" so the
+    // assertions don't depend on what time the test runs at.
+    fireEvent.click(await screen.findByText('View all 24'));
     const body = document.body.textContent || '';
     expect(body).toContain('Saturn');
     expect(body).toContain('Jupiter');

@@ -17,6 +17,7 @@ import {
   translateGreeting,
   translateSummary,
 } from "./components/translations";
+import { currentHourIndex, minutesSinceMidnight } from "./lib/planetaryTime";
 import {
   translateTithi,
   translateNakshatra,
@@ -175,6 +176,15 @@ export default function MyDayPage() {
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Wall-clock minutes-since-midnight, refreshed every 60s so the
+  // "Current Hora" card advances through the day even when the cached
+  // briefing itself is untouched.
+  const [nowMin, setNowMin] = useState(() => minutesSinceMidnight(new Date()));
+  useEffect(() => {
+    const tick = () => setNowMin(minutesSinceMidnight(new Date()));
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // Swap to cached briefing before the first paint on the client.
   // Falls back to useEffect on the server (no-op) via the SSR-safe ref below.
@@ -330,6 +340,15 @@ export default function MyDayPage() {
   const avoidList = briefing.avoidList ?? [];
   const planetaryHours = briefing.planetaryHours ?? [];
 
+  // The daily briefing is cached in localStorage for 24h, so
+  // briefing.currentHora is frozen at the hour it was first generated.
+  // Derive the live current hora from the wall clock and refresh every
+  // minute. Fall back to the server value only when the list is missing
+  // or doesn't currently contain "now" (e.g. timezone mismatch).
+  const liveHoraIdx = currentHourIndex(planetaryHours, nowMin);
+  const liveHora = liveHoraIdx >= 0 ? planetaryHours[liveHoraIdx] : null;
+  const currentHora = liveHora ?? briefing.currentHora ?? null;
+
   return (
     <div className="min-h-screen bg-surface-950">
       {/* Hero Section */}
@@ -457,28 +476,28 @@ export default function MyDayPage() {
 
         {/* Current Hora + Lucky Stats */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
-          {briefing.currentHora && (
+          {currentHora && (
             <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl ${planetIcons[briefing.currentHora.planet]?.bg || "bg-white/[0.06]"} flex items-center justify-center`}>
-                  <span className={`text-2xl ${planetIcons[briefing.currentHora.planet]?.color || "text-white/60"}`}>
-                    {planetIcons[briefing.currentHora.planet]?.symbol || "\u25cb"}
+                <div className={`w-14 h-14 rounded-2xl ${planetIcons[currentHora.planet]?.bg || "bg-white/[0.06]"} flex items-center justify-center`}>
+                  <span className={`text-2xl ${planetIcons[currentHora.planet]?.color || "text-white/60"}`}>
+                    {planetIcons[currentHora.planet]?.symbol || "\u25cb"}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <p className={`text-lg font-bold ${planetIcons[briefing.currentHora.planet]?.color || "text-white"}`}>
-                    {translatePlanet(briefing.currentHora.planet, t)}
+                  <p className={`text-lg font-bold ${planetIcons[currentHora.planet]?.color || "text-white"}`}>
+                    {translatePlanet(currentHora.planet, t)}
                   </p>
                   <p className="text-xs text-white/30 mt-0.5">
-                    {translateTimeRange(briefing.currentHora.startTime, locale)} – {translateTimeRange(briefing.currentHora.endTime, locale)}
+                    {translateTimeRange(currentHora.startTime, locale)} – {translateTimeRange(currentHora.endTime, locale)}
                   </p>
                 </div>
               </div>
               <div className="mt-4 pt-3 border-t border-white/[0.06]">
                 <p className="text-xs text-white/30 mb-1">{t.myDay.bestFor}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {(briefing.currentHora.activities ?? []).map((a, i) => (
+                  {(currentHora.activities ?? []).map((a, i) => (
                     <span key={i} className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[11px] text-white/50">{translateActivity(a, t)}</span>
                   ))}
                 </div>

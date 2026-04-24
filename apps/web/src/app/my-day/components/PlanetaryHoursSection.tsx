@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { Locale, TranslationKeys } from "@/i18n";
 import { translatePlanet, translateActivity } from "./translations";
 import { translateTimeRange } from "@/i18n/panchang-terms";
+import { currentHourIndex, minutesSinceMidnight } from "../lib/planetaryTime";
 
 interface PlanetaryHour {
   planet: string;
@@ -34,10 +35,23 @@ export function PlanetaryHoursSection({
   locale: Locale;
 }) {
   const [showAllHours, setShowAllHours] = useState(false);
-  const currentIdx = planetaryHours.findIndex((h) => h.isCurrent);
-  const visibleHours = showAllHours
+  // Refresh every minute so the "NOW" pill advances without a page reload
+  // as planetary hours change over the day.
+  const [nowMin, setNowMin] = useState(() => minutesSinceMidnight(new Date()));
+  useEffect(() => {
+    const tick = () => setNowMin(minutesSinceMidnight(new Date()));
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const currentIdx = currentHourIndex(planetaryHours, nowMin);
+  // When we can't pin "now" to any slot (wall-clock outside the sunrise-
+  // anchored list), fall through to showing every hour rather than a
+  // seemingly-random first handful.
+  const windowStart = Math.max(0, currentIdx - 1);
+  const visibleHours = showAllHours || currentIdx < 0
     ? planetaryHours
-    : planetaryHours.filter((_, i) => i >= Math.max(0, currentIdx - 1) && i <= currentIdx + 4);
+    : planetaryHours.filter((_, i) => i >= windowStart && i <= currentIdx + 4);
 
   return (
     <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
@@ -51,13 +65,17 @@ export function PlanetaryHoursSection({
         </button>
       </div>
       <div className="space-y-1.5">
-        {visibleHours.map((hour, i) => {
+        {visibleHours.map((hour, displayIdx) => {
           const pi = planetIcons[hour.planet] || { symbol: "\u25cb", color: "text-white/60", bg: "bg-white/[0.04]" };
+          // Map back to the absolute index so the "NOW" pill survives the
+          // showAll / showRelevant filter.
+          const absoluteIdx = showAllHours ? displayIdx : windowStart + displayIdx;
+          const isCurrent = absoluteIdx === currentIdx;
           return (
             <div
-              key={i}
+              key={absoluteIdx}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                hour.isCurrent
+                isCurrent
                   ? "bg-primary-600/10 ring-1 ring-primary-500/25"
                   : "hover:bg-white/[0.02]"
               }`}
@@ -72,7 +90,7 @@ export function PlanetaryHoursSection({
               <span className="text-xs text-white/40 flex-1 hidden sm:block">
                 {hour.activities.slice(0, 2).map(a => translateActivity(a, t)).join(", ")}
               </span>
-              {hour.isCurrent && (
+              {isCurrent && (
                 <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-500/15 text-primary-300">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-50" />
