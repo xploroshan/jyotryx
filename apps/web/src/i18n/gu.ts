@@ -138,7 +138,6 @@ export const gu: TranslationKeys = {
     multiLanguage: 'ભાષાઓ',
     accuracy: 'ચોકસાઈ',
     users: 'વપરાશકર્તા',
-    featuresTitle: 'તમને જોઈએ તે બધું',
     featuresHighlight: 'આધ્યાત્મિક માર્ગદર્શન',
     featuresDescription: 'નિષ્ણાત વૈદિક જ્યોતિષ, હસ્તરેખા અને અંકશાસ્ત્ર માર્ગદર્શન.',
     howItWorksTitle: 'કેવી રીતે',

@@ -145,7 +145,6 @@ export const en = {
     multiLanguage: 'Languages',
     accuracy: 'Accuracy',
     users: 'Users',
-    featuresTitle: 'Everything you need for',
     featuresHighlight: 'spiritual guidance',
     featuresDescription: 'Expert Vedic astrology, palmistry, and numerology guidance.',
     howItWorksTitle: 'How',

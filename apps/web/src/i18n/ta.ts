@@ -138,7 +138,6 @@ export const ta: TranslationKeys = {
     multiLanguage: 'மொழிகள்',
     accuracy: 'துல்லியம்',
     users: 'பயனர்கள்',
-    featuresTitle: 'உங்களுக்கு தேவையான அனைத்தும்',
     featuresHighlight: 'ஆன்மீக வழிகாட்டுதல்',
     featuresDescription: 'நிபுணர் வேத ஜோதிடம், கைரேகை, மற்றும் எண்கணித வழிகாட்டுதல்.',
     howItWorksTitle: 'எப்படி',
