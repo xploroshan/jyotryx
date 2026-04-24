@@ -196,3 +196,63 @@ export interface PaymentFailureRow {
   type: string;
   createdAt: string;
 }
+
+// ─── Phase 3 ops health + kill-switch + broadcast ───────────────────────
+
+export interface LlmErrorRateRow {
+  provider: string;
+  total: number;
+  errors: number;
+  errorRate: number;
+  topErrors: Array<{ errorCode: string; count: number }>;
+}
+
+export interface LatencyBucket {
+  key: string;
+  count: number;
+  p50: number;
+  p95: number;
+  p99: number;
+}
+
+export interface CacheHitRow {
+  feature: string;
+  total: number;
+  hits: number;
+  hitRate: number;
+}
+
+export interface QueueDepthRow {
+  queue: string;
+  waiting: number;
+  active: number;
+  delayed: number;
+  failed: number;
+  completed: number;
+}
+
+export interface ServiceHealth {
+  database: "up" | "down";
+  redis: "up" | "down";
+  details: Record<string, string | number>;
+}
+
+export interface OpsLlmHealthResponse {
+  errorRate: LlmErrorRateRow[];
+  latencyByFeature: LatencyBucket[];
+  latencyByProvider: LatencyBucket[];
+  cacheHitRate: CacheHitRow[];
+}
+
+export type BroadcastAudience =
+  | { type: "all" }
+  | { type: "premium" }
+  | { type: "locale"; locale: string };
+
+export interface BroadcastRequest {
+  audience: BroadcastAudience;
+  subject: string;
+  body: string;
+  channel: "inapp" | "email" | "push";
+  notificationType?: "horoscope" | "panchang" | "reminder" | "promotion" | "system";
+}
