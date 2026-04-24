@@ -755,6 +755,36 @@ export class AuthService {
     }
   }
 
+  /**
+   * Invalidate every refresh-token family for a user — the backing
+   * primitive for the Phase 3 admin "force logout" action. Walks the
+   * `rt:user-families:{userId}` reverse index written by
+   * `generateTokens()`, calls `revokeFamilyTokens()` for each family,
+   * then clears the reverse index itself. Returns the number of
+   * families that were revoked so the admin UI can confirm "N sessions
+   * terminated".
+   *
+   * Access tokens in flight keep working until they expire (default
+   * 1h) — that's the fundamental JWT trade-off. We can't revoke them
+   * without moving to a stateful access-token layer.
+   */
+  async revokeAllUserTokens(userId: string): Promise<{ familiesRevoked: number }> {
+    const indexKey = `rt:user-families:${userId}`;
+    const familyIds = await this.redis.smembers(indexKey);
+    if (familyIds.length === 0) {
+      // No known families — clear the index in case it's a stale empty
+      // set (Redis sets aren't auto-removed when empty on some ops).
+      await this.redis.del(indexKey);
+      return { familiesRevoked: 0 };
+    }
+    for (const familyId of familyIds) {
+      await this.revokeFamilyTokens(familyId);
+    }
+    await this.redis.del(indexKey);
+    this.logger.log(`Force-logout: revoked ${familyIds.length} refresh-token families for user ${userId}`);
+    return { familiesRevoked: familyIds.length };
+  }
+
   async getAuthStatus(userId: string): Promise<{ hasPassword: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -851,12 +881,21 @@ export class AuthService {
       }),
     ]);
 
-    // Store refresh token metadata in Redis
+    // Store refresh token metadata in Redis.
+    //
+    // `rt:user-families:{userId}` is a reverse index that lets
+    // `revokeAllUserTokens()` (Phase 3 force-logout) walk every
+    // family that belongs to a user without having to SCAN every
+    // `rt:*` key. Writing it here means both fresh logins and
+    // refresh-rotation land in the set; the TTL is bumped every time
+    // so the set's lifetime tracks the longest-living family.
     const ttlSeconds = this.parseExpiryToSeconds(refreshExpiresIn);
     const pipeline = this.redis.pipeline();
     pipeline.set(`rt:${jti}`, JSON.stringify({ userId, familyId, used: false }), 'EX', ttlSeconds);
     pipeline.sadd(`rt:family:${familyId}`, jti);
     pipeline.expire(`rt:family:${familyId}`, ttlSeconds);
+    pipeline.sadd(`rt:user-families:${userId}`, familyId);
+    pipeline.expire(`rt:user-families:${userId}`, ttlSeconds);
     await pipeline.exec();
 
     return {

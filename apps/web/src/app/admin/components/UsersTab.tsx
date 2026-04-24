@@ -104,6 +104,27 @@ export function UsersTab({ token }: { token: string }) {
     }
   };
 
+  /**
+   * Admin force-logout — walks the user's refresh-token families in
+   * Redis and deletes them all. Existing access tokens keep working
+   * until they expire (default 1h); admins are warned accordingly.
+   */
+  const handleForceLogout = async (userId: string, email: string) => {
+    if (!confirm(`Force ${email} off every session? Access tokens keep working until expiry (~1h); refresh tokens are killed immediately.`)) return;
+    setError("");
+    try {
+      const res = await api.post<{ familiesRevoked: number }>(
+        `/admin/users/${userId}/force-logout`,
+        {},
+        { token },
+      );
+      setSuccess(`Logged out — ${res.familiesRevoked} session famil${res.familiesRevoked === 1 ? "y" : "ies"} revoked.`);
+      setTimeout(() => setSuccess(""), 4000);
+    } catch (err: any) {
+      setError(err.message || "Failed to force-logout user");
+    }
+  };
+
   const userTotalPages = Math.ceil(userTotal / 20);
 
   return (
@@ -212,6 +233,14 @@ export function UsersTab({ token }: { token: string }) {
                             <option value="PREMIUM">Premium</option>
                             <option value="ADMIN">Admin</option>
                           </select>
+                          <button
+                            onClick={() => handleForceLogout(u.id, u.email)}
+                            data-testid={`force-logout-${u.id}`}
+                            className="text-xs px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+                            title="Revoke all refresh-token families for this user"
+                          >
+                            Logout
+                          </button>
                           <button onClick={() => handleDeleteUser(u.id)} className="text-xs px-2 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20">Delete</button>
                         </div>
                       </td>

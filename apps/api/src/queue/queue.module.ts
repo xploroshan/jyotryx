@@ -3,11 +3,13 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { ReportProcessor } from './report.processor';
 import { PalmistryProcessor } from './palmistry.processor';
+import { BroadcastProcessor } from './broadcast.processor';
 import { UserModule } from '../modules/user/user.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
-import { REPORT_QUEUE, PALMISTRY_QUEUE } from './queue.constants';
+import { NotificationModule } from '../modules/notification/notification.module';
+import { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE } from './queue.constants';
 
-export { REPORT_QUEUE, PALMISTRY_QUEUE };
+export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE };
 
 @Module({
   imports: [
@@ -73,11 +75,24 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE };
           removeOnFail: 200,
         },
       },
+      {
+        name: BROADCAST_QUEUE,
+        // Broadcasts are idempotent fan-outs — a single retry is plenty.
+        // Heavier backlog retention than the other queues so the admin
+        // can see the last few campaigns without paging BullMQ UI.
+        defaultJobOptions: {
+          attempts: 2,
+          backoff: { type: 'exponential', delay: 10_000 },
+          removeOnComplete: 50,
+          removeOnFail: 100,
+        },
+      },
     ),
     UserModule,
     KnowledgeModule,
+    NotificationModule,
   ],
-  providers: [ReportProcessor, PalmistryProcessor],
+  providers: [ReportProcessor, PalmistryProcessor, BroadcastProcessor],
   exports: [BullModule],
 })
 export class QueueModule {}

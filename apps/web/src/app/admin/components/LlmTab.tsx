@@ -37,6 +37,7 @@ export function LlmTab({ token }: { token: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [rotating, setRotating] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -85,6 +86,38 @@ export function LlmTab({ token }: { token: string }) {
       setError(err.message || "Failed to save AI settings");
     } finally {
       setAiSaving(false);
+    }
+  };
+
+  /**
+   * Rotate a provider's API key via the dedicated admin endpoint
+   * (not the bulk settings PUT). The backend writes the new key,
+   * invalidates the LlmService config cache, and logs an
+   * `LLM_KEY_ROTATE` row — everything the bulk settings path does NOT
+   * do, which is why a separate action exists. The key is read from
+   * the staged value in state so an admin can paste a new key and hit
+   * "Rotate" without saving the whole settings blob first.
+   */
+  const rotateProviderKey = async (providerId: string, keyField: string) => {
+    const key = (aiSettings[keyField] || "").trim();
+    if (!key || key.length < 8) {
+      setError(`Enter a new ${providerId} API key (≥ 8 chars) before rotating.`);
+      return;
+    }
+    setRotating(providerId);
+    setError("");
+    try {
+      await api.post(`/admin/llm/keys/${encodeURIComponent(providerId)}/rotate`, { key }, { token });
+      setSuccess(`${providerId} key rotated — picks up within 30s.`);
+      // Clear the typed key from the input so it isn't re-saved by a
+      // later "Save All Changes" click. The server stores the canonical
+      // value now.
+      setAiSetting(keyField, "");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message || `Failed to rotate ${providerId} key`);
+    } finally {
+      setRotating(null);
     }
   };
 
@@ -178,8 +211,20 @@ export function LlmTab({ token }: { token: string }) {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-[11px] text-white/30 mb-1">API Key</label>
-                      <input type="password" placeholder={hasKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg surface-input text-xs font-mono" />
+                      <div className="flex gap-2">
+                        <input type="password" placeholder={hasKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg surface-input text-xs font-mono" />
+                        <button
+                          type="button"
+                          onClick={() => rotateProviderKey(provider.id, provider.keyField)}
+                          disabled={rotating === provider.id || (getAiSetting(provider.keyField) || "").trim().length < 8}
+                          data-testid={`rotate-key-${provider.id}`}
+                          className="px-3 py-2 rounded-lg bg-amber-500/10 text-amber-400 text-[11px] font-medium hover:bg-amber-500/20 disabled:opacity-40"
+                          title="Write the typed key as the new provider key and invalidate the LlmService cache."
+                        >
+                          {rotating === provider.id ? "Rotating\u2026" : "Rotate"}
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
                       <div className="flex items-center gap-1.5">

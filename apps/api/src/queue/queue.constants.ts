@@ -9,3 +9,7 @@
 
 export const REPORT_QUEUE = 'report-generation';
 export const PALMISTRY_QUEUE = 'palmistry-analysis';
+// Phase 3 broadcast queue — admin-initiated fan-out of a single
+// notification payload across a resolved audience (all / premium /
+// locale-filtered). Worker lives in `broadcast.processor.ts`.
+export const BROADCAST_QUEUE = 'broadcast';

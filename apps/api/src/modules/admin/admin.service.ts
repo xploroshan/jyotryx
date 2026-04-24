@@ -16,6 +16,8 @@ import {
 } from '../../analytics/analytics.interface';
 import { GdprPurgeService } from './gdpr-purge.service';
 import { AuthService } from '../auth/auth.service';
+import { LlmService } from '../../llm/llm.service';
+import { BroadcastService, BroadcastRequest } from '../../ops/broadcast.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -147,6 +149,8 @@ export class AdminService {
     @Inject(ANALYTICS_SERVICE) private analyticsService: AnalyticsService,
     private gdprPurgeService: GdprPurgeService,
     private authService: AuthService,
+    private llmService: LlmService,
+    private broadcastSvc: BroadcastService,
   ) {
     // Analytics / read-only queries go through the replica
     this.readPrisma = readReplicaPrisma as unknown as PrismaService;
@@ -1131,5 +1135,156 @@ export class AdminService {
 
     this.logger.log(`Admin ${adminEmail} impersonated user ${target.email}`);
     return token;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Phase 3: provider kill-switch, key rotation, broadcast, force-logout
+  // ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Write `llm.provider.{name}.enabled` to site_settings and invalidate
+   * the LlmService config cache so the flip is effective within seconds,
+   * not the full 30s TTL. Writes an undoable `LLM_PROVIDER_TOGGLE` row
+   * to activity_log — the existing undo path at `undoActivity()`
+   * handles generic settings-style log rows.
+   */
+  async setLlmProviderEnabled(
+    provider: string,
+    enabled: boolean,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ enabled: boolean; provider: string }> {
+    const key = `llm.provider.${provider}.enabled`;
+    const previous = await this.prisma.siteSetting.findUnique({ where: { key } });
+    const next = enabled ? 'true' : 'false';
+    await this.prisma.siteSetting.upsert({
+      where: { key },
+      update: { value: next },
+      create: { key, value: next },
+    });
+    await this.llmService.invalidateCache().catch(() => {});
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'LLM_PROVIDER_TOGGLE',
+        entityType: 'LlmProvider',
+        entityId: provider,
+        entityLabel: provider,
+        previousData: previous ? { enabled: previous.value } : null,
+        newData: { enabled: next } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} set provider ${provider} enabled=${enabled}`);
+    return { enabled, provider };
+  }
+
+  /**
+   * Rotate the stored API key for a provider. The new key is persisted
+   * under `llm.{provider}.key` — the same key shape LlmService reads
+   * for `openai` — and the LlmService reload cache is invalidated so
+   * the next call picks the new key up immediately.
+   *
+   * Non-undoable: `previousData` is NOT populated with the old key
+   * (that would paste a secret into activity_log). Only a redacted
+   * fingerprint lands in the log.
+   */
+  async rotateLlmKey(
+    provider: string,
+    newKey: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ provider: string; rotatedAt: string }> {
+    const key = `llm.${provider}.key`;
+    await this.prisma.siteSetting.upsert({
+      where: { key },
+      update: { value: newKey },
+      create: { key, value: newKey },
+    });
+    await this.llmService.invalidateCache().catch(() => {});
+
+    const rotatedAt = new Date().toISOString();
+    const fingerprint = `${newKey.slice(0, 4)}…${newKey.slice(-4)}`;
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'LLM_KEY_ROTATE',
+        entityType: 'LlmKey',
+        entityId: provider,
+        entityLabel: provider,
+        previousData: null,
+        // newData is deliberately a fingerprint — never the full key.
+        newData: { fingerprint, rotatedAt } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} rotated ${provider} key (${fingerprint})`);
+    return { provider, rotatedAt };
+  }
+
+  /**
+   * Enqueue an admin broadcast. Delegates to `BroadcastService.enqueue()`
+   * which does the validation + audience sizing; we keep the activity
+   * log write here because that's where every admin mutation is
+   * logged from.
+   */
+  async createBroadcast(
+    req: BroadcastRequest,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ jobId: string; audienceSize: number }> {
+    const result = await this.broadcastSvc.enqueue(req, adminEmail);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'BROADCAST_SENT',
+        entityType: 'Broadcast',
+        entityId: result.jobId,
+        entityLabel: req.audience.type,
+        previousData: null,
+        newData: {
+          audience: req.audience,
+          subject: req.subject,
+          channel: req.channel,
+          audienceSize: result.audienceSize,
+        } as any,
+      },
+    });
+    return result;
+  }
+
+  /**
+   * Force-logout wraps `AuthService.revokeAllUserTokens()` and logs
+   * the action. The target user is looked up first to capture the
+   * email for a readable audit row.
+   */
+  async forceLogoutUser(
+    userId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ familiesRevoked: number }> {
+    const target = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    const result = await this.authService.revokeAllUserTokens(userId);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'USER_FORCE_LOGOUT',
+        entityType: 'User',
+        entityId: target.id,
+        entityLabel: target.email,
+        previousData: null,
+        newData: { familiesRevoked: result.familiesRevoked } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} force-logged-out ${target.email} (${result.familiesRevoked} families)`);
+    return result;
   }
 }

@@ -9,9 +9,13 @@ import { AnalyticsModule } from '../../analytics/analytics.module';
 // admin.service.ts can call AuthService.issueImpersonationToken() without
 // duplicating JWT signing setup.
 import { AuthModule } from '../auth/auth.module';
+// OpsModule (Phase 3) exports OpsHealthService + BroadcastService — the
+// admin console fans out to them for the Ops tab, provider kill-switch,
+// and broadcast queue.
+import { OpsModule } from '../../ops/ops.module';
 
 @Module({
-  imports: [UserModule, StatsModule, AnalyticsModule, AuthModule],
+  imports: [UserModule, StatsModule, AnalyticsModule, AuthModule, OpsModule],
   controllers: [AdminController],
   providers: [AdminService, GdprPurgeService],
   exports: [AdminService, GdprPurgeService],
