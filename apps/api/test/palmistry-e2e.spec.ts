@@ -6,7 +6,13 @@
  * authentication + palmistry analysis flow.
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import {
+  INestApplication,
+  HttpException,
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService, JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -17,6 +23,42 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 // callable and silently breaks every test in this suite.
 import request from 'supertest';
 import * as jwt from 'jsonwebtoken';
+
+/**
+ * Sandbox-local exception filter.
+ *
+ * In this repo's pnpm-workspace layout there are two copies of
+ * @nestjs/common on disk — one at apps/api/node_modules (v11) and one
+ * at the workspace root (v10). Nest's built-in BaseExceptionFilter
+ * imports `HttpException` from the core's own node_modules copy, while
+ * the test file (and `UnauthorizedException` thrown by JwtAuthGuard)
+ * resolves to the other copy. The `instanceof HttpException` check in
+ * the built-in filter fails, so every UnauthorizedException becomes a
+ * 500.
+ *
+ * Registering our own filter from the spec's import path uses the
+ * same `HttpException` symbol that guards/strategies threw against,
+ * so `instanceof` passes and status + body serialise correctly. Prod
+ * is unaffected — this is only a testing-layout workaround.
+ */
+@Catch()
+class TestHttpExceptionFilter implements ExceptionFilter {
+  catch(exception: any, host: ArgumentsHost) {
+    const res = host.switchToHttp().getResponse();
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      const body = exception.getResponse();
+      res.status(status).json(
+        typeof body === 'string' ? { statusCode: status, message: body } : body,
+      );
+      return;
+    }
+    res.status(500).json({
+      statusCode: 500,
+      message: exception?.message ?? 'Internal server error',
+    });
+  }
+}
 
 import { PalmistryController } from '../src/modules/palmistry/palmistry.controller';
 import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
@@ -101,6 +143,11 @@ describe('Palmistry E2E (HTTP)', () => {
     }).compile();
 
     app = module.createNestApplication();
+    // See TestHttpExceptionFilter comment: without this, every
+    // UnauthorizedException turns into a 500 because the built-in
+    // filter's `instanceof HttpException` check fails across the
+    // duplicate @nestjs/common copies in this workspace.
+    app.useGlobalFilters(new TestHttpExceptionFilter());
     await app.init();
 
     jwtService = module.get<JwtService>(JwtService);
