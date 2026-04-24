@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { gotoAndHydrate, installApiMocks, json } from './helpers/mock-api';
+import { gotoAndHydrate, installApiMocks, json, waitForReactHandlers } from './helpers/mock-api';
 
 /**
  * Auth page E2E coverage.
@@ -110,13 +110,19 @@ test.describe('Auth page', () => {
   test('switches between phone and email methods', async ({ page }) => {
     // `gotoAndHydrate` waits for React to finish attaching handlers —
     // clicks dispatched before hydration are silently dropped on first
-    // compile of /auth in dev mode.
+    // compile of /auth in dev mode. But "any element hydrated" doesn't
+    // guarantee the specific method-toggle button is hydrated in Next
+    // 15 dev mode, so we also wait for the Email button to have its
+    // React props bound before clicking. Verified race: against the
+    // prod build (`next start`) this test passes without the extra
+    // wait; against `next dev` it fails ~50% of runs without it.
     await gotoAndHydrate(page, '/auth');
 
     // Default is phone.
     await expect(page.getByPlaceholder('Phone number')).toBeVisible();
 
     // Switch to email.
+    await waitForReactHandlers(page, { role: 'button', name: 'Email' });
     await page.getByRole('button', { name: 'Email', exact: true }).click();
     await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
     await expect(page.getByPlaceholder(/Min 8 characters/i)).toBeVisible();
@@ -183,7 +189,10 @@ test.describe('Auth page — email login', () => {
 
     await gotoAndHydrate(page, '/auth?mode=login');
 
-    // Switch from the default phone method to email.
+    // Switch from the default phone method to email. Guard the click
+    // with an explicit react-props wait — see helpers/mock-api.ts for
+    // the dev-mode-only hydration-race explanation.
+    await waitForReactHandlers(page, { role: 'button', name: 'Email' });
     await page.getByRole('button', { name: 'Email', exact: true }).click();
 
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
@@ -214,6 +223,7 @@ test.describe('Auth page — email login', () => {
     });
 
     await gotoAndHydrate(page, '/auth?mode=login');
+    await waitForReactHandlers(page, { role: 'button', name: 'Email' });
     await page.getByRole('button', { name: 'Email', exact: true }).click();
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('WrongPass123');
@@ -242,6 +252,7 @@ test.describe('Auth page — email login', () => {
     });
 
     await gotoAndHydrate(page, '/auth?mode=login');
+    await waitForReactHandlers(page, { role: 'button', name: 'Email' });
     await page.getByRole('button', { name: 'Email', exact: true }).click();
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('SomePass123');

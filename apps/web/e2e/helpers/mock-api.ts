@@ -78,6 +78,13 @@ export const json = (body: unknown, status = 200) => ({
  * for ANY element with that key, which is a reliable "events bound"
  * signal — the body's `__reactContainer$` appears earlier, before
  * children are rendered, so it's not a safe gate on its own.
+ *
+ * CAVEAT: "any element hydrated" does NOT mean "every element
+ * hydrated". Under Next 15 + Turbopack dev mode, children components
+ * can hydrate lazily after gotoAndHydrate returns, so the first click
+ * on a specific button may still land pre-handler. If the test's next
+ * action is a click on a specific button, pair this with
+ * `waitForReactHandlers(locator)` below for tighter safety.
  */
 export async function gotoAndHydrate(page: Page, path: string) {
   await page.goto(path);
@@ -95,5 +102,42 @@ export async function gotoAndHydrate(page: Page, path: string) {
     },
     undefined,
     { timeout: 30_000 },
+  );
+}
+
+/**
+ * Wait until a specific element (by accessible name + role) has React
+ * props attached, i.e. its event handlers are actually bound. Use this
+ * before the first interaction with a component whose handler-binding
+ * might race with `page.click()` under Next 15 dev mode.
+ *
+ * Verified against the /auth method-toggle buttons: without this wait,
+ * the first click on "Email" after `gotoAndHydrate` silently drops in
+ * ~50% of runs; with it, click-to-render is deterministic. Against the
+ * production build (`next start`) the race doesn't occur at all, so
+ * this helper is strictly a dev-mode paper-over.
+ */
+export async function waitForReactHandlers(
+  page: Page,
+  selector: { role: 'button' | 'link' | 'textbox'; name: string },
+) {
+  await page.waitForFunction(
+    ({ role, name }) => {
+      const elements = document.querySelectorAll(
+        role === 'button' ? 'button' : role === 'link' ? 'a' : 'input,textarea',
+      );
+      for (const el of Array.from(elements)) {
+        const text =
+          role === 'textbox'
+            ? (el as HTMLInputElement).placeholder ?? ''
+            : (el.textContent ?? '').trim();
+        if (text === name && Object.keys(el).some((k) => k.startsWith('__reactProps$'))) {
+          return true;
+        }
+      }
+      return false;
+    },
+    selector,
+    { timeout: 10_000 },
   );
 }
