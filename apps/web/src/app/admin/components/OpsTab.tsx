@@ -7,6 +7,7 @@ import type {
   QueueDepthRow,
   ServiceHealth,
   BroadcastAudience,
+  CapacityForecast,
 } from "./types";
 
 type WindowHours = 1 | 24 | 168;
@@ -22,6 +23,7 @@ export function OpsTab({ token }: { token: string }) {
   const [health, setHealth] = useState<OpsLlmHealthResponse | null>(null);
   const [queues, setQueues] = useState<QueueDepthRow[]>([]);
   const [svc, setSvc] = useState<ServiceHealth | null>(null);
+  const [capacity, setCapacity] = useState<CapacityForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [flash, setFlash] = useState<string>("");
@@ -31,14 +33,16 @@ export function OpsTab({ token }: { token: string }) {
     setLoading(true);
     setError("");
     try {
-      const [h, q, s] = await Promise.all([
+      const [h, q, s, c] = await Promise.all([
         api.get<OpsLlmHealthResponse>(`/admin/ops/llm-health?window=${windowHours}`, { token }),
         api.get<QueueDepthRow[]>(`/admin/ops/queues`, { token }),
         api.get<ServiceHealth>(`/admin/ops/health`, { token }),
+        api.get<CapacityForecast[]>(`/admin/forecast/capacity`, { token }).catch(() => []),
       ]);
       setHealth(h);
       setQueues(Array.isArray(q) ? q : []);
       setSvc(s);
+      setCapacity(Array.isArray(c) ? c : []);
     } catch (err: any) {
       setError(err?.message || "Failed to load ops data");
     } finally {
@@ -126,6 +130,10 @@ export function OpsTab({ token }: { token: string }) {
 
       {/* Cache hit rate */}
       <CacheHitCard rows={health?.cacheHitRate ?? []} />
+
+      {/* Phase 4: capacity forecast — days until each provider hits
+          its configured TPM ceiling at current peak-minute usage. */}
+      <CapacityCard rows={capacity} />
 
       {showBroadcast && (
         <BroadcastModal
@@ -364,6 +372,60 @@ function CacheHitCard({ rows }: { rows: Array<{ feature: string; total: number; 
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Phase 4: capacity forecast ────────────────────────────────────────────
+
+function CapacityCard({ rows }: { rows: CapacityForecast[] }) {
+  return (
+    <div className="surface-card p-6 mt-8" data-testid="capacity-card">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Capacity forecast</h3>
+          <p className="text-xs text-white/40 mt-0.5">
+            Days until peak-minute TPM crosses the configured provider ceiling. Set <code className="text-white/60">pricing.llm.&#123;provider&#125;.tpm_limit</code> to enable.
+          </p>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-3 gap-3">
+        {rows.map((r) => {
+          const danger = r.daysUntilHit !== null && r.daysUntilHit <= 7;
+          const warn   = r.daysUntilHit !== null && r.daysUntilHit <= 30 && !danger;
+          const tone = danger ? "text-red-400" : warn ? "text-amber-400" : "text-emerald-400";
+          return (
+            <div
+              key={r.provider}
+              className="p-3 rounded-lg bg-white/[0.03]"
+              data-testid={`capacity-row-${r.provider}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-white">{r.provider}</span>
+                {r.tpmLimit === null ? (
+                  <span className="text-[11px] text-white/30">no limit set</span>
+                ) : (
+                  <span className={`text-xs font-bold tabular-nums ${tone}`}>
+                    {r.daysUntilHit === null ? "stable" : `${r.daysUntilHit}d`}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-white/40 tabular-nums">
+                Peak: {r.currentPeakTpm.toLocaleString()} TPM
+                {r.tpmLimit !== null && ` / ${r.tpmLimit.toLocaleString()}`}
+              </p>
+              <p className="text-[11px] text-white/30 tabular-nums mt-0.5">
+                slope: {r.slopePerDay >= 0 ? "+" : ""}{r.slopePerDay.toLocaleString()} TPM/day
+              </p>
+            </div>
+          );
+        })}
+        {rows.length === 0 && (
+          <p className="text-xs text-white/30 col-span-full text-center py-4">
+            No capacity data — waiting on llm_usage rows for the last 7d.
+          </p>
+        )}
       </div>
     </div>
   );

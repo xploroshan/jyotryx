@@ -61,11 +61,25 @@ export interface ChurnRiskRow {
   userId: string;
   email: string;
   name: string;
-  subscriptionId: string;
-  plan: string;
+  /**
+   * Populated only for `reason: 'inactive'` rows. Payment-fail rows
+   * don't necessarily have an active subscription (the renewal charge
+   * may have already failed them out of ACTIVE status), so they leave
+   * the field null.
+   */
+  subscriptionId: string | null;
+  plan: string | null;
   endDate: string | null;
   lastChatAt: string | null;
   daysSinceLastChat: number | null;
+  /**
+   * Why this user is on the risk list:
+   *   `inactive`     — premium user with last chat > 14d ago AND renewal ≤ 14d
+   *   `payment_fail` — ≥ 2 FAILED payments in the last 30d (Phase 4 signal)
+   */
+  reason: 'inactive' | 'payment_fail';
+  /** Count of recent failed payments — only set when reason='payment_fail'. */
+  recentFailedPayments?: number;
 }
 
 export interface PaymentFailureRow {
@@ -364,7 +378,9 @@ export class GrowthAnalyticsService {
     const now = new Date();
     const in14Days = new Date(now.getTime() + 14 * 86400 * 1000);
     const chatCutoff = new Date(now.getTime() - 14 * 86400 * 1000);
+    const paymentWindow = new Date(now.getTime() - 30 * 86400 * 1000);
 
+    // ── Inactive-renewal signal (Phase 2 original behavior) ───────────
     // Subscriptions ending soon + their user. We pull extra so we can
     // post-filter by last-chat recency (Prisma can't order by a related
     // aggregate in a single where clause).
@@ -395,6 +411,7 @@ export class GrowthAnalyticsService {
     });
 
     const rows: ChurnRiskRow[] = [];
+    const seenUserIds = new Set<string>();
     for (const s of subs) {
       const lastChat = s.user.chatSessions[0]?.updatedAt ?? null;
       if (lastChat && lastChat > chatCutoff) continue; // recently active — not at risk
@@ -410,8 +427,63 @@ export class GrowthAnalyticsService {
         endDate: s.endDate ? s.endDate.toISOString() : null,
         lastChatAt: lastChat ? lastChat.toISOString() : null,
         daysSinceLastChat: daysSince,
+        reason: 'inactive',
       });
+      seenUserIds.add(s.user.id);
       if (rows.length >= limit) break;
+    }
+
+    // ── Phase 4 payment-failure signal ───────────────────────────────
+    // Users with ≥ 2 FAILED payments in the last 30 days. We join
+    // via Prisma groupBy + having because Payment.userId is indexed
+    // and the set is small relative to the full payments table.
+    // De-dup: if the same user already appears via the inactive
+    // signal, we'd rather not show them twice — the inactive row
+    // carries more context.
+    if (rows.length < limit) {
+      const failGroups = await this.readPrisma.payment.groupBy({
+        by: ['userId'],
+        where: {
+          status: 'FAILED',
+          createdAt: { gte: paymentWindow },
+        },
+        _count: { _all: true },
+        having: { userId: { _count: { gte: 2 } } },
+      } as any);
+
+      const flaggedUserIds = (failGroups as any[])
+        .map((g) => g.userId)
+        .filter((id: string) => !seenUserIds.has(id));
+
+      if (flaggedUserIds.length > 0) {
+        const users = await this.readPrisma.user.findMany({
+          where: { id: { in: flaggedUserIds } },
+          select: { id: true, email: true, name: true },
+        });
+        const userById = new Map<string, { id: string; email: string; name: string }>(
+          users.map((u: any) => [u.id as string, u as { id: string; email: string; name: string }]),
+        );
+        const countById = new Map<string, number>(
+          (failGroups as any[]).map((g) => [g.userId as string, g._count?._all ?? 0]),
+        );
+        for (const userId of flaggedUserIds) {
+          const user = userById.get(userId);
+          if (!user) continue;
+          rows.push({
+            userId,
+            email: user.email,
+            name: user.name,
+            subscriptionId: null,
+            plan: null,
+            endDate: null,
+            lastChatAt: null,
+            daysSinceLastChat: null,
+            reason: 'payment_fail',
+            recentFailedPayments: countById.get(userId) ?? 0,
+          });
+          if (rows.length >= limit) break;
+        }
+      }
     }
 
     return rows;

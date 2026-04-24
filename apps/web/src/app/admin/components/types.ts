@@ -178,11 +178,13 @@ export interface ChurnRiskRow {
   userId: string;
   email: string;
   name: string;
-  subscriptionId: string;
-  plan: string;
+  subscriptionId: string | null;
+  plan: string | null;
   endDate: string | null;
   lastChatAt: string | null;
   daysSinceLastChat: number | null;
+  reason: "inactive" | "payment_fail";
+  recentFailedPayments?: number;
 }
 
 export interface PaymentFailureRow {
@@ -255,4 +257,65 @@ export interface BroadcastRequest {
   body: string;
   channel: "inapp" | "email" | "push";
   notificationType?: "horoscope" | "panchang" | "reminder" | "promotion" | "system";
+}
+
+// ─── Phase 4 safety + GDPR + forecasts ──────────────────────────────────
+
+export type FlaggedStatus = "pending" | "approved" | "hidden" | "actioned";
+export type ResolveAction = "approve" | "hide" | "actioned";
+
+export interface FlaggedMessageRow {
+  id: string;
+  messageId: string;
+  userId: string;
+  userEmail: string | null;
+  userName: string | null;
+  categories: string[];
+  scores: Record<string, number>;
+  status: FlaggedStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  preview: string | null;
+}
+
+export type GdprStatus = "pending" | "fulfilled" | "rejected";
+export type GdprType = "export" | "delete";
+
+export interface GdprRequestRow {
+  id: string;
+  userId: string;
+  userEmail: string | null;
+  userName: string | null;
+  type: GdprType;
+  status: GdprStatus;
+  dueBy: string;
+  daysUntilDue: number;
+  fulfilledAt: string | null;
+  adminId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface CostForecastPoint {
+  date: string;
+  actualUsd: number | null;
+  predictedUsd: number | null;
+  lowerUsd: number | null;
+  upperUsd: number | null;
+}
+
+export interface CostForecast {
+  points: CostForecastPoint[];
+  level: number;
+  trend: number;
+  residualStd: number;
+}
+
+export interface CapacityForecast {
+  provider: string;
+  tpmLimit: number | null;
+  currentPeakTpm: number;
+  slopePerDay: number;
+  daysUntilHit: number | null;
 }

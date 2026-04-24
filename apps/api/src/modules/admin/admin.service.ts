@@ -18,6 +18,21 @@ import { GdprPurgeService } from './gdpr-purge.service';
 import { AuthService } from '../auth/auth.service';
 import { LlmService } from '../../llm/llm.service';
 import { BroadcastService, BroadcastRequest } from '../../ops/broadcast.service';
+// Phase 4 injections — safety + GDPR + in-app notifications (for the
+// churn retry-email action). The forecast service is called directly
+// from the controller because it has no activity-log side effects.
+import {
+  SafetyService,
+  FlaggedMessageRow,
+  ResolveAction,
+} from '../../safety/safety.service';
+import {
+  GdprRequestService,
+  GdprRequestRow,
+  GdprType,
+  UserDataExport,
+} from '../../gdpr/gdpr-request.service';
+import { NotificationService } from '../notification/notification.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -151,6 +166,9 @@ export class AdminService {
     private authService: AuthService,
     private llmService: LlmService,
     private broadcastSvc: BroadcastService,
+    private safetyService: SafetyService,
+    private gdprRequestService: GdprRequestService,
+    private notificationService: NotificationService,
   ) {
     // Analytics / read-only queries go through the replica
     this.readPrisma = readReplicaPrisma as unknown as PrismaService;
@@ -1286,5 +1304,158 @@ export class AdminService {
     });
     this.logger.log(`Admin ${adminEmail} force-logged-out ${target.email} (${result.familiesRevoked} families)`);
     return result;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Phase 4: safety + GDPR + churn-retry
+  // ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve a flagged message and write the corresponding activity
+   * log row. The `action` string lands in `newData` so the audit trail
+   * records *what* the admin did ("hide" vs "approve") — not just
+   * "a resolution happened".
+   */
+  async resolveFlaggedMessage(
+    flaggedId: string,
+    action: ResolveAction,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<FlaggedMessageRow> {
+    const resolved = await this.safetyService.resolve(flaggedId, action, adminId);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'FLAGGED_MESSAGE_RESOLVE',
+        entityType: 'FlaggedMessage',
+        entityId: flaggedId,
+        entityLabel: resolved.userEmail ?? resolved.userId,
+        previousData: { status: 'pending' } as any,
+        newData: { status: resolved.status, action } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} resolved flagged ${flaggedId}: ${action}`);
+    return resolved;
+  }
+
+  /**
+   * Admin-initiated GDPR request. The request itself is created in
+   * GdprRequestService (which enforces one-pending-per-(user,type));
+   * we additionally write an activity-log row so the audit trail
+   * attributes the creation to the admin that acted.
+   */
+  async createGdprRequest(
+    userId: string,
+    type: GdprType,
+    note: string | undefined,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<GdprRequestRow> {
+    const row = await this.gdprRequestService.create({ userId, type, note });
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'GDPR_REQUEST_CREATE',
+        entityType: 'GdprRequest',
+        entityId: row.id,
+        entityLabel: row.userEmail ?? row.userId,
+        previousData: null,
+        newData: { type, dueBy: row.dueBy } as any,
+      },
+    });
+    return row;
+  }
+
+  /**
+   * Fulfill a GDPR request. Delegates to GdprRequestService which
+   * either produces an export payload or triggers the purge service
+   * depending on the request type. We unwrap the export payload so
+   * the admin controller can stream it to the browser on the same
+   * response.
+   */
+  async fulfillGdprRequest(
+    requestId: string,
+    adminId: string,
+    adminEmail: string,
+    note?: string,
+  ): Promise<{ row: GdprRequestRow; exportPayload?: UserDataExport }> {
+    const result = await this.gdprRequestService.fulfill(requestId, adminId, note);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'GDPR_REQUEST_FULFILL',
+        entityType: 'GdprRequest',
+        entityId: requestId,
+        entityLabel: result.row.userEmail ?? result.row.userId,
+        previousData: { status: 'pending' } as any,
+        newData: { status: 'fulfilled', type: result.row.type } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} fulfilled GDPR ${result.row.type} for ${result.row.userEmail ?? result.row.userId}`);
+    return result;
+  }
+
+  async rejectGdprRequest(
+    requestId: string,
+    adminId: string,
+    adminEmail: string,
+    note: string,
+  ): Promise<GdprRequestRow> {
+    const row = await this.gdprRequestService.reject(requestId, adminId, note);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'GDPR_REQUEST_REJECT',
+        entityType: 'GdprRequest',
+        entityId: requestId,
+        entityLabel: row.userEmail ?? row.userId,
+        previousData: { status: 'pending' } as any,
+        newData: { status: 'rejected', note } as any,
+      },
+    });
+    return row;
+  }
+
+  /**
+   * Phase 4 churn retry-email action: fire a single in-app
+   * notification at a user flagged as churn-risk with reason
+   * `payment_fail`. Currently in-app only — email transport lands
+   * here when the notifications module grows one.
+   */
+  async sendRetryEmail(
+    userId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ sent: boolean }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const sent = await this.notificationService.sendPushNotification({
+      userId,
+      title: 'Payment method needs a refresh',
+      body: 'We noticed a recent payment didn\'t go through. Update your card or try again to keep your premium features active.',
+      type: 'system',
+    });
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'CHURN_RETRY_EMAIL',
+        entityType: 'User',
+        entityId: userId,
+        entityLabel: user.email,
+        previousData: null,
+        newData: { sent, channel: 'inapp' } as any,
+      },
+    });
+    return { sent };
   }
 }
