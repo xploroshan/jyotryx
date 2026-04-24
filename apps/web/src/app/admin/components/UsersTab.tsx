@@ -162,10 +162,20 @@ export function UsersTab({ token }: { token: string }) {
 
       {/* Churn-risk sidebar. Rendered inline at the top so admins see
           it before scrolling the users table. Each row jumps to the
-          user's detail panel on click. */}
+          user's detail panel on click; payment-fail rows also expose
+          a "Retry" button that fires an in-app nudge. */}
       <ChurnRiskSidebar
         rows={churnRisk}
         onSelect={(userId) => setSelectedUserId(userId)}
+        onRetry={async (userId) => {
+          try {
+            await api.post(`/admin/churn-risk/${userId}/retry-email`, {}, { token });
+            setSuccess("Retry notification sent.");
+            setTimeout(() => setSuccess(""), 2500);
+          } catch (err: any) {
+            setError(err?.message || "Failed to send retry notification");
+          }
+        }}
       />
 
       {/* User detail panel */}
@@ -273,9 +283,11 @@ export function UsersTab({ token }: { token: string }) {
 function ChurnRiskSidebar({
   rows,
   onSelect,
+  onRetry,
 }: {
   rows: ChurnRiskRow[];
   onSelect: (userId: string) => void;
+  onRetry: (userId: string) => Promise<void>;
 }) {
   if (rows.length === 0) return null;
   return (
@@ -284,8 +296,8 @@ function ChurnRiskSidebar({
         <div>
           <h3 className="text-sm font-semibold text-white">Churn risk</h3>
           <p className="text-xs text-white/40 mt-0.5">
-            Premium users whose subscription renews in ≤14 days AND who haven't
-            chatted in the last 14 days.
+            Premium users renewing in ≤14d with no chat in 14d,
+            plus users with ≥2 recent failed payments.
           </p>
         </div>
         <span className="text-[11px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 tabular-nums">
@@ -294,23 +306,59 @@ function ChurnRiskSidebar({
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {rows.slice(0, 9).map((r) => (
-          <button
-            key={r.subscriptionId}
-            onClick={() => onSelect(r.userId)}
+          <div
+            key={`${r.userId}-${r.reason}`}
             className="text-left p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+            data-testid={`churn-row-${r.userId}`}
           >
-            <p className="text-sm text-white truncate">{r.name}</p>
-            <p className="text-[11px] text-white/40 truncate">{r.email}</p>
-            <div className="flex items-center justify-between mt-2 text-[11px]">
-              <span className="text-white/50">
-                {r.plan} · renews{" "}
-                {r.endDate ? new Date(r.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
-              </span>
-              <span className="text-amber-400 tabular-nums">
-                {r.daysSinceLastChat == null ? "never chatted" : `${r.daysSinceLastChat}d idle`}
-              </span>
-            </div>
-          </button>
+            <button
+              onClick={() => onSelect(r.userId)}
+              className="text-left w-full"
+            >
+              <div className="flex items-start justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm text-white truncate">{r.name}</p>
+                  <p className="text-[11px] text-white/40 truncate">{r.email}</p>
+                </div>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${
+                    r.reason === "payment_fail"
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-amber-500/10 text-amber-400"
+                  }`}
+                >
+                  {r.reason === "payment_fail" ? "pay-fail" : "inactive"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-2 text-[11px]">
+                <span className="text-white/50">
+                  {r.reason === "payment_fail"
+                    ? `${r.recentFailedPayments ?? 0} failed 30d`
+                    : `${r.plan ?? ""} · renews ${
+                        r.endDate
+                          ? new Date(r.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+                          : "—"
+                      }`}
+                </span>
+                <span className="text-amber-400 tabular-nums">
+                  {r.reason === "payment_fail"
+                    ? ""
+                    : r.daysSinceLastChat == null
+                      ? "never chatted"
+                      : `${r.daysSinceLastChat}d idle`}
+                </span>
+              </div>
+            </button>
+            {r.reason === "payment_fail" && (
+              <button
+                onClick={() => onRetry(r.userId)}
+                data-testid={`retry-${r.userId}`}
+                className="mt-2 w-full text-[11px] px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+              >
+                Send retry notification
+              </button>
+            )}
+          </div>
         ))}
       </div>
     </div>

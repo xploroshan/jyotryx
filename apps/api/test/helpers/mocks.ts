@@ -147,6 +147,20 @@ export const mockPrismaService = () => ({
     create: jest.fn().mockResolvedValue({ id: 'palm-1', createdAt: new Date() }),
     count: jest.fn().mockResolvedValue(0),
   },
+  flaggedMessage: {
+    create: jest.fn().mockResolvedValue({ id: 'flag-1', createdAt: new Date() }),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    update: jest.fn(),
+  },
+  gdprRequest: {
+    create: jest.fn().mockResolvedValue({ id: 'gdpr-1', createdAt: new Date() }),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    update: jest.fn(),
+  },
 });
 
 export const mockCacheService = () => ({

@@ -6,6 +6,7 @@ import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { LlmService } from '../../llm/llm.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
+import { ModerationService } from '../../safety/moderation.service';
 import { getLocaleInstruction } from '../../common/locale';
 
 export interface ChatMessage {
@@ -39,6 +40,7 @@ export class ChatService {
     private openaiService: OpenAIService,
     private llmService: LlmService,
     private knowledgeService: KnowledgeService,
+    private moderationService: ModerationService,
   ) {}
 
   async sendMessage(
@@ -85,6 +87,16 @@ export class ChatService {
         content: dto.message,
       },
     });
+
+    // Non-blocking moderation — fire-and-forget so we don't add a
+    // network round-trip to the chat path. ModerationService swallows
+    // all errors and only writes a flagged_messages row when OpenAI
+    // flags the content. We deliberately don't await.
+    this.moderationService.checkAndRecord({
+      messageId: userMsg.id,
+      userId,
+      content: dto.message,
+    }).catch(() => { /* logged inside the service */ });
 
     // Fetch user profile for personalized AI responses
     const userProfile = await this.prisma.user.findUnique({
@@ -225,10 +237,17 @@ export class ChatService {
       });
     }
 
-    // Save user message
-    await this.prisma.chatMessage.create({
+    // Save user message (streaming path). We capture the id so the
+    // moderation dispatch below can cite it — the same
+    // fire-and-forget contract the non-streaming branch uses.
+    const userMsg = await this.prisma.chatMessage.create({
       data: { sessionId: dbSession.id, role: 'USER', content: dto.message },
     });
+    this.moderationService.checkAndRecord({
+      messageId: userMsg.id,
+      userId,
+      content: dto.message,
+    }).catch(() => { /* logged inside the service */ });
 
     // Fetch user profile + KB context
     const userProfile = await this.prisma.user.findUnique({

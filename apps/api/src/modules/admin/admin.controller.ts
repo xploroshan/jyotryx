@@ -33,6 +33,24 @@ import {
   ServiceHealth,
 } from '../../ops/ops-health.service';
 import { BroadcastService, BroadcastRequest } from '../../ops/broadcast.service';
+// Phase 4 — safety queue, GDPR workflow, forecasts.
+import {
+  SafetyService,
+  FlaggedMessageRow,
+  FlaggedStatus,
+  ResolveAction,
+} from '../../safety/safety.service';
+import {
+  GdprRequestService,
+  GdprRequestRow,
+  GdprStatus,
+  GdprType,
+} from '../../gdpr/gdpr-request.service';
+import {
+  ForecastService,
+  CostForecast,
+  CapacityForecast,
+} from '../../forecast/forecast.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
 
@@ -48,6 +66,9 @@ export class AdminController {
     private readonly growth: GrowthAnalyticsService,
     private readonly ops: OpsHealthService,
     private readonly broadcastService: BroadcastService,
+    private readonly safety: SafetyService,
+    private readonly gdpr: GdprRequestService,
+    private readonly forecast: ForecastService,
   ) {}
 
   @Get('dashboard')
@@ -403,6 +424,130 @@ export class AdminController {
   ): Promise<{ familiesRevoked: number }> {
     return this.adminService.forceLogoutUser(userId, req.user.sub, req.user.email);
   }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Phase 4: safety queue, GDPR workflow, forecasts
+  // ──────────────────────────────────────────────────────────────────
+
+  @Get('safety/flagged')
+  @ApiOperation({ summary: 'List flagged messages (default: pending queue)' })
+  async getFlagged(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+  ): Promise<FlaggedMessageRow[]> {
+    return this.safety.list({
+      status: normaliseFlaggedStatus(status),
+      limit: parseInt(limit || '50', 10),
+    });
+  }
+
+  @Post('safety/flagged/:id/resolve')
+  @ApiOperation({ summary: 'Resolve a flagged message (approve | hide | actioned)' })
+  async resolveFlagged(
+    @Param('id', ParseUUIDPipe) flaggedId: string,
+    @Body() body: { action?: string },
+    @Request() req: any,
+  ): Promise<FlaggedMessageRow> {
+    const action = normaliseResolveAction(body?.action);
+    if (!action) throw new BadRequestException('action must be one of approve, hide, actioned');
+    return this.adminService.resolveFlaggedMessage(flaggedId, action, req.user.sub, req.user.email);
+  }
+
+  @Get('gdpr/requests')
+  @ApiOperation({ summary: 'List GDPR requests (default: pending queue, nearest-SLA first)' })
+  async getGdprRequests(
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+  ): Promise<GdprRequestRow[]> {
+    return this.gdpr.list({
+      status: normaliseGdprStatus(status),
+      limit: parseInt(limit || '50', 10),
+    });
+  }
+
+  @Post('gdpr/requests')
+  @ApiOperation({ summary: 'Admin-initiated GDPR request on behalf of a user' })
+  async createGdprRequest(
+    @Body() body: { userId?: string; type?: string; note?: string },
+    @Request() req: any,
+  ): Promise<GdprRequestRow> {
+    if (!body?.userId) throw new BadRequestException('userId is required');
+    const type = normaliseGdprType(body?.type);
+    if (!type) throw new BadRequestException('type must be "export" or "delete"');
+    return this.adminService.createGdprRequest(body.userId, type, body.note, req.user.sub, req.user.email);
+  }
+
+  @Post('gdpr/requests/:id/fulfill')
+  @ApiOperation({ summary: 'Fulfill a GDPR request (triggers purge for delete; returns payload for export)' })
+  async fulfillGdprRequest(
+    @Param('id', ParseUUIDPipe) requestId: string,
+    @Body() body: { note?: string },
+    @Request() req: any,
+  ): Promise<{ row: GdprRequestRow; exportPayload?: unknown }> {
+    return this.adminService.fulfillGdprRequest(requestId, req.user.sub, req.user.email, body?.note);
+  }
+
+  @Post('gdpr/requests/:id/reject')
+  @ApiOperation({ summary: 'Reject a GDPR request (requires a note)' })
+  async rejectGdprRequest(
+    @Param('id', ParseUUIDPipe) requestId: string,
+    @Body() body: { note?: string },
+    @Request() req: any,
+  ): Promise<GdprRequestRow> {
+    return this.adminService.rejectGdprRequest(requestId, req.user.sub, req.user.email, body?.note ?? '');
+  }
+
+  @Get('forecast/cost')
+  @ApiOperation({ summary: 'Holt-smoothed cost forecast + 1-σ band, past + future as one series' })
+  async getCostForecast(
+    @Query('lookback') lookback?: string,
+    @Query('days') days?: string,
+  ): Promise<CostForecast> {
+    return this.forecast.getCostForecast({
+      lookbackDays: lookback ? parseInt(lookback, 10) : 60,
+      forecastDays: days ? parseInt(days, 10) : 30,
+    });
+  }
+
+  @Get('forecast/capacity')
+  @ApiOperation({ summary: 'Days until each provider hits its configured TPM ceiling' })
+  async getCapacityForecast(
+    @Query('providers') providers?: string,
+  ): Promise<CapacityForecast[]> {
+    const list = providers
+      ? providers.split(',').map((s) => s.trim()).filter(Boolean)
+      : ['openai', 'gemini', 'anthropic'];
+    return this.forecast.getCapacityForecast(list);
+  }
+
+  @Post('churn-risk/:userId/retry-email')
+  @ApiOperation({ summary: 'Send a payment-retry in-app notification to a churn-risk user' })
+  async sendRetryEmail(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Request() req: any,
+  ): Promise<{ sent: boolean }> {
+    return this.adminService.sendRetryEmail(userId, req.user.sub, req.user.email);
+  }
+}
+
+function normaliseFlaggedStatus(s: string | undefined): FlaggedStatus | undefined {
+  if (!s) return undefined;
+  return ['pending', 'approved', 'hidden', 'actioned'].includes(s) ? (s as FlaggedStatus) : undefined;
+}
+
+function normaliseResolveAction(s: string | undefined): ResolveAction | null {
+  if (!s) return null;
+  return s === 'approve' || s === 'hide' || s === 'actioned' ? (s as ResolveAction) : null;
+}
+
+function normaliseGdprStatus(s: string | undefined): GdprStatus | undefined {
+  if (!s) return undefined;
+  return ['pending', 'fulfilled', 'rejected'].includes(s) ? (s as GdprStatus) : undefined;
+}
+
+function normaliseGdprType(s: string | undefined): GdprType | null {
+  if (!s) return null;
+  return s === 'export' || s === 'delete' ? (s as GdprType) : null;
 }
 
 /** Clamp the `window` query to one of the three allowed buckets. */

@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Toast } from "@/components/ui/Toast";
+import type { CostForecast } from "./types";
 
 interface CostSummary {
   mtdUsd: number;
@@ -25,6 +26,25 @@ interface CostSummary {
   dailyThreshold: number | null;
   monthlyThreshold: number | null;
 }
+
+// Mirror of the backend MODEL_COSTS_USD_PER_1M table for the what-if
+// card. Admin runtime overrides (stored under `pricing.llm.*`) do NOT
+// feed this card — the goal is quick comparative math against the
+// sticker-price baseline. If we add a /admin/llm/models/costs
+// endpoint later, this table becomes a fetched-once fallback.
+const MODEL_COSTS_PER_1M: Record<string, { prompt: number; completion: number }> = {
+  "gpt-4o":              { prompt: 2.5,  completion: 10 },
+  "gpt-4o-mini":         { prompt: 0.15, completion: 0.6 },
+  "gpt-4-turbo":         { prompt: 10,   completion: 30 },
+  "gpt-4":               { prompt: 30,   completion: 60 },
+  "gpt-3.5-turbo":       { prompt: 0.5,  completion: 1.5 },
+  "claude-opus-4-6":     { prompt: 15,   completion: 75 },
+  "claude-sonnet-4-6":   { prompt: 3,    completion: 15 },
+  "claude-haiku-4-5":    { prompt: 0.8,  completion: 4 },
+  "gemini-2.0-flash":    { prompt: 0.1,  completion: 0.4 },
+  "gemini-1.5-pro":      { prompt: 1.25, completion: 5 },
+  "gemini-1.5-flash":    { prompt: 0.075,completion: 0.3 },
+};
 
 interface ByFeatureRow {
   feature: string;
@@ -65,6 +85,7 @@ export function CostTab({ token }: { token: string }) {
   const [byProvider, setByProvider] = useState<ByProviderRow[]>([]);
   const [daily, setDaily] = useState<DailyPoint[]>([]);
   const [today, setToday] = useState<TodayByFeature>({});
+  const [forecast, setForecast] = useState<CostForecast | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -77,18 +98,20 @@ export function CostTab({ token }: { token: string }) {
   const load = async () => {
     setLoading(true);
     try {
-      const [s, f, p, d, t] = await Promise.all([
+      const [s, f, p, d, t, fc] = await Promise.all([
         api.get<CostSummary>("/admin/cost/summary", { token }),
         api.get<ByFeatureRow[]>("/admin/cost/by-feature?days=30", { token }),
         api.get<ByProviderRow[]>("/admin/cost/by-provider?days=30", { token }),
         api.get<DailyPoint[]>("/admin/cost/daily?days=30", { token }),
         api.get<TodayByFeature>("/admin/llm/usage/today", { token }),
+        api.get<CostForecast>("/admin/forecast/cost?lookback=60&days=30", { token }).catch(() => null),
       ]);
       setSummary(s);
       setByFeature(f);
       setByProvider(p);
       setDaily(d);
       setToday(t);
+      setForecast(fc);
       setDailyDraft(s.dailyThreshold != null ? String(s.dailyThreshold) : "");
       setMonthlyDraft(s.monthlyThreshold != null ? String(s.monthlyThreshold) : "");
     } catch (err: any) {
@@ -203,6 +226,15 @@ export function CostTab({ token }: { token: string }) {
         </div>
       </div>
 
+      {/* Phase 4: 30-day spend forecast with 1σ confidence band. Line
+          overlay (history vs prediction) + a small tile with the trend
+          slope so operators see "drifts at $X/day" at a glance. */}
+      <ForecastCard data={forecast} />
+
+      {/* Phase 4: what-if calculator — pure client-side math. Swap the
+          model, pick a feature by volume, see MTD impact instantly. */}
+      <WhatIfCard byFeature={byFeature} byProvider={byProvider} mtdUsd={summary?.mtdUsd ?? 0} />
+
       {/* Spend alert thresholds */}
       <div className="surface-card p-6">
         <h3 className="text-sm font-semibold text-white mb-1">Spend Alerts</h3>
@@ -304,6 +336,236 @@ export function CostTab({ token }: { token: string }) {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Phase 4: spend forecast card ─────────────────────────────────────────
+
+function ForecastCard({ data }: { data: CostForecast | null }) {
+  if (!data || data.points.length === 0) {
+    return (
+      <div className="surface-card p-6 text-white/30 text-sm" data-testid="forecast-card">
+        Forecast unavailable (need a few days of stat_daily rollups first).
+      </div>
+    );
+  }
+  const points = data.points;
+  const width = Math.max(points.length * 12, 400);
+  const height = 120;
+  const values = points
+    .map((p) => p.actualUsd ?? p.upperUsd ?? 0)
+    .filter((v) => Number.isFinite(v));
+  const yMax = Math.max(1, ...values) * 1.1;
+
+  const xForIndex = (i: number) => (i * (width - 20)) / Math.max(1, points.length - 1) + 10;
+  const yForValue = (v: number) => height - 10 - (v / yMax) * (height - 20);
+
+  // Build two polylines: history (solid primary) and forecast (dashed
+  // accent). Plus a translucent confidence band polygon on the forecast.
+  const history = points
+    .filter((p) => p.actualUsd !== null)
+    .map((p, i) => `${xForIndex(i)},${yForValue(p.actualUsd!)}`)
+    .join(" ");
+
+  const forecastIdx0 = points.findIndex((p) => p.predictedUsd !== null);
+  const forecastPath = points
+    .map((p, i) =>
+      p.predictedUsd !== null ? `${xForIndex(i)},${yForValue(p.predictedUsd)}` : null,
+    )
+    .filter(Boolean)
+    .join(" ");
+
+  const bandTop = points
+    .map((p, i) =>
+      p.upperUsd !== null ? `${xForIndex(i)},${yForValue(p.upperUsd)}` : null,
+    )
+    .filter(Boolean)
+    .join(" ");
+  const bandBottom = points
+    .map((p, i) =>
+      p.lowerUsd !== null ? `${xForIndex(i)},${yForValue(p.lowerUsd)}` : null,
+    )
+    .filter(Boolean)
+    .reverse()
+    .join(" ");
+
+  const trendTone = data.trend > 0.01 ? "text-red-400" : data.trend < -0.01 ? "text-emerald-400" : "text-white/50";
+  return (
+    <div className="surface-card p-6" data-testid="forecast-card">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white">30-day spend forecast</h3>
+          <p className="text-xs text-white/40 mt-0.5">
+            Holt trend smoothing over the last 60 days of daily LLM spend. Shaded area ≈ ±1σ residual.
+          </p>
+        </div>
+        <div className="text-right">
+          <p className={`text-xs tabular-nums ${trendTone}`}>
+            drift: {data.trend >= 0 ? "+" : ""}${data.trend.toFixed(2)}/day
+          </p>
+          <p className="text-[11px] text-white/30 tabular-nums">
+            ±{formatUsd(data.residualStd)} 1σ
+          </p>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-32">
+        {/* Confidence band */}
+        {bandTop && (
+          <polygon
+            points={`${bandTop} ${bandBottom}`}
+            fill="currentColor"
+            className="text-accent-400/10"
+          />
+        )}
+        {/* History line */}
+        {history && (
+          <polyline
+            points={history}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            className="text-primary-400"
+          />
+        )}
+        {/* Forecast line */}
+        {forecastPath && (
+          <polyline
+            points={forecastPath}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+            className="text-accent-400"
+          />
+        )}
+        {forecastIdx0 >= 0 && (
+          <line
+            x1={xForIndex(forecastIdx0)}
+            x2={xForIndex(forecastIdx0)}
+            y1={10}
+            y2={height - 10}
+            strokeDasharray="2 3"
+            className="text-white/20"
+            stroke="currentColor"
+          />
+        )}
+      </svg>
+      <div className="flex justify-between text-[10px] text-white/30 mt-2 tabular-nums">
+        <span>{points[0]?.date ?? ""}</span>
+        <span>{points[points.length - 1]?.date ?? ""}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Phase 4: model-cost what-if card ─────────────────────────────────────
+
+function WhatIfCard({
+  byFeature,
+  byProvider,
+  mtdUsd,
+}: {
+  byFeature: ByFeatureRow[];
+  byProvider: ByProviderRow[];
+  mtdUsd: number;
+}) {
+  const modelOptions = Object.keys(MODEL_COSTS_PER_1M);
+  const currentModelSeed = byProvider[0]?.model ?? "gpt-4o";
+  const [fromModel, setFromModel] = useState<string>(modelOptions.includes(currentModelSeed) ? currentModelSeed : "gpt-4o");
+  const [toModel, setToModel] = useState<string>("gpt-4o-mini");
+  const [featureFilter, setFeatureFilter] = useState<string>("");
+
+  // Compute the tokens attributable to the chosen feature(s) × fromModel.
+  // Cost data from the backend is already USD per 1M @ current rates;
+  // for the swap we scale tokens by the ratio of target-to-source rates.
+  const fromRate = MODEL_COSTS_PER_1M[fromModel];
+  const toRate   = MODEL_COSTS_PER_1M[toModel];
+
+  const filtered = byFeature.filter((f) => featureFilter === "" || f.feature === featureFilter);
+  const totalTokens = filtered.reduce((a, b) => a + b.totalTokens, 0);
+  const totalCost   = filtered.reduce((a, b) => a + b.costUsd, 0);
+  // Token split: assume 50/50 prompt/completion for the what-if since we
+  // don't track it per row. Admins care about the ballpark number.
+  const promptTokens = totalTokens / 2;
+  const completionTokens = totalTokens / 2;
+  const projectedCostAtFromRate = (promptTokens * fromRate.prompt + completionTokens * fromRate.completion) / 1_000_000;
+  const projectedCostAtToRate   = (promptTokens * toRate.prompt + completionTokens * toRate.completion) / 1_000_000;
+  const ratio = projectedCostAtFromRate > 0 ? projectedCostAtToRate / projectedCostAtFromRate : 1;
+  const swappedCost = totalCost * ratio;
+  const mtdDelta    = (ratio - 1) * mtdUsd;
+
+  const featureOptions = [""].concat(byFeature.map((f) => f.feature));
+
+  return (
+    <div className="surface-card p-6" data-testid="what-if-card">
+      <h3 className="text-sm font-semibold text-white mb-1">Model-cost what-if</h3>
+      <p className="text-xs text-white/50 mb-4">
+        Pure-client math against the sticker-price table. Admin pricing overrides aren't folded in here —
+        useful for quick "should we migrate" decisions.
+      </p>
+      <div className="grid sm:grid-cols-3 gap-4 mb-4">
+        <label className="block">
+          <span className="block text-xs text-white/40 mb-1">From model</span>
+          <select
+            value={fromModel}
+            onChange={(e) => setFromModel(e.target.value)}
+            data-testid="whatif-from"
+            className="w-full px-3 py-2 rounded-lg surface-input text-sm"
+          >
+            {modelOptions.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="block text-xs text-white/40 mb-1">To model</span>
+          <select
+            value={toModel}
+            onChange={(e) => setToModel(e.target.value)}
+            data-testid="whatif-to"
+            className="w-full px-3 py-2 rounded-lg surface-input text-sm"
+          >
+            {modelOptions.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="block text-xs text-white/40 mb-1">Feature (optional)</span>
+          <select
+            value={featureFilter}
+            onChange={(e) => setFeatureFilter(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg surface-input text-sm"
+          >
+            {featureOptions.map((f) => (
+              <option key={f || "all"} value={f}>{f === "" ? "All features" : f}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <WhatIfTile label="Window cost today" value={formatUsd(totalCost)} tone="text-white" />
+        <WhatIfTile
+          label={`If moved to ${toModel}`}
+          value={formatUsd(swappedCost)}
+          tone={ratio < 1 ? "text-emerald-400" : ratio > 1 ? "text-red-400" : "text-white"}
+        />
+        <WhatIfTile
+          label="MTD impact"
+          value={`${mtdDelta >= 0 ? "+" : ""}${formatUsd(mtdDelta)}`}
+          tone={mtdDelta < 0 ? "text-emerald-400" : mtdDelta > 0 ? "text-red-400" : "text-white/60"}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WhatIfTile({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <div className="p-3 rounded-lg bg-white/[0.03]">
+      <p className="text-[11px] text-white/40">{label}</p>
+      <p className={`text-xl font-bold tabular-nums mt-1 ${tone}`}>{value}</p>
     </div>
   );
 }

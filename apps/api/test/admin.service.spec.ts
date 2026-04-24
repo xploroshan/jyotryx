@@ -10,6 +10,9 @@ import { ANALYTICS_SERVICE } from '../src/analytics/analytics.interface';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { LlmService } from '../src/llm/llm.service';
 import { BroadcastService } from '../src/ops/broadcast.service';
+import { SafetyService } from '../src/safety/safety.service';
+import { GdprRequestService } from '../src/gdpr/gdpr-request.service';
+import { NotificationService } from '../src/modules/notification/notification.service';
 import { mockOpenAIService } from './helpers/mocks';
 
 describe('AdminService', () => {
@@ -121,6 +124,25 @@ describe('AdminService', () => {
       enqueue: jest.fn().mockResolvedValue({ jobId: 'job-1', audienceSize: 0 }),
       audienceCount: jest.fn().mockResolvedValue(0),
     };
+    // Phase 4 additions — safety/gdpr/notification wrappers. Each
+    // stub returns the minimum shape the delegating AdminService
+    // methods expect on the happy path.
+    const mockSafetyService = {
+      resolve: jest.fn().mockResolvedValue({
+        id: 'f-1', status: 'hidden', userEmail: 'a@b.com', userId: 'u-1',
+      }),
+      list: jest.fn().mockResolvedValue([]),
+    };
+    const mockGdprRequestService = {
+      create: jest.fn().mockResolvedValue({ id: 'g-1', userEmail: 'a@b.com', userId: 'u-1', type: 'export', status: 'pending', dueBy: new Date().toISOString() }),
+      fulfill: jest.fn().mockResolvedValue({ row: { id: 'g-1', userEmail: 'a@b.com', userId: 'u-1', type: 'export', status: 'fulfilled' } }),
+      reject: jest.fn().mockResolvedValue({ id: 'g-1', userEmail: 'a@b.com', userId: 'u-1', type: 'export', status: 'rejected' }),
+      list: jest.fn().mockResolvedValue([]),
+    };
+    const mockNotificationService = {
+      sendPushNotification: jest.fn().mockResolvedValue(true),
+      sendBulkNotification: jest.fn().mockResolvedValue({ sent: 0, failed: 0 }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -134,6 +156,9 @@ describe('AdminService', () => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: LlmService, useValue: mockLlmService },
         { provide: BroadcastService, useValue: mockBroadcastService },
+        { provide: SafetyService, useValue: mockSafetyService },
+        { provide: GdprRequestService, useValue: mockGdprRequestService },
+        { provide: NotificationService, useValue: mockNotificationService },
       ],
     }).compile();
 

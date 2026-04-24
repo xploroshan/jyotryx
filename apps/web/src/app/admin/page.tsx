@@ -19,10 +19,12 @@ const ContentTab = dynamic(() => import("./components/ContentTab").then(m => ({ 
 const CostTab = dynamic(() => import("./components/CostTab").then(m => ({ default: m.CostTab })), { ssr: false });
 const FunnelTab = dynamic(() => import("./components/FunnelTab").then(m => ({ default: m.FunnelTab })), { ssr: false });
 const OpsTab = dynamic(() => import("./components/OpsTab").then(m => ({ default: m.OpsTab })), { ssr: false });
+const SafetyTab = dynamic(() => import("./components/SafetyTab").then(m => ({ default: m.SafetyTab })), { ssr: false });
+const GdprTab = dynamic(() => import("./components/GdprTab").then(m => ({ default: m.GdprTab })), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────��──
 
-type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost" | "funnel" | "ops";
+type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost" | "funnel" | "ops" | "safety" | "gdpr";
 
 // ─── Main Admin Page ─────────────────────────────────────────────────────────
 
@@ -92,6 +94,8 @@ export default function AdminPage() {
     { id: "dashboard", label: "Dashboard", icon: "\uD83D\uDCCA" },
     { id: "funnel", label: "Funnel", icon: "\uD83C\uDFAF" },
     { id: "ops", label: "Ops", icon: "\u2699\uFE0F" },
+    { id: "safety", label: "Safety", icon: "\uD83D\uDEE1\uFE0F" },
+    { id: "gdpr", label: "GDPR", icon: "\uD83D\uDCDC" },
     { id: "cost", label: "Cost", icon: "\uD83D\uDCB8" },
     { id: "users", label: "Users", icon: "\uD83D\uDC65" },
     { id: "activity", label: "Activity", icon: "\uD83D\uDDD3" },
@@ -160,6 +164,14 @@ export default function AdminPage() {
 
         {activeTab === "ops" && accessToken && (
           <OpsTab token={accessToken} />
+        )}
+
+        {activeTab === "safety" && accessToken && (
+          <SafetyTab token={accessToken} />
+        )}
+
+        {activeTab === "gdpr" && accessToken && (
+          <GdprTab token={accessToken} />
         )}
 
         {activeTab === "users" && accessToken && (

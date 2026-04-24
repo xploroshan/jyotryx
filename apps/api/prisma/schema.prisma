@@ -717,3 +717,51 @@ model StatDaily {
   @@id([date])
   @@map("stats_daily")
 }
+
+// ─── Phase 4: safety + GDPR ────────────────────────────────────────────────
+// FK constraints are intentionally absent on both models: chat_messages is a
+// partitioned table (no cross-partition FK allowed), and users may be deleted
+// via the same GDPR workflow these rows track — a soft UUID reference keeps
+// the audit row readable after purge (the admin UI renders "[deleted]" when
+// the user lookup misses).
+
+model FlaggedMessage {
+  id          String    @id @default(uuid()) @db.Uuid
+  /// Reference to chat_messages.id — no FK because chat_messages is partitioned.
+  messageId   String    @db.Uuid
+  userId      String    @db.Uuid
+  /// OpenAI moderation category ids: sexual, hate, harassment, self-harm, …
+  categories  String[]
+  /// Full moderation payload (per-category scores, flagged flags).
+  scores      Json
+  /// State machine: pending → approved | hidden | actioned. approved means
+  /// the admin reviewed and found it safe; hidden removes from UI; actioned
+  /// is the terminal state for "user warned / banned / banned + message hidden".
+  status      String    @default("pending")
+  reviewedBy  String?   @db.Uuid
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@map("flagged_messages")
+}
+
+model GdprRequest {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  /// "export" writes a tarball of the user's data; "delete" triggers
+  /// GdprPurgeService.purgeUserData + user row removal.
+  type        String
+  /// pending → fulfilled | rejected. `dueBy` is now + 30d; the admin tab
+  /// sorts by dueBy to surface the nearest-SLA row first.
+  status      String    @default("pending")
+  dueBy       DateTime
+  fulfilledAt DateTime?
+  adminId     String?   @db.Uuid
+  /// Optional free-form note from the admin on fulfillment or rejection.
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, dueBy])
+  @@map("gdpr_requests")
+}
