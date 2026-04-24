@@ -138,7 +138,6 @@ export const kn: TranslationKeys = {
     multiLanguage: 'ಭಾಷೆಗಳು',
     accuracy: 'ನಿಖರತೆ',
     users: 'ಬಳಕೆದಾರರು',
-    featuresTitle: 'ನಿಮಗೆ ಬೇಕಾದ ಎಲ್ಲವೂ',
     featuresHighlight: 'ಆಧ್ಯಾತ್ಮಿಕ ಮಾರ್ಗದರ್ಶನ',
     featuresDescription: 'ತಜ್ಞ ವೈದಿಕ ಜ್ಯೋತಿಷ, ಹಸ್ತರೇಖೆ ಮತ್ತು ಸಂಖ್ಯಾಶಾಸ್ತ್ರ ಮಾರ್ಗದರ್ಶನ.',
     howItWorksTitle: 'ಹೇಗೆ',

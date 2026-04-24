@@ -138,7 +138,6 @@ export const te: TranslationKeys = {
     multiLanguage: 'భాషలు',
     accuracy: 'ఖచ్చితత్వం',
     users: 'వినియోగదారులు',
-    featuresTitle: 'మీకు అవసరమైనదంతా',
     featuresHighlight: 'ఆధ్యాత్మిక మార్గదర్శకత్వం',
     featuresDescription: 'నిపుణుల వేద జ్యోతిషం, హస్తరేఖ మరియు సంఖ్యాశాస్త్ర మార్గదర్శకత్వం.',
     howItWorksTitle: 'ఎలా',

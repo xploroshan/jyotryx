@@ -138,7 +138,6 @@ export const or_: TranslationKeys = {
     multiLanguage: 'ଭାଷା',
     accuracy: 'ସଠିକତା',
     users: 'ବ୍ୟବହାରକାରୀ',
-    featuresTitle: 'ଆପଣଙ୍କ ଆବଶ୍ୟକ ସବୁକିଛି',
     featuresHighlight: 'ଆଧ୍ୟାତ୍ମିକ ମାର୍ଗଦର୍ଶନ',
     featuresDescription: 'ବିଶେଷଜ୍ଞ ବୈଦିକ ଜ୍ୟୋତିଷ, ହସ୍ତରେଖା ଏବଂ ସଂଖ୍ୟାଶାସ୍ତ୍ର ମାର୍ଗଦର୍ଶନ।',
     howItWorksTitle: 'କିପରି',

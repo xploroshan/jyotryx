@@ -138,7 +138,6 @@ export const mr: TranslationKeys = {
     multiLanguage: 'भाषा',
     accuracy: 'अचूकता',
     users: 'वापरकर्ते',
-    featuresTitle: 'तुम्हाला हवे ते सर्व',
     featuresHighlight: 'आध्यात्मिक मार्गदर्शन',
     featuresDescription: 'तज्ञ वैदिक ज्योतिष, हस्तरेषा आणि अंकशास्त्र मार्गदर्शन.',
     howItWorksTitle: 'कसे',

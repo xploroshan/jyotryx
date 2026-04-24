@@ -138,7 +138,6 @@ export const ml: TranslationKeys = {
     multiLanguage: 'ഭാഷകള്‍',
     accuracy: 'കൃത്യത',
     users: 'ഉപയോക്താക്കള്‍',
-    featuresTitle: 'നിങ്ങള്‍ക്ക് ആവശ്യമായ എല്ലാം',
     featuresHighlight: 'ആത്മീയ മാര്‍ഗ്ഗനിര്‍ദ്ദേശം',
     featuresDescription: 'വിദഗ്ധ വൈദിക ജ്യോതിഷം, ഹസ്തരേഖ, സംഖ്യാശാസ്ത്ര മാര്‍ഗ്ഗനിര്‍ദ്ദേശം.',
     howItWorksTitle: 'എങ്ങനെ',

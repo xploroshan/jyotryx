@@ -138,7 +138,6 @@ export const hi: TranslationKeys = {
     multiLanguage: 'भाषाएँ',
     accuracy: 'सटीकता',
     users: 'उपयोगकर्ता',
-    featuresTitle: 'आपको चाहिए सब कुछ',
     featuresHighlight: 'आध्यात्मिक मार्गदर्शन',
     featuresDescription: 'विशेषज्ञ वैदिक ज्योतिष, हस्तरेखा, और अंकशास्त्र मार्गदर्शन।',
     howItWorksTitle: 'कैसे',

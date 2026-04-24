@@ -138,7 +138,6 @@ export const pa: TranslationKeys = {
     multiLanguage: 'ਭਾਸ਼ਾਵਾਂ',
     accuracy: 'ਸ਼ੁੱਧਤਾ',
     users: 'ਉਪਭੋਗਤਾ',
-    featuresTitle: 'ਤੁਹਾਨੂੰ ਲੋੜੀਂਦਾ ਸਭ ਕੁਝ',
     featuresHighlight: 'ਅਧਿਆਤਮਿਕ ਮਾਰਗਦਰਸ਼ਨ',
     featuresDescription: 'ਮਾਹਿਰ ਵੈਦਿਕ ਜੋਤਿਸ਼, ਹਸਤਰੇਖਾ ਅਤੇ ਅੰਕ ਵਿਗਿਆਨ ਮਾਰਗਦਰਸ਼ਨ।',
     howItWorksTitle: 'ਕਿਵੇਂ',

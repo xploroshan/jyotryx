@@ -138,7 +138,6 @@ export const as_: TranslationKeys = {
     multiLanguage: 'ভাষা',
     accuracy: 'নিখুঁততা',
     users: 'ব্যৱহাৰকাৰী',
-    featuresTitle: 'আপোনাৰ প্ৰয়োজনীয় সকলো',
     featuresHighlight: 'আধ্যাত্মিক মাৰ্গদৰ্শন',
     featuresDescription: 'বিশেষজ্ঞ বৈদিক জ্যোতিষ, হস্তৰেখা আৰু অংকশাস্ত্ৰ মাৰ্গদৰ্শন।',
     howItWorksTitle: 'কেনেদৰে',

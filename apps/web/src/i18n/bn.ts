@@ -138,7 +138,6 @@ export const bn: TranslationKeys = {
     multiLanguage: 'ভাষা',
     accuracy: 'নির্ভুলতা',
     users: 'ব্যবহারকারী',
-    featuresTitle: 'আপনার প্রয়োজনীয় সবকিছু',
     featuresHighlight: 'আধ্যাত্মিক নির্দেশনা',
     featuresDescription: 'বিশেষজ্ঞ বৈদিক জ্যোতিষ, হস্তরেখা এবং সংখ্যাতত্ত্ব নির্দেশনা।',
     howItWorksTitle: 'কিভাবে',
