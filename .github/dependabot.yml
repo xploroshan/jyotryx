@@ -1,12 +1,20 @@
 # Dependabot configuration — weekly scan for vulnerable / out-of-date
 # dependencies across both apps and the GitHub Actions workflow.
 #
-# Runs on a schedule rather than per-commit to avoid churn; security
-# advisories are opened immediately regardless of schedule by GitHub's
-# security advisory system.
+# Grouping strategy: related packages that must be version-aligned (e.g.
+# every `@nestjs/*` pin at the same minor) are grouped into a single PR
+# so Dependabot doesn't propose a partial upgrade that breaks peer-dep
+# compatibility. Unrelated production deps get individual PRs so each
+# can be triaged and merged (or rejected) on its own merits.
+#
+# Earlier version of this file grouped ALL `dependency-type: production`
+# into one PR, which produced unmergeable 25-dep mega-PRs. This file is
+# the reviewable-granularity replacement.
 version: 2
 updates:
-  # Root package.json — workspace orchestration (turbo, etc.)
+  # ─── Root package.json ─────────────────────────────────────────────
+  # Minimal — turbo + test harness. Keep dev-deps grouped (they rarely
+  # interact across major versions).
   - package-ecosystem: npm
     directory: "/"
     schedule:
@@ -14,16 +22,13 @@ updates:
       day: monday
       time: "06:00"
       timezone: Etc/UTC
-    open-pull-requests-limit: 5
-    labels:
-      - dependencies
+    open-pull-requests-limit: 3
+    labels: [dependencies]
     groups:
-      dev-dependencies:
+      root-dev-dependencies:
         dependency-type: development
-      production-dependencies:
-        dependency-type: production
 
-  # API (NestJS backend)
+  # ─── API (NestJS backend) ──────────────────────────────────────────
   - package-ecosystem: npm
     directory: /apps/api
     schedule:
@@ -31,17 +36,40 @@ updates:
       day: monday
       time: "06:00"
       timezone: Etc/UTC
-    open-pull-requests-limit: 8
-    labels:
-      - dependencies
-      - api
+    open-pull-requests-limit: 15
+    labels: [dependencies, api]
     groups:
-      dev-dependencies:
-        dependency-type: development
-      production-dependencies:
-        dependency-type: production
+      # Framework & peer-aligned packages get bundled.
+      nestjs:
+        patterns: ["@nestjs/*"]
+      prisma:
+        patterns: ["@prisma/*", "prisma"]
+      sentry:
+        patterns: ["@sentry/*"]
+      # Type definitions — always grouped; never breaking on their own.
+      types:
+        patterns: ["@types/*"]
+      # Test harness — jest + supertest + ts-jest usually bumped together.
+      testing:
+        patterns: ["jest", "jest-*", "ts-jest", "@types/jest", "supertest", "@types/supertest"]
+      # Linters — safe to batch; failures surface together.
+      linting:
+        patterns: ["eslint", "eslint-*", "@typescript-eslint/*", "prettier"]
+    # Everything else (openai, razorpay, firebase-admin, ioredis, bcrypt,
+    # swisseph, etc.) gets an individual PR — these have subtle breaking
+    # changes and deserve per-package review.
+    ignore:
+      # Major version bumps on critical deps need explicit human review.
+      # Comment these out when actively upgrading. Security advisories
+      # still produce PRs regardless of this ignore list.
+      - dependency-name: "openai"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@prisma/client"
+        update-types: [version-update:semver-major]
+      - dependency-name: "prisma"
+        update-types: [version-update:semver-major]
 
-  # Web (Next.js frontend)
+  # ─── Web (Next.js frontend) ────────────────────────────────────────
   - package-ecosystem: npm
     directory: /apps/web
     schedule:
@@ -49,21 +77,45 @@ updates:
       day: monday
       time: "06:00"
       timezone: Etc/UTC
-    open-pull-requests-limit: 8
-    labels:
-      - dependencies
-      - web
+    open-pull-requests-limit: 15
+    labels: [dependencies, web]
     groups:
-      dev-dependencies:
-        dependency-type: development
-      production-dependencies:
-        dependency-type: production
+      # Next.js ecosystem — framework + analyzer + bundled ESLint config.
+      nextjs:
+        patterns: ["next", "@next/*", "eslint-config-next"]
+      # React + types, always version-matched.
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      sentry:
+        patterns: ["@sentry/*"]
+      playwright:
+        patterns: ["@playwright/*", "playwright"]
+      types:
+        patterns: ["@types/*"]
+      linting:
+        patterns: ["eslint", "eslint-*", "@typescript-eslint/*", "prettier"]
+      # Styling / animation / UI libs that version-drift together.
+      styling:
+        patterns: ["tailwindcss", "@tailwindcss/*", "autoprefixer", "postcss", "framer-motion", "motion"]
+    # Zustand, firebase, razorpay, clsx, lucide-react, etc. — each
+    # gets its own PR.
+    ignore:
+      - dependency-name: "next"
+        update-types: [version-update:semver-major]
+      - dependency-name: "react"
+        update-types: [version-update:semver-major]
+      - dependency-name: "react-dom"
+        update-types: [version-update:semver-major]
 
-  # GitHub Actions versions (checkout, setup-node, lighthouse-ci-action, etc.)
+  # ─── GitHub Actions versions ───────────────────────────────────────
+  # Monthly is enough; major bumps (e.g. checkout v4→v5) can still open
+  # out-of-cycle if there's a security advisory.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: monthly
-    labels:
-      - dependencies
-      - ci
+    open-pull-requests-limit: 5
+    labels: [dependencies, ci]
+    groups:
+      actions:
+        patterns: ["actions/*"]
