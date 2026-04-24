@@ -19,6 +19,12 @@ import {
 } from "./components/translations";
 import { currentHourIndex, minutesSinceMidnight } from "./lib/planetaryTime";
 import {
+  readBriefingCache,
+  readBriefingCacheSync,
+  writeBriefingCache,
+} from "./lib/briefingCache";
+import type { DailyBriefing } from "./lib/types";
+import {
   translateTithi,
   translateNakshatra,
   translateYoga,
@@ -30,40 +36,6 @@ const PlanetaryHoursSection = dynamic(
   () => import("./components/PlanetaryHoursSection").then(m => ({ default: m.PlanetaryHoursSection })),
   { ssr: false },
 );
-
-interface PlanetaryHour {
-  planet: string;
-  startTime: string;
-  endTime: string;
-  activities: string[];
-  avoid: string[];
-  isCurrent: boolean;
-}
-
-interface DailyBriefing {
-  greeting: string;
-  date: string;
-  dayQuality: "excellent" | "good" | "moderate" | "challenging";
-  summary: string;
-  doList: string[];
-  avoidList: string[];
-  planetaryHours: PlanetaryHour[];
-  currentHora: PlanetaryHour | null;
-  luckyColor: string;
-  luckyNumber: number;
-  luckyTime: string;
-  professionInsight: string;
-  remedy: string;
-  mantra: string;
-  panchang: {
-    tithi: string;
-    nakshatra: string;
-    yoga: string;
-    vara: string;
-    rahukaal: string;
-  };
-  transitAlert: string | null;
-}
 
 const QUALITY_STYLES = {
   excellent: { emoji: "\u2728", color: "text-emerald-400", ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", bar: "bg-emerald-400", glow: "shadow-emerald-500/20", pct: 100 },
@@ -105,62 +77,6 @@ const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
   HORARY: 'horary',
   MEDICAL: 'medical',
 };
-
-const BRIEFING_CACHE_KEY = 'jyotron-my-day-briefing';
-
-type BriefingCache = {
-  date: string; // YYYY-MM-DD of cached entry; expires daily
-  locale: string; // cached locale; bust when user switches language
-  userId: string; // bust when user switches accounts
-  data: DailyBriefing;
-};
-
-function readBriefingCache(userId: string, locale: string): DailyBriefing | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(BRIEFING_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as BriefingCache;
-    const today = new Date().toISOString().slice(0, 10);
-    if (parsed.date !== today) return null;
-    if (parsed.locale !== locale) return null;
-    if (parsed.userId !== userId) return null;
-    return parsed.data;
-  } catch { return null; }
-}
-
-/**
- * Synchronous cache read used by the useState initializer, so the FIRST
- * client render already has the briefing in hand — no wait for Zustand
- * rehydration or useEffect. We pull userId/locale directly from the
- * persist middleware's localStorage entries instead of routing through
- * the hooks to avoid an extra render cycle on the critical path.
- */
-function readBriefingCacheSync(): DailyBriefing | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const authRaw = window.localStorage.getItem('jyotron-auth');
-    const localeRaw = window.localStorage.getItem('jyotron-locale');
-    if (!authRaw) return null;
-    const userId = JSON.parse(authRaw)?.state?.user?.id;
-    if (!userId) return null;
-    const loc = (localeRaw && JSON.parse(localeRaw)?.state?.locale) || 'en';
-    return readBriefingCache(userId, loc);
-  } catch { return null; }
-}
-
-function writeBriefingCache(userId: string, locale: string, data: DailyBriefing): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const payload: BriefingCache = {
-      date: new Date().toISOString().slice(0, 10),
-      locale,
-      userId,
-      data,
-    };
-    window.localStorage.setItem(BRIEFING_CACHE_KEY, JSON.stringify(payload));
-  } catch { /* quota / private mode */ }
-}
 
 export default function MyDayPage() {
   const { t, locale } = useTranslation();

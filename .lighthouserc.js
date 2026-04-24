@@ -27,6 +27,12 @@ module.exports = {
     assert: {
       assertions: {
         'categories:performance': ['error', { minScore: 0.8 }],
+        // Accessibility + best-practices gates. Lighthouse's a11y audit
+        // covers aria-label presence, form label linkage, color contrast
+        // (properly weighted for dark themes), skip-links and landmarks —
+        // the bug classes that slipped past the render-only unit tests.
+        'categories:accessibility': ['error', { minScore: 0.9 }],
+        'categories:best-practices': ['warn', { minScore: 0.9 }],
         'first-contentful-paint': ['error', { maxNumericValue: 2000 }],
         'largest-contentful-paint': ['error', { maxNumericValue: 3500 }],
         'total-blocking-time': ['error', { maxNumericValue: 300 }],
