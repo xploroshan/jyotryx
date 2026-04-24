@@ -49,6 +49,14 @@ export class AdminBootstrapService implements OnApplicationBootstrap {
         err instanceof Error ? err.stack : String(err),
       );
     }
+    try {
+      await this.promoteConfiguredEmails();
+    } catch (err) {
+      this.logger.error(
+        'Admin promotion (ADMIN_PROMOTE_EMAILS) failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
   }
 
   private async ensureAdmin(): Promise<void> {
@@ -116,6 +124,47 @@ export class AdminBootstrapService implements OnApplicationBootstrap {
       this.logger.log(
         `Admin account ${email} updated (reset=${resetRequested}, passwordBackfill=${needsPasswordBackfill}, roleFix=${needsRoleFix}).`,
       );
+    }
+  }
+
+  /**
+   * Promotes every email in `ADMIN_PROMOTE_EMAILS` (comma-separated) to
+   * role=ADMIN on every boot. Idempotent — already-ADMIN accounts are
+   * logged and skipped, unknown emails are logged as warnings. Use this
+   * to grant an existing registered account admin rights without
+   * shelling into psql:
+   *
+   *     ADMIN_PROMOTE_EMAILS=alice@x.com,bob@y.com
+   *
+   * Missing-email case is only a warning because the typical ops flow is
+   * "set the env, restart, the target user registers, restart again" —
+   * we don't want a mistyped env to crash the boot.
+   */
+  private async promoteConfiguredEmails(): Promise<void> {
+    const raw = this.config.get<string>('ADMIN_PROMOTE_EMAILS') ?? '';
+    const emails = raw
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e.length > 0);
+    if (emails.length === 0) return;
+
+    for (const email of emails) {
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        this.logger.warn(
+          `ADMIN_PROMOTE_EMAILS: no user found for ${email} — they must register first, then restart the API.`,
+        );
+        continue;
+      }
+      if (user.role === Role.ADMIN) {
+        this.logger.log(`ADMIN_PROMOTE_EMAILS: ${email} is already ADMIN.`);
+        continue;
+      }
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { role: Role.ADMIN },
+      });
+      this.logger.log(`ADMIN_PROMOTE_EMAILS: promoted ${email} to ADMIN.`);
     }
   }
 
