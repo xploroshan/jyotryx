@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import PalmDiagram from "@/components/palmistry/PalmDiagram";
 import { useTranslation } from "@/i18n";
+import { Toast } from "@/components/ui/Toast";
 
 interface AnalysisResult {
   majorLines: { name: string; description: string; strength: "strong" | "moderate" | "weak" }[];
@@ -50,6 +51,9 @@ export default function PalmistryPage() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState("major");
   const [error, setError] = useState("");
+  // Transient network/server errors are retriable — surfaces a Retry button
+  // on the error toast instead of forcing the user to re-upload.
+  const [errorRetryable, setErrorRetryable] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -86,10 +90,12 @@ export default function PalmistryPage() {
   const handleAnalyze = async () => {
     if (!imageFile) {
       setError(t.palmistry.uploadFirst);
+      setErrorRetryable(false);
       return;
     }
     setAnalyzing(true);
     setError("");
+    setErrorRetryable(false);
     try {
       const { useAuthStore } = await import("@/lib/store");
       if (!useAuthStore.getState().accessToken) {
@@ -141,6 +147,12 @@ export default function PalmistryPage() {
       }
     } catch (err: any) {
       setError(err.message || t.palmistry.analysisFailed);
+      // Treat network / timeout / 5xx as retriable; the API wrapper sets these
+      // flags on its ApiError. If they're missing we still surface a Retry
+      // link — the analyse call is idempotent, so a spurious retry is harmless.
+      setErrorRetryable(
+        Boolean(err?.isNetwork || err?.isTimeout) || (err?.status ?? 0) >= 500 || !err?.status,
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -177,37 +189,41 @@ export default function PalmistryPage() {
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">
             {t.palmistry.title} <span className="text-gradient">{t.palmistry.titleHighlight}</span>
           </h1>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-white/60 max-w-xl mx-auto">
             {t.palmistry.description}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Upload Area */}
           <div className="space-y-6">
             {/* Gender Selection */}
             <div className="surface-card p-4">
               <h3 className="text-sm font-semibold text-white mb-3">{t.palmistry.selectGender}</h3>
-              <p className="text-xs text-white/40 mb-3">
+              <p className="text-xs text-white/60 mb-3">
                 {gender === "male" ? t.palmistry.genderMaleNote : gender === "female" ? t.palmistry.genderFemaleNote : t.palmistry.genderDefaultNote}
               </p>
-              <div className="flex gap-3">
+              <div role="radiogroup" aria-label={t.palmistry.selectGender} className="flex gap-3">
                 <button
+                  role="radio"
+                  aria-checked={gender === "male"}
                   onClick={() => setGender("male")}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`focus-ring touch-target flex-1 py-3 rounded-xl text-sm font-medium transition-all ${
                     gender === "male"
                       ? "btn-primary text-white"
-                      : "bg-white/[0.03] text-white/40 hover:text-white hover:bg-white/[0.06]"
+                      : "bg-white/[0.03] text-white/70 hover:text-white hover:bg-white/[0.06]"
                   }`}
                 >
                   {t.palmistry.male}
                 </button>
                 <button
+                  role="radio"
+                  aria-checked={gender === "female"}
                   onClick={() => setGender("female")}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`focus-ring touch-target flex-1 py-3 rounded-xl text-sm font-medium transition-all ${
                     gender === "female"
                       ? "btn-primary text-white"
-                      : "bg-white/[0.03] text-white/40 hover:text-white hover:bg-white/[0.06]"
+                      : "bg-white/[0.03] text-white/70 hover:text-white hover:bg-white/[0.06]"
                   }`}
                 >
                   {t.palmistry.female}
@@ -216,11 +232,20 @@ export default function PalmistryPage() {
             </div>
 
             <div
+              role="button"
+              tabIndex={0}
+              aria-label={gender === "male" ? t.palmistry.uploadRight : gender === "female" ? t.palmistry.uploadLeft : t.palmistry.uploadYour}
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
-              className={`surface-card p-8 flex flex-col items-center justify-center min-h-[400px] cursor-pointer transition-all ${
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  fileRef.current?.click();
+                }
+              }}
+              className={`focus-ring surface-card p-8 flex flex-col items-center justify-center min-h-[400px] cursor-pointer transition-all ${
                 isDragging ? "border-primary-500 bg-primary-500/10" : "hover:bg-white/[0.06]"
               }`}
             >
@@ -234,10 +259,11 @@ export default function PalmistryPage() {
 
               {image ? (
                 <div className="relative w-full">
-                  <img src={image} alt="Palm" className="w-full max-h-[350px] object-contain rounded-xl" />
+                  <img src={image} alt={t.palmistry.uploadYour} className="w-full max-h-[350px] object-contain rounded-xl" />
                   <button
                     onClick={(e) => { e.stopPropagation(); setImage(null); setImageFile(null); setAnalysis(null); }}
-                    className="absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-white/60 hover:text-white"
+                    aria-label={t.common.close}
+                    className="focus-ring absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-white/70 hover:text-white"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -269,14 +295,20 @@ export default function PalmistryPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+              <Toast
+                message={error}
+                tone="error"
+                onClose={() => { setError(""); setErrorRetryable(false); }}
+                closeLabel={t.common.close}
+                action={errorRetryable && imageFile ? { label: t.common.retry, onClick: handleAnalyze } : undefined}
+              />
             )}
 
             {image && !analysis && (
               <button
                 onClick={handleAnalyze}
                 disabled={analyzing}
-                className="w-full py-4 rounded-xl btn-primary text-white font-semibold  transition-all disabled:opacity-50"
+                className="focus-ring w-full py-4 rounded-xl btn-primary text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {analyzing ? (
                   <span className="flex items-center justify-center gap-2">
@@ -332,18 +364,20 @@ export default function PalmistryPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1">
-                  {tabs.map((t) => (
+                <div role="tablist" aria-label={t.palmistry.results} className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1 overflow-x-auto no-scrollbar">
+                  {tabs.map((tab) => (
                     <button
-                      key={t.id}
-                      onClick={() => setActiveTab(t.id)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
-                        activeTab === t.id
+                      key={tab.id}
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`focus-ring flex-shrink-0 flex-1 py-2 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                        activeTab === tab.id
                           ? "btn-primary text-white"
-                          : "text-white/40 hover:text-white"
+                          : "text-white/70 hover:text-white"
                       }`}
                     >
-                      {t.label}
+                      {tab.label}
                     </button>
                   ))}
                 </div>
@@ -436,15 +470,20 @@ export default function PalmistryPage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-white/[0.06]">
-                  <button className="w-full py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400">
+                  <button className="focus-ring w-full py-3 rounded-xl btn-secondary text-sm font-medium text-primary-300">
                     {t.palmistry.downloadReport}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="surface-card p-12 flex flex-col items-center justify-center min-h-[400px] text-center">
-                <h3 className="text-lg font-semibold text-white/40 mb-2">{t.palmistry.analysisResults}</h3>
-                <p className="text-sm text-white/20">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500/10 text-primary-300">
+                  <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-white/80 mb-2">{t.palmistry.analysisResults}</h3>
+                <p className="text-sm text-white/60 max-w-xs">
                   {t.palmistry.uploadPrompt}
                 </p>
               </div>

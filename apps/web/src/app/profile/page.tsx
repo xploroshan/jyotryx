@@ -7,6 +7,7 @@ import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
+import { Toast, RequiredMark } from "@/components/ui/Toast";
 
 interface UserProfile {
   id: string;
@@ -188,7 +189,6 @@ export default function ProfilePage() {
       }
 
       setSuccess(t.profile.profileUpdatedSuccess);
-      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
       setError(err.message || t.profile.updateFailed);
     } finally {
@@ -217,7 +217,6 @@ export default function ProfilePage() {
         setHasPassword(true);
         setNewPassword("");
         setConfirmPassword("");
-        setTimeout(() => setSuccess(""), 3000);
       } catch (err: any) {
         setError(err.message || t.profile.errSetFailed);
       } finally {
@@ -255,7 +254,6 @@ export default function ProfilePage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
       setError(err.message || t.profile.errChangeFailed);
     } finally {
@@ -299,7 +297,7 @@ export default function ProfilePage() {
               <>{t.profile.myPrefix} <span className="text-gradient">{t.profile.profileHighlight}</span></>
             )}
           </h1>
-          <p className="text-white/40 text-sm">
+          <p className="text-white/70 text-sm">
             {profile && !profile.profileComplete
               ? t.profile.subtitleIncomplete
               : t.profile.subtitleComplete}
@@ -337,13 +335,24 @@ export default function ProfilePage() {
         )}
 
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
-            {error}
-            <button onClick={() => setError("")} className="text-red-400 hover:text-red-300 ml-2">&times;</button>
+          <div className="mb-6">
+            <Toast
+              message={error}
+              tone="error"
+              onClose={() => setError("")}
+              closeLabel={t.common.close}
+            />
           </div>
         )}
         {success && (
-          <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">{success}</div>
+          <div className="mb-6">
+            <Toast
+              message={success}
+              tone="success"
+              onClose={() => setSuccess("")}
+              closeLabel={t.common.close}
+            />
+          </div>
         )}
 
         {profile && !loading && (
@@ -361,7 +370,7 @@ export default function ProfilePage() {
                   <span className="text-xs text-white/30">{t.profile.memberSince} {new Date(profile.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-              <button onClick={handleLogout} className="px-4 py-2 rounded-xl btn-secondary text-sm text-red-400 hover:bg-red-500/10 transition-all">
+              <button onClick={handleLogout} className="focus-ring px-4 py-2 rounded-xl btn-secondary text-sm text-red-400 hover:bg-red-500/10 transition-all">
                 {t.profile.logout}
               </button>
             </div>
@@ -396,44 +405,47 @@ export default function ProfilePage() {
                 <h3 className="text-lg font-bold text-white mb-6">{t.profile.birthDetails}</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs text-white/30 mb-2">{t.profile.name}</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                    <label htmlFor="profile-name" className="block text-xs font-medium text-white/70 mb-2">{t.profile.name}</label>
+                    <input id="profile-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/30 mb-2">{t.profile.phoneNumberLabel}</label>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.profile.phoneNumberPlaceholder}
+                    <label htmlFor="profile-phone" className="block text-xs font-medium text-white/70 mb-2">{t.profile.phoneNumberLabel}</label>
+                    <input id="profile-phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.profile.phoneNumberPlaceholder}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">
-                        {t.profile.dob} <span className="text-primary-400">*</span>
+                      <label htmlFor="profile-dob" className="flex items-center text-xs font-medium text-white/70 mb-2">
+                        {t.profile.dob} <RequiredMark />
                       </label>
-                      <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl surface-input" />
+                      <input id="profile-dob" type="date" required value={dob} onChange={(e) => setDob(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]" />
                     </div>
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">
-                        {t.profile.tob} <span className="text-primary-400">*</span>
+                      <label htmlFor="profile-tob" className="flex items-center text-xs font-medium text-white/70 mb-2">
+                        {t.profile.tob} <RequiredMark />
                       </label>
-                      <input type="time" value={tob} onChange={(e) => setTob(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl surface-input" />
+                      <input id="profile-tob" type="time" required value={tob} onChange={(e) => setTob(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-white/30 mb-2">
-                      {t.profile.pob} <span className="text-primary-400">*</span>
+                    <label htmlFor="profile-pob" className="flex items-center text-xs font-medium text-white/70 mb-2">
+                      {t.profile.pob} <RequiredMark />
                     </label>
-                    <input type="text" value={pob} onChange={(e) => setPob(e.target.value)} placeholder={t.profile.pobPlaceholderEg}
+                    <input id="profile-pob" type="text" required value={pob} onChange={(e) => setPob(e.target.value)} placeholder={t.profile.pobPlaceholderEg}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
+                    <p className="mt-1 text-[11px] text-white/50">
+                      City where you were born — used for precise latitude/longitude in chart calculations.
+                    </p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">
-                        {t.profile.gender} <span className="text-primary-400">*</span>
+                      <label htmlFor="profile-gender" className="flex items-center text-xs font-medium text-white/70 mb-2">
+                        {t.profile.gender} <RequiredMark />
                       </label>
-                      <select value={gender} onChange={(e) => setGender(e.target.value)}
+                      <select id="profile-gender" required value={gender} onChange={(e) => setGender(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input">
                         <option value="">{t.profile.selectGender}</option>
                         <option value="Male">{t.profile.genderMale}</option>
@@ -442,8 +454,8 @@ export default function ProfilePage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">{t.profile.profession}</label>
-                      <select value={profession} onChange={(e) => setProfession(e.target.value)}
+                      <label htmlFor="profile-profession" className="block text-xs font-medium text-white/70 mb-2">{t.profile.profession}</label>
+                      <select id="profile-profession" value={profession} onChange={(e) => setProfession(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl surface-input">
                         <option value="">{t.profile.selectProfession}</option>
                         <option value="SOFTWARE">{t.profile.profSoftwareFull}</option>
@@ -461,13 +473,23 @@ export default function ProfilePage() {
                   </div>
                   {/* In onboarding mode step 1: show Next button, in step 2 or normal mode: show Save */}
                   {completeMode && !profile?.profileComplete && onboardingStep === 1 ? (
-                    <button onClick={handleNextStep}
-                      className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all">
-                      {t.traditions.next || "Next"}
-                    </button>
+                    <div className="mt-2">
+                      <button onClick={handleNextStep}
+                        className="focus-ring px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!dob || !tob || !pob.trim() || !gender}
+                        aria-describedby="profile-next-hint"
+                      >
+                        {t.traditions.next || "Next"}
+                      </button>
+                      {(!dob || !tob || !pob.trim() || !gender) && (
+                        <p id="profile-next-hint" className="mt-2 text-[11px] text-white/50">
+                          Fill in date, time and place of birth plus gender to continue.
+                        </p>
+                      )}
+                    </div>
                   ) : (
                     <button onClick={handleSave} disabled={saving}
-                      className="mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50">
+                      className="focus-ring mt-2 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                       {saving
                         ? t.profile.saving
                         : profile && !profile.profileComplete
@@ -527,7 +549,7 @@ export default function ProfilePage() {
             {activeTab === "profile" && completeMode && !profile?.profileComplete && onboardingStep === 2 && (
               <div className="surface-card p-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <button onClick={() => setOnboardingStep(1)} className="text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => setOnboardingStep(1)} aria-label={t.common.back} className="focus-ring rounded-lg p-1 text-white/60 hover:text-white transition-colors">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                     </svg>
@@ -560,8 +582,8 @@ export default function ProfilePage() {
                   onChange={setSelectedTraditions}
                 />
 
-                <button onClick={handleSave} disabled={saving}
-                  className="mt-6 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50">
+                <button onClick={handleSave} disabled={saving || selectedTraditions.length === 0}
+                  className="focus-ring mt-6 px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                   {saving ? t.profile.saving : t.profile.completeAndContinue}
                 </button>
               </div>
@@ -581,13 +603,15 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     {hasPassword && (
                       <div>
-                        <label className="block text-xs text-white/30 mb-2">{t.profile.currentPassword}</label>
+                        <label htmlFor="profile-current-password" className="block text-xs font-medium text-white/70 mb-2">{t.profile.currentPassword}</label>
                         <div className="relative">
-                          <input type={showCurrentPw ? "text" : "password"} value={currentPassword}
+                          <input id="profile-current-password" type={showCurrentPw ? "text" : "password"} autoComplete="current-password" value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)} placeholder={t.profile.currentPasswordPlaceholder}
                             className="w-full px-4 py-3 pr-16 rounded-xl surface-input" />
                           <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
+                            aria-label={showCurrentPw ? t.profile.hide : t.profile.show}
+                            aria-pressed={showCurrentPw}
+                            className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-xs text-white/60 hover:text-white/80 px-1">
                             {showCurrentPw ? t.profile.hide : t.profile.show}
                           </button>
                         </div>
@@ -595,24 +619,29 @@ export default function ProfilePage() {
                     )}
 
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">{t.profile.newPassword}</label>
+                      <label htmlFor="profile-new-password" className="block text-xs font-medium text-white/70 mb-2">{t.profile.newPassword}</label>
                       <div className="relative">
-                        <input type={showNewPw ? "text" : "password"} value={newPassword}
+                        <input id="profile-new-password" type={showNewPw ? "text" : "password"} autoComplete="new-password" aria-describedby="profile-new-password-rules" value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)} placeholder={t.profile.newPasswordPlaceholder}
                           className="w-full px-4 py-3 pr-16 rounded-xl surface-input" />
                         <button type="button" onClick={() => setShowNewPw(!showNewPw)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
+                          aria-label={showNewPw ? t.profile.hide : t.profile.show}
+                          aria-pressed={showNewPw}
+                          className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-xs text-white/60 hover:text-white/80 px-1">
                           {showNewPw ? t.profile.hide : t.profile.show}
                         </button>
                       </div>
+                      <p id="profile-new-password-rules" className="mt-1.5 text-[11px] text-white/50 leading-relaxed">
+                        At least 8 characters. Stronger: mix upper + lower case, a number, and a symbol.
+                      </p>
                       {newPassword.length > 0 && (
                         <div className="mt-2">
-                          <div className="flex gap-1 mb-1">
+                          <div className="flex gap-1 mb-1" aria-hidden>
                             {[1, 2, 3, 4, 5].map((i) => (
                               <div key={i} className={`h-1 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-white/10"}`} />
                             ))}
                           </div>
-                          <p className={`text-xs ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`}>
+                          <p className={`text-xs ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`} aria-live="polite">
                             {strengthLabel}
                           </p>
                         </div>
@@ -620,17 +649,19 @@ export default function ProfilePage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-white/30 mb-2">{t.profile.confirmNewPassword}</label>
-                      <input type="password" value={confirmPassword}
+                      <label htmlFor="profile-confirm-password" className="block text-xs font-medium text-white/70 mb-2">{t.profile.confirmNewPassword}</label>
+                      <input id="profile-confirm-password" type="password" autoComplete="new-password" value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t.profile.confirmPasswordPlaceholder}
+                        aria-invalid={Boolean(confirmPassword) && newPassword !== confirmPassword}
                         className="w-full px-4 py-3 rounded-xl surface-input" />
                       {confirmPassword && newPassword !== confirmPassword && (
-                        <p className="text-xs text-red-400 mt-1">{t.profile.errPasswordsMismatchInline}</p>
+                        <p role="alert" className="text-xs text-red-400 mt-1">{t.profile.errPasswordsMismatchInline}</p>
                       )}
                     </div>
 
-                    <button onClick={handleChangePassword} disabled={changingPw}
-                      className="px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50">
+                    <button onClick={handleChangePassword}
+                      disabled={changingPw}
+                      className="focus-ring px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                       {changingPw ? t.profile.saving : hasPassword ? t.profile.changePassword : t.profile.setPassword}
                     </button>
                   </div>
