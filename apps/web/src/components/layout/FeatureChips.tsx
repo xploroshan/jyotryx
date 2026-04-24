@@ -5,26 +5,25 @@ import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   WEB_TRADITIONS,
-  resolveActiveTradition,
+  SLUG_TO_TRADITION,
   type TraditionId,
 } from '@/lib/traditions';
 import { useTranslation } from '@/i18n';
-import { useAuthStore } from '@/lib/store';
 import { tapScale } from '@/lib/motion';
 
 export default function FeatureChips() {
   const pathname = usePathname() ?? '/';
   const { t } = useTranslation();
-  const { user } = useAuthStore();
   const reduce = useReducedMotion();
 
-  const activeId: TraditionId = resolveActiveTradition({
-    pathname,
-    primaryTradition: user?.primaryTradition ?? null,
-    astrologyTraditions: user?.astrologyTraditions,
-  });
+  // Feature chips belong to a specific tradition's navigation. Only render
+  // them when the URL is actually inside that tradition — otherwise (home,
+  // /profile, /pricing, /reports, /kundli, /chat, …) they're noise that
+  // misrepresents where the user is.
+  const firstSegment = pathname.split('/').filter(Boolean)[0] ?? '';
+  const activeId: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
+  if (!activeId) return null;
   const cfg = WEB_TRADITIONS[activeId];
-  if (pathname.startsWith('/my-day')) return null;
 
   const readLabel = (path: string, fallback: string): string => {
     const parts = path.split('.');

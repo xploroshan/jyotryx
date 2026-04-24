@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   TRADITION_LIST,
-  resolveActiveTradition,
+  SLUG_TO_TRADITION,
   type TraditionId,
 } from '@/lib/traditions';
 import { useTranslation } from '@/i18n';
@@ -20,11 +20,14 @@ export default function TraditionRail() {
   const { isAuthenticated, user, updatePrimaryTradition } = useAuthStore();
   const activeRef = useRef<HTMLElement | null>(null);
 
-  const activeId: TraditionId = resolveActiveTradition({
-    pathname,
-    primaryTradition: user?.primaryTradition ?? null,
-    astrologyTraditions: user?.astrologyTraditions,
-  });
+  // A pill is only "active" when the URL actually lives inside that
+  // tradition's section. Otherwise (home, /profile, /pricing, /kundli, …)
+  // nothing is highlighted — the rail becomes pure navigation, not a false
+  // indicator of where the user is. The user's saved primaryTradition still
+  // drives the default destination when they tap a pill; we just don't
+  // paint it as "currently here".
+  const firstSegment = pathname.split('/').filter(Boolean)[0] ?? '';
+  const activeId: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
   const isMyDayActive = pathname.startsWith('/my-day');
 
   const readLabel = (path: string, fallback: string): string => {
