@@ -46,4 +46,25 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   placeOfBirth?: string;
+
+  // ─── Phase 2 growth-analytics context ───────────────────────────────
+  // Clients that know their own locale/source (the web app already
+  // persists its locale in localStorage) can override the
+  // Accept-Language-derived values. Server clamps length + case in
+  // buildSignupContext() before writing to Prisma.
+
+  @ApiProperty({ example: 'hi', required: false, description: 'Primary locale (2-letter)' })
+  @IsOptional()
+  @IsString()
+  locale?: string;
+
+  @ApiProperty({ example: 'IN', required: false, description: 'ISO 3166-1 alpha-2 country code' })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiProperty({ example: 'organic', required: false, description: 'UTM/source tag captured at signup' })
+  @IsOptional()
+  @IsString()
+  signupSource?: string;
 }

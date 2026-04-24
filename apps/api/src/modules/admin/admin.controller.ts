@@ -14,6 +14,15 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService, DashboardStats, UserListItem, UserDetail, AdminUserUpdate, PlatformAnalytics, LlmCostRow } from './admin.service';
+import {
+  GrowthAnalyticsService,
+  FunnelCounts,
+  CohortRow,
+  MrrSnapshot,
+  LtvArpuSnapshot,
+  ChurnRiskRow,
+  PaymentFailureRow,
+} from '../../stats/growth-analytics.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
 
@@ -22,7 +31,10 @@ import { AdminGuard } from './admin.guard';
 @UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly growth: GrowthAnalyticsService,
+  ) {}
 
   @Get('dashboard')
   @ApiOperation({ summary: 'Get admin dashboard statistics' })
@@ -228,5 +240,54 @@ export class AdminController {
     @Request() req: any,
   ): Promise<{ accessToken: string; expiresAt: string }> {
     return this.adminService.impersonateUser(userId, req.user.sub, req.user.email);
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Growth & retention (Phase 2)
+  // Every route here is guarded by JwtAuthGuard + AdminGuard at the
+  // class level. FunnelTab + DashboardTab growth tiles fan out here.
+  // ──────────────────────────────────────────────────────────────────
+
+  @Get('funnel')
+  @ApiOperation({ summary: 'Acquisition funnel counts by stage for a window + optional locale filter' })
+  async getFunnel(
+    @Query('days') days?: string,
+    @Query('locale') locale?: string,
+  ): Promise<FunnelCounts> {
+    return this.growth.getFunnel({
+      days: parseInt(days || '30', 10),
+      locale: locale ?? null,
+    });
+  }
+
+  @Get('cohorts')
+  @ApiOperation({ summary: 'Weekly signup cohorts with retention grid (chat-session-based activity)' })
+  async getCohorts(
+    @Query('weeks') weeks?: string,
+    @Query('locale') locale?: string,
+  ): Promise<CohortRow[]> {
+    return this.growth.getCohorts({
+      weeks: parseInt(weeks || '12', 10),
+      locale: locale ?? null,
+    });
+  }
+
+  @Get('mrr')
+  @ApiOperation({ summary: 'MRR / ARR / MoM delta / 6-month linear projection' })
+  async getMrr(): Promise<MrrSnapshot & LtvArpuSnapshot> {
+    const [mrr, ltv] = await Promise.all([this.growth.getMrr(), this.growth.getLtvArpu()]);
+    return { ...mrr, ...ltv };
+  }
+
+  @Get('churn-risk')
+  @ApiOperation({ summary: 'Premium users whose subscription renews in ≤14d and last chat was >14d ago' })
+  async getChurnRisk(@Query('limit') limit?: string): Promise<ChurnRiskRow[]> {
+    return this.growth.getChurnRisk({ limit: parseInt(limit || '50', 10) });
+  }
+
+  @Get('payment-failures')
+  @ApiOperation({ summary: 'Payments in FAILED / REFUNDED status over the last N days' })
+  async getPaymentFailures(@Query('days') days?: string): Promise<PaymentFailureRow[]> {
+    return this.growth.getPaymentFailures({ days: parseInt(days || '30', 10) });
   }
 }

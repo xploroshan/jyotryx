@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { Badge, roleBadge, statusBadge, formatCurrency, formatDate } from "./helpers";
 import { EditUserModal } from "./EditUserModal";
 import { UserDetailPanel } from "./UserDetailPanel";
-import type { UserItem, UserDetail } from "./types";
+import type { UserItem, UserDetail, ChurnRiskRow } from "./types";
 
 export function UsersTab({ token }: { token: string }) {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -17,6 +17,7 @@ export function UsersTab({ token }: { token: string }) {
   const [success, setSuccess] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
+  const [churnRisk, setChurnRisk] = useState<ChurnRiskRow[]>([]);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -35,6 +36,23 @@ export function UsersTab({ token }: { token: string }) {
   }, [token, search, userPage]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
+
+  // Churn risk is a sidebar — load it once per tab mount. Non-blocking:
+  // a 500 here shouldn't prevent the user list from rendering.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await api.get<ChurnRiskRow[]>(`/admin/churn-risk?limit=20`, { token });
+        if (!cancelled && Array.isArray(rows)) setChurnRisk(rows);
+      } catch {
+        // swallow — sidebar is best-effort
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const handleUpdateUser = async (userId: string, data: any) => {
     setError("");
@@ -120,6 +138,14 @@ export function UsersTab({ token }: { token: string }) {
         <button onClick={() => { setUserPage(1); loadUsers(); }} className="px-5 py-2.5 rounded-xl surface-card text-sm text-primary-400 hover:bg-white/10">Search</button>
       </div>
       <p className="text-sm text-white/30 mb-4">{userTotal} users total</p>
+
+      {/* Churn-risk sidebar. Rendered inline at the top so admins see
+          it before scrolling the users table. Each row jumps to the
+          user's detail panel on click. */}
+      <ChurnRiskSidebar
+        rows={churnRisk}
+        onSelect={(userId) => setSelectedUserId(userId)}
+      />
 
       {/* User detail panel */}
       {selectedUserId && (
@@ -211,6 +237,53 @@ export function UsersTab({ token }: { token: string }) {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function ChurnRiskSidebar({
+  rows,
+  onSelect,
+}: {
+  rows: ChurnRiskRow[];
+  onSelect: (userId: string) => void;
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <div className="mb-6 surface-card p-6" data-testid="churn-risk-sidebar">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Churn risk</h3>
+          <p className="text-xs text-white/40 mt-0.5">
+            Premium users whose subscription renews in ≤14 days AND who haven't
+            chatted in the last 14 days.
+          </p>
+        </div>
+        <span className="text-[11px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 tabular-nums">
+          {rows.length} at risk
+        </span>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {rows.slice(0, 9).map((r) => (
+          <button
+            key={r.subscriptionId}
+            onClick={() => onSelect(r.userId)}
+            className="text-left p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+          >
+            <p className="text-sm text-white truncate">{r.name}</p>
+            <p className="text-[11px] text-white/40 truncate">{r.email}</p>
+            <div className="flex items-center justify-between mt-2 text-[11px]">
+              <span className="text-white/50">
+                {r.plan} · renews{" "}
+                {r.endDate ? new Date(r.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
+              </span>
+              <span className="text-amber-400 tabular-nums">
+                {r.daysSinceLastChat == null ? "never chatted" : `${r.daysSinceLastChat}d idle`}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
