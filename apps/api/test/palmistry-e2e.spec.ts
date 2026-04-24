@@ -7,10 +7,15 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { JwtService, JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import * as request from 'supertest';
+// Default import so `request(app.getHttpServer())` is a call, not a
+// namespace lookup. `import * as` resolves to the CJS module
+// namespace object under ts-jest's transpile-only mode, which isn't
+// callable and silently breaks every test in this suite.
+import request from 'supertest';
 import * as jwt from 'jsonwebtoken';
 
 import { PalmistryController } from '../src/modules/palmistry/palmistry.controller';
@@ -81,6 +86,12 @@ describe('Palmistry E2E (HTTP)', () => {
       providers: [
         PalmistryService,
         JwtStrategy,
+        // Reflector is what `JwtAuthGuard.canActivate` uses to look up
+        // the `@Public()` metadata; without it the guard throws
+        // "Cannot read properties of undefined (reading 'getAllAndOverride')"
+        // and every palmistry request 500s before the auth check runs.
+        // It's normally provided by the full app bootstrap.
+        Reflector,
         { provide: PrismaService, useValue: prisma },
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },

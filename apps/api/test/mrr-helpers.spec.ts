@@ -21,9 +21,9 @@ describe('computeMrrUsd', () => {
       { plan: 'MONTHLY', _count: { _all: 10 } },
       { plan: 'ANNUAL',  _count: { _all: 2 } },
     ];
-    // 10 * 499 + 2 * (4999/12) = 4990 + 833.17 = 5823.17 INR
-    // × 0.012 = 69.88 USD (rounded to 69.87 given floor math)
-    expect(computeMrrUsd(subs, pricing)).toBeCloseTo(69.87, 2);
+    // 10 × 499 + 2 × (4999 / 12) = 4990 + 833.1666… = 5823.1666… INR
+    // × 0.012 = 69.878 USD → rounds to 69.88 at 2-decimal precision.
+    expect(computeMrrUsd(subs, pricing)).toBeCloseTo(69.88, 2);
   });
 
   it('returns 0 when there are no active subscriptions', () => {

@@ -123,6 +123,15 @@ export const mockPrismaService = () => ({
     count: jest.fn().mockResolvedValue(0),
     aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 }, _count: 0 }),
     findMany: jest.fn().mockResolvedValue([]),
+    findFirst: jest.fn().mockResolvedValue(null),
+    findUnique: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue({ id: 'payment-1', createdAt: new Date() }),
+    update: jest.fn().mockResolvedValue({ id: 'payment-1' }),
+    // Phase 1 atomic claim path: payment.service.ts uses `updateMany`
+    // with a guard to claim a pending payment exactly once. The mock
+    // defaults to "1 row claimed" so happy-path payment flows pass;
+    // tests that exercise the duplicate-claim race override it.
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     groupBy: jest.fn().mockResolvedValue([]),
   },
   tarotReading: {
@@ -167,6 +176,17 @@ export const mockCacheService = () => ({
   get: jest.fn().mockResolvedValue(null),
   set: jest.fn().mockResolvedValue(undefined),
   delete: jest.fn().mockResolvedValue(undefined),
+});
+
+/**
+ * Phase 4 moderation dispatch. ChatService added this as a constructor
+ * dep for the post-save hook, so every spec that instantiates
+ * ChatService via NestJS DI needs a provider. The default returns
+ * null (no flag), matching "safe content" so the code path under
+ * test isn't altered.
+ */
+export const mockModerationService = () => ({
+  checkAndRecord: jest.fn().mockResolvedValue(null),
 });
 
 /**
@@ -264,15 +284,33 @@ export const createMockRedis = () => {
       store.set(key, { value: JSON.stringify(set), expiresAt: entry.expiresAt });
       return removed;
     }),
-    pipeline: jest.fn(() => {
+    pipeline: jest.fn(function (this: any) {
+      // Capture the parent mock so exec() can replay queued ops
+      // against the same in-memory store. Previously pipeline ops
+      // were recorded but never executed, which meant code using
+      // `pipeline.del().exec()` (e.g. AuthService.revokeFamilyTokens)
+      // left Redis data untouched under test.
+      const parent = this;
       const ops: Array<{ method: string; args: any[] }> = [];
       const chain: any = {
-        set: jest.fn((...args: any[]) => { ops.push({ method: 'set', args }); return chain; }),
-        del: jest.fn((...args: any[]) => { ops.push({ method: 'del', args }); return chain; }),
-        sadd: jest.fn((...args: any[]) => { ops.push({ method: 'sadd', args }); return chain; }),
-        srem: jest.fn((...args: any[]) => { ops.push({ method: 'srem', args }); return chain; }),
+        set:    jest.fn((...args: any[]) => { ops.push({ method: 'set',    args }); return chain; }),
+        del:    jest.fn((...args: any[]) => { ops.push({ method: 'del',    args }); return chain; }),
+        sadd:   jest.fn((...args: any[]) => { ops.push({ method: 'sadd',   args }); return chain; }),
+        srem:   jest.fn((...args: any[]) => { ops.push({ method: 'srem',   args }); return chain; }),
         expire: jest.fn((...args: any[]) => { ops.push({ method: 'expire', args }); return chain; }),
-        exec: jest.fn(async () => ops.map(() => [null, 'OK'])),
+        exec: jest.fn(async () => {
+          const results: Array<[Error | null, unknown]> = [];
+          for (const op of ops) {
+            try {
+              const fn = parent[op.method];
+              const res = typeof fn === 'function' ? await fn(...op.args) : 'OK';
+              results.push([null, res]);
+            } catch (err) {
+              results.push([err as Error, null]);
+            }
+          }
+          return results;
+        }),
         __ops: ops,
       };
       return chain;

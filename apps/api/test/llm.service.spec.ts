@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { LlmService } from '../src/llm/llm.service';
 import { OpenAIProvider } from '../src/llm/providers/openai.provider';
 import { AnthropicProvider } from '../src/llm/providers/anthropic.provider';
+import { GeminiProvider } from '../src/llm/providers/gemini.provider';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('LlmService (Item 4 — Circuit Breaker + Failover)', () => {
@@ -35,6 +36,7 @@ describe('LlmService (Item 4 — Circuit Breaker + Failover)', () => {
         LlmService,
         { provide: OpenAIProvider, useValue: openaiProvider },
         { provide: AnthropicProvider, useValue: anthropicProvider },
+        { provide: GeminiProvider, useValue: { isAvailable: jest.fn().mockReturnValue(false), chatCompletion: jest.fn().mockResolvedValue(null), chatCompletionStream: jest.fn().mockReturnValue(null), reinitialize: jest.fn() } },
         { provide: PrismaService, useValue: prisma },
         {
           provide: ConfigService,

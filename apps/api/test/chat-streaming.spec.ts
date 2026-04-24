@@ -6,6 +6,7 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { LlmService } from '../src/llm/llm.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockUser } from './helpers/mocks';
 import { firstValueFrom, toArray } from 'rxjs';
 
@@ -66,6 +67,8 @@ describe('ChatService — SSE Streaming (Item 3)', () => {
         { provide: OpenAIService, useValue: openaiService },
         { provide: LlmService, useValue: llmService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 
@@ -233,6 +236,7 @@ describe('ChatService — SSE Streaming (Item 3)', () => {
           { provide: OpenAIService, useValue: openaiService },
           { provide: LlmService, useValue: llmService },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         ],
       }).compile();
 

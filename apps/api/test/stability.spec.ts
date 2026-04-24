@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { NumerologyService } from '../src/modules/numerology/numerology.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { AstrologyService } from '../src/modules/astrology/astrology.service';
 import { ChatService } from '../src/modules/chat/chat.service';
@@ -48,6 +49,8 @@ describe('Stability: Graceful Degradation', () => {
           { provide: PrismaService, useValue: prisma },
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: KbService, useValue: mockKbService() },
           { provide: MemoryCacheService, useValue: mockCacheService() },
         ],
@@ -91,6 +94,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: OpenAIService, useValue: failingOpenAI },
           { provide: MemoryCacheService, useValue: mockCacheService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: EphemerisService, useValue: mockEphemerisService() },
           { provide: KbService, useValue: mockKbService() },
         ],
@@ -150,6 +154,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: OpenAIService, useValue: failingOpenAI },
           { provide: LlmService, useValue: mockLlmService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         ],
       }).compile();
 
@@ -197,6 +202,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: UserService, useValue: mockUserService() },
           { provide: OpenAIService, useValue: failingOpenAI },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: KbService, useValue: mockKbService() },
         ],
       }).compile();
@@ -240,6 +246,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: UserService, useValue: mockUserService() },
           { provide: OpenAIService, useValue: failingOpenAI },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: StorageService, useValue: mockStorageService() },
         ],
       }).compile();
@@ -350,6 +357,7 @@ describe('Stability: Error Recovery', () => {
           NumerologyService,
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: KbService, useValue: mockKbService() },
         ],
       }).compile();
@@ -408,6 +416,7 @@ describe('Stability: Error Recovery', () => {
           { provide: PrismaService, useValue: prisma },
           { provide: OpenAIService, useValue: mockOpenAIService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: KbService, useValue: mockKbService() },
           { provide: MemoryCacheService, useValue: cacheService },
         ],

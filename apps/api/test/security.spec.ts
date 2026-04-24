@@ -9,6 +9,7 @@ import { PaymentService } from '../src/modules/payment/payment.service';
 import { ChatService } from '../src/modules/chat/chat.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
 import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService, mockLlmService, createMockRedis } from './helpers/mocks';
@@ -242,6 +243,7 @@ describe('Security: Input Validation', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
 

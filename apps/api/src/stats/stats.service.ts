@@ -64,6 +64,11 @@ export function computeMomDelta(currentMrr: number, priorMrr: number): number {
  * negative MRR to zero — a business can't owe MRR.
  */
 export function projectMrrSixMonths(currentMrr: number, momDelta: number): number {
+  // A MoM delta ≤ -100% means "we lost everything"; compounding that
+  // with an even exponent (6 months) would otherwise flip the sign
+  // back to positive and project imaginary growth. Clamp to zero so
+  // catastrophic-decline scenarios project to $0 instead of bouncing.
+  if (momDelta <= -1) return 0;
   const projected = currentMrr * Math.pow(1 + momDelta, 6);
   return Math.max(0, Math.round(projected * 100) / 100);
 }
