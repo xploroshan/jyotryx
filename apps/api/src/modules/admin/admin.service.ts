@@ -5,8 +5,17 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PrismaReadReplicaService } from '../../prisma/prisma-read-replica.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { StatsService } from '../../stats/stats.service';
-import { ANALYTICS_SERVICE, AnalyticsService } from '../../analytics/analytics.interface';
+import {
+  ANALYTICS_SERVICE,
+  AnalyticsService,
+  CostProjection,
+  DailyCostPoint,
+  LlmUsageByFeature,
+  LlmUsageByProvider,
+  TodayUsageByFeature,
+} from '../../analytics/analytics.interface';
 import { GdprPurgeService } from './gdpr-purge.service';
+import { AuthService } from '../auth/auth.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -137,6 +146,7 @@ export class AdminService {
     private statsService: StatsService,
     @Inject(ANALYTICS_SERVICE) private analyticsService: AnalyticsService,
     private gdprPurgeService: GdprPurgeService,
+    private authService: AuthService,
   ) {
     // Analytics / read-only queries go through the replica
     this.readPrisma = readReplicaPrisma as unknown as PrismaService;
@@ -972,5 +982,154 @@ export class AdminService {
    */
   async getLlmCostsByUser(limit: number = 20, days: number = 30): Promise<LlmCostRow[]> {
     return this.analyticsService.getLlmCostsByUser(limit, days);
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Cost Tab (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Headline numbers for the Cost tab: MTD spend, previous-month
+   * same-window spend, naive end-of-month projection, and the
+   * currently-configured daily/monthly USD alert thresholds.
+   * Thresholds come from `site_settings` under the `notification.cost.*`
+   * prefix (writable via the existing admin settings whitelist).
+   */
+  async getCostSummary(): Promise<CostProjection & { dailyThreshold: number | null; monthlyThreshold: number | null }> {
+    const [projection, thresholds] = await Promise.all([
+      this.analyticsService.getCostProjection(),
+      this.readPrisma.siteSetting.findMany({
+        where: { key: { in: ['notification.cost.daily_usd', 'notification.cost.monthly_usd'] } },
+        select: { key: true, value: true },
+      }),
+    ]);
+    const byKey = new Map<string, string>(thresholds.map((r: any) => [r.key, r.value]));
+    const toNum = (v: string | undefined) => (v && v.trim() !== '' && !Number.isNaN(Number(v)) ? Number(v) : null);
+    return {
+      ...projection,
+      dailyThreshold: toNum(byKey.get('notification.cost.daily_usd')),
+      monthlyThreshold: toNum(byKey.get('notification.cost.monthly_usd')),
+    };
+  }
+
+  async getCostByFeature(days: number = 30): Promise<LlmUsageByFeature[]> {
+    return this.analyticsService.getLlmUsageByFeature(days);
+  }
+
+  async getCostByProvider(days: number = 30): Promise<LlmUsageByProvider[]> {
+    return this.analyticsService.getLlmUsageByProvider(days);
+  }
+
+  async getDailyCost(days: number = 30): Promise<DailyCostPoint[]> {
+    return this.analyticsService.getDailyCostSeries(days);
+  }
+
+  async getTodayLlmUsage(): Promise<TodayUsageByFeature> {
+    return this.analyticsService.getTodayUsageByFeature();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Stuck onboarding (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Users who signed up in the last 7 days but never finished
+   * onboarding — either birth details still missing or zero chat
+   * sessions. Surfaces the leakiest step of the funnel for quick ops
+   * follow-up without requiring full funnel analytics (Phase 2).
+   */
+  async getStuckOnboarding(): Promise<
+    Array<{ userId: string; email: string; name: string; createdAt: Date; missing: string[] }>
+  > {
+    const since = new Date();
+    since.setDate(since.getDate() - 7);
+
+    // Pull the candidate set + flag which onboarding bits are absent.
+    // Field predicates intentionally mirror the web `ProfileGate` logic
+    // so "stuck" here means the same thing a user sees on the site.
+    const users = await this.readPrisma.user.findMany({
+      where: { createdAt: { gte: since } },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        dateOfBirth: true,
+        timeOfBirth: true,
+        placeOfBirth: true,
+        gender: true,
+        _count: { select: { chatSessions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+
+    const out: Array<{ userId: string; email: string; name: string; createdAt: Date; missing: string[] }> = [];
+    for (const u of users as any[]) {
+      const missing: string[] = [];
+      if (!u.dateOfBirth) missing.push('dateOfBirth');
+      if (!u.timeOfBirth) missing.push('timeOfBirth');
+      if (!u.placeOfBirth) missing.push('placeOfBirth');
+      if (!u.gender) missing.push('gender');
+      if ((u._count?.chatSessions ?? 0) === 0) missing.push('chatStarted');
+      if (missing.length === 0) continue;
+      out.push({ userId: u.id, email: u.email, name: u.name, createdAt: u.createdAt, missing });
+    }
+    return out;
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Impersonation (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Mint a short-lived (1h) impersonation JWT for a target user and
+   * write an activity-log row capturing who impersonated whom.
+   *
+   * Anti-footguns:
+   *   - Admins can't impersonate other admins (privilege escalation
+   *     boundary).
+   *   - No refresh token is issued — the session dies at expiry.
+   *   - The log row is non-undoable; once issued, it's part of the
+   *     permanent audit trail.
+   */
+  async impersonateUser(
+    targetUserId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ accessToken: string; expiresAt: string }> {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+    if (target.role === 'ADMIN') {
+      // Refuse ADMIN → ADMIN impersonation to prevent silent
+      // cross-admin action masking.
+      throw new BadRequestException('Admin accounts cannot be impersonated.');
+    }
+
+    const token = await this.authService.issueImpersonationToken(
+      target.id,
+      target.email,
+      target.name,
+      adminEmail,
+    );
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'USER_IMPERSONATE',
+        entityType: 'User',
+        entityId: target.id,
+        entityLabel: target.email,
+        previousData: null,
+        newData: { expiresAt: token.expiresAt } as any,
+      },
+    });
+
+    this.logger.log(`Admin ${adminEmail} impersonated user ${target.email}`);
+    return token;
   }
 }

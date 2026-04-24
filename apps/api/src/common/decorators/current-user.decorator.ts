@@ -6,6 +6,13 @@ export interface JwtPayload {
   sub: string;
   email: string;
   name: string;
+  /**
+   * Set when this token was minted by an admin impersonating the user.
+   * Carries the admin's email so the web client can render a warning
+   * banner, and so server-side audit middleware (future) can
+   * distinguish impersonation traffic.
+   */
+  impersonatedBy?: string;
   iat?: number;
   exp?: number;
 }

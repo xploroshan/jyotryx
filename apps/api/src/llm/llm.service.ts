@@ -124,13 +124,23 @@ export class LlmService implements OnModuleInit {
     provider?: string;
     model: string;
     usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null;
+    // ─── Ops telemetry (optional — callers pre-instrumentation omit these) ───
+    durationMs?: number | null;
+    cacheHit?: boolean;
+    errorCode?: string | null;
+    retryCount?: number;
   }): Promise<void> {
     if (!this.prisma) return;
     try {
       const promptTokens = params.usage?.prompt_tokens ?? 0;
       const completionTokens = params.usage?.completion_tokens ?? 0;
       const totalTokens = params.usage?.total_tokens ?? promptTokens + completionTokens;
-      const costUsd = this.computeCost(params.model, promptTokens, completionTokens);
+      // Cache hits and failed calls have zero billable tokens — skip the
+      // cost computation and write 0 so dashboards stay honest.
+      const costUsd =
+        params.cacheHit || params.errorCode
+          ? 0
+          : this.computeCost(params.model, promptTokens, completionTokens);
 
       await this.prisma.llmUsage.create({
         data: {
@@ -142,11 +152,30 @@ export class LlmService implements OnModuleInit {
           completionTokens,
           totalTokens,
           costUsd,
+          durationMs: params.durationMs ?? null,
+          cacheHit: params.cacheHit ?? false,
+          errorCode: params.errorCode ?? null,
+          retryCount: params.retryCount ?? 0,
         },
       });
     } catch (err) {
       this.logger.error('Failed to record LLM usage', err);
     }
+  }
+
+  /**
+   * Map an arbitrary provider error to a short, aggregatable code. Used
+   * by the failure path of recordUsage() so the admin error-rate
+   * dashboard has a small cardinality of values to group by.
+   */
+  private classifyError(err: unknown): string {
+    const message = (err instanceof Error ? err.message : String(err)).toLowerCase();
+    if (message.includes('timeout') || message.includes('timed out')) return 'TIMEOUT';
+    if (message.includes('rate limit') || message.includes('429')) return 'RATE_LIMIT';
+    if (message.includes('bad request') || message.includes('400')) return 'BAD_REQUEST';
+    if (message.includes('unauthorized') || message.includes('401') || message.includes('403')) return 'AUTH';
+    if (message.includes('circuit') || message.includes('breaker')) return 'CIRCUIT_OPEN';
+    return 'PROVIDER_ERROR';
   }
 
   /**
@@ -160,42 +189,49 @@ export class LlmService implements OnModuleInit {
     const feature = options.feature || 'chat';
     const enrichedOptions = { ...options, model };
 
-    // Try primary provider (OpenAI)
-    if (this.openaiProvider.isAvailable()) {
-      try {
-        const result = await this.openaiPolicy.execute(() =>
-          this.openaiProvider.chatCompletion(enrichedOptions),
-        );
-        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
-        return this.processResult(result, options.jsonMode);
-      } catch (err) {
-        this.logger.warn(`OpenAI failed: ${(err as Error).message}`);
-      }
-    }
+    // Ordered list of (name, availability, policy, provider) tuples — the
+    // first tuple is always tried; the rest only run when failoverEnabled.
+    // Building it once keeps the loop linear and lets us assign a
+    // retryCount that actually reflects provider-failover depth.
+    const chain: Array<{ name: string; available: boolean; policy: ResiliencePolicy; run: () => Promise<any> }> = [
+      { name: 'openai',    available: this.openaiProvider.isAvailable(),                              policy: this.openaiPolicy,    run: () => this.openaiProvider.chatCompletion(enrichedOptions) },
+      { name: 'gemini',    available: this.failoverEnabled && this.geminiProvider.isAvailable(),      policy: this.geminiPolicy,    run: () => this.geminiProvider.chatCompletion(enrichedOptions) },
+      { name: 'anthropic', available: this.failoverEnabled && this.anthropicProvider.isAvailable(),   policy: this.anthropicPolicy, run: () => this.anthropicProvider.chatCompletion(enrichedOptions) },
+    ];
 
-    // Try secondary provider (Gemini) if failover is enabled
-    if (this.failoverEnabled && this.geminiProvider.isAvailable()) {
+    for (let i = 0; i < chain.length; i++) {
+      const link = chain[i];
+      if (!link.available) continue;
+      const start = performance.now();
       try {
-        const result = await this.geminiPolicy.execute(() =>
-          this.geminiProvider.chatCompletion(enrichedOptions),
-        );
-        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
+        const result = await link.policy.execute(link.run);
+        const durationMs = Math.round(performance.now() - start);
+        this.recordUsage({
+          userId: options.userId,
+          feature,
+          provider: result.provider,
+          model: result.model,
+          usage: result.usage,
+          durationMs,
+          retryCount: i,
+        });
         return this.processResult(result, options.jsonMode);
       } catch (err) {
-        this.logger.warn(`Gemini also failed: ${(err as Error).message}`);
-      }
-    }
-
-    // Try tertiary provider (Anthropic) if failover is enabled
-    if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
-      try {
-        const result = await this.anthropicPolicy.execute(() =>
-          this.anthropicProvider.chatCompletion(enrichedOptions),
-        );
-        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
-        return this.processResult(result, options.jsonMode);
-      } catch (err) {
-        this.logger.error(`Anthropic also failed: ${(err as Error).message}`);
+        const durationMs = Math.round(performance.now() - start);
+        const errorCode = this.classifyError(err);
+        // Record the failure so error-rate dashboards and provider
+        // latency percentiles include it. Zero tokens / zero cost.
+        this.recordUsage({
+          userId: options.userId,
+          feature,
+          provider: link.name,
+          model,
+          durationMs,
+          errorCode,
+          retryCount: i,
+        });
+        const level = i === chain.length - 1 ? 'error' : 'warn';
+        this.logger[level](`${link.name} failed (${errorCode}): ${(err as Error).message}`);
       }
     }
 

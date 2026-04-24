@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -6,6 +7,8 @@ import ProfileGate from "@/components/auth/ProfileGate";
 import TraditionRail from "@/components/layout/TraditionRail";
 import FeatureChips from "@/components/layout/FeatureChips";
 import RouteFocusReset from "@/components/layout/RouteFocusReset";
+import ImpersonateHandler from "@/components/auth/ImpersonateHandler";
+import ImpersonationBanner from "@/components/auth/ImpersonationBanner";
 
 export const metadata: Metadata = {
   title: "Jyotron — Vedic Astrology Platform",
@@ -50,6 +53,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen flex flex-col">
+        {/* Banner must sit above the fixed Navbar so the impersonation
+            warning is unmissable; it only renders when the active JWT
+            carries `impersonatedBy`, so normal users see nothing. */}
+        <ImpersonationBanner />
+        {/* Swap the auth-store token when the user lands at /?__imp=…
+            This is a new tab handoff, so we run it before ProfileGate
+            kicks in. Wrapped in Suspense because useSearchParams
+            requires a boundary during SSR. */}
+        <Suspense fallback={null}>
+          <ImpersonateHandler />
+        </Suspense>
         <Navbar />
         <TraditionRail />
         <FeatureChips />

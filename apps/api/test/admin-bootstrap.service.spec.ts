@@ -195,6 +195,160 @@ describe('AdminBootstrapService', () => {
     expect(prisma.user.create).toHaveBeenCalledTimes(1);
   });
 
+  describe('ADMIN_PROMOTE_EMAILS', () => {
+    function makeMultiUserPrisma(usersByEmail: Record<string, any>): AnyPrisma {
+      return {
+        user: {
+          findUnique: (jest as any)
+            .fn()
+            .mockImplementation(({ where }: { where: { email?: string } }) =>
+              Promise.resolve(
+                where.email ? usersByEmail[where.email.toLowerCase()] ?? null : null,
+              ),
+            ),
+          create: (jest as any)
+            .fn()
+            .mockImplementation(({ data }: { data: any }) =>
+              Promise.resolve({ id: 'new-id', ...data }),
+            ),
+          update: (jest as any)
+            .fn()
+            .mockImplementation(({ where, data }: { where: any; data: any }) =>
+              Promise.resolve({ id: where.id, ...data }),
+            ),
+        },
+      };
+    }
+
+    it('promotes a registered non-admin user to ADMIN', async () => {
+      const prisma = makeMultiUserPrisma({
+        // Default admin already fine — skip the ensureAdmin update path.
+        'admin@jyotron.com': {
+          id: 'admin-1',
+          email: 'admin@jyotron.com',
+          passwordHash: 'x',
+          role: 'ADMIN',
+        },
+        'jyotron.astro@gmail.com': {
+          id: 'u-42',
+          email: 'jyotron.astro@gmail.com',
+          passwordHash: 'y',
+          role: 'USER',
+        },
+      });
+      const redis = makeRedisMock();
+      const config = makeConfig({
+        NODE_ENV: 'development',
+        ADMIN_PROMOTE_EMAILS: 'jyotron.astro@gmail.com',
+      });
+      const svc = await buildService({ prisma, redis, config });
+
+      await svc.onApplicationBootstrap();
+
+      const updates = (prisma.user.update as any).mock.calls.filter(
+        (c: any[]) => c[0]?.where?.id === 'u-42',
+      );
+      expect(updates).toHaveLength(1);
+      expect(updates[0][0].data).toEqual({ role: 'ADMIN' });
+    });
+
+    it('accepts a comma-separated list and is case-insensitive', async () => {
+      const prisma = makeMultiUserPrisma({
+        'admin@jyotron.com': { id: 'a', email: 'admin@jyotron.com', passwordHash: 'x', role: 'ADMIN' },
+        'alice@x.com': { id: 'u-1', email: 'alice@x.com', passwordHash: 'x', role: 'USER' },
+        'bob@y.com': { id: 'u-2', email: 'bob@y.com', passwordHash: 'x', role: 'USER' },
+      });
+      const redis = makeRedisMock();
+      const config = makeConfig({
+        NODE_ENV: 'development',
+        ADMIN_PROMOTE_EMAILS: '  Alice@X.com , bob@y.com ',
+      });
+      const svc = await buildService({ prisma, redis, config });
+
+      await svc.onApplicationBootstrap();
+
+      const promoted = (prisma.user.update as any).mock.calls
+        .filter((c: any[]) => c[0]?.data?.role === 'ADMIN' && c[0]?.where?.id?.startsWith('u-'))
+        .map((c: any[]) => c[0].where.id);
+      expect(promoted.sort()).toEqual(['u-1', 'u-2']);
+    });
+
+    it('is idempotent for already-ADMIN users', async () => {
+      const prisma = makeMultiUserPrisma({
+        'admin@jyotron.com': { id: 'a', email: 'admin@jyotron.com', passwordHash: 'x', role: 'ADMIN' },
+        'already@x.com': { id: 'u-1', email: 'already@x.com', passwordHash: 'x', role: 'ADMIN' },
+      });
+      const redis = makeRedisMock();
+      const config = makeConfig({
+        NODE_ENV: 'development',
+        ADMIN_PROMOTE_EMAILS: 'already@x.com',
+      });
+      const svc = await buildService({ prisma, redis, config });
+
+      await svc.onApplicationBootstrap();
+
+      const promotions = (prisma.user.update as any).mock.calls.filter(
+        (c: any[]) => c[0]?.where?.id === 'u-1',
+      );
+      expect(promotions).toHaveLength(0);
+    });
+
+    it('does not throw when the target email is not yet registered', async () => {
+      const prisma = makeMultiUserPrisma({
+        'admin@jyotron.com': { id: 'a', email: 'admin@jyotron.com', passwordHash: 'x', role: 'ADMIN' },
+      });
+      const redis = makeRedisMock();
+      const config = makeConfig({
+        NODE_ENV: 'development',
+        ADMIN_PROMOTE_EMAILS: 'not-yet@example.com',
+      });
+      const svc = await buildService({ prisma, redis, config });
+
+      await expect(svc.onApplicationBootstrap()).resolves.toBeUndefined();
+      // Nothing to promote → no update call against a missing user.
+      const badUpdates = (prisma.user.update as any).mock.calls.filter(
+        (c: any[]) => c[0]?.data?.role === 'ADMIN' && c[0]?.where?.id?.startsWith('u-'),
+      );
+      expect(badUpdates).toHaveLength(0);
+    });
+
+    it('runs even when ensureAdmin fails (no cascading skip)', async () => {
+      // Admin lookup throws, but we still want the promote list to be
+      // honoured — operators rely on the promote flow as an emergency
+      // access-restoration path.
+      const prisma: AnyPrisma = {
+        user: {
+          findUnique: (jest as any)
+            .fn()
+            .mockImplementationOnce(() => Promise.reject(new Error('timeout')))
+            .mockImplementation(({ where }: { where: { email?: string } }) =>
+              Promise.resolve(
+                where.email === 'target@x.com'
+                  ? { id: 'u-9', email: 'target@x.com', passwordHash: 'x', role: 'USER' }
+                  : null,
+              ),
+            ),
+          update: (jest as any).fn().mockResolvedValue({}),
+          create: (jest as any).fn(),
+        },
+      };
+      const redis = makeRedisMock();
+      const config = makeConfig({
+        NODE_ENV: 'development',
+        ADMIN_PROMOTE_EMAILS: 'target@x.com',
+      });
+      const svc = await buildService({ prisma, redis, config });
+
+      await svc.onApplicationBootstrap();
+
+      const promoted = (prisma.user.update as any).mock.calls.find(
+        (c: any[]) => c[0]?.where?.id === 'u-9',
+      );
+      expect(promoted).toBeDefined();
+      expect(promoted[0].data).toEqual({ role: 'ADMIN' });
+    });
+  });
+
   it('does not crash the app if Prisma throws', async () => {
     const prisma: AnyPrisma = {
       user: {

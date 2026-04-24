@@ -4,7 +4,7 @@
  * Validates that the My Day page renders correctly with mock data,
  * catching visual bugs like the \u2013 literal text issue.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
@@ -87,6 +87,19 @@ describe('My Day Page: Rendering', () => {
     mockApiGet.mockReset();
     mockApiGet.mockResolvedValue(mockBriefing);
     mockStoreState.isAuthenticated = true;
+    // Pin wall clock to 11:30 AM local so the page's live-clock
+    // `currentHourIndex` lands inside Jupiter's 11 AM-12 PM slot in
+    // the fixture. Without this the "NOW" hora depends on when the
+    // test happens to run and fixture-based planet assertions become
+    // flaky any time the real clock falls between 10 AM and 4 PM.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const pinned = new Date();
+    pinned.setHours(11, 30, 0, 0);
+    vi.setSystemTime(pinned);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should render greeting text', async () => {

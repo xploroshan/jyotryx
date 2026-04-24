@@ -173,4 +173,60 @@ export class AdminController {
   async getContentStats() {
     return this.adminService.getContentStats();
   }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Cost Tab (Phase 1)
+  // Every route here is guarded by JwtAuthGuard + AdminGuard at the
+  // class level. The Cost tab fans out to these in parallel.
+  // ──────────────────────────────────────────────────────────────────
+
+  @Get('cost/summary')
+  @ApiOperation({ summary: 'MTD spend, previous MTD, projection, and alert thresholds' })
+  async getCostSummary() {
+    return this.adminService.getCostSummary();
+  }
+
+  @Get('cost/by-feature')
+  @ApiOperation({ summary: 'LLM spend grouped by feature tag' })
+  async getCostByFeature(@Query('days') days?: string) {
+    return this.adminService.getCostByFeature(parseInt(days || '30', 10));
+  }
+
+  @Get('cost/by-provider')
+  @ApiOperation({ summary: 'LLM spend grouped by provider and model' })
+  async getCostByProvider(@Query('days') days?: string) {
+    return this.adminService.getCostByProvider(parseInt(days || '30', 10));
+  }
+
+  @Get('cost/daily')
+  @ApiOperation({ summary: 'Daily LLM spend series (from stat_daily rollups)' })
+  async getCostDaily(@Query('days') days?: string) {
+    return this.adminService.getDailyCost(parseInt(days || '30', 10));
+  }
+
+  @Get('llm/usage/today')
+  @ApiOperation({ summary: "Today's LLM tokens + cost, grouped by feature" })
+  async getTodayLlmUsage() {
+    return this.adminService.getTodayLlmUsage();
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Stuck onboarding + Impersonation (Phase 1)
+  // ──────────────────────────────────────────────────────────────────
+
+  @Get('onboarding/stuck')
+  @ApiOperation({ summary: 'Users who signed up ≤ 7d ago and never finished onboarding' })
+  async getStuckOnboarding() {
+    return this.adminService.getStuckOnboarding();
+  }
+
+  @Post('users/:id/impersonate')
+  @ApiOperation({ summary: 'Mint a 1-hour impersonation JWT for the target user' })
+  @ApiResponse({ status: 200, description: 'Token issued; activity logged' })
+  async impersonateUser(
+    @Param('id', ParseUUIDPipe) userId: string,
+    @Request() req: any,
+  ): Promise<{ accessToken: string; expiresAt: string }> {
+    return this.adminService.impersonateUser(userId, req.user.sub, req.user.email);
+  }
 }
