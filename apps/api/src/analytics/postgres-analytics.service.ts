@@ -2,10 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaReadReplicaService } from '../prisma/prisma-read-replica.service';
 import {
   AnalyticsService,
+  CostProjection,
+  DailyCostPoint,
   LlmCostByUser,
   LlmTotals,
   LlmUsageByFeature,
   LlmUsageByProvider,
+  TodayUsageByFeature,
 } from './analytics.interface';
 
 /**
@@ -121,5 +124,96 @@ export class PostgresAnalyticsService implements AnalyticsService {
       totalTokens: Number(row._sum.totalTokens ?? 0),
       costUsd: Number(row._sum.costUsd ?? 0),
     }));
+  }
+
+  async getCostProjection(): Promise<CostProjection> {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    // Same point-in-month a month ago — if today is the 24th, compare
+    // against the 1st-to-24th window of the previous month.
+    const prevMonthSameDay = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+    );
+    const daysElapsed = Math.max(1, Math.floor((now.getTime() - monthStart.getTime()) / 86_400_000) + 1);
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    const [mtdAgg, prevAgg] = await Promise.all([
+      this.prisma.llmUsage.aggregate({
+        where: { createdAt: { gte: monthStart, lte: now } },
+        _sum: { costUsd: true },
+      }),
+      this.prisma.llmUsage.aggregate({
+        where: { createdAt: { gte: prevMonthStart, lte: prevMonthSameDay } },
+        _sum: { costUsd: true },
+      }),
+    ]);
+
+    const mtdUsd = Number(mtdAgg._sum.costUsd ?? 0);
+    const prevMtdUsd = Number(prevAgg._sum.costUsd ?? 0);
+    // Project linearly from MTD. Rounds to 2 dp so the UI number is
+    // stable across reloads.
+    const projectionUsd = Math.round((mtdUsd * daysInMonth) / daysElapsed * 100) / 100;
+
+    return { mtdUsd, prevMtdUsd, projectionUsd };
+  }
+
+  async getDailyCostSeries(days: number = 30): Promise<DailyCostPoint[]> {
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - (days - 1));
+
+    // stat_daily is one row per date, written by StatsService cron at
+    // 00:05 UTC. Querying it instead of llm_usage keeps this endpoint
+    // fast (≤ 90 rows even on a year-window) and avoids repeat scans
+    // over the partitioned source table.
+    const rows = await this.prisma.statDaily.findMany({
+      where: { date: { gte: since } },
+      orderBy: { date: 'asc' },
+      select: { date: true, llmCostUsd: true, llmTokens: true },
+    });
+
+    // Fill missing days with zeros so the frontend sparkline has a
+    // contiguous series regardless of cron timing.
+    const byDate = new Map<string, { costUsd: number; tokens: number }>();
+    for (const r of rows) {
+      const key = (r.date as Date).toISOString().slice(0, 10);
+      byDate.set(key, { costUsd: Number(r.llmCostUsd ?? 0), tokens: Number(r.llmTokens ?? 0) });
+    }
+
+    const series: DailyCostPoint[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(since);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      const hit = byDate.get(key);
+      series.push({ date: key, costUsd: hit?.costUsd ?? 0, tokens: hit?.tokens ?? 0 });
+    }
+    return series;
+  }
+
+  async getTodayUsageByFeature(): Promise<TodayUsageByFeature> {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+
+    const grouped = await this.prisma.llmUsage.groupBy({
+      by: ['feature'],
+      where: { createdAt: { gte: dayStart } },
+      _sum: { costUsd: true, totalTokens: true },
+    });
+
+    const out: TodayUsageByFeature = {};
+    for (const row of grouped) {
+      out[row.feature] = {
+        tokens: Number(row._sum.totalTokens ?? 0),
+        costUsd: Number(row._sum.costUsd ?? 0),
+      };
+    }
+    return out;
   }
 }

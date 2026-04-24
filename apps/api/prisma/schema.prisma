@@ -399,6 +399,13 @@ model LlmUsage {
   completionTokens Int      @default(0)
   totalTokens      Int      @default(0)
   costUsd          Decimal  @default(0) @db.Decimal(12, 6)
+  // ─── Ops telemetry (added Apr 2026 for admin cost/perf dashboards) ───
+  // All nullable or defaulted so the ALTER TABLE is partition-safe and
+  // historical rows remain valid. Written by LlmService.recordUsage().
+  durationMs       Int?     @db.Integer              /// Wall-clock ms of the provider call. Null for cache hits and pre-instrumentation rows.
+  cacheHit         Boolean  @default(false)          /// True when served from LlmCacheService Redis hit (tokens + cost are 0).
+  errorCode        String?  @db.VarChar(64)          /// Null on success. "TIMEOUT","RATE_LIMIT","PROVIDER_ERROR","BAD_REQUEST"... Recorded so failures are visible in cost/error dashboards.
+  retryCount       Int      @default(0) @db.SmallInt /// Failover depth: 0 = primary succeeded, 1 = second provider, 2 = third.
   createdAt        DateTime @default(now())
 
   // FK relation removed — partitioned table
@@ -408,6 +415,7 @@ model LlmUsage {
   @@index([userId, createdAt])
   @@index([createdAt])
   @@index([provider, model])
+  @@index([errorCode, createdAt])
   @@map("llm_usage")
 }
 

@@ -152,4 +152,114 @@ export class StatsService {
       orderBy: { date: 'asc' },
     });
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Spend alert (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Hourly sweep: if today's running LLM spend crosses the daily
+   * threshold configured in `site_settings.notification.cost.daily_usd`
+   * (or the month-to-date total crosses the monthly threshold), write
+   * a single `COST_ALERT_TRIPPED` row to `activity_log`. The tripped
+   * state is deduped per-day/per-scope by checking whether an alert
+   * for the same scope already exists since the window started, so the
+   * owner gets one alert per threshold breach — not one every hour.
+   *
+   * Extracted as a named method so integration tests can call it
+   * directly without waiting on the cron.
+   */
+  @Cron('0 0 * * * *')
+  async checkSpendThresholdsCron(): Promise<void> {
+    await this.checkSpendThresholds().catch((err) => {
+      this.logger.error(`checkSpendThresholds failed: ${err?.message ?? err}`);
+    });
+  }
+
+  async checkSpendThresholds(): Promise<{ tripped: Array<'daily' | 'monthly'> }> {
+    const settings = await this.readPrisma.siteSetting.findMany({
+      where: { key: { in: ['notification.cost.daily_usd', 'notification.cost.monthly_usd'] } },
+      select: { key: true, value: true },
+    });
+    const byKey = new Map<string, string>(settings.map((s: any) => [s.key, s.value]));
+    const toNum = (v: string | undefined) => (v && v.trim() !== '' && !Number.isNaN(Number(v)) ? Number(v) : null);
+    const dailyLimit = toNum(byKey.get('notification.cost.daily_usd'));
+    const monthlyLimit = toNum(byKey.get('notification.cost.monthly_usd'));
+    if (dailyLimit == null && monthlyLimit == null) return { tripped: [] };
+
+    const now = new Date();
+    const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [dayAgg, monthAgg] = await Promise.all([
+      this.readPrisma.llmUsage.aggregate({
+        where: { createdAt: { gte: dayStart, lte: now } },
+        _sum: { costUsd: true },
+      }),
+      this.readPrisma.llmUsage.aggregate({
+        where: { createdAt: { gte: monthStart, lte: now } },
+        _sum: { costUsd: true },
+      }),
+    ]);
+    const daySpend = Number(dayAgg._sum.costUsd ?? 0);
+    const monthSpend = Number(monthAgg._sum.costUsd ?? 0);
+
+    const tripped: Array<'daily' | 'monthly'> = [];
+
+    // Daily
+    if (dailyLimit != null && daySpend >= dailyLimit) {
+      const alreadyTripped = await this.readPrisma.activityLog.count({
+        where: {
+          action: 'COST_ALERT_TRIPPED',
+          createdAt: { gte: dayStart },
+          entityLabel: 'daily',
+        },
+      });
+      if (alreadyTripped === 0) {
+        await this.prisma.activityLog.create({
+          data: {
+            adminId: null,
+            adminEmail: 'system',
+            action: 'COST_ALERT_TRIPPED',
+            entityType: 'CostAlert',
+            entityId: null,
+            entityLabel: 'daily',
+            previousData: null,
+            newData: { scope: 'daily', threshold: dailyLimit, spend: daySpend } as any,
+          },
+        });
+        this.logger.warn(`Daily LLM spend threshold tripped: $${daySpend.toFixed(2)} ≥ $${dailyLimit}`);
+        tripped.push('daily');
+      }
+    }
+
+    // Monthly
+    if (monthlyLimit != null && monthSpend >= monthlyLimit) {
+      const alreadyTripped = await this.readPrisma.activityLog.count({
+        where: {
+          action: 'COST_ALERT_TRIPPED',
+          createdAt: { gte: monthStart },
+          entityLabel: 'monthly',
+        },
+      });
+      if (alreadyTripped === 0) {
+        await this.prisma.activityLog.create({
+          data: {
+            adminId: null,
+            adminEmail: 'system',
+            action: 'COST_ALERT_TRIPPED',
+            entityType: 'CostAlert',
+            entityId: null,
+            entityLabel: 'monthly',
+            previousData: null,
+            newData: { scope: 'monthly', threshold: monthlyLimit, spend: monthSpend } as any,
+          },
+        });
+        this.logger.warn(`Monthly LLM spend threshold tripped: $${monthSpend.toFixed(2)} ≥ $${monthlyLimit}`);
+        tripped.push('monthly');
+      }
+    }
+
+    return { tripped };
+  }
 }

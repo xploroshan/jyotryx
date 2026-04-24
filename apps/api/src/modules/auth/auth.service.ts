@@ -773,6 +773,43 @@ export class AuthService {
     await this.redis.del(`login:fail:${email}`, `login:lock:${email}`);
   }
 
+  /**
+   * Mint a short-lived access-only JWT for admin user impersonation.
+   *
+   * Intentionally different from generateTokens():
+   *  - 1-hour TTL (not configurable) so an impersonation session can't
+   *    silently outlive the admin's intent.
+   *  - NO refresh token — impersonation ends at expiry, no renewal.
+   *  - Carries `impersonatedBy` so the web client can render a warning
+   *    banner and server-side handlers (future) can flag the traffic.
+   *
+   * Caller (AdminService.impersonateUser) is responsible for writing
+   * the activity_log row that records who impersonated whom.
+   */
+  async issueImpersonationToken(
+    targetUserId: string,
+    targetEmail: string,
+    targetName: string,
+    adminEmail: string,
+  ): Promise<{ accessToken: string; expiresAt: string }> {
+    const ttlSeconds = 60 * 60; // 1 hour, fixed
+    const payload = {
+      sub: targetUserId,
+      email: targetEmail,
+      name: targetName,
+      impersonatedBy: adminEmail,
+    };
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('jwt.secret'),
+      expiresIn: ttlSeconds,
+    });
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+    this.logger.log(
+      `Impersonation token issued: admin=${adminEmail} target=${targetEmail} expires=${expiresAt}`,
+    );
+    return { accessToken, expiresAt };
+  }
+
   private async generateTokens(
     userId: string,
     email: string,

@@ -27,8 +27,11 @@ const aiFeatures = [
   { id: "muhurat", name: "Muhurat", desc: "Auspicious timing calculations", tokensPerCall: "0", needsAI: false, suggestion: "No AI Needed", sugColor: "text-emerald-400" },
 ];
 
+type TodayByFeature = Record<string, { tokens: number; costUsd: number }>;
+
 export function LlmTab({ token }: { token: string }) {
   const [aiSettings, setAiSettings] = useState<Record<string, string>>({});
+  const [todayUsage, setTodayUsage] = useState<TodayByFeature>({});
   const [aiSaving, setAiSaving] = useState(false);
   const [aiSubTab, setAiSubTab] = useState<"providers" | "usage" | "features">("providers");
   const [loading, setLoading] = useState(true);
@@ -38,15 +41,36 @@ export function LlmTab({ token }: { token: string }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      try {
-        const s = await api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token });
-        setAiSettings(s);
-      } catch {}
+      // Settings + today's live usage from /admin/llm/usage/today in
+      // parallel. The usage endpoint replaces what used to be a
+      // hardcoded "0" value pulled from llm.usage.*.today_tokens.
+      const [settingsRes, usageRes] = await Promise.allSettled([
+        api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token }),
+        api.get<TodayByFeature>("/admin/llm/usage/today", { token }),
+      ]);
+      if (settingsRes.status === "fulfilled") setAiSettings(settingsRes.value);
+      if (usageRes.status === "fulfilled") setTodayUsage(usageRes.value);
       setLoading(false);
     })();
   }, [token]);
 
   const getAiSetting = (key: string, fallback: string = "") => aiSettings[key] || fallback;
+
+  /**
+   * Fold every `chat:*`, `report:*`, `tarot:*`, `horoscope:*` sub-tag
+   * back onto its root feature key. Feature tagging in llm_usage is
+   * intentionally granular ("chat:career", "report:life") so the Cost
+   * tab can break them down — but this older table lists only the
+   * root IDs and expects aggregates at that level.
+   */
+  const todayTokensForFeature = (featureId: string): number => {
+    let tokens = 0;
+    for (const [tag, row] of Object.entries(todayUsage)) {
+      const root = tag.split(":")[0];
+      if (root === featureId) tokens += row.tokens;
+    }
+    return tokens;
+  };
   const setAiSetting = (key: string, value: string) => setAiSettings(prev => ({ ...prev, [key]: value }));
 
   const saveAiSettings = async () => {
@@ -219,7 +243,10 @@ export function LlmTab({ token }: { token: string }) {
                 <tbody>
                   {aiFeatures.filter(f => f.tokensPerCall !== "0").map(feature => {
                     const monthlyTokens = parseInt(getAiSetting(`llm.usage.${feature.id}.monthly_tokens`, "0"));
-                    const todayTokens = parseInt(getAiSetting(`llm.usage.${feature.id}.today_tokens`, "0"));
+                    // Real today-token value, folded from llm_usage
+                    // feature sub-tags by the helper above. Replaces
+                    // the old hardcoded-zero settings lookup.
+                    const todayTokens = todayTokensForFeature(feature.id);
                     const calls = parseInt(getAiSetting(`llm.usage.${feature.id}.calls`, "0"));
                     const featureLimit = getAiSetting(`llm.limit.${feature.id}`, "");
                     const estCost = (monthlyTokens / 1000000 * 2.5).toFixed(2);
