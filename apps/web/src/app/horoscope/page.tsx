@@ -3,8 +3,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
-import { useUiStore } from "@/stores/ui";
-import FocusModeToggle from "@/components/ui/FocusModeToggle";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 
 interface HoroscopeData {
@@ -57,7 +55,6 @@ const TRADITION_COLORS: Record<string, { text: string; bg: string; border: strin
 export default function HoroscopePage() {
   const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const focusTradition = useUiStore((s) => s.focusTradition);
   const userTraditions: string[] = user?.astrologyTraditions?.length ? user.astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"];
   const isMultiTradition = userTraditions.length > 1;
   const [activeTradition, setActiveTradition] = useState(userTraditions[0] || "VEDIC");
@@ -455,18 +452,9 @@ export default function HoroscopePage() {
               <p className="text-white/60 leading-relaxed">{summaryData.summary}</p>
             </div>
 
-            {/* Focus mode toggle */}
-            {isMultiTradition && (
-              <div className="px-1">
-                <FocusModeToggle />
-              </div>
-            )}
-
             {/* Individual tradition insights */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.entries(summaryData.traditions)
-                .filter(([tradKey]) => !focusTradition || tradKey === focusTradition)
-                .map(([tradKey, tradData]) => {
+              {Object.entries(summaryData.traditions).map(([tradKey, tradData]) => {
                 const colors = TRADITION_COLORS[tradKey] || TRADITION_COLORS.VEDIC;
                 return (
                   <div key={tradKey} className={`surface-card p-6 border ${colors.border}`}>
