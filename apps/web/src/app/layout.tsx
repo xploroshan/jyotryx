@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import ProfileGate from "@/components/auth/ProfileGate";
 import TraditionRail from "@/components/layout/TraditionRail";
 import FeatureChips from "@/components/layout/FeatureChips";
+import RouteFocusReset from "@/components/layout/RouteFocusReset";
 
 export const metadata: Metadata = {
   title: "Jyotron — Vedic Astrology Platform",
@@ -52,9 +53,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <TraditionRail />
         <FeatureChips />
+        <RouteFocusReset />
         {/* Navbar is fixed (h-14). TraditionRail + FeatureChips are sticky
-            (in normal flow), so only offset for the Navbar height. */}
-        <main className="flex-1 pt-16">
+            (in normal flow), so only offset for the Navbar height.
+            `tabIndex={-1}` lets RouteFocusReset move focus here on navigation
+            without making <main> a tab stop. `focus:outline-none` keeps the
+            focus transparent — a stray ring on the whole content area would
+            be more distracting than the nav ring we're trying to clear. */}
+        <main className="flex-1 pt-16 focus:outline-none" tabIndex={-1}>
           <ProfileGate>{children}</ProfileGate>
         </main>
         <Footer />
