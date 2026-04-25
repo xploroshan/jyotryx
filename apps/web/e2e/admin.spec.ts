@@ -236,6 +236,175 @@ const settingsResponses: Record<string, Record<string, string>> = {
   },
 };
 
+// ─── Phase 2 fixtures (Dashboard growth tiles + Funnel tab) ─────────────────
+
+const stuckUsers = [
+  {
+    userId: 'stuck-1',
+    email: 'incomplete@example.com',
+    name: 'Incomplete Iris',
+    createdAt: '2026-04-23T10:00:00Z',
+    missing: ['birth_details'],
+  },
+];
+
+const mrrSnapshot = {
+  mrrUsd: 1234.56,
+  arrUsd: 14814.72,
+  momDelta: 0.082,
+  projection6m: 18000,
+  asOf: '2026-04-25',
+  totalRevenueUsd: 24500.42,
+  subscriberCount: 89,
+  arpuUsd: 13.87,
+  ltvUsd: 142.5,
+};
+
+const funnelCounts = {
+  windowDays: 30,
+  locale: null,
+  totalSignups: 256,
+  stages: [
+    { stage: 'signup', count: 256, percent: 100 },
+    { stage: 'profile', count: 198, percent: 77.3 },
+    { stage: 'first_chat', count: 120, percent: 46.9 },
+    { stage: 'paid', count: 18, percent: 7.0 },
+  ],
+};
+
+const cohortRows = [
+  { cohortWeek: '2026-W14', size: 60, retention: [100, 70, 55, 42] },
+  { cohortWeek: '2026-W15', size: 78, retention: [100, 65, 50] },
+];
+
+const paymentFailures = [
+  {
+    id: 'pf-1',
+    userId: 'user-1',
+    userEmail: 'churn@example.com',
+    userName: 'Churn Charlie',
+    amount: 49900,
+    currency: 'INR',
+    status: 'FAILED',
+    type: 'SUBSCRIPTION',
+    createdAt: '2026-04-24T10:00:00Z',
+  },
+];
+
+// ─── Phase 3 fixtures (Ops tab + LLM today usage) ───────────────────────────
+
+const opsLlmHealth = {
+  errorRate: [
+    {
+      provider: 'openai',
+      total: 1234,
+      errors: 12,
+      errorRate: 0.0097,
+      topErrors: [
+        { errorCode: 'TIMEOUT', count: 8 },
+        { errorCode: 'RATE_LIMIT', count: 4 },
+      ],
+    },
+  ],
+  latencyByFeature: [
+    { key: 'chat', count: 800, p50: 250, p95: 1200, p99: 2400 },
+  ],
+  latencyByProvider: [
+    { key: 'openai', count: 1234, p50: 300, p95: 1400, p99: 2900 },
+  ],
+  cacheHitRate: [{ feature: 'horoscope', total: 100, hits: 78, hitRate: 0.78 }],
+};
+
+const opsQueues = [
+  { queue: 'briefing', waiting: 3, active: 1, delayed: 0, failed: 0, completed: 1234 },
+];
+
+const opsServiceHealth = {
+  database: 'up' as const,
+  redis: 'up' as const,
+  details: { dbLatencyMs: 4, redisLatencyMs: 1 },
+};
+
+const capacityForecast = [
+  { provider: 'openai', tpmLimit: 1_000_000, currentPeakTpm: 320_000, slopePerDay: 12_000, daysUntilHit: 56 },
+];
+
+const todayUsageByFeature = {
+  chat: { tokens: 12_345, costUsd: 0.42 },
+  kundli: { tokens: 4_321, costUsd: 0.11 },
+};
+
+// ─── Phase 4 fixtures (Safety, GDPR, Cost forecast) ─────────────────────────
+
+const flaggedRows = [
+  {
+    id: 'flag-1',
+    messageId: 'msg-1',
+    userId: 'user-1',
+    userEmail: 'flagger@example.com',
+    userName: 'Flagger Fred',
+    categories: ['hate'],
+    scores: { hate: 0.92 },
+    status: 'pending' as const,
+    reviewedBy: null,
+    reviewedAt: null,
+    createdAt: '2026-04-25T08:00:00Z',
+    preview: 'this is a flagged preview',
+  },
+];
+
+const gdprRows = [
+  {
+    id: 'gdpr-1',
+    userId: 'user-1',
+    userEmail: 'gdpr@example.com',
+    userName: 'GDPR Greta',
+    type: 'export' as const,
+    status: 'pending' as const,
+    dueBy: '2026-05-25T00:00:00Z',
+    daysUntilDue: 30,
+    fulfilledAt: null,
+    adminId: null,
+    note: null,
+    createdAt: '2026-04-25T07:00:00Z',
+  },
+];
+
+const costSummary = {
+  mtdUsd: 87.42,
+  prevMtdUsd: 64.10,
+  projectionUsd: 125.0,
+  dailyThreshold: 5,
+  monthlyThreshold: 150,
+};
+
+const costByFeature = [
+  { feature: 'chat', calls: 800, totalTokens: 1_234_000, costUsd: 45.2 },
+];
+
+const costByProvider = [
+  { provider: 'openai', model: 'gpt-4o', calls: 800, totalTokens: 1_234_000, costUsd: 45.2 },
+];
+
+const costDaily = Array.from({ length: 30 }, (_, i) => ({
+  date: `2026-03-${String(i + 1).padStart(2, '0')}`,
+  costUsd: Math.round(Math.random() * 1000) / 100,
+  tokens: Math.round(Math.random() * 100_000),
+}));
+
+const costForecast = {
+  points: Array.from({ length: 30 }, (_, i) => ({
+    date: `2026-04-${String(i + 1).padStart(2, '0')}`,
+    actualUsd: i < 25 ? Math.round(Math.random() * 1000) / 100 : null,
+    predictedUsd: i >= 25 ? Math.round(Math.random() * 1000) / 100 : null,
+    lowerUsd: i >= 25 ? Math.round(Math.random() * 800) / 100 : null,
+    upperUsd: i >= 25 ? Math.round(Math.random() * 1200) / 100 : null,
+  })),
+  level: 4.2,
+  trend: 0.05,
+  residualStd: 0.8,
+};
+
 /**
  * Wires up every admin endpoint the dashboard touches with deterministic
  * mocks. Tests can override individual handlers by passing an `extras`
@@ -316,6 +485,63 @@ async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
       const body = JSON.parse(route.request().postData() || '{}');
       await route.fulfill(json(body));
     },
+    // Phase 2 — Dashboard growth tiles + Funnel tab
+    'GET /admin/onboarding/stuck': async (route) => {
+      await route.fulfill(json(stuckUsers));
+    },
+    'GET /admin/mrr': async (route) => {
+      await route.fulfill(json(mrrSnapshot));
+    },
+    'GET /admin/funnel': async (route) => {
+      await route.fulfill(json(funnelCounts));
+    },
+    'GET /admin/cohorts': async (route) => {
+      await route.fulfill(json(cohortRows));
+    },
+    'GET /admin/payment-failures': async (route) => {
+      await route.fulfill(json(paymentFailures));
+    },
+    'GET /admin/churn-risk': async (route) => {
+      await route.fulfill(json([]));
+    },
+    // Phase 3 — Ops tab + LLM today usage
+    'GET /admin/ops/llm-health': async (route) => {
+      await route.fulfill(json(opsLlmHealth));
+    },
+    'GET /admin/ops/queues': async (route) => {
+      await route.fulfill(json(opsQueues));
+    },
+    'GET /admin/ops/health': async (route) => {
+      await route.fulfill(json(opsServiceHealth));
+    },
+    'GET /admin/forecast/capacity': async (route) => {
+      await route.fulfill(json(capacityForecast));
+    },
+    'GET /admin/llm/usage/today': async (route) => {
+      await route.fulfill(json(todayUsageByFeature));
+    },
+    // Phase 4 — Safety, GDPR, Cost
+    'GET /admin/safety/flagged': async (route) => {
+      await route.fulfill(json(flaggedRows));
+    },
+    'GET /admin/gdpr/requests': async (route) => {
+      await route.fulfill(json(gdprRows));
+    },
+    'GET /admin/cost/summary': async (route) => {
+      await route.fulfill(json(costSummary));
+    },
+    'GET /admin/cost/by-feature': async (route) => {
+      await route.fulfill(json(costByFeature));
+    },
+    'GET /admin/cost/by-provider': async (route) => {
+      await route.fulfill(json(costByProvider));
+    },
+    'GET /admin/cost/daily': async (route) => {
+      await route.fulfill(json(costDaily));
+    },
+    'GET /admin/forecast/cost': async (route) => {
+      await route.fulfill(json(costForecast));
+    },
     ...extras,
   });
 }
@@ -380,8 +606,10 @@ test.describe('Admin dashboard — tabs', () => {
     await gotoAdmin(page);
 
     await expect(page.getByText('Total Users')).toBeVisible();
-    // 1234 is rendered without thousands separator; use a flexible match.
-    await expect(page.getByText(/1,?234/)).toBeVisible();
+    // Total Users renders without thousands separator (raw "1234"). The
+    // Phase 2 MRR tile also includes "1,234" in "$1,234.56", so pin to
+    // the exact KPI value instead of a fuzzy match.
+    await expect(page.getByText('1234', { exact: true })).toBeVisible();
     await expect(page.getByText('Premium Users')).toBeVisible();
     await expect(page.getByText('New Today')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Quick Actions' })).toBeVisible();
@@ -576,7 +804,15 @@ test.describe('Admin dashboard — error resilience', () => {
     await installAdminMocks(page);
     await gotoAdmin(page);
 
-    for (const label of ['Users', 'Activity', 'Payments', 'Chats', 'Analytics', 'Pricing', 'AI Agents', 'Content']) {
+    // Walk every tab in the strip — order matches `tabs` in
+     // apps/web/src/app/admin/page.tsx. New tabs added there should
+     // be added here so the smoke loop keeps catching tabs that
+     // throw on first render.
+    for (const label of [
+      'Funnel', 'Ops', 'Safety', 'GDPR', 'Cost',
+      'Users', 'Activity', 'Payments', 'Chats',
+      'Analytics', 'Pricing', 'AI Agents', 'Content',
+    ]) {
       await page.getByRole('button', { name: new RegExp(label) }).first().click();
       await page.waitForTimeout(300);
     }
@@ -647,5 +883,333 @@ test.describe('Admin dashboard — error resilience', () => {
       ).toBeVisible();
       await expect(page.getByText(needle).first()).toBeVisible();
     }
+  });
+});
+
+// ─── Phase 2/3/4 tabs (Funnel, Ops, Safety, GDPR, Cost) ─────────────────────
+//
+// These tabs were added on main after this branch diverged. Each test
+// proves both that the happy path renders something specific from the
+// mocked response AND that an endpoint failure surfaces a visible
+// inline error rather than a blank panel — the regression that left
+// the whole dashboard looking dead in production.
+
+test.describe('Admin dashboard — Funnel tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await installAdminMocks(page);
+    await seedAdminAuth(page);
+  });
+
+  test('renders funnel chart, cohort grid, and payment-failure rows', async ({ page }) => {
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Funnel/ }).click();
+
+    // Chart, cohort table, and payment-failures table all rendered.
+    await expect(page.getByTestId('funnel-chart')).toBeVisible();
+    await expect(page.getByTestId('funnel-stage-signup')).toBeVisible();
+    await expect(page.getByTestId('cohort-grid')).toBeVisible();
+    await expect(page.getByTestId('payment-failures')).toBeVisible();
+    // The "Churn Charlie" payment failure from the fixture appears in
+    // the table — proves the data flowed end-to-end (not just an empty
+    // shell rendered).
+    await expect(page.getByText('Churn Charlie')).toBeVisible();
+  });
+
+  test('funnel endpoint failure shows visible error', async ({ page }) => {
+    await installAdminMocks(page, {
+      'GET /admin/funnel': async (route) =>
+        route.fulfill(json({ message: 'funnel offline' }, 500)),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Funnel/ }).click();
+
+    const main = page.getByRole('main');
+    await expect(main.getByText(/funnel offline/i)).toBeVisible();
+  });
+});
+
+test.describe('Admin dashboard — Ops tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await installAdminMocks(page);
+    await seedAdminAuth(page);
+  });
+
+  test('renders service health, queues, error rate, latency, capacity', async ({ page }) => {
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Ops/ }).click();
+
+    await expect(page.getByTestId('service-health-card')).toBeVisible();
+    await expect(page.getByTestId('queue-depth-card')).toBeVisible();
+    await expect(page.getByTestId('error-rate-card')).toBeVisible();
+    await expect(page.getByTestId('cache-hit-card')).toBeVisible();
+    await expect(page.getByTestId('capacity-card')).toBeVisible();
+    // openai error-rate row from the fixture is rendered.
+    await expect(page.getByTestId('error-rate-row-openai')).toBeVisible();
+  });
+
+  test('disable/enable provider posts to /admin/llm/provider/:name/:action', async ({ page }) => {
+    let calledPath = '';
+    await installAdminMocks(page, {
+      'POST /admin/llm/provider/openai/disable': async (route) => {
+        calledPath = new URL(route.request().url()).pathname;
+        await route.fulfill(json({ ok: true }));
+      },
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Ops/ }).click();
+    await page.getByTestId('disable-openai').click();
+
+    await expect.poll(() => calledPath).toMatch(/\/admin\/llm\/provider\/openai\/disable$/);
+  });
+
+  test('ops/health endpoint failure shows visible error', async ({ page }) => {
+    await installAdminMocks(page, {
+      'GET /admin/ops/health': async (route) =>
+        route.fulfill(json({ message: 'ops health offline' }, 500)),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Ops/ }).click();
+
+    const main = page.getByRole('main');
+    await expect(main.getByText(/ops health offline/i)).toBeVisible();
+  });
+});
+
+test.describe('Admin dashboard — Safety tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await installAdminMocks(page);
+    await seedAdminAuth(page);
+  });
+
+  test('renders pending flagged messages with resolve actions', async ({ page }) => {
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Safety/ }).click();
+
+    await expect(page.getByTestId('flagged-list')).toBeVisible();
+    await expect(page.getByTestId('flagged-row-flag-1')).toBeVisible();
+    // Resolve buttons appear for pending items
+    await expect(page.getByTestId('resolve-approve-flag-1')).toBeVisible();
+    await expect(page.getByTestId('resolve-hide-flag-1')).toBeVisible();
+    await expect(page.getByTestId('resolve-actioned-flag-1')).toBeVisible();
+  });
+
+  test('approving a flagged row posts the resolve action', async ({ page }) => {
+    let postedAction = '';
+    await installAdminMocks(page, {
+      'POST /admin/safety/flagged/flag-1/resolve': async (route) => {
+        const body = JSON.parse(route.request().postData() || '{}');
+        postedAction = body.action;
+        await route.fulfill(json({ ok: true }));
+      },
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Safety/ }).click();
+    await page.getByTestId('resolve-approve-flag-1').click();
+
+    await expect.poll(() => postedAction).toBe('approve');
+  });
+
+  test('safety endpoint failure shows visible error', async ({ page }) => {
+    await installAdminMocks(page, {
+      'GET /admin/safety/flagged': async (route) =>
+        route.fulfill(json({ message: 'safety queue offline' }, 500)),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Safety/ }).click();
+
+    const main = page.getByRole('main');
+    await expect(main.getByText(/safety queue offline/i)).toBeVisible();
+  });
+});
+
+test.describe('Admin dashboard — GDPR tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await installAdminMocks(page);
+    await seedAdminAuth(page);
+  });
+
+  test('renders pending GDPR requests with metadata', async ({ page }) => {
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /GDPR/ }).click();
+
+    await expect(page.getByTestId('gdpr-list')).toBeVisible();
+    await expect(page.getByText('GDPR Greta')).toBeVisible();
+    await expect(page.getByText('gdpr@example.com')).toBeVisible();
+  });
+
+  test('gdpr endpoint failure shows visible error', async ({ page }) => {
+    await installAdminMocks(page, {
+      'GET /admin/gdpr/requests': async (route) =>
+        route.fulfill(json({ message: 'gdpr offline' }, 500)),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /GDPR/ }).click();
+
+    const main = page.getByRole('main');
+    await expect(main.getByText(/gdpr offline/i)).toBeVisible();
+  });
+});
+
+test.describe('Admin dashboard — Cost tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await installAdminMocks(page);
+    await seedAdminAuth(page);
+  });
+
+  test('renders MTD spend, daily sparkline, top features and providers', async ({ page }) => {
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Cost/ }).click();
+
+    await expect(page.getByText('MTD LLM Spend')).toBeVisible();
+    // Headline number from costSummary fixture
+    await expect(page.getByText('$87.42')).toBeVisible();
+    await expect(page.getByText('Last 30 Days')).toBeVisible();
+    await expect(page.getByText('Top Features (30d)')).toBeVisible();
+    await expect(page.getByText('Providers & Models (30d)')).toBeVisible();
+  });
+
+  test('saving thresholds PUTs notification.cost.* settings', async ({ page }) => {
+    let putBody: Record<string, string> | null = null;
+    await installAdminMocks(page, {
+      'PUT /admin/settings': async (route) => {
+        putBody = JSON.parse(route.request().postData() || '{}');
+        await route.fulfill(json(putBody));
+      },
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Cost/ }).click();
+
+    await page.getByRole('button', { name: /Save thresholds/i }).click();
+
+    await expect.poll(() => putBody && Object.keys(putBody)).toEqual(
+      expect.arrayContaining(['notification.cost.daily_usd', 'notification.cost.monthly_usd']),
+    );
+  });
+
+  test('cost-summary failure surfaces an inline error', async ({ page }) => {
+    await installAdminMocks(page, {
+      'GET /admin/cost/summary': async (route) =>
+        route.fulfill(json({ message: 'cost summary offline' }, 500)),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Cost/ }).click();
+
+    const main = page.getByRole('main');
+    await expect(main.getByText(/cost summary offline/i)).toBeVisible();
+  });
+});
+
+// ─── Dashboard tab — Phase 2 growth tiles + stuck-onboarding ────────────────
+
+test.describe('Admin dashboard — Phase 2 widgets on Dashboard tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await installAdminMocks(page);
+    await seedAdminAuth(page);
+  });
+
+  test('shows MRR/ARR/ARPU/LTV growth tiles when /admin/mrr returns data', async ({ page }) => {
+    await gotoAdmin(page);
+    await expect(page.getByTestId('growth-tiles')).toBeVisible();
+    await expect(page.getByText(/MRR \(USD\)/)).toBeVisible();
+    await expect(page.getByText(/ARR \(USD\)/)).toBeVisible();
+    await expect(page.getByText(/ARPU \(USD\)/)).toBeVisible();
+    await expect(page.getByText(/LTV \(USD\)/)).toBeVisible();
+  });
+
+  test('hides growth tiles when /admin/mrr fails (graceful degrade)', async ({ page }) => {
+    await installAdminMocks(page, {
+      'GET /admin/mrr': async (route) =>
+        route.fulfill(json({ message: 'mrr offline' }, 500)),
+    });
+    await gotoAdmin(page);
+
+    // The dashboard hero stats still render (Total Users etc.) but the
+    // growth tiles section is absent — by design, since they're nice-
+    // to-haves and shouldn't blank out the whole page.
+    await expect(page.getByText('Total Users')).toBeVisible();
+    await expect(page.getByTestId('growth-tiles')).toHaveCount(0);
+  });
+
+  test('shows stuck-onboarding section with users from /admin/onboarding/stuck', async ({ page }) => {
+    await gotoAdmin(page);
+
+    await expect(page.getByText(/Stuck in Onboarding/)).toBeVisible();
+    await expect(page.getByText('Incomplete Iris')).toBeVisible();
+    await expect(page.getByText('birth_details')).toBeVisible();
+  });
+});
+
+// ─── Contract / shape-mismatch coverage ─────────────────────────────────────
+//
+// The previous suite proved "given a perfect mock, the page renders"
+// but not "given a malformed response, the page doesn't crash". These
+// tests feed shape mismatches the real backend has historically
+// produced (empty arrays, `null` instead of an object, etc.) so we
+// catch defensive-coding regressions that would otherwise only show
+// up in production.
+
+test.describe('Admin dashboard — defensive against malformed responses', () => {
+  test.beforeEach(async ({ page }) => {
+    await seedAdminAuth(page);
+  });
+
+  test('Dashboard tab survives /admin/onboarding/stuck returning an object instead of an array', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await installAdminMocks(page, {
+      'GET /admin/onboarding/stuck': async (route) =>
+        // Backend bug: returns a single object instead of the array
+        // declared by the type. Frontend is supposed to treat this as
+        // "no data" and skip the section, NOT throw `stuck.map is not a function`.
+        route.fulfill(json({ userId: 'oops', email: 'oops@example.com' })),
+    });
+    await gotoAdmin(page);
+
+    await expect(page.getByText('Total Users')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('Cost tab survives /admin/llm/usage/today returning empty object', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await installAdminMocks(page, {
+      'GET /admin/llm/usage/today': async (route) => route.fulfill(json({})),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Cost/ }).click();
+
+    // Tab still renders — the "Today's Spend" tile reduces over an
+    // empty object to $0.00 instead of throwing.
+    await expect(page.getByText("Today's Spend")).toBeVisible();
+    await expect(page.getByText(/\$0\.00/).first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('Ops tab survives /admin/ops/queues returning an empty list', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await installAdminMocks(page, {
+      'GET /admin/ops/queues': async (route) => route.fulfill(json([])),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Ops/ }).click();
+
+    await expect(page.getByTestId('queue-depth-card')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('Safety tab survives /admin/safety/flagged returning null', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await installAdminMocks(page, {
+      'GET /admin/safety/flagged': async (route) => route.fulfill(json(null)),
+    });
+    await gotoAdmin(page);
+    await page.getByRole('button', { name: /Safety/ }).click();
+
+    // The `Array.isArray` guard in SafetyTab.load lets the page render
+    // the empty-state message instead of crashing on `null.map`.
+    await expect(page.getByText(/No pending flagged messages/i)).toBeVisible();
+    expect(errors).toEqual([]);
   });
 });
