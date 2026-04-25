@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { api } from "@/lib/api";
 import { Badge, statusBadge, formatCurrency, formatDate } from "./components/helpers";
 import { Toast } from "@/components/ui/Toast";
@@ -31,6 +31,11 @@ type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" |
 export default function AdminPage() {
   const router = useRouter();
   const { user, accessToken, isAuthenticated } = useAuthStore();
+  // Wait for the persisted auth state to rehydrate before redirecting.
+  // Without this gate, the first render sees `isAuthenticated: false`,
+  // pushes to /auth, and an authenticated admin gets bounced to /my-day
+  // by /auth's own redirect — making /admin unreachable on hard refresh.
+  const isHydrated = useAuthHydrated();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
   // Inline tabs state (payments, chats, pricing — small enough to stay inline)
@@ -52,12 +57,13 @@ export default function AdminPage() {
   const [pricingSaving, setPricingSaving] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!isAuthenticated || user?.role !== "ADMIN") {
       router.push("/auth");
       return;
     }
     loadInlineData();
-  }, [isAuthenticated, user, activeTab]);
+  }, [isHydrated, isAuthenticated, user, activeTab]);
 
   const loadInlineData = async () => {
     if (!accessToken) return;
@@ -107,7 +113,7 @@ export default function AdminPage() {
     { id: "content", label: "Content", icon: "\uD83D\uDCDD" },
   ];
 
-  if (!isAuthenticated || user?.role !== "ADMIN") return null;
+  if (!isHydrated || !isAuthenticated || user?.role !== "ADMIN") return null;
 
   return (
     <div className="relative min-h-screen">
