@@ -13,7 +13,7 @@ export class SendMessageDto {
   @IsString()
   @IsNotEmpty({ message: 'Message cannot be empty' })
   @MaxLength(2000, { message: 'Message cannot exceed 2000 characters' })
-  message: string;
+  message!: string;
 
   @ApiPropertyOptional({ description: 'Consultation category', enum: CATEGORIES })
   @IsOptional()

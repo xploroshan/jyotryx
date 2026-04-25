@@ -1,27 +1,20 @@
 generator client {
-  provider      = "prisma-client-js"
-  // `native` picks the engine for the machine running `prisma generate`
-  // (devs on macOS/Linux). `linux-musl-openssl-3.0.x` is the engine we
-  // need for production on `node:20-alpine` (Alpine 3.19+, OpenSSL 3).
-  // Without this, Prisma falls back to openssl-1.1.x on Alpine and
-  // crashes at runtime with "Please manually install OpenSSL".
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
+  // Prisma 7 made the `client` engine the default and requires every
+  // `new PrismaClient()` to be passed a driver adapter — see
+  // `apps/api/src/prisma/prisma.service.ts`, which wires
+  // `@prisma/adapter-pg` from `DATABASE_URL`. The legacy binary
+  // engine is gone, so neither `binaryTargets` nor `engineType` apply.
 }
 
 datasource db {
-  provider  = "postgresql"
-  // Runtime queries go through Supabase's transaction pooler (port 6543).
-  // The pooler is IPv4-compatible and handles connection multiplexing for
-  // NestJS's many short-lived Prisma connections. Requires `?pgbouncer=true`
-  // in the URL so Prisma disables prepared statements (pgbouncer can't
-  // cache them across connection checkouts).
-  url       = env("DATABASE_URL")
-  // Migrations (`prisma migrate deploy`) must bypass the pooler and talk
-  // directly to Postgres (port 5432) — pgbouncer in transaction mode
-  // can't run the long DDL transactions and advisory locks that Prisma
-  // Migrate uses. Without `directUrl`, migrations are issued over the
-  // pooler and can deadlock or silently drop statements.
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  // Connection URLs (`url` for the Supabase transaction pooler on port
+  // 6543, `directUrl` for migrations on port 5432) are wired in
+  // `prisma.config.ts` — Prisma 7 no longer accepts them in this block.
+  // Without `directUrl`, migrations are issued over the pooler and can
+  // deadlock or silently drop statements; the runtime URL still requires
+  // `?pgbouncer=true` so Prisma disables prepared statements.
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────

@@ -9,6 +9,20 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import { MetricsService } from './metrics/metrics.service';
+import { PrismaService } from './prisma/prisma.service';
+
+// Prisma 7 dropped the `datasources` constructor option, so runtime URL
+// massaging (sslmode/pgbouncer params Supabase needs) has to happen by
+// rewriting `process.env.DATABASE_URL` before any PrismaClient is
+// constructed. This must run *before* Nest builds the DI container.
+if (process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = PrismaService.normalizeUrl(process.env.DATABASE_URL);
+}
+if (process.env.DATABASE_READ_REPLICA_URL) {
+  process.env.DATABASE_READ_REPLICA_URL = PrismaService.normalizeUrl(
+    process.env.DATABASE_READ_REPLICA_URL,
+  );
+}
 
 // Initialize Sentry (before NestFactory.create)
 if (process.env.SENTRY_DSN) {
@@ -46,7 +60,10 @@ async function bootstrap() {
   ].filter(Boolean) as string[];
 
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);

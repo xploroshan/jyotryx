@@ -6,7 +6,7 @@ export class SendOtpDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^\+?[1-9]\d{1,14}$/, { message: 'Invalid phone number format' })
-  phone: string;
+  phone!: string;
 }
 
 export class VerifyOtpDto {
@@ -14,13 +14,13 @@ export class VerifyOtpDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^\+?[1-9]\d{1,14}$/, { message: 'Invalid phone number format' })
-  phone: string;
+  phone!: string;
 
   @ApiProperty({ example: '123456' })
   @IsString()
   @IsNotEmpty()
   @Length(4, 6)
-  otp: string;
+  otp!: string;
 
   /**
    * Optional display name, only used on first-time signup through OTP. For

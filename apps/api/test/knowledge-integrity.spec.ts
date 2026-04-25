@@ -12,8 +12,8 @@
  * (passes trivially); the first time B2 lands real seeds, any missing
  * locale or shape mismatch will fail this spec.
  */
-import { KB_LOCALES } from '../kb-locales';
-import { KB_SEEDS, KbSeedRow } from '../kb-seeds';
+import { KB_LOCALES } from '../src/knowledge/kb-locales';
+import { KB_SEEDS, KbSeedRow } from '../src/knowledge/kb-seeds';
 
 describe('KB integrity', () => {
   const tableNames = Object.keys(KB_SEEDS);

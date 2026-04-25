@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaReadReplicaService
@@ -10,25 +11,18 @@ export class PrismaReadReplicaService
   private readonly usingReplica: boolean;
 
   constructor() {
+    // Pick the replica URL when configured, otherwise fall through to
+    // the primary so existing call sites keep working in environments
+    // without a separate read replica. Each client owns its own
+    // adapter pool so primary and replica connections are independent.
     const replicaUrl = process.env.DATABASE_READ_REPLICA_URL || '';
-    const primaryUrl = process.env.DATABASE_URL || '';
-    const url = replicaUrl || primaryUrl;
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    const needsSsl = isProduction && url.length > 0 && !url.includes('sslmode=');
-    const datasourceUrl = needsSsl
-      ? `${url}${url.includes('?') ? '&' : '?'}sslmode=require`
-      : url;
+    const url = replicaUrl || process.env.DATABASE_URL || '';
 
     super({
-      datasources: datasourceUrl ? { db: { url: datasourceUrl } } : undefined,
+      adapter: new PrismaPg({ connectionString: url }),
     });
 
-    // Track whether we're actually using a separate replica
-    const usingReplica = replicaUrl.length > 0;
-    // Store as a field accessible after super()
-    (this as any).__usingReplica = usingReplica;
-    this.usingReplica = usingReplica;
+    this.usingReplica = replicaUrl.length > 0;
   }
 
   async onModuleInit() {

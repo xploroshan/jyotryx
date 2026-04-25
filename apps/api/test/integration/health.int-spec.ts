@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import Redis from 'ioredis';
-import * as request from 'supertest';
+import request from 'supertest';
 import { HealthController } from '../../src/health/health.controller';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { REDIS_CLIENT } from '../../src/redis/redis.module';

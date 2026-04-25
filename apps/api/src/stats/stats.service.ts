@@ -1,7 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaReadReplicaService } from '../prisma/prisma-read-replica.service';
+
+// Cost-alert activity-log rows aren't initiated by an admin and aren't
+// tied to any single user/subscription, but `activity_logs.admin_id`
+// and `entity_id` are non-null UUID columns. The all-zeros UUID acts as
+// a sentinel readers can detect to render "system" in the audit UI.
+const SYSTEM_ACTOR_ID = '00000000-0000-0000-0000-000000000000';
 
 // ────────────────────────────────────────────────────────────────────────
 // MRR helpers
@@ -337,13 +344,13 @@ export class StatsService {
       if (alreadyTripped === 0) {
         await this.prisma.activityLog.create({
           data: {
-            adminId: null,
+            adminId: SYSTEM_ACTOR_ID,
             adminEmail: 'system',
             action: 'COST_ALERT_TRIPPED',
             entityType: 'CostAlert',
-            entityId: null,
+            entityId: SYSTEM_ACTOR_ID,
             entityLabel: 'daily',
-            previousData: null,
+            previousData: Prisma.JsonNull,
             newData: { scope: 'daily', threshold: dailyLimit, spend: daySpend } as any,
           },
         });
@@ -364,13 +371,13 @@ export class StatsService {
       if (alreadyTripped === 0) {
         await this.prisma.activityLog.create({
           data: {
-            adminId: null,
+            adminId: SYSTEM_ACTOR_ID,
             adminEmail: 'system',
             action: 'COST_ALERT_TRIPPED',
             entityType: 'CostAlert',
-            entityId: null,
+            entityId: SYSTEM_ACTOR_ID,
             entityLabel: 'monthly',
-            previousData: null,
+            previousData: Prisma.JsonNull,
             newData: { scope: 'monthly', threshold: monthlyLimit, spend: monthSpend } as any,
           },
         });

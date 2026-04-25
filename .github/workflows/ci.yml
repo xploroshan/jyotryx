@@ -16,7 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        # `pgvector/pgvector:pg16` is the upstream pgvector image built on
+        # the official `postgres:16` base — same engine, with the `vector`
+        # extension pre-bundled. Migration `20260412_add_pgvector` does
+        # `CREATE EXTENSION vector`, which fails on plain `postgres:16-alpine`
+        # (extension not available) and silently passed before only because
+        # the dev environment happened to have it installed.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: jyotron
           POSTGRES_PASSWORD: jyotron_test
@@ -52,15 +58,41 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Generate Prisma client & migrate
-        run: |
-          cd apps/api
-          npx prisma generate
-          npx prisma migrate deploy
+      - name: Prisma — generate client
+        working-directory: apps/api
+        run: npx prisma generate
+      - name: Prisma — migrate deploy
+        working-directory: apps/api
+        # CI doesn't ship a separate direct URL; the `prisma.config.ts`
+        # `datasource.url` falls back to `DATABASE_URL`, but mirroring
+        # `DIRECT_URL` here keeps the migrate engine's selection logic
+        # identical to the Supabase production env (where DIRECT_URL is
+        # the non-pooled connection that migrations must use).
+        env:
+          DIRECT_URL: postgresql://jyotron:jyotron_test@localhost:5432/jyotron_test?schema=public
+        run: npx prisma migrate deploy
       - name: Lint API
         run: cd apps/api && npx nest build
       - name: Test API
         run: cd apps/api && npm test
+      - name: Install integration-test daemons
+        # The integration suite spawns its own postgres / pgbouncer /
+        # redis on random ports (see test/integration/infra/*) — it does
+        # NOT use the service containers above. The binaries aren't on
+        # `ubuntu-latest` by default, and the apt packages auto-start
+        # default clusters on 5432 / 6379 which would clash with the
+        # service-container ports, so we stop them after install. The
+        # spawn helpers find binaries via `/usr/lib/postgresql/16/bin`.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            redis-server \
+            postgresql-16 \
+            postgresql-16-pgvector \
+            pgbouncer
+          sudo systemctl stop postgresql || true
+          sudo systemctl stop redis-server || true
+          sudo systemctl stop pgbouncer || true
       - name: Integration test API
         run: cd apps/api && npm run test:int
 
