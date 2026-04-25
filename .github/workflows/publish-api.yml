@@ -1,0 +1,73 @@
+name: Publish API image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Rebuild only when the API or its build context actually changes,
+      # so doc-only / web-only commits don't churn `:latest`. The
+      # workflow file itself is included so changes to the build matrix
+      # ship immediately.
+      - 'apps/api/**'
+      - '.github/workflows/publish-api.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  # Image build is the slowest step in the pipeline; squash overlapping
+  # runs on rapid main-branch pushes so the latest commit wins.
+  group: publish-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    name: Build & push apps/api → ghcr.io
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for the GITHUB_TOKEN to push to GHCR. No PAT needed.
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/jyotryx-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        # Buildx unlocks layer caching via the GHA cache backend, which
+        # cuts cold-build time from ~6 min (swisseph compile + node_modules
+        # install) to ~90 s on warm runs.
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v5
+        with:
+          # The Dockerfile assumes `apps/api/` is the entire build
+          # context (matches the Railway / single-service deploy
+          # contract documented inline in apps/api/Dockerfile). Sending
+          # the repo root would change `COPY . .` semantics and break
+          # the build.
+          context: apps/api
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "Pushed:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${IMAGE}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${IMAGE}:sha-${GITHUB_SHA}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Roll the deployment with:" >> $GITHUB_STEP_SUMMARY
+          echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
+          echo "kubectl -n jyotryx rollout restart deployment/api deployment/worker" >> $GITHUB_STEP_SUMMARY
+          echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
