@@ -1,23 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
+import { TabError, errorMessage } from "./helpers";
 import type { ContentStats } from "./types";
 
 export function ContentTab({ token }: { token: string }) {
   const [contentStats, setContentStats] = useState<ContentStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const c = await api.get<ContentStats>("/admin/content/stats", { token });
+      setContentStats(c);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[admin/content/stats] failed to load", err);
+      setError(errorMessage(err));
+    }
+    setLoading(false);
+  }, [token]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const c = await api.get<ContentStats>("/admin/content/stats", { token });
-        setContentStats(c);
-      } catch {}
-      setLoading(false);
-    })();
-  }, [token]);
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -44,7 +53,9 @@ export function ContentTab({ token }: { token: string }) {
   return (
     <div>
       <h2 className="text-xl font-bold text-gradient mb-6">Content Management</h2>
-      {!contentStats ? (
+      {error ? (
+        <TabError message={error} onRetry={load} />
+      ) : !contentStats ? (
         <div className="surface-card p-8 text-center text-white/40 text-sm">Loading content stats…</div>
       ) : (
         <>

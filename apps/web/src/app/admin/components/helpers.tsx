@@ -38,3 +38,39 @@ export function formatDate(dateStr: string) {
 export function formatDateTime(dateStr: string) {
   return new Date(dateStr).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
+
+/**
+ * Visible error state for admin tabs whose data fetch failed. Without
+ * this, tabs that previously did `try { ... } catch {}` rendered as a
+ * silent blank panel — indistinguishable from "still loading" or "no
+ * data yet" — and the only signal anything was wrong was the fetch
+ * error in the network tab.
+ */
+export function TabError({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="surface-card p-6 text-center">
+      <p className="text-sm font-medium text-red-400 mb-1">Failed to load this tab</p>
+      <p className="text-xs text-white/40 mb-4 break-words">{message}</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs text-white/70"
+        >
+          Retry
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Centralised error → message extractor. The api wrapper throws
+ * `ApiError` with a `.message` populated from the server's JSON body;
+ * non-API errors (e.g. a thrown `TypeError`) fall through to a generic
+ * string so the UI never has to render `[object Object]`.
+ */
+export function errorMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "string") return err;
+  return "Unknown error";
+}

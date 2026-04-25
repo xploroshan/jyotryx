@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { formatCurrency, formatDate } from "./helpers";
+import { formatCurrency, formatDate, TabError, errorMessage } from "./helpers";
 import type { DashboardStats, MrrSnapshot } from "./types";
 
 interface StuckUser {
@@ -18,31 +18,43 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
   const [stuck, setStuck] = useState<StuckUser[]>([]);
   const [mrr, setMrr] = useState<MrrSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    // Fire all three fetches in parallel — MRR and stuck-onboarding
+    // are nice-to-haves, neither should block the hero stats if they
+    // fail (e.g. fresh deploy with empty stats_daily rollup). Only a
+    // failure of the primary /admin/dashboard call surfaces a visible
+    // error, since without it the page literally has nothing to show.
+    const [statsRes, stuckRes, mrrRes] = await Promise.allSettled([
+      api.get<DashboardStats>("/admin/dashboard", { token }),
+      api.get<StuckUser[]>("/admin/onboarding/stuck", { token }),
+      api.get<MrrSnapshot>("/admin/mrr", { token }),
+    ]);
+    if (statsRes.status === "fulfilled") {
+      setStats(statsRes.value);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error("[admin/dashboard] failed to load", statsRes.reason);
+      setError(errorMessage(statsRes.reason));
+    }
+    // Defensive — a misconfigured mock or a backend returning non-array
+    // data must not blow up the render. Only trust the response when
+    // it's actually an array.
+    if (stuckRes.status === "fulfilled" && Array.isArray(stuckRes.value)) {
+      setStuck(stuckRes.value);
+    }
+    if (mrrRes.status === "fulfilled" && mrrRes.value) {
+      setMrr(mrrRes.value);
+    }
+    setLoading(false);
+  }, [token]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      // Fire all three fetches in parallel — MRR and stuck-onboarding
-      // are nice-to-haves, neither should block the hero stats if they
-      // fail (e.g. fresh deploy with empty stats_daily rollup).
-      const [statsRes, stuckRes, mrrRes] = await Promise.allSettled([
-        api.get<DashboardStats>("/admin/dashboard", { token }),
-        api.get<StuckUser[]>("/admin/onboarding/stuck", { token }),
-        api.get<MrrSnapshot>("/admin/mrr", { token }),
-      ]);
-      if (statsRes.status === "fulfilled") setStats(statsRes.value);
-      // Defensive — a misconfigured mock or a backend returning
-      // non-array data must not blow up the render. Only trust the
-      // response when it's actually an array.
-      if (stuckRes.status === "fulfilled" && Array.isArray(stuckRes.value)) {
-        setStuck(stuckRes.value);
-      }
-      if (mrrRes.status === "fulfilled" && mrrRes.value) {
-        setMrr(mrrRes.value);
-      }
-      setLoading(false);
-    })();
-  }, [token]);
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -55,6 +67,7 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
     );
   }
 
+  if (error) return <TabError message={error} onRetry={load} />;
   if (!stats) return null;
 
   return (

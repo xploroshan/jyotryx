@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { Badge } from "./helpers";
+import { Badge, TabError, errorMessage } from "./helpers";
 
 const llmProviders = [
   { id: "openai", name: "OpenAI", models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "o1", "o1-mini"], keyField: "llm.openai.key", color: "text-emerald-400" },
@@ -38,22 +38,36 @@ export function LlmTab({ token }: { token: string }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [rotating, setRotating] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    // Settings + today's live usage from /admin/llm/usage/today in
+    // parallel. The usage endpoint replaces what used to be a
+    // hardcoded "0" value pulled from llm.usage.*.today_tokens. A
+    // failure of the settings call is fatal — without it the form
+    // can't render — so it surfaces as a TabError. A usage failure
+    // is silently absorbed since the form is still usable without
+    // today's numbers.
+    const [settingsRes, usageRes] = await Promise.allSettled([
+      api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token }),
+      api.get<TodayByFeature>("/admin/llm/usage/today", { token }),
+    ]);
+    if (settingsRes.status === "fulfilled") {
+      setAiSettings(settingsRes.value);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error("[admin/settings?prefix=llm.] failed to load", settingsRes.reason);
+      setLoadError(errorMessage(settingsRes.reason));
+    }
+    if (usageRes.status === "fulfilled") setTodayUsage(usageRes.value);
+    setLoading(false);
+  }, [token]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      // Settings + today's live usage from /admin/llm/usage/today in
-      // parallel. The usage endpoint replaces what used to be a
-      // hardcoded "0" value pulled from llm.usage.*.today_tokens.
-      const [settingsRes, usageRes] = await Promise.allSettled([
-        api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token }),
-        api.get<TodayByFeature>("/admin/llm/usage/today", { token }),
-      ]);
-      if (settingsRes.status === "fulfilled") setAiSettings(settingsRes.value);
-      if (usageRes.status === "fulfilled") setTodayUsage(usageRes.value);
-      setLoading(false);
-    })();
-  }, [token]);
+    load();
+  }, [load]);
 
   const getAiSetting = (key: string, fallback: string = "") => aiSettings[key] || fallback;
 
@@ -131,6 +145,8 @@ export function LlmTab({ token }: { token: string }) {
       </div>
     );
   }
+
+  if (loadError) return <TabError message={loadError} onRetry={load} />;
 
   return (
     <div>

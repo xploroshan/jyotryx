@@ -584,16 +584,68 @@ test.describe('Admin dashboard — error resilience', () => {
     expect(errors).toEqual([]);
   });
 
-  test('dashboard endpoint failure does not break the tab shell', async ({ page }) => {
+  test('dashboard endpoint failure renders a visible error with retry', async ({ page }) => {
+    let calls = 0;
     await installAdminMocks(page, {
       'GET /admin/dashboard': async (route) => {
-        await route.fulfill(json({ message: 'boom' }, 500));
+        calls += 1;
+        if (calls === 1) {
+          await route.fulfill(json({ message: 'dashboard offline' }, 500));
+        } else {
+          await route.fulfill(json(dashboardStats));
+        }
       },
     });
     await gotoAdmin(page);
 
-    // Header + tab strip still render even when the dashboard fetch fails.
+    // Header + tab strip render even when the dashboard fetch fails…
     await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Users/ }).first()).toBeVisible();
+    // …AND the body of the Dashboard tab surfaces the failure instead of
+    // silently rendering a blank panel (regression: every admin tab used
+    // to do `try { ... } catch {}` and return null on error). Scope to
+    // <main> because Next 15 dev mode also injects an error overlay
+    // containing the same diagnostic text.
+    const main = page.getByRole('main');
+    await expect(main.getByText('Failed to load this tab')).toBeVisible();
+    await expect(main.getByText('dashboard offline')).toBeVisible();
+
+    // Retry succeeds with the mock's second response.
+    await main.getByRole('button', { name: 'Retry' }).click();
+    await expect(main.getByText('Total Users')).toBeVisible();
+  });
+
+  test('every other tab surfaces its own fetch failure', async ({ page }) => {
+    // Every admin endpoint returns 500 except /admin/dashboard, so the
+    // initial load succeeds and we can drive each tab from the strip.
+    const fail = (msg: string) => async (route: any) =>
+      route.fulfill(json({ message: msg }, 500));
+    await installAdminMocks(page, {
+      'GET /admin/users': fail('users offline'),
+      'GET /admin/activity': fail('activity offline'),
+      'GET /admin/payments': fail('payments offline'),
+      'GET /admin/chats': fail('chats offline'),
+      'GET /admin/analytics': fail('analytics offline'),
+      'GET /admin/analytics/llm-costs': fail('llm-costs offline'),
+      'GET /admin/content/stats': fail('content offline'),
+      'GET /admin/settings': fail('settings offline'),
+    });
+    await gotoAdmin(page);
+
+    // Each tab should render TabError ("Failed to load this tab") with
+    // the server's diagnostic, not a blank panel.
+    const cases: Array<{ label: string; needle: RegExp }> = [
+      { label: 'Activity', needle: /activity offline/ },
+      { label: 'Analytics', needle: /(analytics|llm-costs) offline/ },
+      { label: 'Content', needle: /content offline/ },
+      { label: 'AI Agents', needle: /settings offline/ },
+    ];
+    for (const { label, needle } of cases) {
+      await page.getByRole('button', { name: new RegExp(label) }).first().click();
+      await expect(
+        page.getByText('Failed to load this tab').first(),
+      ).toBeVisible();
+      await expect(page.getByText(needle).first()).toBeVisible();
+    }
   });
 });
