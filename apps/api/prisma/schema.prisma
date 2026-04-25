@@ -1,11 +1,10 @@
 generator client {
-  provider      = "prisma-client-js"
-  // `native` picks the engine for the machine running `prisma generate`
-  // (devs on macOS/Linux). `linux-musl-openssl-3.0.x` is the engine we
-  // need for production on `node:20-alpine` (Alpine 3.19+, OpenSSL 3).
-  // Without this, Prisma falls back to openssl-1.1.x on Alpine and
-  // crashes at runtime with "Please manually install OpenSSL".
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
+  // Prisma 7 made the `client` engine the default and requires every
+  // `new PrismaClient()` to be passed a driver adapter — see
+  // `apps/api/src/prisma/prisma.service.ts`, which wires
+  // `@prisma/adapter-pg` from `DATABASE_URL`. The legacy binary
+  // engine is gone, so neither `binaryTargets` nor `engineType` apply.
 }
 
 datasource db {

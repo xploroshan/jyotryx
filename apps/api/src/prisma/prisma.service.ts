@@ -1,16 +1,20 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    // Prisma 7 reads the connection URL from `process.env.DATABASE_URL`
-    // directly; the URL is normalized once at process startup in
-    // `main.ts` before this constructor runs, so no per-instance config
-    // is needed here.
-    super();
+    // Prisma 7 dropped the binary engine, so the runtime client now
+    // talks to Postgres via a driver adapter. `main.ts` already
+    // normalised `DATABASE_URL` (sslmode, pgbouncer params) before the
+    // DI container booted, so we just hand the connection string to
+    // PrismaPg here and let it manage its own pool.
+    super({
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+    });
   }
 
   /**

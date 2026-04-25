@@ -14,7 +14,13 @@ const config: Config = {
   rootDir: '.',
   testRegex: 'test/integration/.*\\.int-spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    // Match the unit suite's tsconfig wiring: `tsconfig.spec.json`
+    // extends the main tsconfig and adds `"types": ["jest", "node"]`,
+    // which is what ts-jest needs so `describe`/`it`/`expect` resolve
+    // when compiling the integration specs. Without an explicit
+    // `tsconfig`, ts-jest falls back to `tsconfig.json` and every
+    // spec fails to load with TS2593.
+    '^.+\\.(t|j)s$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }],
   },
   testEnvironment: 'node',
   moduleNameMapper: {

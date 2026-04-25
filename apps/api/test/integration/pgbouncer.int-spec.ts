@@ -1,5 +1,6 @@
 import { spawnSync } from 'child_process';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 /**
  * Integration test: Phase 0 wiring of Prisma through pgBouncer, plus
@@ -15,10 +16,10 @@ describe('Prisma → pgBouncer', () => {
 
   beforeAll(async () => {
     prismaDirect = new PrismaClient({
-      datasources: { db: { url: process.env.TEST_POSTGRES_URL! } },
+      adapter: new PrismaPg({ connectionString: process.env.TEST_POSTGRES_URL! }),
     });
     prismaPooled = new PrismaClient({
-      datasources: { db: { url: process.env.TEST_PGBOUNCER_URL! } },
+      adapter: new PrismaPg({ connectionString: process.env.TEST_PGBOUNCER_URL! }),
     });
     await prismaDirect.$connect();
     await prismaPooled.$connect();
@@ -78,7 +79,7 @@ describe('GIN index on knowledge_documents.keywords', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient({
-      datasources: { db: { url: process.env.TEST_POSTGRES_URL! } },
+      adapter: new PrismaPg({ connectionString: process.env.TEST_POSTGRES_URL! }),
     });
     await prisma.$connect();
   });
