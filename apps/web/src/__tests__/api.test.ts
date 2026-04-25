@@ -8,7 +8,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Mock zustand store ─────────────────────────────────────────────────────
-const mockStoreState = {
+// `accessToken`/`refreshToken` are typed here as the union that the
+// real store exposes — tests flip them to null to exercise
+// missing-token branches of `api.ts`.
+const mockStoreState: {
+  user: { id: string; name: string; email: string; credits: number; role: string };
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  setAuth: ReturnType<typeof vi.fn>;
+  updateCredits: ReturnType<typeof vi.fn>;
+  logout: ReturnType<typeof vi.fn>;
+} = {
   user: { id: '1', name: 'Test', email: 'test@test.com', credits: 10, role: 'user' },
   accessToken: 'valid-access-token',
   refreshToken: 'valid-refresh-token',

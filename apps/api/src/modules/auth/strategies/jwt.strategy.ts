@@ -23,6 +23,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       sub: payload.sub,
       email: payload.email,
       name: payload.name,
+      // Pass impersonation claim through so downstream guards/handlers
+      // and the web client banner can identify impersonated sessions.
+      ...(payload.impersonatedBy ? { impersonatedBy: payload.impersonatedBy } : {}),
     };
   }
 }

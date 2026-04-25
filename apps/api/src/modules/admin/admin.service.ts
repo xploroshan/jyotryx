@@ -5,8 +5,34 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PrismaReadReplicaService } from '../../prisma/prisma-read-replica.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { StatsService } from '../../stats/stats.service';
-import { ANALYTICS_SERVICE, AnalyticsService } from '../../analytics/analytics.interface';
+import {
+  ANALYTICS_SERVICE,
+  AnalyticsService,
+  CostProjection,
+  DailyCostPoint,
+  LlmUsageByFeature,
+  LlmUsageByProvider,
+  TodayUsageByFeature,
+} from '../../analytics/analytics.interface';
 import { GdprPurgeService } from './gdpr-purge.service';
+import { AuthService } from '../auth/auth.service';
+import { LlmService } from '../../llm/llm.service';
+import { BroadcastService, BroadcastRequest } from '../../ops/broadcast.service';
+// Phase 4 injections — safety + GDPR + in-app notifications (for the
+// churn retry-email action). The forecast service is called directly
+// from the controller because it has no activity-log side effects.
+import {
+  SafetyService,
+  FlaggedMessageRow,
+  ResolveAction,
+} from '../../safety/safety.service';
+import {
+  GdprRequestService,
+  GdprRequestRow,
+  GdprType,
+  UserDataExport,
+} from '../../gdpr/gdpr-request.service';
+import { NotificationService } from '../notification/notification.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -137,6 +163,12 @@ export class AdminService {
     private statsService: StatsService,
     @Inject(ANALYTICS_SERVICE) private analyticsService: AnalyticsService,
     private gdprPurgeService: GdprPurgeService,
+    private authService: AuthService,
+    private llmService: LlmService,
+    private broadcastSvc: BroadcastService,
+    private safetyService: SafetyService,
+    private gdprRequestService: GdprRequestService,
+    private notificationService: NotificationService,
   ) {
     // Analytics / read-only queries go through the replica
     this.readPrisma = readReplicaPrisma as unknown as PrismaService;
@@ -972,5 +1004,458 @@ export class AdminService {
    */
   async getLlmCostsByUser(limit: number = 20, days: number = 30): Promise<LlmCostRow[]> {
     return this.analyticsService.getLlmCostsByUser(limit, days);
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Cost Tab (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Headline numbers for the Cost tab: MTD spend, previous-month
+   * same-window spend, naive end-of-month projection, and the
+   * currently-configured daily/monthly USD alert thresholds.
+   * Thresholds come from `site_settings` under the `notification.cost.*`
+   * prefix (writable via the existing admin settings whitelist).
+   */
+  async getCostSummary(): Promise<CostProjection & { dailyThreshold: number | null; monthlyThreshold: number | null }> {
+    const [projection, thresholds] = await Promise.all([
+      this.analyticsService.getCostProjection(),
+      this.readPrisma.siteSetting.findMany({
+        where: { key: { in: ['notification.cost.daily_usd', 'notification.cost.monthly_usd'] } },
+        select: { key: true, value: true },
+      }),
+    ]);
+    const byKey = new Map<string, string>(thresholds.map((r: any) => [r.key, r.value]));
+    const toNum = (v: string | undefined) => (v && v.trim() !== '' && !Number.isNaN(Number(v)) ? Number(v) : null);
+    return {
+      ...projection,
+      dailyThreshold: toNum(byKey.get('notification.cost.daily_usd')),
+      monthlyThreshold: toNum(byKey.get('notification.cost.monthly_usd')),
+    };
+  }
+
+  async getCostByFeature(days: number = 30): Promise<LlmUsageByFeature[]> {
+    return this.analyticsService.getLlmUsageByFeature(days);
+  }
+
+  async getCostByProvider(days: number = 30): Promise<LlmUsageByProvider[]> {
+    return this.analyticsService.getLlmUsageByProvider(days);
+  }
+
+  async getDailyCost(days: number = 30): Promise<DailyCostPoint[]> {
+    return this.analyticsService.getDailyCostSeries(days);
+  }
+
+  async getTodayLlmUsage(): Promise<TodayUsageByFeature> {
+    return this.analyticsService.getTodayUsageByFeature();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Stuck onboarding (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Users who signed up in the last 7 days but never finished
+   * onboarding — either birth details still missing or zero chat
+   * sessions. Surfaces the leakiest step of the funnel for quick ops
+   * follow-up without requiring full funnel analytics (Phase 2).
+   */
+  async getStuckOnboarding(): Promise<
+    Array<{ userId: string; email: string; name: string; createdAt: Date; missing: string[] }>
+  > {
+    const since = new Date();
+    since.setDate(since.getDate() - 7);
+
+    // Pull the candidate set + flag which onboarding bits are absent.
+    // Field predicates intentionally mirror the web `ProfileGate` logic
+    // so "stuck" here means the same thing a user sees on the site.
+    const users = await this.readPrisma.user.findMany({
+      where: { createdAt: { gte: since } },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        dateOfBirth: true,
+        timeOfBirth: true,
+        placeOfBirth: true,
+        gender: true,
+        _count: { select: { chatSessions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+
+    const out: Array<{ userId: string; email: string; name: string; createdAt: Date; missing: string[] }> = [];
+    for (const u of users as any[]) {
+      const missing: string[] = [];
+      if (!u.dateOfBirth) missing.push('dateOfBirth');
+      if (!u.timeOfBirth) missing.push('timeOfBirth');
+      if (!u.placeOfBirth) missing.push('placeOfBirth');
+      if (!u.gender) missing.push('gender');
+      if ((u._count?.chatSessions ?? 0) === 0) missing.push('chatStarted');
+      if (missing.length === 0) continue;
+      out.push({ userId: u.id, email: u.email, name: u.name, createdAt: u.createdAt, missing });
+    }
+    return out;
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Impersonation (Phase 1)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Mint a short-lived (1h) impersonation JWT for a target user and
+   * write an activity-log row capturing who impersonated whom.
+   *
+   * Anti-footguns:
+   *   - Admins can't impersonate other admins (privilege escalation
+   *     boundary).
+   *   - No refresh token is issued — the session dies at expiry.
+   *   - The log row is non-undoable; once issued, it's part of the
+   *     permanent audit trail.
+   */
+  async impersonateUser(
+    targetUserId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ accessToken: string; expiresAt: string }> {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+    if (target.role === 'ADMIN') {
+      // Refuse ADMIN → ADMIN impersonation to prevent silent
+      // cross-admin action masking.
+      throw new BadRequestException('Admin accounts cannot be impersonated.');
+    }
+
+    const token = await this.authService.issueImpersonationToken(
+      target.id,
+      target.email,
+      target.name,
+      adminEmail,
+    );
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'USER_IMPERSONATE',
+        entityType: 'User',
+        entityId: target.id,
+        entityLabel: target.email,
+        previousData: null,
+        newData: { expiresAt: token.expiresAt } as any,
+      },
+    });
+
+    this.logger.log(`Admin ${adminEmail} impersonated user ${target.email}`);
+    return token;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Phase 3: provider kill-switch, key rotation, broadcast, force-logout
+  // ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Write `llm.provider.{name}.enabled` to site_settings and invalidate
+   * the LlmService config cache so the flip is effective within seconds,
+   * not the full 30s TTL. Writes an undoable `LLM_PROVIDER_TOGGLE` row
+   * to activity_log — the existing undo path at `undoActivity()`
+   * handles generic settings-style log rows.
+   */
+  async setLlmProviderEnabled(
+    provider: string,
+    enabled: boolean,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ enabled: boolean; provider: string }> {
+    const key = `llm.provider.${provider}.enabled`;
+    const previous = await this.prisma.siteSetting.findUnique({ where: { key } });
+    const next = enabled ? 'true' : 'false';
+    await this.prisma.siteSetting.upsert({
+      where: { key },
+      update: { value: next },
+      create: { key, value: next },
+    });
+    await this.llmService.invalidateCache().catch(() => {});
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'LLM_PROVIDER_TOGGLE',
+        entityType: 'LlmProvider',
+        entityId: provider,
+        entityLabel: provider,
+        previousData: previous ? { enabled: previous.value } : null,
+        newData: { enabled: next } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} set provider ${provider} enabled=${enabled}`);
+    return { enabled, provider };
+  }
+
+  /**
+   * Rotate the stored API key for a provider. The new key is persisted
+   * under `llm.{provider}.key` — the same key shape LlmService reads
+   * for `openai` — and the LlmService reload cache is invalidated so
+   * the next call picks the new key up immediately.
+   *
+   * Non-undoable: `previousData` is NOT populated with the old key
+   * (that would paste a secret into activity_log). Only a redacted
+   * fingerprint lands in the log.
+   */
+  async rotateLlmKey(
+    provider: string,
+    newKey: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ provider: string; rotatedAt: string }> {
+    const key = `llm.${provider}.key`;
+    await this.prisma.siteSetting.upsert({
+      where: { key },
+      update: { value: newKey },
+      create: { key, value: newKey },
+    });
+    await this.llmService.invalidateCache().catch(() => {});
+
+    const rotatedAt = new Date().toISOString();
+    const fingerprint = `${newKey.slice(0, 4)}…${newKey.slice(-4)}`;
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'LLM_KEY_ROTATE',
+        entityType: 'LlmKey',
+        entityId: provider,
+        entityLabel: provider,
+        previousData: null,
+        // newData is deliberately a fingerprint — never the full key.
+        newData: { fingerprint, rotatedAt } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} rotated ${provider} key (${fingerprint})`);
+    return { provider, rotatedAt };
+  }
+
+  /**
+   * Enqueue an admin broadcast. Delegates to `BroadcastService.enqueue()`
+   * which does the validation + audience sizing; we keep the activity
+   * log write here because that's where every admin mutation is
+   * logged from.
+   */
+  async createBroadcast(
+    req: BroadcastRequest,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ jobId: string; audienceSize: number }> {
+    const result = await this.broadcastSvc.enqueue(req, adminEmail);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'BROADCAST_SENT',
+        entityType: 'Broadcast',
+        entityId: result.jobId,
+        entityLabel: req.audience.type,
+        previousData: null,
+        newData: {
+          audience: req.audience,
+          subject: req.subject,
+          channel: req.channel,
+          audienceSize: result.audienceSize,
+        } as any,
+      },
+    });
+    return result;
+  }
+
+  /**
+   * Force-logout wraps `AuthService.revokeAllUserTokens()` and logs
+   * the action. The target user is looked up first to capture the
+   * email for a readable audit row.
+   */
+  async forceLogoutUser(
+    userId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ familiesRevoked: number }> {
+    const target = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    const result = await this.authService.revokeAllUserTokens(userId);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'USER_FORCE_LOGOUT',
+        entityType: 'User',
+        entityId: target.id,
+        entityLabel: target.email,
+        previousData: null,
+        newData: { familiesRevoked: result.familiesRevoked } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} force-logged-out ${target.email} (${result.familiesRevoked} families)`);
+    return result;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Phase 4: safety + GDPR + churn-retry
+  // ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve a flagged message and write the corresponding activity
+   * log row. The `action` string lands in `newData` so the audit trail
+   * records *what* the admin did ("hide" vs "approve") — not just
+   * "a resolution happened".
+   */
+  async resolveFlaggedMessage(
+    flaggedId: string,
+    action: ResolveAction,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<FlaggedMessageRow> {
+    const resolved = await this.safetyService.resolve(flaggedId, action, adminId);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'FLAGGED_MESSAGE_RESOLVE',
+        entityType: 'FlaggedMessage',
+        entityId: flaggedId,
+        entityLabel: resolved.userEmail ?? resolved.userId,
+        previousData: { status: 'pending' } as any,
+        newData: { status: resolved.status, action } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} resolved flagged ${flaggedId}: ${action}`);
+    return resolved;
+  }
+
+  /**
+   * Admin-initiated GDPR request. The request itself is created in
+   * GdprRequestService (which enforces one-pending-per-(user,type));
+   * we additionally write an activity-log row so the audit trail
+   * attributes the creation to the admin that acted.
+   */
+  async createGdprRequest(
+    userId: string,
+    type: GdprType,
+    note: string | undefined,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<GdprRequestRow> {
+    const row = await this.gdprRequestService.create({ userId, type, note });
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'GDPR_REQUEST_CREATE',
+        entityType: 'GdprRequest',
+        entityId: row.id,
+        entityLabel: row.userEmail ?? row.userId,
+        previousData: null,
+        newData: { type, dueBy: row.dueBy } as any,
+      },
+    });
+    return row;
+  }
+
+  /**
+   * Fulfill a GDPR request. Delegates to GdprRequestService which
+   * either produces an export payload or triggers the purge service
+   * depending on the request type. We unwrap the export payload so
+   * the admin controller can stream it to the browser on the same
+   * response.
+   */
+  async fulfillGdprRequest(
+    requestId: string,
+    adminId: string,
+    adminEmail: string,
+    note?: string,
+  ): Promise<{ row: GdprRequestRow; exportPayload?: UserDataExport }> {
+    const result = await this.gdprRequestService.fulfill(requestId, adminId, note);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'GDPR_REQUEST_FULFILL',
+        entityType: 'GdprRequest',
+        entityId: requestId,
+        entityLabel: result.row.userEmail ?? result.row.userId,
+        previousData: { status: 'pending' } as any,
+        newData: { status: 'fulfilled', type: result.row.type } as any,
+      },
+    });
+    this.logger.log(`Admin ${adminEmail} fulfilled GDPR ${result.row.type} for ${result.row.userEmail ?? result.row.userId}`);
+    return result;
+  }
+
+  async rejectGdprRequest(
+    requestId: string,
+    adminId: string,
+    adminEmail: string,
+    note: string,
+  ): Promise<GdprRequestRow> {
+    const row = await this.gdprRequestService.reject(requestId, adminId, note);
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'GDPR_REQUEST_REJECT',
+        entityType: 'GdprRequest',
+        entityId: requestId,
+        entityLabel: row.userEmail ?? row.userId,
+        previousData: { status: 'pending' } as any,
+        newData: { status: 'rejected', note } as any,
+      },
+    });
+    return row;
+  }
+
+  /**
+   * Phase 4 churn retry-email action: fire a single in-app
+   * notification at a user flagged as churn-risk with reason
+   * `payment_fail`. Currently in-app only — email transport lands
+   * here when the notifications module grows one.
+   */
+  async sendRetryEmail(
+    userId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ sent: boolean }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const sent = await this.notificationService.sendPushNotification({
+      userId,
+      title: 'Payment method needs a refresh',
+      body: 'We noticed a recent payment didn\'t go through. Update your card or try again to keep your premium features active.',
+      type: 'system',
+    });
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'CHURN_RETRY_EMAIL',
+        entityType: 'User',
+        entityId: userId,
+        entityLabel: user.email,
+        previousData: null,
+        newData: { sent, channel: 'inapp' } as any,
+      },
+    });
+    return { sent };
   }
 }

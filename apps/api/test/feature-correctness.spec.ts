@@ -10,6 +10,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { LlmService } from '../src/llm/llm.service';
@@ -61,6 +62,8 @@ describe('Palmistry Service — Correctness & Bug Validation', () => {
         { provide: UserService, useValue: userService },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: StorageService, useValue: mockStorageService() },
       ],
     }).compile();
@@ -175,6 +178,7 @@ describe('Numerology Service — Mathematical Correctness', () => {
         NumerologyService,
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -401,6 +405,7 @@ describe('Kundli (Birth Chart) — Astronomical Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: EphemerisService, useValue: ephemeris },
         { provide: KbService, useValue: mockKbService() },
       ],
@@ -618,6 +623,7 @@ describe('Matching (Ashtakoota) — Rule Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: EphemerisService, useValue: mockEphemerisService() },
         { provide: KbService, useValue: mockKbService() },
       ],
@@ -732,6 +738,7 @@ describe('Panchang — Calendar & Astronomical Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: EphemerisService, useValue: mockEphemerisService() },
         { provide: KbService, useValue: mockKbService() },
       ],
@@ -854,6 +861,7 @@ describe('Horoscope — Differentiation & Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: EphemerisService, useValue: mockEphemerisService() },
         { provide: KbService, useValue: mockKbService() },
       ],
@@ -968,6 +976,7 @@ describe('Muhurat — Auspicious Time Correctness', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: EphemerisService, useValue: mockEphemerisService() },
         { provide: KbService, useValue: mockKbService() },
       ],
@@ -1063,6 +1072,7 @@ describe('Daily Briefing (My Day) — Personalization & Correctness', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: cacheService },
       ],
@@ -1264,6 +1274,7 @@ describe('Consult (Chat) — Session & Response Correctness', () => {
         { provide: OpenAIService, useValue: openaiService },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
       ],
     }).compile();
     service = module.get<ChatService>(ChatService);

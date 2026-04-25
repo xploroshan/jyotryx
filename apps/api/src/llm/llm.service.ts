@@ -36,6 +36,19 @@ interface LlmRuntimeConfig {
   precisionModel: string;
   visionModel: string;
   temperature: number;
+  // ─── Phase 3 admin kill-switch + pricing overrides ─────────────────
+  // `providerEnabled[name]` is the operator's explicit enable/disable
+  // flag — checked in the provider chain alongside `isAvailable()`.
+  // Absence means "no explicit override"; the flag falls back to
+  // `true` so the existing behaviour is preserved until an admin
+  // touches the setting.
+  providerEnabled: Record<string, boolean>;
+  // `modelCostOverrides` lets admins override the static per-model
+  // USD/1M-token table without a code deploy. Either half of the pair
+  // can be overridden independently. Historical llm_usage rows are
+  // never re-costed — overrides only affect calls made after the
+  // 30s reload picks up the new setting.
+  modelCostOverrides: Record<string, { prompt?: number; completion?: number }>;
 }
 
 @Injectable()
@@ -74,7 +87,22 @@ export class LlmService implements OnModuleInit {
       precisionModel: this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
       visionModel: this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
       temperature: 0.7,
+      providerEnabled: {},
+      modelCostOverrides: {},
     };
+  }
+
+  /**
+   * Is a provider enabled by the admin kill-switch? Absence of the
+   * flag means "no opinion" — we default to enabled so installs that
+   * never touch site_settings behave exactly as before. Both the
+   * canonical Phase 3 key (`llm.provider.{name}.enabled`) and the
+   * pre-existing LlmTab-managed key (`llm.{name}.enabled`) are
+   * honoured; either one set to "false" flips the provider off.
+   */
+  isProviderEnabled(name: string): boolean {
+    const flag = this.currentConfig.providerEnabled[name];
+    return flag !== false;
   }
 
   async onModuleInit() {
@@ -113,8 +141,15 @@ export class LlmService implements OnModuleInit {
   }
 
   computeCost(model: string, promptTokens: number, completionTokens: number): number {
-    const rate = MODEL_COSTS_USD_PER_1M[model] || DEFAULT_COST;
-    const cost = (promptTokens * rate.prompt + completionTokens * rate.completion) / 1_000_000;
+    // Admin can override either half of the per-model rate via
+    // site_settings. Either half left unset falls back to the static
+    // table (and the static table itself falls back to DEFAULT_COST
+    // for unknown models).
+    const override = this.currentConfig.modelCostOverrides[model] ?? {};
+    const base = MODEL_COSTS_USD_PER_1M[model] || DEFAULT_COST;
+    const promptRate = override.prompt ?? base.prompt;
+    const completionRate = override.completion ?? base.completion;
+    const cost = (promptTokens * promptRate + completionTokens * completionRate) / 1_000_000;
     return Math.round(cost * 1_000_000) / 1_000_000;
   }
 
@@ -124,13 +159,23 @@ export class LlmService implements OnModuleInit {
     provider?: string;
     model: string;
     usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null;
+    // ─── Ops telemetry (optional — callers pre-instrumentation omit these) ───
+    durationMs?: number | null;
+    cacheHit?: boolean;
+    errorCode?: string | null;
+    retryCount?: number;
   }): Promise<void> {
     if (!this.prisma) return;
     try {
       const promptTokens = params.usage?.prompt_tokens ?? 0;
       const completionTokens = params.usage?.completion_tokens ?? 0;
       const totalTokens = params.usage?.total_tokens ?? promptTokens + completionTokens;
-      const costUsd = this.computeCost(params.model, promptTokens, completionTokens);
+      // Cache hits and failed calls have zero billable tokens — skip the
+      // cost computation and write 0 so dashboards stay honest.
+      const costUsd =
+        params.cacheHit || params.errorCode
+          ? 0
+          : this.computeCost(params.model, promptTokens, completionTokens);
 
       await this.prisma.llmUsage.create({
         data: {
@@ -142,11 +187,30 @@ export class LlmService implements OnModuleInit {
           completionTokens,
           totalTokens,
           costUsd,
+          durationMs: params.durationMs ?? null,
+          cacheHit: params.cacheHit ?? false,
+          errorCode: params.errorCode ?? null,
+          retryCount: params.retryCount ?? 0,
         },
       });
     } catch (err) {
       this.logger.error('Failed to record LLM usage', err);
     }
+  }
+
+  /**
+   * Map an arbitrary provider error to a short, aggregatable code. Used
+   * by the failure path of recordUsage() so the admin error-rate
+   * dashboard has a small cardinality of values to group by.
+   */
+  private classifyError(err: unknown): string {
+    const message = (err instanceof Error ? err.message : String(err)).toLowerCase();
+    if (message.includes('timeout') || message.includes('timed out')) return 'TIMEOUT';
+    if (message.includes('rate limit') || message.includes('429')) return 'RATE_LIMIT';
+    if (message.includes('bad request') || message.includes('400')) return 'BAD_REQUEST';
+    if (message.includes('unauthorized') || message.includes('401') || message.includes('403')) return 'AUTH';
+    if (message.includes('circuit') || message.includes('breaker')) return 'CIRCUIT_OPEN';
+    return 'PROVIDER_ERROR';
   }
 
   /**
@@ -160,42 +224,54 @@ export class LlmService implements OnModuleInit {
     const feature = options.feature || 'chat';
     const enrichedOptions = { ...options, model };
 
-    // Try primary provider (OpenAI)
-    if (this.openaiProvider.isAvailable()) {
-      try {
-        const result = await this.openaiPolicy.execute(() =>
-          this.openaiProvider.chatCompletion(enrichedOptions),
-        );
-        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
-        return this.processResult(result, options.jsonMode);
-      } catch (err) {
-        this.logger.warn(`OpenAI failed: ${(err as Error).message}`);
-      }
-    }
+    // Ordered list of (name, availability, policy, provider) tuples — the
+    // first tuple is always tried; the rest only run when failoverEnabled.
+    // Building it once keeps the loop linear and lets us assign a
+    // retryCount that actually reflects provider-failover depth.
+    // `isProviderEnabled()` adds the Phase 3 admin kill-switch on top
+    // of the provider's own `isAvailable()` check. A disabled provider
+    // is skipped silently — the caller doesn't even see the breaker
+    // trip, and the retryCount on the next successful row reflects
+    // the real failover depth we exercised.
+    const chain: Array<{ name: string; available: boolean; policy: ResiliencePolicy; run: () => Promise<any> }> = [
+      { name: 'openai',    available: this.isProviderEnabled('openai')    && this.openaiProvider.isAvailable(),                              policy: this.openaiPolicy,    run: () => this.openaiProvider.chatCompletion(enrichedOptions) },
+      { name: 'gemini',    available: this.isProviderEnabled('gemini')    && this.failoverEnabled && this.geminiProvider.isAvailable(),      policy: this.geminiPolicy,    run: () => this.geminiProvider.chatCompletion(enrichedOptions) },
+      { name: 'anthropic', available: this.isProviderEnabled('anthropic') && this.failoverEnabled && this.anthropicProvider.isAvailable(),   policy: this.anthropicPolicy, run: () => this.anthropicProvider.chatCompletion(enrichedOptions) },
+    ];
 
-    // Try secondary provider (Gemini) if failover is enabled
-    if (this.failoverEnabled && this.geminiProvider.isAvailable()) {
+    for (let i = 0; i < chain.length; i++) {
+      const link = chain[i];
+      if (!link.available) continue;
+      const start = performance.now();
       try {
-        const result = await this.geminiPolicy.execute(() =>
-          this.geminiProvider.chatCompletion(enrichedOptions),
-        );
-        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
+        const result = await link.policy.execute(link.run);
+        const durationMs = Math.round(performance.now() - start);
+        this.recordUsage({
+          userId: options.userId,
+          feature,
+          provider: result.provider,
+          model: result.model,
+          usage: result.usage,
+          durationMs,
+          retryCount: i,
+        });
         return this.processResult(result, options.jsonMode);
       } catch (err) {
-        this.logger.warn(`Gemini also failed: ${(err as Error).message}`);
-      }
-    }
-
-    // Try tertiary provider (Anthropic) if failover is enabled
-    if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
-      try {
-        const result = await this.anthropicPolicy.execute(() =>
-          this.anthropicProvider.chatCompletion(enrichedOptions),
-        );
-        this.recordUsage({ userId: options.userId, feature, provider: result.provider, model: result.model, usage: result.usage });
-        return this.processResult(result, options.jsonMode);
-      } catch (err) {
-        this.logger.error(`Anthropic also failed: ${(err as Error).message}`);
+        const durationMs = Math.round(performance.now() - start);
+        const errorCode = this.classifyError(err);
+        // Record the failure so error-rate dashboards and provider
+        // latency percentiles include it. Zero tokens / zero cost.
+        this.recordUsage({
+          userId: options.userId,
+          feature,
+          provider: link.name,
+          model,
+          durationMs,
+          errorCode,
+          retryCount: i,
+        });
+        const level = i === chain.length - 1 ? 'error' : 'warn';
+        this.logger[level](`${link.name} failed (${errorCode}): ${(err as Error).message}`);
       }
     }
 
@@ -212,7 +288,7 @@ export class LlmService implements OnModuleInit {
     const model = options.model || this.currentConfig.defaultModel;
     const enrichedOptions = { ...options, model };
 
-    if (this.openaiProvider.isAvailable()) {
+    if (this.isProviderEnabled('openai') && this.openaiProvider.isAvailable()) {
       try {
         return this.openaiProvider.chatCompletionStream(enrichedOptions);
       } catch (err) {
@@ -220,7 +296,7 @@ export class LlmService implements OnModuleInit {
       }
     }
 
-    if (this.failoverEnabled && this.geminiProvider.isAvailable()) {
+    if (this.isProviderEnabled('gemini') && this.failoverEnabled && this.geminiProvider.isAvailable()) {
       try {
         return this.geminiProvider.chatCompletionStream(enrichedOptions);
       } catch (err) {
@@ -228,7 +304,7 @@ export class LlmService implements OnModuleInit {
       }
     }
 
-    if (this.failoverEnabled && this.anthropicProvider.isAvailable()) {
+    if (this.isProviderEnabled('anthropic') && this.failoverEnabled && this.anthropicProvider.isAvailable()) {
       try {
         return this.anthropicProvider.chatCompletionStream(enrichedOptions);
       } catch (err) {
@@ -320,8 +396,17 @@ export class LlmService implements OnModuleInit {
     let settings: Record<string, string> = {};
     if (this.prisma) {
       try {
+        // Pull both `llm.*` (provider keys, models, kill-switch flags)
+        // and `pricing.llm.*` (admin-editable per-model cost overrides)
+        // in a single query — they live under different prefixes but
+        // this service is the one consumer for both.
         const rows = await this.prisma.siteSetting.findMany({
-          where: { key: { startsWith: 'llm.' } },
+          where: {
+            OR: [
+              { key: { startsWith: 'llm.' } },
+              { key: { startsWith: 'pricing.llm.' } },
+            ],
+          },
         });
         settings = Object.fromEntries(rows.map((r: { key: string; value: string }) => [r.key, r.value]));
       } catch {
@@ -331,6 +416,44 @@ export class LlmService implements OnModuleInit {
 
     const envKey = this.configService.get<string>('openai.apiKey') || null;
 
+    // ─── Provider kill-switch flags ────────────────────────────────────
+    // Two compatible key shapes are honoured so existing LlmTab toggles
+    // (`llm.openai.enabled`) and the Phase 3 canonical shape
+    // (`llm.provider.openai.enabled`) both work. Setting either to
+    // "false" disables the provider.
+    const readEnabled = (name: string): boolean => {
+      const a = settings[`llm.provider.${name}.enabled`];
+      const b = settings[`llm.${name}.enabled`];
+      const effective = a !== undefined ? a : b;
+      if (effective === undefined) return true; // no opinion → enabled
+      return effective !== 'false';
+    };
+    const providerEnabled: Record<string, boolean> = {
+      openai:    readEnabled('openai'),
+      gemini:    readEnabled('gemini'),
+      anthropic: readEnabled('anthropic'),
+    };
+
+    // ─── Per-model cost overrides ──────────────────────────────────────
+    // Key shape: `pricing.llm.{model}.{prompt|completion}`. Model names
+    // can contain dots (e.g. `claude-sonnet-4-6`), so we split from the
+    // right — the last segment is prompt|completion, everything in
+    // between is the model id.
+    const modelCostOverrides: Record<string, { prompt?: number; completion?: number }> = {};
+    for (const [key, raw] of Object.entries(settings)) {
+      if (!key.startsWith('pricing.llm.')) continue;
+      const tail = key.slice('pricing.llm.'.length);
+      const lastDot = tail.lastIndexOf('.');
+      if (lastDot <= 0) continue;
+      const model = tail.slice(0, lastDot);
+      const half = tail.slice(lastDot + 1);
+      if (half !== 'prompt' && half !== 'completion') continue;
+      const num = Number(raw);
+      if (!Number.isFinite(num) || num < 0) continue;
+      if (!modelCostOverrides[model]) modelCostOverrides[model] = {};
+      modelCostOverrides[model][half as 'prompt' | 'completion'] = num;
+    }
+
     const next: LlmRuntimeConfig = {
       provider: settings['llm.default.provider'] || 'openai',
       apiKey: settings['llm.openai.key'] || envKey,
@@ -338,6 +461,8 @@ export class LlmService implements OnModuleInit {
       precisionModel: settings['llm.precision.model'] || this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
       visionModel: settings['llm.vision.model'] || this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
       temperature: parseFloat(settings['llm.default.temperature'] || '0.7') || 0.7,
+      providerEnabled,
+      modelCostOverrides,
     };
 
     const keyChanged = next.apiKey !== this.currentConfig.apiKey;

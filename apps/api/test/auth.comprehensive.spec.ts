@@ -59,7 +59,11 @@ async function buildAuthService(prisma: any, jwtService: any) {
       AuthService,
       { provide: PrismaService, useValue: prisma },
       { provide: JwtService, useValue: jwtService },
-      { provide: ConfigService, useValue: mockConfigService() },
+      // Seed `google.clientId` so the Google OAuth aud-mismatch test has
+      // a value to compare against. Without it the check at
+      // `auth.service.googleAuth` is skipped entirely and the wrong-aud
+      // test never reaches its UnauthorizedException branch.
+      { provide: ConfigService, useValue: mockConfigService({ 'google.clientId': 'test-google-client-id' }) },
       { provide: REDIS_CLIENT, useValue: createMockRedis() },
     ],
   }).compile();
@@ -1264,18 +1268,19 @@ describe('Auth: Controller', () => {
       const expected = { user: { id: 'u1', name: 'Test' }, tokens: { accessToken: 'tok' } };
       authService.register.mockResolvedValue(expected);
 
-      const result = await controller.register({
-        name: 'Test',
-        email: 'test@example.com',
-        password: VALID_PASSWORD,
-      });
+      // Phase 2 added an Accept-Language / body-derived SignupContext
+      // second argument. Pass an empty req so the controller can read
+      // headers off it and hand a parsed context to the service.
+      const result = await controller.register(
+        { name: 'Test', email: 'test@example.com', password: VALID_PASSWORD },
+        { headers: {} } as any,
+      );
 
       expect(result).toEqual(expected);
-      expect(authService.register).toHaveBeenCalledWith({
-        name: 'Test',
-        email: 'test@example.com',
-        password: VALID_PASSWORD,
-      });
+      expect(authService.register).toHaveBeenCalledWith(
+        { name: 'Test', email: 'test@example.com', password: VALID_PASSWORD },
+        { locale: null, country: null, signupSource: null },
+      );
     });
   });
 

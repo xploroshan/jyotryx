@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { api } from "@/lib/api";
 import { Badge, statusBadge, formatCurrency, formatDate } from "./components/helpers";
+import { Toast } from "@/components/ui/Toast";
 
 // ─── Lazy-loaded tab components ──────────────────────────────────────────────
 
@@ -15,10 +16,15 @@ const ActivityTab = dynamic(() => import("./components/ActivityTab").then(m => (
 const AnalyticsTab = dynamic(() => import("./components/AnalyticsTab").then(m => ({ default: m.AnalyticsTab })), { ssr: false });
 const LlmTab = dynamic(() => import("./components/LlmTab").then(m => ({ default: m.LlmTab })), { ssr: false });
 const ContentTab = dynamic(() => import("./components/ContentTab").then(m => ({ default: m.ContentTab })), { ssr: false });
+const CostTab = dynamic(() => import("./components/CostTab").then(m => ({ default: m.CostTab })), { ssr: false });
+const FunnelTab = dynamic(() => import("./components/FunnelTab").then(m => ({ default: m.FunnelTab })), { ssr: false });
+const OpsTab = dynamic(() => import("./components/OpsTab").then(m => ({ default: m.OpsTab })), { ssr: false });
+const SafetyTab = dynamic(() => import("./components/SafetyTab").then(m => ({ default: m.SafetyTab })), { ssr: false });
+const GdprTab = dynamic(() => import("./components/GdprTab").then(m => ({ default: m.GdprTab })), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────��──
 
-type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing";
+type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost" | "funnel" | "ops" | "safety" | "gdpr";
 
 // ─── Main Admin Page ─────────────────────────────────────────────────────────
 
@@ -92,6 +98,11 @@ export default function AdminPage() {
 
   const tabs: { id: TabId; label: string; icon: string }[] = [
     { id: "dashboard", label: "Dashboard", icon: "\uD83D\uDCCA" },
+    { id: "funnel", label: "Funnel", icon: "\uD83C\uDFAF" },
+    { id: "ops", label: "Ops", icon: "\u2699\uFE0F" },
+    { id: "safety", label: "Safety", icon: "\uD83D\uDEE1\uFE0F" },
+    { id: "gdpr", label: "GDPR", icon: "\uD83D\uDCDC" },
+    { id: "cost", label: "Cost", icon: "\uD83D\uDCB8" },
     { id: "users", label: "Users", icon: "\uD83D\uDC65" },
     { id: "activity", label: "Activity", icon: "\uD83D\uDDD3" },
     { id: "payments", label: "Payments", icon: "\uD83D\uDCB3" },
@@ -129,22 +140,44 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Messages (for inline tabs) */}
+        {/* Messages — routed through the shared Toast primitive so
+            every admin surface speaks the same feedback language and
+            the banner stays dismissable instead of auto-disappearing
+            after a fixed timeout the user can miss. */}
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
-            {error}
-            <button onClick={() => setError("")} className="text-red-400 hover:text-red-300">&times;</button>
+          <div className="mb-6">
+            <Toast message={error} tone="error" onClose={() => setError("")} />
           </div>
         )}
         {success && (
-          <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
-            {success}
+          <div className="mb-6">
+            <Toast message={success} tone="success" onClose={() => setSuccess("")} autoCloseMs={4000} />
           </div>
         )}
 
         {/* Dynamic tab components */}
         {activeTab === "dashboard" && accessToken && (
           <DashboardTab token={accessToken} onTabChange={(tab) => setActiveTab(tab as TabId)} />
+        )}
+
+        {activeTab === "cost" && accessToken && (
+          <CostTab token={accessToken} />
+        )}
+
+        {activeTab === "funnel" && accessToken && (
+          <FunnelTab token={accessToken} />
+        )}
+
+        {activeTab === "ops" && accessToken && (
+          <OpsTab token={accessToken} />
+        )}
+
+        {activeTab === "safety" && accessToken && (
+          <SafetyTab token={accessToken} />
+        )}
+
+        {activeTab === "gdpr" && accessToken && (
+          <GdprTab token={accessToken} />
         )}
 
         {activeTab === "users" && accessToken && (

@@ -25,6 +25,7 @@ import {
   FirebaseAuthDto,
 } from './dto';
 import { isProfileComplete } from '../user/user.service';
+import { SignupContext } from './signup-context';
 import * as admin from 'firebase-admin';
 
 type PrismaUser = {
@@ -166,7 +167,7 @@ export class AuthService {
     }
   }
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
+  async register(dto: RegisterDto, signupContext?: SignupContext): Promise<AuthResponse> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -203,6 +204,13 @@ export class AuthService {
         timeOfBirth: dto.timeOfBirth,
         placeOfBirth: dto.placeOfBirth ? { name: dto.placeOfBirth } : undefined,
         credits: this.signupCredits,
+        // Phase 2 growth-analytics dimensions. Null-safe: the client can
+        // omit the header / body fields and the user simply lands
+        // un-tagged, which shows up as an "unknown" bucket in funnel
+        // views rather than breaking the insert.
+        locale:       signupContext?.locale ?? undefined,
+        country:      signupContext?.country ?? undefined,
+        signupSource: signupContext?.signupSource ?? undefined,
       },
     });
 
@@ -392,7 +400,7 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponse> {
+  async verifyOtp(dto: VerifyOtpDto, signupContext?: SignupContext): Promise<AuthResponse> {
     const phone = this.normalizePhone(dto.phone);
     const stored = await this.redis.get(`otp:${phone}`);
 
@@ -419,6 +427,9 @@ export class AuthService {
           email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
           phone,
           credits: this.signupCredits,
+          locale:       signupContext?.locale ?? undefined,
+          country:      signupContext?.country ?? undefined,
+          signupSource: signupContext?.signupSource ?? undefined,
         },
       });
       this.logger.log(`New user created via OTP: ${phone}`);
@@ -502,7 +513,7 @@ export class AuthService {
     this.logger.log(`SMS OTP delivered via Twilio to ${phone}`);
   }
 
-  async googleAuth(dto: GoogleAuthDto): Promise<AuthResponse> {
+  async googleAuth(dto: GoogleAuthDto, signupContext?: SignupContext): Promise<AuthResponse> {
     // Verify Google ID token via Google's tokeninfo endpoint
     let googlePayload: { sub: string; email: string; name: string; picture?: string; email_verified?: string };
 
@@ -564,6 +575,9 @@ export class AuthService {
           provider: 'GOOGLE',
           providerId: googlePayload.sub,
           credits: this.signupCredits,
+          locale:       signupContext?.locale ?? undefined,
+          country:      signupContext?.country ?? undefined,
+          signupSource: signupContext?.signupSource ?? undefined,
         },
       });
       this.logger.log(`New user created via Google: ${user.email}`);
@@ -578,7 +592,7 @@ export class AuthService {
     };
   }
 
-  async firebaseAuth(dto: FirebaseAuthDto): Promise<AuthResponse> {
+  async firebaseAuth(dto: FirebaseAuthDto, signupContext?: SignupContext): Promise<AuthResponse> {
     if (!admin.apps.length) {
       throw new UnauthorizedException('Firebase is not configured on the server');
     }
@@ -641,6 +655,9 @@ export class AuthService {
           provider: isGoogle ? 'GOOGLE' : 'PHONE',
           providerId: uid,
           credits: this.signupCredits,
+          locale:       signupContext?.locale ?? undefined,
+          country:      signupContext?.country ?? undefined,
+          signupSource: signupContext?.signupSource ?? undefined,
         },
       });
       this.logger.log(`New user created via Firebase (${sign_in_provider}): ${user.email}`);
@@ -738,6 +755,36 @@ export class AuthService {
     }
   }
 
+  /**
+   * Invalidate every refresh-token family for a user — the backing
+   * primitive for the Phase 3 admin "force logout" action. Walks the
+   * `rt:user-families:{userId}` reverse index written by
+   * `generateTokens()`, calls `revokeFamilyTokens()` for each family,
+   * then clears the reverse index itself. Returns the number of
+   * families that were revoked so the admin UI can confirm "N sessions
+   * terminated".
+   *
+   * Access tokens in flight keep working until they expire (default
+   * 1h) — that's the fundamental JWT trade-off. We can't revoke them
+   * without moving to a stateful access-token layer.
+   */
+  async revokeAllUserTokens(userId: string): Promise<{ familiesRevoked: number }> {
+    const indexKey = `rt:user-families:${userId}`;
+    const familyIds = await this.redis.smembers(indexKey);
+    if (familyIds.length === 0) {
+      // No known families — clear the index in case it's a stale empty
+      // set (Redis sets aren't auto-removed when empty on some ops).
+      await this.redis.del(indexKey);
+      return { familiesRevoked: 0 };
+    }
+    for (const familyId of familyIds) {
+      await this.revokeFamilyTokens(familyId);
+    }
+    await this.redis.del(indexKey);
+    this.logger.log(`Force-logout: revoked ${familyIds.length} refresh-token families for user ${userId}`);
+    return { familiesRevoked: familyIds.length };
+  }
+
   async getAuthStatus(userId: string): Promise<{ hasPassword: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -773,6 +820,43 @@ export class AuthService {
     await this.redis.del(`login:fail:${email}`, `login:lock:${email}`);
   }
 
+  /**
+   * Mint a short-lived access-only JWT for admin user impersonation.
+   *
+   * Intentionally different from generateTokens():
+   *  - 1-hour TTL (not configurable) so an impersonation session can't
+   *    silently outlive the admin's intent.
+   *  - NO refresh token — impersonation ends at expiry, no renewal.
+   *  - Carries `impersonatedBy` so the web client can render a warning
+   *    banner and server-side handlers (future) can flag the traffic.
+   *
+   * Caller (AdminService.impersonateUser) is responsible for writing
+   * the activity_log row that records who impersonated whom.
+   */
+  async issueImpersonationToken(
+    targetUserId: string,
+    targetEmail: string,
+    targetName: string,
+    adminEmail: string,
+  ): Promise<{ accessToken: string; expiresAt: string }> {
+    const ttlSeconds = 60 * 60; // 1 hour, fixed
+    const payload = {
+      sub: targetUserId,
+      email: targetEmail,
+      name: targetName,
+      impersonatedBy: adminEmail,
+    };
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('jwt.secret'),
+      expiresIn: ttlSeconds,
+    });
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+    this.logger.log(
+      `Impersonation token issued: admin=${adminEmail} target=${targetEmail} expires=${expiresAt}`,
+    );
+    return { accessToken, expiresAt };
+  }
+
   private async generateTokens(
     userId: string,
     email: string,
@@ -797,12 +881,21 @@ export class AuthService {
       }),
     ]);
 
-    // Store refresh token metadata in Redis
+    // Store refresh token metadata in Redis.
+    //
+    // `rt:user-families:{userId}` is a reverse index that lets
+    // `revokeAllUserTokens()` (Phase 3 force-logout) walk every
+    // family that belongs to a user without having to SCAN every
+    // `rt:*` key. Writing it here means both fresh logins and
+    // refresh-rotation land in the set; the TTL is bumped every time
+    // so the set's lifetime tracks the longest-living family.
     const ttlSeconds = this.parseExpiryToSeconds(refreshExpiresIn);
     const pipeline = this.redis.pipeline();
     pipeline.set(`rt:${jti}`, JSON.stringify({ userId, familyId, used: false }), 'EX', ttlSeconds);
     pipeline.sadd(`rt:family:${familyId}`, jti);
     pipeline.expire(`rt:family:${familyId}`, ttlSeconds);
+    pipeline.sadd(`rt:user-families:${userId}`, familyId);
+    pipeline.expire(`rt:user-families:${userId}`, ttlSeconds);
     await pipeline.exec();
 
     return {

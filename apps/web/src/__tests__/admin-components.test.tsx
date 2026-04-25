@@ -37,6 +37,27 @@ describe('DashboardTab', () => {
     vi.clearAllMocks();
   });
 
+  /**
+   * Phase 2 added two sibling fetches (`/admin/onboarding/stuck` and
+   * `/admin/mrr`) alongside `/admin/dashboard`. A single
+   * `mockResolvedValue` returns the same payload for all three, which
+   * crashes the render when the component tries to read `mrr.mrrUsd`
+   * on the stats object. Route per URL instead.
+   */
+  const wireApiMock = () => {
+    (api.get as any).mockImplementation((url: string) => {
+      if (url.startsWith('/admin/dashboard')) return Promise.resolve(mockDashboardStats);
+      if (url.startsWith('/admin/onboarding/stuck')) return Promise.resolve([]);
+      if (url.startsWith('/admin/mrr')) {
+        return Promise.resolve({
+          mrrUsd: 0, arrUsd: 0, momDelta: 0, projection6m: 0, asOf: null,
+          totalRevenueUsd: 0, subscriberCount: 0, arpuUsd: 0, ltvUsd: 0,
+        });
+      }
+      return Promise.resolve(null);
+    });
+  };
+
   it('should render loading spinner initially', async () => {
     (api.get as any).mockImplementation(() => new Promise(() => {})); // never resolves
 
@@ -47,7 +68,7 @@ describe('DashboardTab', () => {
   });
 
   it('should display stats after successful fetch', async () => {
-    (api.get as any).mockResolvedValue(mockDashboardStats);
+    wireApiMock();
 
     const { DashboardTab } = await import('@/app/admin/components/DashboardTab');
     render(<DashboardTab token="test-token" onTabChange={vi.fn()} />);
@@ -59,7 +80,7 @@ describe('DashboardTab', () => {
   });
 
   it('should call api.get with correct endpoint and token', async () => {
-    (api.get as any).mockResolvedValue(mockDashboardStats);
+    wireApiMock();
 
     const { DashboardTab } = await import('@/app/admin/components/DashboardTab');
     render(<DashboardTab token="test-token" onTabChange={vi.fn()} />);
@@ -74,8 +95,10 @@ describe('DashboardTab', () => {
 
 describe('Admin Types', () => {
   it('DashboardStats interface should have all required fields', async () => {
-    const { default: types } = await import('@/app/admin/components/types').catch(() => ({ default: null }));
-    // Type-level check: the mock object should satisfy the interface shape
+    // The types module is declaration-only, so `import(...)` returns a
+    // namespace object with no default export. We just need the
+    // `mockDashboardStats` shape check — the dynamic import was
+    // vestigial and made TypeScript flag a missing `default` field.
     const stats = mockDashboardStats;
     expect(stats.totalUsers).toBeDefined();
     expect(stats.premiumUsers).toBeDefined();

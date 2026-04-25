@@ -9,6 +9,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
+import { ModerationService } from '../src/safety/moderation.service';
 import { LlmService } from '../src/llm/llm.service';
 import { StorageService } from '../src/storage/storage.service';
 import { VectorSearchService } from '../src/knowledge/vector-search.service';
@@ -18,7 +19,8 @@ import { ChatService } from '../src/modules/chat/chat.service';
 import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
 import { getLocaleInstruction, isValidLocale } from '../src/common/locale';
 import {
-  mockOpenAIService, mockKnowledgeService, mockUserService,
+  mockOpenAIService, mockKnowledgeService,
+        ModerationService, mockUserService,
   mockConfigService, mockUser, createMockRedis,
 } from './helpers/mocks';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
@@ -101,12 +103,14 @@ describe('Feature Correctness — Item 4: Circuit Breaker + Failover', () => {
     const { LlmService: LlmSvc } = await import('../src/llm/llm.service');
     const { OpenAIProvider } = await import('../src/llm/providers/openai.provider');
     const { AnthropicProvider } = await import('../src/llm/providers/anthropic.provider');
+    const { GeminiProvider } = await import('../src/llm/providers/gemini.provider');
 
     const module = await Test.createTestingModule({
       providers: [
         LlmSvc,
         { provide: OpenAIProvider, useValue: openaiProvider },
         { provide: AnthropicProvider, useValue: anthropicProvider },
+        { provide: GeminiProvider, useValue: { isAvailable: jest.fn().mockReturnValue(false), chatCompletion: jest.fn().mockResolvedValue(null), chatCompletionStream: jest.fn().mockReturnValue(null), reinitialize: jest.fn() } },
         { provide: PrismaService, useValue: { siteSetting: { findMany: jest.fn().mockResolvedValue([]) }, llmUsage: { create: jest.fn() } } },
         { provide: ConfigService, useValue: { get: jest.fn((k: string, d?: any) => {
           if (k === 'llm.failoverEnabled') return true;

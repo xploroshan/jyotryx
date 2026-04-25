@@ -138,3 +138,184 @@ export interface ActivityLog {
   undoneAt: string | null;
   createdAt: string;
 }
+
+// ─── Phase 2 growth & retention ─────────────────────────────────────────
+
+export interface FunnelStage {
+  stage: "signup" | "profile_complete" | "first_chat" | "first_payment" | "renewal";
+  label: string;
+  count: number;
+  conversionFromPrev: number;
+  conversionFromSignup: number;
+}
+
+export interface FunnelCounts {
+  windowDays: number;
+  locale: string | null;
+  totalSignups: number;
+  stages: FunnelStage[];
+}
+
+export interface CohortRow {
+  cohortWeek: string;
+  size: number;
+  retention: number[];
+}
+
+export interface MrrSnapshot {
+  mrrUsd: number;
+  arrUsd: number;
+  momDelta: number;
+  projection6m: number;
+  asOf: string | null;
+  totalRevenueUsd: number;
+  subscriberCount: number;
+  arpuUsd: number;
+  ltvUsd: number;
+}
+
+export interface ChurnRiskRow {
+  userId: string;
+  email: string;
+  name: string;
+  subscriptionId: string | null;
+  plan: string | null;
+  endDate: string | null;
+  lastChatAt: string | null;
+  daysSinceLastChat: number | null;
+  reason: "inactive" | "payment_fail";
+  recentFailedPayments?: number;
+}
+
+export interface PaymentFailureRow {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  amount: number;
+  currency: string;
+  status: string;
+  type: string;
+  createdAt: string;
+}
+
+// ─── Phase 3 ops health + kill-switch + broadcast ───────────────────────
+
+export interface LlmErrorRateRow {
+  provider: string;
+  total: number;
+  errors: number;
+  errorRate: number;
+  topErrors: Array<{ errorCode: string; count: number }>;
+}
+
+export interface LatencyBucket {
+  key: string;
+  count: number;
+  p50: number;
+  p95: number;
+  p99: number;
+}
+
+export interface CacheHitRow {
+  feature: string;
+  total: number;
+  hits: number;
+  hitRate: number;
+}
+
+export interface QueueDepthRow {
+  queue: string;
+  waiting: number;
+  active: number;
+  delayed: number;
+  failed: number;
+  completed: number;
+}
+
+export interface ServiceHealth {
+  database: "up" | "down";
+  redis: "up" | "down";
+  details: Record<string, string | number>;
+}
+
+export interface OpsLlmHealthResponse {
+  errorRate: LlmErrorRateRow[];
+  latencyByFeature: LatencyBucket[];
+  latencyByProvider: LatencyBucket[];
+  cacheHitRate: CacheHitRow[];
+}
+
+export type BroadcastAudience =
+  | { type: "all" }
+  | { type: "premium" }
+  | { type: "locale"; locale: string };
+
+export interface BroadcastRequest {
+  audience: BroadcastAudience;
+  subject: string;
+  body: string;
+  channel: "inapp" | "email" | "push";
+  notificationType?: "horoscope" | "panchang" | "reminder" | "promotion" | "system";
+}
+
+// ─── Phase 4 safety + GDPR + forecasts ──────────────────────────────────
+
+export type FlaggedStatus = "pending" | "approved" | "hidden" | "actioned";
+export type ResolveAction = "approve" | "hide" | "actioned";
+
+export interface FlaggedMessageRow {
+  id: string;
+  messageId: string;
+  userId: string;
+  userEmail: string | null;
+  userName: string | null;
+  categories: string[];
+  scores: Record<string, number>;
+  status: FlaggedStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  preview: string | null;
+}
+
+export type GdprStatus = "pending" | "fulfilled" | "rejected";
+export type GdprType = "export" | "delete";
+
+export interface GdprRequestRow {
+  id: string;
+  userId: string;
+  userEmail: string | null;
+  userName: string | null;
+  type: GdprType;
+  status: GdprStatus;
+  dueBy: string;
+  daysUntilDue: number;
+  fulfilledAt: string | null;
+  adminId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface CostForecastPoint {
+  date: string;
+  actualUsd: number | null;
+  predictedUsd: number | null;
+  lowerUsd: number | null;
+  upperUsd: number | null;
+}
+
+export interface CostForecast {
+  points: CostForecastPoint[];
+  level: number;
+  trend: number;
+  residualStd: number;
+}
+
+export interface CapacityForecast {
+  provider: string;
+  tpmLimit: number | null;
+  currentPeakTpm: number;
+  slopePerDay: number;
+  daysUntilHit: number | null;
+}

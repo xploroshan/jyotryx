@@ -85,6 +85,38 @@ export function UserDetailPanel({
           </div>
           <div className="flex gap-2">
             <button onClick={() => onEdit(detail)} className="px-3 py-1.5 rounded-lg surface-card text-xs text-primary-400 hover:bg-white/10">Edit</button>
+            {/* Impersonate — only for non-admin targets. The button
+                requests a 1-hour impersonation JWT from the admin API,
+                then hands it off via the /?__imp=<token> URL parameter
+                which the client-side ImpersonateHandler swaps into the
+                auth store. Every call is logged to activity_log. */}
+            {detail.role !== "ADMIN" && (
+              <button
+                onClick={async () => {
+                  const confirmed = window.confirm(
+                    `Log in as ${detail.email}? A 1-hour impersonation session will open in a new tab and be recorded in the activity log.`,
+                  );
+                  if (!confirmed) return;
+                  try {
+                    const res = await api.post<{ accessToken: string; expiresAt: string }>(
+                      `/admin/users/${detail.id}/impersonate`,
+                      {},
+                      { token },
+                    );
+                    // Hand off via query param so the target tab has a
+                    // clean entry point; the handler component reads
+                    // __imp, swaps the token into useAuthStore, and
+                    // strips it from the URL before the user sees it.
+                    window.open(`/?__imp=${encodeURIComponent(res.accessToken)}`, "_blank", "noopener");
+                  } catch (err: any) {
+                    window.alert(err?.message || "Impersonation failed");
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/10 text-xs text-amber-400 hover:bg-amber-500/20"
+              >
+                Log in as user
+              </button>
+            )}
             <button onClick={() => onDelete(detail.id)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-xs text-red-400 hover:bg-red-500/20">Delete</button>
             <button onClick={onClose} className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/40 hover:bg-white/10">&times; Close</button>
           </div>

@@ -7,6 +7,12 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { StatsService } from '../src/stats/stats.service';
 import { GdprPurgeService } from '../src/modules/admin/gdpr-purge.service';
 import { ANALYTICS_SERVICE } from '../src/analytics/analytics.interface';
+import { AuthService } from '../src/modules/auth/auth.service';
+import { LlmService } from '../src/llm/llm.service';
+import { BroadcastService } from '../src/ops/broadcast.service';
+import { SafetyService } from '../src/safety/safety.service';
+import { GdprRequestService } from '../src/gdpr/gdpr-request.service';
+import { NotificationService } from '../src/modules/notification/notification.service';
 import { mockOpenAIService } from './helpers/mocks';
 
 describe('AdminService', () => {
@@ -99,6 +105,45 @@ describe('AdminService', () => {
       purgeUserData: jest.fn().mockResolvedValue(undefined),
     };
 
+    // AdminService's constructor picked up AuthService (Phase 1
+    // impersonation), LlmService + BroadcastService (Phase 3 kill-switch
+    // + broadcast). Stub them here so the DI module compiles.
+    const mockAuthService = {
+      issueImpersonationToken: jest.fn().mockResolvedValue({
+        accessToken: 'imp-token',
+        expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      }),
+      revokeAllUserTokens: jest.fn().mockResolvedValue({ familiesRevoked: 0 }),
+    };
+    const mockLlmService = {
+      invalidateCache: jest.fn().mockResolvedValue(undefined),
+      isProviderEnabled: jest.fn().mockReturnValue(true),
+      computeCost: jest.fn().mockReturnValue(0),
+    };
+    const mockBroadcastService = {
+      enqueue: jest.fn().mockResolvedValue({ jobId: 'job-1', audienceSize: 0 }),
+      audienceCount: jest.fn().mockResolvedValue(0),
+    };
+    // Phase 4 additions — safety/gdpr/notification wrappers. Each
+    // stub returns the minimum shape the delegating AdminService
+    // methods expect on the happy path.
+    const mockSafetyService = {
+      resolve: jest.fn().mockResolvedValue({
+        id: 'f-1', status: 'hidden', userEmail: 'a@b.com', userId: 'u-1',
+      }),
+      list: jest.fn().mockResolvedValue([]),
+    };
+    const mockGdprRequestService = {
+      create: jest.fn().mockResolvedValue({ id: 'g-1', userEmail: 'a@b.com', userId: 'u-1', type: 'export', status: 'pending', dueBy: new Date().toISOString() }),
+      fulfill: jest.fn().mockResolvedValue({ row: { id: 'g-1', userEmail: 'a@b.com', userId: 'u-1', type: 'export', status: 'fulfilled' } }),
+      reject: jest.fn().mockResolvedValue({ id: 'g-1', userEmail: 'a@b.com', userId: 'u-1', type: 'export', status: 'rejected' }),
+      list: jest.fn().mockResolvedValue([]),
+    };
+    const mockNotificationService = {
+      sendPushNotification: jest.fn().mockResolvedValue(true),
+      sendBulkNotification: jest.fn().mockResolvedValue({ sent: 0, failed: 0 }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -108,6 +153,12 @@ describe('AdminService', () => {
         { provide: StatsService, useValue: mockStatsService },
         { provide: ANALYTICS_SERVICE, useValue: mockAnalyticsService },
         { provide: GdprPurgeService, useValue: mockGdprPurgeService },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: LlmService, useValue: mockLlmService },
+        { provide: BroadcastService, useValue: mockBroadcastService },
+        { provide: SafetyService, useValue: mockSafetyService },
+        { provide: GdprRequestService, useValue: mockGdprRequestService },
+        { provide: NotificationService, useValue: mockNotificationService },
       ],
     }).compile();
 

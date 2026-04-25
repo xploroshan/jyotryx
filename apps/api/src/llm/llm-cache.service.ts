@@ -49,6 +49,15 @@ export class LlmCacheService {
       const cached = await this.redis.get(cacheKey);
       if (cached) {
         this.logger.debug(`Cache HIT for ${feature}: ${cacheKey}`);
+        // Record the cache hit as a zero-cost row so the admin cache
+        // hit-rate dashboard has data to aggregate. `cacheHit: true`
+        // flags it; no provider/duration/cost are recorded.
+        this.llmService.recordUsage({
+          userId: options.userId,
+          feature,
+          model: options.model ?? 'cache',
+          cacheHit: true,
+        });
         return JSON.parse(cached);
       }
     } catch {

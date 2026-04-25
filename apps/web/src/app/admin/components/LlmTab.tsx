@@ -27,27 +27,41 @@ const aiFeatures = [
   { id: "muhurat", name: "Muhurat", desc: "Auspicious timing calculations", tokensPerCall: "0", needsAI: false, suggestion: "No AI Needed", sugColor: "text-emerald-400" },
 ];
 
+type TodayByFeature = Record<string, { tokens: number; costUsd: number }>;
+
 export function LlmTab({ token }: { token: string }) {
   const [aiSettings, setAiSettings] = useState<Record<string, string>>({});
+  const [todayUsage, setTodayUsage] = useState<TodayByFeature>({});
   const [aiSaving, setAiSaving] = useState(false);
   const [aiSubTab, setAiSubTab] = useState<"providers" | "usage" | "features">("providers");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
+  const [rotating, setRotating] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
-    try {
-      const s = await api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token });
-      setAiSettings(s);
-    } catch (err) {
+    // Settings + today's live usage from /admin/llm/usage/today in
+    // parallel. The usage endpoint replaces what used to be a
+    // hardcoded "0" value pulled from llm.usage.*.today_tokens. A
+    // failure of the settings call is fatal — without it the form
+    // can't render — so it surfaces as a TabError. A usage failure
+    // is silently absorbed since the form is still usable without
+    // today's numbers.
+    const [settingsRes, usageRes] = await Promise.allSettled([
+      api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token }),
+      api.get<TodayByFeature>("/admin/llm/usage/today", { token }),
+    ]);
+    if (settingsRes.status === "fulfilled") {
+      setAiSettings(settingsRes.value);
+    } else {
       // eslint-disable-next-line no-console
-      console.error("[admin/settings?prefix=llm.] failed to load", err);
-      setLoadError(errorMessage(err));
+      console.error("[admin/settings?prefix=llm.] failed to load", settingsRes.reason);
+      setLoadError(errorMessage(settingsRes.reason));
     }
+    if (usageRes.status === "fulfilled") setTodayUsage(usageRes.value);
     setLoading(false);
   }, [token]);
 
@@ -56,6 +70,22 @@ export function LlmTab({ token }: { token: string }) {
   }, [load]);
 
   const getAiSetting = (key: string, fallback: string = "") => aiSettings[key] || fallback;
+
+  /**
+   * Fold every `chat:*`, `report:*`, `tarot:*`, `horoscope:*` sub-tag
+   * back onto its root feature key. Feature tagging in llm_usage is
+   * intentionally granular ("chat:career", "report:life") so the Cost
+   * tab can break them down — but this older table lists only the
+   * root IDs and expects aggregates at that level.
+   */
+  const todayTokensForFeature = (featureId: string): number => {
+    let tokens = 0;
+    for (const [tag, row] of Object.entries(todayUsage)) {
+      const root = tag.split(":")[0];
+      if (root === featureId) tokens += row.tokens;
+    }
+    return tokens;
+  };
   const setAiSetting = (key: string, value: string) => setAiSettings(prev => ({ ...prev, [key]: value }));
 
   const saveAiSettings = async () => {
@@ -70,6 +100,38 @@ export function LlmTab({ token }: { token: string }) {
       setError(err.message || "Failed to save AI settings");
     } finally {
       setAiSaving(false);
+    }
+  };
+
+  /**
+   * Rotate a provider's API key via the dedicated admin endpoint
+   * (not the bulk settings PUT). The backend writes the new key,
+   * invalidates the LlmService config cache, and logs an
+   * `LLM_KEY_ROTATE` row — everything the bulk settings path does NOT
+   * do, which is why a separate action exists. The key is read from
+   * the staged value in state so an admin can paste a new key and hit
+   * "Rotate" without saving the whole settings blob first.
+   */
+  const rotateProviderKey = async (providerId: string, keyField: string) => {
+    const key = (aiSettings[keyField] || "").trim();
+    if (!key || key.length < 8) {
+      setError(`Enter a new ${providerId} API key (≥ 8 chars) before rotating.`);
+      return;
+    }
+    setRotating(providerId);
+    setError("");
+    try {
+      await api.post(`/admin/llm/keys/${encodeURIComponent(providerId)}/rotate`, { key }, { token });
+      setSuccess(`${providerId} key rotated — picks up within 30s.`);
+      // Clear the typed key from the input so it isn't re-saved by a
+      // later "Save All Changes" click. The server stores the canonical
+      // value now.
+      setAiSetting(keyField, "");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message || `Failed to rotate ${providerId} key`);
+    } finally {
+      setRotating(null);
     }
   };
 
@@ -165,8 +227,20 @@ export function LlmTab({ token }: { token: string }) {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-[11px] text-white/30 mb-1">API Key</label>
-                      <input type="password" placeholder={hasKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg surface-input text-xs font-mono" />
+                      <div className="flex gap-2">
+                        <input type="password" placeholder={hasKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg surface-input text-xs font-mono" />
+                        <button
+                          type="button"
+                          onClick={() => rotateProviderKey(provider.id, provider.keyField)}
+                          disabled={rotating === provider.id || (getAiSetting(provider.keyField) || "").trim().length < 8}
+                          data-testid={`rotate-key-${provider.id}`}
+                          className="px-3 py-2 rounded-lg bg-amber-500/10 text-amber-400 text-[11px] font-medium hover:bg-amber-500/20 disabled:opacity-40"
+                          title="Write the typed key as the new provider key and invalidate the LlmService cache."
+                        >
+                          {rotating === provider.id ? "Rotating\u2026" : "Rotate"}
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
                       <div className="flex items-center gap-1.5">
@@ -230,7 +304,10 @@ export function LlmTab({ token }: { token: string }) {
                 <tbody>
                   {aiFeatures.filter(f => f.tokensPerCall !== "0").map(feature => {
                     const monthlyTokens = parseInt(getAiSetting(`llm.usage.${feature.id}.monthly_tokens`, "0"));
-                    const todayTokens = parseInt(getAiSetting(`llm.usage.${feature.id}.today_tokens`, "0"));
+                    // Real today-token value, folded from llm_usage
+                    // feature sub-tags by the helper above. Replaces
+                    // the old hardcoded-zero settings lookup.
+                    const todayTokens = todayTokensForFeature(feature.id);
                     const calls = parseInt(getAiSetting(`llm.usage.${feature.id}.calls`, "0"));
                     const featureLimit = getAiSetting(`llm.limit.${feature.id}`, "");
                     const estCost = (monthlyTokens / 1000000 * 2.5).toFixed(2);

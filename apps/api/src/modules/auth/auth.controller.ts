@@ -25,6 +25,7 @@ import {
 } from './dto';
 import { Public } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { buildSignupContext } from './signup-context';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -37,8 +38,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'User already exists' })
-  async register(@Body() dto: RegisterDto): Promise<AuthResponse> {
-    return this.authService.register(dto);
+  async register(@Body() dto: RegisterDto, @Request() req: any): Promise<AuthResponse> {
+    const ctx = buildSignupContext({
+      acceptLanguage: req?.headers?.['accept-language'],
+      bodyLocale: dto.locale,
+      bodyCountry: dto.country,
+      bodySignupSource: dto.signupSource,
+    });
+    return this.authService.register(dto, ctx);
   }
 
   @Post('login')
@@ -72,8 +79,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify OTP and authenticate' })
   @ApiResponse({ status: 200, description: 'OTP verified, user authenticated' })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
-  async verifyOtp(@Body() dto: VerifyOtpDto): Promise<AuthResponse> {
-    return this.authService.verifyOtp(dto);
+  async verifyOtp(@Body() dto: VerifyOtpDto, @Request() req: any): Promise<AuthResponse> {
+    const ctx = buildSignupContext({
+      acceptLanguage: req?.headers?.['accept-language'],
+      bodyLocale: (dto as any).locale,
+      bodyCountry: (dto as any).country,
+      bodySignupSource: (dto as any).signupSource,
+    });
+    return this.authService.verifyOtp(dto, ctx);
   }
 
   @Post('google')
@@ -81,8 +94,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate with Google ID token' })
   @ApiResponse({ status: 200, description: 'Google auth successful' })
-  async googleAuth(@Body() dto: GoogleAuthDto): Promise<AuthResponse> {
-    return this.authService.googleAuth(dto);
+  async googleAuth(@Body() dto: GoogleAuthDto, @Request() req: any): Promise<AuthResponse> {
+    const ctx = buildSignupContext({
+      acceptLanguage: req?.headers?.['accept-language'],
+      bodyLocale: (dto as any).locale,
+      bodyCountry: (dto as any).country,
+      bodySignupSource: (dto as any).signupSource,
+    });
+    return this.authService.googleAuth(dto, ctx);
   }
 
   @Post('firebase')
@@ -91,8 +110,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Authenticate with Firebase ID token (Phone OTP or Google)' })
   @ApiResponse({ status: 200, description: 'Firebase auth successful' })
   @ApiResponse({ status: 401, description: 'Invalid Firebase token' })
-  async firebaseAuth(@Body() dto: FirebaseAuthDto): Promise<AuthResponse> {
-    return this.authService.firebaseAuth(dto);
+  async firebaseAuth(@Body() dto: FirebaseAuthDto, @Request() req: any): Promise<AuthResponse> {
+    const ctx = buildSignupContext({
+      acceptLanguage: req?.headers?.['accept-language'],
+      bodyLocale: (dto as any).locale,
+      bodyCountry: (dto as any).country,
+      bodySignupSource: (dto as any).signupSource,
+    });
+    return this.authService.firebaseAuth(dto, ctx);
   }
 
   @Post('refresh')
