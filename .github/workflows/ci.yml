@@ -16,7 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        # `pgvector/pgvector:pg16` is the upstream pgvector image built on
+        # the official `postgres:16` base — same engine, with the `vector`
+        # extension pre-bundled. Migration `20260412_add_pgvector` does
+        # `CREATE EXTENSION vector`, which fails on plain `postgres:16-alpine`
+        # (extension not available) and silently passed before only because
+        # the dev environment happened to have it installed.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: jyotron
           POSTGRES_PASSWORD: jyotron_test
