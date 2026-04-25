@@ -75,6 +75,24 @@ jobs:
         run: cd apps/api && npx nest build
       - name: Test API
         run: cd apps/api && npm test
+      - name: Install integration-test daemons
+        # The integration suite spawns its own postgres / pgbouncer /
+        # redis on random ports (see test/integration/infra/*) — it does
+        # NOT use the service containers above. The binaries aren't on
+        # `ubuntu-latest` by default, and the apt packages auto-start
+        # default clusters on 5432 / 6379 which would clash with the
+        # service-container ports, so we stop them after install. The
+        # spawn helpers find binaries via `/usr/lib/postgresql/16/bin`.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            redis-server \
+            postgresql-16 \
+            postgresql-16-pgvector \
+            pgbouncer
+          sudo systemctl stop postgresql || true
+          sudo systemctl stop redis-server || true
+          sudo systemctl stop pgbouncer || true
       - name: Integration test API
         run: cd apps/api && npm run test:int
 
