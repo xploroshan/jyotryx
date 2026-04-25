@@ -12,11 +12,11 @@ export class RegisterDto {
   @ApiProperty({ example: 'Arjun Sharma' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: 'arjun@example.com' })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'StrongPass123!' })
   @IsString()
@@ -24,7 +24,7 @@ export class RegisterDto {
   @Matches(/(?=.*[a-z])/, { message: 'Password must contain at least one lowercase letter' })
   @Matches(/(?=.*[A-Z])/, { message: 'Password must contain at least one uppercase letter' })
   @Matches(/(?=.*\d)/, { message: 'Password must contain at least one number' })
-  password: string;
+  password!: string;
 
   @ApiProperty({ example: '+919876543210', required: false })
   @IsOptional()

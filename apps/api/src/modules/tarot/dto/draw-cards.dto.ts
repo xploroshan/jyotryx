@@ -5,7 +5,7 @@ export class DrawCardsDto {
   @ApiProperty({ enum: ['single', 'three-card', 'celtic-cross'], description: 'Tarot spread type' })
   @IsString()
   @IsIn(['single', 'three-card', 'celtic-cross'])
-  spread: string;
+  spread!: string;
 
   @ApiProperty({ required: false, description: 'Optional question or intention' })
   @IsOptional()

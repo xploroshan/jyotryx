@@ -6,7 +6,7 @@ export class AnalyzeNameDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  name: string;
+  name!: string;
 
   @ApiProperty({ example: 'hi', required: false, description: 'Language locale for the analysis output' })
   @IsString()
@@ -20,7 +20,7 @@ export class AnalyzeBrandDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  brandName: string;
+  brandName!: string;
 
   @ApiProperty({ example: 'Technology', required: false })
   @IsString()

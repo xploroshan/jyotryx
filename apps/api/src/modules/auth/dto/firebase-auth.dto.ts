@@ -5,5 +5,5 @@ export class FirebaseAuthDto {
   @ApiProperty({ description: 'Firebase ID token from client-side authentication' })
   @IsString()
   @IsNotEmpty()
-  idToken: string;
+  idToken!: string;
 }

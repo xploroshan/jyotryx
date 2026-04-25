@@ -5,7 +5,7 @@ export class CreateSubscriptionDto {
   @ApiProperty({ example: 'plan_premium_monthly', description: 'Razorpay plan ID' })
   @IsString()
   @IsNotEmpty()
-  planId: string;
+  planId!: string;
 
   @ApiProperty({ example: '12', description: 'Total billing cycles', required: false })
   @IsString()

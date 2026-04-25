@@ -5,15 +5,15 @@ export class VerifyPaymentDto {
   @ApiProperty({ description: 'Razorpay order ID' })
   @IsString()
   @IsNotEmpty()
-  razorpayOrderId: string;
+  razorpayOrderId!: string;
 
   @ApiProperty({ description: 'Razorpay payment ID' })
   @IsString()
   @IsNotEmpty()
-  razorpayPaymentId: string;
+  razorpayPaymentId!: string;
 
   @ApiProperty({ description: 'Razorpay signature for verification' })
   @IsString()
   @IsNotEmpty()
-  razorpaySignature: string;
+  razorpaySignature!: string;
 }
