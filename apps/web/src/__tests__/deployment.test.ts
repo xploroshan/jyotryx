@@ -152,8 +152,10 @@ describe('Web TypeScript Config', () => {
     expect(tsconfig.compilerOptions.strict).toBe(true);
   });
 
-  it('should preserve JSX for Next.js', () => {
-    expect(tsconfig.compilerOptions.jsx).toBe('preserve');
+  it('should configure JSX for Next.js', () => {
+    // `preserve` (Next handles JSX) and `react-jsx` (automatic runtime, default
+    // since TS 4.1 / React 17, hard default in TS 6) are both valid for Next.
+    expect(['preserve', 'react-jsx']).toContain(tsconfig.compilerOptions.jsx);
   });
 
   it('should exclude node_modules', () => {

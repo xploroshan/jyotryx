@@ -176,7 +176,7 @@ export function GdprTab({ token }: { token: string }) {
                 </div>
 
                 {r.note && (
-                  <p className="text-xs text-white/50 mt-3 italic">"{r.note}"</p>
+                  <p className="text-xs text-white/50 mt-3 italic">&ldquo;{r.note}&rdquo;</p>
                 )}
 
                 {status === "pending" && (

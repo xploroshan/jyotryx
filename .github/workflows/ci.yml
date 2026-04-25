@@ -129,7 +129,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Lint Web
-        run: cd apps/web && npx next lint
+        run: cd apps/web && npm run lint
       - name: Build Web
         run: cd apps/web && npx next build
         env:
