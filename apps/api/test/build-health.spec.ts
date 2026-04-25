@@ -20,42 +20,15 @@ import path from 'node:path';
  * decorators) fails the test, which fails CI, which blocks the merge
  * — making the deploy skew impossible at the source.
  *
- * ─── Currently skipped ───────────────────────────────────────────
- * The merged code from main does NOT compile cleanly under the
- * pinned dependency versions:
- *
- *   - TypeScript 6.x flags 27 × TS2564 (DTO properties without
- *     initialisers) across apps/api/src/modules/{auth,payment,chat,
- *     numerology,tarot,vastu}/dto/. Fix: append `!:` to the property
- *     types or add `!` to the assignment, e.g.
- *         currentPassword!: string
- *
- *   - Prisma 7.x changed how nullable JSON columns are written:
- *     `previousData: null` is no longer assignable to
- *     `NullableJsonNullValueInput | InputJsonValue`. Fix: replace
- *     every `previousData: null` / `newData: null` /
- *     `entityId: null` in apps/api/src/modules/admin/admin.service.ts
- *     and apps/api/src/stats/stats.service.ts with
- *     `Prisma.JsonNull` (for JSON columns) or drop the field
- *     entirely (for required columns).
- *
- *   - tsconfig.json hits TS5011 ("rootDir must be set explicitly")
- *     and TS5101 (`baseUrl` deprecated). Fix: add
- *         "rootDir": "./src",
- *         "ignoreDeprecations": "6.0",
- *     to apps/api/tsconfig.json.
- *
- *   - Knowledge integrity test fails with TS2593 because the api
- *     tsconfig doesn't include @types/jest. Fix: either move that
- *     spec under apps/api/test/ (where the spec tsconfig already
- *     includes jest types) or add "types": ["jest"] for that file.
- *
- * Run `cd apps/api && npx nest build 2>&1 | grep "error TS" | sort
- * -u` to enumerate all 77 errors. Once they're cleared, flip
- * `describe.skip` → `describe` below and CI will permanently lock in
- * the build.
+ * The TS6 + Prisma 7 errors that originally kept this skipped were
+ * cleared in the API build-restoration phases (tsconfig hygiene,
+ * @nestjs/common single-tree, DTO `!:` markers, `Prisma.JsonNull`
+ * semantics, and the residual spot fixes in PrismaService /
+ * JwtStrategy / clickhouse-analytics stub). Keeping the gate active
+ * from now on is what stops the silent deploy-skew door from
+ * reopening.
  */
-describe.skip('API build health', () => {
+describe('API build health', () => {
   it('compiles cleanly via `nest build` (catches deploy-skew at PR time)', () => {
     const apiRoot = path.resolve(__dirname, '..');
     let stdout = '';
