@@ -187,7 +187,7 @@ export function CostTab({ token }: { token: string }) {
           <p className="text-xs text-white/30 mt-2">Linear projection from MTD ÷ days elapsed × days in month.</p>
         </div>
         <div className="surface-card p-6">
-          <p className="text-xs text-white/40">Today's Spend</p>
+          <p className="text-xs text-white/40">Today&apos;s Spend</p>
           <p className="text-3xl font-bold text-white mt-1 tabular-nums">
             {formatUsd(Object.values(today).reduce((a, b) => a + b.costUsd, 0))}
           </p>
@@ -501,8 +501,8 @@ function WhatIfCard({
     <div className="surface-card p-6" data-testid="what-if-card">
       <h3 className="text-sm font-semibold text-white mb-1">Model-cost what-if</h3>
       <p className="text-xs text-white/50 mb-4">
-        Pure-client math against the sticker-price table. Admin pricing overrides aren't folded in here —
-        useful for quick "should we migrate" decisions.
+        Pure-client math against the sticker-price table. Admin pricing overrides aren&apos;t folded in here —
+        useful for quick &ldquo;should we migrate&rdquo; decisions.
       </p>
       <div className="grid sm:grid-cols-3 gap-4 mb-4">
         <label className="block">

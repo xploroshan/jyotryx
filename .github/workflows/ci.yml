@@ -129,7 +129,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Lint Web
-        run: cd apps/web && npx next lint
+        run: cd apps/web && npm run lint
       - name: Build Web
         run: cd apps/web && npx next build
         env:
@@ -143,6 +143,10 @@ jobs:
           name: web-build
           path: apps/web/.next
           retention-days: 1
+          # `.next` is dot-prefixed; upload-artifact@v4 excludes hidden
+          # paths by default, so without this the artifact is empty and
+          # the downstream Lighthouse / Bundle Size jobs can't download it.
+          include-hidden-files: true
 
   e2e-web:
     name: Web — E2E (Playwright)

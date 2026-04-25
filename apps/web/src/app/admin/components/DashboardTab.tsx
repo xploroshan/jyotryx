@@ -166,7 +166,7 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
           <div>
             <h3 className="text-sm font-semibold text-white">Stuck in Onboarding</h3>
             <p className="text-xs text-white/40 mt-0.5">
-              Signed up in the last 7 days but didn't finish birth details or start chatting.
+              Signed up in the last 7 days but didn&apos;t finish birth details or start chatting.
             </p>
           </div>
           <span className="text-[11px] px-2 py-1 rounded-full bg-accent-500/10 text-accent-400 tabular-nums">
