@@ -52,11 +52,19 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Generate Prisma client & migrate
-        run: |
-          cd apps/api
-          npx prisma generate
-          npx prisma migrate deploy
+      - name: Prisma — generate client
+        working-directory: apps/api
+        run: npx prisma generate
+      - name: Prisma — migrate deploy
+        working-directory: apps/api
+        # CI doesn't ship a separate direct URL; the `prisma.config.ts`
+        # `datasource.url` falls back to `DATABASE_URL`, but mirroring
+        # `DIRECT_URL` here keeps the migrate engine's selection logic
+        # identical to the Supabase production env (where DIRECT_URL is
+        # the non-pooled connection that migrations must use).
+        env:
+          DIRECT_URL: postgresql://jyotron:jyotron_test@localhost:5432/jyotron_test?schema=public
+        run: npx prisma migrate deploy
       - name: Lint API
         run: cd apps/api && npx nest build
       - name: Test API
