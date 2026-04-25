@@ -10,23 +10,16 @@ export class PrismaReadReplicaService
   private readonly usingReplica: boolean;
 
   constructor() {
-    const replicaUrl = process.env.DATABASE_READ_REPLICA_URL || '';
-    const primaryUrl = process.env.DATABASE_URL || '';
-    const url = replicaUrl || primaryUrl;
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Prisma 7 dropped the `datasources` constructor option, so we can no
+    // longer point this client at `DATABASE_READ_REPLICA_URL` separately
+    // from the primary's `DATABASE_URL` without a driver adapter. For now
+    // both clients share the primary URL; the replica wiring is a
+    // follow-up that needs `@prisma/adapter-pg`. The split client is kept
+    // so call sites that already use it don't have to change when the
+    // replica adapter lands.
+    super();
 
-    const needsSsl = isProduction && url.length > 0 && !url.includes('sslmode=');
-    const datasourceUrl = needsSsl
-      ? `${url}${url.includes('?') ? '&' : '?'}sslmode=require`
-      : url;
-
-    super({
-      datasources: datasourceUrl ? { db: { url: datasourceUrl } } : undefined,
-    });
-
-    // Track whether we're actually using a separate replica
-    const usingReplica = replicaUrl.length > 0;
-    // Store as a field accessible after super()
+    const usingReplica = (process.env.DATABASE_READ_REPLICA_URL || '').length > 0;
     (this as any).__usingReplica = usingReplica;
     this.usingReplica = usingReplica;
   }
@@ -35,11 +28,11 @@ export class PrismaReadReplicaService
     try {
       await this.$connect();
       if (this.usingReplica) {
-        this.logger.log('Connected to read replica');
-      } else {
-        this.logger.log(
-          'Read replica not configured, using primary (set DATABASE_READ_REPLICA_URL to enable)',
+        this.logger.warn(
+          'DATABASE_READ_REPLICA_URL is set but Prisma 7 ignores it without a driver adapter; using primary',
         );
+      } else {
+        this.logger.log('Read replica not configured, using primary');
       }
     } catch (error) {
       this.logger.error(`Read replica connection failed: ${error}`);

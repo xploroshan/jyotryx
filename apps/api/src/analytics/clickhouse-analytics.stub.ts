@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   AnalyticsService,
+  CostProjection,
+  DailyCostPoint,
   LlmCostByUser,
   LlmTotals,
   LlmUsageByFeature,
   LlmUsageByProvider,
+  TodayUsageByFeature,
 } from './analytics.interface';
 
 /**
@@ -71,5 +74,20 @@ export class ClickHouseAnalyticsStub implements AnalyticsService {
     // TODO: Implement with ClickHouse client
     this.logger.warn('getLlmUsageByProvider called on ClickHouse stub — returning empty');
     return [];
+  }
+
+  async getCostProjection(): Promise<CostProjection> {
+    this.logger.warn('getCostProjection called on ClickHouse stub — returning zeros');
+    return { mtdUsd: 0, prevMtdUsd: 0, projectionUsd: 0 };
+  }
+
+  async getDailyCostSeries(_days: number): Promise<DailyCostPoint[]> {
+    this.logger.warn('getDailyCostSeries called on ClickHouse stub — returning empty');
+    return [];
+  }
+
+  async getTodayUsageByFeature(): Promise<TodayUsageByFeature> {
+    this.logger.warn('getTodayUsageByFeature called on ClickHouse stub — returning empty');
+    return {};
   }
 }

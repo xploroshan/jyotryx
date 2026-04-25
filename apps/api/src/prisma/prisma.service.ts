@@ -6,12 +6,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    const rawUrl = process.env.DATABASE_URL || '';
-    const datasourceUrl = PrismaService.normalizeUrl(rawUrl);
-
-    super({
-      datasources: datasourceUrl ? { db: { url: datasourceUrl } } : undefined,
-    });
+    // Prisma 7 reads the connection URL from `process.env.DATABASE_URL`
+    // directly; the URL is normalized once at process startup in
+    // `main.ts` before this constructor runs, so no per-instance config
+    // is needed here.
+    super();
   }
 
   /**

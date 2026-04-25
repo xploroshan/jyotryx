@@ -38,7 +38,7 @@ export class WorkerPool {
         }
       });
 
-      worker.on('error', (err) => {
+      worker.on('error', (err: Error) => {
         this.logger.error(`Worker ${i} error: ${err.message}`);
       });
 
