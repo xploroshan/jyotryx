@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { formatCurrency } from "./helpers";
+import { formatCurrency, TabError, errorMessage } from "./helpers";
 import type { PlatformAnalytics, LlmCostRow } from "./types";
 
 export function AnalyticsTab({ token }: { token: string }) {
@@ -10,21 +10,29 @@ export function AnalyticsTab({ token }: { token: string }) {
   const [llmCosts, setLlmCosts] = useState<LlmCostRow[]>([]);
   const [llmCostDays, setLlmCostDays] = useState(30);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [a, l] = await Promise.all([
+        api.get<PlatformAnalytics>("/admin/analytics", { token }),
+        api.get<LlmCostRow[]>(`/admin/analytics/llm-costs?limit=20&days=${llmCostDays}`, { token }),
+      ]);
+      setAnalytics(a);
+      setLlmCosts(l);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[admin/analytics] failed to load", err);
+      setError(errorMessage(err));
+    }
+    setLoading(false);
+  }, [token, llmCostDays]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const [a, l] = await Promise.all([
-          api.get<PlatformAnalytics>("/admin/analytics", { token }),
-          api.get<LlmCostRow[]>(`/admin/analytics/llm-costs?limit=20&days=${llmCostDays}`, { token }),
-        ]);
-        setAnalytics(a);
-        setLlmCosts(l);
-      } catch {}
-      setLoading(false);
-    })();
-  }, [token, llmCostDays]);
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -40,7 +48,9 @@ export function AnalyticsTab({ token }: { token: string }) {
   return (
     <div>
       <h2 className="text-xl font-bold text-gradient mb-6">Platform Analytics</h2>
-      {!analytics ? (
+      {error ? (
+        <TabError message={error} onRetry={load} />
+      ) : !analytics ? (
         <div className="surface-card p-8 text-center text-white/40 text-sm">Loading analytics…</div>
       ) : (
         <>

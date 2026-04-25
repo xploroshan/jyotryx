@@ -1,24 +1,35 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { formatCurrency } from "./helpers";
+import { formatCurrency, TabError, errorMessage } from "./helpers";
 import type { DashboardStats } from "./types";
 
 export function DashboardTab({ token, onTabChange }: { token: string; onTabChange: (tab: string) => void }) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.get<DashboardStats>("/admin/dashboard", { token });
+      setStats(data);
+    } catch (err) {
+      // Surface the failure instead of silently rendering null — the old
+      // `catch {}` here meant a 500 from /admin/dashboard left the
+      // entire Dashboard tab blank with no signal anything had failed.
+      // eslint-disable-next-line no-console
+      console.error("[admin/dashboard] failed to load", err);
+      setError(errorMessage(err));
+    }
+    setLoading(false);
+  }, [token]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const data = await api.get<DashboardStats>("/admin/dashboard", { token });
-        setStats(data);
-      } catch {}
-      setLoading(false);
-    })();
-  }, [token]);
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -31,6 +42,7 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
     );
   }
 
+  if (error) return <TabError message={error} onRetry={load} />;
   if (!stats) return null;
 
   return (

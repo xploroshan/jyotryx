@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { Badge, formatDateTime } from "./helpers";
+import { Badge, TabError, errorMessage, formatDateTime } from "./helpers";
 import type { ActivityLog } from "./types";
 
 export function ActivityTab({ token }: { token: string }) {
@@ -10,19 +10,28 @@ export function ActivityTab({ token }: { token: string }) {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [actionFilter, setActionFilter] = useState("");
   const [undoing, setUndoing] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const loadLogs = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const params = new URLSearchParams({ page: String(page), limit: "30" });
       if (actionFilter) params.set("action", actionFilter);
       const res = await api.get<{ logs: ActivityLog[]; total: number }>(`/admin/activity?${params}`, { token });
       setLogs(res.logs);
       setTotal(res.total);
-    } catch {
+    } catch (err) {
+      // Distinguish "fetch failed" from "no activity yet". The previous
+      // code masked errors as an empty list, so a 500 on /admin/activity
+      // showed the same "No activity logged yet" message as a healthy
+      // brand-new install.
+      // eslint-disable-next-line no-console
+      console.error("[admin/activity] failed to load", err);
+      setLoadError(errorMessage(err));
       setLogs([]);
     } finally {
       setLoading(false);
@@ -119,6 +128,8 @@ export function ActivityTab({ token }: { token: string }) {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         </div>
+      ) : loadError ? (
+        <TabError message={loadError} onRetry={loadLogs} />
       ) : logs.length === 0 ? (
         <div className="surface-card p-8 text-center text-white/30">
           <p className="text-lg mb-2">No activity logged yet</p>

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { Badge } from "./helpers";
+import { Badge, TabError, errorMessage } from "./helpers";
 
 const llmProviders = [
   { id: "openai", name: "OpenAI", models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "o1", "o1-mini"], keyField: "llm.openai.key", color: "text-emerald-400" },
@@ -35,16 +35,25 @@ export function LlmTab({ token }: { token: string }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const s = await api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token });
-        setAiSettings(s);
-      } catch {}
-      setLoading(false);
-    })();
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const s = await api.get<Record<string, string>>("/admin/settings?prefix=llm.", { token });
+      setAiSettings(s);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[admin/settings?prefix=llm.] failed to load", err);
+      setLoadError(errorMessage(err));
+    }
+    setLoading(false);
   }, [token]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const getAiSetting = (key: string, fallback: string = "") => aiSettings[key] || fallback;
   const setAiSetting = (key: string, value: string) => setAiSettings(prev => ({ ...prev, [key]: value }));
@@ -74,6 +83,8 @@ export function LlmTab({ token }: { token: string }) {
       </div>
     );
   }
+
+  if (loadError) return <TabError message={loadError} onRetry={load} />;
 
   return (
     <div>

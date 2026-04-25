@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { roleBadge, statusBadge, formatCurrency, formatDate, formatDateTime, Badge } from "./helpers";
+import { roleBadge, statusBadge, formatCurrency, formatDate, formatDateTime, Badge, errorMessage } from "./helpers";
 import type { UserDetail } from "./types";
 
 export function UserDetailPanel({
@@ -22,16 +22,21 @@ export function UserDetailPanel({
 }) {
   const [detail, setDetail] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"overview" | "subscriptions" | "payments" | "chats" | "credits" | "reports">("overview");
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setError(null);
       try {
         const data = await api.get<UserDetail>(`/admin/users/${userId}`, { token });
         setDetail(data);
-      } catch {
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[admin/users/${userId}] failed to load`, err);
         setDetail(null);
+        setError(errorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -49,7 +54,12 @@ export function UserDetailPanel({
     );
   }
 
-  if (!detail) return <div className="surface-card p-6 text-red-400 text-sm">Failed to load user details.</div>;
+  if (!detail)
+    return (
+      <div className="surface-card p-6 text-red-400 text-sm">
+        Failed to load user details{error ? `: ${error}` : "."}
+      </div>
+    );
 
   const detailTabs = [
     { id: "overview" as const, label: "Overview" },
