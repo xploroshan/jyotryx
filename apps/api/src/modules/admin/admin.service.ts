@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { Inject } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PrismaReadReplicaService } from '../../prisma/prisma-read-replica.service';
 import { OpenAIService } from '../../openai/openai.service';
@@ -1146,7 +1147,7 @@ export class AdminService {
         entityType: 'User',
         entityId: target.id,
         entityLabel: target.email,
-        previousData: null,
+        previousData: Prisma.JsonNull,
         newData: { expiresAt: token.expiresAt } as any,
       },
     });
@@ -1190,7 +1191,7 @@ export class AdminService {
         entityType: 'LlmProvider',
         entityId: provider,
         entityLabel: provider,
-        previousData: previous ? { enabled: previous.value } : null,
+        previousData: previous ? { enabled: previous.value } : Prisma.JsonNull,
         newData: { enabled: next } as any,
       },
     });
@@ -1232,7 +1233,7 @@ export class AdminService {
         entityType: 'LlmKey',
         entityId: provider,
         entityLabel: provider,
-        previousData: null,
+        previousData: Prisma.JsonNull,
         // newData is deliberately a fingerprint — never the full key.
         newData: { fingerprint, rotatedAt } as any,
       },
@@ -1261,7 +1262,7 @@ export class AdminService {
         entityType: 'Broadcast',
         entityId: result.jobId,
         entityLabel: req.audience.type,
-        previousData: null,
+        previousData: Prisma.JsonNull,
         newData: {
           audience: req.audience,
           subject: req.subject,
@@ -1298,7 +1299,7 @@ export class AdminService {
         entityType: 'User',
         entityId: target.id,
         entityLabel: target.email,
-        previousData: null,
+        previousData: Prisma.JsonNull,
         newData: { familiesRevoked: result.familiesRevoked } as any,
       },
     });
@@ -1361,7 +1362,7 @@ export class AdminService {
         entityType: 'GdprRequest',
         entityId: row.id,
         entityLabel: row.userEmail ?? row.userId,
-        previousData: null,
+        previousData: Prisma.JsonNull,
         newData: { type, dueBy: row.dueBy } as any,
       },
     });
@@ -1452,7 +1453,7 @@ export class AdminService {
         entityType: 'User',
         entityId: userId,
         entityLabel: user.email,
-        previousData: null,
+        previousData: Prisma.JsonNull,
         newData: { sent, channel: 'inapp' } as any,
       },
     });
