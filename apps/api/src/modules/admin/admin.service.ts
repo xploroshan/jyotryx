@@ -52,7 +52,15 @@ export interface UserListItem {
   email: string;
   phone: string | null;
   role: string;
+  /** Current balance (already in `users.credits`). */
   credits: number;
+  /** Lifetime sum of negative `credit_transactions` rows for this user.
+   *  The "given" total is derived client-side as `credits + creditsUsed`,
+   *  which is mathematically correct for users who have only ever been
+   *  granted credits and consumed them — i.e. everyone except cases
+   *  where Edit-User absolute sets reduced the balance, which are rare
+   *  and don't write transaction rows. */
+  creditsUsed: number;
   provider: string;
   createdAt: string;
   subscriptionStatus: string | null;
@@ -265,6 +273,22 @@ export class AdminService {
       this.readPrisma.user.count({ where }),
     ]);
 
+    // Single round-trip group-by for the page's users; avoids the
+    // N+1 we'd get from per-row aggregates and keeps the list endpoint
+    // fast even when `limit` climbs.
+    const userIds = users.map((u: any) => u.id);
+    const usageRows =
+      userIds.length === 0
+        ? []
+        : await this.readPrisma.creditTransaction.groupBy({
+            by: ['userId'],
+            where: { userId: { in: userIds }, amount: { lt: 0 } },
+            _sum: { amount: true },
+          });
+    const usageMap = new Map<string, number>(
+      usageRows.map((r: any) => [r.userId as string, Math.abs(Number(r._sum.amount ?? 0))]),
+    );
+
     return {
       users: users.map((u: any) => ({
         id: u.id,
@@ -273,6 +297,7 @@ export class AdminService {
         phone: u.phone,
         role: u.role,
         credits: u.credits,
+        creditsUsed: usageMap.get(u.id) ?? 0,
         provider: u.provider,
         createdAt: u.createdAt.toISOString(),
         subscriptionStatus: u.subscriptions[0]?.status ?? null,
@@ -630,6 +655,13 @@ export class AdminService {
 
     this.logger.log(`Admin ${adminEmail} updated user ${userId}: ${JSON.stringify(dto)}`);
 
+    // Same lifetime-deductions sum used by `getUsers`, so the row the
+    // frontend re-renders after Edit User keeps the Usage column accurate.
+    const usedAgg = await this.readPrisma.creditTransaction.aggregate({
+      where: { userId, amount: { lt: 0 } },
+      _sum: { amount: true },
+    });
+
     return {
       id: updated.id,
       name: updated.name,
@@ -637,6 +669,7 @@ export class AdminService {
       phone: updated.phone,
       role: updated.role,
       credits: updated.credits,
+      creditsUsed: Math.abs(Number(usedAgg._sum.amount ?? 0)),
       provider: updated.provider,
       createdAt: updated.createdAt.toISOString(),
       subscriptionStatus: (updated as any).subscriptions[0]?.status ?? null,
