@@ -75,6 +75,46 @@ export function AnalyticsTab({ token }: { token: string }) {
             ))}
           </div>
 
+          <h3 className="text-lg font-bold text-white mb-4">Credits Spent by Feature (7d)</h3>
+          <div className="surface-card p-6 mb-8">
+            {(() => {
+              const rows = analytics.creditsByFeatureLast7Days ?? [];
+              const total = rows.reduce((s, r) => s + r.totalCredits, 0);
+              if (rows.length === 0 || total === 0) {
+                return <p className="text-sm text-white/40 text-center py-4">No credits spent in the last 7 days yet.</p>;
+              }
+              const colors = [
+                "from-amber-500 to-yellow-500",
+                "from-rose-500 to-pink-500",
+                "from-blue-500 to-cyan-500",
+                "from-emerald-500 to-green-500",
+                "from-purple-500 to-violet-500",
+                "from-orange-500 to-red-500",
+              ];
+              return (
+                <>
+                  {rows.map((r, i) => {
+                    const pct = total > 0 ? Math.round((r.totalCredits / total) * 1000) / 10 : 0;
+                    return (
+                      <div key={r.feature} className="flex items-center gap-4 mb-3 last:mb-0">
+                        <span className="text-sm text-white/40 w-20">{r.feature}</span>
+                        <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden">
+                          <div className={`h-full bg-gradient-to-r ${colors[i % colors.length]} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-sm font-medium text-amber-400 w-20 text-right tabular-nums">{r.totalCredits.toLocaleString()}</span>
+                        <span className="text-xs text-white/30 w-12 text-right">×{r.count}</span>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
+                    <span className="text-sm text-white/40">Total credits spent (7d)</span>
+                    <span className="text-lg font-bold text-amber-400 tabular-nums">{total.toLocaleString()}</span>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+
           <h3 className="text-lg font-bold text-white mb-4">Feature Usage Breakdown</h3>
           <div className="surface-card p-6 mb-8">
             {analytics.featureUsage.length === 0 || analytics.featureUsage.every((f) => f.count === 0) ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { roleBadge, statusBadge, formatCurrency, formatDate, formatDateTime, Badge, errorMessage } from "./helpers";
 import type { UserDetail } from "./types";
@@ -24,24 +24,27 @@ export function UserDetailPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"overview" | "subscriptions" | "payments" | "chats" | "credits" | "reports">("overview");
+  const [grantOpen, setGrantOpen] = useState(false);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.get<UserDetail>(`/admin/users/${userId}`, { token });
+      setDetail(data);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`[admin/users/${userId}] failed to load`, err);
+      setDetail(null);
+      setError(errorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, token]);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await api.get<UserDetail>(`/admin/users/${userId}`, { token });
-        setDetail(data);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error(`[admin/users/${userId}] failed to load`, err);
-        setDetail(null);
-        setError(errorMessage(err));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [userId, token]);
+    reload();
+  }, [reload]);
 
   if (loading) {
     return (
@@ -84,6 +87,12 @@ export function UserDetailPanel({
             {detail.phone && <p className="text-sm text-white/30">{detail.phone}</p>}
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setGrantOpen(true)}
+              className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-xs text-emerald-400 hover:bg-emerald-500/20"
+            >
+              + Grant credits
+            </button>
             <button onClick={() => onEdit(detail)} className="px-3 py-1.5 rounded-lg surface-card text-xs text-primary-400 hover:bg-white/10">Edit</button>
             {/* Impersonate — only for non-admin targets. The button
                 requests a 1-hour impersonation JWT from the admin API,
@@ -122,14 +131,15 @@ export function UserDetailPanel({
           </div>
         </div>
 
-        {/* Stats row */}
+        {/* Stats row — "Usage" sits directly next to "Credits" so the
+            balance and lifetime spend read together at a glance. */}
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 mt-4">
           {[
             { label: "Credits", value: detail.credits, color: "text-primary-400" },
+            { label: "Usage", value: detail.stats.totalCreditsUsed, color: "text-amber-400" },
             { label: "Chats", value: detail.stats.totalChats, color: "text-blue-400" },
             { label: "Payments", value: detail.stats.totalPayments, color: "text-emerald-400" },
             { label: "Spent", value: formatCurrency(detail.stats.totalSpent), color: "text-emerald-400" },
-            { label: "Credits Used", value: detail.stats.totalCreditsUsed, color: "text-amber-400" },
             { label: "Kundlis", value: detail.stats.kundliCharts, color: "text-mystic-400" },
             { label: "Matchings", value: detail.stats.matchingResults, color: "text-pink-400" },
           ].map((s) => (
@@ -248,33 +258,58 @@ export function UserDetailPanel({
         )}
 
         {detailTab === "credits" && (
-          <div className="overflow-x-auto">
-            {detail.creditTransactions.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-6">No credit transactions</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Amount</th>
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Type</th>
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Description</th>
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detail.creditTransactions.map((t) => (
-                    <tr key={t.id} className="border-b border-white/5">
-                      <td className={`px-3 py-2 font-medium ${t.amount > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {t.amount > 0 ? "+" : ""}{t.amount}
-                      </td>
-                      <td className="px-3 py-2 text-white/40">{t.type.replace(/_/g, " ")}</td>
-                      <td className="px-3 py-2 text-white/30 text-xs">{t.description || "-"}</td>
-                      <td className="px-3 py-2 text-white/30 text-xs">{formatDateTime(t.createdAt)}</td>
-                    </tr>
+          <div className="space-y-4">
+            {/* Per-feature spend breakdown — server-side group-by on
+                `credit_transactions.description`, so this answers
+                "where did their credits actually go" without the
+                client having to recompute on every render. */}
+            {detail.creditsByFeature.length > 0 && (
+              <div className="rounded-lg bg-white/[0.03] p-3">
+                <p className="text-[10px] uppercase tracking-wide text-white/30 mb-2">
+                  Spend by feature
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {detail.creditsByFeature.map((f) => (
+                    <div key={f.feature} className="flex items-baseline justify-between rounded bg-white/[0.04] px-2 py-1.5">
+                      <span className="text-xs text-white/60">{f.feature}</span>
+                      <span className="text-sm font-medium text-amber-400 tabular-nums">
+                        {f.totalCredits}
+                        <span className="text-[10px] text-white/30 ml-1">×{f.count}</span>
+                      </span>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </div>
             )}
+
+            <div className="overflow-x-auto">
+              {detail.creditTransactions.length === 0 ? (
+                <p className="text-white/30 text-sm text-center py-6">No credit transactions</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="text-left px-3 py-2 text-xs text-white/30">Amount</th>
+                      <th className="text-left px-3 py-2 text-xs text-white/30">Type</th>
+                      <th className="text-left px-3 py-2 text-xs text-white/30">Description</th>
+                      <th className="text-left px-3 py-2 text-xs text-white/30">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.creditTransactions.map((t) => (
+                      <tr key={t.id} className="border-b border-white/5">
+                        <td className={`px-3 py-2 font-medium ${t.amount > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {t.amount > 0 ? "+" : ""}{t.amount}
+                        </td>
+                        <td className="px-3 py-2 text-white/40">{t.type.replace(/_/g, " ")}</td>
+                        <td className="px-3 py-2 text-white/30 text-xs">{t.description || "-"}</td>
+                        <td className="px-3 py-2 text-white/30 text-xs">{formatDateTime(t.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         )}
 
@@ -299,6 +334,117 @@ export function UserDetailPanel({
           </div>
         )}
       </div>
+
+      {grantOpen && (
+        <GrantCreditsModal
+          userEmail={detail.email}
+          currentCredits={detail.credits}
+          onClose={() => setGrantOpen(false)}
+          onGranted={async () => {
+            setGrantOpen(false);
+            await reload();
+          }}
+          token={token}
+          userId={detail.id}
+        />
+      )}
+    </div>
+  );
+}
+
+function GrantCreditsModal({
+  userId,
+  userEmail,
+  currentCredits,
+  token,
+  onClose,
+  onGranted,
+}: {
+  userId: string;
+  userEmail: string;
+  currentCredits: number;
+  token: string;
+  onClose: () => void;
+  onGranted: () => void | Promise<void>;
+}) {
+  const [amount, setAmount] = useState<string>("10");
+  const [reason, setReason] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseInt(amount, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setErr("Amount must be a positive integer");
+      return;
+    }
+    setSubmitting(true);
+    setErr(null);
+    try {
+      await api.post(`/admin/users/${userId}/credits/grant`, { amount: parsed, reason: reason || undefined }, { token });
+      await onGranted();
+    } catch (e: any) {
+      setErr(errorMessage(e) || "Failed to grant credits");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={submit}
+        className="surface-card w-[min(420px,90vw)] p-6 space-y-4"
+      >
+        <div>
+          <h3 className="text-lg font-semibold text-white">Grant credits</h3>
+          <p className="text-xs text-white/40 mt-0.5">
+            {userEmail} · current balance <span className="text-primary-400">{currentCredits}</span>
+          </p>
+        </div>
+
+        <label className="block">
+          <span className="text-xs text-white/50">Amount</span>
+          <input
+            autoFocus
+            type="number"
+            min={1}
+            step={1}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="mt-1 w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs text-white/50">Reason (optional, recorded in transaction)</span>
+          <input
+            type="text"
+            value={reason}
+            maxLength={200}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. Apology for outage on 2026-04-26"
+            className="mt-1 w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+          />
+        </label>
+
+        {err && <p className="text-xs text-red-400">{err}</p>}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-xs text-white/60 hover:bg-white/10">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-xs text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50"
+          >
+            {submitting ? "Granting…" : `Grant ${amount || 0} credits`}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

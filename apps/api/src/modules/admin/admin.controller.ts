@@ -121,6 +121,23 @@ export class AdminController {
     return this.adminService.deleteUser(userId, req.user.sub, req.user.email);
   }
 
+  @Post('users/:id/credits/grant')
+  @ApiOperation({ summary: 'Add N credits to a user with a typed audit row' })
+  @ApiResponse({ status: 200, description: 'Credits granted' })
+  async grantCredits(
+    @Param('id', ParseUUIDPipe) userId: string,
+    @Body() dto: { amount: number; reason?: string },
+    @Request() req: any,
+  ): Promise<{ id: string; email: string; credits: number; granted: number }> {
+    return this.adminService.grantCredits(
+      userId,
+      Number(dto?.amount),
+      dto?.reason,
+      req.user.sub,
+      req.user.email,
+    );
+  }
+
   @Get('payments')
   @ApiOperation({ summary: 'Get recent payments' })
   @ApiResponse({ status: 200, description: 'Payment list returned' })
