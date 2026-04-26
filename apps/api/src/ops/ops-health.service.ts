@@ -99,7 +99,7 @@ export class OpsHealthService {
         COUNT(*)::bigint AS total,
         COUNT(*) FILTER (WHERE "error_code" IS NOT NULL)::bigint AS errors
       FROM "llm_usage"
-      WHERE "created_at" >= $1::timestamptz
+      WHERE "createdAt" >= $1::timestamptz
         AND "cache_hit" = FALSE
       GROUP BY "provider"
       ORDER BY total DESC
@@ -114,7 +114,7 @@ export class OpsHealthService {
       `
       SELECT "provider", "error_code", COUNT(*)::bigint AS count
       FROM "llm_usage"
-      WHERE "created_at" >= $1::timestamptz
+      WHERE "createdAt" >= $1::timestamptz
         AND "error_code" IS NOT NULL
       GROUP BY "provider", "error_code"
       ORDER BY count DESC
@@ -171,7 +171,7 @@ export class OpsHealthService {
         percentile_cont(0.95) WITHIN GROUP (ORDER BY "duration_ms") AS p95,
         percentile_cont(0.99) WITHIN GROUP (ORDER BY "duration_ms") AS p99
       FROM "llm_usage"
-      WHERE "created_at" >= $1::timestamptz
+      WHERE "createdAt" >= $1::timestamptz
         AND "duration_ms" IS NOT NULL
         AND "cache_hit" = FALSE
         AND "error_code" IS NULL
@@ -213,7 +213,7 @@ export class OpsHealthService {
         COUNT(*)::bigint AS total,
         COUNT(*) FILTER (WHERE "cache_hit" = TRUE)::bigint AS hits
       FROM "llm_usage"
-      WHERE "created_at" >= $1::timestamptz
+      WHERE "createdAt" >= $1::timestamptz
       GROUP BY "feature"
       ORDER BY total DESC
       LIMIT 50

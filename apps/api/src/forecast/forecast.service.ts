@@ -176,11 +176,11 @@ export class ForecastService {
       `
       WITH per_minute AS (
         SELECT
-          DATE_TRUNC('day', "created_at" AT TIME ZONE 'UTC')::date AS day,
-          DATE_TRUNC('minute', "created_at") AS minute,
-          SUM("total_tokens")::bigint AS minute_tokens
+          DATE_TRUNC('day', "createdAt" AT TIME ZONE 'UTC')::date AS day,
+          DATE_TRUNC('minute', "createdAt") AS minute,
+          SUM("totalTokens")::bigint AS minute_tokens
         FROM "llm_usage"
-        WHERE "created_at" >= $1::timestamptz
+        WHERE "createdAt" >= $1::timestamptz
           AND "provider" = $2
           AND "error_code" IS NULL
         GROUP BY day, minute
