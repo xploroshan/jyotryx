@@ -49,6 +49,13 @@ RUN apk add --no-cache openssl libc6-compat
 COPY --from=build /app/dist ./dist
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
+# `prisma.config.ts` (Prisma 7) lives at the package root, not inside
+# `prisma/`. Without this copy, the production image has no config file
+# at all — Prisma's CLI then falls back to the empty `datasource db {}`
+# block in `schema.prisma` (URLs were moved out in #181) and crashes at
+# container start with "The datasource.url property is required in your
+# Prisma config file when using prisma migrate deploy."
+COPY --from=build /app/prisma.config.ts ./
 COPY --from=build /app/package.json ./
 
 # Regenerate the Prisma client against the prod-deps node_modules. The `build`
