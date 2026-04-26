@@ -45,16 +45,21 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
     const workerCount = parseInt(this.configService.get<string>('EPHEMERIS_WORKER_COUNT', '4'), 10);
     this.useWorkers = workerCount > 0;
 
-    if (!this.useWorkers) {
-      // Synchronous fallback
-      try {
-        this.swisseph = require('swisseph');
-        const EPHE_PATH = path.join(path.dirname(require.resolve('swisseph')), 'ephe');
-        this.swisseph.swe_set_ephe_path(EPHE_PATH);
-        this.swisseph.swe_set_sid_mode(this.swisseph.SE_SIDM_LAHIRI, 0, 0);
-      } catch {
-        this.swisseph = null;
-      }
+    // Always load the synchronous swisseph in the main thread, even
+    // when worker mode is on. The pool's `initialize()` doesn't await
+    // the workers' actual readiness — they can `Module did not
+    // self-register` *after* init resolves successfully (musl/alpine
+    // worker_threads issue), leaving us with a "happy" pool that
+    // silently times out every task. Having the sync client preloaded
+    // means `computeChart` can fall back instantly instead of failing
+    // the user-visible request after a 10-second worker timeout.
+    try {
+      this.swisseph = require('swisseph');
+      const EPHE_PATH = path.join(path.dirname(require.resolve('swisseph')), 'ephe');
+      this.swisseph.swe_set_ephe_path(EPHE_PATH);
+      this.swisseph.swe_set_sid_mode(this.swisseph.SE_SIDM_LAHIRI, 0, 0);
+    } catch {
+      this.swisseph = null;
     }
   }
 
@@ -98,12 +103,7 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
     const cached = await this.cacheService.get<ChartResult>(cacheKey);
     if (cached) return cached;
 
-    let result: ChartResult;
-    if (this.pool) {
-      result = await this.pool.execute<ChartResult>('computeFullChart', input);
-    } else {
-      result = this.computeChartSync(input);
-    }
+    const result = await this.computeWithFallback(input);
 
     // Cache birth charts for 24h
     await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
@@ -133,16 +133,41 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
     const cached = await this.cacheService.get<ChartResult>(cacheKey);
     if (cached) return cached;
 
-    let result: ChartResult;
-    if (this.pool) {
-      result = await this.pool.execute<ChartResult>('computeFullChart', input);
-    } else {
-      result = this.computeChartSync(input);
-    }
+    const result = await this.computeWithFallback(input);
 
     // Cache current charts for 5 minutes
     await this.cacheService.set(cacheKey, result, 5 * 60 * 1000);
     return result;
+  }
+
+  /**
+   * Try the worker pool, fall back to the sync swisseph in the main
+   * thread on any pool failure (most often: workers `Module did not
+   * self-register` and time out at 10s). Once the pool fails for the
+   * first time, we mark it dead and skip the worker call entirely on
+   * subsequent requests so users don't eat a 10-second wait per
+   * request waiting for a pool we already know is broken.
+   */
+  private poolDeadAfterFirstFailure = false;
+
+  private async computeWithFallback(input: ChartInput): Promise<ChartResult> {
+    if (this.pool && !this.poolDeadAfterFirstFailure) {
+      try {
+        return await this.pool.execute<ChartResult>('computeFullChart', input);
+      } catch (err: any) {
+        this.logger.error(
+          `Worker pool failed (${err?.message ?? err}); falling back to sync swisseph and disabling pool for this process.`,
+        );
+        this.poolDeadAfterFirstFailure = true;
+        // Fall through to sync.
+      }
+    }
+    if (!this.swisseph) {
+      throw new Error(
+        'Ephemeris unavailable: workers failed and the synchronous swisseph binding could not be loaded either.',
+      );
+    }
+    return this.computeChartSync(input);
   }
 
   // ─── Synchronous fallback ───────────────────────────────────────────────

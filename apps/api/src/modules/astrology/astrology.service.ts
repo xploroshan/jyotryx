@@ -218,37 +218,73 @@ export class AstrologyService {
 
   async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
-
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'Kundli generation');
+    return this.deductAndRun(userId, creditCost, 'Kundli generation', async () => {
+      const chartData = await this.generateAIKundli(birthDetails);
+      const kundli = await this.prisma.kundliChart.create({
+        data: {
+          userId,
+          name: 'Kundli Chart',
+          dateOfBirth: new Date(birthDetails.dateOfBirth),
+          timeOfBirth: birthDetails.timeOfBirth,
+          placeOfBirth: {
+            name: birthDetails.placeOfBirth,
+            lat: birthDetails.latitude || 0,
+            lng: birthDetails.longitude || 0,
+          },
+          chartData,
+        },
+      });
+      return {
+        id: kundli.id,
+        userId,
+        birthDetails,
+        ...chartData,
+        createdAt: kundli.createdAt.toISOString(),
+      };
+    });
+  }
+
+  /**
+   * Deduct `cost` credits, run `work`, and refund the credits if `work`
+   * throws. Without this, an upstream failure (swisseph worker dying,
+   * LLM rate-limited, DB hiccup, …) would leave the user out-of-pocket
+   * with nothing to show for it. The refund itself is best-effort: if
+   * even `addCredits` fails we log loudly so the operator can correct
+   * the balance manually, but we still re-throw the original error so
+   * the client sees the real failure rather than a misleading success.
+   */
+  private async deductAndRun<T>(
+    userId: string,
+    cost: number,
+    description: string,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    const deducted = await this.userService.deductCredits(userId, cost, description);
     if (!deducted) {
       throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
     }
-
-    const chartData = await this.generateAIKundli(birthDetails);
-
-    const kundli = await this.prisma.kundliChart.create({
-      data: {
-        userId,
-        name: 'Kundli Chart',
-        dateOfBirth: new Date(birthDetails.dateOfBirth),
-        timeOfBirth: birthDetails.timeOfBirth,
-        placeOfBirth: {
-          name: birthDetails.placeOfBirth,
-          lat: birthDetails.latitude || 0,
-          lng: birthDetails.longitude || 0,
-        },
-        chartData,
-      },
-    });
-
-    return {
-      id: kundli.id,
-      userId,
-      birthDetails,
-      ...chartData,
-      createdAt: kundli.createdAt.toISOString(),
-    };
+    try {
+      return await work();
+    } catch (err) {
+      try {
+        await this.userService.addCredits(
+          userId,
+          cost,
+          'ADMIN_GRANT',
+          `Refund: ${description}`,
+        );
+        this.logger.warn(
+          `Refunded ${cost} credits to ${userId} after "${description}" failed: ${(err as Error)?.message ?? err}`,
+        );
+      } catch (refundErr) {
+        this.logger.error(
+          `REFUND FAILED for user=${userId} cost=${cost} desc="${description}". Manual balance correction needed.`,
+          refundErr as Error,
+        );
+      }
+      throw err;
+    }
   }
 
   // ─── Swiss Ephemeris Helper: compute Julian Day from birth details ────────
@@ -741,50 +777,42 @@ export class AstrologyService {
 
   async getMatching(userId: string, partner1: BirthDetails, partner2: BirthDetails, locale?: string): Promise<MatchingResult> {
     this.logger.log('Performing Kundli matching');
-
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'Kundli matching');
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
-    }
+    return this.deductAndRun(userId, creditCost, 'Kundli matching', async () => {
+      const gunaDetails = this.calculateGunaScores(partner1, partner2);
+      const totalScore = gunaDetails.reduce((s, g) => s + g.obtainedPoints, 0);
+      const compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
+      const recommendation = `The match score of ${totalScore}/36 indicates ${compatibility.toLowerCase()} compatibility. ${totalScore >= 18 ? 'The couple shares promising foundations for a harmonious relationship.' : 'Remedial measures may be recommended for a balanced relationship.'}`;
 
-    // PRIMARY: Deterministic Guna matching using Swiss Ephemeris for Moon positions
-    const gunaDetails = this.calculateGunaScores(partner1, partner2);
-    const totalScore = gunaDetails.reduce((s, g) => s + g.obtainedPoints, 0);
-    const compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
-    const recommendation = `The match score of ${totalScore}/36 indicates ${compatibility.toLowerCase()} compatibility. ${totalScore >= 18 ? 'The couple shares promising foundations for a harmonious relationship.' : 'Remedial measures may be recommended for a balanced relationship.'}`;
+      const [chart1, chart2] = await Promise.all([
+        this.generateAIKundli(partner1),
+        this.generateAIKundli(partner2),
+      ]);
+      const doshas1 = this.detectDoshas(chart1.planetaryPositions);
+      const doshas2 = this.detectDoshas(chart2.planetaryPositions);
+      const manglikA = doshas1.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
+      const manglikB = doshas2.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
 
-    // Detect Manglik status for each partner — use the cached chart pipeline so
-    // re-running the same matching (or matching when a partner's chart was
-    // already computed elsewhere) skips the expensive Swiss Ephemeris pass.
-    const [chart1, chart2] = await Promise.all([
-      this.generateAIKundli(partner1),
-      this.generateAIKundli(partner2),
-    ]);
-    const doshas1 = this.detectDoshas(chart1.planetaryPositions);
-    const doshas2 = this.detectDoshas(chart2.planetaryPositions);
-    const manglikA = doshas1.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
-    const manglikB = doshas2.some(d => d.name === 'Mangal Dosha (Manglik)' && d.present);
+      const result = await this.prisma.matchingResult.create({
+        data: {
+          userId,
+          personAName: 'Partner A',
+          personADob: new Date(partner1.dateOfBirth),
+          personATime: partner1.timeOfBirth,
+          personAPlace: { name: partner1.placeOfBirth, lat: partner1.latitude || 0, lng: partner1.longitude || 0 },
+          personBName: 'Partner B',
+          personBDob: new Date(partner2.dateOfBirth),
+          personBTime: partner2.timeOfBirth,
+          personBPlace: { name: partner2.placeOfBirth, lat: partner2.latitude || 0, lng: partner2.longitude || 0 },
+          gunaScore: totalScore,
+          manglikA,
+          manglikB,
+          resultData: JSON.parse(JSON.stringify({ gunaDetails, compatibility, recommendation, manglikA, manglikB })),
+        },
+      });
 
-    const result = await this.prisma.matchingResult.create({
-      data: {
-        userId,
-        personAName: 'Partner A',
-        personADob: new Date(partner1.dateOfBirth),
-        personATime: partner1.timeOfBirth,
-        personAPlace: { name: partner1.placeOfBirth, lat: partner1.latitude || 0, lng: partner1.longitude || 0 },
-        personBName: 'Partner B',
-        personBDob: new Date(partner2.dateOfBirth),
-        personBTime: partner2.timeOfBirth,
-        personBPlace: { name: partner2.placeOfBirth, lat: partner2.latitude || 0, lng: partner2.longitude || 0 },
-        gunaScore: totalScore,
-        manglikA,
-        manglikB,
-        resultData: JSON.parse(JSON.stringify({ gunaDetails, compatibility, recommendation, manglikA, manglikB })),
-      },
+      return { id: result.id, partner1, partner2, totalScore, maxScore: 36, gunaDetails, compatibility, recommendation };
     });
-
-    return { id: result.id, partner1, partner2, totalScore, maxScore: 36, gunaDetails, compatibility, recommendation };
   }
 
   private calculateGunaScores(p1: BirthDetails, p2: BirthDetails): GunaDetail[] {
@@ -2264,44 +2292,39 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
   }
 
   async getDivisionalChart(userId: string, birthDetails: BirthDetails, type: string): Promise<any> {
-    const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    const deducted = await this.userService.deductCredits(userId, creditCost, `Divisional chart D${type}`);
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits.');
-    }
-
+    // Validate the divisor BEFORE deducting — a 400 on bad input
+    // shouldn't cost the user a credit they then have to wait to be
+    // refunded.
     const divisorMap: Record<string, number> = { '9': 9, '10': 10, 'navamsa': 9, 'dashamsha': 10 };
     const divisor = divisorMap[type.toLowerCase()] || parseInt(type, 10);
     if (!divisor || divisor < 2 || divisor > 60) {
       throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
     }
-
-    // Reuse the cached deterministic chart computation.
-    const chart = await this.generateAIKundli(birthDetails);
-    const planetLongitudes = chart.planetaryPositions.map((p: PlanetPosition) => ({
-      planet: p.planet,
-      longitude: ALL_SIGNS.indexOf(p.sign as any) * 30 + p.degree,
-    }));
-
-    const divisionalPositions = this.computeDivisionalChart(planetLongitudes, divisor);
-
-    return {
-      type: `D${divisor}`,
-      divisor,
-      birthDetails,
-      positions: divisionalPositions,
-      rasiBhava: chart.planetaryPositions,
-    };
+    const creditCost = this.configService.get<number>('credits.kundliCost', 2);
+    return this.deductAndRun(userId, creditCost, `Divisional chart D${type}`, async () => {
+      const chart = await this.generateAIKundli(birthDetails);
+      const planetLongitudes = chart.planetaryPositions.map((p: PlanetPosition) => ({
+        planet: p.planet,
+        longitude: ALL_SIGNS.indexOf(p.sign as any) * 30 + p.degree,
+      }));
+      const divisionalPositions = this.computeDivisionalChart(planetLongitudes, divisor);
+      return {
+        type: `D${divisor}`,
+        divisor,
+        birthDetails,
+        positions: divisionalPositions,
+        rasiBhava: chart.planetaryPositions,
+      };
+    });
   }
 
   // ─── KP Astrology ────────────────────────────────────────────────────────────
   async generateKPChart(userId: string, birthDetails: BirthDetails): Promise<any> {
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'KP chart generation');
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits.');
-    }
+    return this.deductAndRun(userId, creditCost, 'KP chart generation', () => this.computeKPChart(birthDetails));
+  }
 
+  private async computeKPChart(birthDetails: BirthDetails): Promise<any> {
     // KP charts are a pure function of birth details — cache the expensive
     // Placidus house + sub-lord computation across requests.
     const cacheKey = `kp:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
