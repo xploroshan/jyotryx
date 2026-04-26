@@ -88,6 +88,13 @@ export interface UserDetail {
     palmistryReadings: number;
     matchingResults: number;
   };
+  /**
+   * Per-feature credit-spend breakdown derived from `credit_transactions`
+   * descriptions. Same source as `creditTransactions[]` above; this is
+   * the GROUP-BY rollup so the user-detail panel can show
+   * "Kundli: 8, Chat: 12, Tarot: 3" without the client recomputing.
+   */
+  creditsByFeature: Array<{ feature: string; totalCredits: number; count: number }>;
   llmUsage: {
     totalCostUsd: number;
     totalTokens: number;
@@ -105,6 +112,13 @@ export interface PlatformAnalytics {
   avgChatLength: number;
   creditsConsumedToday: number;
   creditsConsumedLast7Days: number;
+  /**
+   * Org-level credits spent grouped by feature over the last 7 days.
+   * Same shape as the per-user `creditsByFeature` on UserDetail. Lets
+   * the Analytics tab answer "what are users actually buying with
+   * their credits" without joining against feature-specific tables.
+   */
+  creditsByFeatureLast7Days: Array<{ feature: string; totalCredits: number; count: number }>;
   revenueTrend: Array<{ date: string; revenue: number }>; // last 7 days
   featureUsage: Array<{ feature: string; count: number; percent: number }>;
   conversionRate: number; // % of total users who are premium
@@ -301,10 +315,7 @@ export class AdminService {
       kundliCount,
       palmistryCount,
       matchingCount,
-      llmTotals,
-      llmByProvider,
-      llmByFeature,
-      llmRecent,
+      creditsByFeature,
     ] = await Promise.all([
       this.readPrisma.payment.aggregate({
         where: { userId, status: 'SUCCESS' },
@@ -318,29 +329,18 @@ export class AdminService {
       this.readPrisma.kundliChart.count({ where: { userId } }),
       this.readPrisma.palmistryReading.count({ where: { userId } }),
       this.readPrisma.matchingResult.count({ where: { userId } }),
-      this.readPrisma.llmUsage.aggregate({
-        where: { userId },
-        _sum: { costUsd: true, totalTokens: true },
-        _count: true,
-      }),
-      this.readPrisma.llmUsage.groupBy({
-        by: ['provider', 'model'],
-        where: { userId },
-        _sum: { costUsd: true, totalTokens: true },
-        _count: true,
-      }),
-      this.readPrisma.llmUsage.groupBy({
-        by: ['feature'],
-        where: { userId },
-        _sum: { costUsd: true, totalTokens: true },
-        _count: true,
-      }),
-      this.readPrisma.llmUsage.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }),
+      this.aggregateCreditsByFeature(userId),
     ]);
+
+    // The llm_usage queries are split out from the Promise.all above so a
+    // schema-drift hiccup on that one table can't take the whole user
+    // detail panel offline. The findMany returns every column on
+    // `llm_usage` — the four ops-telemetry columns (`duration_ms` etc.)
+    // are now `@map`'d in schema.prisma, but if the deployed Prisma
+    // client ever drifts ahead of an unmigrated DB again the panel
+    // should still render with the rest of the data and a zeroed
+    // `llmUsage` block instead of a 500.
+    const llm = await this.fetchLlmUsageSafely(userId);
 
     return {
       id: user.id,
@@ -406,7 +406,104 @@ export class AdminService {
         palmistryReadings: palmistryCount,
         matchingResults: matchingCount,
       },
-      llmUsage: {
+      creditsByFeature,
+      llmUsage: llm,
+    };
+  }
+
+  /**
+   * Group a user's negative-amount `credit_transactions` rows into
+   * feature buckets by parsing the description prefix. The descriptions
+   * are written by the deductCredits call sites (kundli/chat/palmistry/
+   * tarot/vastu/report) so the prefix maps deterministically.
+   *
+   * Returned rows are sorted by spend descending; the empty-history case
+   * yields `[]` rather than a 500.
+   */
+  private async aggregateCreditsByFeature(
+    userId: string,
+  ): Promise<Array<{ feature: string; totalCredits: number; count: number }>> {
+    const rows = await this.readPrisma.$queryRawUnsafe<
+      Array<{ feature: string; total_credits: bigint; count: bigint }>
+    >(
+      AdminService.CREDITS_BY_FEATURE_SQL +
+        ` WHERE "userId" = $1::uuid AND amount < 0
+          GROUP BY feature
+          ORDER BY total_credits DESC`,
+      userId,
+    );
+    return rows.map((r) => ({
+      feature: r.feature,
+      totalCredits: Number(r.total_credits),
+      count: Number(r.count),
+    }));
+  }
+
+  /**
+   * SQL fragment that classifies a `credit_transactions` description
+   * into a high-level feature bucket. Used in two places: per-user in
+   * `aggregateCreditsByFeature`, and org-wide in `getPlatformAnalytics`.
+   * Kept as a class constant so both queries stay in lock-step when a
+   * new feature description prefix is added.
+   */
+  private static readonly CREDITS_BY_FEATURE_SQL = `
+    SELECT
+      CASE
+        WHEN description ILIKE 'Kundli%'      THEN 'Kundli'
+        WHEN description ILIKE 'Divisional%'  THEN 'Astrology'
+        WHEN description ILIKE 'Chat%'        THEN 'Chat'
+        WHEN description ILIKE 'Palmistry%'   THEN 'Palmistry'
+        WHEN description ILIKE 'Tarot%'       THEN 'Tarot'
+        WHEN description ILIKE 'Vastu%'       THEN 'Vastu'
+        WHEN description ILIKE '%report%'     THEN 'Report'
+        ELSE COALESCE(NULLIF(description, ''), 'Other')
+      END AS feature,
+      ABS(SUM(amount))::bigint AS total_credits,
+      COUNT(*)::bigint AS count
+    FROM credit_transactions`;
+
+  /**
+   * LLM-usage block of `getUserDetail`, hardened so any single failure
+   * (Prisma client/schema drift, partition gone missing, JSON encoding
+   * of bigints) returns zeros instead of bubbling a 500 to the admin
+   * panel. Logs the underlying error so we still see drift in the
+   * service log.
+   */
+  private async fetchLlmUsageSafely(userId: string): Promise<UserDetail['llmUsage']> {
+    const empty: UserDetail['llmUsage'] = {
+      totalCostUsd: 0,
+      totalTokens: 0,
+      totalCalls: 0,
+      byProvider: [],
+      byFeature: [],
+      recent: [],
+    };
+    try {
+      const [llmTotals, llmByProvider, llmByFeature, llmRecent] = await Promise.all([
+        this.readPrisma.llmUsage.aggregate({
+          where: { userId },
+          _sum: { costUsd: true, totalTokens: true },
+          _count: true,
+        }),
+        this.readPrisma.llmUsage.groupBy({
+          by: ['provider', 'model'],
+          where: { userId },
+          _sum: { costUsd: true, totalTokens: true },
+          _count: true,
+        }),
+        this.readPrisma.llmUsage.groupBy({
+          by: ['feature'],
+          where: { userId },
+          _sum: { costUsd: true, totalTokens: true },
+          _count: true,
+        }),
+        this.readPrisma.llmUsage.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        }),
+      ]);
+      return {
         totalCostUsd: Number(llmTotals._sum.costUsd ?? 0),
         totalTokens: Number(llmTotals._sum.totalTokens ?? 0),
         totalCalls: llmTotals._count,
@@ -432,8 +529,13 @@ export class AdminService {
           costUsd: Number(row.costUsd),
           createdAt: row.createdAt.toISOString(),
         })),
-      },
-    };
+      };
+    } catch (err: any) {
+      this.logger.warn(
+        `getUserDetail: llm_usage block failed for ${userId}, returning zeros: ${err?.message ?? err}`,
+      );
+      return empty;
+    }
   }
 
   async updateUser(
@@ -539,6 +641,87 @@ export class AdminService {
       createdAt: updated.createdAt.toISOString(),
       subscriptionStatus: (updated as any).subscriptions[0]?.status ?? null,
       subscriptionPlan: (updated as any).subscriptions[0]?.plan ?? null,
+    };
+  }
+
+  /**
+   * Atomically credit `amount` to the user, write a typed
+   * `credit_transactions` row of type ADMIN_GRANT, and stamp the
+   * activity log so the operator action is auditable. Negative or
+   * zero amounts are rejected — use the regular Edit User flow if you
+   * actually want to set an absolute balance, since that path also
+   * writes a `previousData/newData` audit row.
+   */
+  async grantCredits(
+    userId: string,
+    amount: number,
+    reason: string | undefined,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ id: string; email: string; credits: number; granted: number }> {
+    if (!Number.isFinite(amount) || amount <= 0 || !Number.isInteger(amount)) {
+      throw new BadRequestException('amount must be a positive integer');
+    }
+    if (amount > 100_000) {
+      throw new BadRequestException('amount exceeds the per-grant ceiling (100000)');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, credits: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const description = reason && reason.trim().length > 0
+      ? `Admin grant: ${reason.trim().slice(0, 200)}`
+      : 'Admin grant';
+
+    // Mirrors `UserService.addCredits` — single-statement CTE so the
+    // increment and the credit_transactions row land together (or not
+    // at all). PgBouncer-compatible because there's no client-side
+    // transaction. Casting `$3` to the enum keeps the type-safe shape
+    // even though we're going through `$queryRawUnsafe`.
+    const result: { affected: bigint }[] = await this.prisma.$queryRawUnsafe(
+      `WITH credited AS (
+        UPDATE users
+        SET credits = credits + $1, "updatedAt" = NOW()
+        WHERE id = $2::uuid
+        RETURNING id
+      )
+      INSERT INTO credit_transactions (id, "userId", amount, type, description, "createdAt")
+      SELECT gen_random_uuid(), $2::uuid, $1, 'ADMIN_GRANT'::"CreditTransactionType", $3, NOW()
+      FROM credited
+      RETURNING (SELECT count(*) FROM credited)::int AS affected`,
+      amount,
+      userId,
+      description,
+    );
+    if (Number(result[0]?.affected ?? 0) === 0) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'USER_CREDITS_UPDATE',
+        entityType: 'User',
+        entityId: userId,
+        entityLabel: user.email,
+        previousData: { credits: user.credits },
+        newData: { credits: user.credits + amount, granted: amount, reason: description },
+      },
+    });
+
+    this.logger.log(
+      `Admin ${adminEmail} granted ${amount} credits to ${user.email} (${userId}): ${description}`,
+    );
+
+    return {
+      id: user.id,
+      email: user.email,
+      credits: user.credits + amount,
+      granted: amount,
     };
   }
 
@@ -924,6 +1107,25 @@ export class AdminService {
       day30: totalUsers > 0 ? Math.round((retainedDay30 / totalUsers) * 1000) / 10 : 0,
     };
 
+    // Org-level credits-by-feature breakdown for the same 7-day window
+    // the rest of the dashboard uses. Same SQL classifier as the
+    // per-user breakdown so a new deductCredits caller only needs the
+    // CASE row updated in one place.
+    const creditsByFeatureRows = await this.readPrisma.$queryRawUnsafe<
+      Array<{ feature: string; total_credits: bigint; count: bigint }>
+    >(
+      AdminService.CREDITS_BY_FEATURE_SQL +
+        ` WHERE amount < 0 AND "createdAt" >= $1::timestamptz
+          GROUP BY feature
+          ORDER BY total_credits DESC`,
+      sevenDaysAgo,
+    );
+    const creditsByFeatureLast7Days = creditsByFeatureRows.map((r) => ({
+      feature: r.feature,
+      totalCredits: Number(r.total_credits),
+      count: Number(r.count),
+    }));
+
     return {
       sessionsToday,
       sessionsLast7Days,
@@ -931,6 +1133,7 @@ export class AdminService {
       avgChatLength: totalSessions > 0 ? Math.round((totalChatMessages / totalSessions) * 10) / 10 : 0,
       creditsConsumedToday: Math.abs(Number(creditsToday._sum.amount ?? 0)),
       creditsConsumedLast7Days: Math.abs(Number(creditsLast7Days._sum.amount ?? 0)),
+      creditsByFeatureLast7Days,
       revenueTrend,
       featureUsage,
       conversionRate: totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 1000) / 10 : 0,

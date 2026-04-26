@@ -83,6 +83,7 @@ export interface UserDetail {
     palmistryReadings: number;
     matchingResults: number;
   };
+  creditsByFeature: Array<{ feature: string; totalCredits: number; count: number }>;
 }
 
 export interface PlatformAnalytics {
@@ -92,6 +93,7 @@ export interface PlatformAnalytics {
   avgChatLength: number;
   creditsConsumedToday: number;
   creditsConsumedLast7Days: number;
+  creditsByFeatureLast7Days: Array<{ feature: string; totalCredits: number; count: number }>;
   revenueTrend: Array<{ date: string; revenue: number }>;
   featureUsage: Array<{ feature: string; count: number; percent: number }>;
   conversionRate: number;

@@ -95,6 +95,7 @@ enum CreditTransactionType {
   DAILY_FREE
   CHAT_DEDUCTION
   REPORT_PURCHASE
+  ADMIN_GRANT
 }
 
 enum AdminAction {
