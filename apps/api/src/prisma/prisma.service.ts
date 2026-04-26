@@ -13,20 +13,42 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // DI container booted, so we just hand the connection string to
     // PrismaPg here and let it manage its own pool.
     //
-    // `rejectUnauthorized: false` is required for Supabase's pooler:
-    // pg-connection-string v3 treats `sslmode=require` as `verify-full`
-    // and validates the cert chain against Node's bundled root CAs,
-    // which don't include Supabase's intermediate CA. Without this
-    // override, every query fails with "Error opening a TLS connection:
-    // self-signed certificate in certificate chain". The legacy Prisma
-    // binary engine was lenient about this; the pg-based adapter is
-    // not. The connection is still encrypted; we just don't pin the CA.
+    // We strip `sslmode=` from the URL before handing it to PrismaPg
+    // and pass `ssl: { rejectUnauthorized: false }` explicitly. The
+    // explicit option is necessary because Supabase's CA isn't in
+    // Node's default trust store and pg would otherwise fail every
+    // query with "self-signed certificate in certificate chain". The
+    // strip is necessary because of a precedence bug in
+    // `pg/lib/connection-parameters.js`:
+    //   config = Object.assign({}, config, parse(connectionString))
+    // The URL-parsed config OVERRIDES the explicit one, so leaving
+    // `sslmode=require` in the URL silently wipes our `ssl` override
+    // and pg falls back to verify-full. We strip only for the runtime
+    // adapter; the original DATABASE_URL keeps `sslmode=require`,
+    // which `prisma migrate deploy` (libpq-style) needs intact.
     super({
       adapter: new PrismaPg({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: PrismaService.stripSslmode(process.env.DATABASE_URL),
         ssl: { rejectUnauthorized: false },
       }),
     });
+  }
+
+  /**
+   * Remove `sslmode` from the connection-string query so the URL parsed
+   * by pg doesn't override the explicit `ssl` option we pass alongside
+   * the `connectionString`. See the constructor comment for the full
+   * explanation.
+   */
+  static stripSslmode(input: string | undefined): string {
+    if (!input) return '';
+    try {
+      const u = new URL(input);
+      u.searchParams.delete('sslmode');
+      return u.toString();
+    } catch {
+      return input;
+    }
   }
 
   /**

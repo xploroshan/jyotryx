@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class PrismaReadReplicaService
@@ -18,12 +19,11 @@ export class PrismaReadReplicaService
     const replicaUrl = process.env.DATABASE_READ_REPLICA_URL || '';
     const url = replicaUrl || process.env.DATABASE_URL || '';
 
-    // See `prisma.service.ts` for why `rejectUnauthorized: false` —
-    // Supabase's CA chain isn't in Node's default trust store and
-    // pg-connection-string v3 rejects it as self-signed.
+    // See `prisma.service.ts` constructor for why we strip `sslmode=`
+    // and pass `ssl: { rejectUnauthorized: false }` explicitly.
     super({
       adapter: new PrismaPg({
-        connectionString: url,
+        connectionString: PrismaService.stripSslmode(url),
         ssl: { rejectUnauthorized: false },
       }),
     });
