@@ -8,8 +8,38 @@ function requireInProduction(key: string, fallback: string): string {
   return value || fallback;
 }
 
+/**
+ * Parse a numeric env var safely. The previous pattern —
+ * `parseInt(process.env.X || 'default', 10)` — only catches
+ * `undefined`/`""`. If the variable is set to a non-numeric string
+ * (e.g. an API key got pasted into the wrong slot in Railway),
+ * `parseInt` returns `NaN`, the `||` fallback never fires, and the
+ * downstream code silently breaks: `WHERE credits >= NaN` evaluates
+ * to `NULL` in Postgres so deductCredits returns false → user sees
+ * "Insufficient credits" with no clue why. Same shape can corrupt
+ * `port`, `redis.port`, OTP settings, etc.
+ *
+ * This helper falls back to the default whenever the env var is
+ * missing, empty, or fails to parse to a finite number, and warns
+ * loudly so the operator notices the bad value at boot time.
+ */
+function parseIntEnv(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (raw === undefined || raw === '') return fallback;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[config] env "${key}"=${JSON.stringify(raw)} is not a valid integer; ` +
+        `falling back to ${fallback}. Fix the variable in your deployment platform.`,
+    );
+    return fallback;
+  }
+  return n;
+}
+
 export default () => ({
-  port: parseInt(process.env.PORT || '4000', 10),
+  port: parseIntEnv('PORT', 4000),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 
   database: {
@@ -53,8 +83,8 @@ export default () => ({
   },
 
   otp: {
-    expiresInMinutes: parseInt(process.env.OTP_EXPIRES_IN_MINUTES || '5', 10),
-    length: parseInt(process.env.OTP_LENGTH || '6', 10),
+    expiresInMinutes: parseIntEnv('OTP_EXPIRES_IN_MINUTES', 5),
+    length: parseIntEnv('OTP_LENGTH', 6),
     // When true, the /auth/otp/send response includes the OTP (dev/staging only).
     // Automatically enabled outside production unless explicitly disabled.
     exposeOtpInResponse:
@@ -83,7 +113,7 @@ export default () => ({
 
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    port: parseIntEnv('REDIS_PORT', 6379),
   },
 
   r2: {
@@ -95,7 +125,7 @@ export default () => ({
   },
 
   data: {
-    retentionMonths: parseInt(process.env.DATA_RETENTION_MONTHS || '6', 10),
+    retentionMonths: parseIntEnv('DATA_RETENTION_MONTHS', 6),
   },
 
   analytics: {
@@ -103,10 +133,10 @@ export default () => ({
   },
 
   credits: {
-    freeMonthly: parseInt(process.env.FREE_MONTHLY_CREDITS || '10', 10),
-    chatCost: parseInt(process.env.CHAT_CREDIT_COST || '1', 10),
-    kundliCost: parseInt(process.env.KUNDLI_CREDIT_COST || '2', 10),
-    reportCost: parseInt(process.env.REPORT_CREDIT_COST || '5', 10),
-    palmistryCost: parseInt(process.env.PALMISTRY_CREDIT_COST || '3', 10),
+    freeMonthly: parseIntEnv('FREE_MONTHLY_CREDITS', 10),
+    chatCost: parseIntEnv('CHAT_CREDIT_COST', 1),
+    kundliCost: parseIntEnv('KUNDLI_CREDIT_COST', 2),
+    reportCost: parseIntEnv('REPORT_CREDIT_COST', 5),
+    palmistryCost: parseIntEnv('PALMISTRY_CREDIT_COST', 3),
   },
 });
