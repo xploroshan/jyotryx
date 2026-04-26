@@ -71,11 +71,18 @@ export class PalmistryService {
     this.logger.log(`Analyzing palm for user: ${userId}`);
 
     const creditCost = this.configService.get<number>('credits.palmistryCost', 3);
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'Palmistry reading');
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits for palmistry reading.');
-    }
+    return this.userService.deductWithRefund(userId, creditCost, 'Palmistry reading', () =>
+      this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, creditCost),
+    );
+  }
 
+  private async runPalmistryAnalysis(
+    userId: string,
+    imageBuffer: Buffer | undefined,
+    imageMimeType: string | undefined,
+    locale: string | undefined,
+    creditCost: number,
+  ): Promise<PalmistryAnalysis> {
     // Upload image to R2 first (needed by both sync and async paths)
     let imageKey: string | null = null;
     let imageUrl = '';

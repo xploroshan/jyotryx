@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface UserProfile {
@@ -276,6 +276,50 @@ export class UserService {
       description,
     );
     return Number(result[0]?.affected ?? 0) > 0;
+  }
+
+  /**
+   * Deduct `cost` credits up-front, run `work`, refund the credits if
+   * `work` throws. Without this, an upstream failure (swisseph workers
+   * dying, LLM rate-limited, DB hiccup, …) leaves the user out-of-pocket
+   * with nothing to show for it.
+   *
+   * Throws `BadRequestException('Insufficient credits …')` if the
+   * deduction itself fails (matching the original per-feature error
+   * shape so existing 4xx clients don't break). Re-throws whatever
+   * `work` threw so the client still sees the real failure rather
+   * than a misleading success.
+   *
+   * The refund is best-effort: if even `addCredits` throws after a
+   * failure, we log at error so an operator can correct the balance
+   * manually, and still re-throw the original work error.
+   */
+  async deductWithRefund<T>(
+    userId: string,
+    cost: number,
+    description: string,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    const deducted = await this.deductCredits(userId, cost, description);
+    if (!deducted) {
+      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    }
+    try {
+      return await work();
+    } catch (err) {
+      try {
+        await this.addCredits(userId, cost, 'ADMIN_GRANT', `Refund: ${description}`);
+        this.logger.warn(
+          `Refunded ${cost} credits to ${userId} after "${description}" failed: ${(err as Error)?.message ?? err}`,
+        );
+      } catch (refundErr) {
+        this.logger.error(
+          `REFUND FAILED for user=${userId} cost=${cost} desc="${description}". Manual balance correction needed.`,
+          refundErr as Error,
+        );
+      }
+      throw err;
+    }
   }
 
   async findById(userId: string): Promise<UserProfile | null> {

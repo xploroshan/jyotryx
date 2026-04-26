@@ -219,7 +219,7 @@ export class AstrologyService {
   async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    return this.deductAndRun(userId, creditCost, 'Kundli generation', async () => {
+    return this.userService.deductWithRefund(userId, creditCost, 'Kundli generation', async () => {
       const chartData = await this.generateAIKundli(birthDetails);
       const kundli = await this.prisma.kundliChart.create({
         data: {
@@ -243,48 +243,6 @@ export class AstrologyService {
         createdAt: kundli.createdAt.toISOString(),
       };
     });
-  }
-
-  /**
-   * Deduct `cost` credits, run `work`, and refund the credits if `work`
-   * throws. Without this, an upstream failure (swisseph worker dying,
-   * LLM rate-limited, DB hiccup, …) would leave the user out-of-pocket
-   * with nothing to show for it. The refund itself is best-effort: if
-   * even `addCredits` fails we log loudly so the operator can correct
-   * the balance manually, but we still re-throw the original error so
-   * the client sees the real failure rather than a misleading success.
-   */
-  private async deductAndRun<T>(
-    userId: string,
-    cost: number,
-    description: string,
-    work: () => Promise<T>,
-  ): Promise<T> {
-    const deducted = await this.userService.deductCredits(userId, cost, description);
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
-    }
-    try {
-      return await work();
-    } catch (err) {
-      try {
-        await this.userService.addCredits(
-          userId,
-          cost,
-          'ADMIN_GRANT',
-          `Refund: ${description}`,
-        );
-        this.logger.warn(
-          `Refunded ${cost} credits to ${userId} after "${description}" failed: ${(err as Error)?.message ?? err}`,
-        );
-      } catch (refundErr) {
-        this.logger.error(
-          `REFUND FAILED for user=${userId} cost=${cost} desc="${description}". Manual balance correction needed.`,
-          refundErr as Error,
-        );
-      }
-      throw err;
-    }
   }
 
   // ─── Swiss Ephemeris Helper: compute Julian Day from birth details ────────
@@ -778,7 +736,7 @@ export class AstrologyService {
   async getMatching(userId: string, partner1: BirthDetails, partner2: BirthDetails, locale?: string): Promise<MatchingResult> {
     this.logger.log('Performing Kundli matching');
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    return this.deductAndRun(userId, creditCost, 'Kundli matching', async () => {
+    return this.userService.deductWithRefund(userId, creditCost, 'Kundli matching', async () => {
       const gunaDetails = this.calculateGunaScores(partner1, partner2);
       const totalScore = gunaDetails.reduce((s, g) => s + g.obtainedPoints, 0);
       const compatibility = totalScore >= 25 ? 'Excellent' : totalScore >= 21 ? 'Very Good' : totalScore >= 18 ? 'Good' : totalScore >= 14 ? 'Average' : 'Below Average';
@@ -2301,7 +2259,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
     }
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    return this.deductAndRun(userId, creditCost, `Divisional chart D${type}`, async () => {
+    return this.userService.deductWithRefund(userId, creditCost, `Divisional chart D${type}`, async () => {
       const chart = await this.generateAIKundli(birthDetails);
       const planetLongitudes = chart.planetaryPositions.map((p: PlanetPosition) => ({
         planet: p.planet,
@@ -2321,7 +2279,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
   // ─── KP Astrology ────────────────────────────────────────────────────────────
   async generateKPChart(userId: string, birthDetails: BirthDetails): Promise<any> {
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    return this.deductAndRun(userId, creditCost, 'KP chart generation', () => this.computeKPChart(birthDetails));
+    return this.userService.deductWithRefund(userId, creditCost, 'KP chart generation', () => this.computeKPChart(birthDetails));
   }
 
   private async computeKPChart(birthDetails: BirthDetails): Promise<any> {
