@@ -221,7 +221,36 @@ export class UserService {
       negAmount,
       description,
     );
-    return Number(result[0]?.affected ?? 0) > 0;
+    const ok = Number(result[0]?.affected ?? 0) > 0;
+    if (!ok) {
+      // Diagnostic follow-up so the API log explains *why* the
+      // deduction failed: stale JWT pointing to a missing user, an
+      // unexpectedly large `amount` (e.g. an env-var override of
+      // KUNDLI_CREDIT_COST), or a real "balance < cost" case. Cheap —
+      // one indexed lookup, only on the failure path.
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { credits: true, email: true },
+      });
+      if (!user) {
+        this.logger.warn(
+          `deductCredits: no user with id=${userId} (stale JWT? deleted account?). ` +
+          `Caller asked for amount=${amount} (description="${description}").`,
+        );
+      } else if (!Number.isFinite(amount) || amount < 0) {
+        this.logger.warn(
+          `deductCredits: invalid amount=${amount} for user=${user.email} ` +
+          `(balance=${user.credits}, description="${description}"). ` +
+          `Check the *_CREDIT_COST env var that produced this value.`,
+        );
+      } else {
+        this.logger.warn(
+          `deductCredits: insufficient — user=${user.email} balance=${user.credits} ` +
+          `wanted=${amount} (description="${description}").`,
+        );
+      }
+    }
+    return ok;
   }
 
   async addCredits(userId: string, amount: number, type: string, description: string): Promise<boolean> {
