@@ -16,6 +16,9 @@ export interface UserItem {
   phone: string | null;
   role: string;
   credits: number;
+  /** Lifetime credits consumed (sum of negative `credit_transactions`).
+   *  "Given" is derived as `credits + creditsUsed` for the table row. */
+  creditsUsed: number;
   provider: string;
   createdAt: string;
   subscriptionStatus: string | null;

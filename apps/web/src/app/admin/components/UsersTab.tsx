@@ -211,6 +211,12 @@ export function UsersTab({ token }: { token: string }) {
                     <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Email</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Role</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Credits</th>
+                    <th
+                      className="text-left px-4 py-3 text-xs font-medium text-white/40"
+                      title="Credits used vs. credits given (current balance + lifetime usage)"
+                    >
+                      Usage
+                    </th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Subscription</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Joined</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-white/40">Actions</th>
@@ -224,6 +230,26 @@ export function UsersTab({ token }: { token: string }) {
                       <td className="px-4 py-3 text-white/60">{u.email}</td>
                       <td className="px-4 py-3">{roleBadge(u.role)}</td>
                       <td className="px-4 py-3 text-white/60">{u.credits}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {(() => {
+                          const used = u.creditsUsed ?? 0;
+                          const given = u.credits + used;
+                          const pct = given > 0 ? Math.min(100, Math.round((used / given) * 100)) : 0;
+                          return (
+                            <div className="flex items-center gap-2 min-w-[120px]">
+                              <span className="text-amber-400 tabular-nums whitespace-nowrap">
+                                {used} / {given}
+                              </span>
+                              <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full transition-all"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-4 py-3">
                         {u.subscriptionPlan ? (
                           <div className="flex items-center gap-1">
@@ -257,7 +283,7 @@ export function UsersTab({ token }: { token: string }) {
                     </tr>
                   ))}
                   {users.length === 0 && (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-white/30">No users found</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-white/30">No users found</td></tr>
                   )}
                 </tbody>
               </table>
