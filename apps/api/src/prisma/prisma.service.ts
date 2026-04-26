@@ -12,8 +12,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // normalised `DATABASE_URL` (sslmode, pgbouncer params) before the
     // DI container booted, so we just hand the connection string to
     // PrismaPg here and let it manage its own pool.
+    //
+    // `rejectUnauthorized: false` is required for Supabase's pooler:
+    // pg-connection-string v3 treats `sslmode=require` as `verify-full`
+    // and validates the cert chain against Node's bundled root CAs,
+    // which don't include Supabase's intermediate CA. Without this
+    // override, every query fails with "Error opening a TLS connection:
+    // self-signed certificate in certificate chain". The legacy Prisma
+    // binary engine was lenient about this; the pg-based adapter is
+    // not. The connection is still encrypted; we just don't pin the CA.
     super({
-      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+      adapter: new PrismaPg({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      }),
     });
   }
 
