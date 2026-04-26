@@ -61,6 +61,10 @@ describe('AdminService', () => {
       },
       creditTransaction: {
         aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 0 } }),
+        // `getUsers` group-by-userId aggregation (added with the
+        // Users-tab Usage column). Empty result → every row's
+        // creditsUsed defaults to 0 in the mapping.
+        groupBy: jest.fn().mockResolvedValue([]),
       },
       matchingResult: {
         count: jest.fn().mockResolvedValue(0),
@@ -86,6 +90,12 @@ describe('AdminService', () => {
         groupBy: jest.fn().mockResolvedValue([]),
         findMany: jest.fn().mockResolvedValue([]),
       },
+      // Top-level Prisma raw-query escape hatch. Used by
+      // `aggregateCreditsByFeature` (per-user) and the analytics
+      // `creditsByFeatureLast7Days` rollup. Returning [] is the
+      // empty-history happy path; tests that assert on these rollups
+      // override this on the per-test mock.
+      $queryRawUnsafe: jest.fn().mockResolvedValue([]),
     };
 
     const mockStatsService = {
