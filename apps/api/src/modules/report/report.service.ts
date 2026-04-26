@@ -62,12 +62,12 @@ export class ReportService {
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
     const creditCost = this.configService.get<number>('credits.reportCost', 5);
+    return this.userService.deductWithRefund(userId, creditCost, `${dto.type} report generation`, () =>
+      this.runReportGeneration(userId, dto, creditCost),
+    );
+  }
 
-    const deducted = await this.userService.deductCredits(userId, creditCost, `${dto.type} report generation`);
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
-    }
-
+  private async runReportGeneration(userId: string, dto: GenerateReportDto, creditCost: number): Promise<ReportResponse> {
     // Fetch user's profile for personalized reports
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

@@ -94,9 +94,12 @@ export class TarotService {
     const config = SPREAD_CONFIG[dto.spread];
     if (!config) throw new BadRequestException('Invalid spread type. Use: single, three-card, or celtic-cross');
 
-    const deducted = await this.userService.deductCredits(userId, config.credits, `Tarot ${dto.spread} reading`);
-    if (!deducted) throw new BadRequestException('Insufficient credits for tarot reading.');
+    return this.userService.deductWithRefund(userId, config.credits, `Tarot ${dto.spread} reading`, () =>
+      this.runTarotDraw(userId, dto, config),
+    );
+  }
 
+  private async runTarotDraw(userId: string, dto: DrawCardsDto, config: typeof SPREAD_CONFIG[keyof typeof SPREAD_CONFIG]) {
     // Shuffle and draw
     const shuffled = [...FULL_DECK].sort(() => Math.random() - 0.5);
     const drawn = shuffled.slice(0, config.count).map((card, i) => ({

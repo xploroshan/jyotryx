@@ -44,9 +44,12 @@ export class VastuService {
 
   async analyze(userId: string, dto: VastuAnalysisDto) {
     const creditCost = 2;
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'Vastu consultation');
-    if (!deducted) throw new BadRequestException('Insufficient credits for Vastu consultation.');
+    return this.userService.deductWithRefund(userId, creditCost, 'Vastu consultation', () =>
+      this.runVastuAnalysis(userId, dto),
+    );
+  }
 
+  private async runVastuAnalysis(userId: string, dto: VastuAnalysisDto) {
     const dirData = DIRECTION_DATA[dto.entranceDirection];
     const entranceScore = ENTRANCE_SCORES[dto.entranceDirection];
 
