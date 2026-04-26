@@ -18,8 +18,14 @@ export class PrismaReadReplicaService
     const replicaUrl = process.env.DATABASE_READ_REPLICA_URL || '';
     const url = replicaUrl || process.env.DATABASE_URL || '';
 
+    // See `prisma.service.ts` for why `rejectUnauthorized: false` —
+    // Supabase's CA chain isn't in Node's default trust store and
+    // pg-connection-string v3 rejects it as self-signed.
     super({
-      adapter: new PrismaPg({ connectionString: url }),
+      adapter: new PrismaPg({
+        connectionString: url,
+        ssl: { rejectUnauthorized: false },
+      }),
     });
 
     this.usingReplica = replicaUrl.length > 0;
