@@ -11,6 +11,11 @@ import React from 'react';
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  // Returned as a real-shaped URLSearchParams so the kundli page's
+  // `?place=` capture can call `.get()` without erroring. The default
+  // is empty so existing assertions about the unprefilled form still
+  // hold.
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // ─── Mock store state ───────────────────────────────────────────────────────

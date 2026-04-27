@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/i18n";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
@@ -43,6 +44,13 @@ interface DoshaData {
 export default function KundliPage() {
   const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  // SEO landing pages at /kundli/[city] deep-link here with `?place=`
+  // pre-filled. Picking this up here means the user lands on the form
+  // with the place-of-birth field already set, and only has to fill in
+  // name + DOB + time. We treat the param as a hint only — the user
+  // can still edit the place freely.
+  const searchParams = useSearchParams();
+  const placeFromQuery = searchParams.get("place")?.trim() || "";
   // Kundli is a Vedic-specific feature. Other traditions have their own
   // dedicated feature pages (Western Natal, Chinese BaZi, …) surfaced via
   // the tradition rail, so there's no in-page tradition switcher here.
@@ -85,6 +93,14 @@ export default function KundliPage() {
       return next;
     });
   }, [user]);
+
+  // Pre-fill the place from the SEO landing page deep-link. Runs once
+  // and only writes if the field is still empty, so it doesn't fight
+  // the user-profile prefill above or stomp on what the user typed.
+  useEffect(() => {
+    if (!placeFromQuery) return;
+    setForm((prev) => (prev.place ? prev : { ...prev, place: placeFromQuery }));
+  }, [placeFromQuery]);
 
   // Surface which specific fields are missing so the disabled Generate button
   // is self-explanatory — previously it was a silent `disabled` with no clue.
@@ -269,6 +285,17 @@ export default function KundliPage() {
                     t.kundli.generateKundli
                   )}
                 </button>
+                {/* SEO city directory link — gives indexable internal-link
+                    juice to the static landing pages and gives users an
+                    alternate entry point if they're browsing for a
+                    specific city's content rather than filling the form. */}
+                <p className="mt-3 text-xs text-white/40 text-center">
+                  Or browse{' '}
+                  <a href="/kundli/cities" className="text-primary-300 hover:text-primary-200">
+                    free Kundli pages by city
+                  </a>
+                  .
+                </p>
               </div>
             </div>
           </div>
