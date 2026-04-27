@@ -38,7 +38,14 @@ describe('PalmistryService', () => {
 
     userService = {
       deductCredits: jest.fn().mockResolvedValue(true),
+      addCredits: jest.fn().mockResolvedValue(true),
       findById: jest.fn().mockResolvedValue(mockUser),
+      deductWithRefund: jest.fn(async (
+        _userId: string,
+        _cost: number,
+        _description: string,
+        work: () => Promise<unknown>,
+      ) => work()),
     };
 
     openaiService = {
@@ -81,7 +88,12 @@ describe('PalmistryService', () => {
 
       await service.analyzePalm('test-uuid', imageBuffer, 'image/jpeg');
 
-      expect(userService.deductCredits).toHaveBeenCalledWith('test-uuid', 3, expect.any(String));
+      expect(userService.deductWithRefund).toHaveBeenCalledWith(
+        'test-uuid',
+        3,
+        expect.any(String),
+        expect.any(Function),
+      );
     });
 
     it('should return fallback analysis when OpenAI fails', async () => {
@@ -119,7 +131,7 @@ describe('PalmistryService', () => {
       const result = await service.analyzePalm('test-uuid');
 
       expect(result).toBeDefined();
-      expect(userService.deductCredits).toHaveBeenCalled();
+      expect(userService.deductWithRefund).toHaveBeenCalled();
     });
   });
 });

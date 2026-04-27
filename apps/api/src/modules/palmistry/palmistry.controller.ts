@@ -57,23 +57,28 @@ export class PalmistryController {
   async analyzePalm(
     @CurrentUser() user: JwtPayload,
     @UploadedFile() file?: any,
-    @Body() body?: { locale?: string },
+    @Body() body?: { locale?: string; gender?: string },
   ): Promise<PalmistryAnalysis> {
+    if (!file?.buffer) {
+      throw new BadRequestException('Palm image is required');
+    }
+    const gender = body?.gender === 'male' || body?.gender === 'female' ? body.gender : undefined;
     return this.palmistryService.analyzePalm(
       user.sub,
-      file?.buffer,
-      file?.mimetype,
+      file.buffer,
+      file.mimetype,
       body?.locale,
+      gender,
     );
   }
 
   @Get(':id/status')
-  @ApiOperation({ summary: 'Get palmistry reading status' })
+  @ApiOperation({ summary: 'Get palmistry reading status (and full analysis once complete)' })
   @ApiResponse({ status: 200, description: 'Reading status returned' })
   async getReadingStatus(
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) readingId: string,
-  ): Promise<{ id: string; status: string }> {
+  ): Promise<{ id: string; status: string; analysis?: PalmistryAnalysis }> {
     return this.palmistryService.getReadingStatus(user.sub, readingId);
   }
 
