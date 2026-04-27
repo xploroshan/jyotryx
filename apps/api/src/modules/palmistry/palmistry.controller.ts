@@ -31,7 +31,7 @@ export class PalmistryController {
     FileInterceptor('image', {
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
       fileFilter: (_req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpeg|png|webp|heic)$/)) {
+        if (!file.mimetype.match(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i)) {
           return callback(new BadRequestException('Only image files (JPEG, PNG, WebP, HEIC) are allowed'), false);
         }
         callback(null, true);
@@ -59,14 +59,11 @@ export class PalmistryController {
     @UploadedFile() file?: any,
     @Body() body?: { locale?: string; gender?: string },
   ): Promise<PalmistryAnalysis> {
-    if (!file?.buffer) {
-      throw new BadRequestException('Palm image is required');
-    }
     const gender = body?.gender === 'male' || body?.gender === 'female' ? body.gender : undefined;
     return this.palmistryService.analyzePalm(
       user.sub,
-      file.buffer,
-      file.mimetype,
+      file?.buffer,
+      file?.mimetype,
       body?.locale,
       gender,
     );
