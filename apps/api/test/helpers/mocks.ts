@@ -321,13 +321,37 @@ export const createMockRedis = () => {
   };
 };
 
-export const mockUserService = () => ({
-  deductCredits: jest.fn().mockResolvedValue(true),
-  addCredits: jest.fn().mockResolvedValue(true),
-  findById: jest.fn(),
-  getProfile: jest.fn(),
-  getCredits: jest.fn(),
-});
+export const mockUserService = () => {
+  const deductCredits = jest.fn().mockResolvedValue(true);
+  const addCredits = jest.fn().mockResolvedValue(true);
+  return {
+    deductCredits,
+    addCredits,
+    findById: jest.fn(),
+    getProfile: jest.fn(),
+    getCredits: jest.fn(),
+    deductWithRefund: jest.fn(async (
+      userId: string,
+      cost: number,
+      description: string,
+      work: () => Promise<unknown>,
+    ) => {
+      const ok = await deductCredits(userId, cost, description);
+      if (!ok) {
+        const { BadRequestException } = await import('@nestjs/common');
+        throw new BadRequestException(
+          'Insufficient credits. Please purchase more credits to continue.',
+        );
+      }
+      try {
+        return await work();
+      } catch (err) {
+        await addCredits(userId, cost, 'ADMIN_GRANT', `Refund: ${description}`);
+        throw err;
+      }
+    }),
+  };
+};
 
 export const mockConfigService = (overrides: Record<string, any> = {}) => ({
   get: jest.fn((key: string, defaultValue?: any) => {

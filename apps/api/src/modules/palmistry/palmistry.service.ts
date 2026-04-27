@@ -123,54 +123,69 @@ export class PalmistryService {
       }
     }
 
-    // Async path: enqueue job for background processing
+    // Async path: enqueue job for background processing.
+    // If either the DB write or queue.add fails, fall through to the sync
+    // path rather than 500ing — the user has already paid credits.
     if (this.queueEnabled) {
-      const reading = await this.prisma.palmistryReading.create({
-        data: {
+      try {
+        const reading = await this.prisma.palmistryReading.create({
+          data: {
+            userId,
+            imageUrl,
+            imageKey,
+            analysisData: { status: 'processing' },
+          },
+        });
+
+        await this.palmistryQueue!.add('analyze', {
+          readingId: reading.id,
+          userId,
+          creditCost,
+          imageKey: imageKey ?? undefined,
+          imageMimeType,
+          locale,
+          gender,
+        } satisfies PalmistryJobData);
+
+        return {
+          id: reading.id,
           userId,
           imageUrl,
-          imageKey,
-          analysisData: { status: 'processing' },
-        },
-      });
-
-      await this.palmistryQueue!.add('analyze', {
-        readingId: reading.id,
-        userId,
-        creditCost,
-        imageKey: imageKey ?? undefined,
-        imageMimeType,
-        locale,
-        gender,
-      } satisfies PalmistryJobData);
-
-      return {
-        id: reading.id,
-        userId,
-        imageUrl,
-        status: 'processing',
-        lines: [],
-        mounts: [],
-        fingerAnalysis: [],
-        specialMarkings: [],
-        timingInsights: [],
-        overallReading: 'Your palmistry reading is being processed. Check back shortly.',
-        healthInsights: '',
-        careerInsights: '',
-        relationshipInsights: '',
-        spiritualInsights: '',
-        cautions: '',
-        createdAt: reading.createdAt.toISOString(),
-      };
+          status: 'processing',
+          lines: [],
+          mounts: [],
+          fingerAnalysis: [],
+          specialMarkings: [],
+          timingInsights: [],
+          overallReading: 'Your palmistry reading is being processed. Check back shortly.',
+          healthInsights: '',
+          careerInsights: '',
+          relationshipInsights: '',
+          spiritualInsights: '',
+          cautions: '',
+          createdAt: reading.createdAt.toISOString(),
+        };
+      } catch (err) {
+        this.logger.error(
+          `Palmistry async enqueue failed (${(err as Error)?.message}); falling back to sync analysis`,
+        );
+        // Fall through to sync path below
+      }
     }
 
     // Sync path (fallback when QUEUE_ENABLED=false)
     let analysisData: any;
     const client = this.openaiService.getClient();
 
-    const palmKB = await this.knowledgeService.getByCategory('palmistry', 15);
-    const palmKBContext = this.knowledgeService.assembleContext(palmKB);
-    const palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
+    // KB context is best-effort: a DB hiccup must not break the reading.
+    let palmKBSection = '';
+    try {
+      const palmKB = await this.knowledgeService.getByCategory('palmistry', 15);
+      const palmKBContext = this.knowledgeService.assembleContext(palmKB);
+      palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
+    } catch (err) {
+      this.logger.warn(`Palmistry KB lookup failed, continuing without it: ${(err as Error)?.message}`);
+    }
 
     if (client && imageBuffer) {
       const visionModel = this.openaiService.getModelForFeature('vision');
@@ -204,7 +219,13 @@ export class PalmistryService {
 
         const content = completion.choices[0]?.message?.content;
         if (content) {
-          analysisData = JSON.parse(content);
+          try {
+            analysisData = JSON.parse(content);
+          } catch (parseErr) {
+            this.logger.error(
+              `Palmistry: vision returned invalid JSON, using fallback: ${(parseErr as Error)?.message}`,
+            );
+          }
         }
       } catch (error) {
         this.logger.error('OpenAI Vision palm analysis failed, using fallback', error);
@@ -212,24 +233,39 @@ export class PalmistryService {
     }
 
     if (!analysisData) {
-      analysisData = await this.getKBEnrichedFallback();
+      try {
+        analysisData = await this.getKBEnrichedFallback();
+      } catch (err) {
+        this.logger.warn(`KB-enriched fallback failed, using static fallback: ${(err as Error)?.message}`);
+        analysisData = getDefaultFallback();
+      }
     }
 
-    const reading = await this.prisma.palmistryReading.create({
-      data: {
-        userId,
-        imageUrl,
-        imageKey,
-        analysisData,
-      },
-    });
+    let readingId = '';
+    let createdAt = new Date().toISOString();
+    try {
+      const reading = await this.prisma.palmistryReading.create({
+        data: {
+          userId,
+          imageUrl,
+          imageKey,
+          analysisData,
+        },
+      });
+      readingId = reading.id;
+      createdAt = reading.createdAt.toISOString();
+    } catch (err) {
+      this.logger.error(
+        `Palmistry DB write failed, returning analysis without persistence: ${(err as Error)?.message}`,
+      );
+    }
 
     return {
-      id: reading.id,
+      id: readingId,
       userId,
       imageUrl,
       ...analysisData,
-      createdAt: reading.createdAt.toISOString(),
+      createdAt,
     };
   }
 
