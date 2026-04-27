@@ -21,10 +21,11 @@ const FunnelTab = dynamic(() => import("./components/FunnelTab").then(m => ({ de
 const OpsTab = dynamic(() => import("./components/OpsTab").then(m => ({ default: m.OpsTab })), { ssr: false });
 const SafetyTab = dynamic(() => import("./components/SafetyTab").then(m => ({ default: m.SafetyTab })), { ssr: false });
 const GdprTab = dynamic(() => import("./components/GdprTab").then(m => ({ default: m.GdprTab })), { ssr: false });
+const ReferralTab = dynamic(() => import("./components/ReferralTab").then(m => ({ default: m.ReferralTab })), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────��──
 
-type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost" | "funnel" | "ops" | "safety" | "gdpr";
+type TabId = "dashboard" | "users" | "payments" | "chats" | "analytics" | "ai" | "content" | "activity" | "pricing" | "cost" | "funnel" | "ops" | "safety" | "gdpr" | "referral";
 
 // ─── Main Admin Page ─────────────────────────────────────────────────────────
 
@@ -111,6 +112,7 @@ export default function AdminPage() {
     { id: "pricing", label: "Pricing", icon: "\uD83D\uDCB0" },
     { id: "ai", label: "AI Agents", icon: "\uD83E\uDD16" },
     { id: "content", label: "Content", icon: "\uD83D\uDCDD" },
+    { id: "referral", label: "Referrals", icon: "\uD83C\uDF81" },
   ];
 
   if (!isHydrated || !isAuthenticated || user?.role !== "ADMIN") return null;
@@ -198,6 +200,10 @@ export default function AdminPage() {
 
         {activeTab === "content" && accessToken && (
           <ContentTab token={accessToken} />
+        )}
+
+        {activeTab === "referral" && accessToken && (
+          <ReferralTab token={accessToken} />
         )}
 
         {/* Inline tabs — small enough to stay in the main bundle */}

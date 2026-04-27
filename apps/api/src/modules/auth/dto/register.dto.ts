@@ -67,4 +67,14 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   signupSource?: string;
+
+  @ApiProperty({
+    example: 'ANJALI23',
+    required: false,
+    description:
+      'Referral code from a `?ref=…` share link. Both sides receive `referral.bonus_days` (default 30) of free Premium when the program is enabled.',
+  })
+  @IsOptional()
+  @IsString()
+  ref?: string;
 }

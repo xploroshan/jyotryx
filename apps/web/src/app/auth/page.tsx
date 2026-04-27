@@ -20,6 +20,57 @@ import {
 } from "@/lib/firebase";
 import type { ConfirmationResult } from "firebase/auth";
 
+// Where we stash a captured `?ref=…` so it survives navigation between
+// /auth?ref=X and /auth/register, and any Firebase popup detours. The
+// backend honours it only on first signup, so leaving it in storage
+// for a few minutes is harmless.
+const REFERRAL_STORAGE_KEY = "jyotryx.referralCode";
+const REFERRAL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+interface ReferralPreview {
+  valid: boolean;
+  referrerName?: string;
+  bonusDays?: number;
+}
+
+function loadStoredReferral(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(REFERRAL_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { code: string; savedAt: number };
+    if (!parsed?.code) return null;
+    if (Date.now() - parsed.savedAt > REFERRAL_TTL_MS) {
+      window.localStorage.removeItem(REFERRAL_STORAGE_KEY);
+      return null;
+    }
+    return parsed.code;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredReferral(code: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      REFERRAL_STORAGE_KEY,
+      JSON.stringify({ code, savedAt: Date.now() }),
+    );
+  } catch {
+    // Quota / private mode: just drop it.
+  }
+}
+
+function clearStoredReferral(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(REFERRAL_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 function AuthPageContent() {
   const { t, setLocale } = useTranslation();
   const router = useRouter();
@@ -28,6 +79,10 @@ function AuthPageContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const existingUser = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<"login" | "signup">("login");
+  // Referral code captured from `?ref=…` (or restored from localStorage on
+  // a subsequent visit). Sent on every signup-flavoured backend call.
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralPreview, setReferralPreview] = useState<ReferralPreview | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -37,7 +92,46 @@ function AuthPageContent() {
     const mode = searchParams.get("mode");
     if (mode === "signup") setTab("signup");
     else if (mode === "login") setTab("login");
+
+    // Capture / restore the referral code. URL param wins over storage so a
+    // newer link overrides an older one, but we fall back to storage so the
+    // user doesn't lose the bonus by closing the tab and coming back.
+    const fromUrl = (searchParams.get("ref") || "").trim().toUpperCase();
+    const stored = loadStoredReferral();
+    const next = fromUrl || stored || "";
+    if (next) {
+      setReferralCode(next);
+      if (fromUrl) saveStoredReferral(fromUrl);
+      // The user came in via an invite link — default to the signup tab
+      // so they don't have to switch manually.
+      if (mode !== "login" && fromUrl) setTab("signup");
+    }
   }, [searchParams, isAuthenticated, existingUser, router]);
+
+  // Look up the referrer's name + the active bonus_days so the banner
+  // can read "Sign up via Anjali's invite — both of you get 30 days
+  // of Premium free." If the code is unknown or the program is paused,
+  // the response is { valid: false } and we silently hide the banner.
+  useEffect(() => {
+    if (!referralCode) {
+      setReferralPreview(null);
+      return;
+    }
+    let cancelled = false;
+    api
+      .get<ReferralPreview>(`/referral/preview?code=${encodeURIComponent(referralCode)}`)
+      .then((res) => {
+        if (cancelled) return;
+        setReferralPreview(res);
+        if (!res.valid) clearStoredReferral();
+      })
+      .catch(() => {
+        if (!cancelled) setReferralPreview(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [referralCode]);
 
   const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
@@ -134,13 +228,18 @@ function AuthPageContent() {
   const authenticateWithBackend = useCallback(async (firebaseIdToken: string) => {
     // Cold-start tolerant: 30s the first time, the ApiError is re-thrown so
     // the caller can run its own retry UX.
-    const res = await api.post<any>("/auth/firebase", { idToken: firebaseIdToken }, { timeoutMs: 30_000 });
+    const body: { idToken: string; ref?: string } = { idToken: firebaseIdToken };
+    if (referralCode) body.ref = referralCode;
+    const res = await api.post<any>("/auth/firebase", body, { timeoutMs: 30_000 });
     setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
     applyUserLanguage(res.user?.preferredLanguage);
+    // The bonus has been claimed (or rejected) server-side. Either way,
+    // don't carry the code into a subsequent session.
+    if (referralCode) clearStoredReferral();
     // Profile onboarding needs to open with `?complete=1` so the guided
     // two-step flow kicks in, not the "edit profile" view.
     router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
-  }, [setAuth, router, applyUserLanguage]);
+  }, [setAuth, router, applyUserLanguage, referralCode]);
 
   const setupRecaptcha = useCallback(() => {
     // Clear previous verifier to avoid stale instances
@@ -251,11 +350,12 @@ function AuthPageContent() {
           return;
         }
         // On signup, pass the name so new phone users aren't defaulted to "User".
-        const body: { phone: string; otp: string; name?: string } = {
+        const body: { phone: string; otp: string; name?: string; ref?: string } = {
           phone: backendOtpPhoneRef.current,
           otp,
         };
         if (tab === "signup" && name.trim()) body.name = name.trim();
+        if (tab === "signup" && referralCode) body.ref = referralCode;
         const res = await api.post<any>(
           "/auth/otp/verify",
           body,
@@ -263,6 +363,7 @@ function AuthPageContent() {
         );
         setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
         applyUserLanguage(res.user?.preferredLanguage);
+        if (tab === "signup" && referralCode) clearStoredReferral();
         router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
         return;
       }
@@ -314,13 +415,22 @@ function AuthPageContent() {
     setLoading(true); setError(""); setSuccess(""); setLastAction(null);
     try {
       const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
-      const body = tab === "login" ? { email, password } : { name, email, password };
+      const body =
+        tab === "login"
+          ? { email, password }
+          : ({
+              name,
+              email,
+              password,
+              ...(referralCode ? { ref: referralCode } : {}),
+            } as Record<string, unknown>);
       // Cold-start tolerant timeout. The wake-up ping in useEffect usually
       // means the first real request is warm, but Render can take 30s from
       // stone-cold so we don't abort before that.
       const res = await api.post<any>(endpoint, body, { timeoutMs: 30_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       applyUserLanguage(res.user?.preferredLanguage);
+      if (tab === "signup" && referralCode) clearStoredReferral();
       router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
     } catch (err: any) {
       // Fall back to Firebase email/password ONLY when the backend rejected
@@ -530,6 +640,30 @@ function AuthPageContent() {
                 <div className="mb-4 p-2 rounded-md text-[11px] text-white/40 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                   {t.auth.wakingServer}
+                </div>
+              )}
+
+              {/* Referral banner — only shown when the captured code resolves
+                  to a real referrer AND the program is enabled. The backend
+                  /referral/preview endpoint deliberately returns
+                  { valid: false } for unknown codes / disabled programs so
+                  the banner stays out of the way unless it has something to
+                  promise. */}
+              {tab === "signup" && referralPreview?.valid && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="mb-4 p-3 rounded-lg bg-primary-500/10 border border-primary-500/30 text-primary-200 text-xs flex items-start gap-2"
+                >
+                  <span aria-hidden="true">🎁</span>
+                  <div className="flex-1">
+                    <strong className="font-semibold">{referralPreview.referrerName}</strong>{" "}
+                    invited you to Jyotron — you'll both get{" "}
+                    <strong className="font-semibold">
+                      {referralPreview.bonusDays} days
+                    </strong>{" "}
+                    of Premium free when you sign up.
+                  </div>
                 </div>
               )}
 

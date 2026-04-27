@@ -6,6 +6,7 @@ import {
   Logger,
   ForbiddenException,
   Inject,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -26,6 +27,7 @@ import {
 } from './dto';
 import { isProfileComplete } from '../user/user.service';
 import { SignupContext } from './signup-context';
+import { ReferralService } from '../referral/referral.service';
 import * as admin from 'firebase-admin';
 
 type PrismaUser = {
@@ -120,6 +122,11 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    // Optional so the ~14 unit-test suites that hand-build AuthService
+    // with `Test.createTestingModule({ providers: [...] })` don't have
+    // to all be updated. In production the AuthModule imports
+    // ReferralModule so this is always wired.
+    @Optional() private readonly referralService?: ReferralService,
   ) {
     // Initialize Firebase Admin SDK
     if (!admin.apps.length) {
@@ -215,10 +222,18 @@ export class AuthService {
     });
 
     this.logger.log(`User registered: ${user.email}`);
+    // Phase 1 monetization — fan out to the referral service. Soft
+    // failure here is intentional: signup must succeed even if the
+    // referral grant doesn't (program disabled, cap reached, etc.).
+    if (this.referralService) await this.referralService.activateAtSignup(user.id, dto.ref);
+    // Re-fetch the user so the response carries any role/credit
+    // changes the activation made (Premium upgrade, etc.) instead of
+    // showing the stale row created two statements ago.
+    const refreshed = await this.prisma.user.findUnique({ where: { id: user.id } });
     const tokens = await this.generateTokens(user.id, user.email, user.name);
 
     return {
-      user: toAuthUser(user),
+      user: toAuthUser(refreshed ?? user),
       tokens,
     };
   }
@@ -433,6 +448,9 @@ export class AuthService {
         },
       });
       this.logger.log(`New user created via OTP: ${phone}`);
+      if (this.referralService) await this.referralService.activateAtSignup(user.id, dto.ref);
+      const refreshed = await this.prisma.user.findUnique({ where: { id: user.id } });
+      if (refreshed) user = refreshed;
     }
 
     this.logger.log(`User logged in via OTP: ${user.email}`);
@@ -581,6 +599,9 @@ export class AuthService {
         },
       });
       this.logger.log(`New user created via Google: ${user.email}`);
+      if (this.referralService) await this.referralService.activateAtSignup(user.id, dto.ref);
+      const refreshed = await this.prisma.user.findUnique({ where: { id: user.id } });
+      if (refreshed) user = refreshed;
     }
 
     this.logger.log(`User logged in via Google: ${user.email}`);
@@ -661,6 +682,9 @@ export class AuthService {
         },
       });
       this.logger.log(`New user created via Firebase (${sign_in_provider}): ${user.email}`);
+      if (this.referralService) await this.referralService.activateAtSignup(user.id, dto.ref);
+      const refreshed = await this.prisma.user.findUnique({ where: { id: user.id } });
+      if (refreshed) user = refreshed;
     }
 
     this.logger.log(`User logged in via Firebase: ${user.email}`);

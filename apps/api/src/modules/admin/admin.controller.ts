@@ -53,6 +53,7 @@ import {
 } from '../../forecast/forecast.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
+import { ReferralService } from '../referral/referral.service';
 
 const KNOWN_LLM_PROVIDERS = new Set(['openai', 'gemini', 'anthropic', 'mistral', 'cohere', 'groq', 'google']);
 
@@ -69,6 +70,7 @@ export class AdminController {
     private readonly safety: SafetyService,
     private readonly gdpr: GdprRequestService,
     private readonly forecast: ForecastService,
+    private readonly referralService: ReferralService,
   ) {}
 
   @Get('dashboard')
@@ -191,7 +193,7 @@ export class AdminController {
     @Body() dto: Record<string, string>,
     @Request() req: any,
   ): Promise<Record<string, string>> {
-    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.'];
+    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.'];
     const invalidKeys = Object.keys(dto).filter(
       (key) => !ALLOWED_PREFIXES.some((prefix) => key.startsWith(prefix)),
     );
@@ -199,6 +201,17 @@ export class AdminController {
       throw new BadRequestException(`Invalid setting keys: ${invalidKeys.join(', ')}. Allowed prefixes: ${ALLOWED_PREFIXES.join(', ')}`);
     }
     return this.adminService.updateSettings(dto, req.user.sub, req.user.email);
+  }
+
+  @Get('referral/stats')
+  @ApiOperation({ summary: 'Aggregate referral program stats (for the Settings tab card)' })
+  @ApiResponse({ status: 200, description: 'Referral stats returned' })
+  async getReferralStats() {
+    const [stats, settings] = await Promise.all([
+      this.referralService.getAdminStats(),
+      this.referralService.getSettings(),
+    ]);
+    return { ...stats, settings };
   }
 
   @Post('subscriptions/:id/cancel')

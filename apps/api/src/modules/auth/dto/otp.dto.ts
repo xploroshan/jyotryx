@@ -31,4 +31,15 @@ export class VerifyOtpDto {
   @IsString()
   @MaxLength(100)
   name?: string;
+
+  /**
+   * Optional referral code captured from the `?ref=…` link. Only honoured
+   * on first-time signup through this endpoint; existing users keep their
+   * original referrer (or none).
+   */
+  @ApiProperty({ example: 'ANJALI23', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  ref?: string;
 }

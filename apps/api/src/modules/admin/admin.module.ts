@@ -18,6 +18,9 @@ import { SafetyModule } from '../../safety/safety.module';
 import { GdprModule } from '../../gdpr/gdpr.module';
 import { ForecastModule } from '../../forecast/forecast.module';
 import { NotificationModule } from '../notification/notification.module';
+// Phase 1 monetization — admin Settings tab exposes a "Referral
+// program" card that reads aggregate stats from this service.
+import { ReferralModule } from '../referral/referral.module';
 
 @Module({
   imports: [
@@ -30,6 +33,7 @@ import { NotificationModule } from '../notification/notification.module';
     GdprModule,
     ForecastModule,
     NotificationModule,
+    ReferralModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
