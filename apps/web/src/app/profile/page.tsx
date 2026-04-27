@@ -8,6 +8,7 @@ import { useTranslation } from "@/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
 import { Toast, RequiredMark } from "@/components/ui/Toast";
+import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSection";
 
 interface UserProfile {
   id: string;
@@ -541,6 +542,15 @@ export default function ProfilePage() {
                       </div>
                     )}
                   </div>
+                )}
+
+                {/* Daily briefing email opt-in (Phase 1 monetization).
+                    The toggle is its own self-saving control so the
+                    user doesn't have to remember to hit "Save changes"
+                    afterwards — that pattern is the #1 reason
+                    notification settings get half-flipped. */}
+                {(profile?.profileComplete || !completeMode) && (
+                  <BriefingPreferenceSection token={accessToken!} />
                 )}
               </div>
             )}

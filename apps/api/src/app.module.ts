@@ -24,6 +24,7 @@ import { NumerologyModule } from './modules/numerology/numerology.module';
 import { TarotModule } from './modules/tarot/tarot.module';
 import { VastuModule } from './modules/vastu/vastu.module';
 import { ReferralModule } from './modules/referral/referral.module';
+import { ExperimentModule } from './modules/experiment/experiment.module';
 import { StorageModule } from './storage/storage.module';
 import { EphemerisModule } from './ephemeris/ephemeris.module';
 import { PartitionModule } from './partition/partition.module';
@@ -68,6 +69,7 @@ import { MetricsModule } from './metrics/metrics.module';
     TarotModule,
     VastuModule,
     ReferralModule,
+    ExperimentModule,
     PartitionModule,
     StatsModule,
     AnalyticsModule,

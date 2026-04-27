@@ -10,6 +10,17 @@
  * `fetch` is invoked with `next.revalidate` so each city page is
  * regenerated at most once per N seconds — the panchang changes daily,
  * so we ride the default revalidate set on the page itself.
+ *
+ * IMPORTANT (Next 16 + Turbopack): a page that exports
+ * `export const revalidate = N` AND also calls `fetch(..., { next: {
+ * revalidate: M } })` triggers `Invalid segment configuration export
+ * detected` at build time, even though both forms were independently
+ * valid in Next 14/15. The pages that use these helpers therefore
+ * deliberately do NOT export a top-level `revalidate` — they rely on
+ * the per-fetch hint here, which Next propagates to the page-level
+ * revalidate automatically. If you ever add a page-level
+ * `export const revalidate` here, you'll see the build break with
+ * exactly that message.
  */
 
 const API_BASE_URL =

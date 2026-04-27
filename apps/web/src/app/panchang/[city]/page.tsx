@@ -29,8 +29,6 @@ import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 // Daily revalidate. Panchang changes once per local day; the API itself
 // caches the underlying ephemeris computation, so a 24h ISR on the page
 // is safe and keeps build time low.
-export const revalidate = 60 * 60 * 24;
-
 // Pre-render every city in the directory at build time. Anything not in
 // the list 404s rather than triggering on-demand SSG (keeps the URL
 // surface tight + sitemap-aligned).

@@ -6,6 +6,7 @@ import { useTranslation } from "@/i18n";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/Toast";
+import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 
 interface KundliData {
   id: string;
@@ -102,6 +103,12 @@ export default function KundliPage() {
     setForm((prev) => (prev.place ? prev : { ...prev, place: placeFromQuery }));
   }, [placeFromQuery]);
 
+  // Paywall A/B variant: the "first_free" treatment shows a banner
+  // promising the first kundli at zero credit cost. The actual credit
+  // grant is server-side; the UI just messages it. Until the variant
+  // resolves we render nothing so we don't flash the wrong copy.
+  const paywall = usePaywallVariant();
+
   // Surface which specific fields are missing so the disabled Generate button
   // is self-explanatory — previously it was a silent `disabled` with no clue.
   const missingFields: string[] = [];
@@ -137,6 +144,11 @@ export default function KundliPage() {
         ]);
         setKundli(result);
         if (doshaResult) setDoshas(doshaResult);
+        // First successful paid kundli is the conversion the paywall
+        // A/B test optimises for. Backend dedupes, so firing on every
+        // successful generation is safe and gives us a "user did pay"
+        // signal even when the credit balance was already > 0.
+        void recordPaywallConversion("first_paid_kundli");
       } else {
         setError(t.kundli.loginRequired);
       }
@@ -196,6 +208,21 @@ export default function KundliPage() {
           <div className="max-w-lg mx-auto">
             <div className="surface-card p-8">
               <h2 className="text-lg font-bold text-white mb-6">{t.kundli.enterBirthDetails}</h2>
+
+              {/* Paywall A/B variant banner — only the "first_free"
+                  treatment shows it, and only after the variant is
+                  resolved (no flash of the wrong copy). Both variants
+                  hit the same /astrology/kundli endpoint; the paid-vs-
+                  free framing is purely the user-facing message. */}
+              {!paywall.loading && paywall.variant === "first_free" && (
+                <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs flex items-start gap-2">
+                  <span aria-hidden="true">🎁</span>
+                  <span>
+                    Your first kundli is on us — no credits required. Just fill in your birth
+                    details and you'll have your full Vedic chart in seconds.
+                  </span>
+                </div>
+              )}
 
               {prefilled && (
                 <div className="mb-4 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">

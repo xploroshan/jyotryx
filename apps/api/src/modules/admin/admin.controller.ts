@@ -54,6 +54,8 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
 import { ReferralService } from '../referral/referral.service';
+import { BriefingMailerService } from '../daily-briefing/briefing-mailer.service';
+import { ExperimentService } from '../experiment/experiment.service';
 
 const KNOWN_LLM_PROVIDERS = new Set(['openai', 'gemini', 'anthropic', 'mistral', 'cohere', 'groq', 'google']);
 
@@ -71,6 +73,8 @@ export class AdminController {
     private readonly gdpr: GdprRequestService,
     private readonly forecast: ForecastService,
     private readonly referralService: ReferralService,
+    private readonly briefingMailer: BriefingMailerService,
+    private readonly experimentService: ExperimentService,
   ) {}
 
   @Get('dashboard')
@@ -193,7 +197,7 @@ export class AdminController {
     @Body() dto: Record<string, string>,
     @Request() req: any,
   ): Promise<Record<string, string>> {
-    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.'];
+    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.', 'paywall.'];
     const invalidKeys = Object.keys(dto).filter(
       (key) => !ALLOWED_PREFIXES.some((prefix) => key.startsWith(prefix)),
     );
@@ -212,6 +216,32 @@ export class AdminController {
       this.referralService.getSettings(),
     ]);
     return { ...stats, settings };
+  }
+
+  @Get('briefing/stats')
+  @ApiOperation({ summary: 'Daily briefing email stats + current settings' })
+  async getBriefingStats() {
+    return this.briefingMailer.getAdminStats();
+  }
+
+  @Post('briefing/send-test')
+  @ApiOperation({ summary: 'Send today\'s briefing to a specific user (admin test)' })
+  async sendBriefingTest(
+    @Body() dto: { userId?: string },
+    @Request() req: any,
+  ): Promise<{ ok: boolean }> {
+    // Default target is the admin themselves so the operator can
+    // validate the template against their own inbox without picking
+    // a user.
+    const targetId = dto?.userId || req.user.sub;
+    await this.briefingMailer.sendForUser(targetId, undefined, undefined, /*force*/ true);
+    return { ok: true };
+  }
+
+  @Get('experiments/paywall/stats')
+  @ApiOperation({ summary: 'Per-variant assignments + conversions for the paywall A/B test' })
+  async getPaywallStats() {
+    return this.experimentService.getStats();
   }
 
   @Post('subscriptions/:id/cancel')

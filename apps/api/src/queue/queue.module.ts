@@ -4,12 +4,19 @@ import { ConfigService } from '@nestjs/config';
 import { ReportProcessor } from './report.processor';
 import { PalmistryProcessor } from './palmistry.processor';
 import { BroadcastProcessor } from './broadcast.processor';
+import { BriefingProcessor } from './briefing.processor';
 import { UserModule } from '../modules/user/user.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { NotificationModule } from '../modules/notification/notification.module';
-import { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE } from './queue.constants';
+import { DailyBriefingModule } from '../modules/daily-briefing/daily-briefing.module';
+import {
+  REPORT_QUEUE,
+  PALMISTRY_QUEUE,
+  BROADCAST_QUEUE,
+  BRIEFING_QUEUE,
+} from './queue.constants';
 
-export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE };
+export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE, BRIEFING_QUEUE };
 
 @Module({
   imports: [
@@ -87,12 +94,25 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE };
           removeOnFail: 100,
         },
       },
+      {
+        name: BRIEFING_QUEUE,
+        // Daily fan-out — exactly one attempt per cron tick. A retry
+        // would re-send to every user already mailed in the previous
+        // attempt, so the per-user idempotency guard inside
+        // BriefingMailerService is the only safety net we want.
+        defaultJobOptions: {
+          attempts: 1,
+          removeOnComplete: 30,
+          removeOnFail: 60,
+        },
+      },
     ),
     UserModule,
     KnowledgeModule,
     NotificationModule,
+    DailyBriefingModule,
   ],
-  providers: [ReportProcessor, PalmistryProcessor, BroadcastProcessor],
+  providers: [ReportProcessor, PalmistryProcessor, BroadcastProcessor, BriefingProcessor],
   exports: [BullModule],
 })
 export class QueueModule {}

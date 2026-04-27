@@ -14,8 +14,6 @@ import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
  * the interactive page.
  */
 
-export const revalidate = 60 * 60 * 12; // forecast refreshes twice a day
-
 export function generateStaticParams() {
   return listSignSlugs().map((sign) => ({ sign }));
 }

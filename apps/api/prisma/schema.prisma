@@ -122,6 +122,12 @@ enum ReferralStatus {
   REJECTED
 }
 
+enum BriefingStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -168,6 +174,14 @@ model User {
   referralCode String?   @unique
   referredById String?   @db.Uuid
   referredAt   DateTime?
+
+  // ─── Daily briefings opt-in (Phase 1 monetization) ─────────────────────
+  // Single boolean toggle. Per-user send time is intentionally not
+  // surfaced yet — the operator picks a global UTC hour from
+  // `notification.briefing.send_hour_utc` so the scheduler stays a
+  // single daily sweep instead of 24 cron windows.
+  briefingEmailEnabled Boolean            @default(false)
+  briefingDeliveries   BriefingDelivery[]
 
   referredBy User?  @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals  User[] @relation("UserReferrals")
@@ -250,6 +264,55 @@ model Referral {
   @@index([referrerId])
   @@index([status])
   @@map("referrals")
+}
+
+model BriefingDelivery {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @db.Uuid
+  /// The local "send date" the briefing represents. Stored as a DATE
+  /// so the unique-constraint with userId+channel is exactly "one
+  /// email per user per day", regardless of the actual send timestamp
+  /// (which can drift across the scheduler's window).
+  sendDate   DateTime       @db.Date
+  channel    String         @default("email")
+  status     BriefingStatus
+  /// Provider message id (Resend / SES). Useful for support tickets
+  /// and bounce correlation.
+  providerId String?
+  errorCode  String?
+  createdAt  DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sendDate, channel])
+  @@index([sendDate])
+  @@index([status])
+  @@map("briefing_deliveries")
+}
+
+/// Generic 2- or 3-way bucket store for experiments. The first user is
+/// the paywall A/B test; the table shape is intentionally generic so a
+/// later experiment ("free first chat" / "no free chat") can land
+/// without a migration.
+model ExperimentAssignment {
+  experiment      String
+  /// Either a real user UUID (`User.id`) or an anonymous-cookie value.
+  /// Stored as TEXT so both fit; the typed FK lives in `userId`.
+  userKey         String
+  variant         String
+  isAuthenticated Boolean   @default(false)
+  userId          String?   @db.Uuid
+  /// Set when the user converts (signs up, pays, etc.) so the admin
+  /// dashboard can compute per-variant conversion rate.
+  convertedAt     DateTime?
+  conversionType  String?
+  createdAt       DateTime  @default(now())
+
+  @@id([experiment, userKey])
+  @@index([experiment, variant])
+  @@index([userId])
+  @@index([convertedAt])
+  @@map("experiment_assignments")
 }
 
 model ChatSession {

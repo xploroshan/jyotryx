@@ -23,8 +23,6 @@ import { SITE_ORIGIN } from '@/lib/seo/server-api';
  */
 
 // Evergreen content; weekly ISR is enough to pick up any KB tweaks.
-export const revalidate = 60 * 60 * 24 * 7;
-
 export function generateStaticParams() {
   return listCitySlugs().map((city) => ({ city }));
 }

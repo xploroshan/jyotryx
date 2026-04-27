@@ -3,8 +3,6 @@ import Link from 'next/link';
 import { SEO_CITIES } from '@/lib/seo/cities';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
 
-export const revalidate = 60 * 60 * 24 * 7; // weekly — content is evergreen
-
 export const metadata: Metadata = {
   title: `Free Kundli by City — All ${SEO_CITIES.length} Indian Cities | Jyotron`,
   description: `Free, accurate Vedic kundli (janma kundali) for the top ${SEO_CITIES.length} Indian cities. Each chart is computed using the city's exact coordinates with Swiss Ephemeris and Lahiri ayanamsa.`,

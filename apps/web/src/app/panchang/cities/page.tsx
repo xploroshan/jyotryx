@@ -3,8 +3,6 @@ import Link from 'next/link';
 import { SEO_CITIES } from '@/lib/seo/cities';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
 
-export const revalidate = 60 * 60 * 24 * 7; // weekly
-
 export const metadata: Metadata = {
   title: `Today's Panchang by City — All ${SEO_CITIES.length} Cities | Jyotron`,
   description: `Today's Hindu calendar (tithi, nakshatra, sunrise, sunset, Rahu Kaal) for the top ${SEO_CITIES.length} Indian cities. Each panchang is calculated from the city's exact coordinates using Swiss Ephemeris.`,
