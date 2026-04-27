@@ -10,11 +10,22 @@
 # Earlier version of this file grouped ALL `dependency-type: production`
 # into one PR, which produced unmergeable 25-dep mega-PRs. This file is
 # the reviewable-granularity replacement.
+#
+# Ignore policy for major bumps: tools that need an explicit migration
+# (eslint, jest, the test runners) are pinned at the current major
+# until someone schedules a dedicated upgrade. Without these ignores,
+# Dependabot re-opens the same major PR every week with red CI, and
+# the noise drowns out the genuine patch/minor bumps we care about.
 version: 2
 updates:
   # ─── Root package.json ─────────────────────────────────────────────
-  # Minimal — turbo + test harness. Keep dev-deps grouped (they rarely
-  # interact across major versions).
+  # The actual root deps are tiny: turbo + npm-run-all + concurrently.
+  # Earlier this section used `dependency-type: development`, which
+  # greedily bundled every workspace dev-dep into one PR (the source
+  # of the recurring "root-dev-dependencies group with N updates"
+  # mega-PR that mixed eslint + jest + playwright). Constrain to the
+  # actual root packages so this entry can't pull in workspace deps
+  # via the shared lockfile resolution.
   - package-ecosystem: npm
     directory: "/"
     schedule:
@@ -26,7 +37,7 @@ updates:
     labels: [dependencies]
     groups:
       root-dev-dependencies:
-        dependency-type: development
+        patterns: ["turbo", "concurrently", "npm-run-all"]
 
   # ─── API (NestJS backend) ──────────────────────────────────────────
   - package-ecosystem: npm
@@ -68,6 +79,21 @@ updates:
         update-types: [version-update:semver-major]
       - dependency-name: "prisma"
         update-types: [version-update:semver-major]
+      # Test runner — Jest 30 ships breaking config + ESM changes that
+      # need a deliberate migration (jest.config.ts, jest-environment-*,
+      # snapshot serializer changes). Stay on jest 29 until we schedule
+      # the upgrade. `@types/jest` is tied to jest's major so it's
+      # ignored alongside.
+      - dependency-name: "jest"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@types/jest"
+        update-types: [version-update:semver-major]
+      # `@types/uuid` 11.x is a major bump on the typings package
+      # (not the runtime). Pin to 10.x until the runtime `uuid`
+      # package goes major in this codebase, so the type+runtime
+      # pair stays aligned.
+      - dependency-name: "@types/uuid"
+        update-types: [version-update:semver-major]
 
   # ─── Web (Next.js frontend) ────────────────────────────────────────
   - package-ecosystem: npm
@@ -105,6 +131,11 @@ updates:
       - dependency-name: "react"
         update-types: [version-update:semver-major]
       - dependency-name: "react-dom"
+        update-types: [version-update:semver-major]
+      # ESLint 10 dropped support for several plugin APIs we use through
+      # eslint-config-next; the migration is a half-day's work that
+      # belongs in its own PR. Stay on eslint 9 until then.
+      - dependency-name: "eslint"
         update-types: [version-update:semver-major]
 
   # ─── GitHub Actions versions ───────────────────────────────────────
