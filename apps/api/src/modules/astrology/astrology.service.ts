@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
@@ -7,6 +7,7 @@ import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
+import { ExperimentService } from '../experiment/experiment.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import * as path from 'path';
@@ -189,6 +190,12 @@ export class AstrologyService {
     private knowledgeService: KnowledgeService,
     private ephemerisService: EphemerisService,
     private kbService: KbService,
+    // Optional so the ~10 hand-built test modules that instantiate
+    // AstrologyService don't all need to be updated. Production wires
+    // it via AstrologyModule's ExperimentModule import. Without an
+    // experiment service the paywall A/B treatment falls back to the
+    // control behaviour (i.e. credits are always deducted).
+    @Optional() private experimentService?: ExperimentService,
   ) {}
 
   private async callOpenAI(
@@ -218,8 +225,25 @@ export class AstrologyService {
 
   async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
-    const creditCost = this.configService.get<number>('credits.kundliCost', 2);
-    return this.userService.deductWithRefund(userId, creditCost, 'Kundli generation', async () => {
+    const baseCost = this.configService.get<number>('credits.kundliCost', 2);
+
+    // Paywall A/B "first kundli is free" treatment. We resolve the
+    // effective cost up-front so the existing deductWithRefund path
+    // stays the single source of truth for credit handling — a 0-cost
+    // call still records a credit_transactions row (with amount=0)
+    // for audit, which is what the admin tab uses to count free-arm
+    // grants. If the experiment is disabled / the user is in control
+    // / they've already generated a kundli, we fall through to the
+    // normal `baseCost` deduction.
+    const isFreeFirstKundli = this.experimentService
+      ? await this.experimentService.shouldGrantFreeFirstKundli(userId)
+      : false;
+    const creditCost = isFreeFirstKundli ? 0 : baseCost;
+    const description = isFreeFirstKundli
+      ? `Kundli generation (paywall A/B: first_free arm — ${baseCost} credits waived)`
+      : 'Kundli generation';
+
+    return this.userService.deductWithRefund(userId, creditCost, description, async () => {
       const chartData = await this.generateAIKundli(birthDetails);
       const kundli = await this.prisma.kundliChart.create({
         data: {

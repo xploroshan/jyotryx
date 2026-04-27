@@ -197,6 +197,51 @@ export class ExperimentService {
     }
   }
 
+  /**
+   * Behavioural side of the paywall A/B test.
+   *
+   * Returns true when:
+   *   1. The experiment is enabled (admin can flip it off)
+   *   2. The user is in the `first_free` arm (sticky, persisted)
+   *   3. The user has zero prior `kundli_charts` rows
+   *
+   * Callers (currently `AstrologyService.generateKundli`) use this to
+   * decide whether to deduct credits for the request. A shared helper
+   * keeps the rule in one place — when matching/tarot/etc. join the
+   * same A/B later, this method grows a `kind` parameter rather than
+   * the rule scattering across services.
+   *
+   * Soft-fails to `false` on any error so an experiment glitch never
+   * accidentally hands out free credits to everyone.
+   */
+  async shouldGrantFreeFirstKundli(userId: string): Promise<boolean> {
+    if (!userId) return false;
+    try {
+      const settings = await this.getPaywallSettings();
+      if (!settings.enabled) return false;
+
+      const userKey = `u:${userId}`;
+      const assignment = await this.prisma.experimentAssignment.findUnique({
+        where: { experiment_userKey: { experiment: PAYWALL_EXPERIMENT, userKey } },
+        select: { variant: true },
+      });
+      if (!assignment || coerceVariant(assignment.variant) !== 'first_free') return false;
+
+      // First kundli only — the rule is "first one is on us", not a
+      // recurring discount. Counting a single row is one indexed
+      // hit on (kundli_charts.userId).
+      const priorKundlis = await this.prisma.kundliChart.count({
+        where: { userId },
+      });
+      return priorKundlis === 0;
+    } catch (err) {
+      this.logger.warn(
+        `shouldGrantFreeFirstKundli: failing closed for user=${userId}: ${(err as Error)?.message ?? err}`,
+      );
+      return false;
+    }
+  }
+
   // ─── Admin ─────────────────────────────────────────────────────────────
 
   async getStats(): Promise<ExperimentStats> {

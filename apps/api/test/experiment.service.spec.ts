@@ -29,6 +29,9 @@ function makePrismaMock(overrides: Partial<AnyPrisma> = {}): AnyPrisma {
       updateMany: (jest as any).fn().mockResolvedValue({ count: 1 }),
       groupBy: (jest as any).fn().mockResolvedValue([]),
     },
+    kundliChart: {
+      count: (jest as any).fn().mockResolvedValue(0),
+    },
   };
   return Object.assign(prisma, overrides);
 }
@@ -194,5 +197,75 @@ describe('ExperimentService.getStats', () => {
     const firstFree = stats.variants.find((v) => v.variant === 'first_free')!;
     expect(control.conversionRate).toBe(12);
     expect(firstFree.conversionRate).toBe(17);
+  });
+});
+
+describe('ExperimentService.shouldGrantFreeFirstKundli', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns false when the experiment is disabled', async () => {
+    const prisma = makePrismaMock();
+    (prisma.siteSetting.findMany as any).mockResolvedValue([
+      { key: 'paywall.experiment_enabled', value: 'false' },
+    ]);
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('u-1')).toBe(false);
+    expect(prisma.experimentAssignment.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns false when the user has no assignment row', async () => {
+    const prisma = makePrismaMock();
+    (prisma.experimentAssignment.findUnique as any).mockResolvedValue(null);
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('u-1')).toBe(false);
+    expect(prisma.kundliChart.count).not.toHaveBeenCalled();
+  });
+
+  it('returns false when the user is in the control arm', async () => {
+    const prisma = makePrismaMock();
+    (prisma.experimentAssignment.findUnique as any).mockResolvedValue({ variant: 'control' });
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('u-1')).toBe(false);
+    expect(prisma.kundliChart.count).not.toHaveBeenCalled();
+  });
+
+  it('returns false when the user is first_free but already has a kundli', async () => {
+    const prisma = makePrismaMock();
+    (prisma.experimentAssignment.findUnique as any).mockResolvedValue({ variant: 'first_free' });
+    (prisma.kundliChart.count as any).mockResolvedValue(1);
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('u-1')).toBe(false);
+  });
+
+  it('returns true for a first_free user with zero prior kundlis', async () => {
+    const prisma = makePrismaMock();
+    (prisma.experimentAssignment.findUnique as any).mockResolvedValue({ variant: 'first_free' });
+    (prisma.kundliChart.count as any).mockResolvedValue(0);
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('u-1')).toBe(true);
+  });
+
+  it('looks up the assignment by `u:<userId>` user-key', async () => {
+    const prisma = makePrismaMock();
+    (prisma.experimentAssignment.findUnique as any).mockResolvedValue({ variant: 'first_free' });
+    const svc = await buildService(prisma);
+    await svc.shouldGrantFreeFirstKundli('user-abc');
+    const where = (prisma.experimentAssignment.findUnique as any).mock.calls[0][0].where;
+    expect(where.experiment_userKey.userKey).toBe('u:user-abc');
+    expect(where.experiment_userKey.experiment).toBe('paywall_v1');
+  });
+
+  it('soft-fails to false on persistence errors (never accidentally grants free credits)', async () => {
+    const prisma = makePrismaMock();
+    (prisma.experimentAssignment.findUnique as any).mockRejectedValue(new Error('db down'));
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('u-1')).toBe(false);
+  });
+
+  it('returns false for an empty/missing userId', async () => {
+    const prisma = makePrismaMock();
+    const svc = await buildService(prisma);
+    expect(await svc.shouldGrantFreeFirstKundli('')).toBe(false);
+    expect(prisma.siteSetting.findMany).not.toHaveBeenCalled();
   });
 });
