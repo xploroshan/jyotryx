@@ -21,6 +21,10 @@ import { NotificationModule } from '../notification/notification.module';
 // Phase 1 monetization — admin Settings tab exposes a "Referral
 // program" card that reads aggregate stats from this service.
 import { ReferralModule } from '../referral/referral.module';
+// Phase 1 monetization — daily-briefing admin send-test + stats.
+import { DailyBriefingModule } from '../daily-briefing/daily-briefing.module';
+// Phase 1 monetization — paywall A/B stats panel.
+import { ExperimentModule } from '../experiment/experiment.module';
 
 @Module({
   imports: [
@@ -34,6 +38,8 @@ import { ReferralModule } from '../referral/referral.module';
     ForecastModule,
     NotificationModule,
     ReferralModule,
+    DailyBriefingModule,
+    ExperimentModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

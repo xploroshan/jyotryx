@@ -13,3 +13,8 @@ export const PALMISTRY_QUEUE = 'palmistry-analysis';
 // notification payload across a resolved audience (all / premium /
 // locale-filtered). Worker lives in `broadcast.processor.ts`.
 export const BROADCAST_QUEUE = 'broadcast';
+// Phase 1 monetization — daily email briefings. The mailer service
+// registers a BullMQ repeatable cron at module init; the processor
+// in `briefing.processor.ts` calls back into the service to do the
+// fan-out so the cron job stays a single attempt.
+export const BRIEFING_QUEUE = 'daily-briefing';

@@ -11,6 +11,11 @@ import React from 'react';
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  // Returned as a real-shaped URLSearchParams so the kundli page's
+  // `?place=` capture can call `.get()` without erroring. The default
+  // is empty so existing assertions about the unprefilled form still
+  // hold.
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // ─── Mock store state ───────────────────────────────────────────────────────
@@ -38,7 +43,17 @@ const mockApiGet = vi.fn();
 vi.mock('@/lib/api', () => ({
   api: {
     get: (...args: any[]) => mockApiGet(...args),
-    post: (...args: any[]) => mockApiPost(...args),
+    // The kundli page calls /experiment/paywall/{assign,convert} as
+    // infrastructure traffic for the paywall A/B test. The tests below
+    // only assert on the /astrology/kundli result, so we short-circuit
+    // those experiment calls with benign defaults rather than burn the
+    // `mockResolvedValueOnce` slots that the kundli expectations need.
+    post: (url: string, ...args: any[]) => {
+      if (typeof url === 'string' && url.startsWith('/experiment/')) {
+        return Promise.resolve({ variant: 'control', userKey: 'test-key' });
+      }
+      return mockApiPost(url, ...args);
+    },
     put: vi.fn(),
     delete: vi.fn(),
     upload: vi.fn(),

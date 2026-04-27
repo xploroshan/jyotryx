@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, wakeUpBackend, ApiError } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { linkAnonymousAssignment, recordPaywallConversion } from "@/lib/experiment";
 import { Toast } from "@/components/ui/Toast";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { LogoMark } from "@/components/ui/Logo";
@@ -232,6 +233,13 @@ function AuthPageContent() {
     if (referralCode) body.ref = referralCode;
     const res = await api.post<any>("/auth/firebase", body, { timeoutMs: 30_000 });
     setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+    // Promote any anonymous-cookie paywall assignment to this user id and
+    // mark the conversion. Both calls are no-ops on a return-login (the
+    // backend's `convertedAt IS NULL` guard makes this idempotent), so
+    // putting them at every auth landing is safe and avoids the
+    // "is this signup or login?" branching mess.
+    void linkAnonymousAssignment();
+    void recordPaywallConversion("signup");
     applyUserLanguage(res.user?.preferredLanguage);
     // The bonus has been claimed (or rejected) server-side. Either way,
     // don't carry the code into a subsequent session.
@@ -362,6 +370,13 @@ function AuthPageContent() {
           { timeoutMs: 30_000 },
         );
         setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+    // Promote any anonymous-cookie paywall assignment to this user id and
+    // mark the conversion. Both calls are no-ops on a return-login (the
+    // backend's `convertedAt IS NULL` guard makes this idempotent), so
+    // putting them at every auth landing is safe and avoids the
+    // "is this signup or login?" branching mess.
+    void linkAnonymousAssignment();
+    void recordPaywallConversion("signup");
         applyUserLanguage(res.user?.preferredLanguage);
         if (tab === "signup" && referralCode) clearStoredReferral();
         router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
@@ -429,6 +444,13 @@ function AuthPageContent() {
       // stone-cold so we don't abort before that.
       const res = await api.post<any>(endpoint, body, { timeoutMs: 30_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+    // Promote any anonymous-cookie paywall assignment to this user id and
+    // mark the conversion. Both calls are no-ops on a return-login (the
+    // backend's `convertedAt IS NULL` guard makes this idempotent), so
+    // putting them at every auth landing is safe and avoids the
+    // "is this signup or login?" branching mess.
+    void linkAnonymousAssignment();
+    void recordPaywallConversion("signup");
       applyUserLanguage(res.user?.preferredLanguage);
       if (tab === "signup" && referralCode) clearStoredReferral();
       router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");

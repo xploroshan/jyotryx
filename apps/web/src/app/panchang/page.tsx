@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useTranslation } from "@/i18n";
 import {
   translateTithi,
@@ -172,6 +173,19 @@ export default function PanchangPage() {
                   <p className="text-xs text-white/30">{item.desc}</p>
                 </div>
               ))}
+            </div>
+
+            {/* SEO city directory link — surfaces the static landing pages
+                so authenticated users can hop to a specific-city panchang
+                without losing their daily-default view. */}
+            <div className="mt-8 surface-card p-4 text-sm text-white/60 flex items-center justify-between gap-4">
+              <span>Want today's panchang for a specific city?</span>
+              <Link
+                href="/panchang/cities"
+                className="text-primary-300 hover:text-primary-200 whitespace-nowrap"
+              >
+                Browse cities →
+              </Link>
             </div>
           </>
         )}

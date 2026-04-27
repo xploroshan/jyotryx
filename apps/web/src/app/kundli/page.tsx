@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/i18n";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/Toast";
+import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 
 interface KundliData {
   id: string;
@@ -43,6 +45,13 @@ interface DoshaData {
 export default function KundliPage() {
   const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  // SEO landing pages at /kundli/[city] deep-link here with `?place=`
+  // pre-filled. Picking this up here means the user lands on the form
+  // with the place-of-birth field already set, and only has to fill in
+  // name + DOB + time. We treat the param as a hint only — the user
+  // can still edit the place freely.
+  const searchParams = useSearchParams();
+  const placeFromQuery = searchParams.get("place")?.trim() || "";
   // Kundli is a Vedic-specific feature. Other traditions have their own
   // dedicated feature pages (Western Natal, Chinese BaZi, …) surfaced via
   // the tradition rail, so there's no in-page tradition switcher here.
@@ -86,6 +95,20 @@ export default function KundliPage() {
     });
   }, [user]);
 
+  // Pre-fill the place from the SEO landing page deep-link. Runs once
+  // and only writes if the field is still empty, so it doesn't fight
+  // the user-profile prefill above or stomp on what the user typed.
+  useEffect(() => {
+    if (!placeFromQuery) return;
+    setForm((prev) => (prev.place ? prev : { ...prev, place: placeFromQuery }));
+  }, [placeFromQuery]);
+
+  // Paywall A/B variant: the "first_free" treatment shows a banner
+  // promising the first kundli at zero credit cost. The actual credit
+  // grant is server-side; the UI just messages it. Until the variant
+  // resolves we render nothing so we don't flash the wrong copy.
+  const paywall = usePaywallVariant();
+
   // Surface which specific fields are missing so the disabled Generate button
   // is self-explanatory — previously it was a silent `disabled` with no clue.
   const missingFields: string[] = [];
@@ -121,6 +144,11 @@ export default function KundliPage() {
         ]);
         setKundli(result);
         if (doshaResult) setDoshas(doshaResult);
+        // First successful paid kundli is the conversion the paywall
+        // A/B test optimises for. Backend dedupes, so firing on every
+        // successful generation is safe and gives us a "user did pay"
+        // signal even when the credit balance was already > 0.
+        void recordPaywallConversion("first_paid_kundli");
       } else {
         setError(t.kundli.loginRequired);
       }
@@ -180,6 +208,21 @@ export default function KundliPage() {
           <div className="max-w-lg mx-auto">
             <div className="surface-card p-8">
               <h2 className="text-lg font-bold text-white mb-6">{t.kundli.enterBirthDetails}</h2>
+
+              {/* Paywall A/B variant banner — only the "first_free"
+                  treatment shows it, and only after the variant is
+                  resolved (no flash of the wrong copy). Both variants
+                  hit the same /astrology/kundli endpoint; the paid-vs-
+                  free framing is purely the user-facing message. */}
+              {!paywall.loading && paywall.variant === "first_free" && (
+                <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs flex items-start gap-2">
+                  <span aria-hidden="true">🎁</span>
+                  <span>
+                    Your first kundli is on us — no credits required. Just fill in your birth
+                    details and you'll have your full Vedic chart in seconds.
+                  </span>
+                </div>
+              )}
 
               {prefilled && (
                 <div className="mb-4 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">
@@ -269,6 +312,17 @@ export default function KundliPage() {
                     t.kundli.generateKundli
                   )}
                 </button>
+                {/* SEO city directory link — gives indexable internal-link
+                    juice to the static landing pages and gives users an
+                    alternate entry point if they're browsing for a
+                    specific city's content rather than filling the form. */}
+                <p className="mt-3 text-xs text-white/40 text-center">
+                  Or browse{' '}
+                  <a href="/kundli/cities" className="text-primary-300 hover:text-primary-200">
+                    free Kundli pages by city
+                  </a>
+                  .
+                </p>
               </div>
             </div>
           </div>

@@ -1,0 +1,206 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
+import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
+
+/**
+ * Server-rendered SEO landing page for "<sign> daily horoscope today".
+ *
+ * The existing /horoscope page is "use client" + reads i18n translations
+ * from a hook, so it's not crawlable as separate per-sign URLs. This
+ * route fills the SEO-shaped hole: 12 statically-generated pages, daily
+ * ISR for the forecast text, full structured data, and a CTA back to
+ * the interactive page.
+ */
+
+export function generateStaticParams() {
+  return listSignSlugs().map((sign) => ({ sign }));
+}
+
+interface RouteProps {
+  params: Promise<{ sign: string }>;
+}
+
+export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
+  const { sign: slug } = await params;
+  const sign = findSignBySlug(slug);
+  if (!sign) return {};
+
+  const today = new Date().toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const title = `${sign.name} Horoscope Today — ${today} | Jyotron`;
+  const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
+  const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      type: 'article',
+      url: canonical,
+      siteName: 'Jyotron',
+    },
+    twitter: { card: 'summary', title, description },
+  };
+}
+
+export default async function HoroscopeSignPage({ params }: RouteProps) {
+  const { sign: slug } = await params;
+  const sign = findSignBySlug(slug);
+  if (!sign) notFound();
+
+  const horoscope = await fetchHoroscope(sign.slug, 'daily');
+  const today = new Date();
+  const todayDisplay = today.toLocaleDateString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const jsonLdArticle = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `${sign.name} Horoscope — ${todayDisplay}`,
+    datePublished: today.toISOString(),
+    dateModified: today.toISOString(),
+    author: { '@type': 'Organization', name: 'Jyotron' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Jyotron',
+      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
+    },
+    mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}`,
+    description:
+      horoscope?.forecast?.slice(0, 200) ??
+      `Daily ${sign.name} horoscope covering love, career, health and lucky numbers.`,
+  };
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+      { '@type': 'ListItem', position: 2, name: 'Horoscope', item: `${SITE_ORIGIN}/horoscope` },
+      { '@type': 'ListItem', position: 3, name: sign.name, item: `${SITE_ORIGIN}/horoscope/${sign.slug}` },
+    ],
+  };
+
+  return (
+    <div className="relative min-h-screen">
+      <div className="absolute inset-0 bg-surface-950" />
+      <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-white/40">
+          <ol className="flex flex-wrap items-center gap-1.5">
+            <li><Link href="/" className="hover:text-white">Home</Link></li>
+            <li>›</li>
+            <li><Link href="/horoscope" className="hover:text-white">Horoscope</Link></li>
+            <li>›</li>
+            <li className="text-white/70">{sign.name}</li>
+          </ol>
+        </nav>
+
+        <header className="mb-6 flex items-start gap-4">
+          <span className="text-5xl leading-none" aria-hidden="true">{sign.symbol}</span>
+          <div>
+            <h1 className="text-3xl font-bold text-gradient">
+              {sign.name} Horoscope Today
+            </h1>
+            <p className="text-sm text-white/50 mt-2">
+              {todayDisplay} · {sign.dateRange} · Ruled by {sign.rulingPlanet}
+            </p>
+          </div>
+        </header>
+
+        {/* Forecast */}
+        <section className="surface-card p-6 mb-6">
+          <h2 className="text-lg font-semibold text-white mb-3">Today's forecast</h2>
+          {horoscope ? (
+            <>
+              <p className="text-sm text-white/80 leading-relaxed mb-4">{horoscope.forecast}</p>
+              <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                {horoscope.lucky_color && (
+                  <Stat label="Lucky colour" value={horoscope.lucky_color} />
+                )}
+                {horoscope.lucky_number !== undefined && (
+                  <Stat label="Lucky number" value={String(horoscope.lucky_number)} />
+                )}
+                {horoscope.compatibility && (
+                  <Stat label="Compatible with" value={horoscope.compatibility} />
+                )}
+              </dl>
+            </>
+          ) : (
+            <p className="text-sm text-white/50">
+              Today's forecast is being prepared — please refresh in a moment.
+            </p>
+          )}
+        </section>
+
+        {/* Sign profile */}
+        <article className="surface-card p-6 mb-6">
+          <h2 className="text-lg font-semibold text-white mb-3">About {sign.name}</h2>
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-5">
+            <Stat label="Element"  value={sign.element} />
+            <Stat label="Modality" value={sign.modality} />
+            <Stat label="Ruler"    value={sign.rulingPlanet} />
+            <Stat label="Dates"    value={sign.dateRange} />
+          </dl>
+          <p className="text-sm text-white/70 leading-relaxed mb-3">
+            {sign.name} is a {sign.modality.toLowerCase()} {sign.element.toLowerCase()} sign
+            ruled by {sign.rulingPlanet}. People born between {sign.dateRange} carry the
+            archetypes of {sign.name} as their <em>sun sign</em>; in Vedic astrology your moon
+            sign and ascendant matter even more, so a {sign.name} sun chart can pair with a very
+            different moon (rashi) personality.
+          </p>
+          <p className="text-sm text-white/70 leading-relaxed">
+            Want the full picture instead of just the sun sign?{' '}
+            <Link href="/kundli" className="text-primary-300 hover:text-primary-200">
+              Generate your free Vedic kundli →
+            </Link>
+          </p>
+        </article>
+
+        {/* All signs nav */}
+        <section className="surface-card p-6">
+          <h2 className="text-lg font-semibold text-white mb-3">Other zodiac signs</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+            {ZODIAC_SIGNS.map((s) => (
+              <Link
+                key={s.slug}
+                href={`/horoscope/${s.slug}`}
+                aria-current={s.slug === sign.slug ? 'page' : undefined}
+                className={`flex flex-col items-center p-3 rounded-lg transition-colors ${
+                  s.slug === sign.slug
+                    ? 'bg-primary-500/15 text-primary-200'
+                    : 'bg-white/[0.03] hover:bg-white/[0.06] text-white/70'
+                }`}
+              >
+                <span className="text-xl" aria-hidden="true">{s.symbol}</span>
+                <span className="text-xs mt-1">{s.name}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-white/40">{label}</dt>
+      <dd className="text-sm text-white mt-0.5">{value}</dd>
+    </div>
+  );
+}
