@@ -23,6 +23,7 @@ import { DailyBriefingModule } from './modules/daily-briefing/daily-briefing.mod
 import { NumerologyModule } from './modules/numerology/numerology.module';
 import { TarotModule } from './modules/tarot/tarot.module';
 import { VastuModule } from './modules/vastu/vastu.module';
+import { ReferralModule } from './modules/referral/referral.module';
 import { StorageModule } from './storage/storage.module';
 import { EphemerisModule } from './ephemeris/ephemeris.module';
 import { PartitionModule } from './partition/partition.module';
@@ -66,6 +67,7 @@ import { MetricsModule } from './metrics/metrics.module';
     NumerologyModule,
     TarotModule,
     VastuModule,
+    ReferralModule,
     PartitionModule,
     StatsModule,
     AnalyticsModule,

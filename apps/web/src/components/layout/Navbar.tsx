@@ -70,6 +70,12 @@ export default function Navbar() {
                   {t.common.pricing}
                 </Link>
                 <Link
+                  href="/referral"
+                  className="px-3.5 py-2 text-[13px] text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
+                >
+                  Invite
+                </Link>
+                <Link
                   href="/profile"
                   className="px-3.5 py-2 text-[13px] text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04] max-w-[10ch] truncate"
                   title={user?.name}
@@ -161,6 +167,13 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.common.pricing}
+              </Link>
+              <Link
+                href="/referral"
+                className="block px-3 py-2.5 text-sm text-white/50 hover:text-white rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Invite
               </Link>
               <Link
                 href="/profile"

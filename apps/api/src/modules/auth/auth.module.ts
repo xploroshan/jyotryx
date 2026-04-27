@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AdminBootstrapService } from './admin-bootstrap.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ReferralModule } from '../referral/referral.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
       inject: [ConfigService],
     }),
+    ReferralModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AdminBootstrapService, JwtStrategy],
