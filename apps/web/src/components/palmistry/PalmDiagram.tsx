@@ -75,12 +75,12 @@ const FINGER_LABELS = [
 ];
 
 function getStrengthStyle(strength: string) {
-  switch (strength) {
-    case "Strong":
+  switch ((strength || "").toLowerCase()) {
+    case "strong":
       return { strokeWidth: 3, opacity: 1 };
-    case "Moderate":
+    case "moderate":
       return { strokeWidth: 2.2, opacity: 0.8 };
-    case "Weak":
+    case "weak":
       return { strokeWidth: 1.5, opacity: 0.5 };
     default:
       return { strokeWidth: 2, opacity: 0.7 };
@@ -88,12 +88,12 @@ function getStrengthStyle(strength: string) {
 }
 
 function getProminenceRadius(prominence: string) {
-  switch (prominence) {
-    case "High":
+  switch ((prominence || "").toLowerCase()) {
+    case "high":
       return 18;
-    case "Medium":
+    case "medium":
       return 14;
-    case "Low":
+    case "low":
       return 10;
     default:
       return 14;

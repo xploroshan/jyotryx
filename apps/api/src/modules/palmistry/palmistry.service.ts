@@ -15,13 +15,19 @@ export interface PalmistryAnalysis {
   id: string;
   userId: string;
   imageUrl?: string;
+  status?: 'processing' | 'completed' | 'failed';
+  handShape?: HandShape;
   lines: PalmLine[];
   mounts: PalmMount[];
   fingerAnalysis: FingerAnalysis[];
+  specialMarkings: SpecialMarking[];
+  timingInsights: TimingInsight[];
   overallReading: string;
   healthInsights: string;
   careerInsights: string;
   relationshipInsights: string;
+  spiritualInsights: string;
+  cautions: string;
   createdAt: string;
 }
 
@@ -42,6 +48,23 @@ export interface FingerAnalysis {
   finger: string;
   length: 'long' | 'average' | 'short';
   interpretation: string;
+}
+
+export interface SpecialMarking {
+  name: string;
+  location: string;
+  interpretation: string;
+}
+
+export interface TimingInsight {
+  ageRange: string;
+  area: string;
+  description: string;
+}
+
+export interface HandShape {
+  type: 'Earth' | 'Air' | 'Water' | 'Fire' | string;
+  description: string;
 }
 
 @Injectable()
@@ -67,12 +90,13 @@ export class PalmistryService {
     imageBuffer?: Buffer,
     imageMimeType?: string,
     locale?: string,
+    gender?: string,
   ): Promise<PalmistryAnalysis> {
     this.logger.log(`Analyzing palm for user: ${userId}`);
 
     const creditCost = this.configService.get<number>('credits.palmistryCost', 3);
     return this.userService.deductWithRefund(userId, creditCost, 'Palmistry reading', () =>
-      this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, creditCost),
+      this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, creditCost),
     );
   }
 
@@ -81,6 +105,7 @@ export class PalmistryService {
     imageBuffer: Buffer | undefined,
     imageMimeType: string | undefined,
     locale: string | undefined,
+    gender: string | undefined,
     creditCost: number,
   ): Promise<PalmistryAnalysis> {
     // Upload image to R2 first (needed by both sync and async paths)
@@ -116,19 +141,25 @@ export class PalmistryService {
         imageKey: imageKey ?? undefined,
         imageMimeType,
         locale,
+        gender,
       } satisfies PalmistryJobData);
 
       return {
         id: reading.id,
         userId,
         imageUrl,
+        status: 'processing',
         lines: [],
         mounts: [],
         fingerAnalysis: [],
+        specialMarkings: [],
+        timingInsights: [],
         overallReading: 'Your palmistry reading is being processed. Check back shortly.',
         healthInsights: '',
         careerInsights: '',
         relationshipInsights: '',
+        spiritualInsights: '',
+        cautions: '',
         createdAt: reading.createdAt.toISOString(),
       };
     }
@@ -150,17 +181,17 @@ export class PalmistryService {
           messages: [
             {
               role: 'system',
-              content: `You are an expert palmist. Analyze the palm image and provide a detailed reading. Return a JSON object with keys: lines (array with name, description, strength, interpretation), mounts (array with name, prominence, interpretation), fingerAnalysis (array with finger, length, interpretation), overallReading (string), healthInsights (string), careerInsights (string), relationshipInsights (string).${palmKBSection}${getLocaleInstruction(locale)}`,
+              content: buildPalmistrySystemPrompt(palmKBSection, locale, gender),
             },
             {
               role: 'user',
               content: [
-                { type: 'text', text: 'Please analyze this palm image and provide a detailed palmistry reading.' },
-                { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}` } },
+                { type: 'text', text: buildPalmistryUserPrompt(gender) },
+                { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}`, detail: 'high' } },
               ],
             },
           ],
-          max_tokens: 1500,
+          max_tokens: 3500,
           response_format: { type: 'json_object' },
         });
 
@@ -202,15 +233,36 @@ export class PalmistryService {
     };
   }
 
-  async getReadingStatus(userId: string, readingId: string): Promise<{ id: string; status: string }> {
+  async getReadingStatus(
+    userId: string,
+    readingId: string,
+  ): Promise<{ id: string; status: string; analysis?: PalmistryAnalysis }> {
     const reading = await this.prisma.palmistryReading.findFirst({
       where: { id: readingId, userId },
-      select: { id: true, analysisData: true },
+      select: { id: true, userId: true, imageUrl: true, analysisData: true, createdAt: true },
     });
     if (!reading) throw new BadRequestException('Reading not found');
     const data = reading.analysisData as any;
-    const status = data?.status === 'processing' ? 'processing' : 'completed';
-    return { id: reading.id, status };
+
+    if (data?.status === 'processing') {
+      return { id: reading.id, status: 'processing' };
+    }
+    if (data?.status === 'failed') {
+      return { id: reading.id, status: 'failed' };
+    }
+
+    return {
+      id: reading.id,
+      status: 'completed',
+      analysis: {
+        id: reading.id,
+        userId: reading.userId,
+        imageUrl: reading.imageUrl ?? undefined,
+        status: 'completed',
+        ...data,
+        createdAt: reading.createdAt.toISOString(),
+      },
+    };
   }
 
   async getImageUrl(userId: string, readingId: string): Promise<{ url: string }> {
@@ -257,31 +309,122 @@ export class PalmistryService {
   }
 
   private getFallbackAnalysis() {
-    return {
-      lines: [
-        { name: 'Heart Line', description: 'Starts below the index finger and curves toward the middle finger', strength: 'strong', interpretation: 'Deep capacity for love and emotional expression. Relationships characterized by loyalty and warmth.' },
-        { name: 'Head Line', description: 'Runs straight across the palm with a slight curve at the end', strength: 'strong', interpretation: 'Sharp analytical mind with practical thinking and creative solutions.' },
-        { name: 'Life Line', description: 'Wide arc around the thumb, deep and clear', strength: 'strong', interpretation: 'Strong vitality and zest for life. Good health and physical stamina throughout life.' },
-        { name: 'Fate Line', description: 'Clear line running from base of palm toward middle finger', strength: 'moderate', interpretation: 'Career path shows steady progression with key turning points. Self-made success.' },
-        { name: 'Sun Line', description: 'Faint line running parallel to the fate line', strength: 'weak', interpretation: 'Creative talents that need conscious development. Public recognition may come later.' },
-      ],
-      mounts: [
-        { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership qualities and ambition. Natural ability to inspire others.' },
-        { name: 'Mount of Saturn', prominence: 'normal', interpretation: 'Balanced approach to responsibilities and discipline.' },
-        { name: 'Mount of Apollo', prominence: 'elevated', interpretation: 'Artistic talent and appreciation for beauty.' },
-        { name: 'Mount of Venus', prominence: 'elevated', interpretation: 'Passionate nature. Strong capacity for love and affection.' },
-      ],
-      fingerAnalysis: [
-        { finger: 'Thumb', length: 'long', interpretation: 'Strong willpower and determination' },
-        { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Balanced leadership and confidence' },
-        { finger: 'Middle (Saturn)', length: 'long', interpretation: 'Serious and responsible nature' },
-        { finger: 'Ring (Apollo)', length: 'average', interpretation: 'Balanced creative expression' },
-        { finger: 'Little (Mercury)', length: 'average', interpretation: 'Good communication abilities' },
-      ],
-      overallReading: 'Your palm reveals a person of strong character with excellent analytical abilities and deep emotional intelligence. The prominent heart line and mount of Venus suggest a passionate nature, while the strong head line indicates practical wisdom.',
-      healthInsights: 'The deep life line indicates robust health and physical vitality. Pay attention to stress management as the head line suggests an active mind that benefits from meditation.',
-      careerInsights: 'The fate line suggests a career built through persistent effort. Leadership abilities shown by the mount of Jupiter indicate potential for managerial or entrepreneurial roles.',
-      relationshipInsights: 'The heart line indicates deep, meaningful relationships. You value loyalty and emotional connection. Your ideal partner appreciates both intellectual stimulation and emotional depth.',
-    };
+    return getDefaultFallback();
   }
+}
+
+export function buildPalmistrySystemPrompt(palmKBSection: string, locale?: string, gender?: string): string {
+  const handHint =
+    gender === 'male'
+      ? "The user is male, so the right palm (active, dominant hand) is being analysed."
+      : gender === 'female'
+        ? "The user is female, so the left palm (passive, receptive hand) is being analysed."
+        : "Note whether the image appears to show the left or right palm and treat accordingly.";
+
+  return `You are an expert palmist trained in Hast Rekha Shastra (Vedic palmistry) with deep knowledge of Western palmistry as well. Produce a thorough, structured reading from the palm image. ${handHint}
+
+Return a STRICT JSON object with these keys:
+{
+  "handShape": { "type": "Earth | Air | Water | Fire", "description": "what the overall hand shape says about temperament" },
+  "lines": [
+    { "name": "Heart Line | Head Line | Life Line | Fate Line | Sun Line | Mercury Line | Marriage Line | Bracelet Line | etc.",
+      "description": "where it starts, curves, ends; clarity, depth, breaks, chains, islands",
+      "strength": "strong | moderate | weak",
+      "interpretation": "2-3 sentence interpretation tying observation to life meaning" }
+  ],
+  "mounts": [
+    { "name": "Mount of Jupiter | Saturn | Apollo | Mercury | Venus | Moon (Luna) | Mars (Upper/Lower)",
+      "prominence": "elevated | normal | flat",
+      "interpretation": "what its development indicates" }
+  ],
+  "fingerAnalysis": [
+    { "finger": "Thumb | Index (Jupiter) | Middle (Saturn) | Ring (Apollo) | Little (Mercury)",
+      "length": "long | average | short",
+      "interpretation": "personality and aptitude implications" }
+  ],
+  "specialMarkings": [
+    { "name": "Star | Cross | Triangle | Square | Island | Chain | Grille | Trident | Fish",
+      "location": "where on the palm (e.g. on the Fate Line near the head line)",
+      "interpretation": "what it traditionally signifies" }
+  ],
+  "timingInsights": [
+    { "ageRange": "0-20 | 20-35 | 35-50 | 50+ years",
+      "area": "career | relationships | health | spirituality",
+      "description": "what the lines suggest is significant in this period" }
+  ],
+  "overallReading": "4-6 sentence holistic synthesis of the personality and life themes",
+  "healthInsights": "3-4 sentences on vitality, stress markers, areas to watch",
+  "careerInsights": "3-4 sentences on aptitudes, leadership, ideal directions",
+  "relationshipInsights": "3-4 sentences on emotional patterns, marriage line indications, partner qualities",
+  "spiritualInsights": "2-3 sentences on dharma, intuition, growth path",
+  "cautions": "2-3 gentle, encouraging cautions framed as tendencies, not predictions"
+}
+
+Rules:
+- Always include ALL major lines (Heart, Head, Life, Fate, Sun) in the lines array — mark a missing/very faint line as "weak" and explain.
+- Aim for 5-7 entries in lines (include any visible minor lines you see).
+- Aim for 4-6 entries in mounts and 3-5 in fingerAnalysis.
+- specialMarkings can be empty if none visible; otherwise include at least 2.
+- timingInsights should have 3-4 entries spanning life stages.
+- Speak with warmth and respect. Frame difficulties as "tendencies", never as fate.
+- Never claim to predict death, exact dates, or medical diagnoses.${palmKBSection}${getLocaleInstruction(locale)}`;
+}
+
+export function buildPalmistryUserPrompt(gender?: string): string {
+  const which =
+    gender === 'male'
+      ? 'right palm'
+      : gender === 'female'
+        ? 'left palm'
+        : 'palm';
+  return `Please analyse this ${which} image carefully and return the full structured palmistry reading as specified. Be specific about what you observe — line clarity, branching, mount development, finger proportions and any markings. If the image is blurry or only shows part of the palm, still produce the best possible reading from what is visible and note any limitations in the overallReading field.`;
+}
+
+export function getDefaultFallback() {
+  return {
+    handShape: {
+      type: 'Air',
+      description: 'A balanced palm with proportional fingers — suggesting a thoughtful, communicative temperament that is comfortable with ideas and people.',
+    },
+    lines: [
+      { name: 'Heart Line', description: 'Starts below the index finger and curves gently toward the middle finger, clear and unbroken.', strength: 'strong', interpretation: 'Deep capacity for love and emotional expression. Loyal, warm, and willing to invest in long relationships.' },
+      { name: 'Head Line', description: 'Runs straight across the palm with a soft downward slope at the end.', strength: 'strong', interpretation: 'Sharp analytical mind balanced with creative imagination. Practical decisions guided by intuition.' },
+      { name: 'Life Line', description: 'Wide arc around the thumb, deep and well-defined.', strength: 'strong', interpretation: 'Strong vitality and zest for life. Good physical stamina and recovery throughout life.' },
+      { name: 'Fate Line', description: 'Visible line rising from the base of the palm toward the middle finger with a few small branches.', strength: 'moderate', interpretation: 'Career path shows steady progression with self-made successes; turning points around mid-life.' },
+      { name: 'Sun Line', description: 'Fine line parallel to the fate line, faint near the base, clearer toward the ring finger.', strength: 'weak', interpretation: 'Creative talents that benefit from conscious cultivation. Recognition tends to arrive later in life.' },
+      { name: 'Mercury Line', description: 'Short, slightly broken line running toward the little finger.', strength: 'moderate', interpretation: 'Communicates well; pay attention to digestion and stress management.' },
+      { name: 'Marriage Line', description: 'One clear horizontal line on the edge of the palm beneath the little finger.', strength: 'moderate', interpretation: 'Indicates one significant, lasting partnership built on mutual respect.' },
+    ],
+    mounts: [
+      { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership and ambition. A natural ability to inspire and guide others.' },
+      { name: 'Mount of Saturn', prominence: 'normal', interpretation: 'Balanced sense of duty and discipline. Patient and reliable under pressure.' },
+      { name: 'Mount of Apollo', prominence: 'elevated', interpretation: 'Artistic sensitivity and appreciation for beauty. Public recognition is possible.' },
+      { name: 'Mount of Mercury', prominence: 'normal', interpretation: 'Quick wit, business acumen and clear self-expression.' },
+      { name: 'Mount of Venus', prominence: 'elevated', interpretation: 'Warm, passionate nature with a strong capacity for love and friendship.' },
+      { name: 'Mount of Moon', prominence: 'normal', interpretation: 'Healthy imagination and intuition. Comfortable with travel and new environments.' },
+    ],
+    fingerAnalysis: [
+      { finger: 'Thumb', length: 'long', interpretation: 'Strong willpower and determination; can carry projects through to completion.' },
+      { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Balanced confidence — leads when needed without ego.' },
+      { finger: 'Middle (Saturn)', length: 'long', interpretation: 'Serious, responsible and self-disciplined; values structure.' },
+      { finger: 'Ring (Apollo)', length: 'average', interpretation: 'Balanced creative expression; enjoys art and aesthetics.' },
+      { finger: 'Little (Mercury)', length: 'average', interpretation: 'Good communication abilities; persuasive in conversation.' },
+    ],
+    specialMarkings: [
+      { name: 'Triangle', location: 'On the Fate Line near the head line', interpretation: 'Suggests a moment of clear strategic insight that benefits the career.' },
+      { name: 'Star', location: 'On the Mount of Jupiter', interpretation: 'A traditional sign of recognition and elevation through merit.' },
+    ],
+    timingInsights: [
+      { ageRange: '0-20 years', area: 'foundation', description: 'Formative learning and family influence; the early life line is clear and protected.' },
+      { ageRange: '20-35 years', area: 'career', description: 'A significant new direction begins as the fate line strengthens — a self-chosen path.' },
+      { ageRange: '35-50 years', area: 'relationships', description: 'Stabilising long-term partnerships and reaping the rewards of earlier work.' },
+      { ageRange: '50+ years', area: 'spirituality', description: 'Increasing inward focus, mentoring others and creative legacy.' },
+    ],
+    overallReading: 'Your palm reveals a person of strong character with excellent analytical abilities and deep emotional intelligence. The prominent heart line and mount of Venus suggest a passionate nature, while the steady head line indicates practical wisdom. The hand as a whole shows balance — neither purely emotional nor purely intellectual, but able to draw on both as the moment requires.',
+    healthInsights: 'The deep life line indicates robust health and physical vitality. The mercury line suggests sensitivity in the digestive and nervous systems — gentle daily routines, hydration and stress management will protect long-term wellbeing. Active rest (walking, yoga, breathwork) will serve you better than purely sedentary recovery.',
+    careerInsights: 'The fate line suggests a career built through persistent effort rather than sudden luck. Leadership abilities shown by the mount of Jupiter indicate strong potential for managerial, advisory or entrepreneurial roles. The ring finger and Apollo mount add a creative dimension — work that combines structure with self-expression will feel most fulfilling.',
+    relationshipInsights: 'The heart line indicates deep, meaningful relationships and a willingness to commit. You value loyalty and emotional honesty. Your ideal partner appreciates both intellectual companionship and emotional depth and gives you space to grow without losing closeness.',
+    spiritualInsights: 'A clear head-life line junction indicates thoughtful, considered choices on the spiritual path. You are likely drawn to traditions that combine philosophical understanding with daily practice; service-oriented dharma resonates well.',
+    cautions: 'Avoid carrying responsibility for outcomes that are not yours to control — the strong Saturn finger can over-shoulder. Watch for periods of overthinking around the mid-thirties; ground decisions in conversation with trusted people, not only inside your own head.',
+  };
 }

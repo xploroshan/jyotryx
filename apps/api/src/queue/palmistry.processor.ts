@@ -7,6 +7,11 @@ import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UserService } from '../modules/user/user.service';
 import { StorageService } from '../storage/storage.service';
 import { PALMISTRY_QUEUE } from './queue.constants';
+import {
+  buildPalmistrySystemPrompt,
+  buildPalmistryUserPrompt,
+  getDefaultFallback,
+} from '../modules/palmistry/palmistry.service';
 
 export interface PalmistryJobData {
   readingId: string;
@@ -15,6 +20,7 @@ export interface PalmistryJobData {
   imageKey?: string;
   imageMimeType?: string;
   locale?: string;
+  gender?: string;
 }
 
 @Processor(PALMISTRY_QUEUE)
@@ -32,7 +38,7 @@ export class PalmistryProcessor extends WorkerHost {
   }
 
   async process(job: Job<PalmistryJobData>): Promise<void> {
-    const { readingId, userId, creditCost, imageKey, imageMimeType, locale } = job.data;
+    const { readingId, userId, creditCost, imageKey, imageMimeType: _imageMimeType, locale, gender } = job.data;
     this.logger.log(`Processing palmistry job ${job.id} — readingId=${readingId}`);
 
     try {
@@ -54,17 +60,17 @@ export class PalmistryProcessor extends WorkerHost {
             messages: [
               {
                 role: 'system',
-                content: `You are an expert palmist. Analyze the palm image and provide a detailed reading. Return a JSON object with keys: lines (array with name, description, strength, interpretation), mounts (array with name, prominence, interpretation), fingerAnalysis (array with finger, length, interpretation), overallReading (string), healthInsights (string), careerInsights (string), relationshipInsights (string).${palmKBSection}`,
+                content: buildPalmistrySystemPrompt(palmKBSection, locale, gender),
               },
               {
                 role: 'user',
                 content: [
-                  { type: 'text', text: 'Please analyze this palm image and provide a detailed palmistry reading.' },
-                  { type: 'image_url', image_url: { url: presignedUrl } },
+                  { type: 'text', text: buildPalmistryUserPrompt(gender) },
+                  { type: 'image_url', image_url: { url: presignedUrl, detail: 'high' } },
                 ],
               },
             ],
-            max_tokens: 1500,
+            max_tokens: 3500,
             response_format: { type: 'json_object' },
           });
 
@@ -85,7 +91,7 @@ export class PalmistryProcessor extends WorkerHost {
       }
 
       if (!analysisData) {
-        analysisData = this.getFallbackAnalysis();
+        analysisData = getDefaultFallback();
       }
 
       // Update the reading with analysis results
@@ -102,31 +108,18 @@ export class PalmistryProcessor extends WorkerHost {
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
         this.logger.log(`Refunding ${creditCost} credits for failed palmistry ${readingId}`);
         await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: Palmistry analysis failed');
+        // Mark the reading as failed so the client polling stops with a clear status
+        try {
+          await this.prisma.palmistryReading.update({
+            where: { id: readingId },
+            data: { analysisData: { status: 'failed', message: 'Analysis failed. Credits refunded.' } },
+          });
+        } catch (updateErr) {
+          this.logger.error('Failed to mark reading as failed', updateErr as Error);
+        }
       }
 
       throw error;
     }
-  }
-
-  private getFallbackAnalysis() {
-    return {
-      lines: [
-        { name: 'Heart Line', description: 'Starts below the index finger and curves toward the middle finger', strength: 'strong', interpretation: 'Deep capacity for love and emotional expression.' },
-        { name: 'Head Line', description: 'Runs straight across the palm with a slight curve at the end', strength: 'strong', interpretation: 'Sharp analytical mind with practical thinking.' },
-        { name: 'Life Line', description: 'Wide arc around the thumb, deep and clear', strength: 'strong', interpretation: 'Strong vitality and zest for life.' },
-      ],
-      mounts: [
-        { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership qualities and ambition.' },
-        { name: 'Mount of Venus', prominence: 'elevated', interpretation: 'Passionate nature and strong capacity for love.' },
-      ],
-      fingerAnalysis: [
-        { finger: 'Thumb', length: 'long', interpretation: 'Strong willpower and determination' },
-        { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Balanced leadership and confidence' },
-      ],
-      overallReading: 'Your palm reveals strong character with excellent analytical abilities and deep emotional intelligence.',
-      healthInsights: 'The deep life line indicates robust health and physical vitality.',
-      careerInsights: 'The fate line suggests a career built through persistent effort with leadership potential.',
-      relationshipInsights: 'The heart line indicates deep, meaningful relationships built on loyalty.',
-    };
   }
 }
