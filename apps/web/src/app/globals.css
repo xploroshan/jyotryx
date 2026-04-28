@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Primary: Indigo — matches the logo, feels premium + modern ── */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  /* ── Brand: Orange — vibrant, spiritual, warm. Anchored on #FF4D00 ── */
+  --color-primary-50: #fff4ef;
+  --color-primary-100: #ffe5d6;
+  --color-primary-200: #ffc6a8;
+  --color-primary-300: #ffa07a;
+  --color-primary-400: #ff7a40;
+  --color-primary-500: #ff4d00;
+  --color-primary-600: #e63d00;
+  --color-primary-700: #c43200;
+  --color-primary-800: #a02900;
+  --color-primary-900: #7a2000;
 
-  /* ── Accent: Warm amber — retained but refined for CTAs + highlights ── */
+  /* ── Accent: deeper amber tones for status/warning surfaces only.
+        Brand CTAs should use --color-primary-* (orange). ── */
   --color-accent-50: #fffbeb;
   --color-accent-100: #fef3c7;
   --color-accent-200: #fde68a;
@@ -23,14 +24,16 @@
   --color-accent-600: #d97706;
   --color-accent-700: #b45309;
 
-  /* ── Surface: Zinc-black — cool neutral, Apple-style dark mode ── */
-  --color-surface-50: #fafafa;
-  --color-surface-100: #f4f4f5;
-  --color-surface-200: #e4e4e7;
-  --color-surface-700: #3f3f46;
-  --color-surface-800: #27272a;
-  --color-surface-900: #18181b;
-  --color-surface-950: #09090b;
+  /* ── Surface: warm-tinted neutral.
+        Foreground (text) = #FFFDFA warm white.
+        Background        = near-black with a faint warm bias. ── */
+  --color-surface-50: #fffdfa;
+  --color-surface-100: #f7f3ee;
+  --color-surface-200: #ece6dd;
+  --color-surface-700: #3a342f;
+  --color-surface-800: #221f1c;
+  --color-surface-900: #141210;
+  --color-surface-950: #0a0907;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -38,25 +41,25 @@
 
 @layer base {
   body {
-    @apply bg-surface-950 text-surface-200 antialiased;
+    @apply bg-surface-950 text-surface-50 antialiased;
   }
 
   ::selection {
-    @apply bg-primary-500/30 text-white;
+    @apply bg-primary-500/30 text-surface-50;
   }
 }
 
 @layer utilities {
-  /* ── Text gradient — indigo→violet→fuchsia sweep ── */
+  /* ── Text gradient — orange brand sweep ── */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #818cf8 0%, #a78bfa 40%, #c084fc 70%, #e879f9 100%);
+    background-image: linear-gradient(135deg, #ffa07a 0%, #ff7a40 40%, #ff4d00 70%, #c43200 100%);
   }
 
-  /* ── Warm text gradient for tradition/spiritual accents ── */
+  /* ── Warm text gradient kept for tradition/spiritual accents ── */
   .text-gradient-warm {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #f97316 100%);
+    background-image: linear-gradient(135deg, #ffc6a8 0%, #ff7a40 40%, #ff4d00 100%);
   }
 
   /* ── Card surfaces — two tiers of emphasis ── */
@@ -71,7 +74,7 @@
   }
 
   .surface-input {
-    @apply bg-white/[0.05] border border-white/[0.08] text-white
+    @apply bg-white/[0.05] border border-white/[0.08] text-surface-50
            placeholder-white/40
            focus:outline-none focus:border-primary-500/60 focus:ring-2 focus:ring-primary-500/40
            focus-visible:outline-none focus-visible:border-primary-500/60 focus-visible:ring-2 focus-visible:ring-primary-500/40
@@ -95,31 +98,28 @@
     min-width: 44px;
   }
 
-  /* Secondary text that still clears WCAG AA (>= 4.5:1 on surface-950). The
-     codebase was using `text-white/30`–`text-white/40` for subheadings, which
-     drops below that ratio. Use `.text-secondary` for helper text that the
-     user actually needs to read. */
+  /* Secondary text that still clears WCAG AA on warm-dark surface. */
   .text-secondary {
-    color: rgba(255, 255, 255, 0.62);
+    color: rgba(255, 253, 250, 0.62);
   }
 
   /* ── Buttons ── */
   .btn-primary {
-    @apply bg-primary-500 text-white font-medium
+    @apply bg-primary-500 text-surface-50 font-medium
            hover:bg-primary-400
            active:bg-primary-600
            transition-all duration-150;
   }
 
   .btn-secondary {
-    @apply bg-white/[0.06] border border-white/[0.1] text-white font-medium
-           hover:bg-white/[0.1] hover:border-white/[0.15]
+    @apply bg-white/[0.06] border border-white/[0.12] text-surface-50 font-medium
+           hover:bg-white/[0.1] hover:border-white/[0.18]
            transition-all duration-150;
   }
 
   .btn-accent {
-    @apply bg-accent-500 text-surface-950 font-medium
-           hover:bg-accent-400
+    @apply bg-primary-500 text-surface-50 font-medium
+           hover:bg-primary-400
            transition-all duration-150;
   }
 
@@ -129,17 +129,17 @@
 
   /* ── Frosted glass — refined, subtle, Apple-style blur ── */
   .glass {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 253, 250, 0.03);
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 253, 250, 0.06);
   }
 
   .glass-strong {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 253, 250, 0.05);
     backdrop-filter: blur(32px) saturate(140%);
     -webkit-backdrop-filter: blur(32px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 253, 250, 0.08);
   }
 
   /* ── Tradition pills — clean, flat, modern — no 3D meatball ── */
@@ -149,22 +149,22 @@
     place-items: center;
     border-radius: 1rem;
     flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 253, 250, 0.04);
+    border: 1px solid rgba(255, 253, 250, 0.06);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .meatball::before {
     display: none;
   }
   .meatball:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 253, 250, 0.07);
+    border-color: rgba(255, 253, 250, 0.12);
     transform: translateY(-2px);
   }
   .meatball.active {
-    background: rgba(99, 102, 241, 0.12);
-    border-color: rgba(99, 102, 241, 0.3);
-    box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.3);
+    background: rgba(255, 77, 0, 0.18);
+    border-color: rgba(255, 77, 0, 0.45);
+    box-shadow: 0 0 24px -4px rgba(255, 77, 0, 0.4);
   }
 
   .no-scrollbar::-webkit-scrollbar {

@@ -56,6 +56,13 @@ export default function TraditionRail() {
     }
   };
 
+  const pillBase =
+    'relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-colors duration-300 focus-ring';
+  const pillActive =
+    'bg-primary-500 text-surface-50 shadow-[0_6px_20px_-6px_rgba(255,77,0,0.55)]';
+  const pillInactive =
+    'text-surface-50/55 hover:text-surface-50 hover:bg-white/[0.04]';
+
   return (
     <div
       className="sticky top-16 z-40 bg-surface-950/70 backdrop-blur-2xl border-b border-white/[0.04]"
@@ -63,7 +70,7 @@ export default function TraditionRail() {
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8 overflow-x-auto no-scrollbar">
-        <ul className="flex gap-2 sm:gap-3 py-3 justify-start lg:justify-center">
+        <ul className="flex gap-1.5 sm:gap-2 py-3 justify-start lg:justify-center">
           {/* My Day */}
           <li className="shrink-0">
             <motion.div whileTap={{ scale: 0.96 }}>
@@ -73,23 +80,20 @@ export default function TraditionRail() {
                 role="tab"
                 aria-selected={isMyDayActive}
                 aria-label={t.nav.myDay}
-                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 ${
-                  isMyDayActive
-                    ? 'bg-primary-500/15 text-white border border-primary-500/25'
-                    : 'text-white/50 hover:text-white hover:bg-white/[0.04] border border-transparent'
-                }`}
+                className={`${pillBase} ${isMyDayActive ? pillActive : pillInactive}`}
               >
+                {isMyDayActive && (
+                  <motion.span
+                    layoutId="tradition-indicator"
+                    aria-hidden
+                    className="absolute inset-0 rounded-full bg-primary-500 -z-10"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
                 <span className="text-base leading-none" aria-hidden>
                   ☀️
                 </span>
                 <span>{t.nav.myDay}</span>
-                {isMyDayActive && (
-                  <motion.div
-                    layoutId="tradition-indicator"
-                    className="absolute inset-0 rounded-xl bg-primary-500/10 border border-primary-500/25 -z-10"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
               </Link>
             </motion.div>
           </li>
@@ -106,23 +110,20 @@ export default function TraditionRail() {
                   role="tab"
                   aria-selected={isActive}
                   aria-label={label}
-                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 ${
-                    isActive
-                      ? 'bg-primary-500/15 text-white border border-primary-500/25'
-                      : 'text-white/50 hover:text-white hover:bg-white/[0.04] border border-transparent'
-                  }`}
+                  className={`${pillBase} ${isActive ? pillActive : pillInactive}`}
                 >
+                  {isActive && (
+                    <motion.span
+                      layoutId="tradition-indicator"
+                      aria-hidden
+                      className="absolute inset-0 rounded-full bg-primary-500 -z-10"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
                   <span className="text-base leading-none" aria-hidden>
                     {cfg.icon}
                   </span>
                   <span>{label}</span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="tradition-indicator"
-                      className="absolute inset-0 rounded-xl bg-primary-500/10 border border-primary-500/25 -z-10"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
                 </motion.button>
               </li>
             );
