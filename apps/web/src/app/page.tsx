@@ -28,23 +28,23 @@ export default function HomePage() {
         {/* Mesh gradient background */}
         <div className="absolute inset-0" aria-hidden>
           <div
-            className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full opacity-30"
+            className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full opacity-35"
             style={{
-              background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,77,0,0.45) 0%, transparent 70%)',
               animation: 'mesh-drift 20s ease-in-out infinite',
             }}
           />
           <div
-            className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-20"
+            className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-25"
             style={{
-              background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,122,64,0.35) 0%, transparent 70%)',
               animation: 'mesh-drift 25s ease-in-out infinite reverse',
             }}
           />
           <div
-            className="absolute top-[30%] right-[20%] w-[40%] h-[40%] rounded-full opacity-15"
+            className="absolute top-[30%] right-[20%] w-[40%] h-[40%] rounded-full opacity-20"
             style={{
-              background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,160,122,0.3) 0%, transparent 70%)',
               animation: 'mesh-drift 18s ease-in-out infinite 3s',
             }}
           />
@@ -74,7 +74,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
             <Link
               href="/chat"
-              className="px-8 py-3.5 btn-primary rounded-full text-[15px] font-medium shadow-[0_0_24px_-4px_rgba(99,102,241,0.5)]"
+              className="px-8 py-3.5 btn-primary rounded-full text-[15px] font-medium shadow-[0_0_24px_-4px_rgba(255,77,0,0.55)]"
             >
               {t.home.startConsultation}
             </Link>
@@ -149,7 +149,7 @@ export default function HomePage() {
           </p>
           <Link
             href={isAuthenticated ? "/my-day" : "/auth?mode=signup"}
-            className="inline-block px-10 py-4 btn-primary rounded-full text-[15px] font-medium shadow-[0_0_24px_-4px_rgba(99,102,241,0.5)]"
+            className="inline-block px-10 py-4 btn-primary rounded-full text-[15px] font-medium shadow-[0_0_24px_-4px_rgba(255,77,0,0.55)]"
           >
             {isAuthenticated ? t.home.ctaButtonLoggedIn : t.home.ctaButtonLoggedOut}
           </Link>
