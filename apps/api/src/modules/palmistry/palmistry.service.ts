@@ -16,6 +16,8 @@ export interface PalmistryAnalysis {
   userId: string;
   imageUrl?: string;
   status?: 'processing' | 'completed' | 'failed';
+  atAGlance?: AtAGlance;
+  handOverview?: HandOverview;
   handShape?: HandShape;
   lines: PalmLine[];
   mounts: PalmMount[];
@@ -28,12 +30,30 @@ export interface PalmistryAnalysis {
   relationshipInsights: string;
   spiritualInsights: string;
   cautions: string;
+  closingAffirmation?: string;
   createdAt: string;
+}
+
+export interface AtAGlance {
+  strengths: string;
+  lifePath: string;
+  love: string;
+  bestSuitedFor: string;
+}
+
+export interface HandOverview {
+  handType: string;
+  palmShape: string;
+  fingers: string;
+  thumb: string;
+  dominantHand: string;
 }
 
 export interface PalmLine {
   name: string;
+  subtitle?: string;
   description: string;
+  observations?: string[];
   strength: 'strong' | 'moderate' | 'weak';
   interpretation: string;
 }
@@ -361,10 +381,25 @@ export function buildPalmistrySystemPrompt(palmKBSection: string, locale?: strin
 
 Return a STRICT JSON object with these keys:
 {
-  "handShape": { "type": "Earth | Air | Water | Fire", "description": "what the overall hand shape says about temperament" },
+  "atAGlance": {
+    "strengths": "3-5 comma-separated personality strengths (e.g. 'Resilient, analytical, independent, loyal')",
+    "lifePath": "one short phrase capturing life direction (e.g. 'A path of growth, leadership, and purpose')",
+    "love": "one short phrase about emotional style (e.g. 'Deep feelings, selective, sincere')",
+    "bestSuitedFor": "one short phrase about ideal pursuits (e.g. 'Leadership, strategy, entrepreneurship')"
+  },
+  "handOverview": {
+    "handType": "Fire | Air | Water | Earth (with a 2-3 word descriptor, e.g. 'Air — curious, communicative')",
+    "palmShape": "short shape descriptor (e.g. 'Rectangular palm, long fingers')",
+    "fingers": "short finger descriptor (e.g. 'Long fingers with rounded tips — thoughtful, detail-oriented')",
+    "thumb": "short thumb descriptor (e.g. 'Strong & flexible — willpower with adaptability')",
+    "dominantHand": "Likely Right | Likely Left (and one short reason if visible)"
+  },
+  "handShape": { "type": "Earth | Air | Water | Fire", "description": "1-2 sentences on what the overall hand shape says about temperament" },
   "lines": [
     { "name": "Heart Line | Head Line | Life Line | Fate Line | Sun Line | Mercury Line | Marriage Line | Bracelet Line | etc.",
+      "subtitle": "2-4 word life area, e.g. 'Emotion & Relationships', 'Mind & Intellect', 'Energy & Vitality', 'Career & Direction', 'Success & Recognition'",
       "description": "where it starts, curves, ends; clarity, depth, breaks, chains, islands",
+      "observations": ["2-4 short bullets capturing what is visible (e.g. 'Deep and clear', 'Curves toward Jupiter', 'No major breaks')"],
       "strength": "strong | moderate | weak",
       "interpretation": "2-3 sentence interpretation tying observation to life meaning" }
   ],
@@ -393,7 +428,8 @@ Return a STRICT JSON object with these keys:
   "careerInsights": "3-4 sentences on aptitudes, leadership, ideal directions",
   "relationshipInsights": "3-4 sentences on emotional patterns, marriage line indications, partner qualities",
   "spiritualInsights": "2-3 sentences on dharma, intuition, growth path",
-  "cautions": "2-3 gentle, encouraging cautions framed as tendencies, not predictions"
+  "cautions": "2-3 gentle, encouraging cautions framed as tendencies, not predictions",
+  "closingAffirmation": "one short, uplifting closing line that speaks to the user's potential (e.g. 'You hold the power to shape your destiny' or 'Your path is yours to build with intention.')"
 }
 
 Rules:
@@ -402,6 +438,7 @@ Rules:
 - Aim for 4-6 entries in mounts and 3-5 in fingerAnalysis.
 - specialMarkings can be empty if none visible; otherwise include at least 2.
 - timingInsights should have 3-4 entries spanning life stages.
+- Each major line MUST include a "subtitle" (life area) and "observations" (2-4 short visual bullets) so the reading reads like an editorial guide, not a wall of text.
 - Speak with warmth and respect. Frame difficulties as "tendencies", never as fate.
 - Never claim to predict death, exact dates, or medical diagnoses.${palmKBSection}${getLocaleInstruction(locale)}`;
 }
@@ -418,18 +455,80 @@ export function buildPalmistryUserPrompt(gender?: string): string {
 
 export function getDefaultFallback() {
   return {
+    atAGlance: {
+      strengths: 'Resilient, analytical, independent, loyal',
+      lifePath: 'A path of growth, leadership, and purpose',
+      love: 'Deep feelings, selective, sincere',
+      bestSuitedFor: 'Leadership, strategy, entrepreneurship',
+    },
+    handOverview: {
+      handType: 'Air — curious, communicative, quick thinker',
+      palmShape: 'Rectangular palm, long fingers',
+      fingers: 'Long fingers with rounded tips — thoughtful and detail-oriented',
+      thumb: 'Strong & flexible — willpower paired with adaptability',
+      dominantHand: 'Likely right — externally driven, action-oriented',
+    },
     handShape: {
       type: 'Air',
       description: 'A balanced palm with proportional fingers — suggesting a thoughtful, communicative temperament that is comfortable with ideas and people.',
     },
     lines: [
-      { name: 'Heart Line', description: 'Starts below the index finger and curves gently toward the middle finger, clear and unbroken.', strength: 'strong', interpretation: 'Deep capacity for love and emotional expression. Loyal, warm, and willing to invest in long relationships.' },
-      { name: 'Head Line', description: 'Runs straight across the palm with a soft downward slope at the end.', strength: 'strong', interpretation: 'Sharp analytical mind balanced with creative imagination. Practical decisions guided by intuition.' },
-      { name: 'Life Line', description: 'Wide arc around the thumb, deep and well-defined.', strength: 'strong', interpretation: 'Strong vitality and zest for life. Good physical stamina and recovery throughout life.' },
-      { name: 'Fate Line', description: 'Visible line rising from the base of the palm toward the middle finger with a few small branches.', strength: 'moderate', interpretation: 'Career path shows steady progression with self-made successes; turning points around mid-life.' },
-      { name: 'Sun Line', description: 'Fine line parallel to the fate line, faint near the base, clearer toward the ring finger.', strength: 'weak', interpretation: 'Creative talents that benefit from conscious cultivation. Recognition tends to arrive later in life.' },
-      { name: 'Mercury Line', description: 'Short, slightly broken line running toward the little finger.', strength: 'moderate', interpretation: 'Communicates well; pay attention to digestion and stress management.' },
-      { name: 'Marriage Line', description: 'One clear horizontal line on the edge of the palm beneath the little finger.', strength: 'moderate', interpretation: 'Indicates one significant, lasting partnership built on mutual respect.' },
+      {
+        name: 'Heart Line',
+        subtitle: 'Emotion & Relationships',
+        description: 'Starts below the index finger and curves gently toward the middle finger, clear and unbroken.',
+        observations: ['Deep and clear', 'Ends between index and middle fingers', 'Gentle upward curve'],
+        strength: 'strong',
+        interpretation: 'Deep capacity for love and emotional expression. Loyal, warm, and willing to invest in long relationships.',
+      },
+      {
+        name: 'Head Line',
+        subtitle: 'Mind & Intellect',
+        description: 'Runs straight across the palm with a soft downward slope at the end.',
+        observations: ['Long and well-defined', 'Slightly slopes downward', 'Good separation from life line at the start'],
+        strength: 'strong',
+        interpretation: 'Sharp analytical mind balanced with creative imagination. Practical decisions guided by intuition.',
+      },
+      {
+        name: 'Life Line',
+        subtitle: 'Energy & Vitality',
+        description: 'Wide arc around the thumb, deep and well-defined.',
+        observations: ['Deep and wide arc', 'Clear and unbroken', 'Strong start near thumb and index'],
+        strength: 'strong',
+        interpretation: 'Strong vitality and zest for life. Good physical stamina and recovery throughout life.',
+      },
+      {
+        name: 'Fate Line',
+        subtitle: 'Career & Direction',
+        description: 'Visible line rising from the base of the palm toward the middle finger with a few small branches.',
+        observations: ['Faint but present', 'Rises from lower palm', 'Strengthens upward'],
+        strength: 'moderate',
+        interpretation: 'Self-made path shaped by your own choices. Career grows stronger and clearer over time.',
+      },
+      {
+        name: 'Sun Line',
+        subtitle: 'Success & Recognition',
+        description: 'Fine line parallel to the fate line, faint near the base, clearer toward the ring finger.',
+        observations: ['Light but visible', 'Toward the ring finger', 'Develops in upper palm'],
+        strength: 'weak',
+        interpretation: 'Creative talents that benefit from conscious cultivation. Recognition tends to arrive later in life.',
+      },
+      {
+        name: 'Mercury Line',
+        subtitle: 'Communication & Health',
+        description: 'Short, slightly broken line running toward the little finger.',
+        observations: ['Short and partly broken', 'Runs toward Mercury (little finger)'],
+        strength: 'moderate',
+        interpretation: 'Communicates well and persuasively. Pay attention to digestion and stress management.',
+      },
+      {
+        name: 'Marriage Line',
+        subtitle: 'Partnership',
+        description: 'One clear horizontal line on the edge of the palm beneath the little finger.',
+        observations: ['One clear, long line', 'Edge of palm beneath Mercury'],
+        strength: 'moderate',
+        interpretation: 'Indicates one significant, lasting partnership built on mutual respect.',
+      },
     ],
     mounts: [
       { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership and ambition. A natural ability to inspire and guide others.' },
@@ -462,5 +561,6 @@ export function getDefaultFallback() {
     relationshipInsights: 'The heart line indicates deep, meaningful relationships and a willingness to commit. You value loyalty and emotional honesty. Your ideal partner appreciates both intellectual companionship and emotional depth and gives you space to grow without losing closeness.',
     spiritualInsights: 'A clear head-life line junction indicates thoughtful, considered choices on the spiritual path. You are likely drawn to traditions that combine philosophical understanding with daily practice; service-oriented dharma resonates well.',
     cautions: 'Avoid carrying responsibility for outcomes that are not yours to control — the strong Saturn finger can over-shoulder. Watch for periods of overthinking around the mid-thirties; ground decisions in conversation with trusted people, not only inside your own head.',
+    closingAffirmation: 'You hold the power to shape your destiny. The lines show potential — your choices write the story.',
   };
 }

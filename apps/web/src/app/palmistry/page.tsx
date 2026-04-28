@@ -23,16 +23,42 @@ interface HandShape {
   description: string;
 }
 
+interface AtAGlance {
+  strengths: string;
+  lifePath: string;
+  love: string;
+  bestSuitedFor: string;
+}
+
+interface HandOverview {
+  handType: string;
+  palmShape: string;
+  fingers: string;
+  thumb: string;
+  dominantHand: string;
+}
+
+interface MajorLine {
+  name: string;
+  subtitle?: string;
+  description: string;
+  observations: string[];
+  strength: "strong" | "moderate" | "weak";
+}
+
 interface AnalysisResult {
-  majorLines: { name: string; description: string; strength: "strong" | "moderate" | "weak" }[];
+  atAGlance: AtAGlance | null;
+  handOverview: HandOverview | null;
+  handShape: HandShape | null;
+  majorLines: MajorLine[];
   minorLines: { name: string; description: string; strength?: "strong" | "moderate" | "weak" }[];
   mounts: { name: string; description: string; prominence: "high" | "medium" | "low" }[];
   insights: { label: string; text: string }[];
   fingerAnalysis: { finger: string; interpretation: string; length?: string }[];
   specialMarkings: SpecialMarking[];
   timingInsights: TimingInsight[];
-  handShape: HandShape | null;
   cautions: string;
+  closingAffirmation: string;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -69,11 +95,15 @@ function normalizeProminence(p: string): ProminenceCode {
 
 function mapAnalysis(result: any, t: any): AnalysisResult {
   const lines = Array.isArray(result?.lines) ? result.lines : [];
-  const majorLines = lines
+  const majorLines: MajorLine[] = lines
     .filter((l: any) => isMajorLine(l.name || ""))
     .map((l: any) => ({
       name: l.name,
+      subtitle: typeof l.subtitle === "string" ? l.subtitle : undefined,
       description: l.interpretation || l.description || "",
+      observations: Array.isArray(l.observations)
+        ? l.observations.filter((o: unknown) => typeof o === "string" && o.trim().length > 0)
+        : [],
       strength: normalizeStrength(l.strength),
     }));
   const minorLines = lines
@@ -121,7 +151,33 @@ function mapAnalysis(result: any, t: any): AnalysisResult {
     ? { type: result.handShape.type || "", description: result.handShape.description || "" }
     : null;
 
+  const atAGlance: AtAGlance | null = result?.atAGlance && (
+    result.atAGlance.strengths || result.atAGlance.lifePath || result.atAGlance.love || result.atAGlance.bestSuitedFor
+  )
+    ? {
+        strengths: result.atAGlance.strengths || "",
+        lifePath: result.atAGlance.lifePath || "",
+        love: result.atAGlance.love || "",
+        bestSuitedFor: result.atAGlance.bestSuitedFor || "",
+      }
+    : null;
+
+  const handOverview: HandOverview | null = result?.handOverview && (
+    result.handOverview.handType || result.handOverview.palmShape || result.handOverview.fingers || result.handOverview.thumb || result.handOverview.dominantHand
+  )
+    ? {
+        handType: result.handOverview.handType || "",
+        palmShape: result.handOverview.palmShape || "",
+        fingers: result.handOverview.fingers || "",
+        thumb: result.handOverview.thumb || "",
+        dominantHand: result.handOverview.dominantHand || "",
+      }
+    : null;
+
   return {
+    atAGlance,
+    handOverview,
+    handShape,
     majorLines,
     minorLines,
     mounts,
@@ -129,89 +185,225 @@ function mapAnalysis(result: any, t: any): AnalysisResult {
     fingerAnalysis,
     specialMarkings,
     timingInsights,
-    handShape,
     cautions: typeof result?.cautions === "string" ? result.cautions : "",
+    closingAffirmation: typeof result?.closingAffirmation === "string" ? result.closingAffirmation : "",
   };
 }
 
-function buildReportText(analysis: AnalysisResult, t: any): string {
-  const lines: string[] = [];
-  lines.push(`${t.palmistry.title} ${t.palmistry.titleHighlight}`);
-  lines.push("=".repeat(40));
-  lines.push("");
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-  if (analysis.handShape) {
-    lines.push(`${t.palmistry.handShape}: ${analysis.handShape.type}`);
-    if (analysis.handShape.description) lines.push(analysis.handShape.description);
-    lines.push("");
+function buildReportHtml(analysis: AnalysisResult, t: any): string {
+  const e = escapeHtml;
+  const dateStr = new Date().toLocaleDateString();
+
+  const atAGlanceHtml = analysis.atAGlance
+    ? `
+      <section class="at-a-glance">
+        <h2>${e(t.palmistry.atAGlance)}</h2>
+        <div class="grid">
+          ${analysis.atAGlance.strengths ? `<div class="cell"><div class="label">${e(t.palmistry.atAGlanceStrengths)}</div><div class="value">${e(analysis.atAGlance.strengths)}</div></div>` : ""}
+          ${analysis.atAGlance.lifePath ? `<div class="cell"><div class="label">${e(t.palmistry.atAGlanceLifePath)}</div><div class="value">${e(analysis.atAGlance.lifePath)}</div></div>` : ""}
+          ${analysis.atAGlance.love ? `<div class="cell"><div class="label">${e(t.palmistry.atAGlanceLove)}</div><div class="value">${e(analysis.atAGlance.love)}</div></div>` : ""}
+          ${analysis.atAGlance.bestSuitedFor ? `<div class="cell"><div class="label">${e(t.palmistry.atAGlanceBestSuitedFor)}</div><div class="value">${e(analysis.atAGlance.bestSuitedFor)}</div></div>` : ""}
+        </div>
+      </section>`
+    : "";
+
+  const handOverviewHtml = analysis.handOverview
+    ? `
+      <section class="hand-overview">
+        <h2>${e(t.palmistry.handOverview)}</h2>
+        <div class="grid">
+          ${analysis.handOverview.handType ? `<div class="cell"><div class="label">${e(t.palmistry.handOverviewType)}</div><div class="value">${e(analysis.handOverview.handType)}</div></div>` : ""}
+          ${analysis.handOverview.palmShape ? `<div class="cell"><div class="label">${e(t.palmistry.handOverviewShape)}</div><div class="value">${e(analysis.handOverview.palmShape)}</div></div>` : ""}
+          ${analysis.handOverview.fingers ? `<div class="cell"><div class="label">${e(t.palmistry.handOverviewFingers)}</div><div class="value">${e(analysis.handOverview.fingers)}</div></div>` : ""}
+          ${analysis.handOverview.thumb ? `<div class="cell"><div class="label">${e(t.palmistry.handOverviewThumb)}</div><div class="value">${e(analysis.handOverview.thumb)}</div></div>` : ""}
+          ${analysis.handOverview.dominantHand ? `<div class="cell"><div class="label">${e(t.palmistry.handOverviewDominantHand)}</div><div class="value">${e(analysis.handOverview.dominantHand)}</div></div>` : ""}
+        </div>
+      </section>`
+    : "";
+
+  const majorLinesHtml = analysis.majorLines.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.majorLines)}</h2>
+        <div class="lines-grid">
+          ${analysis.majorLines
+            .map(
+              (l) => `
+            <article class="line-card">
+              <h3>${e(l.name)}</h3>
+              ${l.subtitle ? `<div class="subtitle">${e(l.subtitle)}</div>` : ""}
+              ${
+                l.observations.length
+                  ? `<ul>${l.observations.map((o) => `<li>${e(o)}</li>`).join("")}</ul>`
+                  : ""
+              }
+              <p>${e(l.description)}</p>
+            </article>`,
+            )
+            .join("")}
+        </div>
+      </section>`
+    : "";
+
+  const minorLinesHtml = analysis.minorLines.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.minorLines)}</h2>
+        ${analysis.minorLines
+          .map(
+            (l) =>
+              `<div class="row"><div class="row-name">${e(l.name)}</div><div class="row-text">${e(l.description)}</div></div>`,
+          )
+          .join("")}
+      </section>`
+    : "";
+
+  const mountsHtml = analysis.mounts.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.mounts)}</h2>
+        ${analysis.mounts
+          .map(
+            (m) =>
+              `<div class="row"><div class="row-name">${e(m.name)} <span class="tag">${e(m.prominence)}</span></div><div class="row-text">${e(m.description)}</div></div>`,
+          )
+          .join("")}
+      </section>`
+    : "";
+
+  const fingerHtml = analysis.fingerAnalysis.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.fingerAnalysis)}</h2>
+        ${analysis.fingerAnalysis
+          .map(
+            (f) =>
+              `<div class="row"><div class="row-name">${e(f.finger)}${f.length ? ` <span class="tag">${e(f.length)}</span>` : ""}</div><div class="row-text">${e(f.interpretation)}</div></div>`,
+          )
+          .join("")}
+      </section>`
+    : "";
+
+  const insightsHtml = analysis.insights.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.insights)}</h2>
+        ${analysis.insights
+          .map((i) => `<h3>${e(i.label)}</h3><p>${e(i.text)}</p>`)
+          .join("")}
+      </section>`
+    : "";
+
+  const markingsHtml = analysis.specialMarkings.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.specialMarkings)}</h2>
+        ${analysis.specialMarkings
+          .map(
+            (m) =>
+              `<div class="row"><div class="row-name">${e(m.name)}${m.location ? ` <span class="tag">${e(m.location)}</span>` : ""}</div><div class="row-text">${e(m.interpretation)}</div></div>`,
+          )
+          .join("")}
+      </section>`
+    : "";
+
+  const timingHtml = analysis.timingInsights.length
+    ? `
+      <section>
+        <h2>${e(t.palmistry.timingInsights)}</h2>
+        ${analysis.timingInsights
+          .map(
+            (ti) =>
+              `<div class="row"><div class="row-name">${e(ti.ageRange)}${ti.area ? ` <span class="tag">${e(ti.area)}</span>` : ""}</div><div class="row-text">${e(ti.description)}</div></div>`,
+          )
+          .join("")}
+      </section>`
+    : "";
+
+  const cautionsHtml = analysis.cautions
+    ? `
+      <section class="cautions">
+        <h2>${e(t.palmistry.cautions)}</h2>
+        <p>${e(analysis.cautions)}</p>
+      </section>`
+    : "";
+
+  const closingHtml = analysis.closingAffirmation
+    ? `<div class="closing">${e(analysis.closingAffirmation)}</div>`
+    : "";
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>${e(`${t.palmistry.title} ${t.palmistry.titleHighlight}`)}</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Georgia', 'Iowan Old Style', serif; background: #fafaf7; color: #1f1f1f; line-height: 1.55; }
+  .page { max-width: 880px; margin: 0 auto; padding: 56px 40px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.04); }
+  header { text-align: center; border-bottom: 1px solid #e6e3dc; padding-bottom: 24px; margin-bottom: 32px; }
+  header h1 { margin: 0 0 4px; font-size: 36px; letter-spacing: 0.5px; font-weight: 400; }
+  header .subtitle { color: #8a8478; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; }
+  header .meta { color: #a39d92; font-size: 11px; margin-top: 12px; letter-spacing: 1px; }
+  h2 { font-size: 18px; letter-spacing: 1.2px; text-transform: uppercase; color: #5a534a; border-bottom: 1px solid #e6e3dc; padding-bottom: 8px; margin: 36px 0 18px; font-weight: 500; }
+  h3 { font-size: 15px; margin: 14px 0 4px; color: #2a2722; font-family: -apple-system, system-ui, sans-serif; font-weight: 600; letter-spacing: 0.3px; }
+  .subtitle { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #a09680; margin-bottom: 8px; }
+  p { margin: 4px 0 12px; font-size: 14px; }
+  ul { margin: 4px 0 10px; padding-left: 20px; font-size: 13px; }
+  ul li { margin: 2px 0; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 24px; }
+  .cell { padding: 10px 0; border-bottom: 1px dotted #e6e3dc; }
+  .cell .label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #a09680; margin-bottom: 4px; font-family: -apple-system, system-ui, sans-serif; }
+  .cell .value { font-size: 14px; color: #2a2722; }
+  .lines-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .line-card { padding: 14px 16px; border: 1px solid #ebe7df; border-radius: 6px; background: #fdfcf8; }
+  .line-card h3 { margin-top: 0; }
+  .row { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 8px 0; border-bottom: 1px dotted #ebe7df; font-size: 13px; }
+  .row:last-child { border-bottom: 0; }
+  .row-name { font-family: -apple-system, system-ui, sans-serif; font-weight: 600; color: #2a2722; }
+  .tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #efece4; color: #6b6557; letter-spacing: 0.5px; text-transform: uppercase; margin-left: 4px; font-weight: 500; }
+  .cautions { background: #fbf6ec; border-left: 3px solid #c9a96a; padding: 14px 18px; border-radius: 0 6px 6px 0; }
+  .cautions h2 { border: 0; padding: 0; margin: 0 0 8px; }
+  .closing { text-align: center; font-style: italic; font-size: 16px; color: #6b6557; margin: 40px 0 0; padding-top: 24px; border-top: 1px solid #e6e3dc; }
+  footer { text-align: center; margin-top: 40px; font-size: 10px; color: #a39d92; letter-spacing: 1px; }
+  @media print {
+    body { background: #fff; }
+    .page { box-shadow: none; padding: 24px; }
   }
-
-  if (analysis.insights.length) {
-    for (const ins of analysis.insights) {
-      lines.push(`-- ${ins.label} --`);
-      lines.push(ins.text);
-      lines.push("");
-    }
-  }
-
-  if (analysis.majorLines.length) {
-    lines.push(`-- ${t.palmistry.majorLines} --`);
-    for (const l of analysis.majorLines) {
-      lines.push(`${l.name} (${l.strength}): ${l.description}`);
-    }
-    lines.push("");
-  }
-
-  if (analysis.minorLines.length) {
-    lines.push(`-- ${t.palmistry.minorLines} --`);
-    for (const l of analysis.minorLines) {
-      lines.push(`${l.name}: ${l.description}`);
-    }
-    lines.push("");
-  }
-
-  if (analysis.mounts.length) {
-    lines.push(`-- ${t.palmistry.mounts} --`);
-    for (const m of analysis.mounts) {
-      lines.push(`${m.name} (${m.prominence}): ${m.description}`);
-    }
-    lines.push("");
-  }
-
-  if (analysis.fingerAnalysis.length) {
-    lines.push(`-- ${t.palmistry.fingerAnalysis} --`);
-    for (const f of analysis.fingerAnalysis) {
-      const len = f.length ? ` [${f.length}]` : "";
-      lines.push(`${f.finger}${len}: ${f.interpretation}`);
-    }
-    lines.push("");
-  }
-
-  if (analysis.specialMarkings.length) {
-    lines.push(`-- ${t.palmistry.specialMarkings} --`);
-    for (const m of analysis.specialMarkings) {
-      lines.push(`${m.name} (${m.location}): ${m.interpretation}`);
-    }
-    lines.push("");
-  }
-
-  if (analysis.timingInsights.length) {
-    lines.push(`-- ${t.palmistry.timingInsights} --`);
-    for (const ti of analysis.timingInsights) {
-      lines.push(`${ti.ageRange} — ${ti.area}: ${ti.description}`);
-    }
-    lines.push("");
-  }
-
-  if (analysis.cautions) {
-    lines.push(`-- ${t.palmistry.cautions} --`);
-    lines.push(analysis.cautions);
-    lines.push("");
-  }
-
-  lines.push("");
-  lines.push(t.palmistry.disclaimer);
-  return lines.join("\n");
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>${e(t.palmistry.title)} ${e(t.palmistry.titleHighlight)}</h1>
+      <div class="subtitle">${e(t.palmistry.reportSubtitle)}</div>
+      <div class="meta">${e(dateStr)}</div>
+    </header>
+    ${atAGlanceHtml}
+    ${handOverviewHtml}
+    ${majorLinesHtml}
+    ${minorLinesHtml}
+    ${mountsHtml}
+    ${fingerHtml}
+    ${insightsHtml}
+    ${markingsHtml}
+    ${timingHtml}
+    ${cautionsHtml}
+    ${closingHtml}
+    <footer>${e(t.palmistry.disclaimer)}</footer>
+  </div>
+</body>
+</html>`;
 }
 
 export default function PalmistryPage() {
@@ -372,16 +564,39 @@ export default function PalmistryPage() {
   const handleDownload = () => {
     if (!analysis) return;
     try {
-      const text = buildReportText(analysis, t);
-      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const html = buildReportHtml(analysis, t);
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `palmistry-report-${new Date().toISOString().slice(0, 10)}.txt`;
+      a.download = `palmistry-report-${new Date().toISOString().slice(0, 10)}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    } catch {
+      setError(t.palmistry.downloadFailed);
+      setErrorRetryable(false);
+    }
+  };
+
+  const handlePrint = () => {
+    if (!analysis) return;
+    try {
+      const html = buildReportHtml(analysis, t);
+      const win = window.open("", "_blank", "noopener,noreferrer");
+      if (!win) {
+        setError(t.palmistry.downloadFailed);
+        setErrorRetryable(false);
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      // Give the browser a moment to layout fonts before printing.
+      setTimeout(() => {
+        try { win.focus(); win.print(); } catch { /* ignore */ }
+      }, 250);
     } catch {
       setError(t.palmistry.downloadFailed);
       setErrorRetryable(false);
@@ -633,7 +848,89 @@ export default function PalmistryPage() {
               <div className="surface-card p-6">
                 <h2 className="text-lg font-bold text-gradient mb-4">{t.palmistry.results}</h2>
 
-                {analysis.handShape && (
+                {analysis.atAGlance && (
+                  <section className="mb-5 p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 text-center mb-3">{t.palmistry.atAGlance}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {analysis.atAGlance.strengths && (
+                        <div className="flex gap-2">
+                          <span aria-hidden className="mt-0.5 text-emerald-400">✦</span>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.atAGlanceStrengths}</p>
+                            <p className="text-xs text-white/80 leading-snug">{analysis.atAGlance.strengths}</p>
+                          </div>
+                        </div>
+                      )}
+                      {analysis.atAGlance.lifePath && (
+                        <div className="flex gap-2">
+                          <span aria-hidden className="mt-0.5 text-amber-300">✸</span>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.atAGlanceLifePath}</p>
+                            <p className="text-xs text-white/80 leading-snug">{analysis.atAGlance.lifePath}</p>
+                          </div>
+                        </div>
+                      )}
+                      {analysis.atAGlance.love && (
+                        <div className="flex gap-2">
+                          <span aria-hidden className="mt-0.5 text-rose-400">♥</span>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.atAGlanceLove}</p>
+                            <p className="text-xs text-white/80 leading-snug">{analysis.atAGlance.love}</p>
+                          </div>
+                        </div>
+                      )}
+                      {analysis.atAGlance.bestSuitedFor && (
+                        <div className="flex gap-2">
+                          <span aria-hidden className="mt-0.5 text-primary-300">⚑</span>
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.atAGlanceBestSuitedFor}</p>
+                            <p className="text-xs text-white/80 leading-snug">{analysis.atAGlance.bestSuitedFor}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {analysis.handOverview && (
+                  <section className="mb-5 p-4 rounded-xl bg-primary-500/[0.04] border border-primary-500/15">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-primary-300/80 text-center mb-3">{t.palmistry.handOverview}</p>
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5">
+                      {analysis.handOverview.handType && (
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.handOverviewType}</dt>
+                          <dd className="text-xs text-white/80 leading-snug">{analysis.handOverview.handType}</dd>
+                        </div>
+                      )}
+                      {analysis.handOverview.palmShape && (
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.handOverviewShape}</dt>
+                          <dd className="text-xs text-white/80 leading-snug">{analysis.handOverview.palmShape}</dd>
+                        </div>
+                      )}
+                      {analysis.handOverview.fingers && (
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.handOverviewFingers}</dt>
+                          <dd className="text-xs text-white/80 leading-snug">{analysis.handOverview.fingers}</dd>
+                        </div>
+                      )}
+                      {analysis.handOverview.thumb && (
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.handOverviewThumb}</dt>
+                          <dd className="text-xs text-white/80 leading-snug">{analysis.handOverview.thumb}</dd>
+                        </div>
+                      )}
+                      {analysis.handOverview.dominantHand && (
+                        <div className="border-b border-white/[0.04] pb-2 sm:col-span-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-white/40 mb-0.5">{t.palmistry.handOverviewDominantHand}</dt>
+                          <dd className="text-xs text-white/80 leading-snug">{analysis.handOverview.dominantHand}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </section>
+                )}
+
+                {!analysis.handOverview && analysis.handShape && (
                   <div className="mb-4 p-3 rounded-xl bg-primary-500/[0.06] border border-primary-500/20">
                     <p className="text-[11px] uppercase tracking-wider text-primary-300/80 mb-1">{t.palmistry.handShape}</p>
                     <p className="text-sm font-semibold text-white">{analysis.handShape.type}</p>
@@ -670,26 +967,46 @@ export default function PalmistryPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {activeTab === "major" &&
-                    analysis.majorLines.map((line) => (
-                      <div
-                        key={line.name}
-                        className={`p-4 rounded-xl transition-all cursor-pointer ${
-                          selectedFeature === line.name
-                            ? "bg-white/[0.08] ring-1 ring-primary-500/30"
-                            : "bg-white/[0.03] hover:bg-white/[0.05]"
-                        }`}
-                        onClick={() => setSelectedFeature(selectedFeature === line.name ? null : line.name)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-white text-sm">{line.name}</h4>
-                          <span className={`text-xs font-medium ${strengthColor(line.strength)}`}>
-                            {strengthLabel(line.strength)}
-                          </span>
+                  {activeTab === "major" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {analysis.majorLines.map((line) => (
+                        <div
+                          key={line.name}
+                          className={`p-4 rounded-xl transition-all cursor-pointer ${
+                            selectedFeature === line.name
+                              ? "bg-white/[0.08] ring-1 ring-primary-500/30"
+                              : "bg-white/[0.03] hover:bg-white/[0.05]"
+                          }`}
+                          onClick={() => setSelectedFeature(selectedFeature === line.name ? null : line.name)}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div>
+                              <h4 className="font-semibold text-white text-sm leading-tight">{line.name}</h4>
+                              {line.subtitle && (
+                                <p className="text-[10px] uppercase tracking-wider text-primary-300/70 mt-0.5">{line.subtitle}</p>
+                              )}
+                            </div>
+                            <span className={`text-[10px] font-medium uppercase tracking-wider whitespace-nowrap ${strengthColor(line.strength)}`}>
+                              {strengthLabel(line.strength)}
+                            </span>
+                          </div>
+                          {line.observations.length > 0 && (
+                            <ul className="mt-2 space-y-1">
+                              {line.observations.map((obs, i) => (
+                                <li key={i} className="flex items-start gap-1.5 text-[11px] text-white/60 leading-snug">
+                                  <span aria-hidden className="mt-1 inline-block h-1 w-1 rounded-full bg-white/40 shrink-0" />
+                                  <span>{obs}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          {line.description && (
+                            <p className="mt-2 text-xs text-white/50 leading-relaxed italic">{line.description}</p>
+                          )}
                         </div>
-                        <p className="text-xs text-white/40 leading-relaxed">{line.description}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
 
                   {activeTab === "minor" && (
                     analysis.minorLines.length > 0 ? (
@@ -802,12 +1119,27 @@ export default function PalmistryPage() {
                   )}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/[0.06] flex gap-2">
+                {analysis.closingAffirmation && (
+                  <div className="mt-6 pt-5 border-t border-white/[0.06] text-center">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-primary-300/60 mb-2">{t.palmistry.yourPath}</p>
+                    <p className="text-sm italic text-white/80 leading-relaxed max-w-md mx-auto">
+                      {analysis.closingAffirmation}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     onClick={handleDownload}
-                    className="focus-ring flex-1 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-300"
+                    className="focus-ring py-3 rounded-xl btn-secondary text-sm font-medium text-primary-300"
                   >
                     {t.palmistry.downloadReport}
+                  </button>
+                  <button
+                    onClick={handlePrint}
+                    className="focus-ring py-3 rounded-xl bg-white/[0.04] text-sm font-medium text-white/80 hover:text-white"
+                  >
+                    {t.palmistry.printReport}
                   </button>
                   <button
                     onClick={() => {
@@ -816,7 +1148,7 @@ export default function PalmistryPage() {
                       setImageFile(null);
                       setSelectedFeature(null);
                     }}
-                    className="focus-ring py-3 px-4 rounded-xl bg-white/[0.04] text-sm font-medium text-white/70 hover:text-white"
+                    className="focus-ring py-3 rounded-xl bg-white/[0.04] text-sm font-medium text-white/70 hover:text-white"
                   >
                     {t.palmistry.startOver}
                   </button>
