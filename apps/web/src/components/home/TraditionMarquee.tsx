@@ -31,7 +31,7 @@ export default function TraditionMarquee() {
   return (
     <section
       aria-hidden
-      className="relative grain border-y border-surface-900/[0.08] py-6 sm:py-8 overflow-hidden bg-surface-50"
+      className="relative border-y border-surface-900/[0.08] py-6 sm:py-8 overflow-hidden bg-surface-100/60"
     >
       <Track labels={labels} reverse={false} duration={55} />
       <Track labels={labels} reverse offsetTop="mt-2" duration={70} />
