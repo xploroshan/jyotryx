@@ -85,21 +85,21 @@ export default function PanchangPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-gray-950 to-gray-950" />
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
       <div className="absolute top-32 left-1/4 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-50/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
             <span className="text-lg">🕉️</span>
             {t.panchang.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             {t.panchang.title} <span className="text-gradient">{t.panchang.titleHighlight}</span>
           </h1>
-          <p className="text-surface-50/40 max-w-xl mx-auto">
+          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
             {t.panchang.description}
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function PanchangPage() {
             <div className="inline-block p-4 rounded-2xl bg-red-500/10 border border-red-500/20 mb-4">
               <p className="text-red-400">{error}</p>
             </div>
-            <button onClick={fetchPanchang} className="mt-4 px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1]">
+            <button onClick={fetchPanchang} className="mt-4 px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)]">
               {t.panchang.retry}
             </button>
           </div>
@@ -128,8 +128,8 @@ export default function PanchangPage() {
           <>
             {/* Date */}
             <div className="surface-card p-6 mb-8 text-center">
-              <p className="text-sm text-surface-50/30 mb-1">{t.panchang.date}</p>
-              <p className="text-2xl font-bold text-surface-50">
+              <p className="text-sm text-[rgba(12,8,5,0.40)] mb-1">{t.panchang.date}</p>
+              <p className="text-2xl font-bold text-surface-950">
                 {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
               <p className="text-sm text-accent-400 mt-1">{translateVara(panchang.vara, locale)}</p>
@@ -142,11 +142,11 @@ export default function PanchangPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-2xl">{item.icon}</span>
                     <div>
-                      <p className="text-xs text-surface-50/30">{item.desc}</p>
-                      <p className="text-sm font-medium text-surface-50/40">{item.label}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.40)]">{item.desc}</p>
+                      <p className="text-sm font-medium text-[rgba(12,8,5,0.46)]">{item.label}</p>
                     </div>
                   </div>
-                  <p className="text-xl font-bold text-surface-50">{item.value}</p>
+                  <p className="text-xl font-bold text-surface-950">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -157,8 +157,8 @@ export default function PanchangPage() {
               {timings.map((tm) => (
                 <div key={tm.label} className="surface-card p-5 text-center">
                   <span className="text-3xl block mb-2">{tm.icon}</span>
-                  <p className="text-xs text-surface-50/30 mb-1">{tm.label}</p>
-                  <p className="text-lg font-bold text-surface-50">{tm.value}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{tm.label}</p>
+                  <p className="text-lg font-bold text-surface-950">{tm.value}</p>
                 </div>
               ))}
             </div>
@@ -169,8 +169,8 @@ export default function PanchangPage() {
               {inauspicious.map((item) => (
                 <div key={item.label} className="surface-card p-5 border border-red-500/10">
                   <p className="text-sm font-medium text-red-400 mb-1">{item.label}</p>
-                  <p className="text-lg font-bold text-surface-50 mb-1">{item.value}</p>
-                  <p className="text-xs text-surface-50/30">{item.desc}</p>
+                  <p className="text-lg font-bold text-surface-950 mb-1">{item.value}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.40)]">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -178,7 +178,7 @@ export default function PanchangPage() {
             {/* SEO city directory link — surfaces the static landing pages
                 so authenticated users can hop to a specific-city panchang
                 without losing their daily-default view. */}
-            <div className="mt-8 surface-card p-4 text-sm text-surface-50/60 flex items-center justify-between gap-4">
+            <div className="mt-8 surface-card p-4 text-sm text-secondary flex items-center justify-between gap-4">
               <span>Want today's panchang for a specific city?</span>
               <Link
                 href="/panchang/cities"

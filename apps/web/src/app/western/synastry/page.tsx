@@ -79,14 +79,14 @@ export default function WesternSynastryPage() {
       descriptionKey="featurePages.westernSynastry.description"
     >
       {!isAuthenticated ? (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.loginRequired}
         </div>
       ) : (
         <div className="glass rounded-2xl p-5 sm:p-6 mb-4">
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-surface-50/50 mb-2">
+              <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
                 {fp.partner1}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -107,7 +107,7 @@ export default function WesternSynastryPage() {
               </div>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-surface-50/50 mb-2">
+              <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
                 {fp.partner2}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -144,14 +144,14 @@ export default function WesternSynastryPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass-strong rounded-2xl p-6 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
               {fp.compatibility}
             </p>
-            <p className="text-5xl font-bold text-surface-50 mt-2">
+            <p className="text-5xl font-bold text-surface-950 mt-2">
               {result.compatibility.score}
-              <span className="text-2xl text-surface-50/50">%</span>
+              <span className="text-2xl text-[rgba(12,8,5,0.55)]">%</span>
             </p>
-            <p className="text-sm text-surface-50/70 mt-3">{result.compatibility.summary}</p>
+            <p className="text-sm text-emphasis mt-3">{result.compatibility.summary}</p>
             <div className="flex items-center justify-center gap-6 mt-4 text-xs">
               <span className="text-emerald-300">
                 ✓ {result.compatibility.harmonious} {fp.harmonious}
@@ -165,23 +165,23 @@ export default function WesternSynastryPage() {
           <div className="grid grid-cols-2 gap-3">
             {([result.partner1, result.partner2] as const).map((p, i) => (
               <div key={i} className="glass rounded-2xl p-4">
-                <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-2">
+                <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
                   {fp.partnerPrefix} {i + 1}
                 </p>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-surface-50/60">{fp.sun}</span>
-                    <span className="text-surface-50">
+                    <span className="text-secondary">{fp.sun}</span>
+                    <span className="text-surface-950">
                       {p.sun.sign} ({p.sun.element})
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-surface-50/60">{fp.moon}</span>
-                    <span className="text-surface-50">{p.moon.sign}</span>
+                    <span className="text-secondary">{fp.moon}</span>
+                    <span className="text-surface-950">{p.moon.sign}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-surface-50/60">{fp.asc}</span>
-                    <span className="text-surface-50">{p.ascendant.sign}</span>
+                    <span className="text-secondary">{fp.asc}</span>
+                    <span className="text-surface-950">{p.ascendant.sign}</span>
                   </div>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function WesternSynastryPage() {
 
           {result.aspects.length > 0 && (
             <div className="glass rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-3">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
                 {fp.crossAspects}
               </p>
               <ul className="divide-y divide-white/[0.06]">
@@ -200,9 +200,9 @@ export default function WesternSynastryPage() {
                     className="flex items-center justify-between gap-2 py-2 text-sm"
                   >
                     <div>
-                      <span className="text-surface-50/90">{a.a}</span>
-                      <span className="text-surface-50/40 mx-2">·</span>
-                      <span className="text-surface-50/90">{a.b}</span>
+                      <span className="text-emphasis">{a.a}</span>
+                      <span className="text-[rgba(12,8,5,0.46)] mx-2">·</span>
+                      <span className="text-emphasis">{a.b}</span>
                     </div>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${

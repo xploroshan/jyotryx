@@ -212,21 +212,21 @@ export default function HoroscopePage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-primary-900/10 via-gray-950 to-gray-950" />
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-surface-50/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-secondary mb-4">
             <span className="text-lg">{currentSign.symbol}</span>
             {t.horoscope.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">
             {t.horoscope.title} <span className="text-gradient">{t.horoscope.titleHighlight}</span>
           </h1>
-          <p className="text-surface-50/40 max-w-xl mx-auto">
+          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
             {t.horoscope.description}
           </p>
         </div>
@@ -234,7 +234,7 @@ export default function HoroscopePage() {
         {/* Tradition Tabs - only shown when user has multiple traditions */}
         {isMultiTradition && (
           <div className="flex justify-center mb-8">
-            <div className="inline-flex gap-1 rounded-xl bg-white/[0.03] p-1">
+            <div className="inline-flex gap-1 rounded-xl bg-[rgba(255,252,245,0.78)] p-1">
               {userTraditions.map((trad) => {
                 const colors = TRADITION_COLORS[trad] || TRADITION_COLORS.VEDIC;
                 const isActive = !showSummary && activeTradition === trad;
@@ -245,7 +245,7 @@ export default function HoroscopePage() {
                     className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isActive
                         ? `${colors.bg} ${colors.text} ${colors.border} border`
-                        : "text-surface-50/40 hover:text-surface-50/70"
+                        : "text-[rgba(12,8,5,0.46)] hover:text-emphasis"
                     }`}
                   >
                     {TRADITION_I18N_KEY[trad] ? t.traditionsUi[TRADITION_I18N_KEY[trad]].name : trad}
@@ -256,8 +256,8 @@ export default function HoroscopePage() {
                 onClick={handleShowSummary}
                 className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   showSummary
-                    ? "btn-primary text-surface-50"
-                    : "text-surface-50/40 hover:text-surface-50/70"
+                    ? "btn-primary text-white"
+                    : "text-[rgba(12,8,5,0.46)] hover:text-emphasis"
                 }`}
               >
                 {t.traditions.summary}
@@ -276,12 +276,12 @@ export default function HoroscopePage() {
                   onClick={() => setSelectedSign(z.id)}
                   className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all ${
                     selectedSign === z.id
-                      ? "surface-card bg-white/[0.06] border-primary-500/50"
-                      : "hover:bg-white/[0.03]"
+                      ? "surface-card bg-[rgba(255,252,245,0.92)] border-primary-500/50"
+                      : "hover:bg-[rgba(255,252,245,0.78)]"
                   }`}
                 >
                   <span className="text-2xl mb-1">{z.symbol}</span>
-                  <span className={`text-xs font-medium ${selectedSign === z.id ? "text-surface-50" : "text-surface-50/40"}`}>
+                  <span className={`text-xs font-medium ${selectedSign === z.id ? "text-surface-950" : "text-[rgba(12,8,5,0.46)]"}`}>
                     {z.name}
                   </span>
                 </button>
@@ -292,18 +292,18 @@ export default function HoroscopePage() {
             <div className="surface-card p-6 mb-8 flex flex-col sm:flex-row items-center gap-4">
               <div className="text-4xl">{currentSign.symbol}</div>
               <div className="text-center sm:text-left">
-                <h2 className="text-xl font-bold text-surface-50">{currentSign.name}</h2>
+                <h2 className="text-xl font-bold text-surface-950">{currentSign.name}</h2>
                 <div className="flex flex-wrap gap-3 mt-1 justify-center sm:justify-start">
                   {isChinese ? (
                     <>
-                      <span className="text-sm text-surface-50/40">{(currentSign as typeof CHINESE_ANIMALS[0]).years}</span>
+                      <span className="text-sm text-[rgba(12,8,5,0.46)]">{(currentSign as typeof CHINESE_ANIMALS[0]).years}</span>
                       <span className={`text-sm font-medium ${elementColor((currentSign as typeof CHINESE_ANIMALS[0]).element)}`}>
                         {(currentSign as typeof CHINESE_ANIMALS[0]).element}
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="text-sm text-surface-50/40">{(currentSign as typeof zodiacSigns[0]).date}</span>
+                      <span className="text-sm text-[rgba(12,8,5,0.46)]">{(currentSign as typeof zodiacSigns[0]).date}</span>
                       <span className={`text-sm font-medium ${elementColor((currentSign as typeof zodiacSigns[0]).element)}`}>
                         {(currentSign as typeof zodiacSigns[0]).element}
                       </span>
@@ -313,15 +313,15 @@ export default function HoroscopePage() {
               </div>
               <div className="sm:ml-auto">
                 {/* Period Tabs */}
-                <div className="flex gap-1 rounded-xl bg-white/[0.03] p-1">
+                <div className="flex gap-1 rounded-xl bg-[rgba(255,252,245,0.78)] p-1">
                   {periods.map((p) => (
                     <button
                       key={p.id}
                       onClick={() => setSelectedPeriod(p.id)}
                       className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                         selectedPeriod === p.id
-                          ? "btn-primary text-surface-50"
-                          : "text-surface-50/40 hover:text-surface-50"
+                          ? "btn-primary text-white"
+                          : "text-[rgba(12,8,5,0.46)] hover:text-surface-950"
                       }`}
                     >
                       {p.label}
@@ -336,15 +336,15 @@ export default function HoroscopePage() {
         {/* Summary Mode: Period selector when in summary view */}
         {showSummary && (
           <div className="flex justify-center mb-8">
-            <div className="flex gap-1 rounded-xl bg-white/[0.03] p-1">
+            <div className="flex gap-1 rounded-xl bg-[rgba(255,252,245,0.78)] p-1">
               {periods.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setSelectedPeriod(p.id)}
                   className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                     selectedPeriod === p.id
-                      ? "btn-primary text-surface-50"
-                      : "text-surface-50/40 hover:text-surface-50"
+                      ? "btn-primary text-white"
+                      : "text-[rgba(12,8,5,0.46)] hover:text-surface-950"
                   }`}
                 >
                   {p.label}
@@ -393,24 +393,24 @@ export default function HoroscopePage() {
               <h3 className="text-lg font-bold text-gradient mb-4">
                 {periodHeading} {t.horoscope.overview}
               </h3>
-              <p className="text-surface-50/60 leading-relaxed">{horoscope.overview}</p>
+              <p className="text-secondary leading-relaxed">{horoscope.overview}</p>
             </div>
 
             {/* Lucky */}
             <div className="surface-card p-6">
               <h3 className="text-lg font-bold text-accent-400 mb-4">{t.horoscope.luckyFactors}</h3>
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-surface-50/30 mb-1">{t.horoscope.luckyNumbers}</p>
-                  <p className="text-surface-50 font-semibold">{horoscope.lucky.number}</p>
+                <div className="p-3 rounded-xl bg-[rgba(255,252,245,0.78)]">
+                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.horoscope.luckyNumbers}</p>
+                  <p className="text-surface-950 font-semibold">{horoscope.lucky.number}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-surface-50/30 mb-1">{t.horoscope.luckyColor}</p>
-                  <p className="text-surface-50 font-semibold">{horoscope.lucky.color}</p>
+                <div className="p-3 rounded-xl bg-[rgba(255,252,245,0.78)]">
+                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.horoscope.luckyColor}</p>
+                  <p className="text-surface-950 font-semibold">{horoscope.lucky.color}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-white/[0.03]">
-                  <p className="text-xs text-surface-50/30 mb-1">{t.horoscope.auspiciousTime}</p>
-                  <p className="text-surface-50 font-semibold">{horoscope.lucky.time}</p>
+                <div className="p-3 rounded-xl bg-[rgba(255,252,245,0.78)]">
+                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.horoscope.auspiciousTime}</p>
+                  <p className="text-surface-950 font-semibold">{horoscope.lucky.time}</p>
                 </div>
               </div>
             </div>
@@ -418,25 +418,25 @@ export default function HoroscopePage() {
             {/* Love */}
             <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-bold text-surface-50">{t.horoscope.loveRelationships}</h3>
+                <h3 className="font-bold text-surface-950">{t.horoscope.loveRelationships}</h3>
               </div>
-              <p className="text-sm text-surface-50/60 leading-relaxed">{horoscope.love}</p>
+              <p className="text-sm text-secondary leading-relaxed">{horoscope.love}</p>
             </div>
 
             {/* Career */}
             <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-bold text-surface-50">{t.horoscope.careerFinance}</h3>
+                <h3 className="font-bold text-surface-950">{t.horoscope.careerFinance}</h3>
               </div>
-              <p className="text-sm text-surface-50/60 leading-relaxed">{horoscope.career}</p>
+              <p className="text-sm text-secondary leading-relaxed">{horoscope.career}</p>
             </div>
 
             {/* Health */}
             <div className="surface-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-bold text-surface-50">{t.horoscope.healthWellness}</h3>
+                <h3 className="font-bold text-surface-950">{t.horoscope.healthWellness}</h3>
               </div>
-              <p className="text-sm text-surface-50/60 leading-relaxed">{horoscope.health}</p>
+              <p className="text-sm text-secondary leading-relaxed">{horoscope.health}</p>
             </div>
           </div>
         )}
@@ -449,7 +449,7 @@ export default function HoroscopePage() {
               <h3 className="text-lg font-bold text-gradient mb-4">
                 {t.traditions.summary}
               </h3>
-              <p className="text-surface-50/60 leading-relaxed">{summaryData.summary}</p>
+              <p className="text-secondary leading-relaxed">{summaryData.summary}</p>
             </div>
 
             {/* Individual tradition insights */}
@@ -463,17 +463,17 @@ export default function HoroscopePage() {
                         {TRADITION_I18N_KEY[tradKey] ? t.traditionsUi[TRADITION_I18N_KEY[tradKey]].name : tradKey}
                       </span>
                     </div>
-                    <p className="text-sm text-surface-50/60 leading-relaxed mb-3">{tradData.overview}</p>
+                    <p className="text-sm text-secondary leading-relaxed mb-3">{tradData.overview}</p>
                     {tradData.love && (
                       <div className="mb-2">
-                        <span className="text-xs text-surface-50/30">{t.horoscope.loveRelationships}:</span>
-                        <p className="text-xs text-surface-50/50">{tradData.love}</p>
+                        <span className="text-xs text-[rgba(12,8,5,0.40)]">{t.horoscope.loveRelationships}:</span>
+                        <p className="text-xs text-[rgba(12,8,5,0.55)]">{tradData.love}</p>
                       </div>
                     )}
                     {tradData.career && (
                       <div className="mb-2">
-                        <span className="text-xs text-surface-50/30">{t.horoscope.careerFinance}:</span>
-                        <p className="text-xs text-surface-50/50">{tradData.career}</p>
+                        <span className="text-xs text-[rgba(12,8,5,0.40)]">{t.horoscope.careerFinance}:</span>
+                        <p className="text-xs text-[rgba(12,8,5,0.55)]">{tradData.career}</p>
                       </div>
                     )}
                   </div>

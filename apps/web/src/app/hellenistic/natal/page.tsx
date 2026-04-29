@@ -87,7 +87,7 @@ export default function HellenisticNatalPage() {
       descriptionKey="featurePages.hellenisticNatal.description"
     >
       {!isAuthenticated ? (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.loginRequired}
         </div>
       ) : (
@@ -133,23 +133,23 @@ export default function HellenisticNatalPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/40">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">
                 {fp.ascendant}
               </p>
-              <p className="text-lg font-semibold text-surface-50 mt-1">{result.ascendant}</p>
+              <p className="text-lg font-semibold text-surface-950 mt-1">{result.ascendant}</p>
             </div>
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/40">{fp.sun}</p>
-              <p className="text-lg font-semibold text-surface-50 mt-1">{result.sunSign}</p>
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{fp.sun}</p>
+              <p className="text-lg font-semibold text-surface-950 mt-1">{result.sunSign}</p>
             </div>
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/40">{fp.moon}</p>
-              <p className="text-lg font-semibold text-surface-50 mt-1">{result.moonSign}</p>
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{fp.moon}</p>
+              <p className="text-lg font-semibold text-surface-950 mt-1">{result.moonSign}</p>
             </div>
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/40 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-3">
               {fp.planets}
             </p>
             <ul className="divide-y divide-white/[0.06]">
@@ -158,7 +158,7 @@ export default function HellenisticNatalPage() {
                   key={p.planet}
                   className="flex items-center justify-between py-2 text-sm"
                 >
-                  <span className="flex items-center gap-2 text-surface-50/90">
+                  <span className="flex items-center gap-2 text-emphasis">
                     <span className="text-lg" aria-hidden>
                       {PLANET_GLYPH[p.planet] ?? '✦'}
                     </span>
@@ -169,7 +169,7 @@ export default function HellenisticNatalPage() {
                       </span>
                     )}
                   </span>
-                  <span className="text-surface-50/60 text-xs">
+                  <span className="text-secondary text-xs">
                     {p.sign} · {p.degree.toFixed(2)}° · H{p.house}
                   </span>
                 </li>
@@ -178,21 +178,21 @@ export default function HellenisticNatalPage() {
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/40 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-3">
               {fp.houses}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {result.houses.map((h) => (
                 <div
                   key={h.house}
-                  className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2"
+                  className="rounded-xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)] px-3 py-2"
                 >
-                  <div className="flex items-center justify-between text-xs text-surface-50/50">
+                  <div className="flex items-center justify-between text-xs text-[rgba(12,8,5,0.55)]">
                     <span>{fp.housePrefix} {h.house}</span>
                     <span>{h.sign}</span>
                   </div>
                   {h.planets.length > 0 && (
-                    <div className="text-xs text-surface-50/75 mt-1">
+                    <div className="text-xs text-emphasis mt-1">
                       {h.planets.join(', ')}
                     </div>
                   )}
@@ -202,7 +202,7 @@ export default function HellenisticNatalPage() {
           </div>
 
           {result.interpretation && (
-            <div className="glass rounded-2xl p-5 text-sm text-surface-50/80 whitespace-pre-wrap leading-relaxed">
+            <div className="glass rounded-2xl p-5 text-sm text-emphasis whitespace-pre-wrap leading-relaxed">
               {result.interpretation}
             </div>
           )}

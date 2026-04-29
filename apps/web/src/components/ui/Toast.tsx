@@ -60,7 +60,7 @@ export function Toast({
             <button
               type="button"
               onClick={action.onClick}
-              className="focus-ring rounded-md px-2 py-1 text-xs font-medium underline underline-offset-2 hover:bg-white/[0.06]"
+              className="focus-ring rounded-md px-2 py-1 text-xs font-medium underline underline-offset-2 hover:bg-[rgba(255,252,245,0.92)]"
             >
               {action.label}
             </button>

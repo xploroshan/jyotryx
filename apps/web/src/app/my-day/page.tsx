@@ -157,21 +157,21 @@ export default function MyDayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-950" aria-busy="true" aria-live="polite">
+      <div className="min-h-screen" aria-busy="true" aria-live="polite">
         {/* Hero skeleton */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary-600/8 via-transparent to-transparent" />
           <div className="relative mx-auto max-w-5xl px-4 pt-8 pb-6 sm:pt-12 sm:pb-10">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div className="space-y-3">
-                <div className="h-3 w-40 rounded bg-white/[0.08] animate-pulse" />
-                <div className="h-9 w-72 rounded bg-white/[0.08] animate-pulse" />
+                <div className="h-3 w-40 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
+                <div className="h-9 w-72 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
               </div>
-              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.06]">
-                <div className="w-8 h-8 rounded-full bg-white/[0.08] animate-pulse" />
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-[rgba(255,252,245,0.78)] ring-1 ring-white/[0.06]">
+                <div className="w-8 h-8 rounded-full bg-[rgba(12,8,5,0.05)] animate-pulse" />
                 <div className="space-y-2">
-                  <div className="h-3 w-16 rounded bg-white/[0.08] animate-pulse" />
-                  <div className="h-1 w-24 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-3 w-16 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
+                  <div className="h-1 w-24 rounded-full bg-[rgba(255,252,245,0.92)] overflow-hidden">
                     <div className="h-full w-1/2 bg-primary-500/40 animate-pulse" />
                   </div>
                 </div>
@@ -181,27 +181,27 @@ export default function MyDayPage() {
         </div>
 
         <div className="mx-auto max-w-5xl px-4 pb-16 fade-in-up">
-          <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/[0.06]">
+          <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-[rgba(12,8,5,0.08)]">
             <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
             <div className="pl-4 space-y-2">
-              <div className="h-3 w-full rounded bg-white/[0.08] animate-pulse" />
-              <div className="h-3 w-11/12 rounded bg-white/[0.08] animate-pulse" />
-              <div className="h-3 w-3/4 rounded bg-white/[0.08] animate-pulse" />
+              <div className="h-3 w-full rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
+              <div className="h-3 w-11/12 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
+              <div className="h-3 w-3/4 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
             </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mb-8">
             {[0, 1].map((col) => (
-              <div key={col} className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <div key={col} className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-white/[0.06] animate-pulse" />
-                  <div className="h-3 w-32 rounded bg-white/[0.08] animate-pulse" />
+                  <div className="w-8 h-8 rounded-lg bg-[rgba(255,252,245,0.92)] animate-pulse" />
+                  <div className="h-3 w-32 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
                 </div>
                 <ul className="space-y-2.5">
                   {[0, 1, 2].map((i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/[0.2] shrink-0" />
-                      <div className="h-3 flex-1 rounded bg-white/[0.06] animate-pulse" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[rgba(12,8,5,0.18)] shrink-0" />
+                      <div className="h-3 flex-1 rounded bg-[rgba(255,252,245,0.92)] animate-pulse" />
                     </li>
                   ))}
                 </ul>
@@ -209,16 +209,16 @@ export default function MyDayPage() {
             ))}
           </div>
 
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="h-4 w-40 rounded bg-white/[0.08] animate-pulse mb-4" />
+          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+            <div className="h-4 w-40 rounded bg-[rgba(12,8,5,0.05)] animate-pulse mb-4" />
             <div className="space-y-3">
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/[0.06] animate-pulse" />
-                    <div className="h-3 w-28 rounded bg-white/[0.06] animate-pulse" />
+                    <div className="w-8 h-8 rounded-full bg-[rgba(255,252,245,0.92)] animate-pulse" />
+                    <div className="h-3 w-28 rounded bg-[rgba(255,252,245,0.92)] animate-pulse" />
                   </div>
-                  <div className="h-3 w-16 rounded bg-white/[0.06] animate-pulse" />
+                  <div className="h-3 w-16 rounded bg-[rgba(255,252,245,0.92)] animate-pulse" />
                 </div>
               ))}
             </div>
@@ -240,7 +240,7 @@ export default function MyDayPage() {
             </svg>
           </div>
           <p className="text-red-400 mb-1 text-sm font-medium">{t.myDay.somethingWrong}</p>
-          <p className="text-surface-50/40 text-xs mb-5">{error}</p>
+          <p className="text-[rgba(12,8,5,0.46)] text-xs mb-5">{error}</p>
           <button onClick={() => fetchBriefing(true)} className="px-6 py-2.5 btn-primary rounded-xl text-sm">{t.myDay.tryAgain}</button>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function MyDayPage() {
   const currentHora = liveHora ?? briefing.currentHora ?? null;
 
   return (
-    <div className="min-h-screen bg-surface-950">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary-600/8 via-transparent to-transparent" />
@@ -278,7 +278,7 @@ export default function MyDayPage() {
               <p className="text-xs font-medium text-primary-400/80 tracking-widest uppercase mb-2">
                 {new Date(briefing.date).toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-50 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-950 tracking-tight">
                 {translateGreeting(briefing.greeting, t)}
               </h1>
               {isMultiTradition && (
@@ -302,7 +302,7 @@ export default function MyDayPage() {
               </div>
               <div>
                 <p className={`text-sm font-semibold ${qs.color}`}>{getQualityLabel(briefing.dayQuality, t)}</p>
-                <div className="mt-1.5 w-24 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="mt-1.5 w-24 h-1 rounded-full bg-[rgba(255,252,245,0.92)] overflow-hidden">
                   <div className={`h-full rounded-full ${qs.bar} transition-all duration-1000`} style={{ width: `${qs.pct}%` }} />
                 </div>
               </div>
@@ -313,9 +313,9 @@ export default function MyDayPage() {
 
       <div className="mx-auto max-w-5xl px-4 pb-16">
         {/* Summary */}
-        <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/[0.06]">
+        <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-[rgba(12,8,5,0.08)]">
           <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
-          <p className="text-surface-50/80 leading-relaxed pl-4 text-[15px]">{translateSummary(briefing.summary, t, locale)}</p>
+          <p className="text-emphasis leading-relaxed pl-4 text-[15px]">{translateSummary(briefing.summary, t, locale)}</p>
         </div>
 
         {/* Transit Alert */}
@@ -337,36 +337,36 @@ export default function MyDayPage() {
 
         {/* Do & Avoid */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                 <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-surface-50">{t.myDay.favorableToday}</h3>
+              <h3 className="text-sm font-semibold text-surface-950">{t.myDay.favorableToday}</h3>
             </div>
             <ul className="space-y-2.5">
               {doList.map((item, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm text-surface-50/60">
+                <li key={i} className="flex items-start gap-2.5 text-sm text-secondary">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500/50 shrink-0" />
                   {translateActivity(item, t)}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
                 <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-surface-50">{t.myDay.bestToAvoid}</h3>
+              <h3 className="text-sm font-semibold text-surface-950">{t.myDay.bestToAvoid}</h3>
             </div>
             <ul className="space-y-2.5">
               {avoidList.map((item, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm text-surface-50/60">
+                <li key={i} className="flex items-start gap-2.5 text-sm text-secondary">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500/50 shrink-0" />
                   {translateActivity(item, t)}
                 </li>
@@ -385,7 +385,7 @@ export default function MyDayPage() {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-primary-400 mb-1">{t.myDay.careerWork}</h3>
-              <p className="text-sm text-surface-50/60 leading-relaxed">{translateProfInsight(briefing.professionInsight, t)}</p>
+              <p className="text-sm text-secondary leading-relaxed">{translateProfInsight(briefing.professionInsight, t)}</p>
             </div>
           </div>
         </div>
@@ -393,44 +393,44 @@ export default function MyDayPage() {
         {/* Current Hora + Lucky Stats */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           {currentHora && (
-            <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <h3 className="text-xs font-medium text-surface-50/40 uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
+            <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+              <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl ${planetIcons[currentHora.planet]?.bg || "bg-white/[0.06]"} flex items-center justify-center`}>
-                  <span className={`text-2xl ${planetIcons[currentHora.planet]?.color || "text-surface-50/60"}`}>
+                <div className={`w-14 h-14 rounded-2xl ${planetIcons[currentHora.planet]?.bg || "bg-[rgba(255,252,245,0.92)]"} flex items-center justify-center`}>
+                  <span className={`text-2xl ${planetIcons[currentHora.planet]?.color || "text-secondary"}`}>
                     {planetIcons[currentHora.planet]?.symbol || "\u25cb"}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <p className={`text-lg font-bold ${planetIcons[currentHora.planet]?.color || "text-surface-50"}`}>
+                  <p className={`text-lg font-bold ${planetIcons[currentHora.planet]?.color || "text-surface-950"}`}>
                     {translatePlanet(currentHora.planet, t)}
                   </p>
-                  <p className="text-xs text-surface-50/30 mt-0.5">
+                  <p className="text-xs text-[rgba(12,8,5,0.40)] mt-0.5">
                     {translateTimeRange(currentHora.startTime, locale)} – {translateTimeRange(currentHora.endTime, locale)}
                   </p>
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.06]">
-                <p className="text-xs text-surface-50/30 mb-1">{t.myDay.bestFor}</p>
+              <div className="mt-4 pt-3 border-t border-[rgba(12,8,5,0.08)]">
+                <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.myDay.bestFor}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(currentHora.activities ?? []).map((a, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[11px] text-surface-50/50">{translateActivity(a, t)}</span>
+                    <span key={i} className="px-2.5 py-1 rounded-lg bg-[rgba(255,252,245,0.86)] text-[11px] text-[rgba(12,8,5,0.55)]">{translateActivity(a, t)}</span>
                   ))}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-            <h3 className="text-xs font-medium text-surface-50/40 uppercase tracking-wider mb-4">{t.myDay.luckyToday}</h3>
+          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+            <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-4">{t.myDay.luckyToday}</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center">
                   <div className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-orange-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-surface-50/30 uppercase tracking-wider">{t.myDay.color}</p>
-                  <p className="text-sm text-surface-50 font-medium">{translateColor(briefing.luckyColor, t)}</p>
+                  <p className="text-[11px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider">{t.myDay.color}</p>
+                  <p className="text-sm text-surface-950 font-medium">{translateColor(briefing.luckyColor, t)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -438,8 +438,8 @@ export default function MyDayPage() {
                   <span className="text-accent-400 font-bold text-lg">{briefing.luckyNumber}</span>
                 </div>
                 <div>
-                  <p className="text-[11px] text-surface-50/30 uppercase tracking-wider">{t.myDay.number}</p>
-                  <p className="text-sm text-surface-50 font-medium">{briefing.luckyNumber}</p>
+                  <p className="text-[11px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider">{t.myDay.number}</p>
+                  <p className="text-sm text-surface-950 font-medium">{briefing.luckyNumber}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -449,8 +449,8 @@ export default function MyDayPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[11px] text-surface-50/30 uppercase tracking-wider">{t.myDay.bestTime}</p>
-                  <p className="text-sm text-surface-50 font-medium">{translateTimeRange(briefing.luckyTime, locale)}</p>
+                  <p className="text-[11px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider">{t.myDay.bestTime}</p>
+                  <p className="text-sm text-surface-950 font-medium">{translateTimeRange(briefing.luckyTime, locale)}</p>
                 </div>
               </div>
             </div>
@@ -461,8 +461,8 @@ export default function MyDayPage() {
         <PlanetaryHoursSection planetaryHours={planetaryHours} t={t} locale={locale} />
 
         {/* Panchang */}
-        <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-          <h3 className="text-xs font-medium text-surface-50/40 uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
+        <div className="mb-8 p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+          <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
               { label: t.myDay.tithi, value: translateTithi(panchang.tithi, locale), icon: "\ud83c\udf19" },
@@ -471,10 +471,10 @@ export default function MyDayPage() {
               { label: t.myDay.day, value: translateVara(panchang.vara, locale), icon: "\ud83d\udcc5" },
               { label: t.myDay.rahuKaal, value: translateTimeRange(panchang.rahukaal, locale), icon: "\u26a0\ufe0f" },
             ].map((item) => (
-              <div key={item.label} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04] text-center">
+              <div key={item.label} className="p-3 rounded-xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.06)] text-center">
                 <p className="text-lg mb-1">{item.icon}</p>
-                <p className="text-[10px] text-surface-50/30 uppercase tracking-wider mb-1">{item.label}</p>
-                <p className="text-xs text-surface-50/70 font-medium">{item.value}</p>
+                <p className="text-[10px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider mb-1">{item.label}</p>
+                <p className="text-xs text-emphasis font-medium">{item.value}</p>
               </div>
             ))}
           </div>
@@ -491,14 +491,14 @@ export default function MyDayPage() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-accent-400 mb-1.5">{t.myDay.todaysRemedy}</h3>
-                <p className="text-sm text-surface-50/60 leading-relaxed">{translateRemedy(briefing.remedy, t)}</p>
+                <p className="text-sm text-secondary leading-relaxed">{translateRemedy(briefing.remedy, t)}</p>
               </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-600/8 to-accent-500/5 border border-white/[0.06] flex flex-col items-center justify-center text-center">
-            <h3 className="text-xs font-medium text-surface-50/40 uppercase tracking-wider mb-3">{t.myDay.todaysMantra}</h3>
-            <p className="text-xl sm:text-2xl text-surface-50/90 font-semibold leading-relaxed tracking-wide">
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-600/8 to-accent-500/5 border border-[rgba(12,8,5,0.08)] flex flex-col items-center justify-center text-center">
+            <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-3">{t.myDay.todaysMantra}</h3>
+            <p className="text-xl sm:text-2xl text-emphasis font-semibold leading-relaxed tracking-wide">
               {briefing.mantra}
             </p>
             <div className="mt-3 w-12 h-px bg-gradient-to-r from-transparent via-accent-500/40 to-transparent" />

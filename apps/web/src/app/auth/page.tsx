@@ -538,17 +538,13 @@ function AuthPageContent() {
   const strengthColor = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"][strength] || "";
 
   return (
-    <div className="relative min-h-[85vh] flex items-center justify-center px-4 py-16 overflow-hidden bg-surface-950">
-      {/* Auth uses a deep ink canvas — the form was authored against the
-          dark theme (text-surface-50, surface-card with 4% white tint),
-          so painting a dark backdrop here preserves the existing visual
-          contract while the rest of the site lives on cream. */}
+    <div className="relative min-h-[85vh] flex items-center justify-center px-4 py-16 overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-90"
         style={{
           background:
-            'radial-gradient(ellipse 70% 60% at 50% 10%, rgba(255,182,39,0.20) 0%, rgba(255,77,0,0.12) 35%, transparent 70%)',
+            'radial-gradient(ellipse 70% 60% at 50% 10%, rgba(255,182,39,0.18) 0%, rgba(255,77,0,0.10) 35%, transparent 70%)',
         }}
       />
       <div className="relative w-full max-w-sm fade-in-up">
@@ -564,9 +560,9 @@ function AuthPageContent() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-semibold text-surface-50">{t.auth.brandName}</span>
+            <span className="text-lg font-semibold text-surface-950">{t.auth.brandName}</span>
           </Link>
-          <p className="text-sm text-surface-50/40">{t.auth.subtitle}</p>
+          <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.auth.subtitle}</p>
         </div>
 
         <div className="surface-card p-6">
@@ -575,7 +571,7 @@ function AuthPageContent() {
             <>
               <button
                 onClick={() => { setShowForgotPassword(false); setError(""); setSuccess(""); }}
-                className="flex items-center gap-1.5 text-xs text-surface-50/40 hover:text-surface-50/60 mb-4 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[rgba(12,8,5,0.46)] hover:text-secondary mb-4 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -583,8 +579,8 @@ function AuthPageContent() {
                 {t.auth.backToLogin}
               </button>
 
-              <h2 className="text-base font-semibold text-surface-50 mb-1">{t.auth.forgotTitle}</h2>
-              <p className="text-xs text-surface-50/40 mb-5">
+              <h2 className="text-base font-semibold text-surface-950 mb-1">{t.auth.forgotTitle}</h2>
+              <p className="text-xs text-[rgba(12,8,5,0.46)] mb-5">
                 {t.auth.forgotDesc}
               </p>
 
@@ -609,7 +605,7 @@ function AuthPageContent() {
 
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="reset-email" className="block text-xs text-surface-50/60 mb-1.5">{t.auth.emailLabel}</label>
+                  <label htmlFor="reset-email" className="block text-xs text-secondary mb-1.5">{t.auth.emailLabel}</label>
                   <input
                     id="reset-email"
                     type="email"
@@ -633,12 +629,12 @@ function AuthPageContent() {
           ) : (
             <>
               {/* Tabs */}
-              <div role="tablist" aria-label="Authentication mode" className="flex mb-6 p-1 rounded-lg bg-white/[0.04]">
+              <div role="tablist" aria-label="Authentication mode" className="flex mb-6 p-1 rounded-lg bg-[rgba(255,252,245,0.86)]">
                 <button
                   role="tab"
                   aria-selected={tab === "login"}
                   onClick={() => { setTab("login"); setError(""); setSuccess(""); }}
-                  className={`focus-ring flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "login" ? "bg-primary-600 text-surface-50" : "text-surface-50/60 hover:text-surface-50/80"}`}
+                  className={`focus-ring flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "login" ? "bg-primary-600 text-white" : "text-secondary hover:text-emphasis"}`}
                 >
                   {t.auth.tabLogin}
                 </button>
@@ -646,7 +642,7 @@ function AuthPageContent() {
                   role="tab"
                   aria-selected={tab === "signup"}
                   onClick={() => { setTab("signup"); setError(""); setSuccess(""); }}
-                  className={`focus-ring flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "signup" ? "bg-primary-600 text-surface-50" : "text-surface-50/60 hover:text-surface-50/80"}`}
+                  className={`focus-ring flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === "signup" ? "bg-primary-600 text-white" : "text-secondary hover:text-emphasis"}`}
                 >
                   {t.auth.tabSignup}
                 </button>
@@ -671,7 +667,7 @@ function AuthPageContent() {
                 </div>
               )}
               {serverWaking && !error && !success && (
-                <div className="mb-4 p-2 rounded-md text-[11px] text-surface-50/40 flex items-center gap-2">
+                <div className="mb-4 p-2 rounded-md text-[11px] text-[rgba(12,8,5,0.46)] flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                   {t.auth.wakingServer}
                 </div>
@@ -714,9 +710,9 @@ function AuthPageContent() {
               </button>
 
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1 h-px bg-white/[0.06]" />
-                <span className="text-[11px] text-surface-50/25 uppercase">{t.auth.or}</span>
-                <div className="flex-1 h-px bg-white/[0.06]" />
+                <div className="flex-1 h-px bg-[rgba(255,252,245,0.92)]" />
+                <span className="text-[11px] text-[rgba(12,8,5,0.36)] uppercase">{t.auth.or}</span>
+                <div className="flex-1 h-px bg-[rgba(255,252,245,0.92)]" />
               </div>
 
               {/* Method Toggle */}
@@ -725,7 +721,7 @@ function AuthPageContent() {
                   role="tab"
                   aria-selected={authMethod === "phone"}
                   onClick={() => { setAuthMethod("phone"); setOtpSent(false); setError(""); setSuccess(""); }}
-                  className={`focus-ring flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "phone" ? "bg-white/[0.08] text-surface-50" : "text-surface-50/60 hover:text-surface-50/80"}`}
+                  className={`focus-ring flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "phone" ? "bg-[rgba(12,8,5,0.05)] text-surface-950" : "text-secondary hover:text-emphasis"}`}
                 >
                   {t.auth.phoneOtp}
                 </button>
@@ -733,7 +729,7 @@ function AuthPageContent() {
                   role="tab"
                   aria-selected={authMethod === "email"}
                   onClick={() => { setAuthMethod("email"); setError(""); setSuccess(""); }}
-                  className={`focus-ring flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "email" ? "bg-white/[0.08] text-surface-50" : "text-surface-50/60 hover:text-surface-50/80"}`}
+                  className={`focus-ring flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${authMethod === "email" ? "bg-[rgba(12,8,5,0.05)] text-surface-950" : "text-secondary hover:text-emphasis"}`}
                 >
                   {t.auth.emailMethod}
                 </button>
@@ -743,7 +739,7 @@ function AuthPageContent() {
               <div className="space-y-3">
                 {tab === "signup" && (
                   <div>
-                    <label htmlFor="auth-name" className="block text-xs text-surface-50/60 mb-1.5">{t.auth.fullNameLabel}</label>
+                    <label htmlFor="auth-name" className="block text-xs text-secondary mb-1.5">{t.auth.fullNameLabel}</label>
                     <input id="auth-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.auth.fullNamePlaceholder}
                       className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
                   </div>
@@ -752,12 +748,12 @@ function AuthPageContent() {
                 {authMethod === "phone" ? (
                   <>
                     <div>
-                      <label htmlFor="auth-phone" className="flex items-center justify-between text-xs text-surface-50/60 mb-1.5">
+                      <label htmlFor="auth-phone" className="flex items-center justify-between text-xs text-secondary mb-1.5">
                         <span>{t.auth.phoneNumberLabel}</span>
-                        <span className="text-[10px] tabular-nums text-surface-50/40" aria-live="polite">{phone.length}/10</span>
+                        <span className="text-[10px] tabular-nums text-[rgba(12,8,5,0.46)]" aria-live="polite">{phone.length}/10</span>
                       </label>
                       <div className="flex gap-2">
-                        <span className="flex items-center px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-surface-50/60 text-sm">+91</span>
+                        <span className="flex items-center px-3 rounded-lg bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.10)] text-secondary text-sm">+91</span>
                         <input
                           id="auth-phone"
                           type="tel"
@@ -771,12 +767,12 @@ function AuthPageContent() {
                           className="flex-1 px-3 py-2.5 rounded-lg surface-input text-sm disabled:opacity-40"
                         />
                       </div>
-                      <p id="auth-phone-hint" className="text-[10px] text-surface-50/40 mt-1">10-digit Indian mobile number.</p>
+                      <p id="auth-phone-hint" className="text-[10px] text-[rgba(12,8,5,0.46)] mt-1">10-digit Indian mobile number.</p>
                     </div>
 
                     {otpSent && (
                       <div>
-                        <label htmlFor="auth-otp" className="block text-xs text-surface-50/60 mb-1.5">{t.auth.enterOtpLabel}</label>
+                        <label htmlFor="auth-otp" className="block text-xs text-secondary mb-1.5">{t.auth.enterOtpLabel}</label>
                         <input
                           id="auth-otp"
                           type="text"
@@ -802,7 +798,7 @@ function AuthPageContent() {
                         />
                         <div className="flex items-center justify-between mt-2">
                           <button onClick={handleSendOtp} disabled={loading} className="focus-ring rounded text-[11px] text-primary-400 hover:text-primary-300">{t.auth.resendOtp}</button>
-                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); otpAutoSubmittedRef.current = false; confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="focus-ring rounded text-[11px] text-surface-50/50 hover:text-surface-50/70">{t.auth.changeNumber}</button>
+                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); otpAutoSubmittedRef.current = false; confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="focus-ring rounded text-[11px] text-[rgba(12,8,5,0.55)] hover:text-emphasis">{t.auth.changeNumber}</button>
                         </div>
                       </div>
                     )}
@@ -815,12 +811,12 @@ function AuthPageContent() {
                 ) : (
                   <>
                     <div>
-                      <label htmlFor="auth-email" className="block text-xs text-surface-50/60 mb-1.5">{t.auth.emailLabel}</label>
+                      <label htmlFor="auth-email" className="block text-xs text-secondary mb-1.5">{t.auth.emailLabel}</label>
                       <input id="auth-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.auth.emailPlaceholder}
                         className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
                     </div>
                     <div>
-                      <label htmlFor="auth-password" className="block text-xs text-surface-50/60 mb-1.5">{t.auth.passwordLabel}</label>
+                      <label htmlFor="auth-password" className="block text-xs text-secondary mb-1.5">{t.auth.passwordLabel}</label>
                       <div className="relative">
                         <input id="auth-password" type={showPassword ? "text" : "password"} autoComplete={tab === "signup" ? "new-password" : "current-password"} aria-describedby={tab === "signup" ? "auth-password-rules" : undefined} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.auth.passwordPlaceholder}
                           className="w-full px-3 py-2.5 pr-14 rounded-lg surface-input text-sm"
@@ -828,12 +824,12 @@ function AuthPageContent() {
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? t.auth.hide : t.auth.show}
                           aria-pressed={showPassword}
-                          className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-surface-50/50 hover:text-surface-50/80 text-xs px-1">
+                          className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-[rgba(12,8,5,0.55)] hover:text-emphasis text-xs px-1">
                           {showPassword ? t.auth.hide : t.auth.show}
                         </button>
                       </div>
                       {tab === "signup" && (
-                        <p id="auth-password-rules" className="mt-1.5 text-[10px] text-surface-50/50 leading-relaxed">
+                        <p id="auth-password-rules" className="mt-1.5 text-[10px] text-[rgba(12,8,5,0.55)] leading-relaxed">
                           At least 8 characters. Mix upper + lower case, a number, and a symbol for a strong password.
                         </p>
                       )}
@@ -841,7 +837,7 @@ function AuthPageContent() {
                         <div className="mt-2">
                           <div className="flex gap-0.5 mb-1" aria-hidden>
                             {[1, 2, 3, 4, 5].map((i) => (
-                              <div key={i} className={`h-0.5 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-white/[0.06]"}`} />
+                              <div key={i} className={`h-0.5 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-[rgba(255,252,245,0.92)]"}`} />
                             ))}
                           </div>
                           <p className={`text-[11px] ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`} aria-live="polite">
@@ -874,7 +870,7 @@ function AuthPageContent() {
                 )}
               </div>
 
-              <p className="text-[11px] text-surface-50/20 text-center mt-5">
+              <p className="text-[11px] text-[rgba(12,8,5,0.32)] text-center mt-5">
                 {t.auth.terms}
               </p>
             </>

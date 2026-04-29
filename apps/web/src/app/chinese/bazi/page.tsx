@@ -66,41 +66,41 @@ export default function ChineseBaZiPage() {
       descriptionKey="featurePages.chineseBazi.description"
     >
       {!isAuthenticated ? (
-        <p className="text-sm text-surface-50/60 text-center py-6">
+        <p className="text-sm text-secondary text-center py-6">
           {fp.loginPrompt}
         </p>
       ) : (
         <>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs text-surface-50/60 mb-1">{t.form.dateOfBirth}</label>
+              <label className="block text-xs text-secondary mb-1">{t.form.dateOfBirth}</label>
               <input
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
                 required
-                className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+                className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
               />
             </div>
             <div>
-              <label className="block text-xs text-surface-50/60 mb-1">{t.form.timeOfBirth}</label>
+              <label className="block text-xs text-secondary mb-1">{t.form.timeOfBirth}</label>
               <input
                 type="time"
                 value={timeOfBirth}
                 onChange={(e) => setTimeOfBirth(e.target.value)}
                 required
-                className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+                className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
               />
             </div>
             <div>
-              <label className="block text-xs text-surface-50/60 mb-1">{t.form.placeOfBirth}</label>
+              <label className="block text-xs text-secondary mb-1">{t.form.placeOfBirth}</label>
               <input
                 type="text"
                 value={placeOfBirth}
                 onChange={(e) => setPlaceOfBirth(e.target.value)}
                 placeholder={t.form.placePlaceholder}
                 required
-                className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+                className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
               />
             </div>
             <button
@@ -121,29 +121,29 @@ export default function ChineseBaZiPage() {
                 {(['year', 'month', 'day', 'hour'] as const).map((k) => {
                   const p = result.pillars[k];
                   return (
-                    <div key={k} className="rounded-xl border divider bg-white/[0.03] p-3">
-                      <div className="text-[10px] uppercase tracking-wider text-surface-50/40">
+                    <div key={k} className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-3">
+                      <div className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)]">
                         {pillarLabel[k]} {fp.pillarSuffix}
                       </div>
-                      <div className="mt-1 text-surface-50 text-sm font-semibold">
+                      <div className="mt-1 text-surface-950 text-sm font-semibold">
                         {p.heavenlyStem} · {p.earthlyBranch}
                       </div>
-                      <div className="text-xs text-surface-50/60">
+                      <div className="text-xs text-secondary">
                         {p.animal} · {p.element}
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                <div className="text-xs uppercase tracking-wider text-surface-50/40">
+              <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)]">
                   {fp.dayMaster}
                 </div>
-                <div className="mt-1 text-surface-50 font-medium">{result.dayMaster}</div>
+                <div className="mt-1 text-surface-950 font-medium">{result.dayMaster}</div>
               </div>
               {result.interpretation && (
-                <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                  <p className="text-sm text-surface-50/80 whitespace-pre-wrap leading-relaxed">
+                <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
+                  <p className="text-sm text-emphasis whitespace-pre-wrap leading-relaxed">
                     {result.interpretation}
                   </p>
                 </div>

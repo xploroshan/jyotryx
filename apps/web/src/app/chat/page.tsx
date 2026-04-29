@@ -87,9 +87,9 @@ export default function ChatPage() {
         aria-label={sidebarOpen ? t.common.close : t.chat.selectTopic}
         aria-expanded={sidebarOpen}
         aria-controls="chat-topic-sidebar"
-        className="focus-ring lg:hidden fixed top-[4.5rem] left-3 z-30 p-2 rounded-lg bg-surface-950 border divider"
+        className="focus-ring lg:hidden fixed top-[4.5rem] left-3 z-30 p-2 rounded-lg bg-[rgba(255,252,245,0.92)] border divider shadow-sm"
       >
-        <svg className="w-4 h-4 text-surface-50/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
+        <svg className="w-4 h-4 text-emphasis" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
@@ -105,16 +105,16 @@ export default function ChatPage() {
       )}
 
       {/* Sidebar */}
-      <aside id="chat-topic-sidebar" className={`fixed lg:relative z-20 w-56 h-full bg-surface-950 border-r divider p-3 flex flex-col transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+      <aside id="chat-topic-sidebar" className={`fixed lg:relative z-20 w-56 h-full bg-[rgba(255,252,245,0.92)] border-r divider p-3 flex flex-col transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="mb-4 px-1">
-          <h2 className="text-sm font-semibold text-surface-50 mb-0.5">{t.chat.vedicAstrologer}</h2>
-          <p className="text-[11px] text-surface-50/30">{t.chat.selectTopic}</p>
+          <h2 className="text-sm font-semibold text-surface-950 mb-0.5">{t.chat.vedicAstrologer}</h2>
+          <p className="text-[11px] text-[rgba(12,8,5,0.40)]">{t.chat.selectTopic}</p>
         </div>
 
         <div role="tablist" aria-label={t.chat.selectTopic} className="space-y-0.5 flex-1">
           {categories.map((cat) => (
             <button key={cat.id} role="tab" aria-selected={selectedCategory === cat.id} onClick={() => { setSelectedCategory(cat.id); setSidebarOpen(false); }}
-              className={`focus-ring w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors duration-150 ${selectedCategory === cat.id ? "bg-white/[0.08] text-surface-50 font-medium" : "text-surface-50/70 hover:text-surface-50 hover:bg-white/[0.03]"}`}>
+              className={`focus-ring w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors duration-150 ${selectedCategory === cat.id ? "bg-[rgba(12,8,5,0.05)] text-surface-950 font-medium" : "text-emphasis hover:text-surface-950 hover:bg-[rgba(255,252,245,0.78)]"}`}>
               {cat.label}
             </button>
           ))}
@@ -122,7 +122,7 @@ export default function ChatPage() {
 
         {!isAuthenticated && (
           <div className="surface-card p-3 mt-3">
-            <button onClick={() => router.push("/auth")} className="focus-ring w-full py-1.5 text-[11px] font-medium rounded-md bg-white/[0.04] text-primary-300 hover:bg-white/[0.08] transition-colors">
+            <button onClick={() => router.push("/auth")} className="focus-ring w-full py-1.5 text-[11px] font-medium rounded-md bg-[rgba(255,252,245,0.86)] text-primary-300 hover:bg-[rgba(12,8,5,0.05)] transition-colors">
               {t.chat.signIn}
             </button>
           </div>
@@ -134,22 +134,22 @@ export default function ChatPage() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b divider">
           <div>
-            <h3 className="font-medium text-surface-50 text-sm">{categories.find((c) => c.id === selectedCategory)?.label}</h3>
+            <h3 className="font-medium text-surface-950 text-sm">{categories.find((c) => c.id === selectedCategory)?.label}</h3>
             <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />{t.chat.online}
             </span>
           </div>
-          <span className="text-[11px] text-surface-50/20 border divider px-2 py-0.5 rounded-md">{t.chat.askAnything}</span>
+          <span className="text-[11px] text-[rgba(12,8,5,0.32)] border divider px-2 py-0.5 rounded-md">{t.chat.askAnything}</span>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3">
           {messages.length === 1 && (
             <div className="mb-4">
-              <p className="text-xs text-surface-50/60 mb-2">{t.chat.tryAsking}</p>
+              <p className="text-xs text-secondary mb-2">{t.chat.tryAsking}</p>
               <div className="flex flex-wrap gap-1.5">
                 {suggestedQuestions.map((q) => (
-                  <button key={q} onClick={() => setInput(q)} className="focus-ring px-3 py-1.5 rounded-lg border divider bg-white/[0.02] text-[11px] text-surface-50/70 hover:text-surface-50 hover:bg-white/[0.04] transition-colors">{q}</button>
+                  <button key={q} onClick={() => setInput(q)} className="focus-ring px-3 py-1.5 rounded-lg border divider bg-[rgba(255,252,245,0.70)] text-[11px] text-emphasis hover:text-surface-950 hover:bg-[rgba(255,252,245,0.86)] transition-colors">{q}</button>
                 ))}
               </div>
             </div>
@@ -173,7 +173,7 @@ export default function ChatPage() {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] sm:max-w-[70%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === "user" ? "bg-primary-600 text-surface-50 rounded-br-md" : "bg-white/[0.04] border divider text-surface-50/70 rounded-bl-md"}`}>
+              <div className={`max-w-[85%] sm:max-w-[70%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === "user" ? "bg-primary-600 text-white rounded-br-md" : "bg-[rgba(255,252,245,0.86)] border divider text-emphasis rounded-bl-md"}`}>
                 {msg.content}
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function ChatPage() {
 
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-white/[0.04] border divider px-4 py-3 rounded-2xl rounded-bl-md">
+              <div className="bg-[rgba(255,252,245,0.86)] border divider px-4 py-3 rounded-2xl rounded-bl-md">
                 <div className="flex gap-1">
                   <span className="w-1.5 h-1.5 bg-white/30 rounded-full animate-bounce" />
                   <span className="w-1.5 h-1.5 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }} />
@@ -210,7 +210,7 @@ export default function ChatPage() {
               </svg>
             </button>
           </div>
-          <p className="text-[10px] text-surface-50/40 text-center mt-2">{t.chat.disclaimer}</p>
+          <p className="text-[10px] text-[rgba(12,8,5,0.46)] text-center mt-2">{t.chat.disclaimer}</p>
         </div>
       </div>
     </div>

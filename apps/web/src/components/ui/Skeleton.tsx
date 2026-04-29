@@ -23,7 +23,7 @@ export function Skeleton({
   return (
     <motion.div
       aria-hidden
-      className={`${rounded} bg-white/[0.04] ${className ?? ''}`}
+      className={`${rounded} bg-[rgba(255,252,245,0.86)] ${className ?? ''}`}
       style={style}
       animate={reduce ? undefined : { opacity: [0.55, 0.85, 0.55] }}
       transition={reduce ? undefined : { duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}

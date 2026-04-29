@@ -61,15 +61,15 @@ export default function MedicalBodyZodiacPage() {
           {result.mapping.map((row) => (
             <li
               key={row.sign}
-              className="rounded-xl border divider bg-white/[0.03] p-3 text-sm text-surface-50/80"
+              className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-3 text-sm text-emphasis"
             >
               <div className="flex items-baseline justify-between">
-                <span className="font-semibold text-surface-50">{row.sign}</span>
-                <span className="text-xs text-surface-50/50">{row.element}</span>
+                <span className="font-semibold text-surface-950">{row.sign}</span>
+                <span className="text-xs text-[rgba(12,8,5,0.55)]">{row.element}</span>
               </div>
-              <div className="mt-1 text-surface-50/70">{row.bodyParts.join(', ')}</div>
+              <div className="mt-1 text-emphasis">{row.bodyParts.join(', ')}</div>
               {row.guidance && (
-                <div className="mt-1 text-xs text-surface-50/50">{row.guidance}</div>
+                <div className="mt-1 text-xs text-[rgba(12,8,5,0.55)]">{row.guidance}</div>
               )}
             </li>
           ))}

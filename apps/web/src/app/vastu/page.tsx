@@ -58,29 +58,16 @@ export default function VastuPage() {
   const getScoreColor = (score: number) => score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : "text-red-400";
 
   return (
-    <div className="relative min-h-screen">
-      {/* Vastu uses dark-canvas surface-card tiles (4%-white tint, warm-
-          white text). Paint a deep ink canvas beneath so those classes
-          read correctly inside the site's cream chrome. */}
-      <div aria-hidden className="absolute inset-0 bg-surface-950" />
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-80"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.16) 0%, rgba(255,77,0,0.08) 35%, transparent 70%)',
-        }}
-      />
-      <div className="relative mx-auto max-w-4xl px-4 py-10 fade-in-up">
-      <h1 className="text-3xl font-bold text-surface-50 mb-2">{t.vastu.title}</h1>
-      <p className="text-surface-50/40 mb-8">{t.vastu.description}</p>
+    <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
+      <h1 className="text-3xl font-bold text-surface-950 mb-2">{t.vastu.title}</h1>
+      <p className="text-[rgba(12,8,5,0.46)] mb-8">{t.vastu.description}</p>
 
       <div className="surface-card p-6 mb-6 space-y-4">
         <div>
-          <label className="text-sm text-surface-50/60 mb-2 block">{t.vastu.propertyType}</label>
+          <label className="text-sm text-secondary mb-2 block">{t.vastu.propertyType}</label>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {PROPERTY_TYPES.map((pt) => (
-              <button key={pt.value} onClick={() => setPropertyType(pt.value)} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${propertyType === pt.value ? "bg-primary-600 text-surface-50" : "bg-white/[0.04] text-surface-50/60 hover:bg-white/[0.08]"}`}>
+              <button key={pt.value} onClick={() => setPropertyType(pt.value)} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${propertyType === pt.value ? "bg-primary-600 text-white" : "bg-[rgba(255,252,245,0.86)] text-secondary hover:bg-[rgba(12,8,5,0.05)]"}`}>
                 {pt.label}
               </button>
             ))}
@@ -88,10 +75,10 @@ export default function VastuPage() {
         </div>
 
         <div>
-          <label className="text-sm text-surface-50/60 mb-2 block">{t.vastu.entranceDirection}</label>
+          <label className="text-sm text-secondary mb-2 block">{t.vastu.entranceDirection}</label>
           <div className="grid grid-cols-4 gap-2">
             {DIRECTIONS.map((d) => (
-              <button key={d.value} onClick={() => setEntranceDirection(d.value)} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${entranceDirection === d.value ? "bg-primary-600 text-surface-50" : "bg-white/[0.04] text-surface-50/60 hover:bg-white/[0.08]"}`}>
+              <button key={d.value} onClick={() => setEntranceDirection(d.value)} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${entranceDirection === d.value ? "bg-primary-600 text-white" : "bg-[rgba(255,252,245,0.86)] text-secondary hover:bg-[rgba(12,8,5,0.05)]"}`}>
                 {d.label}
               </button>
             ))}
@@ -99,7 +86,7 @@ export default function VastuPage() {
         </div>
 
         <div>
-          <label className="text-sm text-surface-50/60 mb-2 block">{t.vastu.concern}</label>
+          <label className="text-sm text-secondary mb-2 block">{t.vastu.concern}</label>
           <input type="text" value={concern} onChange={(e) => setConcern(e.target.value)} placeholder={t.vastu.concernPlaceholder} className="w-full px-4 py-3 rounded-xl surface-input" />
         </div>
 
@@ -115,33 +102,33 @@ export default function VastuPage() {
           {/* Score */}
           <div className="surface-card p-6 text-center">
             <div className={`text-4xl font-bold ${getScoreColor(result.entrance.score)}`}>{result.entrance.score}/100</div>
-            <div className="text-sm text-surface-50/60 mt-1">{result.entrance.verdict}</div>
-            <div className="text-xs text-surface-50/30 mt-2">{t.vastu.entrance}: {result.entrance.direction} | {t.vastu.deity}: {result.entrance.deity} | {t.vastu.element}: {result.entrance.element}</div>
+            <div className="text-sm text-secondary mt-1">{result.entrance.verdict}</div>
+            <div className="text-xs text-[rgba(12,8,5,0.40)] mt-2">{t.vastu.entrance}: {result.entrance.direction} | {t.vastu.deity}: {result.entrance.deity} | {t.vastu.element}: {result.entrance.element}</div>
           </div>
 
           {/* Summary */}
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-50 mb-3">{t.vastu.analysis}</h3>
-            <p className="text-sm text-surface-50/60">{result.insights.summary}</p>
+            <h3 className="text-lg font-semibold text-surface-950 mb-3">{t.vastu.analysis}</h3>
+            <p className="text-sm text-secondary">{result.insights.summary}</p>
           </div>
 
           {/* Remedies */}
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-50 mb-3">{t.vastu.remedies}</h3>
+            <h3 className="text-lg font-semibold text-surface-950 mb-3">{t.vastu.remedies}</h3>
             <ul className="space-y-2">
               {result.insights.remedies?.map((r, i) => (
-                <li key={i} className="text-sm text-surface-50/50 flex items-start gap-2">
+                <li key={i} className="text-sm text-[rgba(12,8,5,0.55)] flex items-start gap-2">
                   <span className="text-primary-400 mt-0.5">+</span> {r}
                 </li>
               ))}
             </ul>
             <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="bg-white/[0.03] rounded-lg p-3">
-                <div className="text-xs text-surface-50/30">{t.vastu.gemstone}</div>
+              <div className="bg-[rgba(255,252,245,0.78)] rounded-lg p-3">
+                <div className="text-xs text-[rgba(12,8,5,0.40)]">{t.vastu.gemstone}</div>
                 <div className="text-sm text-accent-400">{result.insights.gemstone}</div>
               </div>
-              <div className="bg-white/[0.03] rounded-lg p-3">
-                <div className="text-xs text-surface-50/30">{t.vastu.mantra}</div>
+              <div className="bg-[rgba(255,252,245,0.78)] rounded-lg p-3">
+                <div className="text-xs text-[rgba(12,8,5,0.40)]">{t.vastu.mantra}</div>
                 <div className="text-sm text-accent-400">{result.insights.mantra}</div>
               </div>
             </div>
@@ -149,12 +136,12 @@ export default function VastuPage() {
 
           {/* Direction Grid */}
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-50 mb-3">{t.vastu.directionGuide}</h3>
+            <h3 className="text-lg font-semibold text-surface-950 mb-3">{t.vastu.directionGuide}</h3>
             <div className="grid sm:grid-cols-2 gap-3">
               {result.directions.map((d) => (
-                <div key={d.direction} className="bg-white/[0.03] rounded-lg p-3">
-                  <div className="text-sm font-medium text-surface-50">{d.direction} — {d.deity}</div>
-                  <div className="text-xs text-surface-50/30 mt-1">{t.vastu.element}: {d.element}</div>
+                <div key={d.direction} className="bg-[rgba(255,252,245,0.78)] rounded-lg p-3">
+                  <div className="text-sm font-medium text-surface-950">{d.direction} — {d.deity}</div>
+                  <div className="text-xs text-[rgba(12,8,5,0.40)] mt-1">{t.vastu.element}: {d.element}</div>
                   <div className="text-xs text-emerald-400/70 mt-1">{t.vastu.bestFor}: {d.suitableRooms.join(", ")}</div>
                   <div className="text-xs text-red-400/70 mt-0.5">{t.vastu.avoid}: {d.avoid.join(", ")}</div>
                 </div>
@@ -164,10 +151,10 @@ export default function VastuPage() {
 
           {/* Tips */}
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-50 mb-3">{t.vastu.propertyTips}</h3>
+            <h3 className="text-lg font-semibold text-surface-950 mb-3">{t.vastu.propertyTips}</h3>
             <ul className="space-y-2">
               {result.propertyTips.map((tip, i) => (
-                <li key={i} className="text-sm text-surface-50/50 flex items-start gap-2">
+                <li key={i} className="text-sm text-[rgba(12,8,5,0.55)] flex items-start gap-2">
                   <span className="text-accent-400 mt-0.5">*</span> {tip}
                 </li>
               ))}
@@ -175,7 +162,6 @@ export default function VastuPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
