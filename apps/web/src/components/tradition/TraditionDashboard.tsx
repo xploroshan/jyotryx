@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { useTranslation } from '@/i18n';
-import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
+import {
+  WEB_TRADITIONS,
+  TRADITION_ICON_TILE_COLORS,
+  TRADITION_CARD_TINTS,
+  type TraditionId,
+} from '@/lib/traditions';
 import Orb3D from '@/components/ui/Orb3D';
 import { PageTransition, Stagger } from '@/components/ui/PageTransition';
 
@@ -19,6 +24,8 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
   const { t } = useTranslation();
   const cfg = WEB_TRADITIONS[traditionId];
   const tint = ORB_TINTS[traditionId];
+  const iconTile = TRADITION_ICON_TILE_COLORS[traditionId];
+  const cardTint = TRADITION_CARD_TINTS[traditionId];
 
   const readLabel = (path: string, fallback?: string): string => {
     const parts = path.split('.');
@@ -74,16 +81,21 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
             const label = readLabel(f.labelKey, f.slug);
             const tile = (
               <div
-                className={`rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 h-full flex flex-col justify-between transition-all duration-300 ${
+                className={`rounded-2xl border border-white/[0.08] p-6 h-full flex flex-col justify-between transition-all duration-300 ${cardTint} ${
                   f.available
-                    ? 'hover:-translate-y-1 hover:border-white/[0.12] hover:bg-white/[0.04] hover:shadow-[0_16px_48px_-16px_rgba(99,102,241,0.15)]'
+                    ? 'hover:-translate-y-1 hover:shadow-[0_16px_48px_-16px_rgba(245,158,11,0.25)]'
                     : 'opacity-40 cursor-not-allowed'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     {f.icon && (
-                      <span className="text-lg" aria-hidden>{f.icon}</span>
+                      <span
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-xl ${iconTile}`}
+                        aria-hidden
+                      >
+                        {f.icon}
+                      </span>
                     )}
                     <h3 className="text-base font-semibold text-white">{label}</h3>
                   </div>

@@ -65,12 +65,39 @@ export const TRADITION_BADGE_COLORS: Record<TraditionId, string> = {
 
 /** Hero gradient background for each tradition's dashboard. */
 export const TRADITION_HERO_COLORS: Record<TraditionId, string> = {
-  VEDIC: 'from-amber-500/10 via-transparent to-transparent',
-  WESTERN: 'from-sky-500/10 via-transparent to-transparent',
-  CHINESE: 'from-red-500/10 via-transparent to-transparent',
-  HELLENISTIC: 'from-violet-500/10 via-transparent to-transparent',
-  HORARY: 'from-teal-500/10 via-transparent to-transparent',
-  MEDICAL: 'from-emerald-500/10 via-transparent to-transparent',
+  VEDIC: 'from-amber-500/20 via-amber-500/5 to-transparent',
+  WESTERN: 'from-sky-500/20 via-sky-500/5 to-transparent',
+  CHINESE: 'from-red-500/20 via-red-500/5 to-transparent',
+  HELLENISTIC: 'from-violet-500/20 via-violet-500/5 to-transparent',
+  HORARY: 'from-teal-500/20 via-teal-500/5 to-transparent',
+  MEDICAL: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
+};
+
+/**
+ * Solid icon-tile palette for feature cards. Higher saturation than
+ * the badge palette so the card icons read clearly against the dark
+ * page background.
+ */
+export const TRADITION_ICON_TILE_COLORS: Record<TraditionId, string> = {
+  VEDIC: 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_24px_-8px_rgba(245,158,11,0.5)]',
+  WESTERN: 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-[0_0_24px_-8px_rgba(14,165,233,0.5)]',
+  CHINESE: 'bg-red-500/20 text-red-300 border-red-500/40 shadow-[0_0_24px_-8px_rgba(239,68,68,0.5)]',
+  HELLENISTIC: 'bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-[0_0_24px_-8px_rgba(139,92,246,0.5)]',
+  HORARY: 'bg-teal-500/20 text-teal-300 border-teal-500/40 shadow-[0_0_24px_-8px_rgba(20,184,166,0.5)]',
+  MEDICAL: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_24px_-8px_rgba(16,185,129,0.5)]',
+};
+
+/**
+ * Card-surface tint per tradition. Slightly warmer than pure black so
+ * the cards don't disappear into the page background.
+ */
+export const TRADITION_CARD_TINTS: Record<TraditionId, string> = {
+  VEDIC: 'bg-gradient-to-br from-amber-500/[0.04] to-white/[0.02] hover:from-amber-500/[0.08] hover:border-amber-500/[0.25]',
+  WESTERN: 'bg-gradient-to-br from-sky-500/[0.04] to-white/[0.02] hover:from-sky-500/[0.08] hover:border-sky-500/[0.25]',
+  CHINESE: 'bg-gradient-to-br from-red-500/[0.04] to-white/[0.02] hover:from-red-500/[0.08] hover:border-red-500/[0.25]',
+  HELLENISTIC: 'bg-gradient-to-br from-violet-500/[0.04] to-white/[0.02] hover:from-violet-500/[0.08] hover:border-violet-500/[0.25]',
+  HORARY: 'bg-gradient-to-br from-teal-500/[0.04] to-white/[0.02] hover:from-teal-500/[0.08] hover:border-teal-500/[0.25]',
+  MEDICAL: 'bg-gradient-to-br from-emerald-500/[0.04] to-white/[0.02] hover:from-emerald-500/[0.08] hover:border-emerald-500/[0.25]',
 };
 
 export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
