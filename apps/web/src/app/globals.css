@@ -63,11 +63,16 @@
 
 @layer base {
   body {
-    @apply bg-surface-950 text-surface-50 antialiased;
+    /* Canvas is orange-dominant per the brand spec (50% orange / 25% white /
+       25% black, black text). Components keep using `bg-white/[X]` for
+       elevated panels — translucent white over orange reads as the 25%
+       white layer; explicit `bg-surface-950` blocks (footer/modals) carry
+       the 25% black. */
+    @apply bg-primary-500 text-surface-950 antialiased;
   }
 
   ::selection {
-    @apply bg-primary-500/40 text-surface-50;
+    @apply bg-surface-950/30 text-surface-950;
   }
 }
 
