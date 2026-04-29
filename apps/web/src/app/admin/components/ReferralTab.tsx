@@ -77,7 +77,7 @@ export function ReferralTab({ token }: { token: string }) {
   }, [enabled, bonusDays, maxPerReferrer, load, token]);
 
   if (loading) {
-    return <div className="surface-card p-6 text-center text-surface-900/40">Loading…</div>;
+    return <div className="surface-card p-6 text-center text-surface-50/40">Loading…</div>;
   }
   if (loadError) {
     return <TabError message={loadError} onRetry={load} />;
@@ -89,12 +89,12 @@ export function ReferralTab({ token }: { token: string }) {
       {/* Aggregate stat strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="Activated" value={stats.totalActivated} accent="text-emerald-400" />
-        <Stat label="Rejected" value={stats.totalRejected} accent="text-surface-900/50" />
+        <Stat label="Rejected" value={stats.totalRejected} accent="text-surface-50/50" />
         <Stat label="Pending" value={stats.totalPending} accent="text-amber-400" />
         <Stat
           label="Premium days granted"
           value={stats.bonusDaysGranted}
-          accent="text-primary-600"
+          accent="text-primary-400"
           hint="Activated × bonusDays × 2 (both sides)"
         />
         <Stat label="Distinct referrers" value={stats.distinctReferrers} accent="text-blue-400" />
@@ -103,8 +103,8 @@ export function ReferralTab({ token }: { token: string }) {
       {/* Settings panel */}
       <div className="surface-card p-6">
         <header className="mb-4">
-          <h2 className="text-lg font-semibold text-surface-900">Program settings</h2>
-          <p className="text-xs text-surface-900/40 mt-1">
+          <h2 className="text-lg font-semibold text-surface-50">Program settings</h2>
+          <p className="text-xs text-surface-50/40 mt-1">
             Changes take effect on the next signup — no redeploy needed.
           </p>
         </header>
@@ -124,9 +124,9 @@ export function ReferralTab({ token }: { token: string }) {
         <div className="space-y-5">
           {/* Enabled toggle */}
           <label className="flex items-center justify-between gap-4">
-            <span className="text-sm text-surface-900/80">
+            <span className="text-sm text-surface-50/80">
               <span className="block font-medium">Referral program enabled</span>
-              <span className="block text-xs text-surface-900/40 mt-0.5">
+              <span className="block text-xs text-surface-50/40 mt-0.5">
                 When off, codes still resolve but no bonuses are granted (rows are recorded as
                 REJECTED with reason <code>program_disabled</code>).
               </span>
@@ -135,7 +135,7 @@ export function ReferralTab({ token }: { token: string }) {
               type="button"
               onClick={() => setEnabled((v) => !v)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                enabled ? "bg-emerald-500" : "bg-surface-900/20"
+                enabled ? "bg-emerald-500" : "bg-white/20"
               }`}
               aria-pressed={enabled}
             >
@@ -149,7 +149,7 @@ export function ReferralTab({ token }: { token: string }) {
 
           {/* Bonus days */}
           <div>
-            <label className="block text-sm font-medium text-surface-900/80 mb-2">
+            <label className="block text-sm font-medium text-surface-50/80 mb-2">
               Bonus days for both sides
             </label>
             <div className="flex flex-wrap items-center gap-2">
@@ -161,7 +161,7 @@ export function ReferralTab({ token }: { token: string }) {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     bonusDays === d
                       ? "bg-primary-600 text-surface-50"
-                      : "bg-surface-900/[0.04] hover:bg-surface-900/[0.08] text-surface-900/70"
+                      : "bg-white/[0.04] hover:bg-white/[0.08] text-surface-50/70"
                   }`}
                 >
                   {d} days
@@ -178,13 +178,13 @@ export function ReferralTab({ token }: { token: string }) {
                 }}
                 className="w-24 px-3 py-2 rounded-lg surface-input text-sm"
               />
-              <span className="text-xs text-surface-900/40">days (1–365)</span>
+              <span className="text-xs text-surface-50/40">days (1–365)</span>
             </div>
           </div>
 
           {/* Cap */}
           <div>
-            <label className="block text-sm font-medium text-surface-900/80 mb-2">
+            <label className="block text-sm font-medium text-surface-50/80 mb-2">
               Max successful referrals per user
             </label>
             <input
@@ -200,7 +200,7 @@ export function ReferralTab({ token }: { token: string }) {
               }}
               className="w-32 px-3 py-2 rounded-lg surface-input text-sm"
             />
-            <p className="text-xs text-surface-900/40 mt-1">
+            <p className="text-xs text-surface-50/40 mt-1">
               Prevents code-farming. Above this, further activations are recorded as REJECTED
               with reason <code>cap_reached</code>.
             </p>
@@ -211,7 +211,7 @@ export function ReferralTab({ token }: { token: string }) {
               type="button"
               onClick={save}
               disabled={saving}
-              className="px-5 py-2.5 rounded-lg btn-primary text-surface-900 text-sm font-medium disabled:opacity-50"
+              className="px-5 py-2.5 rounded-lg btn-primary text-surface-50 text-sm font-medium disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save settings"}
             </button>
@@ -223,7 +223,7 @@ export function ReferralTab({ token }: { token: string }) {
                 setMaxPerReferrer(stats.settings.maxPerReferrer);
               }}
               disabled={saving}
-              className="px-4 py-2 rounded-lg bg-surface-900/[0.04] hover:bg-surface-900/[0.08] text-surface-900/70 text-sm"
+              className="px-4 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-surface-50/70 text-sm"
             >
               Reset
             </button>
@@ -247,9 +247,9 @@ function Stat({
 }) {
   return (
     <div className="surface-card p-4">
-      <p className="text-xs uppercase tracking-wide text-surface-900/40 mb-1">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-surface-50/40 mb-1">{label}</p>
       <p className={`text-2xl font-semibold ${accent}`}>{value.toLocaleString()}</p>
-      {hint && <p className="text-[10px] text-surface-900/30 mt-1">{hint}</p>}
+      {hint && <p className="text-[10px] text-surface-50/30 mt-1">{hint}</p>}
     </div>
   );
 }

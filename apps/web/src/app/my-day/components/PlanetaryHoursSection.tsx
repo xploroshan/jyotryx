@@ -54,19 +54,19 @@ export function PlanetaryHoursSection({
     : planetaryHours.filter((_, i) => i >= windowStart && i <= currentIdx + 4);
 
   return (
-    <div className="mb-8 p-5 rounded-2xl bg-surface-900/[0.03] border border-surface-900/[0.06]">
+    <div className="mb-8 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-xs font-medium text-surface-900/40 uppercase tracking-wider">{t.myDay.planetaryHours}</h3>
+        <h3 className="text-xs font-medium text-surface-50/40 uppercase tracking-wider">{t.myDay.planetaryHours}</h3>
         <button
           onClick={() => setShowAllHours(!showAllHours)}
-          className="text-xs text-primary-600 hover:text-primary-700 transition-colors"
+          className="text-xs text-primary-400 hover:text-primary-300 transition-colors"
         >
           {showAllHours ? t.myDay.showRelevant : t.myDay.viewAll24}
         </button>
       </div>
       <div className="space-y-1.5">
         {visibleHours.map((hour, displayIdx) => {
-          const pi = planetIcons[hour.planet] || { symbol: "\u25cb", color: "text-surface-900/60", bg: "bg-surface-900/[0.04]" };
+          const pi = planetIcons[hour.planet] || { symbol: "\u25cb", color: "text-surface-50/60", bg: "bg-white/[0.04]" };
           // Map back to the absolute index so the "NOW" pill survives the
           // showAll / showRelevant filter.
           const absoluteIdx = showAllHours ? displayIdx : windowStart + displayIdx;
@@ -77,21 +77,21 @@ export function PlanetaryHoursSection({
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                 isCurrent
                   ? "bg-primary-600/10 ring-1 ring-primary-500/25"
-                  : "hover:bg-surface-900/[0.02]"
+                  : "hover:bg-white/[0.02]"
               }`}
             >
               <div className={`w-8 h-8 rounded-lg ${pi.bg} flex items-center justify-center shrink-0`}>
                 <span className={`text-sm ${pi.color}`}>{pi.symbol}</span>
               </div>
               <span className={`text-sm font-medium w-16 ${pi.color}`}>{translatePlanet(hour.planet, t)}</span>
-              <span className="text-xs text-surface-900/25 w-28 tabular-nums">
+              <span className="text-xs text-surface-50/25 w-28 tabular-nums">
                 {translateTimeRange(hour.startTime, locale)} – {translateTimeRange(hour.endTime, locale)}
               </span>
-              <span className="text-xs text-surface-900/40 flex-1 hidden sm:block">
+              <span className="text-xs text-surface-50/40 flex-1 hidden sm:block">
                 {hour.activities.slice(0, 2).map(a => translateActivity(a, t)).join(", ")}
               </span>
               {isCurrent && (
-                <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-500/15 text-primary-700">
+                <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-500/15 text-primary-300">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-50" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-400" />

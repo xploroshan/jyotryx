@@ -94,18 +94,18 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-surface-50" />
+      <div className="absolute inset-0 bg-surface-950" />
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-surface-900/40">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-surface-50/40">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li><Link href="/" className="hover:text-surface-900">Home</Link></li>
+            <li><Link href="/" className="hover:text-surface-50">Home</Link></li>
             <li>›</li>
-            <li><Link href="/horoscope" className="hover:text-surface-900">Horoscope</Link></li>
+            <li><Link href="/horoscope" className="hover:text-surface-50">Horoscope</Link></li>
             <li>›</li>
-            <li className="text-surface-900/70">{sign.name}</li>
+            <li className="text-surface-50/70">{sign.name}</li>
           </ol>
         </nav>
 
@@ -115,7 +115,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
             <h1 className="text-3xl font-bold text-gradient">
               {sign.name} Horoscope Today
             </h1>
-            <p className="text-sm text-surface-900/50 mt-2">
+            <p className="text-sm text-surface-50/50 mt-2">
               {todayDisplay} · {sign.dateRange} · Ruled by {sign.rulingPlanet}
             </p>
           </div>
@@ -123,10 +123,10 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 
         {/* Forecast */}
         <section className="surface-card p-6 mb-6">
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">Today's forecast</h2>
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">Today's forecast</h2>
           {horoscope ? (
             <>
-              <p className="text-sm text-surface-900/80 leading-relaxed mb-4">{horoscope.forecast}</p>
+              <p className="text-sm text-surface-50/80 leading-relaxed mb-4">{horoscope.forecast}</p>
               <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                 {horoscope.lucky_color && (
                   <Stat label="Lucky colour" value={horoscope.lucky_color} />
@@ -140,7 +140,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
               </dl>
             </>
           ) : (
-            <p className="text-sm text-surface-900/50">
+            <p className="text-sm text-surface-50/50">
               Today's forecast is being prepared — please refresh in a moment.
             </p>
           )}
@@ -148,23 +148,23 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 
         {/* Sign profile */}
         <article className="surface-card p-6 mb-6">
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">About {sign.name}</h2>
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">About {sign.name}</h2>
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-5">
             <Stat label="Element"  value={sign.element} />
             <Stat label="Modality" value={sign.modality} />
             <Stat label="Ruler"    value={sign.rulingPlanet} />
             <Stat label="Dates"    value={sign.dateRange} />
           </dl>
-          <p className="text-sm text-surface-900/70 leading-relaxed mb-3">
+          <p className="text-sm text-surface-50/70 leading-relaxed mb-3">
             {sign.name} is a {sign.modality.toLowerCase()} {sign.element.toLowerCase()} sign
             ruled by {sign.rulingPlanet}. People born between {sign.dateRange} carry the
             archetypes of {sign.name} as their <em>sun sign</em>; in Vedic astrology your moon
             sign and ascendant matter even more, so a {sign.name} sun chart can pair with a very
             different moon (rashi) personality.
           </p>
-          <p className="text-sm text-surface-900/70 leading-relaxed">
+          <p className="text-sm text-surface-50/70 leading-relaxed">
             Want the full picture instead of just the sun sign?{' '}
-            <Link href="/kundli" className="text-primary-700 hover:text-primary-700">
+            <Link href="/kundli" className="text-primary-300 hover:text-primary-300">
               Generate your free Vedic kundli →
             </Link>
           </p>
@@ -172,7 +172,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 
         {/* All signs nav */}
         <section className="surface-card p-6">
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">Other zodiac signs</h2>
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">Other zodiac signs</h2>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
             {ZODIAC_SIGNS.map((s) => (
               <Link
@@ -181,8 +181,8 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
                 aria-current={s.slug === sign.slug ? 'page' : undefined}
                 className={`flex flex-col items-center p-3 rounded-lg transition-colors ${
                   s.slug === sign.slug
-                    ? 'bg-primary-500/15 text-primary-700'
-                    : 'bg-surface-900/[0.03] hover:bg-surface-900/[0.06] text-surface-900/70'
+                    ? 'bg-primary-500/15 text-primary-300'
+                    : 'bg-white/[0.03] hover:bg-white/[0.06] text-surface-50/70'
                 }`}
               >
                 <span className="text-xl" aria-hidden="true">{s.symbol}</span>
@@ -199,8 +199,8 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-surface-900/40">{label}</dt>
-      <dd className="text-sm text-surface-900 mt-0.5">{value}</dd>
+      <dt className="text-xs uppercase tracking-wide text-surface-50/40">{label}</dt>
+      <dd className="text-sm text-surface-50 mt-0.5">{value}</dd>
     </div>
   );
 }

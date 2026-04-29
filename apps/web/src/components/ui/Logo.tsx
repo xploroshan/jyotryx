@@ -42,7 +42,7 @@ export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`flex items-center gap-2.5 ${className}`}>
       <LogoMark />
-      <span className="font-display text-lg font-semibold text-surface-900 tracking-tight">Jyotron</span>
+      <span className="font-display text-lg font-semibold text-surface-50 tracking-tight">Jyotron</span>
     </span>
   );
 }

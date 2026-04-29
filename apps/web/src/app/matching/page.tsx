@@ -134,7 +134,7 @@ export default function MatchingPage() {
       </h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-surface-900/40 mb-1.5">{t.matching.fullName}</label>
+          <label className="block text-sm text-surface-50/40 mb-1.5">{t.matching.fullName}</label>
           <input
             type="text"
             value={person.name}
@@ -145,7 +145,7 @@ export default function MatchingPage() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-surface-900/40 mb-1.5">{t.form.dateOfBirth}</label>
+            <label className="block text-sm text-surface-50/40 mb-1.5">{t.form.dateOfBirth}</label>
             <input
               type="date"
               value={person.dob}
@@ -154,7 +154,7 @@ export default function MatchingPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-surface-900/40 mb-1.5">{t.form.timeOfBirth}</label>
+            <label className="block text-sm text-surface-50/40 mb-1.5">{t.form.timeOfBirth}</label>
             <input
               type="time"
               value={person.time}
@@ -164,7 +164,7 @@ export default function MatchingPage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm text-surface-900/40 mb-1.5">{t.form.placeOfBirth}</label>
+          <label className="block text-sm text-surface-50/40 mb-1.5">{t.form.placeOfBirth}</label>
           <input
             type="text"
             value={person.place}
@@ -189,7 +189,7 @@ export default function MatchingPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-900/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-50/60 mb-4">
             <span className="text-lg">💞</span>
             {t.matching.badge}
           </div>
@@ -197,7 +197,7 @@ export default function MatchingPage() {
             {t.matching.title}{" "}
             <span className="text-gradient">{t.matching.titleHighlight}</span>
           </h1>
-          <p className="text-surface-900/40 max-w-xl mx-auto">
+          <p className="text-surface-50/40 max-w-xl mx-auto">
             {t.matching.description}
           </p>
         </div>
@@ -206,7 +206,7 @@ export default function MatchingPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div>
             {personAPrefilled && (
-              <div className="mb-3 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-700 text-xs flex items-center gap-2">
+              <div className="mb-3 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -262,32 +262,32 @@ export default function MatchingPage() {
             <div className="surface-card p-8 text-center">
               <h2 className="text-2xl font-bold text-gradient mb-6">{t.matching.results}</h2>
               <div className="grid sm:grid-cols-3 gap-6 mb-8">
-                <div className="p-4 rounded-xl bg-surface-900/[0.03]">
-                  <p className="text-xs text-surface-900/30 mb-1">{t.matching.ashtakootaScore}</p>
+                <div className="p-4 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-surface-50/30 mb-1">{t.matching.ashtakootaScore}</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>
-                    {results.totalScore}<span className="text-lg text-surface-900/30">/{results.maxScore}</span>
+                    {results.totalScore}<span className="text-lg text-surface-50/30">/{results.maxScore}</span>
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-surface-900/[0.03]">
-                  <p className="text-xs text-surface-900/30 mb-1">{t.matching.compatibility}</p>
+                <div className="p-4 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-surface-50/30 mb-1">{t.matching.compatibility}</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>{results.percentage}%</p>
                 </div>
-                <div className="p-4 rounded-xl bg-surface-900/[0.03]">
-                  <p className="text-xs text-surface-900/30 mb-1">{t.matching.verdict}</p>
+                <div className="p-4 rounded-xl bg-white/[0.03]">
+                  <p className="text-xs text-surface-50/30 mb-1">{t.matching.verdict}</p>
                   <p className="text-3xl font-bold text-emerald-400">{results.verdict}</p>
                 </div>
               </div>
 
               {/* Manglik Status */}
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
-                <div className="p-4 rounded-xl bg-surface-900/[0.03] flex items-center justify-between">
-                  <span className="text-sm text-surface-900/40">{personA.name || t.matching.personA} - {t.matching.manglik}</span>
+                <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
+                  <span className="text-sm text-surface-50/40">{personA.name || t.matching.personA} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikA ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikA ? t.matching.yes : t.matching.no}
                   </span>
                 </div>
-                <div className="p-4 rounded-xl bg-surface-900/[0.03] flex items-center justify-between">
-                  <span className="text-sm text-surface-900/40">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
+                <div className="p-4 rounded-xl bg-white/[0.03] flex items-center justify-between">
+                  <span className="text-sm text-surface-50/40">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikB ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikB ? t.matching.yesMild : t.matching.no}
                   </span>
@@ -297,22 +297,22 @@ export default function MatchingPage() {
 
             {/* Koota Details */}
             <div className="surface-card p-6">
-              <h3 className="text-lg font-bold text-surface-900 mb-4">{t.matching.ashtakootaBreakdown}</h3>
+              <h3 className="text-lg font-bold text-surface-50 mb-4">{t.matching.ashtakootaBreakdown}</h3>
               <div className="space-y-3">
                 {results.koota.map((k) => {
                   const pct = (k.obtained / k.max) * 100;
                   return (
-                    <div key={k.name} className="p-4 rounded-xl bg-surface-900/[0.03]">
+                    <div key={k.name} className="p-4 rounded-xl bg-white/[0.03]">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <span className="font-medium text-surface-900 text-sm">{k.name}</span>
-                          <span className="text-xs text-surface-900/30 ml-2">{k.description}</span>
+                          <span className="font-medium text-surface-50 text-sm">{k.name}</span>
+                          <span className="text-xs text-surface-50/30 ml-2">{k.description}</span>
                         </div>
                         <span className={`text-sm font-bold ${scoreColor(pct)}`}>
                           {k.obtained}/{k.max}
                         </span>
                       </div>
-                      <div className="w-full h-1.5 bg-surface-900/[0.03] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
                             pct >= 75 ? "bg-emerald-500" : pct >= 50 ? "bg-accent-500" : "bg-red-500"
@@ -329,9 +329,9 @@ export default function MatchingPage() {
             {/* Summary */}
             <div className="surface-card p-6">
               <h3 className="text-lg font-bold text-gradient mb-4">{t.matching.analysisSummary}</h3>
-              <p className="text-surface-900/60 leading-relaxed">{results.summary}</p>
+              <p className="text-surface-50/60 leading-relaxed">{results.summary}</p>
               <div className="mt-4 pt-4 border-t divider">
-                <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-600 hover:bg-surface-900/[0.1] transition-all">
+                <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400 hover:bg-white/[0.1] transition-all">
                   {t.matching.downloadReport}
                 </button>
               </div>

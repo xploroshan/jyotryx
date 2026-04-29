@@ -125,7 +125,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-surface-50" />
+      <div className="absolute inset-0 bg-surface-950" />
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script
           type="application/ld+json"
@@ -136,15 +136,15 @@ export default async function KundliCityPage({ params }: RouteProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-surface-900/40">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-surface-50/40">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li><Link href="/" className="hover:text-surface-900">Home</Link></li>
+            <li><Link href="/" className="hover:text-surface-50">Home</Link></li>
             <li>›</li>
-            <li><Link href="/kundli" className="hover:text-surface-900">Kundli</Link></li>
+            <li><Link href="/kundli" className="hover:text-surface-50">Kundli</Link></li>
             <li>›</li>
-            <li><Link href="/kundli/cities" className="hover:text-surface-900">Cities</Link></li>
+            <li><Link href="/kundli/cities" className="hover:text-surface-50">Cities</Link></li>
             <li>›</li>
-            <li className="text-surface-900/70">{city.name}</li>
+            <li className="text-surface-50/70">{city.name}</li>
           </ol>
         </nav>
 
@@ -152,7 +152,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
           <h1 className="text-3xl font-bold text-gradient">
             Free Kundli for {city.name}, {city.state}
           </h1>
-          <p className="text-sm text-surface-900/60 mt-2 max-w-2xl">
+          <p className="text-sm text-surface-50/60 mt-2 max-w-2xl">
             Generate your full Vedic birth chart calculated from Swiss Ephemeris using{' '}
             {city.name}'s exact coordinates and Lahiri ayanamsa.
           </p>
@@ -160,15 +160,15 @@ export default async function KundliCityPage({ params }: RouteProps) {
 
         {/* Primary CTA */}
         <section className="surface-card p-6 mb-6">
-          <p className="text-sm text-surface-900/70 mb-4">
+          <p className="text-sm text-surface-50/70 mb-4">
             Enter your date of birth and time of birth — the place is already set to{' '}
-            <span className="text-surface-900 font-medium">{city.name}</span>. You'll get your rasi
+            <span className="text-surface-50 font-medium">{city.name}</span>. You'll get your rasi
             chart, navamsa (D-9), dasha periods, planetary placements, and dosha analysis in
             seconds.
           </p>
           <Link
             href={ctaHref}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg btn-primary text-surface-900 text-sm font-medium"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg btn-primary text-surface-50 text-sm font-medium"
           >
             Generate my kundli for {city.name} →
           </Link>
@@ -176,10 +176,10 @@ export default async function KundliCityPage({ params }: RouteProps) {
 
         {/* SEO long-form */}
         <article className="surface-card p-6 mb-6">
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">
             What you'll get in your {city.name} kundli
           </h2>
-          <ul className="text-sm text-surface-900/70 space-y-2 mb-5 list-disc pl-5">
+          <ul className="text-sm text-surface-50/70 space-y-2 mb-5 list-disc pl-5">
             <li><strong>Rasi (D-1) chart</strong> — placement of the nine grahas across the twelve houses, drawn for your exact time and place of birth.</li>
             <li><strong>Navamsa (D-9) and divisional charts</strong> — the marriage and dharma chart used for compatibility, plus D-2, D-3, D-7, D-10 and other vargas through D-60.</li>
             <li><strong>Vimshottari dasha</strong> — Mahadasha and Antardasha periods with start and end dates so you know which planet is currently shaping your life.</li>
@@ -188,10 +188,10 @@ export default async function KundliCityPage({ params }: RouteProps) {
             <li><strong>Sade Sati</strong> — your current Saturn-over-Moon phase (rising, peak, or setting) with phase-specific guidance.</li>
           </ul>
 
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">
             Why {city.name}'s coordinates matter
           </h2>
-          <p className="text-sm text-surface-900/70 leading-relaxed mb-3">
+          <p className="text-sm text-surface-50/70 leading-relaxed mb-3">
             The ascendant (<em>lagna</em>) — the rashi rising on the eastern horizon at your
             birth — depends on your geographic location. {city.name} sits at{' '}
             {Math.abs(city.lat).toFixed(2)}°{city.lat >= 0 ? 'N' : 'S'}, {Math.abs(city.lng).toFixed(2)}°{city.lng >= 0 ? 'E' : 'W'},
@@ -202,10 +202,10 @@ export default async function KundliCityPage({ params }: RouteProps) {
             astrologer working in {city.name} would draw by hand.
           </p>
 
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">
             How accurate is the calculation?
           </h2>
-          <p className="text-sm text-surface-900/70 leading-relaxed mb-3">
+          <p className="text-sm text-surface-50/70 leading-relaxed mb-3">
             Every chart on Jyotron is computed from <strong>Swiss Ephemeris</strong> — the same
             astronomical engine used by professional astrologers, academic researchers, and
             standard panchangs. We use the canonical <strong>Lahiri ayanamsa</strong> for
@@ -215,7 +215,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
             randomised or AI-generated.
           </p>
 
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">
             Frequently asked questions about the {city.name} kundli
           </h2>
           <dl className="space-y-4 text-sm">
@@ -236,28 +236,28 @@ export default async function KundliCityPage({ params }: RouteProps) {
 
         {/* Cross-links */}
         <section className="surface-card p-6">
-          <h2 className="text-lg font-semibold text-surface-900 mb-3">
+          <h2 className="text-lg font-semibold text-surface-50 mb-3">
             More astrology tools for {city.name}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Link
               href={`/panchang/${city.slug}`}
-              className="block p-3 rounded-lg bg-surface-900/[0.03] hover:bg-surface-900/[0.06] transition-colors"
+              className="block p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
             >
-              <p className="text-sm font-medium text-surface-900">Today's Panchang for {city.name}</p>
-              <p className="text-xs text-surface-900/50 mt-1">Tithi, nakshatra, sunrise, Rahu Kaal.</p>
+              <p className="text-sm font-medium text-surface-50">Today's Panchang for {city.name}</p>
+              <p className="text-xs text-surface-50/50 mt-1">Tithi, nakshatra, sunrise, Rahu Kaal.</p>
             </Link>
             <Link
               href="/matching"
-              className="block p-3 rounded-lg bg-surface-900/[0.03] hover:bg-surface-900/[0.06] transition-colors"
+              className="block p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
             >
-              <p className="text-sm font-medium text-surface-900">Kundli Matching (Ashtakoota)</p>
-              <p className="text-xs text-surface-900/50 mt-1">36-guna milan score and dosha check.</p>
+              <p className="text-sm font-medium text-surface-50">Kundli Matching (Ashtakoota)</p>
+              <p className="text-xs text-surface-50/50 mt-1">36-guna milan score and dosha check.</p>
             </Link>
           </div>
-          <p className="text-xs text-surface-900/40 mt-5">
+          <p className="text-xs text-surface-50/40 mt-5">
             Born somewhere else?{' '}
-            <Link href="/kundli/cities" className="text-primary-700 hover:text-primary-700">
+            <Link href="/kundli/cities" className="text-primary-300 hover:text-primary-300">
               Browse all {SEO_CITIES.length} cities →
             </Link>
           </p>
@@ -270,8 +270,8 @@ export default async function KundliCityPage({ params }: RouteProps) {
 function Faq({ q, a }: { q: string; a: string }) {
   return (
     <div className="border-l-2 border-primary-500/30 pl-3">
-      <dt className="font-medium text-surface-900">{q}</dt>
-      <dd className="text-surface-900/70 mt-1 leading-relaxed">{a}</dd>
+      <dt className="font-medium text-surface-50">{q}</dt>
+      <dd className="text-surface-50/70 mt-1 leading-relaxed">{a}</dd>
     </div>
   );
 }

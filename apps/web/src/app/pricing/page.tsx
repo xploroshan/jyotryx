@@ -120,10 +120,10 @@ export default function PricingPage() {
     <div className="mx-auto max-w-5xl px-4 py-16 fade-in-up">
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-3 tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-surface-50 mb-3 tracking-tight">
           {t.pricing.titlePart1} <span className="text-gradient">{t.pricing.titleHighlight}</span>
         </h1>
-        <p className="text-sm text-surface-900/40 max-w-md mx-auto">
+        <p className="text-sm text-surface-50/40 max-w-md mx-auto">
           {t.pricing.subtitle}
         </p>
       </div>
@@ -137,14 +137,14 @@ export default function PricingPage() {
         {plans === null
           ? [0, 1, 2].map((i) => (
               <div key={i} className="surface-card p-6 animate-pulse" data-testid="plan-skeleton">
-                <div className="h-4 w-24 rounded bg-surface-900/10 mb-3" />
-                <div className="h-10 w-32 rounded bg-surface-900/10 mb-6" />
+                <div className="h-4 w-24 rounded bg-white/10 mb-3" />
+                <div className="h-10 w-32 rounded bg-white/10 mb-6" />
                 <div className="space-y-2 mb-6">
-                  <div className="h-3 w-full rounded bg-surface-900/5" />
-                  <div className="h-3 w-5/6 rounded bg-surface-900/5" />
-                  <div className="h-3 w-4/6 rounded bg-surface-900/5" />
+                  <div className="h-3 w-full rounded bg-white/5" />
+                  <div className="h-3 w-5/6 rounded bg-white/5" />
+                  <div className="h-3 w-4/6 rounded bg-white/5" />
                 </div>
-                <div className="h-9 w-full rounded bg-surface-900/10" />
+                <div className="h-9 w-full rounded bg-white/10" />
               </div>
             ))
           : plans.map((plan) => (
@@ -154,20 +154,20 @@ export default function PricingPage() {
                     {t.pricing.mostPopular}
                   </div>
                 )}
-                <h3 className="text-sm font-semibold text-surface-900 mb-1">{plan.name}</h3>
+                <h3 className="text-sm font-semibold text-surface-50 mb-1">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mb-5">
                   {plan.price > 0 ? (
                     <>
-                      <span className="text-3xl font-bold text-surface-900">{fmt(plan.price)}</span>
-                      <span className="text-xs text-surface-900/30">{plan.period}</span>
+                      <span className="text-3xl font-bold text-surface-50">{fmt(plan.price)}</span>
+                      <span className="text-xs text-surface-50/30">{plan.period}</span>
                     </>
                   ) : (
-                    <span className="text-3xl font-bold text-surface-900">{t.pricing.free}</span>
+                    <span className="text-3xl font-bold text-surface-50">{t.pricing.free}</span>
                   )}
                 </div>
                 <ul className="space-y-2.5 mb-6">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-surface-900/50">
+                    <li key={f} className="flex items-center gap-2 text-xs text-surface-50/50">
                       <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -188,15 +188,15 @@ export default function PricingPage() {
 
       {/* Credit Packs — pay-as-you-go alternative to subscriptions */}
       <div className="mt-16">
-        <h2 className="text-xl font-semibold text-surface-900 text-center mb-2">{t.pricing.creditPacksTitle}</h2>
-        <p className="text-xs text-surface-900/40 text-center mb-6">{t.pricing.creditPacksSubtitle}</p>
+        <h2 className="text-xl font-semibold text-surface-50 text-center mb-2">{t.pricing.creditPacksTitle}</h2>
+        <p className="text-xs text-surface-50/40 text-center mb-6">{t.pricing.creditPacksSubtitle}</p>
         <div className="grid sm:grid-cols-3 gap-4">
           {creditPacks === null
             ? [0, 1, 2].map((i) => (
                 <div key={i} className="surface-card p-5 animate-pulse" data-testid="credit-skeleton">
-                  <div className="h-4 w-20 rounded bg-surface-900/10 mb-3" />
-                  <div className="h-8 w-24 rounded bg-surface-900/10 mb-4" />
-                  <div className="h-8 w-full rounded bg-surface-900/10" />
+                  <div className="h-4 w-20 rounded bg-white/10 mb-3" />
+                  <div className="h-8 w-24 rounded bg-white/10 mb-4" />
+                  <div className="h-8 w-full rounded bg-white/10" />
                 </div>
               ))
             : creditPacks.map((pack) => (
@@ -206,8 +206,8 @@ export default function PricingPage() {
                       {t.pricing.bestValue}
                     </div>
                   )}
-                  <div className="text-xs text-surface-900/50 mb-1">{pack.credits} {t.pricing.credits}</div>
-                  <div className="text-2xl font-bold text-surface-900 mb-4">{fmt(pack.price)}</div>
+                  <div className="text-xs text-surface-50/50 mb-1">{pack.credits} {t.pricing.credits}</div>
+                  <div className="text-2xl font-bold text-surface-50 mb-4">{fmt(pack.price)}</div>
                   <button
                     onClick={() => router.push(`/checkout?type=credits&pack=${pack.id}`)}
                     className="w-full py-2 rounded-lg text-xs font-medium btn-secondary"

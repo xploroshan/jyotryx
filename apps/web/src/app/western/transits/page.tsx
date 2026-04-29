@@ -21,7 +21,7 @@ interface TransitsResponse {
 }
 
 const ASPECT_CLASS: Record<string, string> = {
-  Conjunction: 'bg-primary-500/15 text-primary-700',
+  Conjunction: 'bg-primary-500/15 text-primary-300',
   Sextile: 'bg-emerald-500/15 text-emerald-300',
   Square: 'bg-amber-500/15 text-amber-300',
   Trine: 'bg-sky-500/15 text-sky-300',
@@ -81,17 +81,17 @@ export default function WesternTransitsPage() {
       descriptionKey="featurePages.westernTransits.description"
     >
       {!isAuthenticated && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-900/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
           {t.kundli.loginRequired}
         </div>
       )}
       {isAuthenticated && !hasBirth && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-900/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
           {t.kundli.doshaComplete}
         </div>
       )}
       {loading && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-900/60">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/60">
           {t.common.loading}
         </div>
       )}
@@ -103,22 +103,22 @@ export default function WesternTransitsPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-900/50 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-3">
               {fp.transitsForPrefix} {result.date}
             </p>
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {result.transitingPlanets.map((p) => (
                 <li
                   key={p.planet}
-                  className="rounded-xl bg-surface-900/[0.04] border border-surface-900/[0.06] px-3 py-2"
+                  className="rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-lg" aria-hidden>
                       {PLANET_GLYPH[p.planet] ?? '✦'}
                     </span>
-                    <span className="text-surface-900 font-medium text-sm">{p.planet}</span>
+                    <span className="text-surface-50 font-medium text-sm">{p.planet}</span>
                   </div>
-                  <div className="text-xs text-surface-900/60 mt-1">
+                  <div className="text-xs text-surface-50/60 mt-1">
                     {p.sign} {p.degree.toFixed(1)}°
                   </div>
                 </li>
@@ -127,28 +127,28 @@ export default function WesternTransitsPage() {
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-900/50 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-3">
               {fp.activeAspectsPrefix} ({result.aspects.length})
             </p>
             {result.aspects.length === 0 ? (
-              <p className="text-sm text-surface-900/50 text-center py-4">
+              <p className="text-sm text-surface-50/50 text-center py-4">
                 {fp.noAspects}
               </p>
             ) : (
-              <ul className="divide-y divide-surface-900/[0.06]">
+              <ul className="divide-y divide-white/[0.06]">
                 {result.aspects.map((a, i) => (
                   <li
                     key={i}
                     className="flex items-center justify-between gap-2 py-2 text-sm"
                   >
-                    <span className="text-surface-900/90">
+                    <span className="text-surface-50/90">
                       {fp.transiting} {a.transiting}
-                      <span className="text-surface-900/40 mx-2">→</span>
+                      <span className="text-surface-50/40 mx-2">→</span>
                       {fp.natal} {a.natal}
                     </span>
                     <span
                       className={`shrink-0 text-[11px] px-2 py-0.5 rounded-full ${
-                        ASPECT_CLASS[a.aspect] ?? 'bg-surface-900/10 text-surface-900/70'
+                        ASPECT_CLASS[a.aspect] ?? 'bg-white/10 text-surface-50/70'
                       }`}
                     >
                       {a.aspect} · {a.orb}°
@@ -159,7 +159,7 @@ export default function WesternTransitsPage() {
             )}
           </div>
 
-          <div className="glass rounded-2xl p-5 text-sm text-surface-900/80 leading-relaxed">
+          <div className="glass rounded-2xl p-5 text-sm text-surface-50/80 leading-relaxed">
             {result.interpretation}
           </div>
         </div>

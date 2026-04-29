@@ -54,8 +54,8 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
   };
 
   return (
-    <section className="mt-8 pt-8 border-t border-surface-900/[0.08]">
-      <h3 className="font-display text-lg font-semibold text-surface-900 mb-2">
+    <section className="mt-8 pt-8 border-t border-white/[0.08]">
+      <h3 className="font-display text-lg font-semibold text-surface-50 mb-2">
         Daily briefing email
       </h3>
       <p className="text-sm text-secondary mb-4 max-w-xl leading-relaxed">
@@ -64,10 +64,10 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
         on by default for everyone who registers. Turn it off here any time.
       </p>
 
-      <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-100 border border-surface-900/[0.06] max-w-xl">
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-900 border border-white/[0.06] max-w-xl">
         <div>
-          <p className="text-sm font-medium text-surface-900">Send me my briefing each morning</p>
-          <p className="text-xs text-surface-900/55 mt-1">
+          <p className="text-sm font-medium text-surface-50">Send me my briefing each morning</p>
+          <p className="text-xs text-surface-50/55 mt-1">
             Delivered to your account email. Switching this off stops emails immediately —
             no other action needed.
           </p>
@@ -80,11 +80,11 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
           aria-busy={saving}
           aria-label={enabled ? "Turn off daily briefing email" : "Turn on daily briefing email"}
           className={`focus-ring relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-            enabled ? "bg-primary-500" : "bg-surface-900/20"
+            enabled ? "bg-primary-500" : "bg-white/20"
           } disabled:opacity-50`}
         >
           <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-surface-50 shadow-sm transition-transform ${
+            className={`inline-block h-5 w-5 transform rounded-full bg-surface-950 shadow-sm transition-transform ${
               enabled ? "translate-x-5" : "translate-x-0.5"
             }`}
           />
@@ -92,12 +92,12 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
       </div>
 
       {error && (
-        <p className="mt-3 text-xs text-red-700" role="alert">
+        <p className="mt-3 text-xs text-red-300" role="alert">
           {error}
         </p>
       )}
       {saved && !error && (
-        <p className="mt-3 text-xs text-emerald-700" role="status">
+        <p className="mt-3 text-xs text-emerald-300" role="status">
           Saved — your preference is now live.
         </p>
       )}

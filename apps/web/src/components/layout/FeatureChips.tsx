@@ -48,7 +48,7 @@ export default function FeatureChips() {
     'relative flex items-center gap-1.5 py-2.5 text-[13px] whitespace-nowrap transition-colors duration-200 focus-ring';
 
   return (
-    <div className="sticky top-[120px] z-30 bg-surface-50/85 backdrop-blur-xl border-b border-surface-900/[0.06]">
+    <div className="sticky top-[120px] z-30 bg-surface-950/85 backdrop-blur-xl border-b border-white/[0.06]">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <ul
           className="flex flex-wrap gap-x-5 sm:gap-x-7 gap-y-0 justify-start lg:justify-center"
@@ -60,20 +60,20 @@ export default function FeatureChips() {
 
             const body = (
               <>
-                <FeatureGlyph slug={f.slug} size={17} />
+                <FeatureGlyph slug={f.slug} size={18} />
                 <span>{label}</span>
               </>
             );
 
             const tabState = isActive
-              ? 'text-surface-900 font-semibold'
-              : 'text-surface-900/55 hover:text-surface-900';
+              ? 'text-surface-50 font-semibold'
+              : 'text-surface-50/55 hover:text-surface-50';
 
             if (!f.available) {
               return (
                 <li key={f.slug} className="shrink-0">
                   <span
-                    className={`${tabBase} text-surface-900/25 cursor-not-allowed`}
+                    className={`${tabBase} text-surface-50/25 cursor-not-allowed`}
                     aria-disabled="true"
                   >
                     {body}

@@ -41,7 +41,7 @@ export function Toast({
       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
       : tone === 'error'
         ? 'bg-red-500/10 border-red-500/30 text-red-300'
-        : 'bg-primary-500/10 border-primary-500/30 text-primary-700';
+        : 'bg-primary-500/10 border-primary-500/30 text-primary-300';
 
   return (
     <AnimatePresence>
@@ -60,7 +60,7 @@ export function Toast({
             <button
               type="button"
               onClick={action.onClick}
-              className="focus-ring rounded-md px-2 py-1 text-xs font-medium underline underline-offset-2 hover:bg-surface-900/[0.06]"
+              className="focus-ring rounded-md px-2 py-1 text-xs font-medium underline underline-offset-2 hover:bg-white/[0.06]"
             >
               {action.label}
             </button>
