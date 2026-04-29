@@ -39,14 +39,19 @@ export default function FeatureChips() {
   // Feature chips render as an underlined tab strip beneath the tradition
   // pills, so the visual hierarchy reads tradition (filled pill) → feature
   // (underline tab) instead of two competing rows of pills.
+  //
+  // Wrapping behaviour: traditions like Vedic have 14 features which
+  // overflow the viewport on a single row, so we wrap on every breakpoint
+  // and let mobile use the same wrap rather than horizontal scroll —
+  // hidden chips behind a scroll bar were getting missed entirely.
   const tabBase =
     'relative flex items-center gap-1.5 py-2.5 text-[13px] whitespace-nowrap transition-colors duration-200 focus-ring';
 
   return (
     <div className="sticky top-[120px] z-30 bg-surface-50/85 backdrop-blur-xl border-b border-surface-900/[0.06]">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 overflow-x-auto no-scrollbar">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <ul
-          className="flex flex-nowrap gap-5 sm:gap-7 justify-start lg:justify-center"
+          className="flex flex-wrap gap-x-5 sm:gap-x-7 gap-y-0 justify-start lg:justify-center"
           role="tablist"
         >
           {cfg.features.map((f) => {
@@ -55,7 +60,7 @@ export default function FeatureChips() {
 
             const body = (
               <>
-                <FeatureGlyph slug={f.slug} size={15} />
+                <FeatureGlyph slug={f.slug} size={17} />
                 <span>{label}</span>
               </>
             );
