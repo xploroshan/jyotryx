@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -9,6 +10,25 @@ import FeatureChips from "@/components/layout/FeatureChips";
 import RouteFocusReset from "@/components/layout/RouteFocusReset";
 import ImpersonateHandler from "@/components/auth/ImpersonateHandler";
 import ImpersonationBanner from "@/components/auth/ImpersonationBanner";
+
+// We expose the next/font families as their own CSS variables and let the
+// theme tokens in globals.css extend them with system fallbacks. Doing it
+// this way avoids a recursive `--font-sans: var(--font-sans), …` declaration
+// in `@theme`.
+const sans = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans-inter",
+  display: "swap",
+});
+
+const display = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-display-fraunces",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Jyotron — Vedic Astrology Platform",
@@ -41,18 +61,17 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#09090b",
+  themeColor: "#fffdfa",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen flex flex-col">
+        {/* Warm paper grain overlay — sits below interactive content but
+            above the body bg, so the entire surface gains a soft analog
+            tactility without ever blocking pointer events. */}
+        <div aria-hidden className="grain pointer-events-none fixed inset-0 z-[1]" />
         {/* Banner must sit above the fixed Navbar so the impersonation
             warning is unmissable; it only renders when the active JWT
             carries `impersonatedBy`, so normal users see nothing. */}
