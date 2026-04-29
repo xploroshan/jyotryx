@@ -117,6 +117,7 @@ export default function PricingPage() {
   const fmt = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(n);
 
   return (
+    <div className="page-dark">
     <div className="mx-auto max-w-5xl px-4 py-16 fade-in-up">
       {/* Header */}
       <div className="text-center mb-12">
@@ -218,6 +219,7 @@ export default function PricingPage() {
               ))}
         </div>
       </div>
+    </div>
     </div>
   );
 }

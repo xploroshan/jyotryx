@@ -24,12 +24,20 @@ export default function Navbar() {
 
   const showAuth = mounted && isAuthenticated;
 
+  // On the cream canvas the navbar is always ink-on-cream. We swap the
+  // surface from transparent (sitting flush against the dawn wash) to a
+  // frosted cream pill once the user scrolls — keeps the chrome legible
+  // over white BentoSummary cards without painting a black bar across
+  // the editorial layout.
+  const linkBase =
+    "px-3.5 py-2 text-[13px] rounded-lg transition-colors duration-200 focus-ring";
+
   return (
     <nav
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-surface-950/80 backdrop-blur-2xl border-b border-white/[0.06]"
+          ? "glass-strong shadow-warm-sm"
           : "bg-transparent"
       )}
     >
@@ -37,10 +45,10 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2.5 shrink-0 group transition-transform duration-200 hover:scale-[1.02]"
+            className="flex items-center gap-2.5 shrink-0 group transition-transform duration-200 hover:scale-[1.02] focus-ring rounded-lg"
           >
             <LogoMark className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[20deg]" />
-            <span className="font-display text-[18px] font-semibold text-surface-50 tracking-tight">
+            <span className="font-display text-[19px] font-semibold text-surface-950 tracking-tight">
               Jyotron
             </span>
           </Link>
@@ -52,39 +60,43 @@ export default function Navbar() {
                 {user?.role === "ADMIN" && (
                   <Link
                     href="/admin"
-                    className="px-3.5 py-2 text-[13px] text-red-400 hover:text-red-300 transition-colors rounded-lg hover:bg-white/[0.04]"
+                    className={cn(linkBase, "text-primary-600 hover:text-primary-500 hover:bg-primary-500/10")}
                   >
                     {t.common.admin}
                   </Link>
                 )}
                 <Link
                   href="/reports"
-                  className="px-3.5 py-2 text-[13px] text-surface-50/50 hover:text-surface-50 transition-colors rounded-lg hover:bg-white/[0.04]"
+                  className={cn(linkBase, "text-ink-700 hover:text-surface-950 hover:bg-black/[0.04]")}
+                  style={{ color: "var(--color-ink-700)" }}
                 >
                   {t.common.reports}
                 </Link>
                 <Link
                   href="/pricing"
-                  className="px-3.5 py-2 text-[13px] font-medium text-primary-400 hover:text-primary-300 transition-colors rounded-lg hover:bg-white/[0.04]"
+                  className={cn(linkBase, "font-semibold text-primary-600 hover:text-primary-500 hover:bg-primary-500/10")}
                 >
                   {t.common.pricing}
                 </Link>
                 <Link
                   href="/referral"
-                  className="px-3.5 py-2 text-[13px] text-surface-50/50 hover:text-surface-50 transition-colors rounded-lg hover:bg-white/[0.04]"
+                  className={cn(linkBase, "hover:bg-black/[0.04]")}
+                  style={{ color: "var(--color-ink-700)" }}
                 >
                   Invite
                 </Link>
                 <Link
                   href="/profile"
-                  className="px-3.5 py-2 text-[13px] text-surface-50/50 hover:text-surface-50 transition-colors rounded-lg hover:bg-white/[0.04] max-w-[10ch] truncate"
+                  className={cn(linkBase, "hover:bg-black/[0.04] max-w-[10ch] truncate")}
+                  style={{ color: "var(--color-ink-700)" }}
                   title={user?.name}
                 >
                   {user?.name}
                 </Link>
                 <button
                   onClick={logout}
-                  className="px-3.5 py-2 text-[13px] text-surface-50/35 hover:text-surface-50 transition-colors rounded-lg hover:bg-white/[0.04]"
+                  className={cn(linkBase, "hover:bg-black/[0.04]")}
+                  style={{ color: "var(--color-ink-500)" }}
                 >
                   {t.common.logout}
                 </button>
@@ -95,13 +107,14 @@ export default function Navbar() {
                   <>
                     <Link
                       href="/auth?mode=login"
-                      className="px-3.5 py-2 text-[13px] text-surface-50/50 hover:text-surface-50 transition-colors rounded-lg hover:bg-white/[0.04]"
+                      className={cn(linkBase, "hover:bg-black/[0.04]")}
+                      style={{ color: "var(--color-ink-700)" }}
                     >
                       {t.common.login}
                     </Link>
                     <Link
                       href="/auth?mode=signup"
-                      className="px-4 py-2 text-[13px] btn-primary rounded-full"
+                      className="ml-1 px-4 py-2 text-[13px] btn-primary rounded-full focus-ring"
                     >
                       {t.common.signup}
                     </Link>
@@ -114,7 +127,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2 lg:hidden">
             <LanguageSwitcher />
             <button
-              className="p-2 -mr-2 text-surface-50/50 hover:text-surface-50 transition-colors"
+              className="p-2 -mr-2 text-surface-950 hover:bg-black/[0.04] rounded-lg transition-colors focus-ring"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -139,16 +152,16 @@ export default function Navbar() {
       <div
         className={cn(
           "lg:hidden transition-all duration-300 overflow-hidden",
-          mobileMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+          mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="bg-surface-950/95 backdrop-blur-2xl border-t border-white/[0.06] px-5 py-4">
+        <div className="glass-strong border-t hairline px-5 py-4">
           {showAuth ? (
             <div className="space-y-1">
               {user?.role === "ADMIN" && (
                 <Link
                   href="/admin"
-                  className="block px-3 py-2.5 text-sm text-red-400 rounded-lg"
+                  className="block px-3 py-2.5 text-sm text-primary-600 font-semibold rounded-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t.common.admin}
@@ -156,28 +169,31 @@ export default function Navbar() {
               )}
               <Link
                 href="/reports"
-                className="block px-3 py-2.5 text-sm text-surface-50/50 hover:text-surface-50 rounded-lg"
+                className="block px-3 py-2.5 text-sm hover:bg-black/[0.04] rounded-lg"
+                style={{ color: "var(--color-ink-700)" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.common.reports}
               </Link>
               <Link
                 href="/pricing"
-                className="block px-3 py-2.5 text-sm font-medium text-primary-400 rounded-lg"
+                className="block px-3 py-2.5 text-sm font-semibold text-primary-600 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.common.pricing}
               </Link>
               <Link
                 href="/referral"
-                className="block px-3 py-2.5 text-sm text-surface-50/50 hover:text-surface-50 rounded-lg"
+                className="block px-3 py-2.5 text-sm hover:bg-black/[0.04] rounded-lg"
+                style={{ color: "var(--color-ink-700)" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Invite
               </Link>
               <Link
                 href="/profile"
-                className="block px-3 py-2.5 text-sm text-surface-50/50 hover:text-surface-50 rounded-lg"
+                className="block px-3 py-2.5 text-sm hover:bg-black/[0.04] rounded-lg"
+                style={{ color: "var(--color-ink-700)" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {user?.name}
@@ -187,7 +203,8 @@ export default function Navbar() {
                   logout();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full text-left px-3 py-2.5 text-sm text-surface-50/35 hover:text-surface-50 rounded-lg"
+                className="w-full text-left px-3 py-2.5 text-sm hover:bg-black/[0.04] rounded-lg"
+                style={{ color: "var(--color-ink-500)" }}
               >
                 {t.common.logout}
               </button>
@@ -198,7 +215,7 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/auth?mode=login"
-                    className="flex-1 text-center px-4 py-2.5 text-sm btn-secondary rounded-full"
+                    className="flex-1 text-center px-4 py-2.5 text-sm btn-ghost rounded-full"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t.common.login}

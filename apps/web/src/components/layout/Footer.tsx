@@ -38,25 +38,44 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-white/[0.04] bg-surface-950">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+    <footer className="relative bg-surface-950 text-surface-50 overflow-hidden">
+      {/* Soft sunrise edge along the top — visually ties the dark anchor
+          back to the brand-orange palette without painting a hard line. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(255,77,0,0) 0%, rgba(255,77,0,0.55) 50%, rgba(255,77,0,0) 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[80%] h-64 opacity-50 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(255,182,39,0.18) 0%, rgba(255,77,0,0.10) 50%, transparent 80%)",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8 py-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-5">
               <LogoMark className="h-7 w-7" />
-              <span className="font-display text-[18px] font-semibold text-surface-50 tracking-tight">Jyotron</span>
+              <span className="font-display text-[19px] font-semibold text-surface-50 tracking-tight">Jyotron</span>
             </div>
-            <p className="text-sm text-surface-50/65 leading-relaxed mb-5">
+            <p className="text-sm text-surface-50/70 leading-relaxed mb-5 max-w-xs">
               {t.footer.tagline}
             </p>
-            <p className="text-xs text-surface-50/45 leading-relaxed">
+            <p className="text-xs text-surface-50/45 leading-relaxed max-w-xs">
               {t.footer.disclaimer}
             </p>
           </div>
 
           {footerGroups.map((group) => (
             <div key={group.title}>
-              <h3 className="text-[11px] font-medium text-surface-50/55 uppercase tracking-widest mb-4">
+              <h3 className="text-[11px] font-medium text-surface-50/55 uppercase tracking-[0.22em] mb-4">
                 {group.title}
               </h3>
               <ul className="space-y-3">
@@ -64,7 +83,7 @@ export default function Footer() {
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-surface-50/65 hover:text-surface-50 transition-colors duration-200"
+                      className="text-sm text-surface-50/70 hover:text-primary-300 transition-colors duration-200"
                     >
                       {link.label}
                     </Link>
@@ -75,14 +94,14 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-16 pt-8 border-t border-white/[0.04] flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-16 pt-8 border-t border-white/[0.06] flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-surface-50/45">
             &copy; {new Date().getFullYear()} Jyotron. {t.footer.copyright}
           </p>
           <div className="flex gap-8">
-            <a href="#" className="text-surface-50/55 hover:text-surface-50 transition-colors text-xs">Twitter</a>
-            <a href="#" className="text-surface-50/55 hover:text-surface-50 transition-colors text-xs">Instagram</a>
-            <a href="#" className="text-surface-50/55 hover:text-surface-50 transition-colors text-xs">YouTube</a>
+            <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">Twitter</a>
+            <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">Instagram</a>
+            <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">YouTube</a>
           </div>
         </div>
       </div>

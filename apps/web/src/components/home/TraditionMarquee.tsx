@@ -31,7 +31,11 @@ export default function TraditionMarquee() {
   return (
     <section
       aria-hidden
-      className="relative border-y border-white/[0.08] py-6 sm:py-8 overflow-hidden bg-white/[0.03]"
+      className="relative border-y hairline py-6 sm:py-8 overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,77,0,0.05) 0%, rgba(253,248,238,0) 50%, rgba(255,182,39,0.06) 100%)",
+      }}
     >
       <Track labels={labels} reverse={false} duration={55} />
       <Track labels={labels} reverse offsetTop="mt-2" duration={70} />
@@ -66,15 +70,22 @@ function Track({
         {seq.map((label, i) => (
           <span key={`${reverse ? 'r' : 'f'}-${i}`} className="flex items-center">
             <span
-              className="serif-italic text-surface-50/85 whitespace-nowrap px-8 sm:px-12"
-              style={{ fontSize: 'clamp(40px, 6vw, 96px)', lineHeight: 1 }}
+              className="serif-italic whitespace-nowrap px-8 sm:px-12"
+              style={{
+                fontSize: 'clamp(40px, 6vw, 96px)',
+                lineHeight: 1,
+                color: 'rgba(12,8,5,0.78)',
+              }}
             >
               {label}
             </span>
             <span
               aria-hidden
-              className="text-[#FFB627] text-2xl sm:text-3xl shrink-0"
-              style={{ filter: 'drop-shadow(0 1px 0 rgba(192,80,0,0.18))' }}
+              className="text-2xl sm:text-3xl shrink-0"
+              style={{
+                color: '#FF7A40',
+                filter: 'drop-shadow(0 1px 0 rgba(192,80,0,0.18))',
+              }}
             >
               ★
             </span>

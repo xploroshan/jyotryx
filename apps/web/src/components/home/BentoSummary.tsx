@@ -43,29 +43,32 @@ interface DailyBriefing {
 }
 
 const QUALITY_STYLES = {
-  excellent: { emoji: '\u2728', wash: 'sunrise', label: 'qualityExcellent' as const, pct: 100, bar: 'bg-primary-500' },
-  good: { emoji: '\u2600\ufe0f', wash: 'sunrise', label: 'qualityGood' as const, pct: 75, bar: 'bg-primary-400' },
-  moderate: { emoji: '\u2696\ufe0f', wash: 'amber', label: 'qualityModerate' as const, pct: 50, bar: 'bg-amber-500' },
-  challenging: { emoji: '\ud83c\udf19', wash: 'amber', label: 'qualityChallenging' as const, pct: 25, bar: 'bg-amber-600' },
+  excellent: { emoji: '✨', wash: 'sunrise', label: 'qualityExcellent' as const, pct: 100, bar: 'bg-primary-500' },
+  good: { emoji: '☀️', wash: 'sunrise', label: 'qualityGood' as const, pct: 75, bar: 'bg-primary-400' },
+  moderate: { emoji: '⚖️', wash: 'amber', label: 'qualityModerate' as const, pct: 50, bar: 'bg-amber-500' },
+  challenging: { emoji: '🌙', wash: 'amber', label: 'qualityChallenging' as const, pct: 25, bar: 'bg-amber-600' },
 } as const;
 
+// Wash washes — radial sunrise behind the hero card. Soft enough to not
+// fight the orange CTA in the hero above; strong enough to anchor the
+// bento card as the page's daily-briefing focal mass.
 const QUALITY_WASH = {
   sunrise:
-    'radial-gradient(circle at 30% 30%, rgba(255,182,39,0.20) 0%, rgba(255,77,0,0.10) 45%, transparent 75%)',
+    'radial-gradient(circle at 25% 25%, rgba(255,182,39,0.32) 0%, rgba(255,77,0,0.16) 45%, transparent 75%)',
   amber:
-    'radial-gradient(circle at 30% 30%, rgba(245,158,11,0.16) 0%, rgba(184,76,4,0.08) 45%, transparent 75%)',
+    'radial-gradient(circle at 25% 25%, rgba(245,158,11,0.26) 0%, rgba(184,76,4,0.12) 45%, transparent 75%)',
 } as const;
 
 // Detect Latin-script copy so we only italicise the mantra accent for
-// languages where italic is a typographic norm \u2014 Devanagari, Tamil, etc.
+// languages where italic is a typographic norm — Devanagari, Tamil, etc.
 // stay roman.
 function isLatinScript(text: string): boolean {
-  return /^[\p{Script=Latin}\s\d.,;:'"\-\u2014\u2013!?]+$/u.test(text.trim());
+  return /^[\p{Script=Latin}\s\d.,;:'"\-—–!?]+$/u.test(text.trim());
 }
 
 const PLANET_SYMBOL: Record<string, string> = {
-  Sun: '\u2609', Moon: '\u263d', Mars: '\u2642', Mercury: '\u263f',
-  Jupiter: '\u2643', Venus: '\u2640', Saturn: '\u2644',
+  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿',
+  Jupiter: '♃', Venus: '♀', Saturn: '♄',
 };
 
 // Shared cache key with /my-day so visiting one warms the other.
@@ -82,6 +85,15 @@ function readSharedBriefingCache(userId: string, locale: string): DailyBriefing 
     return parsed.data as DailyBriefing;
   } catch { return null; }
 }
+
+// Tile chrome — light-canvas tiles that sit above the cream paper.
+// Lift on hover with a warm shadow rather than a brightness change.
+const TILE =
+  'rounded-2xl bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.08)] shadow-warm-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-warm-md hover:border-[rgba(255,77,0,0.25)]';
+const TILE_HERO =
+  'rounded-3xl bg-[rgba(255,252,245,0.92)] border border-[rgba(12,8,5,0.08)] shadow-warm-md backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-warm-lg hover:border-[rgba(255,77,0,0.30)]';
+const KICKER =
+  'text-[11px] uppercase tracking-[0.22em] text-secondary';
 
 export default function BentoSummary() {
   const { t, locale } = useTranslation();
@@ -104,16 +116,16 @@ export default function BentoSummary() {
   }, [isAuthenticated, accessToken, locale, user?.id]);
 
   if (!isAuthenticated) {
-    const sampleMantra = '\u0913\u0902 \u0928\u092e\u0903 \u0936\u093f\u0935\u093e\u092f';
+    const sampleMantra = 'ओं नमः शिवाय';
     return (
       <section className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-28">
         <div className="flex items-end justify-between mb-10">
           <div>
-            <p className="text-[12px] font-medium text-primary-300 uppercase tracking-[0.22em] mb-3">
+            <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-3">
               {t.myDay.luckyToday}
             </p>
             <h2
-              className="font-display font-semibold text-surface-50 tracking-[-0.01em] leading-[1.0]"
+              className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
               style={{ fontSize: 'clamp(28px, 3.6vw, 52px)' }}
             >
               {t.home.ctaLoggedOut.split('.')[0]}
@@ -121,7 +133,7 @@ export default function BentoSummary() {
           </div>
           <Link
             href="/auth?mode=signup"
-            className="group inline-flex items-center gap-2 text-sm font-semibold text-primary-300 hover:text-primary-300 transition-colors whitespace-nowrap"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-500 transition-colors whitespace-nowrap"
           >
             {t.home.ctaButtonLoggedOut}
             <span aria-hidden className="inline-block transition-transform group-hover:translate-x-1">
@@ -131,47 +143,42 @@ export default function BentoSummary() {
         </div>
 
         <Stagger.Container className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[150px] gap-4 sm:gap-5">
-          {/* Hero card \u2014 favorable today */}
+          {/* Hero card — favorable today */}
           <Stagger.Item className="col-span-2 row-span-2">
             <Link
               href="/auth?mode=signup"
-              className="h-full block rounded-3xl bg-white/[0.04] border border-white/[0.08] shadow-warm-lg p-8 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+              className={`${TILE_HERO} h-full block p-8 relative overflow-hidden group`}
             >
               <div
                 className="absolute -inset-10 blur-2xl opacity-90 pointer-events-none"
                 style={{ background: QUALITY_WASH.sunrise }}
               />
               <div className="relative z-10 flex flex-col h-full">
-                <span className="text-5xl mb-4" aria-hidden>{'\u2600\ufe0f'}</span>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55 mb-3">
+                <span className="text-5xl mb-4" aria-hidden>{'☀️'}</span>
+                <p className={`${KICKER} mb-3`}>
                   {t.myDay.favorableToday}
                 </p>
                 <h3
-                  className="font-display font-semibold text-surface-50 mb-4 leading-[1.05] tracking-[-0.01em]"
+                  className="font-display font-semibold text-surface-950 mb-4 leading-[1.05] tracking-[-0.01em]"
                   style={{ fontSize: 'clamp(28px, 3.4vw, 44px)' }}
                 >
-                  {/* Inside the bento card the phrase is short and the
-                      sunrise wash already provides emphasis — skip the
-                      underline (which would wrap badly at this width). */}
                   <span className="serif-italic text-gradient-sunrise">
                     {t.home.heroHighlight}
                   </span>
                 </h3>
-                <p className="text-sm text-secondary line-clamp-3 flex-1 leading-relaxed">
+                <p className="text-sm text-emphasis line-clamp-3 flex-1 leading-relaxed">
                   {t.home.heroDescription}
                 </p>
-                <div className="mt-5 w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="mt-5 w-full h-1 rounded-full bg-black/[0.06] overflow-hidden">
                   <div className="h-full w-3/4 rounded-full bg-primary-500" />
                 </div>
               </div>
             </Link>
           </Stagger.Item>
 
-          {/* Lucky number \u2014 oversized serif numeral */}
-          <Stagger.Item className="rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-5 flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-warm-lg transition-all duration-300">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55">
-              {t.myDay.number}
-            </p>
+          {/* Lucky number — oversized serif numeral */}
+          <Stagger.Item className={`${TILE} p-5 flex flex-col justify-between`}>
+            <p className={KICKER}>{t.myDay.number}</p>
             <p
               className="font-display font-semibold text-gradient-sunrise leading-[0.85] tabular-nums"
               style={{ fontSize: 'clamp(72px, 11vw, 140px)' }}
@@ -181,18 +188,16 @@ export default function BentoSummary() {
           </Stagger.Item>
 
           {/* Lucky color */}
-          <Stagger.Item className="rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-5 relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-warm-lg transition-all duration-300">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55">
-              {t.myDay.color}
-            </p>
+          <Stagger.Item className={`${TILE} p-5 relative overflow-hidden flex flex-col justify-between`}>
+            <p className={KICKER}>{t.myDay.color}</p>
             <div className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-full ring-2 ring-white/10 shrink-0"
+                className="w-9 h-9 rounded-full ring-2 ring-black/[0.06] shrink-0"
                 style={{
                   background: 'linear-gradient(135deg, #FFB627 0%, #FF7A40 50%, #FF4D00 100%)',
                 }}
               />
-              <p className="font-display text-lg font-semibold text-surface-50">Saffron</p>
+              <p className="font-display text-lg font-semibold text-surface-950">Saffron</p>
             </div>
           </Stagger.Item>
 
@@ -200,34 +205,32 @@ export default function BentoSummary() {
           <Stagger.Item className="col-span-2">
             <Link
               href="/auth?mode=signup"
-              className="h-full rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-5 flex items-center gap-5 group hover:-translate-y-0.5 hover:shadow-warm-lg transition-all duration-300"
+              className={`${TILE} h-full p-5 flex items-center gap-5 group`}
             >
-              <div className="w-14 h-14 rounded-2xl bg-primary-500/10 border border-primary-500/20 grid place-items-center shrink-0">
-                <span className="text-2xl text-primary-300">{'\u2609'}</span>
+              <div className="w-14 h-14 rounded-2xl bg-primary-500/12 border border-primary-500/30 grid place-items-center shrink-0">
+                <span className="text-2xl text-primary-600">{'☉'}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55">
-                  {t.myDay.currentHora}
-                </p>
-                <p className="font-display text-lg font-semibold text-surface-50">Sun</p>
-                <p className="text-xs text-surface-50/55 mt-0.5">
+                <p className={KICKER}>{t.myDay.currentHora}</p>
+                <p className="font-display text-lg font-semibold text-surface-950">Sun</p>
+                <p className="text-xs text-secondary mt-0.5">
                   {t.home.ctaButtonLoggedOut}
                 </p>
               </div>
             </Link>
           </Stagger.Item>
 
-          {/* Mantra \u2014 italic serif on Latin scripts only */}
-          <Stagger.Item className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-8 sm:p-10 relative overflow-hidden text-center">
+          {/* Mantra — italic serif on Latin scripts only */}
+          <Stagger.Item className={`${TILE} col-span-2 lg:col-span-4 p-8 sm:p-10 relative overflow-hidden text-center`}>
             <div
               className="absolute inset-0 pointer-events-none"
-              style={{ background: QUALITY_WASH.sunrise, opacity: 0.5 }}
+              style={{ background: QUALITY_WASH.sunrise, opacity: 0.55 }}
             />
-            <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55 mb-3 relative z-10">
+            <p className={`${KICKER} mb-3 relative z-10`}>
               {t.myDay.todaysMantra}
             </p>
             <p
-              className={`font-display tracking-wide relative z-10 text-surface-50 ${
+              className={`font-display tracking-wide relative z-10 text-surface-950 ${
                 isLatinScript(sampleMantra) ? 'serif-italic' : 'font-medium'
               }`}
               style={{ fontSize: 'clamp(22px, 3vw, 36px)' }}
@@ -243,7 +246,7 @@ export default function BentoSummary() {
   if (error) {
     return (
       <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16">
-        <div className="rounded-3xl bg-white/[0.02] border border-white/[0.06] p-8 text-center text-surface-50/40 text-sm">
+        <div className={`${TILE} p-8 text-center text-secondary text-sm`}>
           {t.myDay.somethingWrong}
         </div>
       </section>
@@ -254,11 +257,11 @@ export default function BentoSummary() {
     return (
       <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16" aria-busy="true" aria-live="polite">
         <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[140px] gap-4">
-          <Skeleton rounded="rounded-3xl" className="col-span-2 row-span-2 border border-white/[0.04]" />
-          <Skeleton rounded="rounded-2xl" className="border border-white/[0.04]" />
-          <Skeleton rounded="rounded-2xl" className="border border-white/[0.04]" />
-          <Skeleton rounded="rounded-2xl" className="col-span-2 border border-white/[0.04]" />
-          <Skeleton rounded="rounded-2xl" className="col-span-2 lg:col-span-4 border border-white/[0.04]" />
+          <Skeleton rounded="rounded-3xl" className="col-span-2 row-span-2 border hairline" />
+          <Skeleton rounded="rounded-2xl" className="border hairline" />
+          <Skeleton rounded="rounded-2xl" className="border hairline" />
+          <Skeleton rounded="rounded-2xl" className="col-span-2 border hairline" />
+          <Skeleton rounded="rounded-2xl" className="col-span-2 lg:col-span-4 border hairline" />
         </div>
       </section>
     );
@@ -267,18 +270,18 @@ export default function BentoSummary() {
   const qs = QUALITY_STYLES[briefing.dayQuality];
   const qualityLabel = (t.myDay as any)[qs.label] ?? briefing.dayQuality;
   const planetKey = briefing.currentHora?.planet ?? '';
-  const planetSymbol = PLANET_SYMBOL[planetKey] ?? '\u25cb';
+  const planetSymbol = PLANET_SYMBOL[planetKey] ?? '○';
   const wash = QUALITY_WASH[qs.wash];
 
   return (
     <section className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-28">
       <div className="flex items-end justify-between mb-10">
         <div>
-          <p className="text-[12px] font-medium text-primary-300 uppercase tracking-[0.22em] mb-3">
+          <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-3">
             {t.myDay.luckyToday}
           </p>
           <h2
-            className="font-display font-semibold text-surface-50 tracking-[-0.01em] leading-[1.0]"
+            className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
             style={{ fontSize: 'clamp(28px, 3.6vw, 52px)' }}
           >
             {t.home.ctaLoggedIn.split('.')[0]}
@@ -286,7 +289,7 @@ export default function BentoSummary() {
         </div>
         <Link
           href="/my-day"
-          className="group inline-flex items-center gap-2 text-sm font-semibold text-primary-300 hover:text-primary-300 transition-colors whitespace-nowrap"
+          className="group inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-500 transition-colors whitespace-nowrap"
         >
           {t.home.ctaButtonLoggedIn}
           <span aria-hidden className="inline-block transition-transform group-hover:translate-x-1">
@@ -299,7 +302,7 @@ export default function BentoSummary() {
         <Stagger.Item className="col-span-2 row-span-2">
           <Link
             href="/my-day"
-            className="h-full block rounded-3xl bg-white/[0.04] border border-white/[0.08] shadow-warm-lg p-8 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300"
+            className={`${TILE_HERO} h-full block p-8 relative overflow-hidden group`}
           >
             <div
               className="absolute -inset-10 blur-2xl opacity-90 pointer-events-none"
@@ -307,19 +310,19 @@ export default function BentoSummary() {
             />
             <div className="relative z-10 flex flex-col h-full">
               <span className="text-5xl mb-4" aria-hidden>{qs.emoji}</span>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55 mb-3">
+              <p className={`${KICKER} mb-3`}>
                 {t.myDay.favorableToday}
               </p>
               <h3
-                className="font-display font-semibold text-surface-50 mb-4 leading-[1.05] tracking-[-0.01em]"
+                className="font-display font-semibold text-surface-950 mb-4 leading-[1.05] tracking-[-0.01em]"
                 style={{ fontSize: 'clamp(28px, 3.4vw, 44px)' }}
               >
                 {qualityLabel}
               </h3>
-              <p className="text-sm text-secondary line-clamp-3 flex-1 leading-relaxed">
+              <p className="text-sm text-emphasis line-clamp-3 flex-1 leading-relaxed">
                 {translateSummary(briefing.summary, t, locale)}
               </p>
-              <div className="mt-5 w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="mt-5 w-full h-1 rounded-full bg-black/[0.06] overflow-hidden">
                 <div
                   className={`h-full rounded-full ${qs.bar} transition-all duration-1000`}
                   style={{ width: `${qs.pct}%` }}
@@ -329,10 +332,8 @@ export default function BentoSummary() {
           </Link>
         </Stagger.Item>
 
-        <Stagger.Item className="rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-5 flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-warm-lg transition-all duration-300">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55">
-            {t.myDay.number}
-          </p>
+        <Stagger.Item className={`${TILE} p-5 flex flex-col justify-between`}>
+          <p className={KICKER}>{t.myDay.number}</p>
           <p
             className="font-display font-semibold text-gradient-sunrise leading-[0.85] tabular-nums"
             style={{ fontSize: 'clamp(72px, 11vw, 140px)' }}
@@ -341,18 +342,16 @@ export default function BentoSummary() {
           </p>
         </Stagger.Item>
 
-        <Stagger.Item className="rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-5 relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-warm-lg transition-all duration-300">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55">
-            {t.myDay.color}
-          </p>
+        <Stagger.Item className={`${TILE} p-5 relative overflow-hidden flex flex-col justify-between`}>
+          <p className={KICKER}>{t.myDay.color}</p>
           <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-full ring-2 ring-white/10 shrink-0"
+              className="w-9 h-9 rounded-full ring-2 ring-black/[0.06] shrink-0"
               style={{
                 background: 'linear-gradient(135deg, #FFB627 0%, #FF7A40 50%, #FF4D00 100%)',
               }}
             />
-            <p className="font-display text-lg font-semibold text-surface-50">
+            <p className="font-display text-lg font-semibold text-surface-950">
               {translateColorName(briefing.luckyColor, locale)}
             </p>
           </div>
@@ -361,37 +360,35 @@ export default function BentoSummary() {
         <Stagger.Item className="col-span-2">
           <Link
             href="/my-day"
-            className="h-full rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-5 flex items-center gap-5 group hover:-translate-y-0.5 hover:shadow-warm-lg transition-all duration-300"
+            className={`${TILE} h-full p-5 flex items-center gap-5 group`}
           >
-            <div className="w-14 h-14 rounded-2xl bg-primary-500/10 border border-primary-500/20 grid place-items-center shrink-0">
-              <span className="text-2xl text-primary-300">{planetSymbol}</span>
+            <div className="w-14 h-14 rounded-2xl bg-primary-500/12 border border-primary-500/30 grid place-items-center shrink-0">
+              <span className="text-2xl text-primary-600">{planetSymbol}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55">
-                {t.myDay.currentHora}
+              <p className={KICKER}>{t.myDay.currentHora}</p>
+              <p className="font-display text-lg font-semibold text-surface-950">
+                {briefing.currentHora ? translatePlanetName(briefing.currentHora.planet, locale) : '—'}
               </p>
-              <p className="font-display text-lg font-semibold text-surface-50">
-                {briefing.currentHora ? translatePlanetName(briefing.currentHora.planet, locale) : '\u2014'}
-              </p>
-              <p className="text-xs text-surface-50/55 mt-0.5">
+              <p className="text-xs text-secondary mt-0.5">
                 {briefing.currentHora
-                  ? `${translateTimeRange(briefing.currentHora.startTime, locale)} \u2013 ${translateTimeRange(briefing.currentHora.endTime, locale)}`
+                  ? `${translateTimeRange(briefing.currentHora.startTime, locale)} – ${translateTimeRange(briefing.currentHora.endTime, locale)}`
                   : t.myDay.bestTime}
               </p>
             </div>
           </Link>
         </Stagger.Item>
 
-        <Stagger.Item className="col-span-2 lg:col-span-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-8 sm:p-10 relative overflow-hidden text-center">
+        <Stagger.Item className={`${TILE} col-span-2 lg:col-span-4 p-8 sm:p-10 relative overflow-hidden text-center`}>
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: wash, opacity: 0.5 }}
+            style={{ background: wash, opacity: 0.55 }}
           />
-          <p className="text-[11px] uppercase tracking-[0.22em] text-surface-50/55 mb-3 relative z-10">
+          <p className={`${KICKER} mb-3 relative z-10`}>
             {t.myDay.todaysMantra}
           </p>
           <p
-            className={`font-display tracking-wide relative z-10 text-surface-50 ${
+            className={`font-display tracking-wide relative z-10 text-surface-950 ${
               isLatinScript(briefing.mantra) ? 'serif-italic' : 'font-medium'
             }`}
             style={{ fontSize: 'clamp(22px, 3vw, 36px)' }}

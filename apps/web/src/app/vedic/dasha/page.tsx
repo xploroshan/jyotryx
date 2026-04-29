@@ -105,6 +105,7 @@ export default function VedicDashaPage() {
   const traditionName = (t as any).traditionsUi?.vedic?.name || 'Vedic';
 
   return (
+    <div className="page-dark">
     <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
       <nav className="mb-5 text-sm text-surface-50/40">
         <Link href={`/${cfg.slug}`} className="hover:text-surface-50 transition-colors">
@@ -247,6 +248,7 @@ export default function VedicDashaPage() {
           })}
         </div>
       )}
+    </div>
     </div>
   );
 }

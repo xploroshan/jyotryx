@@ -42,22 +42,29 @@ export default function TraditionFeatureStub({
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-20">
-      <nav className="mb-4 text-xs text-surface-50/50">
-        <Link href={`/${cfg.slug}`} className="hover:text-surface-50">
+      <nav className="mb-4 text-xs text-secondary">
+        <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
           {traditionName}
         </Link>{' '}
-        / <span className="text-surface-50/70">{featureName}</span>
+        / <span className="text-emphasis">{featureName}</span>
       </nav>
 
+      {/* Tradition-coloured deep ink island for the page header — keeps
+          the per-tradition gradient (heroClass) without competing with
+          the cream canvas. */}
       <section
-        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} ring-1 px-6 sm:px-10 py-8 mb-6`}
+        className={`relative overflow-hidden rounded-3xl bg-surface-950 border border-white/[0.06] shadow-warm-md px-6 sm:px-10 py-8 mb-6`}
       >
-        <div className="flex items-center gap-4">
+        <div
+          aria-hidden
+          className={`absolute inset-0 bg-gradient-to-br ${cfg.heroClass} opacity-90`}
+        />
+        <div className="relative flex items-center gap-4">
           <span className="text-4xl leading-none" aria-hidden>
             {cfg.icon}
           </span>
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-surface-50 tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-semibold text-surface-50 tracking-tight">
               {featureName}
             </h1>
             {descriptionKey && (
@@ -69,12 +76,26 @@ export default function TraditionFeatureStub({
         </div>
       </section>
 
-      <div className="surface-card rounded-2xl p-6">
-        {children ?? (
-          <p className="text-sm text-surface-50/60 text-center py-6">
-            {readLabel('traditionsUi.comingSoon', 'Coming soon')}
-          </p>
-        )}
+      {/* Children container kept as dark-canvas surface-card so each
+          tradition's stub content (forms, result tiles styled with
+          text-surface-50 + bg-white/[0.04]) reads correctly on the
+          deep ink island this page renders inside. */}
+      <div className="relative rounded-2xl bg-surface-950 border border-white/[0.06] shadow-warm-md p-6 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 70% 60% at 50% -10%, rgba(255,182,39,0.08) 0%, transparent 70%)',
+          }}
+        />
+        <div className="relative">
+          {children ?? (
+            <p className="text-sm text-surface-50/60 text-center py-6">
+              {readLabel('traditionsUi.comingSoon', 'Coming soon')}
+            </p>
+          )}
+        </div>
       </div>
     </PageTransition>
   );
