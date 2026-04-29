@@ -41,11 +41,11 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
         />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-8">
-          <div className="shrink-0 grid place-items-center w-28 h-28 rounded-3xl bg-primary-100/70 border border-primary-500/25 text-primary-300">
+          <div className="shrink-0 grid place-items-center w-28 h-28 rounded-3xl bg-primary-500/25 border border-primary-500/45 text-primary-200 shadow-[0_0_48px_-8px_rgba(255,77,0,0.55)]">
             <TraditionGlyph id={traditionId} size={64} weight={1.4} />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary-100/70 border border-primary-500/30 text-primary-300 uppercase tracking-[0.18em] mb-4">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary-500/20 border border-primary-500/45 text-primary-200 uppercase tracking-[0.18em] mb-4">
               {name}
             </span>
             <h1
@@ -73,13 +73,13 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
             const label = readLabel(f.labelKey, f.slug);
             const tile = (
               <div
-                className={`group rounded-2xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm p-6 h-full flex items-center gap-4 transition-all duration-300 ${
+                className={`group rounded-2xl bg-gradient-to-br from-primary-500/[0.06] to-white/[0.04] border border-primary-500/[0.18] shadow-warm-sm p-6 h-full flex items-center gap-4 transition-all duration-300 ${
                   f.available
-                    ? 'hover:-translate-y-1 hover:shadow-warm-lg hover:border-white/[0.14]'
+                    ? 'hover:-translate-y-1 hover:shadow-warm-lg hover:border-primary-500/[0.40] hover:from-primary-500/[0.10]'
                     : 'opacity-50 cursor-not-allowed'
                 }`}
               >
-                <div className="shrink-0 grid place-items-center w-12 h-12 rounded-xl bg-primary-100/60 border border-primary-500/15 text-primary-300 group-hover:bg-primary-100 group-hover:border-primary-500/35 transition-colors">
+                <div className="shrink-0 grid place-items-center w-12 h-12 rounded-xl bg-primary-500/20 border border-primary-500/35 text-primary-200 shadow-[0_0_24px_-6px_rgba(255,77,0,0.45)] group-hover:bg-primary-500/30 group-hover:border-primary-500/55 transition-colors">
                   <FeatureGlyph slug={f.slug} size={22} />
                 </div>
                 <div className="min-w-0 flex-1">
