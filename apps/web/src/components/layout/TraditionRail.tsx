@@ -93,7 +93,9 @@ export default function TraditionRail() {
                 <span className="text-base leading-none" aria-hidden>
                   ☀️
                 </span>
-                <span>{t.nav.myDay}</span>
+                <span className={isMyDayActive ? 'font-display font-semibold' : ''}>
+                  {t.nav.myDay}
+                </span>
               </Link>
             </motion.div>
           </li>
@@ -123,7 +125,9 @@ export default function TraditionRail() {
                   <span className="text-base leading-none" aria-hidden>
                     {cfg.icon}
                   </span>
-                  <span>{label}</span>
+                  <span className={isActive ? 'font-display font-semibold' : ''}>
+                    {label}
+                  </span>
                 </motion.button>
               </li>
             );

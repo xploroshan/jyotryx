@@ -95,7 +95,10 @@ export default function FeatureChips() {
                     <motion.span
                       layoutId="feature-underline"
                       aria-hidden
-                      className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full bg-primary-500"
+                      className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full"
+                      style={{
+                        background: 'linear-gradient(90deg, #ff4d00 0%, #ffb627 100%)',
+                      }}
                       transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                     />
                   )}

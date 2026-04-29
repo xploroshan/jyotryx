@@ -24,6 +24,18 @@
   --color-accent-600: #e63d00;
   --color-accent-700: #c43200;
 
+  /* ── Sun: yellow/saffron ladder used SURGICALLY only.
+        Sanctioned spots: HeroSun corona, .accent-underline, FeatureChips
+        active underline, one closing-CTA glint. Yellow never appears as
+        text on white (fails AA) or as a card/button background. ── */
+  --color-sun-50: #fff8e6;
+  --color-sun-100: #ffedb8;
+  --color-sun-200: #ffdc85;
+  --color-sun-300: #ffcb52;
+  --color-sun-400: #ffb627;
+  --color-sun-500: #f09a0a;
+  --color-sun-600: #b66e00;
+
   /* ── Surface: warm-tinted scale.
         50  = #FFFDFA (canvas / page background)
         100..200 = subtle warm card tints
@@ -40,17 +52,20 @@
   --color-surface-900: #141210;
   --color-surface-950: #0a0907;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* next/font/google injects --font-sans-inter and --font-display-fraunces
+     onto <html> via the className applied in layout.tsx. We layer system
+     fallbacks behind them here so the page never renders unstyled. */
+  --font-sans: var(--font-sans-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-display-fraunces), ui-serif, "Times New Roman", Georgia, serif;
 }
 
 @layer base {
   body {
-    @apply bg-surface-50 text-surface-50 antialiased;
+    @apply bg-surface-50 text-surface-900 antialiased;
   }
 
   ::selection {
-    @apply bg-primary-500/30 text-surface-50;
+    @apply bg-primary-500/25 text-surface-900;
   }
 }
 
@@ -67,6 +82,49 @@
     background-image: linear-gradient(135deg, #ffa07a 0%, #ff7a40 40%, #ff4d00 100%);
   }
 
+  /* ── Sunrise gradient — yellow → amber → deep orange. The signature
+        editorial moment. Used in HeroSun corona, hero italic accent, and
+        a few oversized numerals in BentoSummary. ── */
+  .text-gradient-sunrise {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #ffb627 0%, #ff7a40 45%, #ff4d00 100%);
+  }
+
+  /* ── Editorial display helpers ── */
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* Italic serif accent — pairs with .accent-underline on hero/CTA highlights. */
+  .serif-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  /* Hand-drawn-style underline that sits under the italic accent word.
+        Implemented as a layered gradient background rather than a border so
+        it only paints under the glyph baseline, not the descenders. */
+  .accent-underline {
+    background-image: linear-gradient(90deg, #ff4d00 0%, #ffb627 100%);
+    background-size: 100% 8%;
+    background-position: 0 96%;
+    background-repeat: no-repeat;
+    padding-bottom: 0.05em;
+  }
+
+  /* Warm tinted shadows — orange-biased so cards float over the warm-white
+        canvas without the sterile gray drop shadow you get from default
+        shadow-* utilities. */
+  .shadow-warm-sm {
+    box-shadow: 0 8px 18px -8px rgba(255, 77, 0, 0.22);
+  }
+  .shadow-warm-lg {
+    box-shadow:
+      0 30px 60px -20px rgba(255, 77, 0, 0.28),
+      0 12px 24px -12px rgba(192, 80, 0, 0.18);
+  }
+
   /* ── Card surfaces — two tiers of emphasis on a light canvas ── */
   .surface-card {
     @apply bg-surface-100 border border-surface-900/[0.08] rounded-2xl;
@@ -79,7 +137,7 @@
   }
 
   .surface-input {
-    @apply bg-surface-50 border border-surface-900/[0.14] text-surface-50
+    @apply bg-surface-50 border border-surface-900/[0.14] text-surface-900
            placeholder-surface-900/40
            focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30
            focus-visible:outline-none focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/30
@@ -117,7 +175,7 @@
   }
 
   .btn-secondary {
-    @apply bg-surface-100 border border-surface-900/[0.12] text-surface-50 font-medium
+    @apply bg-surface-100 border border-surface-900/[0.12] text-surface-900 font-medium
            hover:bg-surface-200 hover:border-surface-900/[0.2]
            transition-all duration-150;
   }
@@ -191,6 +249,18 @@
   .fade-in-up {
     animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+
+  /* ── Paper grain overlay — subtle warm noise that adds analog texture to
+        the warm-white canvas. Applied once globally in layout.tsx. The
+        SVG turbulence pattern tiles at 220px so the grain stays fine and
+        consistent at any zoom level. mix-blend-mode: multiply keeps the
+        noise from washing out colored content underneath. ── */
+  .grain {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.55'/></svg>");
+    background-size: 220px 220px;
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+  }
 }
 
 @keyframes fade-in {
@@ -221,6 +291,25 @@
   50% { opacity: 1; }
 }
 
+/* HeroSun corona — slow breathing pulse that sells the sun as a living mass
+   without becoming distracting. Paired with mesh-drift behind it. */
+@keyframes corona-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+/* TraditionMarquee — two stacked infinite tracks moving in opposite
+   directions. Translates by exactly 50% of the doubled track's own width,
+   which equals the width of one un-doubled set, so the loop is seamless. */
+@keyframes marquee-forward {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-reverse {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
 /* ── Mesh gradient blob for hero sections ── */
 @keyframes mesh-drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -233,6 +322,9 @@
   [class*="astro-spin"],
   [class*="astro-pulse"],
   [class*="astro-twinkle"],
+  [class*="corona-pulse"],
+  [class*="mesh-drift"],
+  [class*="marquee-"],
   .fade-in,
   .fade-in-up {
     animation: none !important;
