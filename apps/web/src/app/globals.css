@@ -63,12 +63,21 @@
 
 @layer base {
   body {
-    /* Canvas is orange-dominant per the brand spec (50% orange / 25% white /
-       25% black, black text). Components keep using `bg-white/[X]` for
-       elevated panels — translucent white over orange reads as the 25%
-       white layer; explicit `bg-surface-950` blocks (footer/modals) carry
-       the 25% black. */
-    @apply bg-primary-500 text-surface-950 antialiased;
+    /* Canvas is orange-dominant per the brand spec, but at primary-200
+       (#ffc6a8 — soft peach) so it reads as orange-blended-with-white
+       rather than a saturated #FF4D00 wall. The brand orange (primary-500)
+       stays for CTAs, icon tiles, and underlines where it carries the
+       editorial weight. Black text reads cleanly at AA+ on this tint;
+       components that explicitly use `bg-surface-950` (footer/modals)
+       continue to carry the 25% black chrome layer. */
+    @apply bg-primary-200 text-surface-950 antialiased;
+    background-image: radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      var(--color-primary-100) 0%,
+      var(--color-primary-200) 60%,
+      var(--color-primary-300) 100%
+    );
+    background-attachment: fixed;
   }
 
   ::selection {
