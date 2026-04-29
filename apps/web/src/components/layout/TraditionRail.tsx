@@ -12,6 +12,30 @@ import {
 import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
+import { TraditionGlyph } from '@/components/icons';
+
+/* "My Day" sits outside the tradition registry, so it gets its own
+   inline glyph rather than reusing VedicIcon. A simple sun reads
+   universally as "today". */
+function SunGlyph({ size = 15, active = false }: { size?: number; active?: boolean }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={active ? 1.7 : 1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="12" cy="12" r="3.6" />
+      <path d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M5.6 18.4l1.7-1.7M16.7 7.3l1.7-1.7" />
+    </svg>
+  );
+}
 
 export default function TraditionRail() {
   const pathname = usePathname() ?? '/';
@@ -90,9 +114,7 @@ export default function TraditionRail() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className="text-base leading-none" aria-hidden>
-                  ☀️
-                </span>
+                <SunGlyph size={15} active={isMyDayActive} />
                 <span className={isMyDayActive ? 'font-display font-semibold' : ''}>
                   {t.nav.myDay}
                 </span>
@@ -122,9 +144,7 @@ export default function TraditionRail() {
                       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <span className="text-base leading-none" aria-hidden>
-                    {cfg.icon}
-                  </span>
+                  <TraditionGlyph id={cfg.id} size={15} />
                   <span className={isActive ? 'font-display font-semibold' : ''}>
                     {label}
                   </span>
