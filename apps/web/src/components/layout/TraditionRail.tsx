@@ -114,7 +114,7 @@ export default function TraditionRail() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <SunGlyph size={15} active={isMyDayActive} />
+                <SunGlyph size={18} active={isMyDayActive} />
                 <span className={isMyDayActive ? 'font-display font-semibold' : ''}>
                   {t.nav.myDay}
                 </span>
@@ -144,7 +144,7 @@ export default function TraditionRail() {
                       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <TraditionGlyph id={cfg.id} size={15} />
+                  <TraditionGlyph id={cfg.id} size={18} />
                   <span className={isActive ? 'font-display font-semibold' : ''}>
                     {label}
                   </span>

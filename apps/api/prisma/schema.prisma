@@ -180,7 +180,7 @@ model User {
   // surfaced yet — the operator picks a global UTC hour from
   // `notification.briefing.send_hour_utc` so the scheduler stays a
   // single daily sweep instead of 24 cron windows.
-  briefingEmailEnabled Boolean            @default(false)
+  briefingEmailEnabled Boolean            @default(true)
   briefingDeliveries   BriefingDelivery[]
 
   referredBy User?  @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)

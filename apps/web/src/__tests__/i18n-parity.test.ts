@@ -112,17 +112,23 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
  * and other secondary screens.
  */
 const UNTRANSLATED_BASELINE: Record<string, number> = {
+  // hi stays at 67 — it's the only fully-translated locale that absorbed
+  // the 39 new palmistry keys when they landed (see commit 63e9a36).
   hi: 67,
-  ta: 67,
-  te: 426,
-  bn: 426,
-  mr: 421,
-  gu: 426,
-  kn: 426,
-  ml: 426,
-  pa: 426,
-  or: 426,
-  as: 426,
+  // ta: 67 baseline + 39 new untranslated palmistry keys = 106.
+  ta: 106,
+  // All other locales were already trailing on translation; the 39 new
+  // palmistry keys (insightSpirituality, atAGlance, …, reportSubtitle)
+  // pushed each baseline by +39 across the board.
+  te: 465,
+  bn: 465,
+  mr: 460,
+  gu: 465,
+  kn: 465,
+  ml: 465,
+  pa: 465,
+  or: 465,
+  as: 465,
 };
 
 const locales: Array<[string, Dict]> = [

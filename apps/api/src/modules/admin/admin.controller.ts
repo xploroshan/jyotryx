@@ -238,6 +238,15 @@ export class AdminController {
     return { ok: true };
   }
 
+  @Post('briefing/enable-for-all')
+  @ApiOperation({
+    summary:
+      'Flip briefingEmailEnabled to true for every user currently opted out',
+  })
+  async enableBriefingForAll(): Promise<{ updated: number }> {
+    return this.briefingMailer.enableForAllDisabled();
+  }
+
   @Get('experiments/paywall/stats')
   @ApiOperation({ summary: 'Per-variant assignments + conversions for the paywall A/B test' })
   async getPaywallStats() {
