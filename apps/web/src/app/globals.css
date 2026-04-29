@@ -36,10 +36,12 @@
   --color-sun-500: #f09a0a;
   --color-sun-600: #b66e00;
 
-  /* ── Surface: warm-tinted scale.
-        50  = #FFFDFA (canvas / page background)
-        100..200 = subtle warm card tints
-        700..950 = text & strong contrast (no pure black) ── */
+  /* ── Surface: warm-tinted scale anchored on a deep warm-black canvas.
+        50  = #FFFDFA  (warm-white text + inverted high-emphasis pills)
+        100..300 = warm cream tints (light pills/cards on dark surface)
+        700..950 = surface tones (deep warm-black is the page bg)
+        950 is intentionally not pure black — a faint orange undertone
+        ties the dark canvas to the brand without going theatrical. ── */
   --color-surface-50: #fffdfa;
   --color-surface-100: #f7f3ee;
   --color-surface-200: #ece6dd;
@@ -47,10 +49,10 @@
   --color-surface-400: #a8a09a;
   --color-surface-500: #6b6560;
   --color-surface-600: #4a4540;
-  --color-surface-700: #34302c;
-  --color-surface-800: #221f1c;
-  --color-surface-900: #141210;
-  --color-surface-950: #0a0907;
+  --color-surface-700: #2a221d;
+  --color-surface-800: #1a130e;
+  --color-surface-900: #110b07;
+  --color-surface-950: #080503;
 
   /* next/font/google injects --font-sans-inter and --font-display-fraunces
      onto <html> via the className applied in layout.tsx. We layer system
@@ -61,11 +63,11 @@
 
 @layer base {
   body {
-    @apply bg-surface-50 text-surface-900 antialiased;
+    @apply bg-surface-950 text-surface-50 antialiased;
   }
 
   ::selection {
-    @apply bg-primary-500/25 text-surface-900;
+    @apply bg-primary-500/40 text-surface-50;
   }
 }
 
@@ -123,34 +125,37 @@
     background-image: linear-gradient(90deg, #ff4d00 0%, #ffb627 100%);
   }
 
-  /* Warm tinted shadows — orange-biased so cards float over the warm-white
-        canvas without the sterile gray drop shadow you get from default
+  /* Warm tinted shadows — orange-biased so the orange focal masses
+        (HeroSun, primary CTAs) read as glowing on the dark canvas
+        without the sterile gray drop shadow you get from default
         shadow-* utilities. */
   .shadow-warm-sm {
-    box-shadow: 0 8px 18px -8px rgba(255, 77, 0, 0.22);
+    box-shadow: 0 8px 24px -8px rgba(255, 77, 0, 0.45);
   }
   .shadow-warm-lg {
     box-shadow:
-      0 30px 60px -20px rgba(255, 77, 0, 0.28),
-      0 12px 24px -12px rgba(192, 80, 0, 0.18);
+      0 30px 80px -20px rgba(255, 77, 0, 0.55),
+      0 12px 28px -8px rgba(255, 122, 64, 0.35);
   }
 
-  /* ── Card surfaces — two tiers of emphasis on a light canvas ── */
+  /* ── Card surfaces — two tiers of emphasis on a dark canvas. The
+        subtle white-tint pattern keeps cards readable without a
+        competing background colour. ── */
   .surface-card {
-    @apply bg-surface-100 border border-surface-900/[0.08] rounded-2xl;
+    @apply bg-white/[0.04] border border-white/[0.08] rounded-2xl;
   }
 
   .surface-card-hover {
-    @apply bg-surface-100 border border-surface-900/[0.08] rounded-2xl
-           hover:bg-surface-200 hover:border-surface-900/[0.14]
+    @apply bg-white/[0.04] border border-white/[0.08] rounded-2xl
+           hover:bg-white/[0.07] hover:border-white/[0.14]
            transition-all duration-300 ease-out;
   }
 
   .surface-input {
-    @apply bg-surface-50 border border-surface-900/[0.14] text-surface-900
-           placeholder-surface-900/40
-           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30
-           focus-visible:outline-none focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/30
+    @apply bg-white/[0.05] border border-white/[0.12] text-surface-50
+           placeholder-white/40
+           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40
+           focus-visible:outline-none focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/40
            transition-all duration-200;
   }
 
@@ -160,7 +165,7 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2
            focus-visible:ring-primary-500 focus-visible:ring-offset-2
-           focus-visible:ring-offset-surface-50;
+           focus-visible:ring-offset-surface-950;
   }
 
   /* WCAG-friendly minimum hit area (44×44). Apply alongside padding utilities;
@@ -171,9 +176,9 @@
     min-width: 44px;
   }
 
-  /* Secondary text that still clears WCAG AA on the warm-white canvas. */
+  /* Secondary text that clears WCAG AA on the dark warm canvas. */
   .text-secondary {
-    color: rgba(20, 18, 16, 0.62);
+    color: rgba(255, 253, 250, 0.72);
   }
 
   /* ── Buttons ── */
@@ -184,9 +189,13 @@
            transition-all duration-150;
   }
 
+  /* Inverted high-emphasis button: warm-white pill with deep ink text.
+        Used as the secondary CTA on dark hero/CTA bands so the page
+        carries both ends of the brand pair (orange + warm white) on the
+        same row without two pure-orange buttons fighting each other. */
   .btn-secondary {
-    @apply bg-surface-100 border border-surface-900/[0.12] text-surface-900 font-medium
-           hover:bg-surface-200 hover:border-surface-900/[0.2]
+    @apply bg-surface-50 text-surface-950 font-medium
+           hover:bg-surface-100
            transition-all duration-150;
   }
 
@@ -197,47 +206,47 @@
   }
 
   .divider {
-    @apply border-surface-900/[0.08];
+    @apply border-white/[0.08];
   }
 
-  /* ── Frosted glass — dark-on-light tint, refined ── */
+  /* ── Frosted glass — white-on-dark tint, refined ── */
   .glass {
-    background: rgba(20, 18, 16, 0.03);
+    background: rgba(255, 253, 250, 0.04);
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
-    border: 1px solid rgba(20, 18, 16, 0.08);
+    border: 1px solid rgba(255, 253, 250, 0.08);
   }
 
   .glass-strong {
-    background: rgba(20, 18, 16, 0.05);
+    background: rgba(255, 253, 250, 0.06);
     backdrop-filter: blur(32px) saturate(140%);
     -webkit-backdrop-filter: blur(32px) saturate(140%);
-    border: 1px solid rgba(20, 18, 16, 0.1);
+    border: 1px solid rgba(255, 253, 250, 0.1);
   }
 
-  /* ── Tradition pills — flat & modern on light canvas ── */
+  /* ── Tradition pills — flat & modern on dark canvas ── */
   .meatball {
     position: relative;
     display: grid;
     place-items: center;
     border-radius: 1rem;
     flex-shrink: 0;
-    background: rgba(20, 18, 16, 0.04);
-    border: 1px solid rgba(20, 18, 16, 0.08);
+    background: rgba(255, 253, 250, 0.05);
+    border: 1px solid rgba(255, 253, 250, 0.08);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .meatball::before {
     display: none;
   }
   .meatball:hover {
-    background: rgba(20, 18, 16, 0.07);
-    border-color: rgba(20, 18, 16, 0.14);
+    background: rgba(255, 253, 250, 0.08);
+    border-color: rgba(255, 253, 250, 0.15);
     transform: translateY(-2px);
   }
   .meatball.active {
-    background: rgba(255, 77, 0, 0.14);
-    border-color: rgba(255, 77, 0, 0.55);
-    box-shadow: 0 0 24px -4px rgba(255, 77, 0, 0.45);
+    background: rgba(255, 77, 0, 0.22);
+    border-color: rgba(255, 77, 0, 0.7);
+    box-shadow: 0 0 32px -4px rgba(255, 77, 0, 0.55);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -260,16 +269,17 @@
     animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  /* ── Paper grain overlay — subtle warm noise that adds analog texture to
-        the warm-white canvas. Applied once globally in layout.tsx. The
-        SVG turbulence pattern tiles at 220px so the grain stays fine and
-        consistent at any zoom level. mix-blend-mode: multiply keeps the
-        noise from washing out colored content underneath. ── */
+  /* ── Paper grain overlay — fine warm noise that adds analog texture to
+        the dark canvas. Applied once globally in layout.tsx. The SVG
+        turbulence pattern tiles at 220px so the grain stays fine and
+        consistent at any zoom level. `screen` blend lifts the noise
+        slightly above the dark surface; on dark `multiply` would erase
+        instead of texture. ── */
   .grain {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.55'/></svg>");
     background-size: 220px 220px;
-    opacity: 0.045;
-    mix-blend-mode: multiply;
+    opacity: 0.06;
+    mix-blend-mode: screen;
   }
 }
 

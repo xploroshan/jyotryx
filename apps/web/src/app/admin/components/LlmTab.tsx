@@ -170,14 +170,14 @@ export function LlmTab({ token }: { token: string }) {
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-1.5 mb-6 p-1 rounded-xl bg-surface-900/[0.03] w-fit">
+      <div className="flex gap-1.5 mb-6 p-1 rounded-xl bg-white/[0.03] w-fit">
         {([
           { id: "providers" as const, label: "LLM Providers" },
           { id: "usage" as const, label: "Token Usage" },
           { id: "features" as const, label: "Feature Controls" },
         ]).map(t => (
           <button key={t.id} onClick={() => setAiSubTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${aiSubTab === t.id ? "bg-primary-600 text-surface-50" : "text-surface-900/40 hover:text-surface-900/60"}`}>
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${aiSubTab === t.id ? "bg-primary-600 text-surface-50" : "text-surface-50/40 hover:text-surface-50/60"}`}>
             {t.label}
           </button>
         ))}
@@ -187,24 +187,24 @@ export function LlmTab({ token }: { token: string }) {
       {aiSubTab === "providers" && (
         <div className="space-y-6">
           <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-surface-900 mb-4">Global Defaults</h3>
+            <h3 className="text-sm font-semibold text-surface-50 mb-4">Global Defaults</h3>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs text-surface-900/30 mb-1.5">Default Provider</label>
+                <label className="block text-xs text-surface-50/30 mb-1.5">Default Provider</label>
                 <select value={getAiSetting("llm.default.provider", "openai")} onChange={e => setAiSetting("llm.default.provider", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg surface-input text-sm">
                   {llmProviders.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-surface-900/30 mb-1.5">Default Model</label>
+                <label className="block text-xs text-surface-50/30 mb-1.5">Default Model</label>
                 <select value={getAiSetting("llm.default.model", "gpt-4o")} onChange={e => setAiSetting("llm.default.model", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg surface-input text-sm">
                   {(llmProviders.find(p => p.id === getAiSetting("llm.default.provider", "openai"))?.models || []).map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-surface-900/30 mb-1.5">Temperature</label>
+                <label className="block text-xs text-surface-50/30 mb-1.5">Temperature</label>
                 <input type="number" min={0} max={2} step={0.1} value={getAiSetting("llm.default.temperature", "0.7")} onChange={e => setAiSetting("llm.default.temperature", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
               </div>
@@ -216,17 +216,17 @@ export function LlmTab({ token }: { token: string }) {
               const enabled = getAiSetting(`llm.${provider.id}.enabled`, provider.id === "openai" ? "true" : "false") === "true";
               const hasKey = !!getAiSetting(provider.keyField);
               return (
-                <div key={provider.id} className={`surface-card p-5 transition-all ${enabled ? "ring-1 ring-surface-900/[0.1]" : "opacity-60"}`}>
+                <div key={provider.id} className={`surface-card p-5 transition-all ${enabled ? "ring-1 ring-white/[0.1]" : "opacity-60"}`}>
                   <div className="flex items-center justify-between mb-4">
                     <span className={`text-lg font-bold ${provider.color}`}>{provider.name}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" checked={enabled} onChange={e => setAiSetting(`llm.${provider.id}.enabled`, e.target.checked ? "true" : "false")} className="sr-only peer" />
-                      <div className="w-9 h-5 bg-surface-900/10 peer-checked:bg-primary-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] peer-checked:after:translate-x-full after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
+                      <div className="w-9 h-5 bg-white/10 peer-checked:bg-primary-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] peer-checked:after:translate-x-full after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
                     </label>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-[11px] text-surface-900/30 mb-1">API Key</label>
+                      <label className="block text-[11px] text-surface-50/30 mb-1">API Key</label>
                       <div className="flex gap-2">
                         <input type="password" placeholder={hasKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
                           className="flex-1 px-3 py-2 rounded-lg surface-input text-xs font-mono" />
@@ -242,12 +242,12 @@ export function LlmTab({ token }: { token: string }) {
                         </button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-surface-900/[0.04]">
+                    <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
                       <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${hasKey && enabled ? "bg-emerald-400" : hasKey ? "bg-amber-400" : "bg-surface-900/20"}`} />
-                        <span className="text-[11px] text-surface-900/40">{hasKey && enabled ? "Active" : hasKey ? "Key set, disabled" : "No key"}</span>
+                        <span className={`w-2 h-2 rounded-full ${hasKey && enabled ? "bg-emerald-400" : hasKey ? "bg-amber-400" : "bg-white/20"}`} />
+                        <span className="text-[11px] text-surface-50/40">{hasKey && enabled ? "Active" : hasKey ? "Key set, disabled" : "No key"}</span>
                       </div>
-                      <span className="text-[11px] text-surface-900/30">{provider.models.length} models</span>
+                      <span className="text-[11px] text-surface-50/30">{provider.models.length} models</span>
                     </div>
                   </div>
                 </div>
@@ -261,21 +261,21 @@ export function LlmTab({ token }: { token: string }) {
       {aiSubTab === "usage" && (
         <div className="space-y-6">
           <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-surface-900 mb-1">Global Token Budget</h3>
-            <p className="text-xs text-surface-900/30 mb-4">Set monthly token limits. When exceeded, features auto-fallback to Knowledge Base.</p>
+            <h3 className="text-sm font-semibold text-surface-50 mb-1">Global Token Budget</h3>
+            <p className="text-xs text-surface-50/30 mb-4">Set monthly token limits. When exceeded, features auto-fallback to Knowledge Base.</p>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[11px] text-surface-900/30 mb-1">Monthly Token Limit (global)</label>
+                <label className="block text-[11px] text-surface-50/30 mb-1">Monthly Token Limit (global)</label>
                 <input type="number" value={getAiSetting("llm.budget.monthly_tokens", "1000000")} onChange={e => setAiSetting("llm.budget.monthly_tokens", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
               </div>
               <div>
-                <label className="block text-[11px] text-surface-900/30 mb-1">Per-User Daily Limit</label>
+                <label className="block text-[11px] text-surface-50/30 mb-1">Per-User Daily Limit</label>
                 <input type="number" value={getAiSetting("llm.budget.user_daily_tokens", "10000")} onChange={e => setAiSetting("llm.budget.user_daily_tokens", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
               </div>
               <div>
-                <label className="block text-[11px] text-surface-900/30 mb-1">Fallback Behavior</label>
+                <label className="block text-[11px] text-surface-50/30 mb-1">Fallback Behavior</label>
                 <select value={getAiSetting("llm.budget.fallback", "knowledge_base")} onChange={e => setAiSetting("llm.budget.fallback", e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg surface-input text-sm">
                   <option value="knowledge_base">Use Knowledge Base</option>
@@ -287,18 +287,18 @@ export function LlmTab({ token }: { token: string }) {
           </div>
 
           <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-surface-900 mb-4">Token Usage by Feature</h3>
+            <h3 className="text-sm font-semibold text-surface-50 mb-4">Token Usage by Feature</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-surface-900/[0.06]">
-                    <th className="text-left text-[11px] text-surface-900/30 font-medium py-2 pr-4">Feature</th>
-                    <th className="text-right text-[11px] text-surface-900/30 font-medium py-2 px-3">Tokens/Call</th>
-                    <th className="text-right text-[11px] text-surface-900/30 font-medium py-2 px-3">Today</th>
-                    <th className="text-right text-[11px] text-surface-900/30 font-medium py-2 px-3">This Month</th>
-                    <th className="text-right text-[11px] text-surface-900/30 font-medium py-2 px-3">Calls</th>
-                    <th className="text-right text-[11px] text-surface-900/30 font-medium py-2 px-3">Est. Cost</th>
-                    <th className="text-right text-[11px] text-surface-900/30 font-medium py-2 pl-3">Limit</th>
+                  <tr className="border-b border-white/[0.06]">
+                    <th className="text-left text-[11px] text-surface-50/30 font-medium py-2 pr-4">Feature</th>
+                    <th className="text-right text-[11px] text-surface-50/30 font-medium py-2 px-3">Tokens/Call</th>
+                    <th className="text-right text-[11px] text-surface-50/30 font-medium py-2 px-3">Today</th>
+                    <th className="text-right text-[11px] text-surface-50/30 font-medium py-2 px-3">This Month</th>
+                    <th className="text-right text-[11px] text-surface-50/30 font-medium py-2 px-3">Calls</th>
+                    <th className="text-right text-[11px] text-surface-50/30 font-medium py-2 px-3">Est. Cost</th>
+                    <th className="text-right text-[11px] text-surface-50/30 font-medium py-2 pl-3">Limit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -312,15 +312,15 @@ export function LlmTab({ token }: { token: string }) {
                     const featureLimit = getAiSetting(`llm.limit.${feature.id}`, "");
                     const estCost = (monthlyTokens / 1000000 * 2.5).toFixed(2);
                     return (
-                      <tr key={feature.id} className="border-b border-surface-900/[0.03] hover:bg-surface-900/[0.02]">
+                      <tr key={feature.id} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
                         <td className="py-2.5 pr-4">
-                          <p className="text-surface-900/80 font-medium">{feature.name}</p>
-                          <p className="text-[11px] text-surface-900/30">{feature.desc}</p>
+                          <p className="text-surface-50/80 font-medium">{feature.name}</p>
+                          <p className="text-[11px] text-surface-50/30">{feature.desc}</p>
                         </td>
-                        <td className="text-right text-surface-900/40 px-3 tabular-nums">{feature.tokensPerCall}</td>
-                        <td className="text-right text-surface-900/60 px-3 tabular-nums">{todayTokens.toLocaleString()}</td>
-                        <td className="text-right text-surface-900/60 px-3 tabular-nums">{monthlyTokens.toLocaleString()}</td>
-                        <td className="text-right text-surface-900/40 px-3 tabular-nums">{calls.toLocaleString()}</td>
+                        <td className="text-right text-surface-50/40 px-3 tabular-nums">{feature.tokensPerCall}</td>
+                        <td className="text-right text-surface-50/60 px-3 tabular-nums">{todayTokens.toLocaleString()}</td>
+                        <td className="text-right text-surface-50/60 px-3 tabular-nums">{monthlyTokens.toLocaleString()}</td>
+                        <td className="text-right text-surface-50/40 px-3 tabular-nums">{calls.toLocaleString()}</td>
                         <td className="text-right text-accent-400/80 px-3 tabular-nums">${estCost}</td>
                         <td className="text-right pl-3">
                           <input type="number" placeholder="No limit" value={featureLimit} onChange={e => setAiSetting(`llm.limit.${feature.id}`, e.target.value)}
@@ -335,9 +335,9 @@ export function LlmTab({ token }: { token: string }) {
           </div>
 
           <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-surface-900 mb-1">Top Token Consumers</h3>
-            <p className="text-xs text-surface-900/30 mb-4">Users ranked by token consumption this month. Set per-user overrides from the Users tab.</p>
-            <p className="text-sm text-surface-900/30 text-center py-6">Load the Users tab to see per-user token stats.</p>
+            <h3 className="text-sm font-semibold text-surface-50 mb-1">Top Token Consumers</h3>
+            <p className="text-xs text-surface-50/30 mb-4">Users ranked by token consumption this month. Set per-user overrides from the Users tab.</p>
+            <p className="text-sm text-surface-50/30 text-center py-6">Load the Users tab to see per-user token stats.</p>
           </div>
         </div>
       )}
@@ -346,9 +346,9 @@ export function LlmTab({ token }: { token: string }) {
       {aiSubTab === "features" && (
         <div className="space-y-6">
           <div className="surface-card p-4 flex flex-wrap gap-4 text-xs">
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary-500" /> <span className="text-surface-900/40">Using AI / LLM</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> <span className="text-surface-900/40">Using Knowledge Base only</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> <span className="text-surface-900/40">Hybrid (AI + KB fallback)</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary-500" /> <span className="text-surface-50/40">Using AI / LLM</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> <span className="text-surface-50/40">Using Knowledge Base only</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> <span className="text-surface-50/40">Hybrid (AI + KB fallback)</span></div>
           </div>
 
           <div className="space-y-2">
@@ -363,9 +363,9 @@ export function LlmTab({ token }: { token: string }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${mode === "ai" ? "bg-primary-500" : mode === "hybrid" ? "bg-amber-500" : "bg-emerald-500"}`} />
-                        <h4 className="text-sm font-medium text-surface-900">{feature.name}</h4>
+                        <h4 className="text-sm font-medium text-surface-50">{feature.name}</h4>
                       </div>
-                      <p className="text-[11px] text-surface-900/30 mt-0.5 ml-4">{feature.desc}</p>
+                      <p className="text-[11px] text-surface-50/30 mt-0.5 ml-4">{feature.desc}</p>
                     </div>
                     <div className="sm:text-right shrink-0">
                       <span className={`text-[11px] font-medium ${feature.sugColor}`}>{feature.suggestion}</span>
@@ -374,8 +374,8 @@ export function LlmTab({ token }: { token: string }) {
                       {(["ai", "hybrid", "kb"] as const).map(m => (
                         <button key={m} onClick={() => setAiSetting(`llm.feature.${feature.id}.mode`, m)}
                           className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${mode === m
-                            ? m === "ai" ? "bg-primary-600 text-surface-50" : m === "hybrid" ? "bg-amber-600 text-surface-900" : "bg-emerald-600 text-surface-900"
-                            : "bg-surface-900/[0.04] text-surface-900/30 hover:text-surface-900/50"
+                            ? m === "ai" ? "bg-primary-600 text-surface-50" : m === "hybrid" ? "bg-amber-600 text-surface-50" : "bg-emerald-600 text-surface-50"
+                            : "bg-white/[0.04] text-surface-50/30 hover:text-surface-50/50"
                           }`}>
                           {m === "ai" ? "AI" : m === "hybrid" ? "Hybrid" : "KB Only"}
                         </button>
@@ -383,9 +383,9 @@ export function LlmTab({ token }: { token: string }) {
                     </div>
                   </div>
                   {(mode === "ai" || mode === "hybrid") && (
-                    <div className="mt-3 pt-3 border-t border-surface-900/[0.04] grid grid-cols-2 sm:grid-cols-4 gap-3 ml-4">
+                    <div className="mt-3 pt-3 border-t border-white/[0.04] grid grid-cols-2 sm:grid-cols-4 gap-3 ml-4">
                       <div>
-                        <label className="block text-[10px] text-surface-900/25 mb-1">Provider Override</label>
+                        <label className="block text-[10px] text-surface-50/25 mb-1">Provider Override</label>
                         <select value={provider} onChange={e => setAiSetting(`llm.feature.${feature.id}.provider`, e.target.value)}
                           className="w-full px-2 py-1.5 rounded surface-input text-xs">
                           <option value="">Use Default</option>
@@ -395,7 +395,7 @@ export function LlmTab({ token }: { token: string }) {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-surface-900/25 mb-1">Model Override</label>
+                        <label className="block text-[10px] text-surface-50/25 mb-1">Model Override</label>
                         <select value={model} onChange={e => setAiSetting(`llm.feature.${feature.id}.model`, e.target.value)}
                           className="w-full px-2 py-1.5 rounded surface-input text-xs">
                           <option value="">Use Default</option>
@@ -405,13 +405,13 @@ export function LlmTab({ token }: { token: string }) {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-surface-900/25 mb-1">Max Tokens</label>
+                        <label className="block text-[10px] text-surface-50/25 mb-1">Max Tokens</label>
                         <input type="number" placeholder="Default" value={maxTokens} onChange={e => setAiSetting(`llm.feature.${feature.id}.max_tokens`, e.target.value)}
                           className="w-full px-2 py-1.5 rounded surface-input text-xs" />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-surface-900/25 mb-1">Est. Tokens/Call</label>
-                        <p className="text-xs text-surface-900/40 py-1.5">{feature.tokensPerCall}</p>
+                        <label className="block text-[10px] text-surface-50/25 mb-1">Est. Tokens/Call</label>
+                        <p className="text-xs text-surface-50/40 py-1.5">{feature.tokensPerCall}</p>
                       </div>
                     </div>
                   )}
@@ -423,16 +423,16 @@ export function LlmTab({ token }: { token: string }) {
           <div className="p-4 rounded-2xl bg-gradient-to-r from-primary-600/8 to-accent-500/5 border border-primary-500/10">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary-500/15 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-4 h-4 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-primary-600 mb-1">Cost Optimization Suggestion</h4>
-                <p className="text-xs text-surface-900/50 leading-relaxed">
-                  <strong className="text-surface-900/70">Panchang, Muhurat, Numerology, Kundli Matching, and Daily Horoscope</strong> can run entirely on the Knowledge Base with rule-based computation, saving ~60% of token costs.
-                  Only <strong className="text-surface-900/70">AI Chat, Palmistry (vision), and Report Generation</strong> truly require LLM calls.
-                  Use <strong className="text-surface-900/70">Hybrid mode</strong> for features like Kundli Interpretation to use KB first and fall back to AI only for complex queries.
+                <h4 className="text-sm font-semibold text-primary-400 mb-1">Cost Optimization Suggestion</h4>
+                <p className="text-xs text-surface-50/50 leading-relaxed">
+                  <strong className="text-surface-50/70">Panchang, Muhurat, Numerology, Kundli Matching, and Daily Horoscope</strong> can run entirely on the Knowledge Base with rule-based computation, saving ~60% of token costs.
+                  Only <strong className="text-surface-50/70">AI Chat, Palmistry (vision), and Report Generation</strong> truly require LLM calls.
+                  Use <strong className="text-surface-50/70">Hybrid mode</strong> for features like Kundli Interpretation to use KB first and fall back to AI only for complex queries.
                 </p>
               </div>
             </div>

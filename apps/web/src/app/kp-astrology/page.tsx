@@ -57,12 +57,12 @@ export default function KPAstrologyPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 fade-in-up">
-      <h1 className="text-3xl font-bold text-surface-900 mb-2">{t.kp.title}</h1>
-      <p className="text-surface-900/40 mb-8">{t.kp.description}</p>
+      <h1 className="text-3xl font-bold text-surface-50 mb-2">{t.kp.title}</h1>
+      <p className="text-surface-50/40 mb-8">{t.kp.description}</p>
 
       <div className="surface-card p-6 mb-6">
         {prefilled && (
-          <div className="mb-4 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-700 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs flex items-center gap-2">
             <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -71,24 +71,24 @@ export default function KPAstrologyPage() {
         )}
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-sm text-surface-900/60 mb-1 block">{t.form.dateOfBirth}</label>
+            <label className="text-sm text-surface-50/60 mb-1 block">{t.form.dateOfBirth}</label>
             <input type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div>
-            <label className="text-sm text-surface-900/60 mb-1 block">{t.form.timeOfBirth}</label>
+            <label className="text-sm text-surface-50/60 mb-1 block">{t.form.timeOfBirth}</label>
             <input type="time" value={form.timeOfBirth} onChange={(e) => setForm({ ...form, timeOfBirth: e.target.value })} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div>
-            <label className="text-sm text-surface-900/60 mb-1 block">{t.form.placeOfBirth}</label>
+            <label className="text-sm text-surface-50/60 mb-1 block">{t.form.placeOfBirth}</label>
             <input type="text" value={form.placeOfBirth} onChange={(e) => setForm({ ...form, placeOfBirth: e.target.value })} placeholder={t.form.placePlaceholder} className="w-full px-4 py-3 rounded-xl surface-input" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-sm text-surface-900/60 mb-1 block">{t.form.latitude}</label>
+              <label className="text-sm text-surface-50/60 mb-1 block">{t.form.latitude}</label>
               <input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="28.61" className="w-full px-4 py-3 rounded-xl surface-input" />
             </div>
             <div>
-              <label className="text-sm text-surface-900/60 mb-1 block">{t.form.longitude}</label>
+              <label className="text-sm text-surface-50/60 mb-1 block">{t.form.longitude}</label>
               <input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="77.20" className="w-full px-4 py-3 rounded-xl surface-input" />
             </div>
           </div>
@@ -103,16 +103,16 @@ export default function KPAstrologyPage() {
       {result && (
         <div className="space-y-6">
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-900 mb-4">{t.kp.cuspTable}</h3>
+            <h3 className="text-lg font-semibold text-surface-50 mb-4">{t.kp.cuspTable}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-surface-900/40 border-b border-surface-900/[0.06]">
+                <thead><tr className="text-surface-50/40 border-b border-white/[0.06]">
                   <th className="text-left py-2 px-2">{t.kp.cusp}</th><th className="text-left py-2 px-2">{t.kp.sign}</th><th className="text-left py-2 px-2">{t.kp.nakshatra}</th><th className="text-left py-2 px-2">{t.kp.starLord}</th><th className="text-left py-2 px-2">{t.kp.subLord}</th><th className="text-right py-2 px-2">{t.kp.longitude}</th>
                 </tr></thead>
                 <tbody>
                   {result.cusps.map((c) => (
-                    <tr key={c.cusp} className="border-b border-surface-900/[0.03] text-surface-900/70">
-                      <td className="py-2 px-2 font-medium text-primary-600">{c.cusp}</td>
+                    <tr key={c.cusp} className="border-b border-white/[0.03] text-surface-50/70">
+                      <td className="py-2 px-2 font-medium text-primary-400">{c.cusp}</td>
                       <td className="py-2 px-2">{c.sign}</td>
                       <td className="py-2 px-2">{c.nakshatra}</td>
                       <td className="py-2 px-2">{c.starLord}</td>
@@ -126,16 +126,16 @@ export default function KPAstrologyPage() {
           </div>
 
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-900 mb-4">{t.kp.planetPositions}</h3>
+            <h3 className="text-lg font-semibold text-surface-50 mb-4">{t.kp.planetPositions}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-surface-900/40 border-b border-surface-900/[0.06]">
+                <thead><tr className="text-surface-50/40 border-b border-white/[0.06]">
                   <th className="text-left py-2 px-2">{t.kp.planet}</th><th className="text-left py-2 px-2">{t.kp.sign}</th><th className="text-left py-2 px-2">{t.kp.nakshatra}</th><th className="text-left py-2 px-2">{t.kp.starLord}</th><th className="text-left py-2 px-2">{t.kp.subLord}</th><th className="text-right py-2 px-2">{t.kp.degree}</th>
                 </tr></thead>
                 <tbody>
                   {result.planets.map((p) => (
-                    <tr key={p.planet} className="border-b border-surface-900/[0.03] text-surface-900/70">
-                      <td className="py-2 px-2 font-medium text-surface-900">{p.planet}</td>
+                    <tr key={p.planet} className="border-b border-white/[0.03] text-surface-50/70">
+                      <td className="py-2 px-2 font-medium text-surface-50">{p.planet}</td>
                       <td className="py-2 px-2">{p.sign}</td>
                       <td className="py-2 px-2">{p.nakshatra}</td>
                       <td className="py-2 px-2">{p.starLord}</td>
@@ -149,12 +149,12 @@ export default function KPAstrologyPage() {
           </div>
 
           <div className="surface-card p-6">
-            <h3 className="text-lg font-semibold text-surface-900 mb-4">{t.kp.houseSignificators}</h3>
+            <h3 className="text-lg font-semibold text-surface-50 mb-4">{t.kp.houseSignificators}</h3>
             <div className="grid sm:grid-cols-3 gap-3">
               {Object.entries(result.significators).map(([house, planets]) => (
-                <div key={house} className="bg-surface-900/[0.03] rounded-lg p-3">
-                  <div className="text-sm font-medium text-primary-600">{t.kp.house} {house}</div>
-                  <div className="text-xs text-surface-900/60 mt-1">{(planets as string[]).length > 0 ? (planets as string[]).join(", ") : t.kp.none}</div>
+                <div key={house} className="bg-white/[0.03] rounded-lg p-3">
+                  <div className="text-sm font-medium text-primary-400">{t.kp.house} {house}</div>
+                  <div className="text-xs text-surface-50/60 mt-1">{(planets as string[]).length > 0 ? (planets as string[]).join(", ") : t.kp.none}</div>
                 </div>
               ))}
             </div>

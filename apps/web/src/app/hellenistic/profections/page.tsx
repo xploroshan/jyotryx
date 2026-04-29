@@ -48,7 +48,7 @@ export default function HellenisticProfectionsPage() {
       descriptionKey="featurePages.hellenisticProfections.description"
     >
       {!isAuthenticated ? (
-        <p className="text-sm text-surface-900/60 text-center py-6">
+        <p className="text-sm text-surface-50/60 text-center py-6">
           {fp.loginPrompt}
         </p>
       ) : (
@@ -59,7 +59,7 @@ export default function HellenisticProfectionsPage() {
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
               required
-              className="w-full bg-surface-900/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-900"
+              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
             />
             <button
               type="submit"
@@ -72,7 +72,7 @@ export default function HellenisticProfectionsPage() {
           </form>
 
           {result && (
-            <div className="mt-6 rounded-xl border divider bg-surface-900/[0.03] p-4 space-y-2 text-sm text-surface-900/80">
+            <div className="mt-6 rounded-xl border divider bg-white/[0.03] p-4 space-y-2 text-sm text-surface-50/80">
               <div>{fp.age}: {result.ageYears}</div>
               <div>{fp.profectedHouse}: {result.profectedHouse}</div>
               <div>{fp.profectedSign}: {result.profectedSign}</div>

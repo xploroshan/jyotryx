@@ -31,7 +31,7 @@ export default function TraditionMarquee() {
   return (
     <section
       aria-hidden
-      className="relative border-y border-surface-900/[0.08] py-6 sm:py-8 overflow-hidden bg-surface-100/60"
+      className="relative border-y border-white/[0.08] py-6 sm:py-8 overflow-hidden bg-white/[0.03]"
     >
       <Track labels={labels} reverse={false} duration={55} />
       <Track labels={labels} reverse offsetTop="mt-2" duration={70} />
@@ -66,7 +66,7 @@ function Track({
         {seq.map((label, i) => (
           <span key={`${reverse ? 'r' : 'f'}-${i}`} className="flex items-center">
             <span
-              className="serif-italic text-surface-900/85 whitespace-nowrap px-8 sm:px-12"
+              className="serif-italic text-surface-50/85 whitespace-nowrap px-8 sm:px-12"
               style={{ fontSize: 'clamp(40px, 6vw, 96px)', lineHeight: 1 }}
             >
               {label}

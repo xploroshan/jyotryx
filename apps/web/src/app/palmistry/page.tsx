@@ -613,7 +613,7 @@ export default function PalmistryPage() {
   ];
 
   const strengthColor = (s: "strong" | "moderate" | "weak") =>
-    s === "strong" ? "text-emerald-400" : s === "moderate" ? "text-accent-400" : "text-surface-900/40";
+    s === "strong" ? "text-emerald-400" : s === "moderate" ? "text-accent-400" : "text-surface-50/40";
 
   const strengthLabel = (s: "strong" | "moderate" | "weak") =>
     s === "strong" ? t.palmistry.strengthStrong : s === "moderate" ? t.palmistry.strengthModerate : t.palmistry.strengthWeak;
@@ -639,13 +639,13 @@ export default function PalmistryPage() {
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 fade-in-up">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-surface-900/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-surface-50/60 mb-4">
             {t.palmistry.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">
             {t.palmistry.title} <span className="text-gradient">{t.palmistry.titleHighlight}</span>
           </h1>
-          <p className="text-surface-900/60 max-w-xl mx-auto">{t.palmistry.description}</p>
+          <p className="text-surface-50/60 max-w-xl mx-auto">{t.palmistry.description}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -654,10 +654,10 @@ export default function PalmistryPage() {
             {/* Step 1: Gender */}
             <div className="surface-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/20 text-[10px] font-semibold text-primary-700">1</span>
-                <h3 className="text-sm font-semibold text-surface-900">{t.palmistry.selectGender}</h3>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/20 text-[10px] font-semibold text-primary-300">1</span>
+                <h3 className="text-sm font-semibold text-surface-50">{t.palmistry.selectGender}</h3>
               </div>
-              <p className="text-xs text-surface-900/60 mb-3">
+              <p className="text-xs text-surface-50/60 mb-3">
                 {gender === "male" ? t.palmistry.genderMaleNote : gender === "female" ? t.palmistry.genderFemaleNote : t.palmistry.genderDefaultNote}
               </p>
               <div role="radiogroup" aria-label={t.palmistry.selectGender} className="flex gap-3">
@@ -667,8 +667,8 @@ export default function PalmistryPage() {
                   onClick={() => setGender("male")}
                   className={`focus-ring touch-target flex-1 py-3 rounded-xl text-sm font-medium transition-all ${
                     gender === "male"
-                      ? "btn-primary text-surface-900"
-                      : "bg-surface-900/[0.03] text-surface-900/70 hover:text-surface-900 hover:bg-surface-900/[0.06]"
+                      ? "btn-primary text-surface-50"
+                      : "bg-white/[0.03] text-surface-50/70 hover:text-surface-50 hover:bg-white/[0.06]"
                   }`}
                 >
                   {t.palmistry.male}
@@ -679,8 +679,8 @@ export default function PalmistryPage() {
                   onClick={() => setGender("female")}
                   className={`focus-ring touch-target flex-1 py-3 rounded-xl text-sm font-medium transition-all ${
                     gender === "female"
-                      ? "btn-primary text-surface-900"
-                      : "bg-surface-900/[0.03] text-surface-900/70 hover:text-surface-900 hover:bg-surface-900/[0.06]"
+                      ? "btn-primary text-surface-50"
+                      : "bg-white/[0.03] text-surface-50/70 hover:text-surface-50 hover:bg-white/[0.06]"
                   }`}
                 >
                   {t.palmistry.female}
@@ -691,8 +691,8 @@ export default function PalmistryPage() {
             {/* Step 2: Image */}
             <div className="surface-card p-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/20 text-[10px] font-semibold text-primary-700">2</span>
-                <h3 className="text-sm font-semibold text-surface-900">{uploadHeading}</h3>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/20 text-[10px] font-semibold text-primary-300">2</span>
+                <h3 className="text-sm font-semibold text-surface-50">{uploadHeading}</h3>
               </div>
 
               <div
@@ -709,8 +709,8 @@ export default function PalmistryPage() {
                     fileRef.current?.click();
                   }
                 }}
-                className={`focus-ring rounded-xl border-2 border-dashed border-surface-900/10 p-6 flex flex-col items-center justify-center min-h-[320px] cursor-pointer transition-all ${
-                  isDragging ? "border-primary-500 bg-primary-500/10" : "hover:bg-surface-900/[0.04]"
+                className={`focus-ring rounded-xl border-2 border-dashed border-white/10 p-6 flex flex-col items-center justify-center min-h-[320px] cursor-pointer transition-all ${
+                  isDragging ? "border-primary-500 bg-primary-500/10" : "hover:bg-white/[0.04]"
                 }`}
               >
                 <input
@@ -736,7 +736,7 @@ export default function PalmistryPage() {
                         setAnalysis(null);
                       }}
                       aria-label={t.common.close}
-                      className="focus-ring absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-surface-900/70 hover:text-surface-900"
+                      className="focus-ring absolute top-2 right-2 p-2 rounded-full bg-gray-900/80 text-surface-50/70 hover:text-surface-50"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -748,8 +748,8 @@ export default function PalmistryPage() {
                     <div className="w-40 mb-3">
                       <PalmDiagram analysis={null} />
                     </div>
-                    <p className="text-sm text-surface-900/60 text-center mb-1">{dragDropText}</p>
-                    <p className="text-[11px] text-surface-900/30 text-center">{t.palmistry.fileFormats}</p>
+                    <p className="text-sm text-surface-50/60 text-center mb-1">{dragDropText}</p>
+                    <p className="text-[11px] text-surface-50/30 text-center">{t.palmistry.fileFormats}</p>
                   </>
                 )}
               </div>
@@ -759,7 +759,7 @@ export default function PalmistryPage() {
                 <button
                   type="button"
                   onClick={() => setShowCamera(true)}
-                  className="focus-ring touch-target rounded-xl bg-surface-900/[0.04] py-2.5 text-sm font-medium text-surface-900 hover:bg-surface-900/[0.08] transition flex items-center justify-center gap-2"
+                  className="focus-ring touch-target rounded-xl bg-white/[0.04] py-2.5 text-sm font-medium text-surface-50 hover:bg-white/[0.08] transition flex items-center justify-center gap-2"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
@@ -770,7 +770,7 @@ export default function PalmistryPage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="focus-ring touch-target rounded-xl bg-surface-900/[0.04] py-2.5 text-sm font-medium text-surface-900 hover:bg-surface-900/[0.08] transition flex items-center justify-center gap-2"
+                  className="focus-ring touch-target rounded-xl bg-white/[0.04] py-2.5 text-sm font-medium text-surface-50 hover:bg-white/[0.08] transition flex items-center justify-center gap-2"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
@@ -780,7 +780,7 @@ export default function PalmistryPage() {
                 </button>
               </div>
 
-              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-900/[0.02] text-[11px] text-surface-900/50">
+              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.02] text-[11px] text-surface-50/50">
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
                 </svg>
@@ -802,7 +802,7 @@ export default function PalmistryPage() {
               <button
                 onClick={handleAnalyze}
                 disabled={analyzing}
-                className="focus-ring w-full py-4 rounded-xl btn-primary text-surface-900 font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="focus-ring w-full py-4 rounded-xl btn-primary text-surface-50 font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {analyzing ? (
                   <span className="flex items-center justify-center gap-2">
@@ -820,22 +820,22 @@ export default function PalmistryPage() {
 
             {/* Tips */}
             <div className="surface-card p-6">
-              <h3 className="text-sm font-semibold text-surface-900 mb-3">{t.palmistry.tipsTitle}</h3>
-              <ul className="space-y-2 text-xs text-surface-900/40">
+              <h3 className="text-sm font-semibold text-surface-50 mb-3">{t.palmistry.tipsTitle}</h3>
+              <ul className="space-y-2 text-xs text-surface-50/40">
                 <li className="flex items-start gap-2">
-                  <span className="text-primary-600 mt-0.5">1.</span>
+                  <span className="text-primary-400 mt-0.5">1.</span>
                   {gender === "male" ? t.palmistry.tipRightPalm : gender === "female" ? t.palmistry.tipLeftPalm : t.palmistry.tipSelectGender}
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary-600 mt-0.5">2.</span>
+                  <span className="text-primary-400 mt-0.5">2.</span>
                   {t.palmistry.tipFlatPalm}
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary-600 mt-0.5">3.</span>
+                  <span className="text-primary-400 mt-0.5">3.</span>
                   {t.palmistry.tipLighting}
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary-600 mt-0.5">4.</span>
+                  <span className="text-primary-400 mt-0.5">4.</span>
                   {t.palmistry.tipFingers}
                 </li>
               </ul>
@@ -849,15 +849,15 @@ export default function PalmistryPage() {
                 <h2 className="text-lg font-bold text-gradient mb-4">{t.palmistry.results}</h2>
 
                 {analysis.atAGlance && (
-                  <section className="mb-5 p-4 rounded-xl bg-surface-900/[0.04] border border-surface-900/[0.06]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-surface-900/40 text-center mb-3">{t.palmistry.atAGlance}</p>
+                  <section className="mb-5 p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-surface-50/40 text-center mb-3">{t.palmistry.atAGlance}</p>
                     <div className="grid grid-cols-2 gap-3">
                       {analysis.atAGlance.strengths && (
                         <div className="flex gap-2">
                           <span aria-hidden className="mt-0.5 text-emerald-400">✦</span>
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.atAGlanceStrengths}</p>
-                            <p className="text-xs text-surface-900/80 leading-snug">{analysis.atAGlance.strengths}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.atAGlanceStrengths}</p>
+                            <p className="text-xs text-surface-50/80 leading-snug">{analysis.atAGlance.strengths}</p>
                           </div>
                         </div>
                       )}
@@ -865,8 +865,8 @@ export default function PalmistryPage() {
                         <div className="flex gap-2">
                           <span aria-hidden className="mt-0.5 text-amber-300">✸</span>
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.atAGlanceLifePath}</p>
-                            <p className="text-xs text-surface-900/80 leading-snug">{analysis.atAGlance.lifePath}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.atAGlanceLifePath}</p>
+                            <p className="text-xs text-surface-50/80 leading-snug">{analysis.atAGlance.lifePath}</p>
                           </div>
                         </div>
                       )}
@@ -874,17 +874,17 @@ export default function PalmistryPage() {
                         <div className="flex gap-2">
                           <span aria-hidden className="mt-0.5 text-rose-400">♥</span>
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.atAGlanceLove}</p>
-                            <p className="text-xs text-surface-900/80 leading-snug">{analysis.atAGlance.love}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.atAGlanceLove}</p>
+                            <p className="text-xs text-surface-50/80 leading-snug">{analysis.atAGlance.love}</p>
                           </div>
                         </div>
                       )}
                       {analysis.atAGlance.bestSuitedFor && (
                         <div className="flex gap-2">
-                          <span aria-hidden className="mt-0.5 text-primary-700">⚑</span>
+                          <span aria-hidden className="mt-0.5 text-primary-300">⚑</span>
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.atAGlanceBestSuitedFor}</p>
-                            <p className="text-xs text-surface-900/80 leading-snug">{analysis.atAGlance.bestSuitedFor}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.atAGlanceBestSuitedFor}</p>
+                            <p className="text-xs text-surface-50/80 leading-snug">{analysis.atAGlance.bestSuitedFor}</p>
                           </div>
                         </div>
                       )}
@@ -894,36 +894,36 @@ export default function PalmistryPage() {
 
                 {analysis.handOverview && (
                   <section className="mb-5 p-4 rounded-xl bg-primary-500/[0.04] border border-primary-500/15">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-primary-700/80 text-center mb-3">{t.palmistry.handOverview}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-primary-300/80 text-center mb-3">{t.palmistry.handOverview}</p>
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5">
                       {analysis.handOverview.handType && (
-                        <div className="border-b border-surface-900/[0.04] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.handOverviewType}</dt>
-                          <dd className="text-xs text-surface-900/80 leading-snug">{analysis.handOverview.handType}</dd>
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.handOverviewType}</dt>
+                          <dd className="text-xs text-surface-50/80 leading-snug">{analysis.handOverview.handType}</dd>
                         </div>
                       )}
                       {analysis.handOverview.palmShape && (
-                        <div className="border-b border-surface-900/[0.04] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.handOverviewShape}</dt>
-                          <dd className="text-xs text-surface-900/80 leading-snug">{analysis.handOverview.palmShape}</dd>
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.handOverviewShape}</dt>
+                          <dd className="text-xs text-surface-50/80 leading-snug">{analysis.handOverview.palmShape}</dd>
                         </div>
                       )}
                       {analysis.handOverview.fingers && (
-                        <div className="border-b border-surface-900/[0.04] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.handOverviewFingers}</dt>
-                          <dd className="text-xs text-surface-900/80 leading-snug">{analysis.handOverview.fingers}</dd>
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.handOverviewFingers}</dt>
+                          <dd className="text-xs text-surface-50/80 leading-snug">{analysis.handOverview.fingers}</dd>
                         </div>
                       )}
                       {analysis.handOverview.thumb && (
-                        <div className="border-b border-surface-900/[0.04] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.handOverviewThumb}</dt>
-                          <dd className="text-xs text-surface-900/80 leading-snug">{analysis.handOverview.thumb}</dd>
+                        <div className="border-b border-white/[0.04] pb-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.handOverviewThumb}</dt>
+                          <dd className="text-xs text-surface-50/80 leading-snug">{analysis.handOverview.thumb}</dd>
                         </div>
                       )}
                       {analysis.handOverview.dominantHand && (
-                        <div className="border-b border-surface-900/[0.04] pb-2 sm:col-span-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-surface-900/40 mb-0.5">{t.palmistry.handOverviewDominantHand}</dt>
-                          <dd className="text-xs text-surface-900/80 leading-snug">{analysis.handOverview.dominantHand}</dd>
+                        <div className="border-b border-white/[0.04] pb-2 sm:col-span-2">
+                          <dt className="text-[10px] uppercase tracking-wider text-surface-50/40 mb-0.5">{t.palmistry.handOverviewDominantHand}</dt>
+                          <dd className="text-xs text-surface-50/80 leading-snug">{analysis.handOverview.dominantHand}</dd>
                         </div>
                       )}
                     </dl>
@@ -932,15 +932,15 @@ export default function PalmistryPage() {
 
                 {!analysis.handOverview && analysis.handShape && (
                   <div className="mb-4 p-3 rounded-xl bg-primary-500/[0.06] border border-primary-500/20">
-                    <p className="text-[11px] uppercase tracking-wider text-primary-700/80 mb-1">{t.palmistry.handShape}</p>
-                    <p className="text-sm font-semibold text-surface-900">{analysis.handShape.type}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-primary-300/80 mb-1">{t.palmistry.handShape}</p>
+                    <p className="text-sm font-semibold text-surface-50">{analysis.handShape.type}</p>
                     {analysis.handShape.description && (
-                      <p className="mt-1 text-xs text-surface-900/60 leading-relaxed">{analysis.handShape.description}</p>
+                      <p className="mt-1 text-xs text-surface-50/60 leading-relaxed">{analysis.handShape.description}</p>
                     )}
                   </div>
                 )}
 
-                <div className="mb-6 p-4 rounded-xl bg-surface-900/[0.02]">
+                <div className="mb-6 p-4 rounded-xl bg-white/[0.02]">
                   <PalmDiagram
                     analysis={analysis}
                     onFeatureSelect={handleFeatureSelect}
@@ -948,7 +948,7 @@ export default function PalmistryPage() {
                   />
                 </div>
 
-                <div role="tablist" aria-label={t.palmistry.results} className="flex gap-1 mb-6 rounded-xl bg-surface-900/[0.03] p-1 overflow-x-auto no-scrollbar">
+                <div role="tablist" aria-label={t.palmistry.results} className="flex gap-1 mb-6 rounded-xl bg-white/[0.03] p-1 overflow-x-auto no-scrollbar">
                   {tabs.map((tab) => (
                     <button
                       key={tab.id}
@@ -957,8 +957,8 @@ export default function PalmistryPage() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`focus-ring flex-shrink-0 flex-1 py-2 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                         activeTab === tab.id
-                          ? "btn-primary text-surface-900"
-                          : "text-surface-900/70 hover:text-surface-900"
+                          ? "btn-primary text-surface-50"
+                          : "text-surface-50/70 hover:text-surface-50"
                       }`}
                     >
                       {tab.label}
@@ -974,16 +974,16 @@ export default function PalmistryPage() {
                           key={line.name}
                           className={`p-4 rounded-xl transition-all cursor-pointer ${
                             selectedFeature === line.name
-                              ? "bg-surface-900/[0.08] ring-1 ring-primary-500/30"
-                              : "bg-surface-900/[0.03] hover:bg-surface-900/[0.05]"
+                              ? "bg-white/[0.08] ring-1 ring-primary-500/30"
+                              : "bg-white/[0.03] hover:bg-white/[0.05]"
                           }`}
                           onClick={() => setSelectedFeature(selectedFeature === line.name ? null : line.name)}
                         >
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <div>
-                              <h4 className="font-semibold text-surface-900 text-sm leading-tight">{line.name}</h4>
+                              <h4 className="font-semibold text-surface-50 text-sm leading-tight">{line.name}</h4>
                               {line.subtitle && (
-                                <p className="text-[10px] uppercase tracking-wider text-primary-700/70 mt-0.5">{line.subtitle}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-primary-300/70 mt-0.5">{line.subtitle}</p>
                               )}
                             </div>
                             <span className={`text-[10px] font-medium uppercase tracking-wider whitespace-nowrap ${strengthColor(line.strength)}`}>
@@ -993,15 +993,15 @@ export default function PalmistryPage() {
                           {line.observations.length > 0 && (
                             <ul className="mt-2 space-y-1">
                               {line.observations.map((obs, i) => (
-                                <li key={i} className="flex items-start gap-1.5 text-[11px] text-surface-900/60 leading-snug">
-                                  <span aria-hidden className="mt-1 inline-block h-1 w-1 rounded-full bg-surface-900/40 shrink-0" />
+                                <li key={i} className="flex items-start gap-1.5 text-[11px] text-surface-50/60 leading-snug">
+                                  <span aria-hidden className="mt-1 inline-block h-1 w-1 rounded-full bg-white/40 shrink-0" />
                                   <span>{obs}</span>
                                 </li>
                               ))}
                             </ul>
                           )}
                           {line.description && (
-                            <p className="mt-2 text-xs text-surface-900/50 leading-relaxed italic">{line.description}</p>
+                            <p className="mt-2 text-xs text-surface-50/50 leading-relaxed italic">{line.description}</p>
                           )}
                         </div>
                       ))}
@@ -1011,13 +1011,13 @@ export default function PalmistryPage() {
                   {activeTab === "minor" && (
                     analysis.minorLines.length > 0 ? (
                       analysis.minorLines.map((line) => (
-                        <div key={line.name} className="p-4 rounded-xl bg-surface-900/[0.03]">
-                          <h4 className="font-semibold text-surface-900 text-sm mb-2">{line.name}</h4>
-                          <p className="text-xs text-surface-900/40 leading-relaxed">{line.description}</p>
+                        <div key={line.name} className="p-4 rounded-xl bg-white/[0.03]">
+                          <h4 className="font-semibold text-surface-50 text-sm mb-2">{line.name}</h4>
+                          <p className="text-xs text-surface-50/40 leading-relaxed">{line.description}</p>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-surface-900/30 text-center py-4">{t.palmistry.noMinorLines}</p>
+                      <p className="text-sm text-surface-50/30 text-center py-4">{t.palmistry.noMinorLines}</p>
                     )
                   )}
 
@@ -1027,20 +1027,20 @@ export default function PalmistryPage() {
                         key={mount.name}
                         className={`p-4 rounded-xl transition-all cursor-pointer ${
                           selectedFeature === mount.name
-                            ? "bg-surface-900/[0.08] ring-1 ring-purple-500/30"
-                            : "bg-surface-900/[0.03] hover:bg-surface-900/[0.05]"
+                            ? "bg-white/[0.08] ring-1 ring-purple-500/30"
+                            : "bg-white/[0.03] hover:bg-white/[0.05]"
                         }`}
                         onClick={() => setSelectedFeature(selectedFeature === mount.name ? null : mount.name)}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-surface-900 text-sm">{mount.name}</h4>
+                          <h4 className="font-semibold text-surface-50 text-sm">{mount.name}</h4>
                           <span className={`text-xs font-medium ${
                             mount.prominence === "high" ? "text-emerald-400" : "text-accent-400"
                           }`}>
                             {prominenceLabel(mount.prominence)}
                           </span>
                         </div>
-                        <p className="text-xs text-surface-900/40 leading-relaxed">{mount.description}</p>
+                        <p className="text-xs text-surface-50/40 leading-relaxed">{mount.description}</p>
                       </div>
                     ))}
 
@@ -1048,13 +1048,13 @@ export default function PalmistryPage() {
                     <div className="space-y-4">
                       {analysis.insights.length > 0 ? (
                         analysis.insights.map((insight, i) => (
-                          <div key={i} className="p-4 rounded-xl bg-surface-900/[0.03]">
-                            <h4 className="font-semibold text-surface-900 text-sm mb-2">{insight.label}</h4>
-                            <p className="text-xs text-surface-900/50 leading-relaxed whitespace-pre-line">{insight.text}</p>
+                          <div key={i} className="p-4 rounded-xl bg-white/[0.03]">
+                            <h4 className="font-semibold text-surface-50 text-sm mb-2">{insight.label}</h4>
+                            <p className="text-xs text-surface-50/50 leading-relaxed whitespace-pre-line">{insight.text}</p>
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-surface-900/30 text-center py-4">{t.palmistry.noInsights}</p>
+                        <p className="text-sm text-surface-50/30 text-center py-4">{t.palmistry.noInsights}</p>
                       )}
                       {analysis.cautions && (
                         <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/20">
@@ -1063,13 +1063,13 @@ export default function PalmistryPage() {
                         </div>
                       )}
                       {analysis.fingerAnalysis.length > 0 && (
-                        <div className="p-4 rounded-xl bg-surface-900/[0.03]">
-                          <h4 className="font-semibold text-surface-900 text-sm mb-3">{t.palmistry.fingerAnalysis}</h4>
+                        <div className="p-4 rounded-xl bg-white/[0.03]">
+                          <h4 className="font-semibold text-surface-50 text-sm mb-3">{t.palmistry.fingerAnalysis}</h4>
                           <div className="space-y-2">
                             {analysis.fingerAnalysis.map((f, i) => (
                               <div key={i} className="flex items-start gap-2">
-                                <span className="text-primary-600 text-xs font-medium min-w-[80px]">{f.finger}</span>
-                                <p className="text-xs text-surface-900/40">{f.interpretation}</p>
+                                <span className="text-primary-400 text-xs font-medium min-w-[80px]">{f.finger}</span>
+                                <p className="text-xs text-surface-50/40">{f.interpretation}</p>
                               </div>
                             ))}
                           </div>
@@ -1082,19 +1082,19 @@ export default function PalmistryPage() {
                     analysis.timingInsights.length > 0 ? (
                       <div className="space-y-3">
                         {analysis.timingInsights.map((ti, i) => (
-                          <div key={i} className="p-4 rounded-xl bg-surface-900/[0.03]">
+                          <div key={i} className="p-4 rounded-xl bg-white/[0.03]">
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-surface-900 text-sm">{ti.ageRange}</h4>
+                              <h4 className="font-semibold text-surface-50 text-sm">{ti.ageRange}</h4>
                               {ti.area && (
-                                <span className="text-[10px] uppercase tracking-wider text-primary-700/80">{ti.area}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-primary-300/80">{ti.area}</span>
                               )}
                             </div>
-                            <p className="text-xs text-surface-900/50 leading-relaxed">{ti.description}</p>
+                            <p className="text-xs text-surface-50/50 leading-relaxed">{ti.description}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-surface-900/30 text-center py-4">{t.palmistry.noTimingInsights}</p>
+                      <p className="text-sm text-surface-50/30 text-center py-4">{t.palmistry.noTimingInsights}</p>
                     )
                   )}
 
@@ -1102,27 +1102,27 @@ export default function PalmistryPage() {
                     analysis.specialMarkings.length > 0 ? (
                       <div className="space-y-3">
                         {analysis.specialMarkings.map((m, i) => (
-                          <div key={i} className="p-4 rounded-xl bg-surface-900/[0.03]">
+                          <div key={i} className="p-4 rounded-xl bg-white/[0.03]">
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-surface-900 text-sm">{m.name}</h4>
+                              <h4 className="font-semibold text-surface-50 text-sm">{m.name}</h4>
                               {m.location && (
-                                <span className="text-[10px] text-surface-900/40">{m.location}</span>
+                                <span className="text-[10px] text-surface-50/40">{m.location}</span>
                               )}
                             </div>
-                            <p className="text-xs text-surface-900/50 leading-relaxed">{m.interpretation}</p>
+                            <p className="text-xs text-surface-50/50 leading-relaxed">{m.interpretation}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-surface-900/30 text-center py-4">{t.palmistry.noSpecialMarkings}</p>
+                      <p className="text-sm text-surface-50/30 text-center py-4">{t.palmistry.noSpecialMarkings}</p>
                     )
                   )}
                 </div>
 
                 {analysis.closingAffirmation && (
-                  <div className="mt-6 pt-5 border-t border-surface-900/[0.06] text-center">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-primary-700/60 mb-2">{t.palmistry.yourPath}</p>
-                    <p className="text-sm italic text-surface-900/80 leading-relaxed max-w-md mx-auto">
+                  <div className="mt-6 pt-5 border-t border-white/[0.06] text-center">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-primary-300/60 mb-2">{t.palmistry.yourPath}</p>
+                    <p className="text-sm italic text-surface-50/80 leading-relaxed max-w-md mx-auto">
                       {analysis.closingAffirmation}
                     </p>
                   </div>
@@ -1131,13 +1131,13 @@ export default function PalmistryPage() {
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     onClick={handleDownload}
-                    className="focus-ring py-3 rounded-xl btn-secondary text-sm font-medium text-primary-700"
+                    className="focus-ring py-3 rounded-xl btn-secondary text-sm font-medium text-primary-300"
                   >
                     {t.palmistry.downloadReport}
                   </button>
                   <button
                     onClick={handlePrint}
-                    className="focus-ring py-3 rounded-xl bg-surface-900/[0.04] text-sm font-medium text-surface-900/80 hover:text-surface-900"
+                    className="focus-ring py-3 rounded-xl bg-white/[0.04] text-sm font-medium text-surface-50/80 hover:text-surface-50"
                   >
                     {t.palmistry.printReport}
                   </button>
@@ -1148,7 +1148,7 @@ export default function PalmistryPage() {
                       setImageFile(null);
                       setSelectedFeature(null);
                     }}
-                    className="focus-ring py-3 rounded-xl bg-surface-900/[0.04] text-sm font-medium text-surface-900/70 hover:text-surface-900"
+                    className="focus-ring py-3 rounded-xl bg-white/[0.04] text-sm font-medium text-surface-50/70 hover:text-surface-50"
                   >
                     {t.palmistry.startOver}
                   </button>
@@ -1156,13 +1156,13 @@ export default function PalmistryPage() {
               </div>
             ) : (
               <div className="surface-card p-12 flex flex-col items-center justify-center min-h-[400px] text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500/10 text-primary-700">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500/10 text-primary-300">
                   <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-surface-900/80 mb-2">{t.palmistry.analysisResults}</h3>
-                <p className="text-sm text-surface-900/60 max-w-xs">{t.palmistry.uploadPrompt}</p>
+                <h3 className="text-lg font-semibold text-surface-50/80 mb-2">{t.palmistry.analysisResults}</h3>
+                <p className="text-sm text-surface-50/60 max-w-xs">{t.palmistry.uploadPrompt}</p>
               </div>
             )}
           </div>
@@ -1170,7 +1170,7 @@ export default function PalmistryPage() {
 
         {/* Disclaimer */}
         <div className="mt-12 text-center">
-          <p className="text-xs text-surface-900/20">{t.palmistry.disclaimer}</p>
+          <p className="text-xs text-surface-50/20">{t.palmistry.disclaimer}</p>
         </div>
       </div>
 

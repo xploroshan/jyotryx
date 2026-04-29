@@ -84,7 +84,7 @@ export default function VedicDoshaPage() {
       case 'severe':
         return 'bg-red-500/20 text-red-300 border-red-500/30';
       default:
-        return 'bg-surface-900/10 text-surface-900/60 border-surface-900/10';
+        return 'bg-white/10 text-surface-50/60 border-white/10';
     }
   };
 
@@ -93,33 +93,33 @@ export default function VedicDoshaPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
-      <nav className="mb-5 text-sm text-surface-900/40">
-        <Link href={`/${cfg.slug}`} className="hover:text-surface-900 transition-colors">
+      <nav className="mb-5 text-sm text-surface-50/40">
+        <Link href={`/${cfg.slug}`} className="hover:text-surface-50 transition-colors">
           {traditionName}
         </Link>{' '}
-        <span className="text-surface-900/20">/</span>{' '}
-        <span className="text-surface-900/60">{featureName}</span>
+        <span className="text-surface-50/20">/</span>{' '}
+        <span className="text-surface-50/60">{featureName}</span>
       </nav>
 
       <section
-        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-surface-900/[0.06] px-8 sm:px-10 py-10 mb-8`}
+        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-10 py-10 mb-8`}
       >
         <div className="flex items-center gap-5">
           <span className="text-4xl leading-none" aria-hidden>
             🔥
           </span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-surface-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-surface-50 tracking-tight">
               {featureName}
             </h1>
-            <p className="mt-2 text-sm text-surface-900/50 leading-relaxed">{t.kundli.doshaNote}</p>
+            <p className="mt-2 text-sm text-surface-50/50 leading-relaxed">{t.kundli.doshaNote}</p>
           </div>
         </div>
       </section>
 
       {!isAuthenticated && (
-        <div className="rounded-2xl bg-surface-900/[0.02] border border-surface-900/[0.06] p-10 text-center">
-          <p className="text-surface-900/50 mb-5">{t.kundli.loginRequired}</p>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+          <p className="text-surface-50/50 mb-5">{t.kundli.loginRequired}</p>
           <Link
             href="/auth?mode=login"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
@@ -130,8 +130,8 @@ export default function VedicDoshaPage() {
       )}
 
       {isAuthenticated && !hasBirthDetails && (
-        <div className="rounded-2xl bg-surface-900/[0.02] border border-surface-900/[0.06] p-10 text-center">
-          <p className="text-surface-900/50 mb-5">{t.kundli.doshaComplete}</p>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+          <p className="text-surface-50/50 mb-5">{t.kundli.doshaComplete}</p>
           <Link
             href="/profile"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
@@ -142,7 +142,7 @@ export default function VedicDoshaPage() {
       )}
 
       {isAuthenticated && hasBirthDetails && loading && (
-        <div className="rounded-2xl bg-surface-900/[0.02] border border-surface-900/[0.06] p-10 text-center text-surface-900/40 text-sm">
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-10 text-center text-surface-50/40 text-sm">
           {t.common.loading}
         </div>
       )}
@@ -156,9 +156,9 @@ export default function VedicDoshaPage() {
       {data?.doshas && data.doshas.length > 0 && (
         <div className="space-y-4">
           {data.doshas.map((d, i) => (
-            <div key={i} className="rounded-2xl bg-surface-900/[0.02] border border-surface-900/[0.06] p-6 sm:p-8">
+            <div key={i} className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 sm:p-8">
               <div className="flex items-start justify-between gap-3 mb-4">
-                <h3 className="font-semibold text-surface-900 text-lg">
+                <h3 className="font-semibold text-surface-50 text-lg">
                   {d.name}
                 </h3>
                 <span
@@ -167,15 +167,15 @@ export default function VedicDoshaPage() {
                   {severityLabel(d)}
                 </span>
               </div>
-              <p className="text-sm text-surface-900/50 leading-relaxed mb-4">
+              <p className="text-sm text-surface-50/50 leading-relaxed mb-4">
                 {d.description}
               </p>
               {d.remedies && d.remedies.length > 0 && (
-                <div className="rounded-xl bg-surface-900/[0.03] border border-surface-900/[0.05] p-4 sm:p-5">
-                  <p className="text-[11px] uppercase tracking-widest text-primary-600 font-medium mb-2">
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4 sm:p-5">
+                  <p className="text-[11px] uppercase tracking-widest text-primary-400 font-medium mb-2">
                     {t.kundli.remedies}
                   </p>
-                  <ul className="text-sm text-surface-900/60 list-disc pl-5 space-y-1.5">
+                  <ul className="text-sm text-surface-50/60 list-disc pl-5 space-y-1.5">
                     {d.remedies.map((r, j) => (
                       <li key={j}>{r}</li>
                     ))}

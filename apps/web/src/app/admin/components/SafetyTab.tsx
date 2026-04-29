@@ -77,13 +77,13 @@ export function SafetyTab({ token }: { token: string }) {
       )}
 
       <div className="flex items-center gap-3 mb-6">
-        <label htmlFor="safety-status" className="text-xs text-surface-900/40">Status:</label>
+        <label htmlFor="safety-status" className="text-xs text-surface-50/40">Status:</label>
         <select
           id="safety-status"
           data-testid="safety-status"
           value={status}
           onChange={(e) => setStatus(e.target.value as FlaggedStatus)}
-          className="px-3 py-2 rounded-xl bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm"
+          className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -91,15 +91,15 @@ export function SafetyTab({ token }: { token: string }) {
         </select>
         <button
           onClick={load}
-          className="px-3 py-2 rounded-xl surface-card text-sm text-surface-900/60 hover:bg-surface-900/10"
+          className="px-3 py-2 rounded-xl surface-card text-sm text-surface-50/60 hover:bg-white/10"
         >
           Refresh
         </button>
-        {loading && <span className="text-xs text-surface-900/30">Loading…</span>}
+        {loading && <span className="text-xs text-surface-50/30">Loading…</span>}
       </div>
 
       {rows.length === 0 ? (
-        <div className="surface-card p-6 text-surface-900/30 text-sm">
+        <div className="surface-card p-6 text-surface-50/30 text-sm">
           {status === "pending"
             ? "No pending flagged messages — zero backlog 🎉"
             : `No ${status} messages.`}
@@ -114,10 +114,10 @@ export function SafetyTab({ token }: { token: string }) {
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="text-sm text-surface-900">{r.userName ?? "(deleted user)"}</p>
-                  <p className="text-xs text-surface-900/40">{r.userEmail ?? r.userId}</p>
+                  <p className="text-sm text-surface-50">{r.userName ?? "(deleted user)"}</p>
+                  <p className="text-xs text-surface-50/40">{r.userEmail ?? r.userId}</p>
                 </div>
-                <span className="text-xs text-surface-900/30 tabular-nums">
+                <span className="text-xs text-surface-50/30 tabular-nums">
                   {new Date(r.createdAt).toLocaleString("en-IN", {
                     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                   })}
@@ -138,7 +138,7 @@ export function SafetyTab({ token }: { token: string }) {
               )}
 
               {r.preview && (
-                <div className="mb-3 p-3 rounded-lg bg-surface-900/[0.03] text-sm text-surface-900/80 whitespace-pre-wrap">
+                <div className="mb-3 p-3 rounded-lg bg-white/[0.03] text-sm text-surface-50/80 whitespace-pre-wrap">
                   {r.preview}
                 </div>
               )}
@@ -179,10 +179,10 @@ function ScoreGrid({ scores }: { scores: Record<string, number> }) {
       {entries.map(([k, v]) => {
         const pct = Math.round((v as number) * 100);
         const tone =
-          pct >= 50 ? "text-red-400" : pct >= 20 ? "text-amber-400" : "text-surface-900/60";
+          pct >= 50 ? "text-red-400" : pct >= 20 ? "text-amber-400" : "text-surface-50/60";
         return (
-          <div key={k} className="text-[11px] flex items-center justify-between bg-surface-900/[0.02] px-2 py-1 rounded">
-            <span className="text-surface-900/50 truncate max-w-[120px]">{k}</span>
+          <div key={k} className="text-[11px] flex items-center justify-between bg-white/[0.02] px-2 py-1 rounded">
+            <span className="text-surface-50/50 truncate max-w-[120px]">{k}</span>
             <span className={`tabular-nums ${tone}`}>{pct}%</span>
           </div>
         );

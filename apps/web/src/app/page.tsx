@@ -17,24 +17,40 @@ const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
 
 /**
  * Renders a highlight phrase with the .accent-underline scoped to the
- * brand name "Jyotron" only. The brand string is locale-stable (proper
- * noun) so a literal split is safe; if a translation drops it for any
- * reason we fall back to the plain phrase with no underline.
+ * brand name "Jyotron" only. Each fragment carries its own gradient
+ * because `text-gradient-sunrise` clips background to text — putting it
+ * on a parent leaves the children with `color: transparent` and no
+ * gradient of their own (they go invisible). Brand string is locale-
+ * stable; if a translation drops it for any reason the whole phrase
+ * still renders with the gradient and no underline.
  */
 function renderHighlight(text: string) {
   const BRAND = "Jyotron";
-  if (!text.includes(BRAND)) return text;
+  if (!text.includes(BRAND)) {
+    return <span className="text-gradient-sunrise">{text}</span>;
+  }
   const parts = text.split(BRAND);
-  return parts.flatMap((p, i) =>
-    i < parts.length - 1
-      ? [
-          <span key={`p-${i}`}>{p}</span>,
-          <span key={`b-${i}`} className="accent-underline">
-            {BRAND}
-          </span>,
-        ]
-      : [<span key={`p-${i}`}>{p}</span>],
-  );
+  const out: React.ReactNode[] = [];
+  parts.forEach((p, i) => {
+    if (p) {
+      out.push(
+        <span key={`p-${i}`} className="text-gradient-sunrise">
+          {p}
+        </span>,
+      );
+    }
+    if (i < parts.length - 1) {
+      out.push(
+        <span
+          key={`b-${i}`}
+          className="text-gradient-sunrise accent-underline"
+        >
+          {BRAND}
+        </span>,
+      );
+    }
+  });
+  return <>{out}</>;
 }
 
 /**
@@ -105,13 +121,13 @@ export default function HomePage() {
                 value prop never falls below the fold on mobile. The
                 orb follows on small screens. */}
             <div className="col-span-12 lg:col-span-7 order-1">
-              <p className="font-display italic text-[15px] sm:text-base text-primary-700 mb-6 sm:mb-8 tracking-wide">
+              <p className="font-display italic text-[15px] sm:text-base text-primary-300 mb-6 sm:mb-8 tracking-wide">
                 — {t.home.badge}
               </p>
 
               <h1
                 aria-label={`${t.home.heroTitle} ${t.home.heroHighlight}`}
-                className="font-display font-semibold text-surface-900 leading-[0.92] tracking-[-0.02em] mb-8"
+                className="font-display font-semibold text-surface-50 leading-[0.92] tracking-[-0.02em] mb-8"
                 style={{ fontSize: "clamp(56px, 9vw, 144px)" }}
               >
                 <span className="block">
@@ -125,12 +141,13 @@ export default function HomePage() {
                     ease: [0.22, 1, 0.36, 1],
                     delay: 0.45,
                   }}
-                  className="serif-italic text-gradient-sunrise inline-block mt-1"
+                  className="serif-italic inline-block mt-1"
                 >
-                  {/* The accent-underline is scoped to the brand name only —
-                      otherwise on multi-line wrap the underline lands under
-                      the wrong line, and visually under-emphasises the brand
-                      that the editorial moment is meant to celebrate. */}
+                  {/* The gradient lives per-fragment inside renderHighlight
+                      (not on this parent) so the brand word stays visible
+                      under bg-clip-text. The accent-underline is scoped to
+                      the brand only — multi-line wrap would otherwise
+                      mis-place the stripe under the wrong line. */}
                   {renderHighlight(t.home.heroHighlight)}
                 </motion.span>
               </h1>
@@ -153,7 +170,7 @@ export default function HomePage() {
                 <CtaPrimary href="/chat" label={t.home.startConsultation} />
                 <Link
                   href="/palmistry"
-                  className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-900 hover:text-primary-600 transition-colors focus-ring rounded"
+                  className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-50 hover:text-primary-400 transition-colors focus-ring rounded"
                 >
                   {t.home.tryPalmReading}
                   <span
@@ -184,18 +201,18 @@ export default function HomePage() {
           {/* Stats — thin baseline strip, hairline dividers between items.
               Lives outside the grid so it spans full hero width regardless
               of whether the orb has bled. */}
-          <Stagger.Container className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 border-t border-surface-900/[0.08]">
+          <Stagger.Container className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 border-t border-white/[0.08]">
             {stats.map((stat, i) => (
               <Stagger.Item
                 key={stat.label}
                 className={`flex items-baseline gap-3 py-5 ${
-                  i > 0 ? "sm:border-l border-surface-900/[0.08]" : ""
+                  i > 0 ? "sm:border-l border-white/[0.08]" : ""
                 } ${i > 0 ? "sm:pl-6" : ""}`}
               >
-                <span className="font-display font-semibold text-surface-900 text-3xl sm:text-4xl tabular-nums leading-none">
+                <span className="font-display font-semibold text-surface-50 text-3xl sm:text-4xl tabular-nums leading-none">
                   {stat.value}
                 </span>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-surface-900/55">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-surface-50/55">
                   {stat.label}
                 </span>
               </Stagger.Item>
@@ -241,7 +258,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-3xl text-center">
           <h2
-            className="font-display font-semibold text-surface-900 mb-6 tracking-[-0.01em] leading-[1.02]"
+            className="font-display font-semibold text-surface-50 mb-6 tracking-[-0.01em] leading-[1.02]"
             style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
           >
             {t.home.ctaTitle}{" "}
@@ -291,11 +308,11 @@ function HowItWorks({
     <section className="py-28 sm:py-36 px-5 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-20">
-          <p className="text-[12px] font-medium text-primary-700 uppercase tracking-[0.22em] mb-4">
+          <p className="text-[12px] font-medium text-primary-300 uppercase tracking-[0.22em] mb-4">
             {eyebrow}
           </p>
           <h2
-            className="font-display font-semibold text-surface-900 tracking-[-0.01em] leading-[1.0]"
+            className="font-display font-semibold text-surface-50 tracking-[-0.01em] leading-[1.0]"
             style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
           >
             <span className="serif-italic accent-underline text-gradient-sunrise">Jyotron</span>{" "}
@@ -316,7 +333,7 @@ function HowItWorks({
             {steps.map((item) => (
               <Stagger.Item
                 key={item.step}
-                className="group relative rounded-2xl bg-surface-50 border border-surface-900/[0.08] shadow-warm-sm pt-16 px-7 pb-7 hover:-translate-y-1 hover:shadow-warm-lg hover:border-surface-900/[0.14] transition-all duration-300"
+                className="group relative rounded-2xl bg-surface-950 border border-white/[0.08] shadow-warm-sm pt-16 px-7 pb-7 hover:-translate-y-1 hover:shadow-warm-lg hover:border-white/[0.14] transition-all duration-300"
               >
                 {/* Hollow editorial numeral — breaks out of the card top-left.
                     The transparent fill + webkit-text-stroke gives the
@@ -332,7 +349,7 @@ function HowItWorks({
                 >
                   {item.step}
                 </span>
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-900 mb-3 leading-tight relative z-10">
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-50 mb-3 leading-tight relative z-10">
                   {item.title}
                 </h3>
                 <p className="text-sm text-secondary leading-relaxed relative z-10">{item.desc}</p>

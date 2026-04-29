@@ -56,18 +56,18 @@ export function ContentTab({ token }: { token: string }) {
       {error ? (
         <TabError message={error} onRetry={load} />
       ) : !contentStats ? (
-        <div className="surface-card p-8 text-center text-surface-900/40 text-sm">Loading content stats…</div>
+        <div className="surface-card p-8 text-center text-surface-50/40 text-sm">Loading content stats…</div>
       ) : (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {contentSections.map((section) => (
               <div key={section.title} className="surface-card p-5">
-                <h3 className="font-bold text-surface-900 mb-1">{section.title}</h3>
-                <p className="text-xs text-surface-900/40 mb-3">{section.desc}</p>
-                <div className="flex items-center justify-between pt-3 border-t border-surface-900/[0.06]">
+                <h3 className="font-bold text-surface-50 mb-1">{section.title}</h3>
+                <p className="text-xs text-surface-50/40 mb-3">{section.desc}</p>
+                <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
                   <div>
                     <p className="text-lg font-bold text-gradient">{section.items.toLocaleString()}</p>
-                    <p className="text-[10px] text-surface-900/30">items</p>
+                    <p className="text-[10px] text-surface-50/30">items</p>
                   </div>
                 </div>
               </div>
@@ -76,13 +76,13 @@ export function ContentTab({ token }: { token: string }) {
 
           {contentStats.knowledgeCategories.length > 0 && (
             <>
-              <h3 className="text-lg font-bold text-surface-900 mt-8 mb-4">Knowledge Base by Category</h3>
+              <h3 className="text-lg font-bold text-surface-50 mt-8 mb-4">Knowledge Base by Category</h3>
               <div className="surface-card p-6">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {contentStats.knowledgeCategories.map((cat) => (
-                    <div key={cat.category} className="flex items-center justify-between p-3 rounded-lg bg-surface-900/[0.03]">
-                      <span className="text-sm text-surface-900/70 capitalize">{cat.category}</span>
-                      <span className="text-sm font-bold text-primary-600">{cat.count.toLocaleString()}</span>
+                    <div key={cat.category} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03]">
+                      <span className="text-sm text-surface-50/70 capitalize">{cat.category}</span>
+                      <span className="text-sm font-bold text-primary-400">{cat.count.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>

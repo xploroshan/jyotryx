@@ -85,11 +85,11 @@ export default function TraditionRail() {
   const pillActive =
     'bg-primary-500 text-surface-50 shadow-[0_6px_20px_-6px_rgba(255,77,0,0.55)]';
   const pillInactive =
-    'text-surface-900/55 hover:text-surface-900 hover:bg-surface-900/[0.04]';
+    'text-surface-50/55 hover:text-surface-50 hover:bg-white/[0.04]';
 
   return (
     <div
-      className="sticky top-16 z-40 bg-surface-50/70 backdrop-blur-2xl border-b border-surface-900/[0.04]"
+      className="sticky top-16 z-40 bg-surface-950/70 backdrop-blur-2xl border-b border-white/[0.04]"
       role="tablist"
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >
@@ -114,7 +114,7 @@ export default function TraditionRail() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <SunGlyph size={18} active={isMyDayActive} />
+                <SunGlyph size={20} active={isMyDayActive} />
                 <span className={isMyDayActive ? 'font-display font-semibold' : ''}>
                   {t.nav.myDay}
                 </span>
@@ -144,7 +144,7 @@ export default function TraditionRail() {
                       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <TraditionGlyph id={cfg.id} size={18} />
+                  <TraditionGlyph id={cfg.id} size={20} />
                   <span className={isActive ? 'font-display font-semibold' : ''}>
                     {label}
                   </span>
