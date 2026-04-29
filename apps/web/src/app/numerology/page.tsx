@@ -87,7 +87,7 @@ export default function NumerologyPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-surface-950" />
+      <div className="absolute inset-0 bg-surface-50" />
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-12 fade-in-up">
 
         {/* Header */}
@@ -95,11 +95,11 @@ export default function NumerologyPage() {
           <h1 className="text-4xl font-bold mb-2">
             <span className="text-gradient">{t.numerology.title}</span> {t.numerology.titleHighlight}
           </h1>
-          <p className="text-white/40 text-sm">{t.numerology.description}</p>
+          <p className="text-surface-900/40 text-sm">{t.numerology.description}</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 rounded-xl bg-white/[0.03] p-1 w-fit mx-auto">
+        <div className="flex gap-2 mb-8 rounded-xl bg-surface-900/[0.03] p-1 w-fit mx-auto">
           {[
             { id: "name" as const, label: t.numerology.nameAnalysis },
             { id: "brand" as const, label: t.numerology.brandBusiness },
@@ -108,7 +108,7 @@ export default function NumerologyPage() {
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setError(""); }}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id ? "btn-primary" : "text-white/40 hover:text-white"
+                activeTab === tab.id ? "btn-primary" : "text-surface-900/40 hover:text-surface-900"
               }`}
             >
               {tab.label}
@@ -124,7 +124,7 @@ export default function NumerologyPage() {
         {activeTab === "name" && (
           <div>
             <div className="surface-card p-6 mb-6">
-              <label className="block text-xs text-white/30 mb-2">{t.numerology.enterNameLabel}</label>
+              <label className="block text-xs text-surface-900/30 mb-2">{t.numerology.enterNameLabel}</label>
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -154,9 +154,9 @@ export default function NumerologyPage() {
                     { label: t.numerology.personalityNumber, num: nameResult.personalityNumber, desc: nameResult.personalityMeaning },
                   ].map((item) => (
                     <div key={item.label} className="surface-card p-5 text-center">
-                      <p className="text-xs text-white/30 mb-1">{item.label}</p>
+                      <p className="text-xs text-surface-900/30 mb-1">{item.label}</p>
                       <p className="text-4xl font-bold text-gradient mb-2">{item.num}</p>
-                      <p className="text-[11px] text-white/40 leading-relaxed">{item.desc.substring(0, 80)}...</p>
+                      <p className="text-[11px] text-surface-900/40 leading-relaxed">{item.desc.substring(0, 80)}...</p>
                     </div>
                   ))}
                 </div>
@@ -165,9 +165,9 @@ export default function NumerologyPage() {
                 <div className={`p-4 rounded-xl border ${vc.bg}`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-sm font-semibold ${vc.color}`}>{vc.label}</span>
-                    <span className="text-xs text-white/30">{t.numerology.rulingPlanet}: {nameResult.rulingPlanet}</span>
+                    <span className="text-xs text-surface-900/30">{t.numerology.rulingPlanet}: {nameResult.rulingPlanet}</span>
                   </div>
-                  <p className="text-sm text-white/60 mt-2">{nameResult.suggestion}</p>
+                  <p className="text-sm text-surface-900/60 mt-2">{nameResult.suggestion}</p>
                 </div>
 
                 {/* Strengths & Cautions */}
@@ -176,7 +176,7 @@ export default function NumerologyPage() {
                     <h3 className="text-sm font-semibold text-emerald-400 mb-3">{t.numerology.strengths}</h3>
                     <ul className="space-y-1.5">
                       {nameResult.strengths.map((s, i) => (
-                        <li key={i} className="text-sm text-white/60 flex items-center gap-2">
+                        <li key={i} className="text-sm text-surface-900/60 flex items-center gap-2">
                           <span className="text-emerald-400">&#10003;</span> {s}
                         </li>
                       ))}
@@ -186,7 +186,7 @@ export default function NumerologyPage() {
                     <h3 className="text-sm font-semibold text-amber-400 mb-3">{t.numerology.cautions}</h3>
                     <ul className="space-y-1.5">
                       {nameResult.cautions.map((c, i) => (
-                        <li key={i} className="text-sm text-white/60 flex items-center gap-2">
+                        <li key={i} className="text-sm text-surface-900/60 flex items-center gap-2">
                           <span className="text-amber-400">!</span> {c}
                         </li>
                       ))}
@@ -198,16 +198,16 @@ export default function NumerologyPage() {
                 <div className="surface-card p-5">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-white/30 mb-1">{t.numerology.luckyColors}</p>
-                      <p className="text-sm text-white/70">{nameResult.luckyColors.join(", ")}</p>
+                      <p className="text-xs text-surface-900/30 mb-1">{t.numerology.luckyColors}</p>
+                      <p className="text-sm text-surface-900/70">{nameResult.luckyColors.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-white/30 mb-1">{t.numerology.bestDays}</p>
-                      <p className="text-sm text-white/70">{nameResult.bestDaysToUse.join(", ")}</p>
+                      <p className="text-xs text-surface-900/30 mb-1">{t.numerology.bestDays}</p>
+                      <p className="text-sm text-surface-900/70">{nameResult.bestDaysToUse.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-white/30 mb-1">{t.numerology.compatibility}</p>
-                      <p className="text-sm text-white/70">{nameResult.compatibility}</p>
+                      <p className="text-xs text-surface-900/30 mb-1">{t.numerology.compatibility}</p>
+                      <p className="text-sm text-surface-900/70">{nameResult.compatibility}</p>
                     </div>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export default function NumerologyPage() {
         {activeTab === "brand" && (
           <div>
             <div className="surface-card p-6 mb-6">
-              <label className="block text-xs text-white/30 mb-2">{t.numerology.enterBrandLabel}</label>
+              <label className="block text-xs text-surface-900/30 mb-2">{t.numerology.enterBrandLabel}</label>
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -245,25 +245,25 @@ export default function NumerologyPage() {
                 {/* Score + Number */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="surface-card p-5 text-center">
-                    <p className="text-xs text-white/30 mb-1">{t.numerology.nameNumber}</p>
+                    <p className="text-xs text-surface-900/30 mb-1">{t.numerology.nameNumber}</p>
                     <p className="text-5xl font-bold text-gradient mb-2">{brandResult.nameNumber}</p>
-                    <p className="text-sm text-white/50">{brandResult.vibration}</p>
+                    <p className="text-sm text-surface-900/50">{brandResult.vibration}</p>
                   </div>
                   <div className="surface-card p-5 text-center">
-                    <p className="text-xs text-white/30 mb-1">{t.numerology.businessScore}</p>
+                    <p className="text-xs text-surface-900/30 mb-1">{t.numerology.businessScore}</p>
                     <p className="text-5xl font-bold mb-2">
                       <span className={brandResult.overallScore >= 7 ? "text-emerald-400" : brandResult.overallScore >= 5 ? "text-amber-400" : "text-red-400"}>
                         {brandResult.overallScore}
                       </span>
-                      <span className="text-lg text-white/20">/10</span>
+                      <span className="text-lg text-surface-900/20">/10</span>
                     </p>
-                    <p className="text-sm text-white/50">{t.numerology.ruledBy} {brandResult.planetaryRuler}</p>
+                    <p className="text-sm text-surface-900/50">{t.numerology.ruledBy} {brandResult.planetaryRuler}</p>
                   </div>
                 </div>
 
                 {/* Recommendation */}
                 <div className="surface-card p-5">
-                  <p className="text-sm text-white/70">{brandResult.recommendation}</p>
+                  <p className="text-sm text-surface-900/70">{brandResult.recommendation}</p>
                 </div>
 
                 {/* Suitable / Avoid */}
@@ -290,12 +290,12 @@ export default function NumerologyPage() {
                 <div className="surface-card p-5">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-white/30 mb-1">{t.numerology.bestLaunchDays}</p>
-                      <p className="text-sm text-white/70">{brandResult.bestLaunchDays.join(", ")}</p>
+                      <p className="text-xs text-surface-900/30 mb-1">{t.numerology.bestLaunchDays}</p>
+                      <p className="text-sm text-surface-900/70">{brandResult.bestLaunchDays.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-white/30 mb-1">{t.numerology.luckyColors}</p>
-                      <p className="text-sm text-white/70">{brandResult.luckyColors.join(", ")}</p>
+                      <p className="text-xs text-surface-900/30 mb-1">{t.numerology.luckyColors}</p>
+                      <p className="text-sm text-surface-900/70">{brandResult.luckyColors.join(", ")}</p>
                     </div>
                   </div>
                 </div>

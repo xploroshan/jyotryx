@@ -42,11 +42,11 @@ export default function TraditionFeatureStub({
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-20">
-      <nav className="mb-4 text-xs text-white/50">
-        <Link href={`/${cfg.slug}`} className="hover:text-white">
+      <nav className="mb-4 text-xs text-surface-900/50">
+        <Link href={`/${cfg.slug}`} className="hover:text-surface-900">
           {traditionName}
         </Link>{' '}
-        / <span className="text-white/70">{featureName}</span>
+        / <span className="text-surface-900/70">{featureName}</span>
       </nav>
 
       <section
@@ -57,11 +57,11 @@ export default function TraditionFeatureStub({
             {cfg.icon}
           </span>
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-semibold text-surface-900 tracking-tight">
               {featureName}
             </h1>
             {descriptionKey && (
-              <p className="mt-1 text-sm text-white/70">
+              <p className="mt-1 text-sm text-surface-900/70">
                 {readLabel(descriptionKey, '')}
               </p>
             )}
@@ -71,7 +71,7 @@ export default function TraditionFeatureStub({
 
       <div className="surface-card rounded-2xl p-6">
         {children ?? (
-          <p className="text-sm text-white/60 text-center py-6">
+          <p className="text-sm text-surface-900/60 text-center py-6">
             {readLabel('traditionsUi.comingSoon', 'Coming soon')}
           </p>
         )}

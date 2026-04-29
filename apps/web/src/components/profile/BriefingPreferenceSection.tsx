@@ -51,18 +51,18 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
   };
 
   return (
-    <section className="mt-8 pt-8 border-t border-white/[0.06]">
-      <h3 className="text-lg font-bold text-white mb-2">Daily briefing email</h3>
-      <p className="text-sm text-white/40 mb-4 max-w-xl">
+    <section className="mt-8 pt-8 border-t border-surface-900/[0.06]">
+      <h3 className="text-lg font-bold text-surface-900 mb-2">Daily briefing email</h3>
+      <p className="text-sm text-surface-900/40 mb-4 max-w-xl">
         Get a personalised "My Day" briefing in your inbox each morning — tithi, nakshatra, what
         to do, what to avoid, your lucky number and Rahu Kaal for today. Free, sent once per
         day, no marketing fluff.
       </p>
 
-      <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.03] max-w-xl">
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-900/[0.03] max-w-xl">
         <div>
-          <p className="text-sm font-medium text-white">Send me my briefing each morning</p>
-          <p className="text-xs text-white/40 mt-1">
+          <p className="text-sm font-medium text-surface-900">Send me my briefing each morning</p>
+          <p className="text-xs text-surface-900/40 mt-1">
             Delivered to your account email. You can turn it off any time from this page.
           </p>
         </div>
@@ -73,7 +73,7 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
           aria-pressed={!!enabled}
           aria-busy={saving}
           className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-            enabled ? "bg-emerald-500" : "bg-white/20"
+            enabled ? "bg-emerald-500" : "bg-surface-900/20"
           } disabled:opacity-50`}
         >
           <span

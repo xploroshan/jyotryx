@@ -88,21 +88,21 @@ export default function MuhuratPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-900/60 mb-4">
             <span className="text-lg">📅</span>
             {t.muhurat.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             <span className="text-gradient">{t.muhurat.title}</span> {t.muhurat.titleHighlight}
           </h1>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-surface-900/40 max-w-xl mx-auto">
             {t.muhurat.description}
           </p>
         </div>
 
         {/* Purpose Selection */}
         <div className="surface-card p-6 mb-6">
-          <h2 className="text-sm font-medium text-white/40 mb-4">{t.muhurat.selectPurpose}</h2>
+          <h2 className="text-sm font-medium text-surface-900/40 mb-4">{t.muhurat.selectPurpose}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {purposes.map((p) => (
               <button
@@ -110,8 +110,8 @@ export default function MuhuratPage() {
                 onClick={() => setSelectedPurpose(p.id)}
                 className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   selectedPurpose === p.id
-                    ? "bg-white/[0.06] border border-white/[0.06] text-white border-primary-500/50"
-                    : "text-white/40 hover:text-white hover:bg-white/[0.03]"
+                    ? "bg-surface-900/[0.06] border border-surface-900/[0.06] text-surface-900 border-primary-500/50"
+                    : "text-surface-900/40 hover:text-surface-900 hover:bg-surface-900/[0.03]"
                 }`}
               >
                 <span className="text-lg">{p.icon}</span>
@@ -125,7 +125,7 @@ export default function MuhuratPage() {
         <div className="surface-card p-6 mb-6">
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-white/30 mb-2">{t.muhurat.fromDate}</label>
+              <label className="block text-xs text-surface-900/30 mb-2">{t.muhurat.fromDate}</label>
               <input
                 type="date"
                 value={fromDate}
@@ -134,7 +134,7 @@ export default function MuhuratPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/30 mb-2">{t.muhurat.toDate}</label>
+              <label className="block text-xs text-surface-900/30 mb-2">{t.muhurat.toDate}</label>
               <input
                 type="date"
                 value={toDate}
@@ -143,7 +143,7 @@ export default function MuhuratPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-white/30 mb-2">{t.muhurat.location}</label>
+              <label className="block text-xs text-surface-900/30 mb-2">{t.muhurat.location}</label>
               <input
                 type="text"
                 value={location}
@@ -157,7 +157,7 @@ export default function MuhuratPage() {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50"
+            className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-surface-900 font-medium  transition-all disabled:opacity-50"
           >
             {loading ? t.muhurat.finding : t.muhurat.findTimes}
           </button>
@@ -177,7 +177,7 @@ export default function MuhuratPage() {
             </h2>
 
             {result.auspiciousTimes.length === 0 ? (
-              <div className="surface-card p-8 text-center text-white/30">
+              <div className="surface-card p-8 text-center text-surface-900/30">
                 {t.muhurat.noResults}
               </div>
             ) : (
@@ -187,17 +187,17 @@ export default function MuhuratPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <p className="text-lg font-bold text-white">
+                          <p className="text-lg font-bold text-surface-900">
                             {new Date(time.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                           </p>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${qualityColor(time.quality)}`}>
                             {time.quality === "excellent" ? t.muhurat.qualityExcellent : time.quality === "good" ? t.muhurat.qualityGood : t.muhurat.qualityAverage}
                           </span>
                         </div>
-                        <p className="text-sm text-primary-400 font-medium mb-1">
+                        <p className="text-sm text-primary-600 font-medium mb-1">
                           {time.startTime} - {time.endTime}
                         </p>
-                        <p className="text-sm text-white/40">{time.reason}</p>
+                        <p className="text-sm text-surface-900/40">{time.reason}</p>
                       </div>
                     </div>
                   </div>

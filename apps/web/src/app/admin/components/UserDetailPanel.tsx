@@ -76,15 +76,15 @@ export function UserDetailPanel({
   return (
     <div className="surface-card overflow-hidden">
       {/* Header */}
-      <div className="p-6 border-b border-white/[0.06]">
+      <div className="p-6 border-b border-surface-900/[0.06]">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h3 className="text-xl font-bold text-white">{detail.name}</h3>
+              <h3 className="text-xl font-bold text-surface-900">{detail.name}</h3>
               {roleBadge(detail.role)}
             </div>
-            <p className="text-sm text-white/40">{detail.email}</p>
-            {detail.phone && <p className="text-sm text-white/30">{detail.phone}</p>}
+            <p className="text-sm text-surface-900/40">{detail.email}</p>
+            {detail.phone && <p className="text-sm text-surface-900/30">{detail.phone}</p>}
           </div>
           <div className="flex gap-2">
             <button
@@ -93,7 +93,7 @@ export function UserDetailPanel({
             >
               + Grant credits
             </button>
-            <button onClick={() => onEdit(detail)} className="px-3 py-1.5 rounded-lg surface-card text-xs text-primary-400 hover:bg-white/10">Edit</button>
+            <button onClick={() => onEdit(detail)} className="px-3 py-1.5 rounded-lg surface-card text-xs text-primary-600 hover:bg-surface-900/10">Edit</button>
             {/* Impersonate — only for non-admin targets. The button
                 requests a 1-hour impersonation JWT from the admin API,
                 then hands it off via the /?__imp=<token> URL parameter
@@ -127,7 +127,7 @@ export function UserDetailPanel({
               </button>
             )}
             <button onClick={() => onDelete(detail.id)} className="px-3 py-1.5 rounded-lg bg-red-500/10 text-xs text-red-400 hover:bg-red-500/20">Delete</button>
-            <button onClick={onClose} className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/40 hover:bg-white/10">&times; Close</button>
+            <button onClick={onClose} className="px-3 py-1.5 rounded-lg surface-card text-xs text-surface-900/40 hover:bg-surface-900/10">&times; Close</button>
           </div>
         </div>
 
@@ -135,7 +135,7 @@ export function UserDetailPanel({
             balance and lifetime spend read together at a glance. */}
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 mt-4">
           {[
-            { label: "Credits", value: detail.credits, color: "text-primary-400" },
+            { label: "Credits", value: detail.credits, color: "text-primary-600" },
             { label: "Usage", value: detail.stats.totalCreditsUsed, color: "text-amber-400" },
             { label: "Chats", value: detail.stats.totalChats, color: "text-blue-400" },
             { label: "Payments", value: detail.stats.totalPayments, color: "text-emerald-400" },
@@ -145,7 +145,7 @@ export function UserDetailPanel({
           ].map((s) => (
             <div key={s.label} className="text-center">
               <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-[10px] text-white/30">{s.label}</p>
+              <p className="text-[10px] text-surface-900/30">{s.label}</p>
             </div>
           ))}
         </div>
@@ -155,7 +155,7 @@ export function UserDetailPanel({
       <div className="flex gap-1 px-4 pt-3 overflow-x-auto">
         {detailTabs.map((t) => (
           <button key={t.id} onClick={() => setDetailTab(t.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${detailTab === t.id ? "bg-primary-600/30 text-primary-400" : "text-white/30 hover:text-white/60"}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${detailTab === t.id ? "bg-primary-600/30 text-primary-600" : "text-surface-900/30 hover:text-surface-900/60"}`}>
             {t.label}
           </button>
         ))}
@@ -174,9 +174,9 @@ export function UserDetailPanel({
               { label: "Joined", value: formatDateTime(detail.createdAt) },
               { label: "Last Updated", value: formatDateTime(detail.updatedAt) },
             ].map((item) => (
-              <div key={item.label} className="flex justify-between p-3 rounded-lg bg-white/[0.03]">
-                <span className="text-xs text-white/30">{item.label}</span>
-                <span className="text-sm text-white/60">{item.value}</span>
+              <div key={item.label} className="flex justify-between p-3 rounded-lg bg-surface-900/[0.03]">
+                <span className="text-xs text-surface-900/30">{item.label}</span>
+                <span className="text-sm text-surface-900/60">{item.value}</span>
               </div>
             ))}
           </div>
@@ -185,16 +185,16 @@ export function UserDetailPanel({
         {detailTab === "subscriptions" && (
           <div className="space-y-3">
             {detail.subscriptions.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-6">No subscriptions</p>
+              <p className="text-surface-900/30 text-sm text-center py-6">No subscriptions</p>
             ) : (
               detail.subscriptions.map((sub) => (
-                <div key={sub.id} className="p-4 rounded-lg bg-white/[0.03] flex items-center justify-between">
+                <div key={sub.id} className="p-4 rounded-lg bg-surface-900/[0.03] flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-white">{sub.plan} Plan</span>
+                      <span className="text-sm font-medium text-surface-900">{sub.plan} Plan</span>
                       {statusBadge(sub.status)}
                     </div>
-                    <p className="text-xs text-white/30">
+                    <p className="text-xs text-surface-900/30">
                       {formatDate(sub.startDate)} {sub.endDate ? ` - ${formatDate(sub.endDate)}` : " - Ongoing"}
                     </p>
                   </div>
@@ -213,24 +213,24 @@ export function UserDetailPanel({
         {detailTab === "payments" && (
           <div className="overflow-x-auto">
             {detail.recentPayments.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-6">No payments</p>
+              <p className="text-surface-900/30 text-sm text-center py-6">No payments</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Amount</th>
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Status</th>
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Type</th>
-                    <th className="text-left px-3 py-2 text-xs text-white/30">Date</th>
+                  <tr className="border-b border-surface-900/[0.06]">
+                    <th className="text-left px-3 py-2 text-xs text-surface-900/30">Amount</th>
+                    <th className="text-left px-3 py-2 text-xs text-surface-900/30">Status</th>
+                    <th className="text-left px-3 py-2 text-xs text-surface-900/30">Type</th>
+                    <th className="text-left px-3 py-2 text-xs text-surface-900/30">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {detail.recentPayments.map((p) => (
-                    <tr key={p.id} className="border-b border-white/5">
-                      <td className="px-3 py-2 text-white">{formatCurrency(p.amount)}</td>
+                    <tr key={p.id} className="border-b border-surface-900/5">
+                      <td className="px-3 py-2 text-surface-900">{formatCurrency(p.amount)}</td>
                       <td className="px-3 py-2">{statusBadge(p.status)}</td>
-                      <td className="px-3 py-2 text-white/40">{p.type}</td>
-                      <td className="px-3 py-2 text-white/30 text-xs">{formatDate(p.createdAt)}</td>
+                      <td className="px-3 py-2 text-surface-900/40">{p.type}</td>
+                      <td className="px-3 py-2 text-surface-900/30 text-xs">{formatDate(p.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -242,15 +242,15 @@ export function UserDetailPanel({
         {detailTab === "chats" && (
           <div className="space-y-2">
             {detail.recentChats.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-6">No chat sessions</p>
+              <p className="text-surface-900/30 text-sm text-center py-6">No chat sessions</p>
             ) : (
               detail.recentChats.map((c) => (
-                <div key={c.id} className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between">
+                <div key={c.id} className="p-3 rounded-lg bg-surface-900/[0.03] flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-white">{c.title}</p>
-                    <p className="text-xs text-white/30">{c.category} &middot; {c.messageCount} messages</p>
+                    <p className="text-sm text-surface-900">{c.title}</p>
+                    <p className="text-xs text-surface-900/30">{c.category} &middot; {c.messageCount} messages</p>
                   </div>
-                  <span className="text-xs text-white/30">{formatDate(c.updatedAt)}</span>
+                  <span className="text-xs text-surface-900/30">{formatDate(c.updatedAt)}</span>
                 </div>
               ))
             )}
@@ -264,17 +264,17 @@ export function UserDetailPanel({
                 "where did their credits actually go" without the
                 client having to recompute on every render. */}
             {detail.creditsByFeature.length > 0 && (
-              <div className="rounded-lg bg-white/[0.03] p-3">
-                <p className="text-[10px] uppercase tracking-wide text-white/30 mb-2">
+              <div className="rounded-lg bg-surface-900/[0.03] p-3">
+                <p className="text-[10px] uppercase tracking-wide text-surface-900/30 mb-2">
                   Spend by feature
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {detail.creditsByFeature.map((f) => (
-                    <div key={f.feature} className="flex items-baseline justify-between rounded bg-white/[0.04] px-2 py-1.5">
-                      <span className="text-xs text-white/60">{f.feature}</span>
+                    <div key={f.feature} className="flex items-baseline justify-between rounded bg-surface-900/[0.04] px-2 py-1.5">
+                      <span className="text-xs text-surface-900/60">{f.feature}</span>
                       <span className="text-sm font-medium text-amber-400 tabular-nums">
                         {f.totalCredits}
-                        <span className="text-[10px] text-white/30 ml-1">×{f.count}</span>
+                        <span className="text-[10px] text-surface-900/30 ml-1">×{f.count}</span>
                       </span>
                     </div>
                   ))}
@@ -284,26 +284,26 @@ export function UserDetailPanel({
 
             <div className="overflow-x-auto">
               {detail.creditTransactions.length === 0 ? (
-                <p className="text-white/30 text-sm text-center py-6">No credit transactions</p>
+                <p className="text-surface-900/30 text-sm text-center py-6">No credit transactions</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/[0.06]">
-                      <th className="text-left px-3 py-2 text-xs text-white/30">Amount</th>
-                      <th className="text-left px-3 py-2 text-xs text-white/30">Type</th>
-                      <th className="text-left px-3 py-2 text-xs text-white/30">Description</th>
-                      <th className="text-left px-3 py-2 text-xs text-white/30">Date</th>
+                    <tr className="border-b border-surface-900/[0.06]">
+                      <th className="text-left px-3 py-2 text-xs text-surface-900/30">Amount</th>
+                      <th className="text-left px-3 py-2 text-xs text-surface-900/30">Type</th>
+                      <th className="text-left px-3 py-2 text-xs text-surface-900/30">Description</th>
+                      <th className="text-left px-3 py-2 text-xs text-surface-900/30">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {detail.creditTransactions.map((t) => (
-                      <tr key={t.id} className="border-b border-white/5">
+                      <tr key={t.id} className="border-b border-surface-900/5">
                         <td className={`px-3 py-2 font-medium ${t.amount > 0 ? "text-emerald-400" : "text-red-400"}`}>
                           {t.amount > 0 ? "+" : ""}{t.amount}
                         </td>
-                        <td className="px-3 py-2 text-white/40">{t.type.replace(/_/g, " ")}</td>
-                        <td className="px-3 py-2 text-white/30 text-xs">{t.description || "-"}</td>
-                        <td className="px-3 py-2 text-white/30 text-xs">{formatDateTime(t.createdAt)}</td>
+                        <td className="px-3 py-2 text-surface-900/40">{t.type.replace(/_/g, " ")}</td>
+                        <td className="px-3 py-2 text-surface-900/30 text-xs">{t.description || "-"}</td>
+                        <td className="px-3 py-2 text-surface-900/30 text-xs">{formatDateTime(t.createdAt)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -316,18 +316,18 @@ export function UserDetailPanel({
         {detailTab === "reports" && (
           <div className="space-y-2">
             {detail.reports.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-6">No reports generated</p>
+              <p className="text-surface-900/30 text-sm text-center py-6">No reports generated</p>
             ) : (
               detail.reports.map((r) => (
-                <div key={r.id} className="p-3 rounded-lg bg-white/[0.03] flex items-center justify-between">
+                <div key={r.id} className="p-3 rounded-lg bg-surface-900/[0.03] flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-white">{r.type} Report</span>
+                      <span className="text-sm text-surface-900">{r.type} Report</span>
                       {statusBadge(r.status)}
                     </div>
-                    <p className="text-xs text-white/30">{formatCurrency(r.price)}</p>
+                    <p className="text-xs text-surface-900/30">{formatCurrency(r.price)}</p>
                   </div>
-                  <span className="text-xs text-white/30">{formatDate(r.createdAt)}</span>
+                  <span className="text-xs text-surface-900/30">{formatDate(r.createdAt)}</span>
                 </div>
               ))
             )}
@@ -399,14 +399,14 @@ function GrantCreditsModal({
         className="surface-card w-[min(420px,90vw)] p-6 space-y-4"
       >
         <div>
-          <h3 className="text-lg font-semibold text-white">Grant credits</h3>
-          <p className="text-xs text-white/40 mt-0.5">
-            {userEmail} · current balance <span className="text-primary-400">{currentCredits}</span>
+          <h3 className="text-lg font-semibold text-surface-900">Grant credits</h3>
+          <p className="text-xs text-surface-900/40 mt-0.5">
+            {userEmail} · current balance <span className="text-primary-600">{currentCredits}</span>
           </p>
         </div>
 
         <label className="block">
-          <span className="text-xs text-white/50">Amount</span>
+          <span className="text-xs text-surface-900/50">Amount</span>
           <input
             autoFocus
             type="number"
@@ -414,26 +414,26 @@ function GrantCreditsModal({
             step={1}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="mt-1 w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+            className="mt-1 w-full bg-surface-900/[0.04] border border-surface-900/10 rounded-lg px-3 py-2 text-sm text-surface-900"
           />
         </label>
 
         <label className="block">
-          <span className="text-xs text-white/50">Reason (optional, recorded in transaction)</span>
+          <span className="text-xs text-surface-900/50">Reason (optional, recorded in transaction)</span>
           <input
             type="text"
             value={reason}
             maxLength={200}
             onChange={(e) => setReason(e.target.value)}
             placeholder="e.g. Apology for outage on 2026-04-26"
-            className="mt-1 w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+            className="mt-1 w-full bg-surface-900/[0.04] border border-surface-900/10 rounded-lg px-3 py-2 text-sm text-surface-900"
           />
         </label>
 
         {err && <p className="text-xs text-red-400">{err}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-xs text-white/60 hover:bg-white/10">
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-xs text-surface-900/60 hover:bg-surface-900/10">
             Cancel
           </button>
           <button

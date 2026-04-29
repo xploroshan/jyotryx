@@ -52,7 +52,7 @@ export default function AstrologyAnimation() {
             cy={s.y}
             r={s.r * 0.1}
             fill="currentColor"
-            className="text-white/70 [animation:astro-twinkle_3s_ease-in-out_infinite]"
+            className="text-surface-900/70 [animation:astro-twinkle_3s_ease-in-out_infinite]"
             style={{ animationDelay: `${s.d}s` }}
           />
         ))}
@@ -73,7 +73,7 @@ export default function AstrologyAnimation() {
                 stroke="currentColor"
                 strokeWidth="0.5"
                 strokeDasharray="2 6"
-                className="text-white/10"
+                className="text-surface-900/10"
               />
               {/* Inner fine circle */}
               <circle
@@ -83,7 +83,7 @@ export default function AstrologyAnimation() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="0.3"
-                className="text-white/8"
+                className="text-surface-900/8"
               />
               {/* 12 zodiac glyphs at each 30° */}
               {ZODIAC_SYMBOLS.map((sym, i) => {
@@ -99,7 +99,7 @@ export default function AstrologyAnimation() {
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="currentColor"
-                    className="text-white/15"
+                    className="text-surface-900/15"
                   >
                     {sym}
                   </text>
@@ -121,7 +121,7 @@ export default function AstrologyAnimation() {
                     y2={y2}
                     stroke="currentColor"
                     strokeWidth="0.8"
-                    className="text-white/10"
+                    className="text-surface-900/10"
                   />
                 );
               })}
@@ -139,7 +139,7 @@ export default function AstrologyAnimation() {
                 stroke="currentColor"
                 strokeWidth="0.4"
                 strokeDasharray="1 4"
-                className="text-white/10"
+                className="text-surface-900/10"
               />
               {/* 5 planet dots at unequal angles */}
               {[0, 72, 144, 216, 288].map((deg, i) => {
@@ -154,7 +154,7 @@ export default function AstrologyAnimation() {
                     cy={y}
                     r={sizes[i]}
                     fill="currentColor"
-                    className="text-primary-400/25"
+                    className="text-primary-600/25"
                   />
                 );
               })}
@@ -171,7 +171,7 @@ export default function AstrologyAnimation() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="0.3"
-                className="text-white/8"
+                className="text-surface-900/8"
               />
               {/* 3 small sparks */}
               {[0, 120, 240].map((deg, i) => {
@@ -201,7 +201,7 @@ export default function AstrologyAnimation() {
                 height="28"
                 viewBox="0 0 24 24"
                 fill="none"
-                className="relative text-primary-400/30 [animation:astro-pulse_4s_ease-in-out_infinite]"
+                className="relative text-primary-600/30 [animation:astro-pulse_4s_ease-in-out_infinite]"
               >
                 <circle
                   cx="12"

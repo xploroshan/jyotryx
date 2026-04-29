@@ -144,13 +144,13 @@ export default function CameraCapture({ onCapture, onClose, labels }: CameraCapt
         )}
 
         {!snapshot && !starting && !error && (
-          <div className="absolute bottom-24 left-0 right-0 px-4 text-center text-sm text-white/80">
+          <div className="absolute bottom-24 left-0 right-0 px-4 text-center text-sm text-surface-900/80">
             {labels.overlayHint}
           </div>
         )}
 
         {starting && !error && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-white/70">
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-surface-900/70">
             {labels.starting}
           </div>
         )}
@@ -165,7 +165,7 @@ export default function CameraCapture({ onCapture, onClose, labels }: CameraCapt
       <div className="flex items-center justify-between gap-3 bg-black/90 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button
           onClick={onClose}
-          className="focus-ring rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white"
+          className="focus-ring rounded-xl bg-surface-900/10 px-4 py-2.5 text-sm font-medium text-surface-900"
         >
           {labels.cancel}
         </button>
@@ -174,13 +174,13 @@ export default function CameraCapture({ onCapture, onClose, labels }: CameraCapt
           <div className="flex items-center gap-2">
             <button
               onClick={handleRetake}
-              className="focus-ring rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white"
+              className="focus-ring rounded-xl bg-surface-900/10 px-4 py-2.5 text-sm font-medium text-surface-900"
             >
               {labels.retake}
             </button>
             <button
               onClick={handleUse}
-              className="focus-ring rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white"
+              className="focus-ring rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-surface-50"
             >
               {labels.use}
             </button>
@@ -190,7 +190,7 @@ export default function CameraCapture({ onCapture, onClose, labels }: CameraCapt
             onClick={handleCapture}
             disabled={starting || !!error}
             aria-label={labels.capture}
-            className="focus-ring h-16 w-16 rounded-full border-4 border-white bg-white/20 transition active:scale-95 disabled:opacity-40"
+            className="focus-ring h-16 w-16 rounded-full border-4 border-white bg-surface-900/20 transition active:scale-95 disabled:opacity-40"
           >
             <span className="block h-full w-full rounded-full border-2 border-white bg-white" />
           </button>
@@ -200,7 +200,7 @@ export default function CameraCapture({ onCapture, onClose, labels }: CameraCapt
           <button
             onClick={switchCamera}
             aria-label={labels.switchCamera}
-            className="focus-ring rounded-xl bg-white/10 p-2.5 text-white"
+            className="focus-ring rounded-xl bg-surface-900/10 p-2.5 text-surface-900"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

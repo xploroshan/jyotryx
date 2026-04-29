@@ -167,18 +167,18 @@ export default function AstrologyTraditionSelector({
               onClick={() => available && toggle(tradition.id)}
               className={`relative group text-left p-5 rounded-2xl border transition-all duration-300 ${
                 !available
-                  ? "opacity-40 cursor-not-allowed border-white/5 bg-white/[0.01]"
+                  ? "opacity-40 cursor-not-allowed border-surface-900/5 bg-surface-900/[0.01]"
                   : selected
-                  ? `surface-card ${tradition.borderColor} shadow-lg ${tradition.glowColor} bg-white/[0.06]`
-                  : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]"
+                  ? `surface-card ${tradition.borderColor} shadow-lg ${tradition.glowColor} bg-surface-900/[0.06]`
+                  : "border-surface-900/[0.06] bg-surface-900/[0.02] hover:bg-surface-900/[0.04] hover:border-surface-900/[0.12]"
               }`}
             >
               {/* Selection indicator */}
               {available && (
                 <div className={`absolute top-3 right-3 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                   selected
-                    ? `${tradition.borderColor} bg-white/10`
-                    : "border-white/20"
+                    ? `${tradition.borderColor} bg-surface-900/10`
+                    : "border-surface-900/20"
                 }`}>
                   {selected && (
                     <svg className={`w-3.5 h-3.5 ${tradition.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -190,23 +190,23 @@ export default function AstrologyTraditionSelector({
 
               {/* Coming Soon badge */}
               {!available && (
-                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-white/30 font-medium">
+                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-surface-900/5 text-[10px] text-surface-900/30 font-medium">
                   {t.traditions.comingSoon}
                 </div>
               )}
 
               {/* Icon */}
-              <div className={`mb-3 ${available ? tradition.color : "text-white/20"}`}>
+              <div className={`mb-3 ${available ? tradition.color : "text-surface-900/20"}`}>
                 {tradition.icon}
               </div>
 
               {/* Name */}
-              <h3 className={`text-sm font-semibold mb-1 ${available ? "text-white" : "text-white/30"}`}>
+              <h3 className={`text-sm font-semibold mb-1 ${available ? "text-surface-900" : "text-surface-900/30"}`}>
                 {tradition.name}
               </h3>
 
               {/* Description */}
-              <p className={`text-xs leading-relaxed ${available ? "text-white/50" : "text-white/20"}`}>
+              <p className={`text-xs leading-relaxed ${available ? "text-surface-900/50" : "text-surface-900/20"}`}>
                 {tradition.description}
               </p>
             </button>

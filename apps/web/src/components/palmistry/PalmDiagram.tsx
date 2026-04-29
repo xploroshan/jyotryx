@@ -342,7 +342,7 @@ export default function PalmDiagram({
       {tooltip && !isGuideMode && (
         <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-full px-2">
           <div className="surface-card p-2.5 rounded-lg text-center">
-            <p className="text-xs text-white/70 leading-relaxed line-clamp-2">
+            <p className="text-xs text-surface-900/70 leading-relaxed line-clamp-2">
               {tooltip.text}
             </p>
           </div>

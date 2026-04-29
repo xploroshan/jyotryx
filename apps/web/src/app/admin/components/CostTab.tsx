@@ -173,8 +173,8 @@ export function CostTab({ token }: { token: string }) {
       {/* Headline tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="surface-card p-6">
-          <p className="text-xs text-white/40">MTD LLM Spend</p>
-          <p className="text-3xl font-bold text-white mt-1 tabular-nums">{formatUsd(summary?.mtdUsd ?? 0)}</p>
+          <p className="text-xs text-surface-900/40">MTD LLM Spend</p>
+          <p className="text-3xl font-bold text-surface-900 mt-1 tabular-nums">{formatUsd(summary?.mtdUsd ?? 0)}</p>
           {delta && (
             <p className={`text-xs mt-2 ${delta.up ? "text-red-400" : "text-emerald-400"}`}>
               {delta.up ? "▲" : "▼"} {delta.value.toFixed(1)}% vs same window last month ({formatUsd(summary!.prevMtdUsd)})
@@ -182,16 +182,16 @@ export function CostTab({ token }: { token: string }) {
           )}
         </div>
         <div className="surface-card p-6">
-          <p className="text-xs text-white/40">Projected End-of-Month</p>
+          <p className="text-xs text-surface-900/40">Projected End-of-Month</p>
           <p className="text-3xl font-bold text-accent-400 mt-1 tabular-nums">{formatUsd(summary?.projectionUsd ?? 0)}</p>
-          <p className="text-xs text-white/30 mt-2">Linear projection from MTD ÷ days elapsed × days in month.</p>
+          <p className="text-xs text-surface-900/30 mt-2">Linear projection from MTD ÷ days elapsed × days in month.</p>
         </div>
         <div className="surface-card p-6">
-          <p className="text-xs text-white/40">Today&apos;s Spend</p>
-          <p className="text-3xl font-bold text-white mt-1 tabular-nums">
+          <p className="text-xs text-surface-900/40">Today&apos;s Spend</p>
+          <p className="text-3xl font-bold text-surface-900 mt-1 tabular-nums">
             {formatUsd(Object.values(today).reduce((a, b) => a + b.costUsd, 0))}
           </p>
-          <p className="text-xs text-white/30 mt-2">
+          <p className="text-xs text-surface-900/30 mt-2">
             {Object.values(today).reduce((a, b) => a + b.tokens, 0).toLocaleString()} tokens across {Object.keys(today).length} features.
           </p>
         </div>
@@ -199,7 +199,7 @@ export function CostTab({ token }: { token: string }) {
 
       {/* 30-day sparkline */}
       <div className="surface-card p-6">
-        <h3 className="text-sm font-semibold text-white mb-4">Last 30 Days</h3>
+        <h3 className="text-sm font-semibold text-surface-900 mb-4">Last 30 Days</h3>
         <svg viewBox={`0 0 ${daily.length * 16} 80`} className="w-full h-24">
           {daily.map((d, i) => {
             const h = (d.costUsd / maxDaily) * 70;
@@ -220,7 +220,7 @@ export function CostTab({ token }: { token: string }) {
             );
           })}
         </svg>
-        <div className="flex justify-between text-[10px] text-white/30 mt-2 tabular-nums">
+        <div className="flex justify-between text-[10px] text-surface-900/30 mt-2 tabular-nums">
           <span>{daily[0]?.date ?? ""}</span>
           <span>{daily[daily.length - 1]?.date ?? ""}</span>
         </div>
@@ -237,15 +237,15 @@ export function CostTab({ token }: { token: string }) {
 
       {/* Spend alert thresholds */}
       <div className="surface-card p-6">
-        <h3 className="text-sm font-semibold text-white mb-1">Spend Alerts</h3>
-        <p className="text-xs text-white/50 mb-4">
-          Hourly cron writes a <code className="text-white/70">COST_ALERT_TRIPPED</code> row to the
+        <h3 className="text-sm font-semibold text-surface-900 mb-1">Spend Alerts</h3>
+        <p className="text-xs text-surface-900/50 mb-4">
+          Hourly cron writes a <code className="text-surface-900/70">COST_ALERT_TRIPPED</code> row to the
           activity log (and sends the admin notification if enabled) the first time
           each window breaches its threshold. Leave a field blank to disable that scope.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <label className="block">
-            <span className="block text-xs text-white/50 mb-1">Daily threshold (USD)</span>
+            <span className="block text-xs text-surface-900/50 mb-1">Daily threshold (USD)</span>
             <input
               type="number"
               inputMode="decimal"
@@ -258,7 +258,7 @@ export function CostTab({ token }: { token: string }) {
             />
           </label>
           <label className="block">
-            <span className="block text-xs text-white/50 mb-1">Monthly threshold (USD)</span>
+            <span className="block text-xs text-surface-900/50 mb-1">Monthly threshold (USD)</span>
             <input
               type="number"
               inputMode="decimal"
@@ -283,54 +283,54 @@ export function CostTab({ token }: { token: string }) {
       {/* Per-feature */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="surface-card p-6">
-          <h3 className="text-sm font-semibold text-white mb-4">Top Features (30d)</h3>
+          <h3 className="text-sm font-semibold text-surface-900 mb-4">Top Features (30d)</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="text-left text-[11px] text-white/40 font-medium py-2">Feature</th>
-                <th className="text-right text-[11px] text-white/40 font-medium py-2">Calls</th>
-                <th className="text-right text-[11px] text-white/40 font-medium py-2">Tokens</th>
-                <th className="text-right text-[11px] text-white/40 font-medium py-2">Cost</th>
+              <tr className="border-b border-surface-900/[0.06]">
+                <th className="text-left text-[11px] text-surface-900/40 font-medium py-2">Feature</th>
+                <th className="text-right text-[11px] text-surface-900/40 font-medium py-2">Calls</th>
+                <th className="text-right text-[11px] text-surface-900/40 font-medium py-2">Tokens</th>
+                <th className="text-right text-[11px] text-surface-900/40 font-medium py-2">Cost</th>
               </tr>
             </thead>
             <tbody>
               {byFeature.slice(0, 15).map((r) => (
-                <tr key={r.feature} className="border-b border-white/[0.03]">
-                  <td className="py-2 text-white/80">{r.feature}</td>
-                  <td className="py-2 text-right text-white/60 tabular-nums">{r.calls.toLocaleString()}</td>
-                  <td className="py-2 text-right text-white/60 tabular-nums">{r.totalTokens.toLocaleString()}</td>
+                <tr key={r.feature} className="border-b border-surface-900/[0.03]">
+                  <td className="py-2 text-surface-900/80">{r.feature}</td>
+                  <td className="py-2 text-right text-surface-900/60 tabular-nums">{r.calls.toLocaleString()}</td>
+                  <td className="py-2 text-right text-surface-900/60 tabular-nums">{r.totalTokens.toLocaleString()}</td>
                   <td className="py-2 text-right text-accent-400 tabular-nums">{formatUsd(r.costUsd)}</td>
                 </tr>
               ))}
               {byFeature.length === 0 && (
-                <tr><td colSpan={4} className="py-6 text-center text-white/30">No feature spend in window.</td></tr>
+                <tr><td colSpan={4} className="py-6 text-center text-surface-900/30">No feature spend in window.</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
         <div className="surface-card p-6">
-          <h3 className="text-sm font-semibold text-white mb-4">Providers &amp; Models (30d)</h3>
+          <h3 className="text-sm font-semibold text-surface-900 mb-4">Providers &amp; Models (30d)</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="text-left text-[11px] text-white/40 font-medium py-2">Provider</th>
-                <th className="text-left text-[11px] text-white/40 font-medium py-2">Model</th>
-                <th className="text-right text-[11px] text-white/40 font-medium py-2">Calls</th>
-                <th className="text-right text-[11px] text-white/40 font-medium py-2">Cost</th>
+              <tr className="border-b border-surface-900/[0.06]">
+                <th className="text-left text-[11px] text-surface-900/40 font-medium py-2">Provider</th>
+                <th className="text-left text-[11px] text-surface-900/40 font-medium py-2">Model</th>
+                <th className="text-right text-[11px] text-surface-900/40 font-medium py-2">Calls</th>
+                <th className="text-right text-[11px] text-surface-900/40 font-medium py-2">Cost</th>
               </tr>
             </thead>
             <tbody>
               {byProvider.slice(0, 15).map((r) => (
-                <tr key={`${r.provider}|${r.model}`} className="border-b border-white/[0.03]">
-                  <td className="py-2 text-white/80">{r.provider}</td>
-                  <td className="py-2 text-white/60">{r.model}</td>
-                  <td className="py-2 text-right text-white/60 tabular-nums">{r.calls.toLocaleString()}</td>
+                <tr key={`${r.provider}|${r.model}`} className="border-b border-surface-900/[0.03]">
+                  <td className="py-2 text-surface-900/80">{r.provider}</td>
+                  <td className="py-2 text-surface-900/60">{r.model}</td>
+                  <td className="py-2 text-right text-surface-900/60 tabular-nums">{r.calls.toLocaleString()}</td>
                   <td className="py-2 text-right text-accent-400 tabular-nums">{formatUsd(r.costUsd)}</td>
                 </tr>
               ))}
               {byProvider.length === 0 && (
-                <tr><td colSpan={4} className="py-6 text-center text-white/30">No provider spend in window.</td></tr>
+                <tr><td colSpan={4} className="py-6 text-center text-surface-900/30">No provider spend in window.</td></tr>
               )}
             </tbody>
           </table>
@@ -345,7 +345,7 @@ export function CostTab({ token }: { token: string }) {
 function ForecastCard({ data }: { data: CostForecast | null }) {
   if (!data || data.points.length === 0) {
     return (
-      <div className="surface-card p-6 text-white/30 text-sm" data-testid="forecast-card">
+      <div className="surface-card p-6 text-surface-900/30 text-sm" data-testid="forecast-card">
         Forecast unavailable (need a few days of stat_daily rollups first).
       </div>
     );
@@ -390,13 +390,13 @@ function ForecastCard({ data }: { data: CostForecast | null }) {
     .reverse()
     .join(" ");
 
-  const trendTone = data.trend > 0.01 ? "text-red-400" : data.trend < -0.01 ? "text-emerald-400" : "text-white/50";
+  const trendTone = data.trend > 0.01 ? "text-red-400" : data.trend < -0.01 ? "text-emerald-400" : "text-surface-900/50";
   return (
     <div className="surface-card p-6" data-testid="forecast-card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-white">30-day spend forecast</h3>
-          <p className="text-xs text-white/40 mt-0.5">
+          <h3 className="text-sm font-semibold text-surface-900">30-day spend forecast</h3>
+          <p className="text-xs text-surface-900/40 mt-0.5">
             Holt trend smoothing over the last 60 days of daily LLM spend. Shaded area ≈ ±1σ residual.
           </p>
         </div>
@@ -404,7 +404,7 @@ function ForecastCard({ data }: { data: CostForecast | null }) {
           <p className={`text-xs tabular-nums ${trendTone}`}>
             drift: {data.trend >= 0 ? "+" : ""}${data.trend.toFixed(2)}/day
           </p>
-          <p className="text-[11px] text-white/30 tabular-nums">
+          <p className="text-[11px] text-surface-900/30 tabular-nums">
             ±{formatUsd(data.residualStd)} 1σ
           </p>
         </div>
@@ -425,7 +425,7 @@ function ForecastCard({ data }: { data: CostForecast | null }) {
             fill="none"
             stroke="currentColor"
             strokeWidth={1.5}
-            className="text-primary-400"
+            className="text-primary-600"
           />
         )}
         {/* Forecast line */}
@@ -446,12 +446,12 @@ function ForecastCard({ data }: { data: CostForecast | null }) {
             y1={10}
             y2={height - 10}
             strokeDasharray="2 3"
-            className="text-white/20"
+            className="text-surface-900/20"
             stroke="currentColor"
           />
         )}
       </svg>
-      <div className="flex justify-between text-[10px] text-white/30 mt-2 tabular-nums">
+      <div className="flex justify-between text-[10px] text-surface-900/30 mt-2 tabular-nums">
         <span>{points[0]?.date ?? ""}</span>
         <span>{points[points.length - 1]?.date ?? ""}</span>
       </div>
@@ -499,14 +499,14 @@ function WhatIfCard({
 
   return (
     <div className="surface-card p-6" data-testid="what-if-card">
-      <h3 className="text-sm font-semibold text-white mb-1">Model-cost what-if</h3>
-      <p className="text-xs text-white/50 mb-4">
+      <h3 className="text-sm font-semibold text-surface-900 mb-1">Model-cost what-if</h3>
+      <p className="text-xs text-surface-900/50 mb-4">
         Pure-client math against the sticker-price table. Admin pricing overrides aren&apos;t folded in here —
         useful for quick &ldquo;should we migrate&rdquo; decisions.
       </p>
       <div className="grid sm:grid-cols-3 gap-4 mb-4">
         <label className="block">
-          <span className="block text-xs text-white/40 mb-1">From model</span>
+          <span className="block text-xs text-surface-900/40 mb-1">From model</span>
           <select
             value={fromModel}
             onChange={(e) => setFromModel(e.target.value)}
@@ -519,7 +519,7 @@ function WhatIfCard({
           </select>
         </label>
         <label className="block">
-          <span className="block text-xs text-white/40 mb-1">To model</span>
+          <span className="block text-xs text-surface-900/40 mb-1">To model</span>
           <select
             value={toModel}
             onChange={(e) => setToModel(e.target.value)}
@@ -532,7 +532,7 @@ function WhatIfCard({
           </select>
         </label>
         <label className="block">
-          <span className="block text-xs text-white/40 mb-1">Feature (optional)</span>
+          <span className="block text-xs text-surface-900/40 mb-1">Feature (optional)</span>
           <select
             value={featureFilter}
             onChange={(e) => setFeatureFilter(e.target.value)}
@@ -545,16 +545,16 @@ function WhatIfCard({
         </label>
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <WhatIfTile label="Window cost today" value={formatUsd(totalCost)} tone="text-white" />
+        <WhatIfTile label="Window cost today" value={formatUsd(totalCost)} tone="text-surface-900" />
         <WhatIfTile
           label={`If moved to ${toModel}`}
           value={formatUsd(swappedCost)}
-          tone={ratio < 1 ? "text-emerald-400" : ratio > 1 ? "text-red-400" : "text-white"}
+          tone={ratio < 1 ? "text-emerald-400" : ratio > 1 ? "text-red-400" : "text-surface-900"}
         />
         <WhatIfTile
           label="MTD impact"
           value={`${mtdDelta >= 0 ? "+" : ""}${formatUsd(mtdDelta)}`}
-          tone={mtdDelta < 0 ? "text-emerald-400" : mtdDelta > 0 ? "text-red-400" : "text-white/60"}
+          tone={mtdDelta < 0 ? "text-emerald-400" : mtdDelta > 0 ? "text-red-400" : "text-surface-900/60"}
         />
       </div>
     </div>
@@ -563,8 +563,8 @@ function WhatIfCard({
 
 function WhatIfTile({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="p-3 rounded-lg bg-white/[0.03]">
-      <p className="text-[11px] text-white/40">{label}</p>
+    <div className="p-3 rounded-lg bg-surface-900/[0.03]">
+      <p className="text-[11px] text-surface-900/40">{label}</p>
       <p className={`text-xl font-bold tabular-nums mt-1 ${tone}`}>{value}</p>
     </div>
   );

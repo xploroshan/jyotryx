@@ -4,7 +4,7 @@ import React from "react";
 
 export function Badge({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "danger" | "purple" | "blue" }) {
   const colors = {
-    default: "bg-white/[0.03] text-white/40",
+    default: "bg-surface-900/[0.03] text-surface-900/40",
     success: "bg-emerald-500/20 text-emerald-400",
     warning: "bg-amber-500/20 text-amber-400",
     danger: "bg-red-500/20 text-red-400",
@@ -50,11 +50,11 @@ export function TabError({ message, onRetry }: { message: string; onRetry?: () =
   return (
     <div className="surface-card p-6 text-center">
       <p className="text-sm font-medium text-red-400 mb-1">Failed to load this tab</p>
-      <p className="text-xs text-white/40 mb-4 break-words">{message}</p>
+      <p className="text-xs text-surface-900/40 mb-4 break-words">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="px-4 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs text-white/70"
+          className="px-4 py-2 rounded-lg bg-surface-900/[0.04] hover:bg-surface-900/[0.08] text-xs text-surface-900/70"
         >
           Retry
         </button>

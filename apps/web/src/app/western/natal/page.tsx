@@ -55,7 +55,7 @@ export default function WesternNatalPage() {
       descriptionKey="featurePages.westernNatal.description"
     >
       {!isAuthenticated ? (
-        <p className="text-sm text-white/60 text-center py-6">
+        <p className="text-sm text-surface-900/60 text-center py-6">
           {fp.loginPrompt}
         </p>
       ) : (
@@ -66,14 +66,14 @@ export default function WesternNatalPage() {
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-surface-900/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-900"
             />
             <input
               type="time"
               value={timeOfBirth}
               onChange={(e) => setTimeOfBirth(e.target.value)}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-surface-900/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-900"
             />
             <input
               type="text"
@@ -81,7 +81,7 @@ export default function WesternNatalPage() {
               onChange={(e) => setPlaceOfBirth(e.target.value)}
               placeholder={t.form.placePlaceholder}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-surface-900/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-900"
             />
             <button
               type="submit"
@@ -95,23 +95,23 @@ export default function WesternNatalPage() {
 
           {result && (
             <div className="mt-6 space-y-4">
-              <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                <div className="text-xs uppercase tracking-wider text-white/40">
+              <div className="rounded-xl border divider bg-surface-900/[0.03] p-4">
+                <div className="text-xs uppercase tracking-wider text-surface-900/40">
                   {fp.ascendant}
                 </div>
-                <div className="mt-1 text-white font-medium">
+                <div className="mt-1 text-surface-900 font-medium">
                   {result.ascendant.sign} ({result.ascendant.degree.toFixed(2)}°)
                 </div>
               </div>
-              <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                <div className="text-xs uppercase tracking-wider text-white/40 mb-3">
+              <div className="rounded-xl border divider bg-surface-900/[0.03] p-4">
+                <div className="text-xs uppercase tracking-wider text-surface-900/40 mb-3">
                   {fp.planets}
                 </div>
-                <ul className="space-y-2 text-sm text-white/80">
+                <ul className="space-y-2 text-sm text-surface-900/80">
                   {result.planets.map((p) => (
                     <li key={p.planet} className="flex justify-between">
                       <span>{p.planet}</span>
-                      <span className="text-white/60">
+                      <span className="text-surface-900/60">
                         {p.sign} {p.degree.toFixed(2)}°
                         {p.house !== null ? ` · H${p.house}` : ''}
                       </span>
@@ -120,8 +120,8 @@ export default function WesternNatalPage() {
                 </ul>
               </div>
               {result.interpretation && (
-                <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                  <p className="text-sm text-white/80 whitespace-pre-wrap">
+                <div className="rounded-xl border divider bg-surface-900/[0.03] p-4">
+                  <p className="text-sm text-surface-900/80 whitespace-pre-wrap">
                     {result.interpretation}
                   </p>
                 </div>

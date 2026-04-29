@@ -22,15 +22,15 @@ export default function GlobalError({
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-white mb-2">Something went wrong</h2>
-        <p className="text-sm text-white/40 mb-3">An unexpected error occurred. Please try again.</p>
+        <h2 className="text-lg font-semibold text-surface-900 mb-2">Something went wrong</h2>
+        <p className="text-sm text-surface-900/40 mb-3">An unexpected error occurred. Please try again.</p>
         {error?.message && (
-          <p className="text-[11px] text-white/30 font-mono break-words mb-4 px-3 py-2 rounded bg-white/[0.03]">
+          <p className="text-[11px] text-surface-900/30 font-mono break-words mb-4 px-3 py-2 rounded bg-surface-900/[0.03]">
             {error.message}
           </p>
         )}
         {error?.digest && (
-          <p className="text-[10px] text-white/20 mb-4">Ref: {error.digest}</p>
+          <p className="text-[10px] text-surface-900/20 mb-4">Ref: {error.digest}</p>
         )}
         <button onClick={reset} className="px-6 py-2.5 rounded-lg btn-primary text-sm">
           Try Again
