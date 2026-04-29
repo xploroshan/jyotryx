@@ -7,6 +7,7 @@ import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { Stagger } from "@/components/ui/PageTransition";
 import HeroSun from "@/components/home/HeroSun";
+import TraditionMarquee from "@/components/home/TraditionMarquee";
 
 const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
   ssr: false,
@@ -171,6 +172,11 @@ export default function HomePage() {
           </Stagger.Container>
         </div>
       </section>
+
+      {/* ── Tradition marquee — editorial signature strip between hero and
+          authenticated bento. Decorative; labels are reachable via the
+          TraditionRail in the chrome. ── */}
+      <TraditionMarquee />
 
       {/* ── Bento summary ── */}
       <BentoSummary />

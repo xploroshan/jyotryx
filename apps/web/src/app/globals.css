@@ -298,6 +298,18 @@
   50% { transform: scale(1.06); opacity: 1; }
 }
 
+/* TraditionMarquee — two stacked infinite tracks moving in opposite
+   directions. Translates by exactly 50% of the doubled track's own width,
+   which equals the width of one un-doubled set, so the loop is seamless. */
+@keyframes marquee-forward {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-reverse {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
 /* ── Mesh gradient blob for hero sections ── */
 @keyframes mesh-drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -312,6 +324,7 @@
   [class*="astro-twinkle"],
   [class*="corona-pulse"],
   [class*="mesh-drift"],
+  [class*="marquee-"],
   .fade-in,
   .fade-in-up {
     animation: none !important;
