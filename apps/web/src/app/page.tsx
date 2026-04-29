@@ -127,7 +127,7 @@ export default function HomePage() {
 
               <h1
                 aria-label={`${t.home.heroTitle} ${t.home.heroHighlight}`}
-                className="font-display font-semibold text-surface-50 leading-[0.92] tracking-[-0.02em] mb-8"
+                className="font-display font-semibold text-surface-950 leading-[0.92] tracking-[-0.02em] mb-8"
                 style={{ fontSize: "clamp(56px, 9vw, 144px)" }}
               >
                 <span className="block">
@@ -170,7 +170,7 @@ export default function HomePage() {
                 <CtaPrimary href="/chat" label={t.home.startConsultation} />
                 <Link
                   href="/palmistry"
-                  className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-50 hover:text-primary-400 transition-colors focus-ring rounded"
+                  className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-950 hover:text-primary-400 transition-colors focus-ring rounded"
                 >
                   {t.home.tryPalmReading}
                   <span
@@ -209,10 +209,10 @@ export default function HomePage() {
                   i > 0 ? "sm:border-l border-white/[0.08]" : ""
                 } ${i > 0 ? "sm:pl-6" : ""}`}
               >
-                <span className="font-display font-semibold text-surface-50 text-3xl sm:text-4xl tabular-nums leading-none">
+                <span className="font-display font-semibold text-surface-950 text-3xl sm:text-4xl tabular-nums leading-none">
                   {stat.value}
                 </span>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-surface-50/55">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-surface-950/55">
                   {stat.label}
                 </span>
               </Stagger.Item>
@@ -258,7 +258,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-3xl text-center">
           <h2
-            className="font-display font-semibold text-surface-50 mb-6 tracking-[-0.01em] leading-[1.02]"
+            className="font-display font-semibold text-surface-950 mb-6 tracking-[-0.01em] leading-[1.02]"
             style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
           >
             {t.home.ctaTitle}{" "}
@@ -312,7 +312,7 @@ function HowItWorks({
             {eyebrow}
           </p>
           <h2
-            className="font-display font-semibold text-surface-50 tracking-[-0.01em] leading-[1.0]"
+            className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
             style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
           >
             <span className="serif-italic accent-underline text-gradient-sunrise">Jyotron</span>{" "}
@@ -349,7 +349,7 @@ function HowItWorks({
                 >
                   {item.step}
                 </span>
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-50 mb-3 leading-tight relative z-10">
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 mb-3 leading-tight relative z-10">
                   {item.title}
                 </h3>
                 <p className="text-sm text-secondary leading-relaxed relative z-10">{item.desc}</p>
