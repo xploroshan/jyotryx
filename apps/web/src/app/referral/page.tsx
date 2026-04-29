@@ -98,9 +98,8 @@ export default function ReferralPage() {
   if (!isHydrated || loading) {
     return (
       <div className="relative min-h-screen">
-        <div className="absolute inset-0 bg-surface-950" />
         <div className="relative z-10 mx-auto max-w-4xl px-4 py-12">
-          <div className="surface-card p-8 text-center text-surface-50/40">Loading…</div>
+          <div className="surface-card p-8 text-center text-[rgba(12,8,5,0.46)]">Loading…</div>
         </div>
       </div>
     );
@@ -109,7 +108,6 @@ export default function ReferralPage() {
   if (!status) {
     return (
       <div className="relative min-h-screen">
-        <div className="absolute inset-0 bg-surface-950" />
         <div className="relative z-10 mx-auto max-w-4xl px-4 py-12">
           {error && <Toast message={error} tone="error" onClose={() => setError("")} />}
         </div>
@@ -127,11 +125,10 @@ export default function ReferralPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-surface-950" />
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-12 fade-in-up">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gradient">Invite friends, get free Premium</h1>
-          <p className="text-surface-50/60 mt-2 text-sm max-w-2xl">
+          <p className="text-secondary mt-2 text-sm max-w-2xl">
             When a friend signs up with your code, you both get{" "}
             <span className="text-primary-300 font-semibold">{status.bonusDays} days</span> of
             Premium — full access to every chart, report and AI consultation.
@@ -139,7 +136,7 @@ export default function ReferralPage() {
               <>
                 {" "}
                 You can claim this bonus up to{" "}
-                <span className="text-surface-50/80">{status.maxPerReferrer}</span> times — you have{" "}
+                <span className="text-emphasis">{status.maxPerReferrer}</span> times — you have{" "}
                 <span className="text-primary-300 font-semibold">
                   {status.remainingSlots}
                 </span>{" "}
@@ -169,35 +166,35 @@ export default function ReferralPage() {
         <section className="surface-card p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-wide text-surface-50/40 mb-1">Your code</p>
-              <p className="text-3xl font-mono tracking-widest text-surface-50">{status.code}</p>
+              <p className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-1">Your code</p>
+              <p className="text-3xl font-mono tracking-widest text-surface-950">{status.code}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => copy(status.code, "code")}
-                className="focus-ring px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-surface-50 text-sm font-medium"
+                className="focus-ring px-4 py-2 rounded-lg bg-white/5 hover:bg-[rgba(12,8,5,0.07)] text-surface-950 text-sm font-medium"
               >
                 {copied === "code" ? "Copied!" : "Copy code"}
               </button>
               <button
                 type="button"
                 onClick={() => copy(status.shareUrl, "url")}
-                className="focus-ring px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-surface-50 text-sm font-medium"
+                className="focus-ring px-4 py-2 rounded-lg bg-white/5 hover:bg-[rgba(12,8,5,0.07)] text-surface-950 text-sm font-medium"
               >
                 {copied === "url" ? "Copied!" : "Copy link"}
               </button>
               <button
                 type="button"
                 onClick={() => shareNative(status)}
-                className="focus-ring px-4 py-2 rounded-lg btn-primary text-surface-50 text-sm font-medium"
+                className="focus-ring px-4 py-2 rounded-lg btn-primary text-white text-sm font-medium"
               >
                 Share
               </button>
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-white/[0.03] text-xs text-surface-50/50 break-all">
+          <div className="mt-4 p-3 rounded-lg bg-[rgba(255,252,245,0.78)] text-xs text-[rgba(12,8,5,0.55)] break-all">
             {status.shareUrl}
           </div>
 
@@ -231,7 +228,7 @@ export default function ReferralPage() {
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <Stat label="Activated" value={status.activatedReferrals} accent="text-emerald-300" />
           <Stat label="Pending" value={status.pendingReferrals} accent="text-amber-300" />
-          <Stat label="Rejected" value={status.rejectedReferrals} accent="text-surface-50/50" />
+          <Stat label="Rejected" value={status.rejectedReferrals} accent="text-[rgba(12,8,5,0.55)]" />
           <Stat
             label="Days earned"
             value={status.activatedReferrals * status.bonusDays}
@@ -241,9 +238,9 @@ export default function ReferralPage() {
 
         {/* Recent */}
         <section className="surface-card p-6">
-          <h2 className="text-lg font-semibold text-surface-50 mb-4">Recent invites</h2>
+          <h2 className="text-lg font-semibold text-surface-950 mb-4">Recent invites</h2>
           {status.recent.length === 0 ? (
-            <p className="text-sm text-surface-50/40">
+            <p className="text-sm text-[rgba(12,8,5,0.46)]">
               No invites yet. Share your code to start earning Premium days.
             </p>
           ) : (
@@ -260,15 +257,15 @@ export default function ReferralPage() {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-surface-50 truncate">{r.refereeName}</p>
-                    <p className="text-xs text-surface-50/40 truncate">{r.refereeEmail}</p>
+                    <p className="text-sm text-surface-950 truncate">{r.refereeName}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.46)] truncate">{r.refereeEmail}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-surface-50/40">
+                    <p className="text-xs text-[rgba(12,8,5,0.46)]">
                       {r.status === "ACTIVATED" ? "+" : ""}
                       {r.status === "ACTIVATED" ? r.bonusDays : 0} days
                     </p>
-                    <p className="text-[11px] text-surface-50/30">
+                    <p className="text-[11px] text-[rgba(12,8,5,0.40)]">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -285,7 +282,7 @@ export default function ReferralPage() {
 function Stat({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
     <div className="surface-card p-4">
-      <p className="text-xs uppercase tracking-wide text-surface-50/40 mb-1">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-1">{label}</p>
       <p className={`text-2xl font-semibold ${accent}`}>{value}</p>
     </div>
   );

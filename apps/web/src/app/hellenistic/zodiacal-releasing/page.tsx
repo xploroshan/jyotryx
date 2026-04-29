@@ -60,17 +60,17 @@ export default function HellenisticZodiacalReleasingPage() {
       descriptionKey="featurePages.hellenisticZodiacalReleasing.description"
     >
       {!isAuthenticated && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.loginRequired}
         </div>
       )}
       {isAuthenticated && !hasDob && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.doshaComplete}
         </div>
       )}
       {loading && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/60">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-secondary">
           {t.common.loading}
         </div>
       )}
@@ -82,44 +82,44 @@ export default function HellenisticZodiacalReleasingPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass-strong rounded-2xl p-6 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
               {fp.age}
             </p>
-            <p className="text-4xl font-bold text-surface-50 mt-1">{result.ageYears}</p>
+            <p className="text-4xl font-bold text-surface-950 mt-1">{result.ageYears}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                 {fp.majorPeriod}
               </p>
-              <p className="text-xl font-semibold text-surface-50 mt-1">
+              <p className="text-xl font-semibold text-surface-950 mt-1">
                 {result.majorPeriod.sign}
               </p>
-              <p className="text-xs text-surface-50/60 mt-1">
+              <p className="text-xs text-secondary mt-1">
                 {fp.lord}: {result.majorPeriod.lord}
               </p>
-              <p className="text-xs text-surface-50/70 mt-3">
+              <p className="text-xs text-emphasis mt-3">
                 {result.majorPeriod.description}
               </p>
             </div>
             <div className="glass rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                 {fp.annualSubPeriod}
               </p>
-              <p className="text-xl font-semibold text-surface-50 mt-1">
+              <p className="text-xl font-semibold text-surface-950 mt-1">
                 {result.minorPeriod.sign}
               </p>
-              <p className="text-xs text-surface-50/60 mt-1">
+              <p className="text-xs text-secondary mt-1">
                 {fp.lord}: {result.minorPeriod.lord}
               </p>
-              <p className="text-xs text-surface-50/70 mt-3">
+              <p className="text-xs text-emphasis mt-3">
                 {result.minorPeriod.description}
               </p>
             </div>
           </div>
 
-          <div className="glass rounded-2xl p-5 text-sm text-surface-50/80 leading-relaxed">
+          <div className="glass rounded-2xl p-5 text-sm text-emphasis leading-relaxed">
             {result.interpretation}
           </div>
         </div>

@@ -81,17 +81,17 @@ export default function WesternTransitsPage() {
       descriptionKey="featurePages.westernTransits.description"
     >
       {!isAuthenticated && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.loginRequired}
         </div>
       )}
       {isAuthenticated && !hasBirth && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.doshaComplete}
         </div>
       )}
       {loading && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/60">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-secondary">
           {t.common.loading}
         </div>
       )}
@@ -103,22 +103,22 @@ export default function WesternTransitsPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
               {fp.transitsForPrefix} {result.date}
             </p>
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {result.transitingPlanets.map((p) => (
                 <li
                   key={p.planet}
-                  className="rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 py-2"
+                  className="rounded-xl bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.08)] px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-lg" aria-hidden>
                       {PLANET_GLYPH[p.planet] ?? '✦'}
                     </span>
-                    <span className="text-surface-50 font-medium text-sm">{p.planet}</span>
+                    <span className="text-surface-950 font-medium text-sm">{p.planet}</span>
                   </div>
-                  <div className="text-xs text-surface-50/60 mt-1">
+                  <div className="text-xs text-secondary mt-1">
                     {p.sign} {p.degree.toFixed(1)}°
                   </div>
                 </li>
@@ -127,11 +127,11 @@ export default function WesternTransitsPage() {
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
               {fp.activeAspectsPrefix} ({result.aspects.length})
             </p>
             {result.aspects.length === 0 ? (
-              <p className="text-sm text-surface-50/50 text-center py-4">
+              <p className="text-sm text-[rgba(12,8,5,0.55)] text-center py-4">
                 {fp.noAspects}
               </p>
             ) : (
@@ -141,14 +141,14 @@ export default function WesternTransitsPage() {
                     key={i}
                     className="flex items-center justify-between gap-2 py-2 text-sm"
                   >
-                    <span className="text-surface-50/90">
+                    <span className="text-emphasis">
                       {fp.transiting} {a.transiting}
-                      <span className="text-surface-50/40 mx-2">→</span>
+                      <span className="text-[rgba(12,8,5,0.46)] mx-2">→</span>
                       {fp.natal} {a.natal}
                     </span>
                     <span
                       className={`shrink-0 text-[11px] px-2 py-0.5 rounded-full ${
-                        ASPECT_CLASS[a.aspect] ?? 'bg-white/10 text-surface-50/70'
+                        ASPECT_CLASS[a.aspect] ?? 'bg-[rgba(12,8,5,0.07)] text-emphasis'
                       }`}
                     >
                       {a.aspect} · {a.orb}°
@@ -159,7 +159,7 @@ export default function WesternTransitsPage() {
             )}
           </div>
 
-          <div className="glass rounded-2xl p-5 text-sm text-surface-50/80 leading-relaxed">
+          <div className="glass rounded-2xl p-5 text-sm text-emphasis leading-relaxed">
             {result.interpretation}
           </div>
         </div>

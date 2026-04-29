@@ -72,12 +72,12 @@ export default function ChineseFlyingStarsPage() {
       descriptionKey="featurePages.chineseFlyingStars.description"
     >
       <div className="glass rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
-        <label className="text-xs text-surface-50/60">{fp.year}</label>
+        <label className="text-xs text-secondary">{fp.year}</label>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setYear((y) => y - 1)}
-            className="px-2 py-1 rounded bg-white/5 text-surface-50/70 text-sm hover:bg-white/10"
+            className="px-2 py-1 rounded bg-white/5 text-emphasis text-sm hover:bg-[rgba(12,8,5,0.07)]"
           >
             −
           </button>
@@ -92,7 +92,7 @@ export default function ChineseFlyingStarsPage() {
           <button
             type="button"
             onClick={() => setYear((y) => y + 1)}
-            className="px-2 py-1 rounded bg-white/5 text-surface-50/70 text-sm hover:bg-white/10"
+            className="px-2 py-1 rounded bg-white/5 text-emphasis text-sm hover:bg-[rgba(12,8,5,0.07)]"
           >
             +
           </button>
@@ -100,7 +100,7 @@ export default function ChineseFlyingStarsPage() {
       </div>
 
       {loading && (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/60">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-secondary">
           {t.common.loading}
         </div>
       )}
@@ -119,13 +119,13 @@ export default function ChineseFlyingStarsPage() {
                   <div
                     key={`${r}-${c}`}
                     className={`aspect-square rounded-2xl border bg-gradient-to-br ${
-                      STAR_BG[star] ?? 'from-white/10 to-white/[0.02] border-white/10'
+                      STAR_BG[star] ?? 'from-white/10 to-white/[0.02] border-[rgba(12,8,5,0.10)]'
                     } p-3 flex flex-col items-center justify-center relative overflow-hidden`}
                   >
-                    <div className="text-[9px] uppercase tracking-wide text-surface-50/40">
+                    <div className="text-[9px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">
                       {palaceLabels[r][c]}
                     </div>
-                    <div className="text-4xl font-bold text-surface-50 leading-none mt-1">
+                    <div className="text-4xl font-bold text-surface-950 leading-none mt-1">
                       {star}
                     </div>
                   </div>
@@ -135,24 +135,24 @@ export default function ChineseFlyingStarsPage() {
           </div>
 
           <div className="glass-strong rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
               {fp.centerStarPrefix} {result.centerStar}
             </p>
-            <p className="text-sm text-surface-50 mt-2">{result.centerMeaning}</p>
-            <p className="text-xs text-surface-50/70 mt-3">{result.interpretation}</p>
+            <p className="text-sm text-surface-950 mt-2">{result.centerMeaning}</p>
+            <p className="text-xs text-emphasis mt-3">{result.interpretation}</p>
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
               {fp.starMeanings}
             </p>
             <ul className="space-y-1.5 text-xs">
               {Object.entries(result.meanings).map(([num, meaning]) => (
                 <li key={num} className="flex gap-3">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-white/10 text-surface-50 text-[11px] font-semibold grid place-items-center">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-[rgba(12,8,5,0.07)] text-surface-950 text-[11px] font-semibold grid place-items-center">
                     {num}
                   </span>
-                  <span className="text-surface-50/70">{meaning}</span>
+                  <span className="text-emphasis">{meaning}</span>
                 </li>
               ))}
             </ul>

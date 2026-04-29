@@ -98,27 +98,27 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="page-dark flex items-center justify-center px-4 py-16">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm fade-in-up">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-semibold text-surface-50">{t.auth.brandName}</span>
+            <span className="text-lg font-semibold text-surface-950">{t.auth.brandName}</span>
           </Link>
-          <p className="text-sm text-surface-50/40">{t.auth.subtitle}</p>
+          <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.auth.subtitle}</p>
         </div>
 
         <div className="surface-card p-6">
           {verifying && (
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500" />
-              <p className="text-xs text-surface-50/40">{t.auth.resetPasswordVerifying}</p>
+              <p className="text-xs text-[rgba(12,8,5,0.46)]">{t.auth.resetPasswordVerifying}</p>
             </div>
           )}
 
           {!verifying && invalidLink && (
             <>
-              <h2 className="text-base font-semibold text-surface-50 mb-2">{t.auth.resetPasswordTitle}</h2>
+              <h2 className="text-base font-semibold text-surface-950 mb-2">{t.auth.resetPasswordTitle}</h2>
               <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
                 {t.auth.resetPasswordInvalidLink}
               </div>
@@ -136,8 +136,8 @@ function ResetPasswordContent() {
 
           {!verifying && !invalidLink && !done && (
             <>
-              <h2 className="text-base font-semibold text-surface-50 mb-1">{t.auth.resetPasswordTitle}</h2>
-              <p className="text-xs text-surface-50/40 mb-5">
+              <h2 className="text-base font-semibold text-surface-950 mb-1">{t.auth.resetPasswordTitle}</h2>
+              <p className="text-xs text-[rgba(12,8,5,0.46)] mb-5">
                 {email ? `${t.auth.resetPasswordDesc} (${email})` : t.auth.resetPasswordDesc}
               </p>
 
@@ -149,7 +149,7 @@ function ResetPasswordContent() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-surface-50/40 mb-1.5">{t.auth.newPasswordLabel}</label>
+                  <label className="block text-xs text-[rgba(12,8,5,0.46)] mb-1.5">{t.auth.newPasswordLabel}</label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -161,7 +161,7 @@ function ResetPasswordContent() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-50/25 hover:text-surface-50/50 text-xs"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgba(12,8,5,0.36)] hover:text-[rgba(12,8,5,0.55)] text-xs"
                     >
                       {showPassword ? t.auth.hide : t.auth.show}
                     </button>
@@ -170,7 +170,7 @@ function ResetPasswordContent() {
                     <div className="mt-2">
                       <div className="flex gap-0.5 mb-1">
                         {[1, 2, 3, 4, 5].map((i) => (
-                          <div key={i} className={`h-0.5 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-white/[0.06]"}`} />
+                          <div key={i} className={`h-0.5 flex-1 rounded-full ${i <= strength ? strengthColor : "bg-[rgba(255,252,245,0.92)]"}`} />
                         ))}
                       </div>
                       <p className={`text-[11px] ${strength >= 4 ? "text-emerald-400" : strength >= 3 ? "text-amber-400" : "text-red-400"}`}>
@@ -180,7 +180,7 @@ function ResetPasswordContent() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs text-surface-50/40 mb-1.5">{t.auth.confirmPasswordLabel}</label>
+                  <label className="block text-xs text-[rgba(12,8,5,0.46)] mb-1.5">{t.auth.confirmPasswordLabel}</label>
                   <input
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}

@@ -52,7 +52,7 @@ export default function AstrologyAnimation() {
             cy={s.y}
             r={s.r * 0.1}
             fill="currentColor"
-            className="text-surface-50/70 [animation:astro-twinkle_3s_ease-in-out_infinite]"
+            className="text-emphasis [animation:astro-twinkle_3s_ease-in-out_infinite]"
             style={{ animationDelay: `${s.d}s` }}
           />
         ))}
@@ -73,7 +73,7 @@ export default function AstrologyAnimation() {
                 stroke="currentColor"
                 strokeWidth="0.5"
                 strokeDasharray="2 6"
-                className="text-surface-50/10"
+                className="text-[rgba(12,8,5,0.12)]"
               />
               {/* Inner fine circle */}
               <circle
@@ -83,7 +83,7 @@ export default function AstrologyAnimation() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="0.3"
-                className="text-surface-50/8"
+                className="text-[rgba(12,8,5,0.10)]"
               />
               {/* 12 zodiac glyphs at each 30° */}
               {ZODIAC_SYMBOLS.map((sym, i) => {
@@ -99,7 +99,7 @@ export default function AstrologyAnimation() {
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="currentColor"
-                    className="text-surface-50/15"
+                    className="text-[rgba(12,8,5,0.18)]"
                   >
                     {sym}
                   </text>
@@ -121,7 +121,7 @@ export default function AstrologyAnimation() {
                     y2={y2}
                     stroke="currentColor"
                     strokeWidth="0.8"
-                    className="text-surface-50/10"
+                    className="text-[rgba(12,8,5,0.12)]"
                   />
                 );
               })}
@@ -139,7 +139,7 @@ export default function AstrologyAnimation() {
                 stroke="currentColor"
                 strokeWidth="0.4"
                 strokeDasharray="1 4"
-                className="text-surface-50/10"
+                className="text-[rgba(12,8,5,0.12)]"
               />
               {/* 5 planet dots at unequal angles */}
               {[0, 72, 144, 216, 288].map((deg, i) => {
@@ -171,7 +171,7 @@ export default function AstrologyAnimation() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="0.3"
-                className="text-surface-50/8"
+                className="text-[rgba(12,8,5,0.10)]"
               />
               {/* 3 small sparks */}
               {[0, 120, 240].map((deg, i) => {

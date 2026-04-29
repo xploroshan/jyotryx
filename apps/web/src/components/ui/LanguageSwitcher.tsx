@@ -54,7 +54,7 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border divider bg-white/[0.03] text-xs font-medium text-surface-50/60 hover:text-surface-50/80 transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border divider bg-[rgba(255,252,245,0.78)] text-xs font-medium text-secondary hover:text-emphasis transition-colors"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A8.966 8.966 0 0 1 3 12c0-1.264.26-2.467.732-3.558" />
@@ -74,7 +74,7 @@ export default function LanguageSwitcher() {
               className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
                 locale === l.code
                   ? 'text-primary-400 bg-primary-600/10'
-                  : 'text-surface-50/60 hover:text-surface-50 hover:bg-white/[0.04]'
+                  : 'text-secondary hover:text-surface-950 hover:bg-[rgba(255,252,245,0.86)]'
               }`}
             >
               <span>{l.native}</span>

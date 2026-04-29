@@ -121,7 +121,7 @@ export default function AdminPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-surface-950" />
+      
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

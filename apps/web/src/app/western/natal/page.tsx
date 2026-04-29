@@ -55,7 +55,7 @@ export default function WesternNatalPage() {
       descriptionKey="featurePages.westernNatal.description"
     >
       {!isAuthenticated ? (
-        <p className="text-sm text-surface-50/60 text-center py-6">
+        <p className="text-sm text-secondary text-center py-6">
           {fp.loginPrompt}
         </p>
       ) : (
@@ -66,14 +66,14 @@ export default function WesternNatalPage() {
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
             />
             <input
               type="time"
               value={timeOfBirth}
               onChange={(e) => setTimeOfBirth(e.target.value)}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
             />
             <input
               type="text"
@@ -81,7 +81,7 @@ export default function WesternNatalPage() {
               onChange={(e) => setPlaceOfBirth(e.target.value)}
               placeholder={t.form.placePlaceholder}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
             />
             <button
               type="submit"
@@ -95,23 +95,23 @@ export default function WesternNatalPage() {
 
           {result && (
             <div className="mt-6 space-y-4">
-              <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                <div className="text-xs uppercase tracking-wider text-surface-50/40">
+              <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)]">
                   {fp.ascendant}
                 </div>
-                <div className="mt-1 text-surface-50 font-medium">
+                <div className="mt-1 text-surface-950 font-medium">
                   {result.ascendant.sign} ({result.ascendant.degree.toFixed(2)}°)
                 </div>
               </div>
-              <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                <div className="text-xs uppercase tracking-wider text-surface-50/40 mb-3">
+              <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-3">
                   {fp.planets}
                 </div>
-                <ul className="space-y-2 text-sm text-surface-50/80">
+                <ul className="space-y-2 text-sm text-emphasis">
                   {result.planets.map((p) => (
                     <li key={p.planet} className="flex justify-between">
                       <span>{p.planet}</span>
-                      <span className="text-surface-50/60">
+                      <span className="text-secondary">
                         {p.sign} {p.degree.toFixed(2)}°
                         {p.house !== null ? ` · H${p.house}` : ''}
                       </span>
@@ -120,8 +120,8 @@ export default function WesternNatalPage() {
                 </ul>
               </div>
               {result.interpretation && (
-                <div className="rounded-xl border divider bg-white/[0.03] p-4">
-                  <p className="text-sm text-surface-50/80 whitespace-pre-wrap">
+                <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
+                  <p className="text-sm text-emphasis whitespace-pre-wrap">
                     {result.interpretation}
                   </p>
                 </div>

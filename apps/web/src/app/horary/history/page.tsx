@@ -63,16 +63,16 @@ export default function HoraryHistoryPage() {
       descriptionKey="featurePages.horaryHistory.description"
     >
       {!isAuthenticated ? (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.loginRequired}
         </div>
       ) : !hydrated ? (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/60">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-secondary">
           {t.common.loading}
         </div>
       ) : records.length === 0 ? (
         <div className="glass rounded-2xl p-8 text-center">
-          <p className="text-sm text-surface-50/70 mb-4">{fp.empty}</p>
+          <p className="text-sm text-emphasis mb-4">{fp.empty}</p>
           <Link
             href="/horary/ask"
             className="inline-block px-5 py-2 btn-primary rounded-lg text-sm"
@@ -83,13 +83,13 @@ export default function HoraryHistoryPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-surface-50/50">
+            <p className="text-xs text-[rgba(12,8,5,0.55)]">
               {records.length} {records.length === 1 ? fp.questionSingular : fp.questionPlural}
             </p>
             <button
               type="button"
               onClick={clearAll}
-              className="text-xs text-surface-50/50 hover:text-red-300 transition"
+              className="text-xs text-[rgba(12,8,5,0.55)] hover:text-red-300 transition"
             >
               {fp.clearAll}
             </button>
@@ -105,57 +105,57 @@ export default function HoraryHistoryPage() {
                 <button
                   type="button"
                   onClick={() => setExpandedId(isOpen ? null : r.id)}
-                  className="w-full text-left px-5 py-4 hover:bg-white/[0.03] flex items-start justify-between gap-3"
+                  className="w-full text-left px-5 py-4 hover:bg-[rgba(255,252,245,0.78)] flex items-start justify-between gap-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-surface-50 font-medium truncate">
+                    <p className="text-sm text-surface-950 font-medium truncate">
                       {r.question}
                     </p>
-                    <p className="text-[11px] text-surface-50/45 mt-1">
+                    <p className="text-[11px] text-[rgba(12,8,5,0.50)] mt-1">
                       {formatDate(r.askedAt)} · {fp.ascShort} {r.chart.ascendant.sign}
                     </p>
                   </div>
-                  <span className="text-xs text-surface-50/40 shrink-0" aria-hidden>
+                  <span className="text-xs text-[rgba(12,8,5,0.46)] shrink-0" aria-hidden>
                     {isOpen ? '▲' : '▼'}
                   </span>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-white/[0.06] bg-black/20 px-5 py-4 space-y-3">
+                  <div className="border-t border-[rgba(12,8,5,0.08)] bg-black/20 px-5 py-4 space-y-3">
                     <div className="text-xs space-y-1">
-                      <div className="text-surface-50/50">
+                      <div className="text-[rgba(12,8,5,0.55)]">
                         {fp.ascendant}:{' '}
-                        <span className="text-surface-50/80">
+                        <span className="text-emphasis">
                           {r.chart.ascendant.sign} (
                           {r.chart.ascendant.degree.toFixed(2)}°)
                         </span>
                       </div>
-                      <div className="text-surface-50/50">
+                      <div className="text-[rgba(12,8,5,0.55)]">
                         {fp.querent}:{' '}
-                        <span className="text-surface-50/80">
+                        <span className="text-emphasis">
                           {r.chart.significators.querent}
                         </span>
                       </div>
-                      <div className="text-surface-50/50">
+                      <div className="text-[rgba(12,8,5,0.55)]">
                         {fp.quesited}:{' '}
-                        <span className="text-surface-50/80">
+                        <span className="text-emphasis">
                           {r.chart.significators.quesited}
                         </span>
                       </div>
-                      <div className="text-surface-50/50">
+                      <div className="text-[rgba(12,8,5,0.55)]">
                         {fp.moon}:{' '}
-                        <span className="text-surface-50/80">
+                        <span className="text-emphasis">
                           {r.chart.significators.moon}
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm text-surface-50/85 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-emphasis whitespace-pre-wrap leading-relaxed">
                       {r.judgment}
                     </p>
                     <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={() => remove(r.id)}
-                        className="text-xs text-surface-50/40 hover:text-red-300 transition"
+                        className="text-xs text-[rgba(12,8,5,0.46)] hover:text-red-300 transition"
                       >
                         {fp.delete}
                       </button>

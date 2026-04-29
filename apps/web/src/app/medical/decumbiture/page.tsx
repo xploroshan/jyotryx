@@ -73,7 +73,7 @@ export default function MedicalDecumbiturePage() {
       descriptionKey="featurePages.medicalDecumbiture.description"
     >
       {!isAuthenticated ? (
-        <div className="glass rounded-2xl p-8 text-center text-sm text-surface-50/70">
+        <div className="glass rounded-2xl p-8 text-center text-sm text-emphasis">
           {t.kundli.loginRequired}
         </div>
       ) : (
@@ -81,7 +81,7 @@ export default function MedicalDecumbiturePage() {
           <form onSubmit={submit} className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
-                <span className="text-[11px] uppercase tracking-wide text-surface-50/50">
+                <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                   {fp.onsetDate}
                 </span>
                 <input
@@ -93,7 +93,7 @@ export default function MedicalDecumbiturePage() {
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] uppercase tracking-wide text-surface-50/50">
+                <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                   {fp.onsetTime}
                 </span>
                 <input
@@ -106,7 +106,7 @@ export default function MedicalDecumbiturePage() {
               </label>
             </div>
             <label className="block">
-              <span className="text-[11px] uppercase tracking-wide text-surface-50/50">
+              <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                 {fp.symptoms}
               </span>
               <textarea
@@ -136,37 +136,37 @@ export default function MedicalDecumbiturePage() {
           <div
             className={`rounded-2xl border bg-gradient-to-br ${
               ELEMENT_BG[result.ascendantElement] ??
-              'from-white/10 to-white/[0.02] border-white/10'
+              'from-white/10 to-white/[0.02] border-[rgba(12,8,5,0.10)]'
             } p-6`}
           >
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
               {fp.ascendantPatient}
             </p>
-            <p className="text-2xl font-bold text-surface-50 mt-1">
+            <p className="text-2xl font-bold text-surface-950 mt-1">
               {result.ascendant.sign}
             </p>
-            <p className="text-xs text-surface-50/70 mt-1">
+            <p className="text-xs text-emphasis mt-1">
               {fp.element}: {result.ascendantElement}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                 {fp.sixthHouse}
               </p>
-              <p className="text-lg font-semibold text-surface-50 mt-1">
+              <p className="text-lg font-semibold text-surface-950 mt-1">
                 {result.sixthHouseSign}
               </p>
             </div>
             {result.moon && (
               <div className="glass rounded-2xl p-4">
-                <p className="text-[10px] uppercase tracking-wide text-surface-50/50">
+                <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
                   {fp.moonProgression}
                 </p>
-                <p className="text-lg font-semibold text-surface-50 mt-1">
+                <p className="text-lg font-semibold text-surface-950 mt-1">
                   {result.moon.sign}{' '}
-                  <span className="text-xs text-surface-50/50">
+                  <span className="text-xs text-[rgba(12,8,5,0.55)]">
                     {result.moon.degree.toFixed(1)}°
                   </span>
                 </p>
@@ -175,19 +175,19 @@ export default function MedicalDecumbiturePage() {
           </div>
 
           <div className="glass-strong rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-surface-50/50 mb-2">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
               {fp.guidance}
             </p>
-            <p className="text-sm text-surface-50/85">{result.guidance}</p>
+            <p className="text-sm text-emphasis">{result.guidance}</p>
           </div>
 
-          <div className="glass rounded-2xl p-5 text-sm text-surface-50/80 leading-relaxed">
+          <div className="glass rounded-2xl p-5 text-sm text-emphasis leading-relaxed">
             {result.interpretation}
           </div>
 
           {result.symptoms && (
-            <div className="glass rounded-2xl p-4 text-xs text-surface-50/60">
-              <span className="text-surface-50/40 uppercase tracking-wide">
+            <div className="glass rounded-2xl p-4 text-xs text-secondary">
+              <span className="text-[rgba(12,8,5,0.46)] uppercase tracking-wide">
                 {fp.reportedSymptoms}:
               </span>{' '}
               {result.symptoms}

@@ -26,44 +26,49 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
 
   return (
     <PageTransition className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-14">
-      {/* Hero — deep ink island on the cream canvas. The tradition glyph
-          sits in a saffron-tinted plinth so the brand orange carries the
-          eye. White text in here is intentional: this card is the dark
-          editorial moment on a light page. */}
-      <section className="relative overflow-hidden rounded-3xl bg-surface-950 border border-white/[0.06] shadow-warm-md px-8 sm:px-12 py-12 sm:py-14 mb-12">
+      {/* Hero — cream card with a soft sunrise wash. The per-tradition
+          gradient sits behind a low-opacity tint so each tradition gets
+          a brand-coloured hint without breaking the unified cream
+          editorial canvas. */}
+      <section className="relative overflow-hidden rounded-3xl card-cream shadow-warm-md px-8 sm:px-12 py-12 sm:py-14 mb-12">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-20 -top-24 w-[560px] h-[560px] rounded-full opacity-90"
+          className="pointer-events-none absolute -right-20 -top-24 w-[560px] h-[560px] rounded-full opacity-80"
           style={{
             background:
-              'radial-gradient(circle, rgba(255,182,39,0.30) 0%, rgba(255,77,0,0.16) 45%, transparent 75%)',
+              'radial-gradient(circle, rgba(255,182,39,0.34) 0%, rgba(255,77,0,0.16) 45%, transparent 75%)',
           }}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-32 bottom-[-30%] w-[420px] h-[420px] rounded-full opacity-60"
+          className={`pointer-events-none absolute inset-0 opacity-12 bg-gradient-to-br ${cfg.heroClass}`}
+          style={{ opacity: 0.10 }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-32 bottom-[-30%] w-[420px] h-[420px] rounded-full opacity-50"
           style={{
             background:
-              'radial-gradient(circle, rgba(255,122,64,0.18) 0%, rgba(255,77,0,0.08) 45%, transparent 75%)',
+              'radial-gradient(circle, rgba(255,122,64,0.20) 0%, rgba(255,77,0,0.08) 45%, transparent 75%)',
           }}
         />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-8">
-          <div className="shrink-0 grid place-items-center w-28 h-28 rounded-3xl bg-primary-500/22 border border-primary-500/45 text-primary-200 shadow-[0_0_48px_-8px_rgba(255,77,0,0.55)]">
+          <div className="shrink-0 grid place-items-center w-28 h-28 rounded-3xl bg-primary-500/15 border border-primary-500/40 text-primary-600 shadow-[0_0_48px_-8px_rgba(255,77,0,0.45)]">
             <TraditionGlyph id={traditionId} size={64} weight={1.4} />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary-500/20 border border-primary-500/45 text-primary-200 uppercase tracking-[0.18em] mb-4">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary-500/15 border border-primary-500/40 text-primary-600 uppercase tracking-[0.18em] mb-4">
               {name}
             </span>
             <h1
-              className="font-display font-semibold text-surface-50 tracking-[-0.01em] leading-[1.0]"
+              className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
               style={{ fontSize: 'clamp(36px, 5vw, 64px)' }}
             >
               {name}
             </h1>
             {tagline && (
-              <p className="mt-4 text-base sm:text-lg text-surface-50/72 max-w-2xl leading-relaxed">
+              <p className="mt-4 text-base sm:text-lg text-emphasis max-w-2xl leading-relaxed">
                 {tagline}
               </p>
             )}
@@ -71,9 +76,7 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
         </div>
       </section>
 
-      {/* Feature tiles — cream cards on the page canvas. Crisp white surface
-          with a saffron-glowing icon plinth so the orange echoes through
-          the editorial light theme. */}
+      {/* Feature tiles — cream cards with saffron-glowing icon plinths. */}
       <section>
         <h2 className="text-[12px] uppercase tracking-[0.22em] text-primary-600 font-semibold mb-6">
           {exploreCta}

@@ -54,8 +54,8 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
   };
 
   return (
-    <section className="mt-8 pt-8 border-t border-white/[0.08]">
-      <h3 className="font-display text-lg font-semibold text-surface-50 mb-2">
+    <section className="mt-8 pt-8 border-t border-[rgba(12,8,5,0.10)]">
+      <h3 className="font-display text-lg font-semibold text-surface-950 mb-2">
         Daily briefing email
       </h3>
       <p className="text-sm text-secondary mb-4 max-w-xl leading-relaxed">
@@ -64,10 +64,10 @@ export default function BriefingPreferenceSection({ token }: { token: string }) 
         on by default for everyone who registers. Turn it off here any time.
       </p>
 
-      <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-900 border border-white/[0.06] max-w-xl">
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-900 border border-[rgba(12,8,5,0.08)] max-w-xl">
         <div>
-          <p className="text-sm font-medium text-surface-50">Send me my briefing each morning</p>
-          <p className="text-xs text-surface-50/55 mt-1">
+          <p className="text-sm font-medium text-surface-950">Send me my briefing each morning</p>
+          <p className="text-xs text-secondary mt-1">
             Delivered to your account email. Switching this off stops emails immediately —
             no other action needed.
           </p>

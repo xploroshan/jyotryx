@@ -81,28 +81,28 @@ export default function MuhuratPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-gray-950 to-gray-950" />
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-50/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
             <span className="text-lg">📅</span>
             {t.muhurat.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             <span className="text-gradient">{t.muhurat.title}</span> {t.muhurat.titleHighlight}
           </h1>
-          <p className="text-surface-50/40 max-w-xl mx-auto">
+          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
             {t.muhurat.description}
           </p>
         </div>
 
         {/* Purpose Selection */}
         <div className="surface-card p-6 mb-6">
-          <h2 className="text-sm font-medium text-surface-50/40 mb-4">{t.muhurat.selectPurpose}</h2>
+          <h2 className="text-sm font-medium text-[rgba(12,8,5,0.46)] mb-4">{t.muhurat.selectPurpose}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {purposes.map((p) => (
               <button
@@ -110,8 +110,8 @@ export default function MuhuratPage() {
                 onClick={() => setSelectedPurpose(p.id)}
                 className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   selectedPurpose === p.id
-                    ? "bg-white/[0.06] border border-white/[0.06] text-surface-50 border-primary-500/50"
-                    : "text-surface-50/40 hover:text-surface-50 hover:bg-white/[0.03]"
+                    ? "bg-[rgba(255,252,245,0.92)] border border-[rgba(12,8,5,0.08)] text-surface-950 border-primary-500/50"
+                    : "text-[rgba(12,8,5,0.46)] hover:text-surface-950 hover:bg-[rgba(255,252,245,0.78)]"
                 }`}
               >
                 <span className="text-lg">{p.icon}</span>
@@ -125,7 +125,7 @@ export default function MuhuratPage() {
         <div className="surface-card p-6 mb-6">
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-surface-50/30 mb-2">{t.muhurat.fromDate}</label>
+              <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.muhurat.fromDate}</label>
               <input
                 type="date"
                 value={fromDate}
@@ -134,7 +134,7 @@ export default function MuhuratPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-surface-50/30 mb-2">{t.muhurat.toDate}</label>
+              <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.muhurat.toDate}</label>
               <input
                 type="date"
                 value={toDate}
@@ -143,7 +143,7 @@ export default function MuhuratPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-surface-50/30 mb-2">{t.muhurat.location}</label>
+              <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.muhurat.location}</label>
               <input
                 type="text"
                 value={location}
@@ -157,7 +157,7 @@ export default function MuhuratPage() {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-surface-50 font-medium  transition-all disabled:opacity-50"
+            className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl btn-primary text-white font-medium  transition-all disabled:opacity-50"
           >
             {loading ? t.muhurat.finding : t.muhurat.findTimes}
           </button>
@@ -177,7 +177,7 @@ export default function MuhuratPage() {
             </h2>
 
             {result.auspiciousTimes.length === 0 ? (
-              <div className="surface-card p-8 text-center text-surface-50/30">
+              <div className="surface-card p-8 text-center text-[rgba(12,8,5,0.40)]">
                 {t.muhurat.noResults}
               </div>
             ) : (
@@ -187,7 +187,7 @@ export default function MuhuratPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <p className="text-lg font-bold text-surface-50">
+                          <p className="text-lg font-bold text-surface-950">
                             {new Date(time.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                           </p>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${qualityColor(time.quality)}`}>
@@ -197,7 +197,7 @@ export default function MuhuratPage() {
                         <p className="text-sm text-primary-400 font-medium mb-1">
                           {time.startTime} - {time.endTime}
                         </p>
-                        <p className="text-sm text-surface-50/40">{time.reason}</p>
+                        <p className="text-sm text-[rgba(12,8,5,0.46)]">{time.reason}</p>
                       </div>
                     </div>
                   </div>

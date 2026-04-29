@@ -87,30 +87,30 @@ export default function ReportsPage() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-violet-500/5 via-gray-950 to-gray-950" />
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-50/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
             <span className="text-lg">📄</span>
             {t.reports.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             {t.reports.titlePart1} <span className="text-gradient">{t.reports.titleHighlight}</span>
           </h1>
-          <p className="text-surface-50/40 max-w-xl mx-auto">
+          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
             {t.reports.subtitle}
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 rounded-xl bg-white/[0.03] p-1 w-fit">
+        <div className="flex gap-2 mb-8 rounded-xl bg-[rgba(255,252,245,0.78)] p-1 w-fit">
           {(["generate", "history"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveView(tab)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-surface-50" : "text-surface-50/40 hover:text-surface-50"}`}>
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-white" : "text-[rgba(12,8,5,0.46)] hover:text-surface-950"}`}>
               {tab === "generate" ? t.reports.generateNew : `${t.reports.myReports} (${reports.length})`}
             </button>
           ))}
@@ -126,13 +126,13 @@ export default function ReportsPage() {
             {reportTypes.map((rt) => (
               <div key={rt.id} className="surface-card p-6">
                 <span className="text-3xl block mb-3">{rt.icon}</span>
-                <h3 className="text-lg font-bold text-surface-50 mb-2">{rt.label}</h3>
-                <p className="text-sm text-surface-50/40 mb-4">{rt.desc}</p>
+                <h3 className="text-lg font-bold text-surface-950 mb-2">{rt.label}</h3>
+                <p className="text-sm text-[rgba(12,8,5,0.46)] mb-4">{rt.desc}</p>
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => handleGenerate(rt.id)}
                     disabled={generating === rt.id}
-                    className="px-4 py-2 rounded-xl btn-primary text-sm text-surface-50 font-medium  transition-all disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl btn-primary text-sm text-white font-medium  transition-all disabled:opacity-50"
                   >
                     {generating === rt.id ? t.reports.generating : t.reports.generate}
                   </button>
@@ -156,8 +156,8 @@ export default function ReportsPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="surface-card p-12 text-center">
-                <p className="text-surface-50/30 mb-4">{t.reports.noReports}</p>
-                <button onClick={() => setActiveView("generate")} className="px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1]">
+                <p className="text-[rgba(12,8,5,0.40)] mb-4">{t.reports.noReports}</p>
+                <button onClick={() => setActiveView("generate")} className="px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)]">
                   {t.reports.firstReport}
                 </button>
               </div>
@@ -168,17 +168,17 @@ export default function ReportsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">{reportTypes.find((r) => r.id === report.type)?.icon || "📄"}</span>
-                        <h3 className="font-bold text-surface-50">{report.title}</h3>
+                        <h3 className="font-bold text-surface-950">{report.title}</h3>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadge(report.status)}`}>{report.status}</span>
                       </div>
-                      <p className="text-sm text-surface-50/40">{report.summary}</p>
-                      <p className="text-xs text-surface-50/20 mt-1">
+                      <p className="text-sm text-[rgba(12,8,5,0.46)]">{report.summary}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.32)] mt-1">
                         {t.reports.generatedOn} {new Date(report.createdAt).toLocaleDateString(locale === "en" ? "en-IN" : locale)}
                       </p>
                     </div>
                     {report.pdfUrl && (
                       <a href={report.pdfUrl} target="_blank" rel="noopener noreferrer"
-                        className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1] transition-all shrink-0">
+                        className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)] transition-all shrink-0">
                         {t.reports.downloadPdf}
                       </a>
                     )}

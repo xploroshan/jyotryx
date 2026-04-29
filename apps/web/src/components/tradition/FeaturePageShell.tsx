@@ -50,28 +50,35 @@ export default function FeaturePageShell({
         <span className="text-emphasis">{featureName}</span>
       </nav>
 
-      {/* Feature hero — sits on the cream canvas as a deep ink block so
-          the per-tradition gradient (heroClass, e.g. from-vedic-500/...)
-          still reads as a confident editorial header without competing
-          with the page-wide cream. White text in here is intentional —
-          this is a dark island on a light page. */}
-      <section
-        className={`relative rounded-3xl overflow-hidden bg-surface-950 border border-white/[0.06] px-8 sm:px-10 py-10 mb-8 shadow-warm-md`}
-      >
+      {/* Feature hero — cream card with a soft sunrise wash. The per-
+          tradition gradient (cfg.heroClass) sits behind a light overlay
+          so it tints the card in the tradition's brand without ever
+          breaking the cream-canvas contract. */}
+      <section className="relative overflow-hidden rounded-3xl card-cream shadow-warm-md px-8 sm:px-10 py-10 mb-8">
         <div
           aria-hidden
-          className={`absolute inset-0 bg-gradient-to-br ${cfg.heroClass} opacity-90`}
+          className="absolute inset-0 pointer-events-none opacity-25"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 80% 0%, rgba(255,182,39,0.30) 0%, rgba(255,77,0,0.15) 40%, transparent 75%)',
+          }}
+        />
+        <div
+          aria-hidden
+          className={`absolute inset-0 pointer-events-none opacity-15 bg-gradient-to-br ${cfg.heroClass}`}
         />
         <div className="relative flex items-center gap-5">
-          <span className="text-4xl leading-none" aria-hidden>
-            {icon ?? cfg.icon}
-          </span>
+          <div className="shrink-0 grid place-items-center w-16 h-16 rounded-2xl bg-primary-500/15 border border-primary-500/35 text-primary-600 shadow-[0_0_28px_-6px_rgba(255,77,0,0.45)]">
+            <span className="text-3xl leading-none" aria-hidden>
+              {icon ?? cfg.icon}
+            </span>
+          </div>
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-surface-50 tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-semibold text-surface-950 tracking-tight">
               {featureName}
             </h1>
             {resolvedDescription && (
-              <p className="mt-2 text-sm text-surface-50/65 leading-relaxed">{resolvedDescription}</p>
+              <p className="mt-2 text-sm text-emphasis leading-relaxed">{resolvedDescription}</p>
             )}
           </div>
         </div>

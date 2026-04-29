@@ -29,21 +29,31 @@ function renderHighlight(text: string) {
   if (!text.includes(BRAND)) {
     return <span className="text-gradient-sunrise">{text}</span>;
   }
+  // The italic Fraunces "J" has a generous ascender that gets clipped by the
+  // headline above it when "Jyotron" wraps onto a second line of its own.
+  // To guarantee full visibility we render the brand on a forced new line
+  // (display:block) with extra top spacing so the J's curl never collides
+  // with the line above. The leading text fragment ("decoded by ") trims its
+  // trailing space — without that trim the new-line block leaves a hanging
+  // gap on the prior line.
   const parts = text.split(BRAND);
   const out: React.ReactNode[] = [];
   parts.forEach((p, i) => {
     if (p) {
-      out.push(
-        <span key={`p-${i}`} className="text-gradient-sunrise">
-          {p}
-        </span>,
-      );
+      const leading = i < parts.length - 1 ? p.replace(/\s+$/, "") : p;
+      if (leading) {
+        out.push(
+          <span key={`p-${i}`} className="text-gradient-sunrise">
+            {leading}
+          </span>,
+        );
+      }
     }
     if (i < parts.length - 1) {
       out.push(
         <span
           key={`b-${i}`}
-          className="text-gradient-sunrise accent-underline"
+          className="block text-gradient-sunrise accent-underline mt-3 sm:mt-4 pt-[0.08em] leading-[1.05]"
         >
           {BRAND}
         </span>,
@@ -137,10 +147,10 @@ export default function HomePage() {
 
               <h1
                 aria-label={`${t.home.heroTitle} ${t.home.heroHighlight}`}
-                className="font-display font-semibold text-surface-950 leading-[0.92] tracking-[-0.02em] mb-8"
+                className="font-display font-semibold text-surface-950 leading-[1.0] tracking-[-0.02em] mb-8"
                 style={{ fontSize: "clamp(56px, 9vw, 144px)" }}
               >
-                <span className="block">
+                <span className="block leading-[0.94]">
                   <CharReveal text={t.home.heroTitle.replace(/[,.]?\s*$/, "")} />
                 </span>
                 <motion.span
@@ -151,13 +161,13 @@ export default function HomePage() {
                     ease: [0.22, 1, 0.36, 1],
                     delay: 0.45,
                   }}
-                  className="serif-italic inline-block mt-1"
+                  className="serif-italic block mt-3 sm:mt-4 pb-[0.05em] leading-[1.05]"
                 >
                   {/* The gradient lives per-fragment inside renderHighlight
                       (not on this parent) so the brand word stays visible
-                      under bg-clip-text. The accent-underline is scoped to
-                      the brand only — multi-line wrap would otherwise
-                      mis-place the stripe under the wrong line. */}
+                      under bg-clip-text. The brand "Jyotron" forces its own
+                      block-level line inside renderHighlight so the italic
+                      J ascender never gets clipped by the line above. */}
                   {renderHighlight(t.home.heroHighlight)}
                 </motion.span>
               </h1>

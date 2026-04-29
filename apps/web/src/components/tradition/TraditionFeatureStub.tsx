@@ -9,9 +9,9 @@ import { PageTransition } from '@/components/ui/PageTransition';
  * Placeholder scaffold rendered by each new tradition-feature page until
  * the backend endpoint and full form are wired up.
  *
- * Uses the tradition's palette so the page doesn't feel empty — users
- * land on the correct tradition-branded skeleton and can navigate back
- * to the tradition dashboard.
+ * Lives on the cream canvas: per-tradition palette is hinted via a low-
+ * opacity overlay rather than a saturated dark band, so every tradition's
+ * stub looks like a member of the same editorial system.
  */
 export default function TraditionFeatureStub({
   traditionId,
@@ -20,7 +20,7 @@ export default function TraditionFeatureStub({
   children,
 }: {
   traditionId: TraditionId;
-  featureKey: string; // e.g. 'traditionsUi.chinese.features.bazi'
+  featureKey: string;
   descriptionKey?: string;
   children?: React.ReactNode;
 }) {
@@ -49,26 +49,32 @@ export default function TraditionFeatureStub({
         / <span className="text-emphasis">{featureName}</span>
       </nav>
 
-      {/* Tradition-coloured deep ink island for the page header — keeps
-          the per-tradition gradient (heroClass) without competing with
-          the cream canvas. */}
-      <section
-        className={`relative overflow-hidden rounded-3xl bg-surface-950 border border-white/[0.06] shadow-warm-md px-6 sm:px-10 py-8 mb-6`}
-      >
+      <section className="relative overflow-hidden rounded-3xl card-cream shadow-warm-md px-6 sm:px-10 py-8 mb-6">
         <div
           aria-hidden
-          className={`absolute inset-0 bg-gradient-to-br ${cfg.heroClass} opacity-90`}
+          className={`absolute inset-0 pointer-events-none bg-gradient-to-br ${cfg.heroClass}`}
+          style={{ opacity: 0.10 }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none opacity-25"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 80% 0%, rgba(255,182,39,0.30) 0%, rgba(255,77,0,0.15) 40%, transparent 75%)',
+          }}
         />
         <div className="relative flex items-center gap-4">
-          <span className="text-4xl leading-none" aria-hidden>
-            {cfg.icon}
-          </span>
+          <div className="shrink-0 grid place-items-center w-14 h-14 rounded-xl bg-primary-500/15 border border-primary-500/30 text-primary-600">
+            <span className="text-3xl leading-none" aria-hidden>
+              {cfg.icon}
+            </span>
+          </div>
           <div>
-            <h1 className="font-display text-xl sm:text-2xl font-semibold text-surface-50 tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 tracking-tight">
               {featureName}
             </h1>
             {descriptionKey && (
-              <p className="mt-1 text-sm text-surface-50/70">
+              <p className="mt-1 text-sm text-emphasis">
                 {readLabel(descriptionKey, '')}
               </p>
             )}
@@ -76,26 +82,12 @@ export default function TraditionFeatureStub({
         </div>
       </section>
 
-      {/* Children container kept as dark-canvas surface-card so each
-          tradition's stub content (forms, result tiles styled with
-          text-surface-50 + bg-white/[0.04]) reads correctly on the
-          deep ink island this page renders inside. */}
-      <div className="relative rounded-2xl bg-surface-950 border border-white/[0.06] shadow-warm-md p-6 overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 60% at 50% -10%, rgba(255,182,39,0.08) 0%, transparent 70%)',
-          }}
-        />
-        <div className="relative">
-          {children ?? (
-            <p className="text-sm text-surface-50/60 text-center py-6">
-              {readLabel('traditionsUi.comingSoon', 'Coming soon')}
-            </p>
-          )}
-        </div>
+      <div className="card-cream rounded-2xl p-6 shadow-warm-sm">
+        {children ?? (
+          <p className="text-sm text-secondary text-center py-6">
+            {readLabel('traditionsUi.comingSoon', 'Coming soon')}
+          </p>
+        )}
       </div>
     </PageTransition>
   );

@@ -59,7 +59,7 @@ export default function HoraryAskPage() {
       descriptionKey="featurePages.horaryAsk.description"
     >
       {!isAuthenticated ? (
-        <p className="text-sm text-surface-50/60 text-center py-6">
+        <p className="text-sm text-secondary text-center py-6">
           {fp.loginPrompt}
         </p>
       ) : (
@@ -71,7 +71,7 @@ export default function HoraryAskPage() {
               placeholder={fp.placeholder}
               rows={4}
               required
-              className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-50"
+              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
             />
             <button
               type="submit"
@@ -85,14 +85,14 @@ export default function HoraryAskPage() {
 
           {result && (
             <div className="mt-6 space-y-3">
-              <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-surface-50/80">
-                <div className="text-xs uppercase tracking-wider text-surface-50/40 mb-1">
+              <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4 text-sm text-emphasis">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-1">
                   {fp.question}
                 </div>
                 <div>{result.question}</div>
               </div>
-              <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-surface-50/80">
-                <div className="text-xs uppercase tracking-wider text-surface-50/40 mb-1">
+              <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4 text-sm text-emphasis">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-1">
                   {fp.chart}
                 </div>
                 <div>
@@ -103,13 +103,13 @@ export default function HoraryAskPage() {
                 <div>{fp.quesited}: {result.chart.significators.quesited}</div>
                 <div>{fp.moon}: {result.chart.significators.moon}</div>
               </div>
-              <div className="rounded-xl border divider bg-white/[0.03] p-4 text-sm text-surface-50/80 whitespace-pre-wrap">
+              <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4 text-sm text-emphasis whitespace-pre-wrap">
                 {result.judgment}
               </div>
               <div className="text-right">
                 <Link
                   href="/horary/history"
-                  className="text-xs text-surface-50/50 hover:text-surface-50 transition"
+                  className="text-xs text-[rgba(12,8,5,0.55)] hover:text-surface-950 transition"
                 >
                   {fp.viewHistory}
                 </Link>

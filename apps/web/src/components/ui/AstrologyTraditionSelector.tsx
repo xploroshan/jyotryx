@@ -167,10 +167,10 @@ export default function AstrologyTraditionSelector({
               onClick={() => available && toggle(tradition.id)}
               className={`relative group text-left p-5 rounded-2xl border transition-all duration-300 ${
                 !available
-                  ? "opacity-40 cursor-not-allowed border-white/5 bg-white/[0.01]"
+                  ? "opacity-40 cursor-not-allowed border-[rgba(12,8,5,0.06)] bg-[rgba(255,252,245,0.60)]"
                   : selected
-                  ? `surface-card ${tradition.borderColor} shadow-lg ${tradition.glowColor} bg-white/[0.06]`
-                  : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.12]"
+                  ? `surface-card ${tradition.borderColor} shadow-lg ${tradition.glowColor} bg-[rgba(255,252,245,0.92)]`
+                  : "border-[rgba(12,8,5,0.08)] bg-[rgba(255,252,245,0.70)] hover:bg-[rgba(255,252,245,0.86)] hover:border-[rgba(12,8,5,0.14)]"
               }`}
             >
               {/* Selection indicator */}
@@ -190,23 +190,23 @@ export default function AstrologyTraditionSelector({
 
               {/* Coming Soon badge */}
               {!available && (
-                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-surface-50/30 font-medium">
+                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-[rgba(12,8,5,0.40)] font-medium">
                   {t.traditions.comingSoon}
                 </div>
               )}
 
               {/* Icon */}
-              <div className={`mb-3 ${available ? tradition.color : "text-surface-50/20"}`}>
+              <div className={`mb-3 ${available ? tradition.color : "text-[rgba(12,8,5,0.32)]"}`}>
                 {tradition.icon}
               </div>
 
               {/* Name */}
-              <h3 className={`text-sm font-semibold mb-1 ${available ? "text-surface-50" : "text-surface-50/30"}`}>
+              <h3 className={`text-sm font-semibold mb-1 ${available ? "text-surface-950" : "text-[rgba(12,8,5,0.40)]"}`}>
                 {tradition.name}
               </h3>
 
               {/* Description */}
-              <p className={`text-xs leading-relaxed ${available ? "text-surface-50/50" : "text-surface-50/20"}`}>
+              <p className={`text-xs leading-relaxed ${available ? "text-[rgba(12,8,5,0.55)]" : "text-[rgba(12,8,5,0.32)]"}`}>
                 {tradition.description}
               </p>
             </button>
