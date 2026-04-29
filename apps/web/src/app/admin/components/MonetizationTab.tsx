@@ -53,6 +53,7 @@ export function MonetizationTab({ token }: { token: string }) {
   const [savingBriefing, setSavingBriefing] = useState(false);
   const [briefingMsg, setBriefingMsg] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
+  const [enrollingAll, setEnrollingAll] = useState(false);
 
   // Paywall weights state
   const [paywallEnabled, setPaywallEnabled] = useState(true);
@@ -127,6 +128,37 @@ export function MonetizationTab({ token }: { token: string }) {
     } finally {
       setSendingTest(false);
       setTimeout(() => setBriefingMsg(null), 4000);
+    }
+  };
+
+  const enableForAll = async () => {
+    // Confirm before flipping every opted-out user, since this overrides
+    // explicit opt-outs and emails are user-visible — we never want a
+    // misclick to re-subscribe the entire base.
+    const ok = window.confirm(
+      "Enable the daily briefing for every user who is currently opted out?\n\n" +
+        "This will overwrite explicit opt-outs and they will start receiving the morning email " +
+        "until they turn it off again from their profile.",
+    );
+    if (!ok) return;
+    setEnrollingAll(true);
+    setBriefingMsg(null);
+    try {
+      const res = await api.post<{ updated: number }>(
+        "/admin/briefing/enable-for-all",
+        {},
+        { token },
+      );
+      setBriefingMsg({
+        tone: "success",
+        text: `Enabled briefing for ${res.updated} previously-disabled user${res.updated === 1 ? "" : "s"}.`,
+      });
+      await load();
+    } catch (err) {
+      setBriefingMsg({ tone: "error", text: errorMessage(err) });
+    } finally {
+      setEnrollingAll(false);
+      setTimeout(() => setBriefingMsg(null), 6000);
     }
   };
 
@@ -251,6 +283,14 @@ export function MonetizationTab({ token }: { token: string }) {
                 className="px-4 py-2 rounded-lg bg-surface-900/[0.04] hover:bg-surface-900/[0.08] text-surface-900/70 text-sm disabled:opacity-50"
               >
                 {sendingTest ? "Sending…" : "Send test to me"}
+              </button>
+              <button
+                onClick={enableForAll}
+                disabled={enrollingAll}
+                className="px-4 py-2 rounded-lg bg-primary-100/70 hover:bg-primary-100 border border-primary-500/30 text-primary-700 text-sm font-medium disabled:opacity-50"
+                title="Flip briefingEmailEnabled to true for every user currently opted out. Existing opt-outs will be overridden."
+              >
+                {enrollingAll ? "Enrolling…" : "Enable for all opted-out users"}
               </button>
             </div>
           </div>

@@ -244,6 +244,29 @@ export class BriefingMailerService implements OnModuleInit {
     return 'sent';
   }
 
+  // ─── Bulk opt-in (admin one-shot) ──────────────────────────────────────
+
+  /**
+   * Flip every currently-disabled user to opted-in. The product policy
+   * is that the briefing is on by default; this lever exists so the
+   * operator can re-enroll opted-out users in bulk after a policy
+   * change or a feature relaunch.
+   *
+   * Returns the number of rows affected so the admin UI can confirm
+   * "X users are now subscribed" instead of asking the operator to
+   * trust that something happened.
+   */
+  async enableForAllDisabled(): Promise<{ updated: number }> {
+    const result = await this.prisma.user.updateMany({
+      where: { briefingEmailEnabled: false },
+      data: { briefingEmailEnabled: true },
+    });
+    this.logger.log(
+      `Admin: enabled briefing for ${result.count} previously-disabled users.`,
+    );
+    return { updated: result.count };
+  }
+
   // ─── Admin stats ───────────────────────────────────────────────────────
 
   async getAdminStats(): Promise<{
