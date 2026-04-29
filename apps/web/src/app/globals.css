@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Brand: Orange — vibrant, spiritual, warm. Anchored on #FF4D00 ── */
+  /* ── Brand: Orange — vibrant, warm. Anchored on #FF4D00 ── */
   --color-primary-50: #fff4ef;
   --color-primary-100: #ffe5d6;
   --color-primary-200: #ffc6a8;
@@ -13,24 +13,29 @@
   --color-primary-800: #a02900;
   --color-primary-900: #7a2000;
 
-  /* ── Accent: deeper amber tones for status/warning surfaces only.
-        Brand CTAs should use --color-primary-* (orange). ── */
-  --color-accent-50: #fffbeb;
-  --color-accent-100: #fef3c7;
-  --color-accent-200: #fde68a;
-  --color-accent-300: #fcd34d;
-  --color-accent-400: #fbbf24;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
-  --color-accent-700: #b45309;
+  /* ── Accent kept on the same orange ladder — no separate amber. Status
+        amber/red/emerald used in admin remain (semantic, not branding). ── */
+  --color-accent-50: #fff4ef;
+  --color-accent-100: #ffe5d6;
+  --color-accent-200: #ffc6a8;
+  --color-accent-300: #ffa07a;
+  --color-accent-400: #ff7a40;
+  --color-accent-500: #ff4d00;
+  --color-accent-600: #e63d00;
+  --color-accent-700: #c43200;
 
-  /* ── Surface: warm-tinted neutral.
-        Foreground (text) = #FFFDFA warm white.
-        Background        = near-black with a faint warm bias. ── */
+  /* ── Surface: warm-tinted scale.
+        50  = #FFFDFA (canvas / page background)
+        100..200 = subtle warm card tints
+        700..950 = text & strong contrast (no pure black) ── */
   --color-surface-50: #fffdfa;
   --color-surface-100: #f7f3ee;
   --color-surface-200: #ece6dd;
-  --color-surface-700: #3a342f;
+  --color-surface-300: #d8d0c4;
+  --color-surface-400: #a8a09a;
+  --color-surface-500: #6b6560;
+  --color-surface-600: #4a4540;
+  --color-surface-700: #34302c;
   --color-surface-800: #221f1c;
   --color-surface-900: #141210;
   --color-surface-950: #0a0907;
@@ -41,7 +46,7 @@
 
 @layer base {
   body {
-    @apply bg-surface-950 text-surface-50 antialiased;
+    @apply bg-surface-50 text-surface-50 antialiased;
   }
 
   ::selection {
@@ -53,31 +58,31 @@
   /* ── Text gradient — orange brand sweep ── */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #ffa07a 0%, #ff7a40 40%, #ff4d00 70%, #c43200 100%);
+    background-image: linear-gradient(135deg, #ff7a40 0%, #ff4d00 50%, #c43200 100%);
   }
 
   /* ── Warm text gradient kept for tradition/spiritual accents ── */
   .text-gradient-warm {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #ffc6a8 0%, #ff7a40 40%, #ff4d00 100%);
+    background-image: linear-gradient(135deg, #ffa07a 0%, #ff7a40 40%, #ff4d00 100%);
   }
 
-  /* ── Card surfaces — two tiers of emphasis ── */
+  /* ── Card surfaces — two tiers of emphasis on a light canvas ── */
   .surface-card {
-    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl;
+    @apply bg-surface-100 border border-surface-900/[0.08] rounded-2xl;
   }
 
   .surface-card-hover {
-    @apply bg-white/[0.03] border border-white/[0.06] rounded-2xl
-           hover:bg-white/[0.05] hover:border-white/[0.1]
+    @apply bg-surface-100 border border-surface-900/[0.08] rounded-2xl
+           hover:bg-surface-200 hover:border-surface-900/[0.14]
            transition-all duration-300 ease-out;
   }
 
   .surface-input {
-    @apply bg-white/[0.05] border border-white/[0.08] text-surface-50
-           placeholder-white/40
-           focus:outline-none focus:border-primary-500/60 focus:ring-2 focus:ring-primary-500/40
-           focus-visible:outline-none focus-visible:border-primary-500/60 focus-visible:ring-2 focus-visible:ring-primary-500/40
+    @apply bg-surface-50 border border-surface-900/[0.14] text-surface-50
+           placeholder-surface-900/40
+           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30
+           focus-visible:outline-none focus-visible:border-primary-500 focus-visible:ring-2 focus-visible:ring-primary-500/30
            transition-all duration-200;
   }
 
@@ -86,8 +91,8 @@
      users, not on every mouse click. */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-primary-500/60 focus-visible:ring-offset-2
-           focus-visible:ring-offset-surface-950;
+           focus-visible:ring-primary-500 focus-visible:ring-offset-2
+           focus-visible:ring-offset-surface-50;
   }
 
   /* WCAG-friendly minimum hit area (44×44). Apply alongside padding utilities;
@@ -98,9 +103,9 @@
     min-width: 44px;
   }
 
-  /* Secondary text that still clears WCAG AA on warm-dark surface. */
+  /* Secondary text that still clears WCAG AA on the warm-white canvas. */
   .text-secondary {
-    color: rgba(255, 253, 250, 0.62);
+    color: rgba(20, 18, 16, 0.62);
   }
 
   /* ── Buttons ── */
@@ -112,8 +117,8 @@
   }
 
   .btn-secondary {
-    @apply bg-white/[0.06] border border-white/[0.12] text-surface-50 font-medium
-           hover:bg-white/[0.1] hover:border-white/[0.18]
+    @apply bg-surface-100 border border-surface-900/[0.12] text-surface-50 font-medium
+           hover:bg-surface-200 hover:border-surface-900/[0.2]
            transition-all duration-150;
   }
 
@@ -124,47 +129,47 @@
   }
 
   .divider {
-    @apply border-white/[0.06];
+    @apply border-surface-900/[0.08];
   }
 
-  /* ── Frosted glass — refined, subtle, Apple-style blur ── */
+  /* ── Frosted glass — dark-on-light tint, refined ── */
   .glass {
-    background: rgba(255, 253, 250, 0.03);
+    background: rgba(20, 18, 16, 0.03);
     backdrop-filter: blur(20px) saturate(120%);
     -webkit-backdrop-filter: blur(20px) saturate(120%);
-    border: 1px solid rgba(255, 253, 250, 0.06);
+    border: 1px solid rgba(20, 18, 16, 0.08);
   }
 
   .glass-strong {
-    background: rgba(255, 253, 250, 0.05);
+    background: rgba(20, 18, 16, 0.05);
     backdrop-filter: blur(32px) saturate(140%);
     -webkit-backdrop-filter: blur(32px) saturate(140%);
-    border: 1px solid rgba(255, 253, 250, 0.08);
+    border: 1px solid rgba(20, 18, 16, 0.1);
   }
 
-  /* ── Tradition pills — clean, flat, modern — no 3D meatball ── */
+  /* ── Tradition pills — flat & modern on light canvas ── */
   .meatball {
     position: relative;
     display: grid;
     place-items: center;
     border-radius: 1rem;
     flex-shrink: 0;
-    background: rgba(255, 253, 250, 0.04);
-    border: 1px solid rgba(255, 253, 250, 0.06);
+    background: rgba(20, 18, 16, 0.04);
+    border: 1px solid rgba(20, 18, 16, 0.08);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .meatball::before {
     display: none;
   }
   .meatball:hover {
-    background: rgba(255, 253, 250, 0.07);
-    border-color: rgba(255, 253, 250, 0.12);
+    background: rgba(20, 18, 16, 0.07);
+    border-color: rgba(20, 18, 16, 0.14);
     transform: translateY(-2px);
   }
   .meatball.active {
-    background: rgba(255, 77, 0, 0.18);
-    border-color: rgba(255, 77, 0, 0.45);
-    box-shadow: 0 0 24px -4px rgba(255, 77, 0, 0.4);
+    background: rgba(255, 77, 0, 0.14);
+    border-color: rgba(255, 77, 0, 0.55);
+    box-shadow: 0 0 24px -4px rgba(255, 77, 0, 0.45);
   }
 
   .no-scrollbar::-webkit-scrollbar {

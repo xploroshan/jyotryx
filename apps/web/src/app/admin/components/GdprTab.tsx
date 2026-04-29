@@ -96,13 +96,13 @@ export function GdprTab({ token }: { token: string }) {
       )}
 
       <div className="flex items-center gap-3 mb-6">
-        <label htmlFor="gdpr-status" className="text-xs text-white/40">Status:</label>
+        <label htmlFor="gdpr-status" className="text-xs text-surface-900/40">Status:</label>
         <select
           id="gdpr-status"
           data-testid="gdpr-status"
           value={status}
           onChange={(e) => setStatus(e.target.value as GdprStatus)}
-          className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm"
+          className="px-3 py-2 rounded-xl bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -117,15 +117,15 @@ export function GdprTab({ token }: { token: string }) {
         </button>
         <button
           onClick={load}
-          className="px-3 py-2 rounded-xl surface-card text-sm text-white/60 hover:bg-white/10"
+          className="px-3 py-2 rounded-xl surface-card text-sm text-surface-900/60 hover:bg-surface-900/10"
         >
           Refresh
         </button>
-        {loading && <span className="text-xs text-white/30">Loading…</span>}
+        {loading && <span className="text-xs text-surface-900/30">Loading…</span>}
       </div>
 
       {rows.length === 0 ? (
-        <div className="surface-card p-6 text-white/30 text-sm">
+        <div className="surface-card p-6 text-surface-900/30 text-sm">
           {status === "pending"
             ? "No pending GDPR requests — SLA clock is clean."
             : `No ${status} requests.`}
@@ -143,7 +143,7 @@ export function GdprTab({ token }: { token: string }) {
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-surface-900">
                       {r.userName ?? "(deleted user)"}
                       <span className={`ml-2 text-[11px] px-2 py-0.5 rounded-full ${
                         r.type === "delete" ? "bg-red-500/10 text-red-400" : "bg-blue-500/10 text-blue-400"
@@ -151,32 +151,32 @@ export function GdprTab({ token }: { token: string }) {
                         {r.type.toUpperCase()}
                       </span>
                     </p>
-                    <p className="text-xs text-white/40 truncate">{r.userEmail ?? r.userId}</p>
+                    <p className="text-xs text-surface-900/40 truncate">{r.userEmail ?? r.userId}</p>
                   </div>
                   <div className="text-right">
                     {status === "pending" ? (
                       <span className={`text-xs tabular-nums ${
-                        overdue ? "text-red-400" : soon ? "text-amber-400" : "text-white/50"
+                        overdue ? "text-red-400" : soon ? "text-amber-400" : "text-surface-900/50"
                       }`}>
                         {overdue
                           ? `overdue by ${Math.abs(r.daysUntilDue)}d`
                           : `due in ${r.daysUntilDue}d`}
                       </span>
                     ) : (
-                      <span className="text-xs text-white/40 tabular-nums">
+                      <span className="text-xs text-surface-900/40 tabular-nums">
                         {r.fulfilledAt
                           ? new Date(r.fulfilledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
                           : "—"}
                       </span>
                     )}
-                    <p className="text-[11px] text-white/30 mt-1">
+                    <p className="text-[11px] text-surface-900/30 mt-1">
                       Due {new Date(r.dueBy).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
                 </div>
 
                 {r.note && (
-                  <p className="text-xs text-white/50 mt-3 italic">&ldquo;{r.note}&rdquo;</p>
+                  <p className="text-xs text-surface-900/50 mt-3 italic">&ldquo;{r.note}&rdquo;</p>
                 )}
 
                 {status === "pending" && (
@@ -193,7 +193,7 @@ export function GdprTab({ token }: { token: string }) {
                       onClick={() => reject(r.id)}
                       disabled={pendingId === r.id}
                       data-testid={`reject-${r.id}`}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-white/[0.05] text-white/60 hover:bg-white/10 disabled:opacity-40"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-surface-900/[0.05] text-surface-900/60 hover:bg-surface-900/10 disabled:opacity-40"
                     >
                       Reject
                     </button>
@@ -254,29 +254,29 @@ function CreateRequestModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="surface-card w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">New GDPR request</h3>
-          <button onClick={onClose} className="text-white/40 hover:text-white text-xl">&times;</button>
+          <h3 className="text-lg font-semibold text-surface-900">New GDPR request</h3>
+          <button onClick={onClose} className="text-surface-900/40 hover:text-surface-900 text-xl">&times;</button>
         </div>
         {err && (
           <div className="mb-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">{err}</div>
         )}
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-white/40 mb-1">User ID (UUID)</label>
+            <label className="block text-xs text-surface-900/40 mb-1">User ID (UUID)</label>
             <input
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               placeholder="00000000-0000-0000-0000-000000000000"
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm font-mono"
+              className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm font-mono"
               data-testid="gdpr-user-id"
             />
           </div>
           <div>
-            <label className="block text-xs text-white/40 mb-1">Type</label>
+            <label className="block text-xs text-surface-900/40 mb-1">Type</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as GdprType)}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm"
               data-testid="gdpr-type"
             >
               <option value="export">Export</option>
@@ -284,17 +284,17 @@ function CreateRequestModal({
             </select>
           </div>
           <div>
-            <label className="block text-xs text-white/40 mb-1">Note (optional)</label>
+            <label className="block text-xs text-surface-900/40 mb-1">Note (optional)</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl surface-card text-sm text-white/60 hover:bg-white/10">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-xl surface-card text-sm text-surface-900/60 hover:bg-surface-900/10">Cancel</button>
           <button
             onClick={submit}
             disabled={saving || !userId}

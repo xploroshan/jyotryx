@@ -40,9 +40,9 @@ export default function Orb3D({
         aria-hidden
       >
         {/* Specular highlight */}
-        <div className="absolute top-[14%] left-[22%] w-[24%] h-[18%] rounded-full bg-white/35 blur-md" />
+        <div className="absolute top-[14%] left-[22%] w-[24%] h-[18%] rounded-full bg-surface-900/35 blur-md" />
         {/* Equatorial ring */}
-        <div className="absolute inset-[18%] rounded-full border border-white/15" />
+        <div className="absolute inset-[18%] rounded-full border border-surface-900/15" />
       </div>
     </div>
   );

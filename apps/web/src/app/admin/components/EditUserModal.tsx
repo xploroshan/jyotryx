@@ -42,30 +42,30 @@ export function EditUserModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="surface-card w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-white">Edit User</h3>
-          <button onClick={onClose} className="text-white/40 hover:text-white text-xl">&times;</button>
+          <h3 className="text-lg font-bold text-surface-900">Edit User</h3>
+          <button onClick={onClose} className="text-surface-900/40 hover:text-surface-900 text-xl">&times;</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-white/30 mb-1">Name</label>
+            <label className="block text-xs text-surface-900/30 mb-1">Name</label>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
+              className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm focus:outline-none focus:border-primary-500" />
           </div>
           <div>
-            <label className="block text-xs text-white/30 mb-1">Email</label>
+            <label className="block text-xs text-surface-900/30 mb-1">Email</label>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
+              className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm focus:outline-none focus:border-primary-500" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-white/30 mb-1">Phone</label>
+              <label className="block text-xs text-surface-900/30 mb-1">Phone</label>
               <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
+                className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm focus:outline-none focus:border-primary-500" />
             </div>
             <div>
-              <label className="block text-xs text-white/30 mb-1">Gender</label>
+              <label className="block text-xs text-surface-900/30 mb-1">Gender</label>
               <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm focus:outline-none focus:border-primary-500">
+                className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900/60 text-sm focus:outline-none focus:border-primary-500">
                 <option value="">Not set</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -75,24 +75,24 @@ export function EditUserModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-white/30 mb-1">Role</label>
+              <label className="block text-xs text-surface-900/30 mb-1">Role</label>
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm focus:outline-none focus:border-primary-500">
+                className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900/60 text-sm focus:outline-none focus:border-primary-500">
                 <option value="USER">User</option>
                 <option value="PREMIUM">Premium</option>
                 <option value="ADMIN">Admin</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-white/30 mb-1">Credits</label>
+              <label className="block text-xs text-surface-900/30 mb-1">Credits</label>
               <input type="number" value={form.credits} onChange={(e) => setForm({ ...form, credits: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white text-sm focus:outline-none focus:border-primary-500" />
+                className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900 text-sm focus:outline-none focus:border-primary-500" />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-white/30 mb-1">Language</label>
+            <label className="block text-xs text-surface-900/30 mb-1">Language</label>
             <select value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm focus:outline-none focus:border-primary-500">
+              className="w-full px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900/60 text-sm focus:outline-none focus:border-primary-500">
               <option value="en">English</option>
               <option value="hi">Hindi</option>
               <option value="ta">Tamil</option>
@@ -104,10 +104,10 @@ export function EditUserModal({
           </div>
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving}
-              className="flex-1 py-2.5 rounded-xl btn-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+              className="flex-1 py-2.5 rounded-xl btn-primary text-surface-900 text-sm font-medium hover:opacity-90 disabled:opacity-50">
               {saving ? "Saving..." : "Save Changes"}
             </button>
-            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl surface-card text-sm text-white/60 hover:bg-white/10">Cancel</button>
+            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl surface-card text-sm text-surface-900/60 hover:bg-surface-900/10">Cancel</button>
           </div>
         </form>
       </div>

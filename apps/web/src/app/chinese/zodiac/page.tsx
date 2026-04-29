@@ -52,7 +52,7 @@ export default function ChineseZodiacPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs text-white/60 mb-1">{fp.birthYear}</label>
+          <label className="block text-xs text-surface-900/60 mb-1">{fp.birthYear}</label>
           <input
             type="number"
             min={1900}
@@ -60,7 +60,7 @@ export default function ChineseZodiacPage() {
             value={year}
             onChange={(e) => setYear(e.target.value)}
             required
-            className="w-full bg-white/[0.04] border divider rounded-lg px-3 py-2 text-sm text-white"
+            className="w-full bg-surface-900/[0.04] border divider rounded-lg px-3 py-2 text-sm text-surface-900"
           />
         </div>
         <button
@@ -74,20 +74,20 @@ export default function ChineseZodiacPage() {
       </form>
 
       {result && (
-        <div className="mt-6 rounded-xl border divider bg-white/[0.03] p-4 space-y-2">
-          <div className="text-2xl font-semibold text-white">
+        <div className="mt-6 rounded-xl border divider bg-surface-900/[0.03] p-4 space-y-2">
+          <div className="text-2xl font-semibold text-surface-900">
             {result.animal} · {result.element}
           </div>
           {result.yinYang && (
-            <div className="text-sm text-white/60">{result.yinYang}</div>
+            <div className="text-sm text-surface-900/60">{result.yinYang}</div>
           )}
           {result.traits && result.traits.length > 0 && (
-            <ul className="list-disc list-inside text-sm text-white/80">
+            <ul className="list-disc list-inside text-sm text-surface-900/80">
               {result.traits.map((tt) => <li key={tt}>{tt}</li>)}
             </ul>
           )}
           {result.interpretation && (
-            <p className="text-sm text-white/70 whitespace-pre-wrap mt-2">
+            <p className="text-sm text-surface-900/70 whitespace-pre-wrap mt-2">
               {result.interpretation}
             </p>
           )}

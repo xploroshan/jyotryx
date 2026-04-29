@@ -38,7 +38,7 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
     <PageTransition className="mx-auto max-w-6xl px-5 sm:px-8 py-8">
       {/* Hero */}
       <section
-        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-12 py-12 mb-10`}
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-surface-900/[0.06] px-8 sm:px-12 py-12 mb-10`}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 relative z-10">
           <div className="shrink-0">
@@ -53,20 +53,20 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
                 {name}
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold text-surface-900 tracking-tight">
               {name}
             </h1>
             {tagline && (
-              <p className="mt-3 text-base text-white/50 max-w-2xl leading-relaxed">{tagline}</p>
+              <p className="mt-3 text-base text-surface-900/50 max-w-2xl leading-relaxed">{tagline}</p>
             )}
           </div>
         </div>
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/[0.03] blur-3xl pointer-events-none" />
+        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-surface-900/[0.03] blur-3xl pointer-events-none" />
       </section>
 
       {/* Feature tiles */}
       <section>
-        <h2 className="text-[13px] uppercase tracking-widest text-white/40 font-medium mb-5">
+        <h2 className="text-[13px] uppercase tracking-widest text-surface-900/40 font-medium mb-5">
           {exploreCta}
         </h2>
         <Stagger.Container className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -74,9 +74,9 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
             const label = readLabel(f.labelKey, f.slug);
             const tile = (
               <div
-                className={`rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 h-full flex flex-col justify-between transition-all duration-300 ${
+                className={`rounded-2xl bg-surface-900/[0.02] border border-surface-900/[0.06] p-6 h-full flex flex-col justify-between transition-all duration-300 ${
                   f.available
-                    ? 'hover:-translate-y-1 hover:border-white/[0.12] hover:bg-white/[0.04] hover:shadow-[0_16px_48px_-16px_rgba(255,77,0,0.18)]'
+                    ? 'hover:-translate-y-1 hover:border-surface-900/[0.12] hover:bg-surface-900/[0.04] hover:shadow-[0_16px_48px_-16px_rgba(255,77,0,0.18)]'
                     : 'opacity-40 cursor-not-allowed'
                 }`}
               >
@@ -85,11 +85,11 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
                     {f.icon && (
                       <span className="text-lg" aria-hidden>{f.icon}</span>
                     )}
-                    <h3 className="text-base font-semibold text-white">{label}</h3>
+                    <h3 className="text-base font-semibold text-surface-900">{label}</h3>
                   </div>
                 </div>
                 {!f.available && (
-                  <p className="mt-4 text-xs text-white/30">
+                  <p className="mt-4 text-xs text-surface-900/30">
                     {readLabel('traditionsUi.comingSoon', 'Coming soon')}
                   </p>
                 )}

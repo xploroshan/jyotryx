@@ -38,25 +38,25 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-white/[0.04] bg-surface-950">
+    <footer className="border-t border-surface-900/[0.04] bg-surface-50">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-5">
               <LogoMark className="h-7 w-7" />
-              <span className="text-[15px] font-semibold text-white tracking-tight">Jyotron</span>
+              <span className="text-[15px] font-semibold text-surface-900 tracking-tight">Jyotron</span>
             </div>
-            <p className="text-sm text-white/30 leading-relaxed mb-5">
+            <p className="text-sm text-surface-900/65 leading-relaxed mb-5">
               {t.footer.tagline}
             </p>
-            <p className="text-xs text-white/15 leading-relaxed">
+            <p className="text-xs text-surface-900/45 leading-relaxed">
               {t.footer.disclaimer}
             </p>
           </div>
 
           {footerGroups.map((group) => (
             <div key={group.title}>
-              <h3 className="text-[11px] font-medium text-white/40 uppercase tracking-widest mb-4">
+              <h3 className="text-[11px] font-medium text-surface-900/55 uppercase tracking-widest mb-4">
                 {group.title}
               </h3>
               <ul className="space-y-3">
@@ -64,7 +64,7 @@ export default function Footer() {
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/30 hover:text-white transition-colors duration-200"
+                      className="text-sm text-surface-900/65 hover:text-surface-900 transition-colors duration-200"
                     >
                       {link.label}
                     </Link>
@@ -75,14 +75,14 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-16 pt-8 border-t border-white/[0.04] flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-white/20">
+        <div className="mt-16 pt-8 border-t border-surface-900/[0.04] flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-surface-900/45">
             &copy; {new Date().getFullYear()} Jyotron. {t.footer.copyright}
           </p>
           <div className="flex gap-8">
-            <a href="#" className="text-white/20 hover:text-white/50 transition-colors text-xs">Twitter</a>
-            <a href="#" className="text-white/20 hover:text-white/50 transition-colors text-xs">Instagram</a>
-            <a href="#" className="text-white/20 hover:text-white/50 transition-colors text-xs">YouTube</a>
+            <a href="#" className="text-surface-900/55 hover:text-surface-900 transition-colors text-xs">Twitter</a>
+            <a href="#" className="text-surface-900/55 hover:text-surface-900 transition-colors text-xs">Instagram</a>
+            <a href="#" className="text-surface-900/55 hover:text-surface-900 transition-colors text-xs">YouTube</a>
           </div>
         </div>
       </div>

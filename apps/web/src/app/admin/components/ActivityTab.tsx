@@ -80,13 +80,13 @@ export function ActivityTab({ token }: { token: string }) {
       <div className="mt-2 space-y-1">
         {Array.from(allKeys).map((key) => (
           <div key={key} className="text-xs flex items-center gap-2">
-            <span className="text-white/30 w-20 shrink-0">{key}:</span>
+            <span className="text-surface-900/30 w-20 shrink-0">{key}:</span>
             {prev?.[key] !== undefined && (
               <span className="text-red-400 line-through">{String(prev[key])}</span>
             )}
             {next?.[key] !== undefined && (
               <>
-                <span className="text-white/20">&rarr;</span>
+                <span className="text-surface-900/20">&rarr;</span>
                 <span className="text-emerald-400">{String(next[key])}</span>
               </>
             )}
@@ -103,7 +103,7 @@ export function ActivityTab({ token }: { token: string }) {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gradient">Activity Log</h2>
         <select value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/60 text-sm">
+          className="px-3 py-2 rounded-lg bg-surface-900/[0.03] border border-surface-900/[0.06] text-surface-900/60 text-sm">
           <option value="">All Actions</option>
           <option value="USER_UPDATE">User Updates</option>
           <option value="USER_DELETE">User Deletions</option>
@@ -119,7 +119,7 @@ export function ActivityTab({ token }: { token: string }) {
         </div>
       )}
 
-      <p className="text-sm text-white/30 mb-4">{total} total actions recorded</p>
+      <p className="text-sm text-surface-900/30 mb-4">{total} total actions recorded</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -131,7 +131,7 @@ export function ActivityTab({ token }: { token: string }) {
       ) : loadError ? (
         <TabError message={loadError} onRetry={loadLogs} />
       ) : logs.length === 0 ? (
-        <div className="surface-card p-8 text-center text-white/30">
+        <div className="surface-card p-8 text-center text-surface-900/30">
           <p className="text-lg mb-2">No activity logged yet</p>
           <p className="text-sm">Admin actions like user edits, deletions, and subscription changes will appear here.</p>
         </div>
@@ -142,15 +142,15 @@ export function ActivityTab({ token }: { token: string }) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${actionColors[log.action] || "text-white/40 bg-white/[0.03]"}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${actionColors[log.action] || "text-surface-900/40 bg-surface-900/[0.03]"}`}>
                       {actionLabels[log.action] || log.action}
                     </span>
                     {log.undone && <Badge variant="warning">UNDONE</Badge>}
                   </div>
-                  <p className="text-sm text-white">
-                    {log.entityType}: <span className="text-primary-400">{log.entityLabel || log.entityId}</span>
+                  <p className="text-sm text-surface-900">
+                    {log.entityType}: <span className="text-primary-600">{log.entityLabel || log.entityId}</span>
                   </p>
-                  <p className="text-xs text-white/30 mt-1">
+                  <p className="text-xs text-surface-900/30 mt-1">
                     by {log.adminEmail} &middot; {formatDateTime(log.createdAt)}
                     {log.undone && log.undoneAt && <span> &middot; Undone at {formatDateTime(log.undoneAt)}</span>}
                   </p>
@@ -175,10 +175,10 @@ export function ActivityTab({ token }: { token: string }) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
           <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}
-            className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Prev</button>
-          <span className="text-sm text-white/40">Page {page} of {totalPages}</span>
+            className="px-3 py-1.5 rounded-lg surface-card text-xs text-surface-900/60 disabled:opacity-30">Prev</button>
+          <span className="text-sm text-surface-900/40">Page {page} of {totalPages}</span>
           <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}
-            className="px-3 py-1.5 rounded-lg surface-card text-xs text-white/60 disabled:opacity-30">Next</button>
+            className="px-3 py-1.5 rounded-lg surface-card text-xs text-surface-900/60 disabled:opacity-30">Next</button>
         </div>
       )}
     </div>

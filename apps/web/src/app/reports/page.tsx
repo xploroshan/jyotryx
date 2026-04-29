@@ -94,23 +94,23 @@ export default function ReportsPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-white/60 mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-surface-900/60 mb-4">
             <span className="text-lg">📄</span>
             {t.reports.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             {t.reports.titlePart1} <span className="text-gradient">{t.reports.titleHighlight}</span>
           </h1>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-surface-900/40 max-w-xl mx-auto">
             {t.reports.subtitle}
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 rounded-xl bg-white/[0.03] p-1 w-fit">
+        <div className="flex gap-2 mb-8 rounded-xl bg-surface-900/[0.03] p-1 w-fit">
           {(["generate", "history"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveView(tab)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-white" : "text-white/40 hover:text-white"}`}>
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-surface-900" : "text-surface-900/40 hover:text-surface-900"}`}>
               {tab === "generate" ? t.reports.generateNew : `${t.reports.myReports} (${reports.length})`}
             </button>
           ))}
@@ -126,13 +126,13 @@ export default function ReportsPage() {
             {reportTypes.map((rt) => (
               <div key={rt.id} className="surface-card p-6">
                 <span className="text-3xl block mb-3">{rt.icon}</span>
-                <h3 className="text-lg font-bold text-white mb-2">{rt.label}</h3>
-                <p className="text-sm text-white/40 mb-4">{rt.desc}</p>
+                <h3 className="text-lg font-bold text-surface-900 mb-2">{rt.label}</h3>
+                <p className="text-sm text-surface-900/40 mb-4">{rt.desc}</p>
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => handleGenerate(rt.id)}
                     disabled={generating === rt.id}
-                    className="px-4 py-2 rounded-xl btn-primary text-sm text-white font-medium  transition-all disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl btn-primary text-sm text-surface-900 font-medium  transition-all disabled:opacity-50"
                   >
                     {generating === rt.id ? t.reports.generating : t.reports.generate}
                   </button>
@@ -156,8 +156,8 @@ export default function ReportsPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="surface-card p-12 text-center">
-                <p className="text-white/30 mb-4">{t.reports.noReports}</p>
-                <button onClick={() => setActiveView("generate")} className="px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1]">
+                <p className="text-surface-900/30 mb-4">{t.reports.noReports}</p>
+                <button onClick={() => setActiveView("generate")} className="px-6 py-2 rounded-xl btn-secondary text-sm text-primary-600 hover:bg-surface-900/[0.1]">
                   {t.reports.firstReport}
                 </button>
               </div>
@@ -168,17 +168,17 @@ export default function ReportsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">{reportTypes.find((r) => r.id === report.type)?.icon || "📄"}</span>
-                        <h3 className="font-bold text-white">{report.title}</h3>
+                        <h3 className="font-bold text-surface-900">{report.title}</h3>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadge(report.status)}`}>{report.status}</span>
                       </div>
-                      <p className="text-sm text-white/40">{report.summary}</p>
-                      <p className="text-xs text-white/20 mt-1">
+                      <p className="text-sm text-surface-900/40">{report.summary}</p>
+                      <p className="text-xs text-surface-900/20 mt-1">
                         {t.reports.generatedOn} {new Date(report.createdAt).toLocaleDateString(locale === "en" ? "en-IN" : locale)}
                       </p>
                     </div>
                     {report.pdfUrl && (
                       <a href={report.pdfUrl} target="_blank" rel="noopener noreferrer"
-                        className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-white/[0.1] transition-all shrink-0">
+                        className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-600 hover:bg-surface-900/[0.1] transition-all shrink-0">
                         {t.reports.downloadPdf}
                       </a>
                     )}

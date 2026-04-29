@@ -35,23 +35,17 @@ export default function FeatureChips() {
     return typeof node === 'string' ? node : fallback;
   };
 
-  const chipBase =
-    'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] whitespace-nowrap transition-colors duration-200 border focus-ring';
-
-  const chipActive =
-    'bg-primary-500/12 text-primary-300 border-primary-500/45 font-medium';
-
-  const chipIdle =
-    'text-surface-50/55 border-white/[0.08] hover:text-surface-50 hover:border-white/[0.18] hover:bg-white/[0.04]';
-
-  const chipDisabled =
-    'text-surface-50/25 border-white/[0.04] cursor-not-allowed';
+  // Feature chips render as an underlined tab strip beneath the tradition
+  // pills, so the visual hierarchy reads tradition (filled pill) → feature
+  // (underline tab) instead of two competing rows of pills.
+  const tabBase =
+    'relative flex items-center gap-1.5 py-2.5 text-[13px] whitespace-nowrap transition-colors duration-200 focus-ring';
 
   return (
-    <div className="sticky top-[120px] z-30 bg-surface-950/60 backdrop-blur-xl border-b border-white/[0.03]">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 py-2.5 overflow-x-auto no-scrollbar">
+    <div className="sticky top-[120px] z-30 bg-surface-50/85 backdrop-blur-xl border-b border-surface-900/[0.06]">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 overflow-x-auto no-scrollbar">
         <ul
-          className="flex flex-nowrap gap-1.5 sm:gap-2 justify-start lg:justify-center"
+          className="flex flex-nowrap gap-5 sm:gap-7 justify-start lg:justify-center"
           role="tablist"
         >
           {cfg.features.map((f) => {
@@ -69,11 +63,15 @@ export default function FeatureChips() {
               </>
             );
 
+            const tabState = isActive
+              ? 'text-surface-900 font-semibold'
+              : 'text-surface-900/55 hover:text-surface-900';
+
             if (!f.available) {
               return (
                 <li key={f.slug} className="shrink-0">
                   <span
-                    className={`${chipBase} ${chipDisabled}`}
+                    className={`${tabBase} text-surface-900/25 cursor-not-allowed`}
                     aria-disabled="true"
                   >
                     {body}
@@ -89,10 +87,18 @@ export default function FeatureChips() {
               >
                 <Link
                   href={f.href}
-                  className={`${chipBase} ${isActive ? chipActive : chipIdle}`}
+                  className={`${tabBase} ${tabState}`}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {body}
+                  {isActive && (
+                    <motion.span
+                      layoutId="feature-underline"
+                      aria-hidden
+                      className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full bg-primary-500"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    />
+                  )}
                 </Link>
               </motion.li>
             );
