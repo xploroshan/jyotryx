@@ -40,7 +40,7 @@ export default function Navbar() {
             className="flex items-center gap-2.5 shrink-0 group transition-transform duration-200 hover:scale-[1.02]"
           >
             <LogoMark className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[20deg]" />
-            <span className="text-[15px] font-semibold text-surface-900 tracking-tight">
+            <span className="font-display text-[18px] font-semibold text-surface-900 tracking-tight">
               Jyotron
             </span>
           </Link>

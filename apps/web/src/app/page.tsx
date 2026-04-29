@@ -1,13 +1,15 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { Stagger } from "@/components/ui/PageTransition";
 import HeroSun from "@/components/home/HeroSun";
 import TraditionMarquee from "@/components/home/TraditionMarquee";
+import Orb3D from "@/components/ui/Orb3D";
 
 const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
   ssr: false,
@@ -182,50 +184,32 @@ export default function HomePage() {
       <BentoSummary />
 
       {/* ── How it works ── */}
-      <section className="py-24 sm:py-32 px-5 sm:px-8">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <p className="text-[12px] font-medium text-primary-700 uppercase tracking-[0.22em] mb-4">
-              {t.home.howItWorksTitle}
-            </p>
-            <h2
-              className="font-display font-semibold text-surface-900 tracking-[-0.01em] leading-[1.0]"
-              style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
-            >
-              <span className="serif-italic accent-underline text-gradient-sunrise">Jyotron</span>{" "}
-              {t.home.howItWorks}
-            </h2>
-          </div>
-
-          <Stagger.Container className="grid md:grid-cols-3 gap-6">
-            {[
-              { step: "01", title: t.home.step01Title, desc: t.home.step01Desc },
-              { step: "02", title: t.home.step02Title, desc: t.home.step02Desc },
-              { step: "03", title: t.home.step03Title, desc: t.home.step03Desc },
-            ].map((item) => (
-              <Stagger.Item
-                key={item.step}
-                className="group relative rounded-2xl bg-surface-50 border border-surface-900/[0.08] shadow-warm-sm p-8 hover:-translate-y-1 hover:shadow-warm-lg hover:border-surface-900/[0.14] transition-all duration-300"
-              >
-                <div
-                  className="font-display font-semibold mb-4 leading-none text-primary-500/15 group-hover:text-primary-500/35 transition-colors"
-                  style={{ fontSize: "clamp(56px, 7vw, 88px)" }}
-                >
-                  {item.step}
-                </div>
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-900 mb-3 leading-tight">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-secondary leading-relaxed">{item.desc}</p>
-              </Stagger.Item>
-            ))}
-          </Stagger.Container>
-        </div>
-      </section>
+      <HowItWorks
+        title={t.home.howItWorks}
+        eyebrow={t.home.howItWorksTitle}
+        steps={[
+          { step: "01", title: t.home.step01Title, desc: t.home.step01Desc },
+          { step: "02", title: t.home.step02Title, desc: t.home.step02Desc },
+          { step: "03", title: t.home.step03Title, desc: t.home.step03Desc },
+        ]}
+      />
 
       {/* ── Closing CTA ── */}
-      <section className="py-24 sm:py-32 px-5 sm:px-8">
-        <div className="mx-auto max-w-3xl text-center">
+      <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+        {/* Quiet sun echo top-right — ties the closing back to the hero. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-8 right-6 sm:right-10 opacity-90"
+        >
+          <Orb3D
+            size={96}
+            fromClass="from-sun-300/80"
+            viaClass="via-primary-500/40"
+            toClass="to-transparent"
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-3xl text-center">
           <h2
             className="font-display font-semibold text-surface-900 mb-6 tracking-[-0.01em] leading-[1.02]"
             style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
@@ -247,6 +231,87 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * How-it-works section with editorial breakout numerals (hollow, oversized,
+ * crashing into the top of each card) and a hairline that draws across
+ * the row as the section scrolls into view. The connector is hidden on
+ * narrow viewports where the cards stack vertically.
+ */
+function HowItWorks({
+  eyebrow,
+  title,
+  steps,
+}: {
+  eyebrow: string;
+  title: string;
+  steps: { step: string; title: string; desc: string }[];
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 80%", "end 60%"],
+  });
+  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  return (
+    <section className="py-28 sm:py-36 px-5 sm:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="text-center mb-20">
+          <p className="text-[12px] font-medium text-primary-700 uppercase tracking-[0.22em] mb-4">
+            {eyebrow}
+          </p>
+          <h2
+            className="font-display font-semibold text-surface-900 tracking-[-0.01em] leading-[1.0]"
+            style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
+          >
+            <span className="serif-italic accent-underline text-gradient-sunrise">Jyotron</span>{" "}
+            {title}
+          </h2>
+        </div>
+
+        <div ref={ref} className="relative">
+          {/* Scroll-driven hairline behind the row. Hidden on mobile where
+              cards stack and the connector wouldn't make sense. */}
+          <motion.div
+            aria-hidden
+            className="hidden md:block absolute top-[34%] left-[10%] right-[10%] h-px origin-left bg-gradient-to-r from-primary-500 via-sun-400 to-primary-500"
+            style={{ scaleX: reduce ? 1 : lineScale }}
+          />
+
+          <Stagger.Container className="grid md:grid-cols-3 gap-8 md:gap-10 relative">
+            {steps.map((item) => (
+              <Stagger.Item
+                key={item.step}
+                className="group relative rounded-2xl bg-surface-50 border border-surface-900/[0.08] shadow-warm-sm pt-16 px-7 pb-7 hover:-translate-y-1 hover:shadow-warm-lg hover:border-surface-900/[0.14] transition-all duration-300"
+              >
+                {/* Hollow editorial numeral — breaks out of the card top-left.
+                    The transparent fill + webkit-text-stroke gives the
+                    architectural look without needing a background image. */}
+                <span
+                  aria-hidden
+                  className="font-display font-semibold leading-none absolute -top-6 sm:-top-8 -left-1 select-none pointer-events-none"
+                  style={{
+                    fontSize: "clamp(96px, 14vw, 180px)",
+                    color: "transparent",
+                    WebkitTextStroke: "1.5px var(--color-primary-500)",
+                  }}
+                >
+                  {item.step}
+                </span>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-900 mb-3 leading-tight relative z-10">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-secondary leading-relaxed relative z-10">{item.desc}</p>
+              </Stagger.Item>
+            ))}
+          </Stagger.Container>
+        </div>
+      </div>
+    </section>
   );
 }
 

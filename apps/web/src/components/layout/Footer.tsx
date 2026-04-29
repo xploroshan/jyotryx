@@ -44,7 +44,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-5">
               <LogoMark className="h-7 w-7" />
-              <span className="text-[15px] font-semibold text-surface-900 tracking-tight">Jyotron</span>
+              <span className="font-display text-[18px] font-semibold text-surface-900 tracking-tight">Jyotron</span>
             </div>
             <p className="text-sm text-surface-900/65 leading-relaxed mb-5">
               {t.footer.tagline}
