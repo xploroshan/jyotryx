@@ -139,19 +139,24 @@
 
   /* Hand-drawn-style underline that sits under the italic accent word.
      Implemented as ::after so it can compose with .text-gradient-sunrise
-     without fighting for background-image. */
+     without fighting for background-image.
+
+     The padding-bottom is generous (0.18em) because the italic Fraunces
+     descender — most visibly the curl of "J" — extends well below the
+     baseline and was clipping into the underline at smaller spacing.
+     With this padding the underline always sits clear of the descender. */
   .accent-underline {
     position: relative;
     display: inline-block;
-    padding-bottom: 0.04em;
+    padding-bottom: 0.18em;
   }
   .accent-underline::after {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
-    height: 0.085em;
+    bottom: 0.02em;
+    height: 0.075em;
     border-radius: 999px;
     background-image: linear-gradient(90deg, #ff4d00 0%, #ffb627 100%);
   }
