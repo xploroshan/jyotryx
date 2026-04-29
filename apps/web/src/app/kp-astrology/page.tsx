@@ -56,7 +56,17 @@ export default function KPAstrologyPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 fade-in-up">
+    <div className="relative min-h-screen">
+      <div aria-hidden className="absolute inset-0 bg-surface-950" />
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-80"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.16) 0%, rgba(255,77,0,0.08) 35%, transparent 70%)',
+        }}
+      />
+      <div className="relative mx-auto max-w-5xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-surface-50 mb-2">{t.kp.title}</h1>
       <p className="text-surface-50/40 mb-8">{t.kp.description}</p>
 
@@ -161,6 +171,7 @@ export default function KPAstrologyPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

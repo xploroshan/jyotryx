@@ -80,16 +80,20 @@ export default function TraditionRail() {
     }
   };
 
+  // Cream-glass rail. Active pill = orange brand fill; inactive sits
+  // flat with a hairline border that lifts on hover. Same chrome on
+  // every page, but only paints an "active" pill when the URL is
+  // actually inside the matching tradition.
   const pillBase =
     'relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-colors duration-300 focus-ring';
   const pillActive =
-    'bg-primary-500 text-surface-50 shadow-[0_6px_20px_-6px_rgba(255,77,0,0.55)]';
+    'text-white shadow-[0_10px_28px_-10px_rgba(255,77,0,0.55)]';
   const pillInactive =
-    'text-surface-50/55 hover:text-surface-50 hover:bg-white/[0.04]';
+    'text-emphasis hover:bg-black/[0.05]';
 
   return (
     <div
-      className="sticky top-16 z-40 bg-surface-950/70 backdrop-blur-2xl border-b border-white/[0.04]"
+      className="sticky top-16 z-40 glass border-b hairline"
       role="tablist"
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >

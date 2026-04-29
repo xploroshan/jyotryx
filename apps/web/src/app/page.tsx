@@ -105,12 +105,22 @@ export default function HomePage() {
             three-blob composition: a single, confident wash sells the warm
             atmosphere without competing with the sun for attention. */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          {/* Two warm washes — one behind the orb for depth, one low-left
+              tying the section to the marquee strip below. Soft enough
+              that black hero text still passes AAA on cream. */}
           <div
-            className="absolute top-[-10%] right-[-15%] w-[80%] h-[90%] rounded-full opacity-70"
+            className="absolute top-[-12%] right-[-18%] w-[85%] h-[95%] rounded-full opacity-90"
             style={{
               background:
-                "radial-gradient(circle, rgba(255,182,39,0.28) 0%, rgba(255,77,0,0.18) 40%, transparent 72%)",
+                "radial-gradient(circle, rgba(255,182,39,0.36) 0%, rgba(255,77,0,0.22) 35%, transparent 70%)",
               animation: reduce ? undefined : "mesh-drift 22s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute bottom-[-20%] left-[-12%] w-[55%] h-[60%] rounded-full opacity-60"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(255,122,64,0.20) 0%, rgba(255,77,0,0.10) 40%, transparent 75%)",
             }}
           />
         </div>
@@ -121,7 +131,7 @@ export default function HomePage() {
                 value prop never falls below the fold on mobile. The
                 orb follows on small screens. */}
             <div className="col-span-12 lg:col-span-7 order-1">
-              <p className="font-display italic text-[15px] sm:text-base text-primary-300 mb-6 sm:mb-8 tracking-wide">
+              <p className="font-display italic text-[15px] sm:text-base text-primary-600 mb-6 sm:mb-8 tracking-wide">
                 — {t.home.badge}
               </p>
 
@@ -156,7 +166,7 @@ export default function HomePage() {
                 initial={reduce ? false : { y: 14, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.7 }}
-                className="text-secondary text-[17px] sm:text-lg max-w-xl leading-relaxed mb-10"
+                className="text-emphasis text-[17px] sm:text-lg max-w-xl leading-relaxed mb-10"
               >
                 {t.home.heroDescription}
               </motion.p>
@@ -170,7 +180,7 @@ export default function HomePage() {
                 <CtaPrimary href="/chat" label={t.home.startConsultation} />
                 <Link
                   href="/palmistry"
-                  className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-950 hover:text-primary-400 transition-colors focus-ring rounded"
+                  className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-950 hover:text-primary-600 transition-colors focus-ring rounded-full px-5 py-2.5 btn-ghost"
                 >
                   {t.home.tryPalmReading}
                   <span
@@ -201,18 +211,18 @@ export default function HomePage() {
           {/* Stats — thin baseline strip, hairline dividers between items.
               Lives outside the grid so it spans full hero width regardless
               of whether the orb has bled. */}
-          <Stagger.Container className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 border-t border-white/[0.08]">
+          <Stagger.Container className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 border-t hairline">
             {stats.map((stat, i) => (
               <Stagger.Item
                 key={stat.label}
                 className={`flex items-baseline gap-3 py-5 ${
-                  i > 0 ? "sm:border-l border-white/[0.08]" : ""
+                  i > 0 ? "sm:border-l hairline" : ""
                 } ${i > 0 ? "sm:pl-6" : ""}`}
               >
                 <span className="font-display font-semibold text-surface-950 text-3xl sm:text-4xl tabular-nums leading-none">
                   {stat.value}
                 </span>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-surface-950/55">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-secondary">
                   {stat.label}
                 </span>
               </Stagger.Item>
@@ -240,18 +250,37 @@ export default function HomePage() {
         ]}
       />
 
-      {/* ── Closing CTA ── */}
-      <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
-        {/* Quiet sun echo top-right — ties the closing back to the hero.
-            Hidden on small screens where it would crash into the headline. */}
+      {/* ── Closing CTA — sits on a soft sunrise wash that closes the page
+          before the dark Footer anchor. Two corner orb echoes balance the
+          headline rather than crowding one side. ── */}
+      <section className="relative py-28 sm:py-36 px-5 sm:px-8 overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute top-8 right-6 sm:right-10 opacity-90 hidden md:block"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(255,182,39,0.18) 0%, rgba(255,77,0,0.08) 45%, transparent 75%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-10 right-6 sm:right-12 opacity-85 hidden md:block"
         >
           <Orb3D
-            size={96}
+            size={108}
             fromClass="from-sun-300/80"
             viaClass="via-primary-500/40"
+            toClass="to-transparent"
+          />
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-12 left-6 sm:left-12 opacity-70 hidden md:block"
+        >
+          <Orb3D
+            size={72}
+            fromClass="from-primary-300/70"
+            viaClass="via-sun-400/30"
             toClass="to-transparent"
           />
         </div>
@@ -267,7 +296,7 @@ export default function HomePage() {
             </span>
             ?
           </h2>
-          <p className="text-base sm:text-lg text-secondary mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-emphasis mb-10 max-w-xl mx-auto leading-relaxed">
             {isAuthenticated ? t.home.ctaLoggedIn : t.home.ctaLoggedOut}
           </p>
           <CtaPrimary
@@ -308,7 +337,7 @@ function HowItWorks({
     <section className="py-28 sm:py-36 px-5 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-20">
-          <p className="text-[12px] font-medium text-primary-300 uppercase tracking-[0.22em] mb-4">
+          <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-4">
             {eyebrow}
           </p>
           <h2
@@ -333,11 +362,11 @@ function HowItWorks({
             {steps.map((item) => (
               <Stagger.Item
                 key={item.step}
-                className="group relative rounded-2xl bg-surface-950 border border-white/[0.08] shadow-warm-sm pt-16 px-7 pb-7 hover:-translate-y-1 hover:shadow-warm-lg hover:border-white/[0.14] transition-all duration-300"
+                className="group relative rounded-2xl surface-card-hover shadow-warm-sm pt-16 px-7 pb-7"
               >
                 {/* Hollow editorial numeral — breaks out of the card top-left.
-                    The transparent fill + webkit-text-stroke gives the
-                    architectural look without needing a background image. */}
+                    Transparent fill + webkit-text-stroke gives an architectural
+                    look without needing a background image. */}
                 <span
                   aria-hidden
                   className="font-display font-semibold leading-none absolute -top-6 sm:-top-8 -left-1 select-none pointer-events-none"
@@ -352,7 +381,7 @@ function HowItWorks({
                 <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 mb-3 leading-tight relative z-10">
                   {item.title}
                 </h3>
-                <p className="text-sm text-secondary leading-relaxed relative z-10">{item.desc}</p>
+                <p className="text-sm text-emphasis leading-relaxed relative z-10">{item.desc}</p>
               </Stagger.Item>
             ))}
           </Stagger.Container>

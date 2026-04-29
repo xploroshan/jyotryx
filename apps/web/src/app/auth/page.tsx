@@ -538,8 +538,20 @@ function AuthPageContent() {
   const strengthColor = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"][strength] || "";
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm fade-in-up">
+    <div className="relative min-h-[85vh] flex items-center justify-center px-4 py-16 overflow-hidden bg-surface-950">
+      {/* Auth uses a deep ink canvas — the form was authored against the
+          dark theme (text-surface-50, surface-card with 4% white tint),
+          so painting a dark backdrop here preserves the existing visual
+          contract while the rest of the site lives on cream. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-90"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 60% at 50% 10%, rgba(255,182,39,0.20) 0%, rgba(255,77,0,0.12) 35%, transparent 70%)',
+        }}
+      />
+      <div className="relative w-full max-w-sm fade-in-up">
         {/* Invisible reCAPTCHA container */}
         <div ref={recaptchaContainerRef} id="recaptcha-container" />
 

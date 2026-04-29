@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Brand: Orange — vibrant, warm. Anchored on #FF4D00 ── */
+  /* ── Brand: Orange — vibrant, warm. Anchored on #FF4D00. The mid stops
+        stay legible against the cream canvas; primary-300 / 400 are the
+        only orange shades safe as text on cream (use primary-500 for
+        emphasis-text, never as cream-on-orange text background). ── */
   --color-primary-50: #fff4ef;
   --color-primary-100: #ffe5d6;
   --color-primary-200: #ffc6a8;
@@ -13,8 +16,7 @@
   --color-primary-800: #a02900;
   --color-primary-900: #7a2000;
 
-  /* ── Accent kept on the same orange ladder — no separate amber. Status
-        amber/red/emerald used in admin remain (semantic, not branding). ── */
+  /* Accent ladder mirrors primary — kept for utilities that import it. */
   --color-accent-50: #fff4ef;
   --color-accent-100: #ffe5d6;
   --color-accent-200: #ffc6a8;
@@ -24,10 +26,9 @@
   --color-accent-600: #e63d00;
   --color-accent-700: #c43200;
 
-  /* ── Sun: yellow/saffron ladder used SURGICALLY only.
-        Sanctioned spots: HeroSun corona, .accent-underline, FeatureChips
-        active underline, one closing-CTA glint. Yellow never appears as
-        text on white (fails AA) or as a card/button background. ── */
+  /* ── Sun: yellow/saffron ladder — surgical accents only.
+        Sanctioned spots: HeroSun corona, .accent-underline gradient,
+        FeatureChips active underline, hero italic word, marquee stars. ── */
   --color-sun-50: #fff8e6;
   --color-sun-100: #ffedb8;
   --color-sun-200: #ffdc85;
@@ -36,12 +37,12 @@
   --color-sun-500: #f09a0a;
   --color-sun-600: #b66e00;
 
-  /* ── Surface: warm-tinted scale anchored on a deep warm-black canvas.
-        50  = #FFFDFA  (warm-white text + inverted high-emphasis pills)
-        100..300 = warm cream tints (light pills/cards on dark surface)
-        700..950 = surface tones (deep warm-black is the page bg)
-        950 is intentionally not pure black — a faint orange undertone
-        ties the dark canvas to the brand without going theatrical. ── */
+  /* ── Surface scale — preserved dark-canvas semantics so existing
+        components that use `text-surface-50` (warm-white) and
+        `bg-surface-950` (deep ink) keep working. The page canvas is
+        cream but lives on a SEPARATE token (--color-canvas) so we can
+        choose where the cream paints without aliasing the surface
+        scale used by hundreds of inner tiles. ── */
   --color-surface-50: #fffdfa;
   --color-surface-100: #f7f3ee;
   --color-surface-200: #ece6dd;
@@ -54,6 +55,18 @@
   --color-surface-900: #110b07;
   --color-surface-950: #080503;
 
+  /* Page canvas — warm parchment cream. Decoupled from surface-50 so
+     dark-card components keep their high-contrast warm-white text. */
+  --color-canvas-50: #fdf8ee;
+  --color-canvas-100: #f6efe1;
+  --color-canvas-200: #ece3cf;
+
+  /* Ink scale — high-contrast text on the cream canvas. Used by
+     light-canvas chrome (Navbar, TraditionRail, BentoSummary). */
+  --color-ink-500: rgba(12, 8, 5, 0.62);
+  --color-ink-700: rgba(12, 8, 5, 0.82);
+  --color-ink-900: #0c0805;
+
   /* next/font/google injects --font-sans-inter and --font-display-fraunces
      onto <html> via the className applied in layout.tsx. We layer system
      fallbacks behind them here so the page never renders unstyled. */
@@ -63,44 +76,51 @@
 
 @layer base {
   body {
-    /* Canvas is orange-dominant per the brand spec, but at primary-200
-       (#ffc6a8 — soft peach) so it reads as orange-blended-with-white
-       rather than a saturated #FF4D00 wall. The brand orange (primary-500)
-       stays for CTAs, icon tiles, and underlines where it carries the
-       editorial weight. Black text reads cleanly at AA+ on this tint;
-       components that explicitly use `bg-surface-950` (footer/modals)
-       continue to carry the 25% black chrome layer. */
-    @apply bg-primary-200 text-surface-950 antialiased;
-    background-image: radial-gradient(
-      ellipse 80% 60% at 50% 0%,
-      var(--color-primary-100) 0%,
-      var(--color-primary-200) 60%,
-      var(--color-primary-300) 100%
-    );
+    /* Editorial cream canvas — warm parchment with a soft dawn wash at
+       the top so the hero feels lit from above. The body text colour is
+       the ink scale; on this cream both AAA contrast and an editorial
+       feel are achievable without saturation fatigue. We paint cream
+       directly via background-color rather than aliasing surface-50
+       (which legacy dark cards still use as warm-white text). */
+    background-color: var(--color-canvas-50);
+    color: var(--color-ink-900);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(
+        ellipse 90% 55% at 50% -10%,
+        rgba(255, 182, 39, 0.20) 0%,
+        rgba(255, 122, 64, 0.10) 35%,
+        rgba(253, 248, 238, 0) 75%
+      ),
+      radial-gradient(
+        ellipse 70% 50% at 100% 100%,
+        rgba(255, 122, 64, 0.06) 0%,
+        rgba(253, 248, 238, 0) 70%
+      );
     background-attachment: fixed;
   }
 
   ::selection {
-    @apply bg-surface-950/30 text-surface-950;
+    background-color: rgba(255, 77, 0, 0.22);
+    color: var(--color-ink-900);
   }
 }
 
 @layer utilities {
-  /* ── Text gradient — orange brand sweep ── */
+  /* ── Text gradients — orange brand sweep ── */
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #ff7a40 0%, #ff4d00 50%, #c43200 100%);
   }
 
-  /* ── Warm text gradient kept for tradition/spiritual accents ── */
   .text-gradient-warm {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #ffa07a 0%, #ff7a40 40%, #ff4d00 100%);
   }
 
-  /* ── Sunrise gradient — yellow → amber → deep orange. The signature
-        editorial moment. Used in HeroSun corona, hero italic accent, and
-        a few oversized numerals in BentoSummary. ── */
+  /* Sunrise gradient — yellow → amber → deep orange. Signature editorial
+     accent: hero italic word, oversized numerals, accent underline. */
   .text-gradient-sunrise {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #ffb627 0%, #ff7a40 45%, #ff4d00 100%);
@@ -111,7 +131,6 @@
     font-family: var(--font-display);
   }
 
-  /* Italic serif accent — pairs with .accent-underline on hero/CTA highlights. */
   .serif-italic {
     font-family: var(--font-display);
     font-style: italic;
@@ -119,10 +138,8 @@
   }
 
   /* Hand-drawn-style underline that sits under the italic accent word.
-        Implemented as a ::after pseudo so it can compose with utilities that
-        already set background-image (notably .text-gradient-sunrise — both
-        would otherwise fight for the same property and one would erase the
-        other). */
+     Implemented as ::after so it can compose with .text-gradient-sunrise
+     without fighting for background-image. */
   .accent-underline {
     position: relative;
     display: inline-block;
@@ -139,22 +156,33 @@
     background-image: linear-gradient(90deg, #ff4d00 0%, #ffb627 100%);
   }
 
-  /* Warm tinted shadows — orange-biased so the orange focal masses
-        (HeroSun, primary CTAs) read as glowing on the dark canvas
-        without the sterile gray drop shadow you get from default
-        shadow-* utilities. */
+  /* ── Warm tinted shadows — orange-biased so cards on cream lift with a
+        glow rather than a sterile gray drop. Two intensities so we can
+        differentiate hero/CTA cards from secondary tiles. ── */
   .shadow-warm-sm {
-    box-shadow: 0 8px 24px -8px rgba(255, 77, 0, 0.45);
+    box-shadow:
+      0 1px 0 rgba(122, 32, 0, 0.04),
+      0 8px 24px -10px rgba(255, 77, 0, 0.18),
+      0 2px 6px -2px rgba(122, 32, 0, 0.06);
+  }
+  .shadow-warm-md {
+    box-shadow:
+      0 1px 0 rgba(122, 32, 0, 0.04),
+      0 14px 40px -14px rgba(255, 77, 0, 0.24),
+      0 4px 10px -4px rgba(122, 32, 0, 0.08);
   }
   .shadow-warm-lg {
     box-shadow:
-      0 30px 80px -20px rgba(255, 77, 0, 0.55),
-      0 12px 28px -8px rgba(255, 122, 64, 0.35);
+      0 1px 0 rgba(122, 32, 0, 0.05),
+      0 28px 64px -16px rgba(255, 77, 0, 0.30),
+      0 10px 22px -8px rgba(122, 32, 0, 0.12);
   }
 
-  /* ── Card surfaces — two tiers of emphasis on a dark canvas. The
-        subtle white-tint pattern keeps cards readable without a
-        competing background colour. ── */
+  /* ── Card surfaces (DARK-CANVAS legacy) — kept as the original
+        4%-white tint so the dozens of feature pages that paint their
+        own dark section (`bg-surface-950`, `bg-gradient-to-b ... gray-950`)
+        keep their existing visual contract. New cream-canvas cards use
+        `card-cream` / `card-cream-hover` below. ── */
   .surface-card {
     @apply bg-white/[0.04] border border-white/[0.08] rounded-2xl;
   }
@@ -165,6 +193,34 @@
            transition-all duration-300 ease-out;
   }
 
+  /* Cream-canvas card — pure-cream tint with hairline ink border and a
+     warm shadow. The "go-to" tile chrome on top of the page canvas. */
+  .card-cream {
+    background-color: rgba(255, 252, 245, 0.86);
+    border: 1px solid rgba(12, 8, 5, 0.08);
+    border-radius: 1.25rem;
+    backdrop-filter: blur(8px) saturate(115%);
+    -webkit-backdrop-filter: blur(8px) saturate(115%);
+  }
+  .card-cream-hover {
+    background-color: rgba(255, 252, 245, 0.86);
+    border: 1px solid rgba(12, 8, 5, 0.08);
+    border-radius: 1.25rem;
+    backdrop-filter: blur(8px) saturate(115%);
+    -webkit-backdrop-filter: blur(8px) saturate(115%);
+    transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-cream-hover:hover {
+    background-color: rgba(255, 253, 248, 0.94);
+    border-color: rgba(255, 77, 0, 0.22);
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 rgba(122, 32, 0, 0.05),
+      0 28px 64px -16px rgba(255, 77, 0, 0.30),
+      0 10px 22px -8px rgba(122, 32, 0, 0.12);
+  }
+
+  /* Dark-canvas input — preserved original styling. */
   .surface-input {
     @apply bg-white/[0.05] border border-white/[0.12] text-surface-50
            placeholder-white/40
@@ -173,94 +229,150 @@
            transition-all duration-200;
   }
 
-  /* Reusable focus ring for non-input interactive elements (buttons, tabs,
-     pill toggles). Uses focus-visible so the ring only appears for keyboard
-     users, not on every mouse click. */
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-primary-500 focus-visible:ring-offset-2
-           focus-visible:ring-offset-surface-950;
+  /* Cream-canvas input — high-contrast ink on cream with brand focus ring. */
+  .input-cream {
+    background-color: rgba(255, 252, 245, 0.92);
+    border: 1px solid rgba(12, 8, 5, 0.12);
+    color: var(--color-ink-900);
+    border-radius: 0.75rem;
+    transition: all 200ms ease-out;
+  }
+  .input-cream::placeholder {
+    color: rgba(12, 8, 5, 0.42);
+  }
+  .input-cream:focus,
+  .input-cream:focus-visible {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.20);
   }
 
-  /* WCAG-friendly minimum hit area (44×44). Apply alongside padding utilities;
-     on desktop the padding usually already exceeds this, but the floor ensures
-     thumb-reachable targets on phones. */
+  /* Reusable focus ring for buttons / tabs / pills. Visible only for
+     keyboard users (focus-visible). */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+    --tw-ring-offset-color: var(--color-surface-50);
+  }
+
+  /* WCAG-friendly minimum hit area (44×44). */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
 
-  /* Secondary text that clears WCAG AA on the dark warm canvas. */
+  /* Secondary text utility — graphite ink that clears AA on cream. */
   .text-secondary {
-    color: rgba(255, 253, 250, 0.72);
+    color: var(--color-ink-500);
+  }
+  .text-emphasis {
+    color: var(--color-ink-700);
   }
 
   /* ── Buttons ── */
   .btn-primary {
-    @apply bg-primary-500 text-surface-50 font-medium
-           hover:bg-primary-400
-           active:bg-primary-600
-           transition-all duration-150;
+    background-color: var(--color-primary-500);
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 150ms ease-out;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-primary-400);
+    box-shadow:
+      0 14px 36px -12px rgba(255, 77, 0, 0.55),
+      0 4px 10px -2px rgba(122, 32, 0, 0.15);
+  }
+  .btn-primary:active {
+    background-color: var(--color-primary-600);
   }
 
-  /* Inverted high-emphasis button: warm-white pill with deep ink text.
-        Used as the secondary CTA on dark hero/CTA bands so the page
-        carries both ends of the brand pair (orange + warm white) on the
-        same row without two pure-orange buttons fighting each other. */
+  /* Inverted button for dark surfaces (footer / closing CTA on dark band). */
   .btn-secondary {
-    @apply bg-surface-50 text-surface-950 font-medium
-           hover:bg-surface-100
-           transition-all duration-150;
+    background-color: var(--color-surface-50);
+    color: var(--color-ink-900);
+    font-weight: 600;
+    transition: all 150ms ease-out;
+  }
+  .btn-secondary:hover {
+    background-color: #ffffff;
+  }
+
+  /* Outline button on cream canvas — used as the secondary CTA next to
+     the primary, when a dark fill would be too heavy. */
+  .btn-ghost {
+    background-color: rgba(12, 8, 5, 0.04);
+    color: var(--color-ink-900);
+    border: 1px solid rgba(12, 8, 5, 0.12);
+    font-weight: 600;
+    transition: all 150ms ease-out;
+  }
+  .btn-ghost:hover {
+    background-color: rgba(12, 8, 5, 0.07);
+    border-color: rgba(12, 8, 5, 0.22);
   }
 
   .btn-accent {
-    @apply bg-primary-500 text-surface-50 font-medium
+    @apply bg-primary-500 text-white font-medium
            hover:bg-primary-400
            transition-all duration-150;
   }
 
   .divider {
-    @apply border-white/[0.08];
+    border-color: rgba(12, 8, 5, 0.10);
   }
 
-  /* ── Frosted glass — white-on-dark tint, refined ── */
+  /* ── Frosted glass on cream — used by Navbar/TraditionRail/FeatureChips
+        when scrolled. Cream tint so the chrome reads as a frosted page,
+        not a competing dark band. ── */
   .glass {
-    background: rgba(255, 253, 250, 0.04);
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
-    border: 1px solid rgba(255, 253, 250, 0.08);
+    background: rgba(253, 248, 238, 0.72);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(12, 8, 5, 0.06);
   }
 
   .glass-strong {
-    background: rgba(255, 253, 250, 0.06);
-    backdrop-filter: blur(32px) saturate(140%);
-    -webkit-backdrop-filter: blur(32px) saturate(140%);
-    border: 1px solid rgba(255, 253, 250, 0.1);
+    background: rgba(253, 248, 238, 0.86);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid rgba(12, 8, 5, 0.08);
   }
 
-  /* ── Tradition pills — flat & modern on dark canvas ── */
+  /* Dark glass for pages that opt into a dark band (footer overlays,
+     hero closing band). */
+  .glass-dark {
+    background: rgba(12, 8, 5, 0.78);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid rgba(255, 253, 250, 0.08);
+  }
+
+  /* ── Tradition pills — cream canvas variant. Inactive sits flat on
+        cream with a hairline border; active is a confident orange pill
+        with a soft glow so it reads as the chosen tab. ── */
   .meatball {
     position: relative;
     display: grid;
     place-items: center;
-    border-radius: 1rem;
+    border-radius: 999px;
     flex-shrink: 0;
-    background: rgba(255, 253, 250, 0.05);
-    border: 1px solid rgba(255, 253, 250, 0.08);
+    background: rgba(12, 8, 5, 0.04);
+    border: 1px solid rgba(12, 8, 5, 0.08);
+    color: var(--color-ink-700);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .meatball::before {
-    display: none;
-  }
   .meatball:hover {
-    background: rgba(255, 253, 250, 0.08);
-    border-color: rgba(255, 253, 250, 0.15);
-    transform: translateY(-2px);
+    background: rgba(12, 8, 5, 0.07);
+    border-color: rgba(12, 8, 5, 0.16);
+    transform: translateY(-1px);
   }
   .meatball.active {
-    background: rgba(255, 77, 0, 0.22);
-    border-color: rgba(255, 77, 0, 0.7);
-    box-shadow: 0 0 32px -4px rgba(255, 77, 0, 0.55);
+    background: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+    color: #ffffff;
+    box-shadow:
+      0 14px 30px -10px rgba(255, 77, 0, 0.55),
+      0 4px 10px -2px rgba(122, 32, 0, 0.20);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -274,26 +386,58 @@
     background-image: radial-gradient(var(--tw-gradient-stops));
   }
 
-  /* ── Fade-in animation for page content ── */
+  /* ── Page entrance helpers ── */
   .fade-in {
     animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-
   .fade-in-up {
     animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  /* ── Paper grain overlay — fine warm noise that adds analog texture to
-        the dark canvas. Applied once globally in layout.tsx. The SVG
-        turbulence pattern tiles at 220px so the grain stays fine and
-        consistent at any zoom level. `screen` blend lifts the noise
-        slightly above the dark surface; on dark `multiply` would erase
-        instead of texture. ── */
+  /* Editorial paper grain — sepia-tinted noise that adds analog
+     tactility to the cream canvas. Multiply blend so it sits IN the
+     paper rather than glowing on top. */
   .grain {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.55'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.55'/></svg>");
     background-size: 220px 220px;
-    opacity: 0.06;
-    mix-blend-mode: screen;
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+  }
+
+  /* Hairline divider — used between editorial sections. Slightly
+     warmer than pure black for the cream canvas. */
+  .hairline {
+    border-color: rgba(12, 8, 5, 0.10);
+  }
+
+  /* Page-level dark canvas — applied to feature pages whose tiles were
+     authored against the dark theme (text-surface-50, bg-white/[0.04]).
+     Wrap the page content in `.page-dark` and the tile contract still
+     reads correctly inside the cream-glass site chrome. The soft
+     sunrise wash up top ties the dark island to the brand orange. */
+  .page-dark {
+    position: relative;
+    min-height: 100vh;
+    background-color: var(--color-surface-950);
+    isolation: isolate;
+  }
+  .page-dark::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(
+        ellipse 80% 40% at 50% 0%,
+        rgba(255, 182, 39, 0.16) 0%,
+        rgba(255, 77, 0, 0.08) 35%,
+        transparent 70%
+      );
+  }
+  .page-dark > * {
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -325,16 +469,14 @@
   50% { opacity: 1; }
 }
 
-/* HeroSun corona — slow breathing pulse that sells the sun as a living mass
-   without becoming distracting. Paired with mesh-drift behind it. */
+/* HeroSun corona — slow breathing pulse. */
 @keyframes corona-pulse {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50% { transform: scale(1.06); opacity: 1; }
 }
 
-/* TraditionMarquee — two stacked infinite tracks moving in opposite
-   directions. Translates by exactly 50% of the doubled track's own width,
-   which equals the width of one un-doubled set, so the loop is seamless. */
+/* TraditionMarquee — two stacked infinite tracks. Translates by exactly
+   -50% of the doubled track's width for a seamless loop. */
 @keyframes marquee-forward {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(-50%, 0, 0); }
@@ -344,7 +486,7 @@
   to   { transform: translate3d(0, 0, 0); }
 }
 
-/* ── Mesh gradient blob for hero sections ── */
+/* Hero mesh blob drift — keeps the warm wash alive without distracting. */
 @keyframes mesh-drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
   25% { transform: translate(30px, -20px) scale(1.05); }

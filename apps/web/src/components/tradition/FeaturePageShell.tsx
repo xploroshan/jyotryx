@@ -42,27 +42,36 @@ export default function FeaturePageShell({
 
   return (
     <PageTransition className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4">
-      <nav className="mb-5 text-sm text-surface-50/40">
-        <Link href={`/${cfg.slug}`} className="hover:text-surface-50 transition-colors">
+      <nav className="mb-5 text-sm text-secondary">
+        <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
           {traditionName}
         </Link>{' '}
-        <span className="text-surface-50/20">/</span>{' '}
-        <span className="text-surface-50/60">{featureName}</span>
+        <span style={{ color: 'rgba(12,8,5,0.30)' }}>/</span>{' '}
+        <span className="text-emphasis">{featureName}</span>
       </nav>
 
+      {/* Feature hero — sits on the cream canvas as a deep ink block so
+          the per-tradition gradient (heroClass, e.g. from-vedic-500/...)
+          still reads as a confident editorial header without competing
+          with the page-wide cream. White text in here is intentional —
+          this is a dark island on a light page. */}
       <section
-        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-white/[0.06] px-8 sm:px-10 py-10 mb-8`}
+        className={`relative rounded-3xl overflow-hidden bg-surface-950 border border-white/[0.06] px-8 sm:px-10 py-10 mb-8 shadow-warm-md`}
       >
-        <div className="flex items-center gap-5">
+        <div
+          aria-hidden
+          className={`absolute inset-0 bg-gradient-to-br ${cfg.heroClass} opacity-90`}
+        />
+        <div className="relative flex items-center gap-5">
           <span className="text-4xl leading-none" aria-hidden>
             {icon ?? cfg.icon}
           </span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-surface-50 tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-surface-50 tracking-tight">
               {featureName}
             </h1>
             {resolvedDescription && (
-              <p className="mt-2 text-sm text-surface-50/50 leading-relaxed">{resolvedDescription}</p>
+              <p className="mt-2 text-sm text-surface-50/65 leading-relaxed">{resolvedDescription}</p>
             )}
           </div>
         </div>

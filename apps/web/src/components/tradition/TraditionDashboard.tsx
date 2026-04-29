@@ -26,22 +26,30 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
 
   return (
     <PageTransition className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-14">
-      {/* Hero — editorial card with the tradition glyph as the focal mass.
-          Per-tradition colour leaks were swapped out for a unified brand
-          treatment so the site stays in the orange-and-warm-white system. */}
-      <section className="relative overflow-hidden rounded-3xl bg-white/[0.04] border border-white/[0.08] shadow-warm-sm px-8 sm:px-12 py-12 sm:py-14 mb-12">
-        {/* Soft sunrise wash behind the glyph. */}
+      {/* Hero — deep ink island on the cream canvas. The tradition glyph
+          sits in a saffron-tinted plinth so the brand orange carries the
+          eye. White text in here is intentional: this card is the dark
+          editorial moment on a light page. */}
+      <section className="relative overflow-hidden rounded-3xl bg-surface-950 border border-white/[0.06] shadow-warm-md px-8 sm:px-12 py-12 sm:py-14 mb-12">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-20 -top-24 w-[520px] h-[520px] rounded-full opacity-70"
+          className="pointer-events-none absolute -right-20 -top-24 w-[560px] h-[560px] rounded-full opacity-90"
           style={{
             background:
-              'radial-gradient(circle, rgba(255,182,39,0.22) 0%, rgba(255,77,0,0.12) 45%, transparent 75%)',
+              'radial-gradient(circle, rgba(255,182,39,0.30) 0%, rgba(255,77,0,0.16) 45%, transparent 75%)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-32 bottom-[-30%] w-[420px] h-[420px] rounded-full opacity-60"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(255,122,64,0.18) 0%, rgba(255,77,0,0.08) 45%, transparent 75%)',
           }}
         />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-8">
-          <div className="shrink-0 grid place-items-center w-28 h-28 rounded-3xl bg-primary-500/25 border border-primary-500/45 text-primary-200 shadow-[0_0_48px_-8px_rgba(255,77,0,0.55)]">
+          <div className="shrink-0 grid place-items-center w-28 h-28 rounded-3xl bg-primary-500/22 border border-primary-500/45 text-primary-200 shadow-[0_0_48px_-8px_rgba(255,77,0,0.55)]">
             <TraditionGlyph id={traditionId} size={64} weight={1.4} />
           </div>
           <div className="flex-1 min-w-0">
@@ -55,7 +63,7 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
               {name}
             </h1>
             {tagline && (
-              <p className="mt-4 text-base sm:text-lg text-secondary max-w-2xl leading-relaxed">
+              <p className="mt-4 text-base sm:text-lg text-surface-50/72 max-w-2xl leading-relaxed">
                 {tagline}
               </p>
             )}
@@ -63,9 +71,11 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
         </div>
       </section>
 
-      {/* Feature tiles */}
+      {/* Feature tiles — cream cards on the page canvas. Crisp white surface
+          with a saffron-glowing icon plinth so the orange echoes through
+          the editorial light theme. */}
       <section>
-        <h2 className="text-[12px] uppercase tracking-[0.22em] text-primary-300 font-medium mb-6">
+        <h2 className="text-[12px] uppercase tracking-[0.22em] text-primary-600 font-semibold mb-6">
           {exploreCta}
         </h2>
         <Stagger.Container className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
@@ -73,21 +83,21 @@ export default function TraditionDashboard({ traditionId }: { traditionId: Tradi
             const label = readLabel(f.labelKey, f.slug);
             const tile = (
               <div
-                className={`group rounded-2xl bg-gradient-to-br from-primary-500/[0.06] to-white/[0.04] border border-primary-500/[0.18] shadow-warm-sm p-6 h-full flex items-center gap-4 transition-all duration-300 ${
+                className={`group rounded-2xl card-cream-hover shadow-warm-sm p-6 h-full flex items-center gap-4 ${
                   f.available
-                    ? 'hover:-translate-y-1 hover:shadow-warm-lg hover:border-primary-500/[0.40] hover:from-primary-500/[0.10]'
-                    : 'opacity-50 cursor-not-allowed'
+                    ? ''
+                    : 'opacity-50 cursor-not-allowed pointer-events-none'
                 }`}
               >
-                <div className="shrink-0 grid place-items-center w-12 h-12 rounded-xl bg-primary-500/20 border border-primary-500/35 text-primary-200 shadow-[0_0_24px_-6px_rgba(255,77,0,0.45)] group-hover:bg-primary-500/30 group-hover:border-primary-500/55 transition-colors">
+                <div className="shrink-0 grid place-items-center w-12 h-12 rounded-xl bg-primary-500/15 border border-primary-500/30 text-primary-600 shadow-[0_0_24px_-6px_rgba(255,77,0,0.40)] group-hover:bg-primary-500/25 group-hover:border-primary-500/55 transition-colors">
                   <FeatureGlyph slug={f.slug} size={22} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-base sm:text-lg font-semibold text-surface-50 leading-tight">
+                  <h3 className="font-display text-base sm:text-lg font-semibold text-surface-950 leading-tight">
                     {label}
                   </h3>
                   {!f.available && (
-                    <p className="mt-1 text-xs text-surface-50/55">
+                    <p className="mt-1 text-xs text-secondary">
                       {readLabel('traditionsUi.comingSoon', 'Coming soon')}
                     </p>
                   )}

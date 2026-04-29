@@ -48,7 +48,7 @@ export default function FeatureChips() {
     'relative flex items-center gap-1.5 py-2.5 text-[13px] whitespace-nowrap transition-colors duration-200 focus-ring';
 
   return (
-    <div className="sticky top-[120px] z-30 bg-surface-950/85 backdrop-blur-xl border-b border-white/[0.06]">
+    <div className="sticky top-[120px] z-30 glass border-b hairline">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <ul
           className="flex flex-wrap gap-x-5 sm:gap-x-7 gap-y-0 justify-start lg:justify-center"
@@ -66,14 +66,14 @@ export default function FeatureChips() {
             );
 
             const tabState = isActive
-              ? 'text-surface-50 font-semibold'
-              : 'text-surface-50/55 hover:text-surface-50';
+              ? 'text-surface-950 font-semibold'
+              : 'text-emphasis hover:text-surface-950';
 
             if (!f.available) {
               return (
                 <li key={f.slug} className="shrink-0">
                   <span
-                    className={`${tabBase} text-surface-50/25 cursor-not-allowed`}
+                    className={`${tabBase} cursor-not-allowed opacity-35`}
                     aria-disabled="true"
                   >
                     {body}

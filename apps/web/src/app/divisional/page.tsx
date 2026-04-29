@@ -61,6 +61,7 @@ export default function DivisionalPage() {
   };
 
   return (
+    <div className="page-dark">
     <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-surface-50 mb-2">{t.divisional.title}</h1>
       <p className="text-surface-50/40 mb-8">{t.divisional.description}</p>
@@ -145,6 +146,7 @@ export default function DivisionalPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
