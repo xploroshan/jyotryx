@@ -79,8 +79,10 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-5 sm:px-8 pt-12 sm:pt-16 lg:pt-24 pb-16 sm:pb-24">
           <div className="grid grid-cols-12 gap-y-10 lg:gap-x-8 items-center">
-            {/* Headline column */}
-            <div className="col-span-12 lg:col-span-7 order-2 lg:order-1">
+            {/* Headline column — sits FIRST on every viewport so the
+                value prop never falls below the fold on mobile. The
+                orb follows on small screens. */}
+            <div className="col-span-12 lg:col-span-7 order-1">
               <p className="font-display italic text-[15px] sm:text-base text-primary-700 mb-6 sm:mb-8 tracking-wide">
                 — {t.home.badge}
               </p>
@@ -138,14 +140,15 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* Orb column — bleeds past the right gutter at lg+. */}
-            <div className="col-span-12 lg:col-span-5 order-1 lg:order-2 relative">
+            {/* Orb column — bleeds past the right gutter at lg+. On mobile
+                the orb is shrunk and centered below the headline. */}
+            <div className="col-span-12 lg:col-span-5 order-2 relative">
               <motion.div
                 initial={reduce ? false : { scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-                className="relative mx-auto lg:translate-x-[8%] xl:translate-x-[12%]"
-                style={{ maxWidth: "min(560px, 80vw)" }}
+                className="relative mx-auto lg:translate-x-[6%] xl:translate-x-[10%]"
+                style={{ width: "100%", maxWidth: "min(520px, 78vw)" }}
               >
                 <HeroSun />
               </motion.div>
@@ -196,10 +199,11 @@ export default function HomePage() {
 
       {/* ── Closing CTA ── */}
       <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
-        {/* Quiet sun echo top-right — ties the closing back to the hero. */}
+        {/* Quiet sun echo top-right — ties the closing back to the hero.
+            Hidden on small screens where it would crash into the headline. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute top-8 right-6 sm:right-10 opacity-90"
+          className="pointer-events-none absolute top-8 right-6 sm:right-10 opacity-90 hidden md:block"
         >
           <Orb3D
             size={96}
