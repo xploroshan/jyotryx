@@ -10,6 +10,7 @@ import {
 } from '@/lib/traditions';
 import { useTranslation } from '@/i18n';
 import { tapScale } from '@/lib/motion';
+import { FeatureGlyph } from '@/components/icons';
 
 export default function FeatureChips() {
   const pathname = usePathname() ?? '/';
@@ -54,11 +55,7 @@ export default function FeatureChips() {
 
             const body = (
               <>
-                {f.icon && (
-                  <span className="text-[13px] leading-none" aria-hidden>
-                    {f.icon}
-                  </span>
-                )}
+                <FeatureGlyph slug={f.slug} size={15} />
                 <span>{label}</span>
               </>
             );

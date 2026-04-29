@@ -16,6 +16,28 @@ const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
 });
 
 /**
+ * Renders a highlight phrase with the .accent-underline scoped to the
+ * brand name "Jyotron" only. The brand string is locale-stable (proper
+ * noun) so a literal split is safe; if a translation drops it for any
+ * reason we fall back to the plain phrase with no underline.
+ */
+function renderHighlight(text: string) {
+  const BRAND = "Jyotron";
+  if (!text.includes(BRAND)) return text;
+  const parts = text.split(BRAND);
+  return parts.flatMap((p, i) =>
+    i < parts.length - 1
+      ? [
+          <span key={`p-${i}`}>{p}</span>,
+          <span key={`b-${i}`} className="accent-underline">
+            {BRAND}
+          </span>,
+        ]
+      : [<span key={`p-${i}`}>{p}</span>],
+  );
+}
+
+/**
  * Splits a string into per-character motion spans for the hero headline.
  * Whitespace is preserved as a non-breaking space so the layout never
  * collapses mid-word; the actual text content of the heading remains
@@ -103,9 +125,13 @@ export default function HomePage() {
                     ease: [0.22, 1, 0.36, 1],
                     delay: 0.45,
                   }}
-                  className="serif-italic accent-underline text-gradient-sunrise inline-block mt-1"
+                  className="serif-italic text-gradient-sunrise inline-block mt-1"
                 >
-                  {t.home.heroHighlight}
+                  {/* The accent-underline is scoped to the brand name only —
+                      otherwise on multi-line wrap the underline lands under
+                      the wrong line, and visually under-emphasises the brand
+                      that the editorial moment is meant to celebrate. */}
+                  {renderHighlight(t.home.heroHighlight)}
                 </motion.span>
               </h1>
 

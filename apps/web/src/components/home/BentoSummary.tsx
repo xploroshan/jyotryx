@@ -150,7 +150,10 @@ export default function BentoSummary() {
                   className="font-display font-semibold text-surface-900 mb-4 leading-[1.05] tracking-[-0.01em]"
                   style={{ fontSize: 'clamp(28px, 3.4vw, 44px)' }}
                 >
-                  <span className="serif-italic accent-underline text-gradient-sunrise">
+                  {/* Inside the bento card the phrase is short and the
+                      sunrise wash already provides emphasis — skip the
+                      underline (which would wrap badly at this width). */}
+                  <span className="serif-italic text-gradient-sunrise">
                     {t.home.heroHighlight}
                   </span>
                 </h3>
