@@ -52,7 +52,8 @@ export function SafetyTab({ token }: { token: string }) {
     setError("");
     try {
       await api.post(`/admin/safety/flagged/${id}/resolve`, { action }, { token });
-      setFlash(`Message ${action}d.`);
+      const verb = action === "hide" ? "hidden" : action === "approve" ? "approved" : "actioned";
+      setFlash(`Message ${verb}.`);
       setTimeout(() => setFlash(""), 2500);
       load();
     } catch (err: any) {
