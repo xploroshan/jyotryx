@@ -111,8 +111,8 @@ test.describe('Navigation smoke', () => {
     // Tabs live inside the card; scope to the form container to avoid matching
     // the navbar "Log in" link that appears on every page.
     const card = page.locator('.surface-card').first();
-    await expect(card.getByRole('button', { name: 'Log in', exact: true })).toBeVisible();
-    await expect(card.getByRole('button', { name: 'Sign up', exact: true })).toBeVisible();
+    await expect(card.getByRole('tab', { name: 'Log in', exact: true })).toBeVisible();
+    await expect(card.getByRole('tab', { name: 'Sign up', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /Continue with Google/i })).toBeVisible();
   });
 });

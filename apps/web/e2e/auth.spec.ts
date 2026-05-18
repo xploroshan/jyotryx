@@ -123,12 +123,12 @@ test.describe('Auth page', () => {
 
     // Switch to email.
     await waitForReactHandlers(page, { role: 'button', name: 'Email' });
-    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await page.getByRole('tab', { name: 'Email', exact: true }).click();
     await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
     await expect(page.getByPlaceholder(/Min 8 characters/i)).toBeVisible();
 
     // Switch back to phone.
-    await page.getByRole('button', { name: /Phone \(OTP\)/i }).click();
+    await page.getByRole('tab', { name: /Phone \(OTP\)/i }).click();
     await expect(page.getByPlaceholder('Phone number')).toBeVisible();
   });
 
@@ -136,8 +136,8 @@ test.describe('Auth page', () => {
     await page.goto('/auth?mode=signup');
 
     const card = page.locator('.surface-card').first();
-    await card.getByRole('button', { name: 'Sign up', exact: true }).click();
-    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await card.getByRole('tab', { name: 'Sign up', exact: true }).click();
+    await page.getByRole('tab', { name: 'Email', exact: true }).click();
 
     await expect(page.getByPlaceholder('Enter your name')).toBeVisible();
   });
@@ -148,7 +148,7 @@ test.describe('Auth page', () => {
     await page.goto('/auth?mode=signup');
 
     const card = page.locator('.surface-card').first();
-    await card.getByRole('button', { name: 'Sign up', exact: true }).click();
+    await card.getByRole('tab', { name: 'Sign up', exact: true }).click();
     // Phone is the default method.
     await expect(page.getByPlaceholder('Phone number')).toBeVisible();
     await expect(page.getByPlaceholder('Enter your name')).toBeVisible();
@@ -193,7 +193,7 @@ test.describe('Auth page — email login', () => {
     // with an explicit react-props wait — see helpers/mock-api.ts for
     // the dev-mode-only hydration-race explanation.
     await waitForReactHandlers(page, { role: 'button', name: 'Email' });
-    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await page.getByRole('tab', { name: 'Email', exact: true }).click();
 
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('CorrectPass123');
@@ -224,7 +224,7 @@ test.describe('Auth page — email login', () => {
 
     await gotoAndHydrate(page, '/auth?mode=login');
     await waitForReactHandlers(page, { role: 'button', name: 'Email' });
-    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await page.getByRole('tab', { name: 'Email', exact: true }).click();
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('WrongPass123');
     // Two "Log in" buttons exist: the tab switcher at the top and the
@@ -253,7 +253,7 @@ test.describe('Auth page — email login', () => {
 
     await gotoAndHydrate(page, '/auth?mode=login');
     await waitForReactHandlers(page, { role: 'button', name: 'Email' });
-    await page.getByRole('button', { name: 'Email', exact: true }).click();
+    await page.getByRole('tab', { name: 'Email', exact: true }).click();
     await page.getByPlaceholder('you@example.com').fill('user@example.com');
     await page.getByPlaceholder(/Min 8 characters/i).fill('SomePass123');
     // Two "Log in" buttons exist: the tab switcher at the top and the
