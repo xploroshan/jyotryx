@@ -1,7 +1,7 @@
 apiVersion: kustomize.io/v1beta1
 kind: Kustomization
 
-namespace: jyotryx
+namespace: myastro360
 
 resources:
   - namespace.yaml

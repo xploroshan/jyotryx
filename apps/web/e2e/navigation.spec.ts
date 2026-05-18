@@ -27,10 +27,10 @@ test.describe('Navigation smoke', () => {
     // via its exact casing + surrounding dot element.
     await expect(page.getByText('Vedic Astrology Platform', { exact: true })).toBeVisible();
 
-    // Hero headline — "Your stars," + "decoded by Jyotron"
+    // Hero headline — "Your stars," + "decoded by myastro360"
     const hero = page.getByRole('heading', { level: 1 });
     await expect(hero).toContainText('Your stars');
-    await expect(hero).toContainText('decoded by Jyotron');
+    await expect(hero).toContainText('decoded by myastro360');
 
     // Primary CTAs
     await expect(page.getByRole('link', { name: 'Start Consultation' })).toBeVisible();
@@ -41,13 +41,13 @@ test.describe('Navigation smoke', () => {
     await page.goto('/');
 
     // BentoSummary's logged-out state renders a headline card with
-    // "decoded by Jyotron" (`t.home.heroHighlight`) plus a "Get Started
+    // "decoded by myastro360" (`t.home.heroHighlight`) plus a "Get Started
     // Free" signup link. Replaces the earlier "14 feature cards" expect
     // — the grid was redesigned to a curated bento summary anchored
-    // around My Day. The hero also contains "decoded by Jyotron", so
+    // around My Day. The hero also contains "decoded by myastro360", so
     // scope the h3 lookup (it's a <h3>, not the <h1> hero headline).
     await expect(page.getByText('Favorable Today')).toBeVisible();
-    await expect(page.getByRole('heading', { level: 3, name: 'decoded by Jyotron' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: 'decoded by myastro360' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Get Started Free/i }).first()).toBeVisible();
 
     // The mantra card at the bottom of the bento grid is always rendered.

@@ -87,7 +87,7 @@ function makeQueue() {
 async function buildService(opts: { prisma?: AnyPrisma; resolveProvider?: 'log' | 'resend' }): Promise<BriefingMailerService> {
   const prisma = opts.prisma ?? makePrismaMock();
   const config = {
-    get: (k: string) => (k === 'frontendUrl' ? 'https://www.jyotron.com' : undefined),
+    get: (k: string) => (k === 'frontendUrl' ? 'https://www.myastro360.com' : undefined),
   } as unknown as ConfigService;
   const briefing = makeBriefing();
   const queue = makeQueue();
@@ -111,8 +111,8 @@ describe('BriefingMailerService.getSettings', () => {
     const s = await svc.getSettings();
     expect(s.enabled).toBe(true);
     expect(s.sendHourUtc).toBe(1);
-    expect(s.fromEmail).toBe('jyotron.astro@gmail.com');
-    expect(s.fromName).toBe('Jyotron');
+    expect(s.fromEmail).toBe('myastro360.astro@gmail.com');
+    expect(s.fromName).toBe('myastro360');
   });
 
   it('clamps invalid send-hour values to the default', async () => {
@@ -199,8 +199,8 @@ describe('renderBriefingEmail', () => {
         },
         transitAlert: null,
       } as any,
-      appUrl: 'https://www.jyotron.com/my-day',
-      prefsUrl: 'https://www.jyotron.com/profile',
+      appUrl: 'https://www.myastro360.com/my-day',
+      prefsUrl: 'https://www.myastro360.com/profile',
     });
 
     expect(out.subject).toContain('Saptami');

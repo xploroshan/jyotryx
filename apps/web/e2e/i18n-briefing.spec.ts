@@ -87,8 +87,8 @@ test.describe('Briefing surfaces translate when locale is Hindi', () => {
     });
     await page.addInitScript(
       ({ auth, locale }: { auth: string; locale: string }) => {
-        localStorage.setItem('jyotron-auth', auth);
-        localStorage.setItem('jyotron-locale', locale);
+        localStorage.setItem('myastro360-auth', auth);
+        localStorage.setItem('myastro360-locale', locale);
       },
       { auth: authState, locale: hiLocale },
     );

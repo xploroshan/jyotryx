@@ -1,8 +1,8 @@
-# Jyotryx (Jyotron)
+# myastro360
 
 AI-powered, multi-tradition astrology platform. Vedic + Western + Chinese + Hellenistic + Horary + Medical astrology, palmistry, tarot, numerology, vastu, daily briefings, and an admin operations console — all wired together with multi-provider LLM failover, credit-metered billing, and GDPR-grade audit logging.
 
-Production: [www.jyotron.com](https://www.jyotron.com) · API: `api.jyotron.com` · Repo: `xploroshan/jyotryx`
+Production: [www.myastro360.com](https://www.myastro360.com) · API: `api.myastro360.com` · Repo: `xploroshan/myastro360`
 
 - [Repository layout](#repository-layout)
 - [Tech stack](#tech-stack)
@@ -21,7 +21,7 @@ Production: [www.jyotron.com](https://www.jyotron.com) · API: `api.jyotron.com`
 ## Repository layout
 
 ```
-jyotryx/
+myastro360/
 ├── apps/
 │   ├── api/          # NestJS backend (port 4000)
 │   └── web/          # Next.js 15 web app (port 3000, App Router)
@@ -241,8 +241,8 @@ The deterministic features (kundli, matching, panchang, etc.) **never call an LL
 ### Setup
 
 ```bash
-git clone https://github.com/xploroshan/jyotryx.git
-cd jyotryx
+git clone https://github.com/xploroshan/myastro360.git
+cd myastro360
 
 # Bring up Postgres 16 + pgvector, Redis 7, pgbouncer, pgAdmin
 docker compose up -d postgres redis pgbouncer pgadmin
@@ -320,8 +320,8 @@ psql $DATABASE_URL -c "UPDATE users SET role='ADMIN' WHERE email='you@example.co
 | API | Railway | Watches `apps/api/**`. Builds from `apps/api/Dockerfile`. Healthcheck `/api/health/ready`. |
 | Postgres | Supabase (`ap-south-1`) | Pooler URL on `:6543` for runtime, direct URL on `:5432` for migrations. pgvector extension required. |
 | Redis | Upstash (`ap-south-1`) | TLS (`rediss://`). `noeviction` policy required by BullMQ. |
-| Storage | Cloudflare R2 | Palm uploads, PDF reports. Custom domain `uploads.jyotron.com`. |
-| DNS / CDN | Cloudflare | `www.jyotron.com` proxied; `api.jyotron.com` DNS-only. |
+| Storage | Cloudflare R2 | Palm uploads, PDF reports. Custom domain `uploads.myastro360.com`. |
+| DNS / CDN | Cloudflare | `www.myastro360.com` proxied; `api.myastro360.com` DNS-only. |
 | LLM | OpenAI · Gemini · Anthropic | Failover order configurable in `site_settings` table. |
 | Errors | Sentry | Both API and web instrumented. |
 
@@ -330,7 +330,7 @@ psql $DATABASE_URL -c "UPDATE users SET role='ADMIN' WHERE email='you@example.co
 1. Push to `main` (or merge a PR).
 2. Vercel auto-builds the web app and rolls forward.
 3. Railway sees the change under `apps/api/**`, builds the Dockerfile, runs `npx prisma migrate deploy && node dist/main`.
-4. `.github/workflows/publish-api.yml` independently pushes a tagged container to GHCR (`ghcr.io/xploroshan/jyotryx-api:latest` and `:sha-<commit>`) for K8s deploys.
+4. `.github/workflows/publish-api.yml` independently pushes a tagged container to GHCR (`ghcr.io/xploroshan/myastro360-api:latest` and `:sha-<commit>`) for K8s deploys.
 
 For the long-form deployment guide — Supabase + Upstash + Railway setup, custom-domain wiring, K8s migration plan, monitoring hookup, and cost summary — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
@@ -350,7 +350,7 @@ R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET_NAME / R2_PU
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 FIREBASE_PROJECT_ID / FIREBASE_SERVICE_ACCOUNT_JSON
 SENTRY_DSN
-CORS_ORIGIN=https://www.jyotron.com
+CORS_ORIGIN=https://www.myastro360.com
 
 # Optional / tunable:
 FREE_MONTHLY_CREDITS=10
@@ -509,4 +509,4 @@ Proprietary — all rights reserved.
 
 ## Disclaimer
 
-Jyotron is for entertainment and spiritual-guidance purposes only and is not a substitute for professional medical, legal, or financial advice.
+myastro360 is for entertainment and spiritual-guidance purposes only and is not a substitute for professional medical, legal, or financial advice.

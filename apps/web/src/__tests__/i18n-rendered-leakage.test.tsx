@@ -181,8 +181,7 @@ const ALLOWED_CONTEXTS = [
   'test@test.com',
   'Bangalore, India',
   'Om Budhaya Namaha', // Sanskrit mantra — intentionally untranslated
-  'Jyotron',
-  'Jyotryx',
+  'myastro360',
 ];
 
 function assertNoEnglishLeakage(sentinels: string[]) {

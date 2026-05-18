@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `Panchang for ${city.name}, ${city.state} — ${today} | Jyotron`;
+  const title = `Panchang for ${city.name}, ${city.state} — ${today} | myastro360`;
   const description = `Today's Hindu calendar (Panchang) for ${city.name}: tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal, Gulika Kaal and Yamakantaka — calculated from Swiss Ephemeris for ${city.name}'s exact latitude and longitude.`;
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
       description,
       type: 'article',
       url: canonical,
-      siteName: 'Jyotron',
+      siteName: 'myastro360',
     },
     twitter: { card: 'summary', title, description },
   };
@@ -94,10 +94,10 @@ export default async function PanchangCityPage({ params }: RouteProps) {
     headline: `Panchang for ${city.name} — ${todayDisplay}`,
     datePublished: today.toISOString(),
     dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'Jyotron' },
+    author: { '@type': 'Organization', name: 'myastro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'Jyotron',
+      name: 'myastro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: `${SITE_ORIGIN}/panchang/${city.slug}`,
@@ -223,7 +223,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
             How {city.name}'s panchang is computed
           </h3>
           <p className="text-sm text-emphasis leading-relaxed">
-            Jyotron uses <strong>Swiss Ephemeris</strong> (the same astronomical engine used by
+            myastro360 uses <strong>Swiss Ephemeris</strong> (the same astronomical engine used by
             professional astrologers and academic researchers) and the canonical{' '}
             <strong>Lahiri ayanamsa</strong> for sidereal calculations. Sunrise and sunset are
             geocoded for {city.name}'s coordinates rather than the Indian Standard Time meridian,

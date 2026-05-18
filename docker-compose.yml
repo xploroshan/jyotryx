@@ -1,25 +1,25 @@
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: jyotron-postgres
+    container_name: myastro360-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-jyotron}
+      POSTGRES_USER: ${POSTGRES_USER:-myastro360}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: ${POSTGRES_DB:-jyotron}
+      POSTGRES_DB: ${POSTGRES_DB:-myastro360}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jyotron"]
+      test: ["CMD-SHELL", "pg_isready -U myastro360"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: jyotron-redis
+    container_name: myastro360-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -34,13 +34,13 @@ services:
 
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
-    container_name: jyotron-pgbouncer
+    container_name: myastro360-pgbouncer
     restart: unless-stopped
     environment:
       DATABASES_HOST: postgres
       DATABASES_PORT: "5432"
-      DATABASES_DBNAME: ${POSTGRES_DB:-jyotron}
-      DATABASES_USER: ${POSTGRES_USER:-jyotron}
+      DATABASES_DBNAME: ${POSTGRES_DB:-myastro360}
+      DATABASES_USER: ${POSTGRES_USER:-myastro360}
       DATABASES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       PGBOUNCER_POOL_MODE: transaction
       PGBOUNCER_DEFAULT_POOL_SIZE: "20"
@@ -56,18 +56,18 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: jyotron-api
+    container_name: myastro360-api
     restart: unless-stopped
     ports:
       - "4000:4000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-jyotron}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB:-jyotron}?pgbouncer=true&connection_limit=5&pool_timeout=10
+      DATABASE_URL: postgresql://${POSTGRES_USER:-myastro360}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB:-myastro360}?pgbouncer=true&connection_limit=5&pool_timeout=10
       REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       NODE_ENV: production
       PORT: "4000"
-      CORS_ORIGIN: https://www.jyotron.com
+      CORS_ORIGIN: https://www.myastro360.com
     env_file:
       - ./apps/api/.env
     depends_on:
@@ -82,13 +82,13 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-    container_name: jyotron-web
+    container_name: myastro360-web
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: https://api.jyotron.com/api
-      NEXT_PUBLIC_APP_URL: https://www.jyotron.com
+      NEXT_PUBLIC_API_URL: https://api.myastro360.com/api
+      NEXT_PUBLIC_APP_URL: https://www.myastro360.com
       NODE_ENV: production
     depends_on:
       - api
@@ -96,14 +96,14 @@ services:
   # ─── Postgres Read Replica (uncomment when ready) ─────────────────────────
   # postgres-replica:
   #   image: pgvector/pgvector:pg16
-  #   container_name: jyotron-postgres-replica
+  #   container_name: myastro360-postgres-replica
   #   restart: unless-stopped
   #   ports:
   #     - "5433:5432"
   #   environment:
-  #     POSTGRES_USER: ${POSTGRES_USER:-jyotron}
+  #     POSTGRES_USER: ${POSTGRES_USER:-myastro360}
   #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-  #     POSTGRES_DB: ${POSTGRES_DB:-jyotron}
+  #     POSTGRES_DB: ${POSTGRES_DB:-myastro360}
   #   depends_on:
   #     postgres:
   #       condition: service_healthy
@@ -111,7 +111,7 @@ services:
   # ─── ClickHouse (uncomment for LLM analytics offloading) ────────────────
   # clickhouse:
   #   image: clickhouse/clickhouse-server:24
-  #   container_name: jyotron-clickhouse
+  #   container_name: myastro360-clickhouse
   #   restart: unless-stopped
   #   ports:
   #     - "8123:8123"
@@ -119,18 +119,18 @@ services:
   #   volumes:
   #     - clickhouse_data:/var/lib/clickhouse
   #   environment:
-  #     CLICKHOUSE_DB: jyotryx
+  #     CLICKHOUSE_DB: myastro360
   #     CLICKHOUSE_USER: default
   #     CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: jyotron-pgadmin
+    container_name: myastro360-pgadmin
     restart: unless-stopped
     ports:
       - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@jyotron.com}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@myastro360.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in .env}
     volumes:
       - pgadmin_data:/var/lib/pgadmin

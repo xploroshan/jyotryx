@@ -127,7 +127,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gradient">Admin Dashboard</h1>
-            <p className="text-surface-50/40 text-sm mt-1">Manage your Jyotron platform</p>
+            <p className="text-surface-50/40 text-sm mt-1">Manage your myastro360 platform</p>
           </div>
           <div className="surface-card px-4 py-2 rounded-xl text-sm text-surface-50/60">
             Logged in as <span className="text-primary-400 font-medium">{user?.name}</span>

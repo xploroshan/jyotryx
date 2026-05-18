@@ -92,14 +92,14 @@ export const useAuthStore = create<AuthState>()(
         // doesn't see the previous user's briefing.
         try {
           if (typeof window !== 'undefined') {
-            window.localStorage.removeItem('jyotron-my-day-briefing');
+            window.localStorage.removeItem('myastro360-my-day-briefing');
           }
         } catch { /* quota / private mode */ }
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
       },
     }),
     {
-      name: 'jyotron-auth',
+      name: 'myastro360-auth',
     },
   ),
 );

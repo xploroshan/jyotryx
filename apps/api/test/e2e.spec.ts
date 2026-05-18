@@ -101,7 +101,7 @@ describe('E2E: Auth → Chat Flow', () => {
       id: 'msg-1',
       sessionId: 'session-1',
       role: 'ASSISTANT',
-      content: 'Welcome to Jyotron!',
+      content: 'Welcome to myastro360!',
       createdAt: new Date(),
     });
 
@@ -219,7 +219,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
     prisma.user.create.mockResolvedValueOnce({
       id: 'otp-user-1',
       name: 'User',
-      email: '911234567890@phone.jyotron.com',
+      email: '911234567890@phone.myastro360.com',
       phone,
       credits: 10,
       role: 'USER',

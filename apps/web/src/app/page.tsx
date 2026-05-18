@@ -17,7 +17,7 @@ const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
 
 /**
  * Renders a highlight phrase with the .accent-underline scoped to the
- * brand name "Jyotron" only. Each fragment carries its own gradient
+ * brand name "myastro360" only. Each fragment carries its own gradient
  * because `text-gradient-sunrise` clips background to text — putting it
  * on a parent leaves the children with `color: transparent` and no
  * gradient of their own (they go invisible). Brand string is locale-
@@ -25,12 +25,12 @@ const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
  * still renders with the gradient and no underline.
  */
 function renderHighlight(text: string) {
-  const BRAND = "Jyotron";
+  const BRAND = "myastro360";
   if (!text.includes(BRAND)) {
     return <span className="text-gradient-sunrise">{text}</span>;
   }
   // The italic Fraunces "J" has a generous ascender that gets clipped by the
-  // headline above it when "Jyotron" wraps onto a second line of its own.
+  // headline above it when "myastro360" wraps onto a second line of its own.
   // To guarantee full visibility we render the brand on a forced new line
   // (display:block) with extra top spacing so the J's curl never collides
   // with the line above. The leading text fragment ("decoded by ") trims its
@@ -165,7 +165,7 @@ export default function HomePage() {
                 >
                   {/* The gradient lives per-fragment inside renderHighlight
                       (not on this parent) so the brand word stays visible
-                      under bg-clip-text. The brand "Jyotron" forces its own
+                      under bg-clip-text. The brand "myastro360" forces its own
                       block-level line inside renderHighlight so the italic
                       J ascender never gets clipped by the line above. */}
                   {renderHighlight(t.home.heroHighlight)}
@@ -354,7 +354,7 @@ function HowItWorks({
             className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
             style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
           >
-            <span className="serif-italic accent-underline text-gradient-sunrise">Jyotron</span>{" "}
+            <span className="serif-italic accent-underline text-gradient-sunrise">myastro360</span>{" "}
             {title}
           </h2>
         </div>

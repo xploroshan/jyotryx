@@ -10,7 +10,7 @@ import { PrismaInstrumentation } from '@prisma/instrumentation';
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 
 const sdk = new NodeSDK({
-  serviceName: 'jyotryx-api',
+  serviceName: 'myastro360-api',
   traceExporter: otlpEndpoint
     ? new OTLPTraceExporter({ url: `${otlpEndpoint}/v1/traces` })
     : undefined,

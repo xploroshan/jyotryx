@@ -137,7 +137,7 @@ export const en = {
   home: {
     badge: 'Vedic Astrology Platform',
     heroTitle: 'Your stars,',
-    heroHighlight: 'decoded by Jyotron',
+    heroHighlight: 'decoded by myastro360',
     heroDescription: 'Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility, and spiritual guidance — available 24/7.',
     startConsultation: 'Start Consultation',
     tryPalmReading: 'Try Palm Reading',
@@ -1054,7 +1054,7 @@ export const en = {
     confirmPasswordPlaceholder: 'Re-enter new password',
     errPasswordsMismatch: 'Passwords do not match.',
     updatePassword: 'Update password',
-    brandName: 'Jyotron',
+    brandName: 'myastro360',
   },
 
   // Profile
@@ -1139,7 +1139,7 @@ export const en = {
     strengthVeryStrong: 'Very Strong',
     // Header
     welcomePrefix: 'Welcome to',
-    brandName: 'Jyotron',
+    brandName: 'myastro360',
     myPrefix: 'My',
     profileHighlight: 'Profile',
     subtitleIncomplete: 'Complete your birth details to unlock personalized astrology',

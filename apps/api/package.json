@@ -1,8 +1,8 @@
 {
-  "name": "@jyotryx/api",
+  "name": "@myastro360/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Jyotryx Astrology App - NestJS Backend API",
+  "description": "myastro360 Astrology App - NestJS Backend API",
   "scripts": {
     "build": "nest build && npx tsc prisma/seed.ts --outDir dist/prisma --target es2016 --module commonjs --moduleResolution node --esModuleInterop --resolveJsonModule --skipLibCheck 2>/dev/null || true",
     "start": "node scripts/startup.js",

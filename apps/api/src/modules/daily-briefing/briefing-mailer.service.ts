@@ -18,8 +18,8 @@ export interface BriefingSettings {
 const DEFAULTS: BriefingSettings = {
   enabled: true,
   sendHourUtc: 1, // 06:30 IST
-  fromEmail: 'jyotron.astro@gmail.com',
-  fromName: 'Jyotron',
+  fromEmail: 'myastro360.astro@gmail.com',
+  fromName: 'myastro360',
 };
 
 const REPEATABLE_JOB_KEY = 'briefing-daily-fanout';
@@ -339,7 +339,7 @@ export class BriefingMailerService implements OnModuleInit {
   }
 
   private frontendUrl(): string {
-    return (this.config.get<string>('frontendUrl') || 'https://www.jyotron.com').replace(/\/+$/, '');
+    return (this.config.get<string>('frontendUrl') || 'https://www.myastro360.com').replace(/\/+$/, '');
   }
 }
 

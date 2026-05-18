@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `${sign.name} Horoscope Today — ${today} | Jyotron`;
+  const title = `${sign.name} Horoscope Today — ${today} | myastro360`;
   const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
 
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
       description,
       type: 'article',
       url: canonical,
-      siteName: 'Jyotron',
+      siteName: 'myastro360',
     },
     twitter: { card: 'summary', title, description },
   };
@@ -71,10 +71,10 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
     headline: `${sign.name} Horoscope — ${todayDisplay}`,
     datePublished: today.toISOString(),
     dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'Jyotron' },
+    author: { '@type': 'Organization', name: 'myastro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'Jyotron',
+      name: 'myastro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}`,

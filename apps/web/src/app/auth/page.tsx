@@ -25,7 +25,7 @@ import type { ConfirmationResult } from "firebase/auth";
 // /auth?ref=X and /auth/register, and any Firebase popup detours. The
 // backend honours it only on first signup, so leaving it in storage
 // for a few minutes is harmless.
-const REFERRAL_STORAGE_KEY = "jyotryx.referralCode";
+const REFERRAL_STORAGE_KEY = "myastro360.referralCode";
 const REFERRAL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 interface ReferralPreview {
@@ -688,7 +688,7 @@ function AuthPageContent() {
                   <span aria-hidden="true">🎁</span>
                   <div className="flex-1">
                     <strong className="font-semibold">{referralPreview.referrerName}</strong>{" "}
-                    invited you to Jyotron — you'll both get{" "}
+                    invited you to myastro360 — you'll both get{" "}
                     <strong className="font-semibold">
                       {referralPreview.bonusDays} days
                     </strong>{" "}

@@ -63,7 +63,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-5">
               <LogoMark className="h-7 w-7" />
-              <span className="font-display text-[19px] font-semibold text-surface-50 tracking-tight">Jyotron</span>
+              <span className="font-display text-[19px] font-semibold text-surface-50 tracking-tight">myastro360</span>
             </div>
             <p className="text-sm text-surface-50/70 leading-relaxed mb-5 max-w-xs">
               {t.footer.tagline}
@@ -96,7 +96,7 @@ export default function Footer() {
 
         <div className="mt-16 pt-8 border-t border-white/[0.06] flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-surface-50/45">
-            &copy; {new Date().getFullYear()} Jyotron. {t.footer.copyright}
+            &copy; {new Date().getFullYear()} myastro360. {t.footer.copyright}
           </p>
           <div className="flex gap-8">
             <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">Twitter</a>

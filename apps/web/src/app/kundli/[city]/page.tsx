@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const city = findCityBySlug(slug);
   if (!city) return {};
 
-  const title = `Free Kundli for ${city.name} — Vedic Birth Chart | Jyotron`;
+  const title = `Free Kundli for ${city.name} — Vedic Birth Chart | myastro360`;
   const description = `Generate your free, accurate Vedic Kundli (janma kundali) for ${city.name}. Computed from Swiss Ephemeris using ${city.name}'s exact coordinates and Lahiri ayanamsa — full rasi, navamsa, dasha, doshas, and yogas in seconds.`;
   const canonical = `${SITE_ORIGIN}/kundli/${city.slug}`;
 
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
       description,
       type: 'article',
       url: canonical,
-      siteName: 'Jyotron',
+      siteName: 'myastro360',
     },
     twitter: { card: 'summary', title, description },
   };
@@ -72,7 +72,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
     mainEntity: [
       {
         '@type': 'Question',
-        name: `Is the kundli for ${city.name} free on Jyotron?`,
+        name: `Is the kundli for ${city.name} free on myastro360?`,
         acceptedAnswer: {
           '@type': 'Answer',
           text: `Yes — generating a Vedic kundli (janma kundali) for ${city.name} is free for every signed-up user. The first chart costs no credits, and you can come back to view it any time without re-entering your details.`,
@@ -80,7 +80,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
       },
       {
         '@type': 'Question',
-        name: `Why does Jyotron compute the kundli for ${city.name}'s exact coordinates?`,
+        name: `Why does myastro360 compute the kundli for ${city.name}'s exact coordinates?`,
         acceptedAnswer: {
           '@type': 'Answer',
           text: `The ascendant (lagna) and house cusps depend on the local horizon at your time of birth. Using ${city.name}'s exact latitude (${city.lat.toFixed(4)}) and longitude (${city.lng.toFixed(4)}) — instead of a national centroid — gives you the same accuracy a professional astrologer working in ${city.name} would.`,
@@ -88,7 +88,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
       },
       {
         '@type': 'Question',
-        name: `Which ayanamsa does Jyotron use for ${city.name}?`,
+        name: `Which ayanamsa does myastro360 use for ${city.name}?`,
         acceptedAnswer: {
           '@type': 'Answer',
           text: `Lahiri ayanamsa, the canonical sidereal zero point used by every standard Indian panchang and recognised by the Indian government's Calendar Reform Committee. All sidereal calculations — kundli, dasha, transits — use it consistently.`,
@@ -196,7 +196,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
             {Math.abs(city.lat).toFixed(2)}°{city.lat >= 0 ? 'N' : 'S'}, {Math.abs(city.lng).toFixed(2)}°{city.lng >= 0 ? 'E' : 'W'},
             so the rising sign at, say, 6:00 AM in {city.name} is different from the same time in
             Mumbai or Kolkata. National-average kundli generators ignore this and produce charts
-            that can be a sign or two off. Jyotron uses {city.name}'s exact coordinates, so the
+            that can be a sign or two off. myastro360 uses {city.name}'s exact coordinates, so the
             lagna, house cusps and planetary house placements match what a professional
             astrologer working in {city.name} would draw by hand.
           </p>
@@ -205,7 +205,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
             How accurate is the calculation?
           </h2>
           <p className="text-sm text-emphasis leading-relaxed mb-3">
-            Every chart on Jyotron is computed from <strong>Swiss Ephemeris</strong> — the same
+            Every chart on myastro360 is computed from <strong>Swiss Ephemeris</strong> — the same
             astronomical engine used by professional astrologers, academic researchers, and
             standard panchangs. We use the canonical <strong>Lahiri ayanamsa</strong> for
             sidereal positions (recognised by the Indian government's Calendar Reform Committee)

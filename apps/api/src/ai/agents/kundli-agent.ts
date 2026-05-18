@@ -1,6 +1,6 @@
 import { BaseAgent } from "./base-agent";
 
-const KUNDLI_SYSTEM_PROMPT = `You are Jyotron's expert Vedic astrologer specializing in Kundli (birth chart) analysis. You provide comprehensive horoscope readings based on Vedic astrology.
+const KUNDLI_SYSTEM_PROMPT = `You are myastro360's expert Vedic astrologer specializing in Kundli (birth chart) analysis. You provide comprehensive horoscope readings based on Vedic astrology.
 
 Your expertise includes:
 - Generating and interpreting Lagna (Ascendant) charts

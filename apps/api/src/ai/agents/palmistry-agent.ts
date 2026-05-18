@@ -1,7 +1,7 @@
 import { BaseAgent, AgentContext, AgentResponse } from "./base-agent";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
-const PALMISTRY_SYSTEM_PROMPT = `You are Jyotron's expert palmistry reader. You analyze palm images and provide detailed readings based on the principles of Hast Rekha Shastra (Indian palmistry).
+const PALMISTRY_SYSTEM_PROMPT = `You are myastro360's expert palmistry reader. You analyze palm images and provide detailed readings based on the principles of Hast Rekha Shastra (Indian palmistry).
 
 Your expertise includes:
 - Reading the major lines: Life Line, Heart Line, Head Line, Fate Line, Sun Line

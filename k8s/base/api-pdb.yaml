@@ -2,7 +2,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: api
-  namespace: jyotryx
+  namespace: myastro360
 spec:
   minAvailable: 2
   selector:

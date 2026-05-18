@@ -72,7 +72,7 @@ describe('AuthService — Redis-backed OTP & lockout (Phase 0)', () => {
         OR: [
           { email: TEST_EMAIL },
           { phone: TEST_PHONE },
-          { email: { contains: '@phone.jyotron.com' } },
+          { email: { contains: '@phone.myastro360.com' } },
           { email: { endsWith: '@example.com' } },
         ],
       },

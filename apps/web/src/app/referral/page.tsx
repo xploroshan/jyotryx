@@ -76,14 +76,14 @@ export default function ReferralPage() {
   };
 
   const sharePayload = (s: ReferralStatus) =>
-    `Join me on Jyotron! Sign up with my code ${s.code} and we both get ${s.bonusDays} days of Premium for free. ${s.shareUrl}`;
+    `Join me on myastro360! Sign up with my code ${s.code} and we both get ${s.bonusDays} days of Premium for free. ${s.shareUrl}`;
 
   const shareNative = async (s: ReferralStatus) => {
     const text = sharePayload(s);
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
         await (navigator as any).share({
-          title: "Jyotron — multi-tradition astrology",
+          title: "myastro360 — multi-tradition astrology",
           text,
           url: s.shareUrl,
         });
@@ -117,7 +117,7 @@ export default function ReferralPage() {
 
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(sharePayload(status))}`;
   const emailHref = `mailto:?subject=${encodeURIComponent(
-    "Try Jyotron — get free Premium",
+    "Try myastro360 — get free Premium",
   )}&body=${encodeURIComponent(sharePayload(status))}`;
   const twitterHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
     sharePayload(status),

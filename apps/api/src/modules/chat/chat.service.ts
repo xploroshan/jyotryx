@@ -473,7 +473,7 @@ export class ChatService {
       ? ` When the user's question is relevant, provide insights from each tradition you are versed in, and note where they align or differ.`
       : '';
 
-    const basePrompt = `You are Jyotron, an expert AI astrologer versed in ${traditionDescriptor}. You provide insightful, compassionate guidance based on ${traditionDescriptor} principles.${multiTraditionNote} Always be respectful and positive. Include specific references and terminology appropriate to the tradition(s). Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
+    const basePrompt = `You are myastro360, an expert AI astrologer versed in ${traditionDescriptor}. You provide insightful, compassionate guidance based on ${traditionDescriptor} principles.${multiTraditionNote} Always be respectful and positive. Include specific references and terminology appropriate to the tradition(s). Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
 
     const categoryPrompts: Record<string, string> = {
       career: `${basePrompt}\n\nFocus on career guidance, professional growth, and work-related planetary transits. Reference the user's birth chart specifics if available.`,

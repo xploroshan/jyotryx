@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: jyotryx
+  namespace: myastro360
   labels:
     app: api
-    app.kubernetes.io/part-of: jyotryx
+    app.kubernetes.io/part-of: myastro360
 spec:
   replicas: 3
   selector:
@@ -15,20 +15,20 @@ spec:
     metadata:
       labels:
         app: api
-        app.kubernetes.io/part-of: jyotryx
+        app.kubernetes.io/part-of: myastro360
     spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: api
-          image: ghcr.io/xploroshan/jyotryx-api:latest
+          image: ghcr.io/xploroshan/myastro360-api:latest
           ports:
             - containerPort: 4000
               name: http
           envFrom:
             - configMapRef:
-                name: jyotryx-config
+                name: myastro360-config
             - secretRef:
-                name: jyotryx-secrets
+                name: myastro360-secrets
           readinessProbe:
             httpGet:
               path: /health/ready

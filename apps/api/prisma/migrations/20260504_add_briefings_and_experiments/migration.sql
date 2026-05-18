@@ -95,8 +95,8 @@ INSERT INTO "site_settings" ("key", "value", "updatedAt") VALUES
   -- Daily email briefings
   ('notification.briefing.enabled',       'true',  NOW()),
   ('notification.briefing.send_hour_utc', '1',     NOW()), -- 06:30 IST = 01:00 UTC
-  ('notification.briefing.from_email',    'jyotron.astro@gmail.com', NOW()),
-  ('notification.briefing.from_name',     'Jyotron', NOW()),
+  ('notification.briefing.from_email',    'myastro360.astro@gmail.com', NOW()),
+  ('notification.briefing.from_name',     'myastro360', NOW()),
   -- Paywall A/B test
   ('paywall.experiment_enabled',          'true',  NOW()),
   ('paywall.experiment_id',               'paywall_v1', NOW()),

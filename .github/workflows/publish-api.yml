@@ -27,7 +27,7 @@ jobs:
       # Required for the GITHUB_TOKEN to push to GHCR. No PAT needed.
       packages: write
     env:
-      IMAGE: ghcr.io/${{ github.repository_owner }}/jyotryx-api
+      IMAGE: ghcr.io/${{ github.repository_owner }}/myastro360-api
     steps:
       - uses: actions/checkout@v4
 
@@ -69,5 +69,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Roll the deployment with:" >> $GITHUB_STEP_SUMMARY
           echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
-          echo "kubectl -n jyotryx rollout restart deployment/api deployment/worker" >> $GITHUB_STEP_SUMMARY
+          echo "kubectl -n myastro360 rollout restart deployment/api deployment/worker" >> $GITHUB_STEP_SUMMARY
           echo '\`\`\`' >> $GITHUB_STEP_SUMMARY

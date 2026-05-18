@@ -1000,7 +1000,7 @@ export const gu: TranslationKeys = {
     confirmPasswordPlaceholder: 'Re-enter new password',
     errPasswordsMismatch: 'Passwords do not match.',
     updatePassword: 'Update password',
-    brandName: 'Jyotron',
+    brandName: 'myastro360',
   },
   profile: {
     title: 'Profile',
@@ -1082,7 +1082,7 @@ export const gu: TranslationKeys = {
     strengthStrong: 'Strong',
     strengthVeryStrong: 'Very Strong',
     welcomePrefix: 'Welcome to',
-    brandName: 'Jyotron',
+    brandName: 'myastro360',
     myPrefix: 'My',
     profileHighlight: 'Profile',
     subtitleIncomplete: 'Complete your birth details to unlock personalized astrology',

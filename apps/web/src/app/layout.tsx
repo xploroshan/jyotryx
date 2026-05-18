@@ -31,7 +31,7 @@ const display = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Jyotron — Vedic Astrology Platform",
+  title: "myastro360 — Vedic Astrology Platform",
   description:
     "Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
   icons: {
@@ -40,19 +40,19 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   keywords: [
     "astrology", "vedic astrology", "kundli", "horoscope",
-    "palmistry", "kundli matching", "panchang", "muhurat", "jyotron",
+    "palmistry", "kundli matching", "panchang", "muhurat", "myastro360",
   ],
-  metadataBase: new URL("https://www.jyotron.com"),
+  metadataBase: new URL("https://www.myastro360.com"),
   openGraph: {
-    title: "Jyotron — Vedic Astrology Platform",
+    title: "myastro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
     type: "website",
-    url: "https://www.jyotron.com",
-    siteName: "Jyotron",
+    url: "https://www.myastro360.com",
+    siteName: "myastro360",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Jyotron — Vedic Astrology Platform",
+    title: "myastro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
   },
 };

@@ -1,4 +1,4 @@
-# Jyotryx — Monetization & Growth Strategy
+# myastro360 — Monetization & Growth Strategy
 
 > Target: **USD 1M ARR within 18 months**, USD 5M ARR within 36 months.
 > Lens used throughout: what is *actually buildable on top of the existing repo* (NestJS + Next.js + Prisma + Razorpay + LLM failover + KB + Swiss Ephemeris) vs. greenfield work.
@@ -283,7 +283,7 @@ FCM is wired (`firebase-admin` in API deps) but not orchestrated. Build a **noti
 
 ### 5.1 Who actually competes
 
-| Competitor | Strength | Weakness Jyotryx can exploit |
+| Competitor | Strength | Weakness myastro360 can exploit |
 |---|---|---|
 | **AstroSage** | SEO, free calculators, 50M downloads | UX feels 2012, no AI, weak chat, no Western depth |
 | **AstroTalk** | Astrologer supply, brand recall | Calculators are weak, no multi-tradition, vernacular-only |
@@ -293,10 +293,10 @@ FCM is wired (`firebase-admin` in API deps) but not orchestrated. Build a **noti
 | **GaneshaSpeaks** | Daily content, India | UX, no AI, calculators feel old |
 | **Sanctuary** | Live psychic chat, US | US-only, no Vedic |
 
-### 5.2 Jyotryx's three unfair advantages (to compound, not abandon)
+### 5.2 myastro360's three unfair advantages (to compound, not abandon)
 
 1. **Multi-tradition under one chart** — Vedic + Western + Hellenistic + Chinese in one screen. Nobody else does this. Lean in: every chart should show "what each tradition says about this same moment".
-2. **Swiss Ephemeris + Lahiri ayanamsa accuracy** — most competitors compute charts in the browser with cached JS tables. We're calculationally correct. **Publish a public "compute your chart at jyotryx.com/verify" tool** that lets astrologers verify our numbers vs theirs. SEO + trust.
+2. **Swiss Ephemeris + Lahiri ayanamsa accuracy** — most competitors compute charts in the browser with cached JS tables. We're calculationally correct. **Publish a public "compute your chart at myastro360.com/verify" tool** that lets astrologers verify our numbers vs theirs. SEO + trust.
 3. **LLM cost discipline** — the admin LLM tab, Holt-Winters cost forecasting, kill-switch, per-feature model overrides. This is internal infrastructure that competitors do not have. It means we can run AI features at margin **and** white-label the platform.
 
 ### 5.3 Positioning statement
@@ -361,7 +361,7 @@ Total paid budget for 12-month plan: USD 200k → ~140k installs at $1.40 blende
 ### 6.5 PR / earned media plays
 
 - **"State of Astrology in India 2026"** — publish an annual report using anonymized internal data (top searched questions, regional differences in remedy preference, etc.). PR-friendly, citable, defensible.
-- **Open-source the KB seed files for the 18 structured tables.** This generates GitHub stars, dev mentions, and positions Jyotryx as the *infrastructure* of astrology.
+- **Open-source the KB seed files for the 18 structured tables.** This generates GitHub stars, dev mentions, and positions myastro360 as the *infrastructure* of astrology.
 - **Partner with Indian wedding planners** — every wedding involves at least one matching/muhurat consultation. Co-brand.
 
 ---
@@ -461,7 +461,7 @@ Approximately **USD 600k/year burn**, fundable from $1M ARR by Q4.
 
 ## 10. The one-sentence test
 
-If a board member asks "why will Jyotryx hit $1M ARR when AstroSage has 50M downloads and still struggles?", the answer is:
+If a board member asks "why will myastro360 hit $1M ARR when AstroSage has 50M downloads and still struggles?", the answer is:
 
 > *We are the only platform that combines Vedic mathematical correctness, multi-tradition narrative depth, AI cost discipline, and a live-astrologer marketplace — built on a stack with built-in margin governance — and we are the first to make astrology a daily-utility app rather than a daily-content app.*
 

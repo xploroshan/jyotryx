@@ -1,6 +1,6 @@
 # k6 Load Tests
 
-Synthetic load tests targeting Jyotryx API at up to 10k requests per second.
+Synthetic load tests targeting myastro360 API at up to 10k requests per second.
 
 ## Prerequisites
 
@@ -60,7 +60,7 @@ AUTH_TOKEN=<jwt> k6 run test/k6/full-suite.js
 ## Target a remote environment
 
 ```bash
-AUTH_TOKEN=<jwt> API_URL=https://api.jyotron.com/api k6 run test/k6/full-suite.js
+AUTH_TOKEN=<jwt> API_URL=https://api.myastro360.com/api k6 run test/k6/full-suite.js
 ```
 
 ## Output to JSON (for Grafana dashboards)

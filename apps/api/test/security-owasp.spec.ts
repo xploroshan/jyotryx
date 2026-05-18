@@ -2,7 +2,7 @@
  * OWASP Security Tests
  *
  * Covers XSS prevention, SQL injection, auth bypass, rate limiting,
- * and logout security for the Jyotryx API.
+ * and logout security for the myastro360 API.
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';

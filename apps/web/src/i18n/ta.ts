@@ -1082,7 +1082,7 @@ export const ta: TranslationKeys = {
     strengthStrong: 'வலுவான',
     strengthVeryStrong: 'மிகவும் வலுவான',
     welcomePrefix: 'Welcome to',
-    brandName: 'Jyotron',
+    brandName: 'myastro360',
     myPrefix: 'My',
     profileHighlight: 'Profile',
     subtitleIncomplete: 'Complete your birth details to unlock personalized astrology',

@@ -21,7 +21,7 @@ export interface RedisHandle {
  */
 export async function startRedis(): Promise<RedisHandle> {
   const port = await getFreePort();
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jyotryx-int-redis-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'myastro360-int-redis-'));
 
   const child = spawn(
     'redis-server',

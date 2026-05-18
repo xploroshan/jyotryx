@@ -82,7 +82,7 @@ export const useI18nStore = create<I18nState>()(
       resetLocale: () => set({ locale: detectSystemLocale(), userSet: false }),
     }),
     {
-      name: 'jyotron-locale',
+      name: 'myastro360-locale',
       onRehydrateStorage: () => (state) => {
         if (state && !state.userSet) {
           const sys = detectSystemLocale();

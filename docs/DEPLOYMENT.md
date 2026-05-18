@@ -1,4 +1,4 @@
-# Jyotryx Deployment Guide — Scaling to 200K Users
+# myastro360 Deployment Guide — Scaling to 200K Users
 
 ## Table of Contents
 1. [Current Architecture Overview](#1-current-architecture-overview)
@@ -110,7 +110,7 @@ npx ts-node prisma/seed.ts
 
 **Step 1: Create Railway project**
 1. Go to https://railway.app → New Project → Deploy from GitHub repo
-2. Select `xploroshan/jyotryx`
+2. Select `xploroshan/myastro360`
 3. Railway will auto-detect the monorepo
 
 **Step 2: Configure the API service**
@@ -134,8 +134,8 @@ REDIS_PORT=6379
 # Server
 PORT=4000
 NODE_ENV=production
-CORS_ORIGIN=https://www.jyotron.com
-FRONTEND_URL=https://www.jyotron.com
+CORS_ORIGIN=https://www.myastro360.com
+FRONTEND_URL=https://www.myastro360.com
 
 # JWT (generate strong secrets)
 JWT_SECRET=<generate with: openssl rand -hex 32>
@@ -168,8 +168,8 @@ GOOGLE_CLIENT_SECRET=...
 R2_ACCOUNT_ID=...
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
-R2_BUCKET_NAME=jyotryx-uploads
-R2_PUBLIC_URL=https://uploads.jyotron.com
+R2_BUCKET_NAME=myastro360-uploads
+R2_PUBLIC_URL=https://uploads.myastro360.com
 
 # Observability
 SENTRY_DSN=https://...@sentry.io/...
@@ -186,7 +186,7 @@ In Railway service settings:
 
 **Step 5: Set up custom domain**
 1. Railway Settings → Networking → Custom Domain
-2. Add `api.jyotron.com`
+2. Add `api.myastro360.com`
 3. Railway gives you a CNAME value
 4. In Cloudflare DNS, add: `api CNAME [railway-value]` (proxy OFF for Railway)
 
@@ -206,9 +206,9 @@ Alternatively, to use the startup script that handles seed data:
 Go to your Vercel project → Settings → Environment Variables:
 
 ```env
-NEXT_PUBLIC_API_URL=https://api.jyotron.com/api
-NEXT_PUBLIC_WS_URL=wss://api.jyotron.com
-NEXT_PUBLIC_APP_URL=https://www.jyotron.com
+NEXT_PUBLIC_API_URL=https://api.myastro360.com/api
+NEXT_PUBLIC_WS_URL=wss://api.myastro360.com
+NEXT_PUBLIC_APP_URL=https://www.myastro360.com
 NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_...
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
@@ -223,32 +223,32 @@ In Vercel project settings:
 - Framework: Next.js (auto-detected)
 
 **Step 3: Configure domain**
-1. Vercel Settings → Domains → Add `www.jyotron.com`
+1. Vercel Settings → Domains → Add `www.myastro360.com`
 2. In Cloudflare DNS, add: `www CNAME cname.vercel-dns.com` (proxy ON)
 
 ### 2.5 Verify Phase 1 Deployment
 
 ```bash
 # 1. Check API health
-curl https://api.jyotron.com/health/live
+curl https://api.myastro360.com/health/live
 # Expected: {"status":"ok"}
 
-curl https://api.jyotron.com/health/ready
+curl https://api.myastro360.com/health/ready
 # Expected: {"status":"ok","info":{"database":{"status":"up"},"redis":{"status":"up"}}}
 
 # 2. Check web frontend
-curl -I https://www.jyotron.com
+curl -I https://www.myastro360.com
 # Expected: HTTP/2 200
 
 # 3. Check CORS
-curl -H "Origin: https://www.jyotron.com" \
+curl -H "Origin: https://www.myastro360.com" \
      -H "Access-Control-Request-Method: POST" \
-     -X OPTIONS https://api.jyotron.com/api/auth/login
-# Expected: access-control-allow-origin: https://www.jyotron.com
+     -X OPTIONS https://api.myastro360.com/api/auth/login
+# Expected: access-control-allow-origin: https://www.myastro360.com
 
 # 4. Run k6 load test against production
 cd apps/api
-JYOTRON_BASE_URL=https://api.jyotron.com npm run test:k6:all
+MYASTRO360_BASE_URL=https://api.myastro360.com npm run test:k6:all
 ```
 
 ---
@@ -322,21 +322,21 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u xploroshan --password-stdin
 ```bash
 # Build API image
 cd apps/api
-docker build -t ghcr.io/xploroshan/jyotryx-api:latest .
-docker push ghcr.io/xploroshan/jyotryx-api:latest
+docker build -t ghcr.io/xploroshan/myastro360-api:latest .
+docker push ghcr.io/xploroshan/myastro360-api:latest
 
 # Build Web image
 cd ../web
-docker build -t ghcr.io/xploroshan/jyotryx-web:latest .
-docker push ghcr.io/xploroshan/jyotryx-web:latest
+docker build -t ghcr.io/xploroshan/myastro360-web:latest .
+docker push ghcr.io/xploroshan/myastro360-web:latest
 ```
 
 **Step 3: Create GHCR pull secret in K8s**
 ```bash
-kubectl create namespace jyotryx
+kubectl create namespace myastro360
 
 kubectl create secret docker-registry ghcr-secret \
-  --namespace=jyotryx \
+  --namespace=myastro360 \
   --docker-server=ghcr.io \
   --docker-username=xploroshan \
   --docker-password=$GITHUB_TOKEN
@@ -365,8 +365,8 @@ Edit `k8s/base/configmap.yaml`:
 data:
   NODE_ENV: "production"
   PORT: "4000"
-  CORS_ORIGIN: "https://www.jyotron.com"
-  FRONTEND_URL: "https://www.jyotron.com"
+  CORS_ORIGIN: "https://www.myastro360.com"
+  FRONTEND_URL: "https://www.myastro360.com"
   RATE_LIMIT_WINDOW_MS: "60000"
   RATE_LIMIT_MAX_REQUESTS: "60"
   NEXT_TELEMETRY_DISABLED: "1"
@@ -407,7 +407,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@jyotron.com
+    email: admin@myastro360.com
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
@@ -424,7 +424,7 @@ EOF
 kubectl apply -k k8s/base/
 
 # Verify deployments
-kubectl get pods -n jyotryx
+kubectl get pods -n myastro360
 # Expected output:
 # NAME                      READY   STATUS    RESTARTS   AGE
 # api-xxx-yyy               1/1     Running   0          1m
@@ -436,13 +436,13 @@ kubectl get pods -n jyotryx
 # worker-xxx-zzz            1/1     Running   0          1m
 
 # Check services
-kubectl get svc -n jyotryx
+kubectl get svc -n myastro360
 
 # Check ingress
-kubectl get ingress -n jyotryx
+kubectl get ingress -n myastro360
 
 # Check HPA
-kubectl get hpa -n jyotryx
+kubectl get hpa -n myastro360
 # Expected:
 # NAME     REFERENCE           TARGETS   MINPODS   MAXPODS
 # api      Deployment/api      <CPU>     3         16
@@ -460,29 +460,29 @@ kubectl get svc -n ingress-nginx
 
 **Step 2: Update Cloudflare DNS**
 ```
-api.jyotron.com  → A record → <LB-IP> (proxy OFF or DNS only)
-www.jyotron.com  → A record → <LB-IP> (proxy ON for CDN)
+api.myastro360.com  → A record → <LB-IP> (proxy OFF or DNS only)
+www.myastro360.com  → A record → <LB-IP> (proxy ON for CDN)
 ```
 
 ### 3.10 Verify Phase 2 Deployment
 
 ```bash
 # Check pods are healthy
-kubectl get pods -n jyotryx -o wide
+kubectl get pods -n myastro360 -o wide
 
 # Check API readiness
-kubectl exec -n jyotryx deploy/api -- wget -qO- http://localhost:4000/health/ready
+kubectl exec -n myastro360 deploy/api -- wget -qO- http://localhost:4000/health/ready
 
 # Check logs
-kubectl logs -n jyotryx deploy/api --tail=50
-kubectl logs -n jyotryx deploy/worker --tail=50
+kubectl logs -n myastro360 deploy/api --tail=50
+kubectl logs -n myastro360 deploy/worker --tail=50
 
 # Check HPA is working
-kubectl describe hpa api -n jyotryx
+kubectl describe hpa api -n myastro360
 
 # Run load test
 cd apps/api
-JYOTRON_BASE_URL=https://api.jyotron.com npm run test:k6:all
+MYASTRO360_BASE_URL=https://api.myastro360.com npm run test:k6:all
 ```
 
 ---
@@ -501,7 +501,7 @@ JYOTRON_BASE_URL=https://api.jyotron.com npm run test:k6:all
 
 You already use R2 for palm images. Add a custom domain:
 1. Cloudflare → R2 → Your bucket → Settings → Custom Domains
-2. Add `uploads.jyotron.com`
+2. Add `uploads.myastro360.com`
 3. This serves images via Cloudflare CDN automatically
 
 ### 4.3 Rate Limiting at the Edge
@@ -527,7 +527,7 @@ Rule 2: Auth brute force protection
 
 **OpenAI (Primary)**
 1. Go to https://platform.openai.com/api-keys
-2. Create a new API key with name "jyotryx-production"
+2. Create a new API key with name "myastro360-production"
 3. Set usage limits: $100/month hard cap to start
 4. Set the key as `OPENAI_API_KEY`
 
@@ -572,7 +572,7 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 Check API logs after deployment:
 ```bash
 # Should show all 3 providers
-kubectl logs -n jyotryx deploy/api | grep "LLM service ready"
+kubectl logs -n myastro360 deploy/api | grep "LLM service ready"
 # Expected: LLM service ready — primary: OpenAI, secondary: Gemini, tertiary: Anthropic, failover: true
 ```
 
@@ -590,7 +590,7 @@ kubectl logs -n jyotryx deploy/api | grep "LLM service ready"
 
 The API exposes metrics via `prom-client`:
 ```bash
-curl https://api.jyotron.com/api/metrics
+curl https://api.myastro360.com/api/metrics
 ```
 
 For K8s, install kube-prometheus-stack:
@@ -659,11 +659,11 @@ railway up                           # Deploy
 
 # ── Kubernetes Deployment ──
 kubectl apply -k k8s/base/           # Deploy all resources
-kubectl get pods -n jyotryx          # Check pod status
-kubectl logs deploy/api -n jyotryx   # Check API logs
-kubectl logs deploy/worker -n jyotryx # Check worker logs
-kubectl top pods -n jyotryx          # Resource usage
-kubectl describe hpa -n jyotryx      # Autoscaler status
+kubectl get pods -n myastro360          # Check pod status
+kubectl logs deploy/api -n myastro360   # Check API logs
+kubectl logs deploy/worker -n myastro360 # Check worker logs
+kubectl top pods -n myastro360          # Resource usage
+kubectl describe hpa -n myastro360      # Autoscaler status
 
 # ── Database ──
 npx prisma migrate deploy            # Run pending migrations
@@ -675,8 +675,8 @@ npm run test:k6:chat                 # Chat load test
 npm run test:k6:kundli               # Kundli load test
 
 # ── Docker Build ──
-docker build -t ghcr.io/xploroshan/jyotryx-api:latest apps/api/
-docker build -t ghcr.io/xploroshan/jyotryx-web:latest apps/web/
-docker push ghcr.io/xploroshan/jyotryx-api:latest
-docker push ghcr.io/xploroshan/jyotryx-web:latest
+docker build -t ghcr.io/xploroshan/myastro360-api:latest apps/api/
+docker build -t ghcr.io/xploroshan/myastro360-web:latest apps/web/
+docker push ghcr.io/xploroshan/myastro360-api:latest
+docker push ghcr.io/xploroshan/myastro360-web:latest
 ```

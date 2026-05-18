@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: jyotryx-config
-  namespace: jyotryx
+  name: myastro360-config
+  namespace: myastro360
 data:
   NODE_ENV: "production"
   PORT: "4000"
-  CORS_ORIGIN: "https://www.jyotron.com"
+  CORS_ORIGIN: "https://www.myastro360.com"
   RATE_LIMIT_WINDOW_MS: "60000"
   RATE_LIMIT_MAX_REQUESTS: "60"
   NEXT_TELEMETRY_DISABLED: "1"

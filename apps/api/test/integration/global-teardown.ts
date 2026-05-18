@@ -9,7 +9,7 @@ import * as fs from 'fs';
  * separate node processes and the in-memory handles are gone.
  */
 export default async function globalTeardown(): Promise<void> {
-  const handles = (globalThis as any).__JYOTRYX_INT__;
+  const handles = (globalThis as any).__MYASTRO360_INT__;
 
   if (handles) {
     await Promise.allSettled([
@@ -17,11 +17,11 @@ export default async function globalTeardown(): Promise<void> {
       handles.postgres?.stop?.(),
       handles.redis?.stop?.(),
     ]);
-  } else if (process.env.JYOTRYX_INT_HANDOFF && fs.existsSync(process.env.JYOTRYX_INT_HANDOFF)) {
+  } else if (process.env.MYASTRO360_INT_HANDOFF && fs.existsSync(process.env.MYASTRO360_INT_HANDOFF)) {
     // Best-effort fallback: use the handoff file to pg_ctl stop, then
     // nuke any lingering processes via fuser/lsof on the recorded ports.
     try {
-      const info = JSON.parse(fs.readFileSync(process.env.JYOTRYX_INT_HANDOFF, 'utf8'));
+      const info = JSON.parse(fs.readFileSync(process.env.MYASTRO360_INT_HANDOFF, 'utf8'));
       if (info?.postgres?.dataDir) {
         const uid = process.getuid?.() ?? 0;
         const su = uid === 0 ? 'su postgres -c ' : '';
