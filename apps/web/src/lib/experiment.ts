@@ -13,7 +13,7 @@ export interface PaywallAssignment {
   userKey: string;
 }
 
-const ANON_COOKIE_KEY = "jyotryx.exp.anon";
+const ANON_COOKIE_KEY = "myastro360.exp.anon";
 const ANON_COOKIE_TTL_DAYS = 365;
 
 /**

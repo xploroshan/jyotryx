@@ -99,11 +99,11 @@ describe('readBriefingCacheSync — pulls userId/locale from persist middleware'
 
   it('reads the cache using userId+locale from the persist keys', () => {
     window.localStorage.setItem(
-      'jyotron-auth',
+      'myastro360-auth',
       JSON.stringify({ state: { user: { id: 'user-7' } } }),
     );
     window.localStorage.setItem(
-      'jyotron-locale',
+      'myastro360-locale',
       JSON.stringify({ state: { locale: 'hi' } }),
     );
     writeBriefingCache('user-7', 'hi', fixtureBriefing);
@@ -116,7 +116,7 @@ describe('readBriefingCacheSync — pulls userId/locale from persist middleware'
 
   it('falls back to locale=en when locale key is absent', () => {
     window.localStorage.setItem(
-      'jyotron-auth',
+      'myastro360-auth',
       JSON.stringify({ state: { user: { id: 'user-7' } } }),
     );
     writeBriefingCache('user-7', 'en', fixtureBriefing);

@@ -69,7 +69,7 @@ describe('Monorepo Structure', () => {
     expect(fs.existsSync(API_DIR)).toBe(true);
   });
 
-  // @jyotryx/shared was deleted in the app-review cleanup — the package
+  // @myastro360/shared was deleted in the app-review cleanup — the package
   // had zero importers across the monorepo and both apps had redefined
   // its enums locally. No replacement is expected.
 });

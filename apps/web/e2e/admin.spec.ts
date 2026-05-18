@@ -5,7 +5,7 @@ import { gotoAndHydrate, installApiMocks, json } from './helpers/mock-api';
 /**
  * End-to-end coverage for the admin dashboard at `/admin`.
  *
- * Auth is faked by seeding the Zustand-persisted `jyotron-auth` key in
+ * Auth is faked by seeding the Zustand-persisted `myastro360-auth` key in
  * localStorage with `role: 'ADMIN'`. The page guards on
  * `user?.role !== 'ADMIN'` and pushes to `/auth` otherwise, so this is
  * the documented way to land on the admin UI in tests (see
@@ -548,7 +548,7 @@ async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
 
 async function seedAdminAuth(page: Page) {
   await page.addInitScript((authJson) => {
-    localStorage.setItem('jyotron-auth', authJson);
+    localStorage.setItem('myastro360-auth', authJson);
   }, adminAuthState);
 }
 
@@ -579,7 +579,7 @@ test.describe('Admin dashboard — auth gating', () => {
   test('redirects non-admin users to /auth', async ({ page }) => {
     await installAdminMocks(page);
     await page.addInitScript((authJson) => {
-      localStorage.setItem('jyotron-auth', authJson);
+      localStorage.setItem('myastro360-auth', authJson);
     }, userAuthState);
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/auth/, { timeout: 10_000 });

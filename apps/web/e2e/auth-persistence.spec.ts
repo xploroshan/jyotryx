@@ -88,7 +88,7 @@ test.describe('Auth persists across reload and navigation', () => {
       'GET /reports': async (route) => route.fulfill(json([])),
     });
     await page.addInitScript((authJson) => {
-      localStorage.setItem('jyotron-auth', authJson);
+      localStorage.setItem('myastro360-auth', authJson);
     }, authState);
   });
 
@@ -139,7 +139,7 @@ test.describe('Auth persists across reload and navigation', () => {
     // delays the redirect until rehydration completes, not disable it.
     await context.clearCookies();
     await page.addInitScript(() => {
-      localStorage.removeItem('jyotron-auth');
+      localStorage.removeItem('myastro360-auth');
     });
     await page.goto('/my-day');
     await expect(page).toHaveURL(/\/auth/, { timeout: 10_000 });

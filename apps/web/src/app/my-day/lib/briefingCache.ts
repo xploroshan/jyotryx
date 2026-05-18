@@ -12,7 +12,7 @@
  */
 import type { DailyBriefing } from './types';
 
-export const BRIEFING_CACHE_KEY = 'jyotron-my-day-briefing';
+export const BRIEFING_CACHE_KEY = 'myastro360-my-day-briefing';
 
 export type BriefingCache = {
   date: string; // YYYY-MM-DD of cached entry; expires daily
@@ -59,8 +59,8 @@ export function readBriefingCache(
 export function readBriefingCacheSync(now: Date = new Date()): DailyBriefing | null {
   if (typeof window === 'undefined') return null;
   try {
-    const authRaw = window.localStorage.getItem('jyotron-auth');
-    const localeRaw = window.localStorage.getItem('jyotron-locale');
+    const authRaw = window.localStorage.getItem('myastro360-auth');
+    const localeRaw = window.localStorage.getItem('myastro360-locale');
     if (!authRaw) return null;
     const userId = JSON.parse(authRaw)?.state?.user?.id;
     if (!userId) return null;

@@ -33,7 +33,7 @@ test.describe('Admin Safety tab', () => {
         },
         version: 0,
       };
-      localStorage.setItem('jyotron-auth', JSON.stringify(persisted));
+      localStorage.setItem('myastro360-auth', JSON.stringify(persisted));
     });
 
     let flagged = [

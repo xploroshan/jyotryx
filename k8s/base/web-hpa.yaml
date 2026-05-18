@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: web
-  namespace: jyotryx
+  namespace: myastro360
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

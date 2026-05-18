@@ -13,7 +13,7 @@ import { REDIS_CLIENT } from '../../redis/redis.module';
  * Context: the Docker image runs `prisma migrate deploy` on start but
  * never runs `prisma/seed.ts`, so deployments that didn't manually
  * execute `npm run seed` end up with no admin user at all — the
- * `admin@jyotron.com` login from the docs just fails with "Invalid
+ * `admin@myastro360.com` login from the docs just fails with "Invalid
  * email or password". This service closes that gap idempotently:
  *
  * 1. If no user with role=ADMIN exists, create one using
@@ -63,7 +63,7 @@ export class AdminBootstrapService implements OnApplicationBootstrap {
     const env = this.config.get<string>('NODE_ENV') ?? 'development';
     const isProd = env === 'production';
 
-    const email = this.config.get<string>('ADMIN_EMAIL') ?? 'admin@jyotron.com';
+    const email = this.config.get<string>('ADMIN_EMAIL') ?? 'admin@myastro360.com';
     const configuredPassword = this.config.get<string>('ADMIN_PASSWORD');
     const resetRequested =
       (this.config.get<string>('ADMIN_BOOTSTRAP_RESET') ?? '').toLowerCase() ===
@@ -78,7 +78,7 @@ export class AdminBootstrapService implements OnApplicationBootstrap {
       return;
     }
 
-    const password = configuredPassword ?? 'admin@jyotron2024';
+    const password = configuredPassword ?? 'admin@myastro360_2024';
 
     const existing = await this.prisma.user.findUnique({ where: { email } });
 
@@ -87,7 +87,7 @@ export class AdminBootstrapService implements OnApplicationBootstrap {
       await this.prisma.user.create({
         data: {
           email,
-          name: 'Jyotron Admin',
+          name: 'myastro360 Admin',
           passwordHash,
           role: Role.ADMIN,
           credits: 9999,

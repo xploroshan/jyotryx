@@ -26,7 +26,7 @@ export class ReferralController {
   @ApiOperation({ summary: 'Get the current user\'s referral code, share URL and history' })
   @ApiResponse({ status: 200, description: 'Referral status returned' })
   async getMyReferralStatus(@Request() req: any): Promise<ReferralStatus> {
-    const baseUrl = this.configService.get<string>('frontendUrl') || 'https://www.jyotron.com';
+    const baseUrl = this.configService.get<string>('frontendUrl') || 'https://www.myastro360.com';
     return this.referralService.getStatusForUser(req.user.sub, baseUrl);
   }
 

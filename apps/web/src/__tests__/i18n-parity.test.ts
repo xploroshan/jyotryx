@@ -56,7 +56,7 @@ function resolvePath(obj: Dict, path: string): unknown {
 /**
  * Keys that are allowed to match English verbatim in other locales.
  *
- * Use sparingly. Valid reasons: proper nouns ('Jyotron', 'Vedic'), universally
+ * Use sparingly. Valid reasons: proper nouns ('myastro360', 'Vedic'), universally
  * adopted English terms in Indian-language UIs ('OK', 'Email', 'SMS'), and
  * acronyms (API, URL).
  *
@@ -84,8 +84,7 @@ const UNTRANSLATED_ALLOWLIST = new Set<string>([
  * the key path. Use for patterns like brand names, numbers, URLs.
  */
 const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
-  /^Jyotron$/i,         // brand name
-  /^Jyotryx$/i,         // brand name
+  /^myastro360$/i,         // brand name
   /^OK$/,               // universal UI term
   /^\d+$/,              // pure numbers
   /^[\d.,%+\-\s]+$/,    // numeric formats

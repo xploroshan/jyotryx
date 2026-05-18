@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Jyotryx backend health diagnostics.
+# myastro360 backend health diagnostics.
 #
 # Curls the configured API base URL and prints a terse pass/fail report so
-# you can tell at a glance whether a login failure on jyotron.com is caused
+# you can tell at a glance whether a login failure on myastro360.com is caused
 # by the backend being asleep/unreachable or by something in the client.
 #
 # Usage:
@@ -24,9 +24,9 @@ API_BASE="${API_BASE:-}"
 if [ -z "$API_BASE" ] && [ -f "$REPO_ROOT/apps/web/.env.production" ]; then
   API_BASE="$(grep -E '^NEXT_PUBLIC_API_URL=' "$REPO_ROOT/apps/web/.env.production" | head -n1 | cut -d= -f2- | tr -d '"' | tr -d "'")"
 fi
-API_BASE="${API_BASE:-https://jyotryx.onrender.com/api}"
+API_BASE="${API_BASE:-https://myastro360.onrender.com/api}"
 
-echo "Jyotryx backend diagnostics"
+echo "myastro360 backend diagnostics"
 echo "API base: $API_BASE"
 echo
 
@@ -43,7 +43,7 @@ run_check() {
   local curl_args=(
     --silent --show-error
     --max-time 35
-    --output /tmp/jyotryx-check-body.$$
+    --output /tmp/myastro360-check-body.$$
     --write-out '%{http_code} %{time_total}s'
     --request "$method"
   )
@@ -67,12 +67,12 @@ run_check() {
     pass=$((pass + 1))
   else
     echo "  [FAIL] $label — expected HTTP $expect_code, got HTTP $code in $elapsed"
-    if [ -s /tmp/jyotryx-check-body.$$ ]; then
-      echo "         body: $(head -c 200 /tmp/jyotryx-check-body.$$)"
+    if [ -s /tmp/myastro360-check-body.$$ ]; then
+      echo "         body: $(head -c 200 /tmp/myastro360-check-body.$$)"
     fi
     fail=$((fail + 1))
   fi
-  rm -f /tmp/jyotryx-check-body.$$
+  rm -f /tmp/myastro360-check-body.$$
 }
 
 # 1. Health endpoint — must respond 200 with a JSON body.
@@ -100,6 +100,6 @@ if [ "$fail" -gt 0 ]; then
   echo "  * If /auth/firebase returns 401 'Firebase is not configured on the server',"
   echo "    set FIREBASE_SERVICE_ACCOUNT_JSON (or FIREBASE_PROJECT_ID) on Render and"
   echo "    redeploy."
-  echo "  * Check CORS_ALLOWED_ORIGINS includes https://jyotron.com."
+  echo "  * Check CORS_ALLOWED_ORIGINS includes https://myastro360.com."
   exit 1
 fi

@@ -1,7 +1,7 @@
 /**
  * Accuracy Validation Tests
  *
- * These tests verify that the Swiss Ephemeris-based calculations in Jyotryx
+ * These tests verify that the Swiss Ephemeris-based calculations in myastro360
  * produce accurate results by comparing against known reference data
  * (verified against clickastro.com and established Vedic astrology software).
  *

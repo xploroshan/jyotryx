@@ -93,15 +93,15 @@ export default async function globalSetup(): Promise<void> {
   };
   const handoffPath = path.join(
     require('os').tmpdir(),
-    `jyotryx-int-handoff-${process.pid}.json`,
+    `myastro360-int-handoff-${process.pid}.json`,
   );
   fs.writeFileSync(handoffPath, JSON.stringify(handoff, null, 2));
-  process.env.JYOTRYX_INT_HANDOFF = handoffPath;
+  process.env.MYASTRO360_INT_HANDOFF = handoffPath;
 
   // Retain the stop closures on the module-level global so teardown can
   // reach them. Jest shares `globalThis` between globalSetup and
   // globalTeardown when they run in the same node process.
-  (globalThis as any).__JYOTRYX_INT__ = { redis, postgres, pgb };
+  (globalThis as any).__MYASTRO360_INT__ = { redis, postgres, pgb };
 
   // Small log to confirm boot time in CI diagnostics.
   // eslint-disable-next-line no-console

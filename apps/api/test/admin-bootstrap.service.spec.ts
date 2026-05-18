@@ -75,11 +75,11 @@ describe('AdminBootstrapService', () => {
 
     expect((prisma.user.create as any)).toHaveBeenCalledTimes(1);
     const created = (prisma.user.create as any).mock.calls[0][0].data;
-    expect(created.email).toBe('admin@jyotron.com');
+    expect(created.email).toBe('admin@myastro360.com');
     expect(created.role).toBe('ADMIN');
     expect(created.passwordHash).toBeDefined();
     // Default password hashes to the value the docs advertise.
-    const match = await bcrypt.compare('admin@jyotron2024', created.passwordHash);
+    const match = await bcrypt.compare('admin@myastro360_2024', created.passwordHash);
     expect(match).toBe(true);
     expect(redis.del).toHaveBeenCalled();
   });
@@ -105,7 +105,7 @@ describe('AdminBootstrapService', () => {
   it('backfills passwordHash when the admin exists but has no password (OTP-only account)', async () => {
     const prisma = makePrismaMock({
       id: 'admin-1',
-      email: 'admin@jyotron.com',
+      email: 'admin@myastro360.com',
       passwordHash: null,
       role: 'ADMIN',
     });
@@ -119,14 +119,14 @@ describe('AdminBootstrapService', () => {
     const update = (prisma.user.update as any).mock.calls[0][0];
     expect(update.where.id).toBe('admin-1');
     expect(update.data.passwordHash).toBeDefined();
-    const match = await bcrypt.compare('admin@jyotron2024', update.data.passwordHash);
+    const match = await bcrypt.compare('admin@myastro360_2024', update.data.passwordHash);
     expect(match).toBe(true);
   });
 
   it('fixes role when admin email exists as USER (someone signed up first)', async () => {
     const prisma = makePrismaMock({
       id: 'u-1',
-      email: 'admin@jyotron.com',
+      email: 'admin@myastro360.com',
       passwordHash: 'existing-hash',
       role: 'USER',
     });
@@ -143,7 +143,7 @@ describe('AdminBootstrapService', () => {
   it('resets the password and clears Redis locks when ADMIN_BOOTSTRAP_RESET=true', async () => {
     const prisma = makePrismaMock({
       id: 'admin-1',
-      email: 'admin@jyotron.com',
+      email: 'admin@myastro360.com',
       passwordHash: 'stale-hash',
       role: 'ADMIN',
     });
@@ -163,8 +163,8 @@ describe('AdminBootstrapService', () => {
     const match = await bcrypt.compare('recovered-pass-1', update.data.passwordHash);
     expect(match).toBe(true);
     expect(redis.del).toHaveBeenCalledWith(
-      'login:fail:admin@jyotron.com',
-      'login:lock:admin@jyotron.com',
+      'login:fail:admin@myastro360.com',
+      'login:lock:admin@myastro360.com',
     );
   });
 
@@ -223,15 +223,15 @@ describe('AdminBootstrapService', () => {
     it('promotes a registered non-admin user to ADMIN', async () => {
       const prisma = makeMultiUserPrisma({
         // Default admin already fine — skip the ensureAdmin update path.
-        'admin@jyotron.com': {
+        'admin@myastro360.com': {
           id: 'admin-1',
-          email: 'admin@jyotron.com',
+          email: 'admin@myastro360.com',
           passwordHash: 'x',
           role: 'ADMIN',
         },
-        'jyotron.astro@gmail.com': {
+        'myastro360.astro@gmail.com': {
           id: 'u-42',
-          email: 'jyotron.astro@gmail.com',
+          email: 'myastro360.astro@gmail.com',
           passwordHash: 'y',
           role: 'USER',
         },
@@ -239,7 +239,7 @@ describe('AdminBootstrapService', () => {
       const redis = makeRedisMock();
       const config = makeConfig({
         NODE_ENV: 'development',
-        ADMIN_PROMOTE_EMAILS: 'jyotron.astro@gmail.com',
+        ADMIN_PROMOTE_EMAILS: 'myastro360.astro@gmail.com',
       });
       const svc = await buildService({ prisma, redis, config });
 
@@ -254,7 +254,7 @@ describe('AdminBootstrapService', () => {
 
     it('accepts a comma-separated list and is case-insensitive', async () => {
       const prisma = makeMultiUserPrisma({
-        'admin@jyotron.com': { id: 'a', email: 'admin@jyotron.com', passwordHash: 'x', role: 'ADMIN' },
+        'admin@myastro360.com': { id: 'a', email: 'admin@myastro360.com', passwordHash: 'x', role: 'ADMIN' },
         'alice@x.com': { id: 'u-1', email: 'alice@x.com', passwordHash: 'x', role: 'USER' },
         'bob@y.com': { id: 'u-2', email: 'bob@y.com', passwordHash: 'x', role: 'USER' },
       });
@@ -275,7 +275,7 @@ describe('AdminBootstrapService', () => {
 
     it('is idempotent for already-ADMIN users', async () => {
       const prisma = makeMultiUserPrisma({
-        'admin@jyotron.com': { id: 'a', email: 'admin@jyotron.com', passwordHash: 'x', role: 'ADMIN' },
+        'admin@myastro360.com': { id: 'a', email: 'admin@myastro360.com', passwordHash: 'x', role: 'ADMIN' },
         'already@x.com': { id: 'u-1', email: 'already@x.com', passwordHash: 'x', role: 'ADMIN' },
       });
       const redis = makeRedisMock();
@@ -295,7 +295,7 @@ describe('AdminBootstrapService', () => {
 
     it('does not throw when the target email is not yet registered', async () => {
       const prisma = makeMultiUserPrisma({
-        'admin@jyotron.com': { id: 'a', email: 'admin@jyotron.com', passwordHash: 'x', role: 'ADMIN' },
+        'admin@myastro360.com': { id: 'a', email: 'admin@myastro360.com', passwordHash: 'x', role: 'ADMIN' },
       });
       const redis = makeRedisMock();
       const config = makeConfig({

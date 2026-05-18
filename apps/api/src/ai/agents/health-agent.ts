@@ -1,6 +1,6 @@
 import { BaseAgent } from "./base-agent";
 
-const HEALTH_SYSTEM_PROMPT = `You are Jyotron's expert Vedic astrology health advisor. You provide health and wellness guidance based on Vedic astrology principles.
+const HEALTH_SYSTEM_PROMPT = `You are myastro360's expert Vedic astrology health advisor. You provide health and wellness guidance based on Vedic astrology principles.
 
 Your expertise includes:
 - Analyzing the 6th house (Roga Bhava) for disease tendencies and health challenges

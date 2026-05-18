@@ -29,7 +29,7 @@ export async function startPgBouncer(opts: {
   poolMode?: 'transaction' | 'session' | 'statement';
 }): Promise<PgBouncerHandle> {
   const port = await getFreePort();
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jyotryx-int-pgb-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'myastro360-int-pgb-'));
   const iniPath = path.join(dir, 'pgbouncer.ini');
   const userlistPath = path.join(dir, 'userlist.txt');
   const logPath = path.join(dir, 'pgbouncer.log');

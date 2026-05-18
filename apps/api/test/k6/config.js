@@ -1,8 +1,8 @@
 /**
- * Shared k6 configuration for Jyotryx load tests.
+ * Shared k6 configuration for myastro360 load tests.
  *
  * Usage:
- *   API_URL=https://api.jyotron.com/api AUTH_TOKEN=<jwt> k6 run test/k6/chat-message.js
+ *   API_URL=https://api.myastro360.com/api AUTH_TOKEN=<jwt> k6 run test/k6/chat-message.js
  *
  * Environment variables:
  *   API_URL     — Base API URL (default: http://localhost:4000/api)

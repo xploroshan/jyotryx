@@ -483,7 +483,7 @@ describe('Auth: Phone OTP', () => {
       prisma.user.create.mockResolvedValue({
         id: 'new-otp-user',
         name: 'User',
-        email: '915555555555@phone.jyotron.com',
+        email: '915555555555@phone.myastro360.com',
         phone: '+915555555555',
         credits: 10,
         role: 'USER',
@@ -535,7 +535,7 @@ describe('Auth: Phone OTP', () => {
       prisma.user.create.mockResolvedValue({
         id: 'new-named-user',
         name: 'Arjun Mehta',
-        email: '918888888881@phone.jyotron.com',
+        email: '918888888881@phone.myastro360.com',
         phone: '+918888888881',
         credits: 10,
         role: 'USER',
@@ -559,7 +559,7 @@ describe('Auth: Phone OTP', () => {
       prisma.user.create.mockResolvedValue({
         id: 'new-default-user',
         name: 'User',
-        email: '918888888882@phone.jyotron.com',
+        email: '918888888882@phone.myastro360.com',
         phone: '+918888888882',
         credits: 10,
         role: 'USER',
@@ -771,7 +771,7 @@ describe('Auth: Firebase Auth', () => {
     prisma.user.create.mockResolvedValue({
       id: 'phone-fb-user',
       name: 'User',
-      email: '919998887770@phone.jyotron.com',
+      email: '919998887770@phone.myastro360.com',
       phone: '+919998887770',
       provider: 'PHONE',
       providerId: 'firebase-phone-uid',
@@ -1064,7 +1064,7 @@ describe('Auth: Set Password', () => {
   it('should set password for phone OTP user', async () => {
     prisma.user.findUnique.mockResolvedValue({
       id: 'user-phone-set',
-      email: '919876543210@phone.jyotron.com',
+      email: '919876543210@phone.myastro360.com',
       passwordHash: null,
       provider: 'PHONE',
     });

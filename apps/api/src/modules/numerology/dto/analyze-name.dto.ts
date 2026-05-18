@@ -16,7 +16,7 @@ export class AnalyzeNameDto {
 }
 
 export class AnalyzeBrandDto {
-  @ApiProperty({ example: 'Jyotryx' })
+  @ApiProperty({ example: 'myastro360' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)

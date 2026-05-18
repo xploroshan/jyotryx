@@ -1,5 +1,5 @@
 /**
- * Offline Computation Engine for Jyotryx
+ * Offline Computation Engine for myastro360
  *
  * Provides fully local computations for features that don't need AI:
  * - Numerology (Chaldean & Pythagorean)
@@ -269,7 +269,7 @@ export function assessDayQualityOffline(date: Date = new Date()): {
 
 // ─── Offline Data Cache (for mobile) ────────────────────────────────────────
 
-const OFFLINE_CACHE_KEY = 'jyotryx-offline-data';
+const OFFLINE_CACHE_KEY = 'myastro360-offline-data';
 
 export interface OfflineCachedData {
   dailyBriefing: ReturnType<typeof assessDayQualityOffline> | null;

@@ -49,7 +49,7 @@ export default function Navbar() {
           >
             <LogoMark className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[20deg]" />
             <span className="font-display text-[19px] font-semibold text-surface-950 tracking-tight">
-              Jyotron
+              myastro360
             </span>
           </Link>
 

@@ -69,12 +69,12 @@ export async function startPostgres(opts: {
   user?: string;
   password?: string;
 } = {}): Promise<PostgresHandle> {
-  const user = opts.user ?? 'jyotryx';
-  const password = opts.password ?? 'jyotryx';
-  const database = opts.database ?? 'jyotryx_test';
+  const user = opts.user ?? 'myastro360';
+  const password = opts.password ?? 'myastro360';
+  const database = opts.database ?? 'myastro360_test';
 
   const port = await getFreePort();
-  const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jyotryx-int-pg-'));
+  const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'myastro360-int-pg-'));
   const dataDir = path.join(baseDir, 'data');
   fs.mkdirSync(dataDir, { recursive: true });
 

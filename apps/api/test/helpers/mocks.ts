@@ -1,5 +1,5 @@
 /**
- * Shared mock factories for Jyotryx test suite.
+ * Shared mock factories for myastro360 test suite.
  */
 
 export const mockKnowledgeService = () => ({

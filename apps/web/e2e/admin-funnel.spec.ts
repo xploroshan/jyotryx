@@ -66,7 +66,7 @@ test.describe('Admin Funnel tab', () => {
         },
         version: 0,
       };
-      localStorage.setItem('jyotron-auth', JSON.stringify(persisted));
+      localStorage.setItem('myastro360-auth', JSON.stringify(persisted));
     });
 
     await installApiMocks(page, {

@@ -51,10 +51,10 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:8081',
-    'https://jyotron-web.vercel.app',
-    'https://jyotryx-web.vercel.app',
-    'https://www.jyotron.com',
-    'https://jyotron.com',
+    'https://myastro360-web.vercel.app',
+    'https://myastro360-web.vercel.app',
+    'https://www.myastro360.com',
+    'https://myastro360.com',
     process.env.FRONTEND_URL,
     process.env.CORS_ORIGIN,
   ].filter(Boolean) as string[];
@@ -100,8 +100,8 @@ async function bootstrap() {
   // setups can set ENABLE_SWAGGER=true in .env.local; CI leaves it off.
   if (process.env.ENABLE_SWAGGER === 'true') {
     const config = new DocumentBuilder()
-      .setTitle('Jyotron API')
-      .setDescription('Jyotron Astrology App Backend API')
+      .setTitle('myastro360 API')
+      .setDescription('myastro360 Astrology App Backend API')
       .setVersion('1.0')
       .addBearerAuth(
         {
@@ -134,7 +134,7 @@ async function bootstrap() {
   // of `::` sometimes routes only IPv6, which silently fails healthchecks
   // that probe over IPv4.
   await app.listen(port, '0.0.0.0');
-  logger.log(`Jyotron API running on http://0.0.0.0:${port}`);
+  logger.log(`myastro360 API running on http://0.0.0.0:${port}`);
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

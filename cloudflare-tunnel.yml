@@ -1,28 +1,28 @@
 # Cloudflare Tunnel Configuration
-# Run: cloudflared tunnel --config cloudflare-tunnel.yml run jyotron
+# Run: cloudflared tunnel --config cloudflare-tunnel.yml run myastro360
 #
 # Setup steps:
 # 1. Install cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
 # 2. Authenticate: cloudflared tunnel login
-# 3. Create tunnel: cloudflared tunnel create jyotron
-# 4. Add DNS: cloudflared tunnel route dns jyotron www.jyotron.com
-# 5. Add DNS: cloudflared tunnel route dns jyotron api.jyotron.com
-# 6. Run: cloudflared tunnel --config cloudflare-tunnel.yml run jyotron
+# 3. Create tunnel: cloudflared tunnel create myastro360
+# 4. Add DNS: cloudflared tunnel route dns myastro360 www.myastro360.com
+# 5. Add DNS: cloudflared tunnel route dns myastro360 api.myastro360.com
+# 6. Run: cloudflared tunnel --config cloudflare-tunnel.yml run myastro360
 
 tunnel: <YOUR_TUNNEL_ID>
 credentials-file: /root/.cloudflared/<YOUR_TUNNEL_ID>.json
 
 ingress:
   # API backend
-  - hostname: api.jyotron.com
+  - hostname: api.myastro360.com
     service: http://localhost:4000
 
   # Web frontend
-  - hostname: www.jyotron.com
+  - hostname: www.myastro360.com
     service: http://localhost:3000
 
   # Root domain redirect
-  - hostname: jyotron.com
+  - hostname: myastro360.com
     service: http://localhost:3000
 
   # Catch-all (required)

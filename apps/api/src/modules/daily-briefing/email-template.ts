@@ -71,7 +71,7 @@ export function renderBriefingEmail(params: BriefingEmailParams): {
           <!-- Header -->
           <tr>
             <td style="padding: 24px 24px 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.06);">
-              <p style="margin:0 0 4px 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color:#8a8aa0;">${escape(dateLabel)} · Jyotron</p>
+              <p style="margin:0 0 4px 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color:#8a8aa0;">${escape(dateLabel)} · myastro360</p>
               <h1 style="margin: 4px 0 0 0; font-size: 22px; font-weight: 600; color:#ffffff;">${escape(greeting)}</h1>
             </td>
           </tr>
@@ -173,7 +173,7 @@ export function renderBriefingEmail(params: BriefingEmailParams): {
           <tr>
             <td style="padding: 16px 24px; background-color:#0b0b13; border-top: 1px solid rgba(255,255,255,0.06);">
               <p style="margin: 0; font-size: 11px; color:#5d5d70; text-align:center; line-height: 1.5;">
-                You're receiving this because you turned on daily briefings on Jyotron.<br/>
+                You're receiving this because you turned on daily briefings on myastro360.<br/>
                 <a href="${escape(prefsUrl)}" style="color:#8a8aa0;">Manage preferences</a> · For entertainment and spiritual guidance only — not professional advice.
               </p>
             </td>

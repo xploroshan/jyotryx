@@ -72,8 +72,8 @@ describe('K8s Manifests', () => {
   it('Ingress should define routes for both API and web', () => {
     const ingress = readYaml(path.join(K8S_BASE, 'ingress.yaml'));
     const hosts = ingress.spec.rules.map((r: any) => r.host);
-    expect(hosts).toContain('api.jyotron.com');
-    expect(hosts).toContain('www.jyotron.com');
+    expect(hosts).toContain('api.myastro360.com');
+    expect(hosts).toContain('www.myastro360.com');
   });
 
   it('All YAML files in k8s/base should parse without error', () => {

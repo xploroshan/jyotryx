@@ -102,4 +102,4 @@ export async function fetchHoroscope(
 
 /** Origin used in canonical URLs and JSON-LD. */
 export const SITE_ORIGIN =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.jyotron.com';
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.myastro360.com';

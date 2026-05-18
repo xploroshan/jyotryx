@@ -439,7 +439,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           name: signupName && signupName.length > 0 ? signupName : 'User',
-          email: `${phone.replace(/\+/g, '')}@phone.jyotron.com`,
+          email: `${phone.replace(/\+/g, '')}@phone.myastro360.com`,
           phone,
           credits: this.signupCredits,
           locale:       signupContext?.locale ?? undefined,
@@ -507,7 +507,7 @@ export class AuthService {
       return;
     }
 
-    const body = `Your Jyotryx verification code is ${otp}. It expires in ${expiresInMinutes} minute${expiresInMinutes === 1 ? '' : 's'}. Do not share this code.`;
+    const body = `Your myastro360 verification code is ${otp}. It expires in ${expiresInMinutes} minute${expiresInMinutes === 1 ? '' : 's'}. Do not share this code.`;
     const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
     const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
     const form = new URLSearchParams();
@@ -665,7 +665,7 @@ export class AuthService {
       }
     } else {
       // Create new user
-      const userEmail = email || (phone_number ? `${phone_number.replace(/\+/g, '')}@phone.jyotron.com` : `firebase_${uid}@jyotron.com`);
+      const userEmail = email || (phone_number ? `${phone_number.replace(/\+/g, '')}@phone.myastro360.com` : `firebase_${uid}@myastro360.com`);
       const userName = firebaseName || (phone_number ? 'User' : email?.split('@')[0] || 'User');
 
       user = await this.prisma.user.create({

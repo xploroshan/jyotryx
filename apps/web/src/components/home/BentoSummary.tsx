@@ -72,7 +72,7 @@ const PLANET_SYMBOL: Record<string, string> = {
 };
 
 // Shared cache key with /my-day so visiting one warms the other.
-const BRIEFING_CACHE_KEY = 'jyotron-my-day-briefing';
+const BRIEFING_CACHE_KEY = 'myastro360-my-day-briefing';
 
 function readSharedBriefingCache(userId: string, locale: string): DailyBriefing | null {
   if (typeof window === 'undefined') return null;

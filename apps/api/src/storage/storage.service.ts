@@ -15,7 +15,7 @@ export class StorageService {
     const accessKeyId = this.configService.get<string>('r2.accessKeyId');
     const secretAccessKey = this.configService.get<string>('r2.secretAccessKey');
 
-    this.bucket = this.configService.get<string>('r2.bucketName', 'jyotryx-uploads');
+    this.bucket = this.configService.get<string>('r2.bucketName', 'myastro360-uploads');
     this.publicUrl = this.configService.get<string>('r2.publicUrl', '');
 
     if (accountId && accessKeyId && secretAccessKey) {

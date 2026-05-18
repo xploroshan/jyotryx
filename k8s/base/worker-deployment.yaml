@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
-  namespace: jyotryx
+  namespace: myastro360
   labels:
     app: worker
-    app.kubernetes.io/part-of: jyotryx
+    app.kubernetes.io/part-of: myastro360
 spec:
   replicas: 2
   selector:
@@ -15,18 +15,18 @@ spec:
     metadata:
       labels:
         app: worker
-        app.kubernetes.io/part-of: jyotryx
+        app.kubernetes.io/part-of: myastro360
     spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: worker
-          image: ghcr.io/xploroshan/jyotryx-api:latest
+          image: ghcr.io/xploroshan/myastro360-api:latest
           command: ["node", "dist/main", "--worker"]
           envFrom:
             - configMapRef:
-                name: jyotryx-config
+                name: myastro360-config
             - secretRef:
-                name: jyotryx-secrets
+                name: myastro360-secrets
           env:
             - name: WORKER_MODE
               value: "true"

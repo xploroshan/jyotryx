@@ -38,7 +38,7 @@ test.describe('My Day page', () => {
     });
     // Inject auth state into localStorage so the page doesn't redirect to /auth
     await page.addInitScript((authJson) => {
-      localStorage.setItem('jyotron-auth', authJson);
+      localStorage.setItem('myastro360-auth', authJson);
     }, fakeAuthState);
   });
 

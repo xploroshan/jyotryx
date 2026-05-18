@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== Jyotron Deployment Script ==="
+echo "=== myastro360 Deployment Script ==="
 echo ""
 
 # Check prerequisites
@@ -34,8 +34,8 @@ echo "PgAdmin: http://localhost:5050"
 echo ""
 echo "For Cloudflare Tunnel setup:"
 echo "  1. cloudflared tunnel login"
-echo "  2. cloudflared tunnel create jyotron"
+echo "  2. cloudflared tunnel create myastro360"
 echo "  3. Update cloudflare-tunnel.yml with your tunnel ID"
-echo "  4. cloudflared tunnel route dns jyotron www.jyotron.com"
-echo "  5. cloudflared tunnel route dns jyotron api.jyotron.com"
-echo "  6. cloudflared tunnel --config cloudflare-tunnel.yml run jyotron"
+echo "  4. cloudflared tunnel route dns myastro360 www.myastro360.com"
+echo "  5. cloudflared tunnel route dns myastro360 api.myastro360.com"
+echo "  6. cloudflared tunnel --config cloudflare-tunnel.yml run myastro360"

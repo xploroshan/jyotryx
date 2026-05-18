@@ -24,13 +24,13 @@ jobs:
         # the dev environment happened to have it installed.
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: jyotron
-          POSTGRES_PASSWORD: jyotron_test
-          POSTGRES_DB: jyotron_test
+          POSTGRES_USER: myastro360
+          POSTGRES_PASSWORD: myastro360_test
+          POSTGRES_DB: myastro360_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U jyotron"
+          --health-cmd="pg_isready -U myastro360"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -44,7 +44,7 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgresql://jyotron:jyotron_test@localhost:5432/jyotron_test?schema=public
+      DATABASE_URL: postgresql://myastro360:myastro360_test@localhost:5432/myastro360_test?schema=public
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ci-test-secret
       JWT_REFRESH_SECRET: ci-test-refresh-secret
@@ -69,7 +69,7 @@ jobs:
         # identical to the Supabase production env (where DIRECT_URL is
         # the non-pooled connection that migrations must use).
         env:
-          DIRECT_URL: postgresql://jyotron:jyotron_test@localhost:5432/jyotron_test?schema=public
+          DIRECT_URL: postgresql://myastro360:myastro360_test@localhost:5432/myastro360_test?schema=public
         run: npx prisma migrate deploy
       - name: Lint API
         run: cd apps/api && npx nest build

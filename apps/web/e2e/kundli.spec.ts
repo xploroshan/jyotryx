@@ -57,7 +57,7 @@ test.describe('Kundli form', () => {
     // Seed the auth store before navigation so useAuthStore rehydrates
     // as authenticated on first paint.
     await page.addInitScript((authState) => {
-      window.localStorage.setItem('jyotron-auth', JSON.stringify(authState));
+      window.localStorage.setItem('myastro360-auth', JSON.stringify(authState));
     }, AUTH_STATE);
 
     await installApiMocks(page, {
