@@ -51,7 +51,7 @@ export function AnalyticsTab({ token }: { token: string }) {
       {error ? (
         <TabError message={error} onRetry={load} />
       ) : !analytics ? (
-        <div className="surface-card p-8 text-center text-surface-50/40 text-sm">Loading analytics…</div>
+        <div className="surface-card p-8 text-center text-ink-500 text-sm">Loading analytics…</div>
       ) : (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -67,21 +67,21 @@ export function AnalyticsTab({ token }: { token: string }) {
               { label: "LLM Cost (7d)", value: `$${analytics.llmTotals.totalCostUsdLast7Days.toFixed(4)}` },
             ].map((m) => (
               <div key={m.label} className="surface-card p-5">
-                <p className="text-xs text-surface-50/30 mb-1">{m.label}</p>
+                <p className="text-xs text-ink-500 mb-1">{m.label}</p>
                 <div className="flex items-end gap-2">
-                  <p className="text-2xl font-bold text-surface-50">{m.value}</p>
+                  <p className="text-2xl font-bold text-ink-900">{m.value}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <h3 className="text-lg font-bold text-surface-50 mb-4">Credits Spent by Feature (7d)</h3>
+          <h3 className="text-lg font-bold text-ink-900 mb-4">Credits Spent by Feature (7d)</h3>
           <div className="surface-card p-6 mb-8">
             {(() => {
               const rows = analytics.creditsByFeatureLast7Days ?? [];
               const total = rows.reduce((s, r) => s + r.totalCredits, 0);
               if (rows.length === 0 || total === 0) {
-                return <p className="text-sm text-surface-50/40 text-center py-4">No credits spent in the last 7 days yet.</p>;
+                return <p className="text-sm text-ink-500 text-center py-4">No credits spent in the last 7 days yet.</p>;
               }
               const colors = [
                 "from-amber-500 to-yellow-500",
@@ -97,17 +97,17 @@ export function AnalyticsTab({ token }: { token: string }) {
                     const pct = total > 0 ? Math.round((r.totalCredits / total) * 1000) / 10 : 0;
                     return (
                       <div key={r.feature} className="flex items-center gap-4 mb-3 last:mb-0">
-                        <span className="text-sm text-surface-50/40 w-20">{r.feature}</span>
-                        <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden">
+                        <span className="text-sm text-ink-500 w-20">{r.feature}</span>
+                        <div className="flex-1 h-3 bg-black/[0.04] rounded-full overflow-hidden">
                           <div className={`h-full bg-gradient-to-r ${colors[i % colors.length]} rounded-full transition-all`} style={{ width: `${pct}%` }} />
                         </div>
                         <span className="text-sm font-medium text-amber-400 w-20 text-right tabular-nums">{r.totalCredits.toLocaleString()}</span>
-                        <span className="text-xs text-surface-50/30 w-12 text-right">×{r.count}</span>
+                        <span className="text-xs text-ink-500 w-12 text-right">×{r.count}</span>
                       </div>
                     );
                   })}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
-                    <span className="text-sm text-surface-50/40">Total credits spent (7d)</span>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-black/[0.10]">
+                    <span className="text-sm text-ink-500">Total credits spent (7d)</span>
                     <span className="text-lg font-bold text-amber-400 tabular-nums">{total.toLocaleString()}</span>
                   </div>
                 </>
@@ -115,10 +115,10 @@ export function AnalyticsTab({ token }: { token: string }) {
             })()}
           </div>
 
-          <h3 className="text-lg font-bold text-surface-50 mb-4">Feature Usage Breakdown</h3>
+          <h3 className="text-lg font-bold text-ink-900 mb-4">Feature Usage Breakdown</h3>
           <div className="surface-card p-6 mb-8">
             {analytics.featureUsage.length === 0 || analytics.featureUsage.every((f) => f.count === 0) ? (
-              <p className="text-sm text-surface-50/40 text-center py-4">No feature usage data yet</p>
+              <p className="text-sm text-ink-500 text-center py-4">No feature usage data yet</p>
             ) : (
               analytics.featureUsage.map((f, i) => {
                 const colors = [
@@ -131,19 +131,19 @@ export function AnalyticsTab({ token }: { token: string }) {
                 ];
                 return (
                   <div key={f.feature} className="flex items-center gap-4 mb-3 last:mb-0">
-                    <span className="text-sm text-surface-50/40 w-20">{f.feature}</span>
-                    <div className="flex-1 h-3 bg-white/[0.03] rounded-full overflow-hidden">
+                    <span className="text-sm text-ink-500 w-20">{f.feature}</span>
+                    <div className="flex-1 h-3 bg-black/[0.04] rounded-full overflow-hidden">
                       <div className={`h-full bg-gradient-to-r ${colors[i % colors.length]} rounded-full transition-all`} style={{ width: `${f.percent}%` }} />
                     </div>
-                    <span className="text-sm font-medium text-surface-50 w-16 text-right">{f.count.toLocaleString()}</span>
-                    <span className="text-xs text-surface-50/30 w-12 text-right">{f.percent}%</span>
+                    <span className="text-sm font-medium text-ink-900 w-16 text-right">{f.count.toLocaleString()}</span>
+                    <span className="text-xs text-ink-500 w-12 text-right">{f.percent}%</span>
                   </div>
                 );
               })
             )}
           </div>
 
-          <h3 className="text-lg font-bold text-surface-50 mb-4">Revenue Trend (Last 7 Days)</h3>
+          <h3 className="text-lg font-bold text-ink-900 mb-4">Revenue Trend (Last 7 Days)</h3>
           <div className="surface-card p-6 mb-8">
             {(() => {
               const maxRev = Math.max(...analytics.revenueTrend.map((d) => d.revenue), 1);
@@ -156,13 +156,13 @@ export function AnalyticsTab({ token }: { token: string }) {
                       return (
                         <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
                           <div className="w-full bg-gradient-to-t from-primary-600 to-mystic-500 rounded-t-lg transition-all" style={{ height: `${Math.max((d.revenue / maxRev) * 100, 2)}%` }} />
-                          <span className="text-[10px] text-surface-50/30">{label}</span>
+                          <span className="text-[10px] text-ink-500">{label}</span>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
-                    <span className="text-sm text-surface-50/40">Weekly Total</span>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-black/[0.10]">
+                    <span className="text-sm text-ink-500">Weekly Total</span>
                     <span className="text-lg font-bold text-gradient">{formatCurrency(total)}</span>
                   </div>
                 </>
@@ -171,11 +171,11 @@ export function AnalyticsTab({ token }: { token: string }) {
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-surface-50">LLM Cost Per User</h3>
+            <h3 className="text-lg font-bold text-ink-900">LLM Cost Per User</h3>
             <select
               value={llmCostDays}
               onChange={(e) => setLlmCostDays(Number(e.target.value))}
-              className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-surface-50 text-xs focus:outline-none focus:border-primary-500"
+              className="px-3 py-1.5 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-xs focus:outline-none focus:border-primary-500"
             >
               <option value={7}>Last 7 days</option>
               <option value={30}>Last 30 days</option>
@@ -186,26 +186,26 @@ export function AnalyticsTab({ token }: { token: string }) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">User</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Email</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-surface-50/40">Calls</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-surface-50/40">Tokens</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-surface-50/40">Cost (USD)</th>
+                  <tr className="border-b border-black/[0.10]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">User</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Email</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-ink-500">Calls</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-ink-500">Tokens</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-ink-500">Cost (USD)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {llmCosts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-surface-50/30 text-xs">No LLM usage recorded in this period.</td>
+                      <td colSpan={5} className="px-4 py-6 text-center text-ink-500 text-xs">No LLM usage recorded in this period.</td>
                     </tr>
                   ) : (
                     llmCosts.map((row, idx) => (
-                      <tr key={`${row.userId ?? 'unknown'}-${idx}`} className="border-b border-white/5">
-                        <td className="px-4 py-3 text-surface-50">{row.userName ?? <span className="text-surface-50/30 italic">Deleted user</span>}</td>
-                        <td className="px-4 py-3 text-surface-50/60">{row.userEmail ?? "—"}</td>
-                        <td className="px-4 py-3 text-right text-surface-50/80">{row.calls.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right text-surface-50/80">{row.totalTokens.toLocaleString()}</td>
+                      <tr key={`${row.userId ?? 'unknown'}-${idx}`} className="border-b border-black/5">
+                        <td className="px-4 py-3 text-ink-900">{row.userName ?? <span className="text-ink-500 italic">Deleted user</span>}</td>
+                        <td className="px-4 py-3 text-ink-700">{row.userEmail ?? "—"}</td>
+                        <td className="px-4 py-3 text-right text-ink-700">{row.calls.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right text-ink-700">{row.totalTokens.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-medium text-emerald-400">${row.totalCostUsd.toFixed(4)}</td>
                       </tr>
                     ))
