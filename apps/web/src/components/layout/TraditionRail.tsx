@@ -85,7 +85,7 @@ export default function TraditionRail() {
   // every page, but only paints an "active" pill when the URL is
   // actually inside the matching tradition.
   const pillBase =
-    'relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-colors duration-300 focus-ring';
+    'relative flex items-center gap-2 px-5 py-2 rounded-full text-[15px] font-medium transition-colors duration-300 focus-ring';
   const pillActive =
     'text-white shadow-[0_10px_28px_-10px_rgba(255,77,0,0.55)]';
   const pillInactive =
@@ -98,7 +98,7 @@ export default function TraditionRail() {
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8 overflow-x-auto no-scrollbar">
-        <ul className="flex gap-1.5 sm:gap-2 py-3 justify-start lg:justify-center">
+        <ul className="flex gap-2.5 sm:gap-4 py-3 justify-start lg:justify-center">
           {/* My Day */}
           <li className="shrink-0">
             <motion.div whileTap={{ scale: 0.96 }}>
