@@ -186,7 +186,7 @@ export function MonetizationTab({ token }: { token: string }) {
   };
 
   if (loading) {
-    return <div className="surface-card p-6 text-center text-surface-50/40">Loading…</div>;
+    return <div className="surface-card p-6 text-center text-ink-500">Loading…</div>;
   }
   if (loadError) {
     return <TabError message={loadError} onRetry={load} />;
@@ -198,9 +198,9 @@ export function MonetizationTab({ token }: { token: string }) {
       {/* ─── Briefings ──────────────────────────────────────────────── */}
       <section>
         <header className="mb-3">
-          <h2 className="text-lg font-semibold text-surface-50">Daily briefing emails</h2>
-          <p className="text-xs text-surface-50/40 mt-1">
-            Provider: <span className="text-surface-50/70">{briefing.provider}</span>
+          <h2 className="text-lg font-semibold text-ink-900">Daily briefing emails</h2>
+          <p className="text-xs text-ink-500 mt-1">
+            Provider: <span className="text-ink-700">{briefing.provider}</span>
             {briefing.provider === "log" && (
               <>
                 {" "}— <span className="text-amber-300">no real provider configured</span>; emails are
@@ -246,7 +246,7 @@ export function MonetizationTab({ token }: { token: string }) {
                 }}
                 className="w-24 px-3 py-2 rounded-lg surface-input text-sm"
               />
-              <span className="text-xs text-surface-50/40 ml-2">
+              <span className="text-xs text-ink-500 ml-2">
                 01:00 UTC ≈ 06:30 IST. Pick the hour your audience opens email.
               </span>
             </Field>
@@ -273,14 +273,14 @@ export function MonetizationTab({ token }: { token: string }) {
               <button
                 onClick={saveBriefingSettings}
                 disabled={savingBriefing}
-                className="px-5 py-2.5 rounded-lg btn-primary text-surface-50 text-sm font-medium disabled:opacity-50"
+                className="px-5 py-2.5 rounded-lg btn-primary text-white text-sm font-medium disabled:opacity-50"
               >
                 {savingBriefing ? "Saving…" : "Save briefing settings"}
               </button>
               <button
                 onClick={sendTest}
                 disabled={sendingTest}
-                className="px-4 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-surface-50/70 text-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-black/[0.05] hover:bg-black/[0.08] text-ink-700 text-sm disabled:opacity-50"
               >
                 {sendingTest ? "Sending…" : "Send test to me"}
               </button>
@@ -300,8 +300,8 @@ export function MonetizationTab({ token }: { token: string }) {
       {/* ─── Paywall A/B ─────────────────────────────────────────────── */}
       <section>
         <header className="mb-3">
-          <h2 className="text-lg font-semibold text-surface-50">Paywall A/B — first kundli</h2>
-          <p className="text-xs text-surface-50/40 mt-1">
+          <h2 className="text-lg font-semibold text-ink-900">Paywall A/B — first kundli</h2>
+          <p className="text-xs text-ink-500 mt-1">
             <code>control</code>: first kundli costs credits as usual. <code>first_free</code>: a
             "your first kundli is on us" banner. Both groups hit the same backend; only the copy
             changes — server-side credit grant for "first_free" can land later.
@@ -326,7 +326,7 @@ export function MonetizationTab({ token }: { token: string }) {
         <div className="surface-card overflow-hidden mb-4">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/[0.06]">
+              <tr className="border-b border-black/[0.10]">
                 <Th>Variant</Th>
                 <Th>Weight</Th>
                 <Th>Assignments</Th>
@@ -336,7 +336,7 @@ export function MonetizationTab({ token }: { token: string }) {
             </thead>
             <tbody>
               {paywall.variants.map((v) => (
-                <tr key={v.variant} className="border-b border-white/5">
+                <tr key={v.variant} className="border-b border-black/5">
                   <Td>
                     <code>{v.variant}</code>
                   </Td>
@@ -392,7 +392,7 @@ export function MonetizationTab({ token }: { token: string }) {
                 onChange={(e) => setFirstFreeWeight(clamp(parseInt(e.target.value, 10), 0, 100, firstFreeWeight))}
                 className="w-24 px-3 py-2 rounded-lg surface-input text-sm"
               />
-              <span className="text-xs text-surface-50/40 ml-2">
+              <span className="text-xs text-ink-500 ml-2">
                 Weights are relative — 50/50 is even, 0/100 ramps everyone to a single arm.
               </span>
             </Field>
@@ -401,7 +401,7 @@ export function MonetizationTab({ token }: { token: string }) {
               <button
                 onClick={savePaywallSettings}
                 disabled={savingPaywall}
-                className="px-5 py-2.5 rounded-lg btn-primary text-surface-50 text-sm font-medium disabled:opacity-50"
+                className="px-5 py-2.5 rounded-lg btn-primary text-white text-sm font-medium disabled:opacity-50"
               >
                 {savingPaywall ? "Saving…" : "Save A/B settings"}
               </button>
@@ -426,7 +426,7 @@ function Stat({
 }) {
   return (
     <div className="surface-card p-4">
-      <p className="text-xs uppercase tracking-wide text-surface-50/40 mb-1">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-ink-500 mb-1">{label}</p>
       <p className={`text-2xl font-semibold ${accent}`}>
         {value.toLocaleString()}
         {suffix ?? ""}
@@ -446,13 +446,13 @@ function Toggle({
 }) {
   return (
     <label className="flex items-center justify-between gap-4">
-      <span className="text-sm text-surface-50/80">{label}</span>
+      <span className="text-sm text-ink-700">{label}</span>
       <button
         type="button"
         onClick={() => onChange(!value)}
         aria-pressed={value}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          value ? "bg-emerald-500" : "bg-white/20"
+          value ? "bg-emerald-500" : "bg-black/15"
         }`}
       >
         <span
@@ -468,18 +468,18 @@ function Toggle({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-surface-50/80 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-ink-700 mb-2">{label}</label>
       <div className="flex items-center flex-wrap gap-2">{children}</div>
     </div>
   );
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">{children}</th>;
+  return <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">{children}</th>;
 }
 
 function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-4 py-3 text-surface-50/80">{children}</td>;
+  return <td className="px-4 py-3 text-ink-700">{children}</td>;
 }
 
 function clamp(n: number, min: number, max: number, fallback: number): number {

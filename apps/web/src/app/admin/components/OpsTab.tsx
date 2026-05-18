@@ -81,13 +81,13 @@ export function OpsTab({ token }: { token: string }) {
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center mb-6">
         <div className="flex items-center gap-2">
-          <label htmlFor="ops-window" className="text-xs text-surface-50/40">Window:</label>
+          <label htmlFor="ops-window" className="text-xs text-ink-500">Window:</label>
           <select
             id="ops-window"
             data-testid="ops-window"
             value={windowHours}
             onChange={(e) => setWindowHours(Number(e.target.value) as WindowHours)}
-            className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
+            className="px-3 py-2 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm"
           >
             {WINDOW_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -103,11 +103,11 @@ export function OpsTab({ token }: { token: string }) {
         </button>
         <button
           onClick={load}
-          className="px-3 py-2 rounded-xl surface-card text-sm text-surface-50/60 hover:bg-white/10"
+          className="px-3 py-2 rounded-xl surface-card text-sm text-ink-700 hover:bg-black/10"
         >
           Refresh
         </button>
-        {loading && <span className="text-xs text-surface-50/30">Loading…</span>}
+        {loading && <span className="text-xs text-ink-500">Loading…</span>}
       </div>
 
       {/* Service health + queues */}
@@ -154,17 +154,17 @@ export function OpsTab({ token }: { token: string }) {
 function ServiceHealthCard({ data }: { data: ServiceHealth | null }) {
   return (
     <div className="surface-card p-6" data-testid="service-health-card">
-      <h3 className="text-sm font-semibold text-surface-50 mb-4">Service health</h3>
+      <h3 className="text-sm font-semibold text-ink-900 mb-4">Service health</h3>
       {!data ? (
-        <p className="text-xs text-surface-50/30">Loading…</p>
+        <p className="text-xs text-ink-500">Loading…</p>
       ) : (
         <div className="space-y-2">
           <HealthRow label="Database" status={data.database} />
           <HealthRow label="Redis"    status={data.redis} />
           {Object.keys(data.details).length > 0 && (
-            <ul className="text-[11px] text-surface-50/40 mt-3 space-y-1">
+            <ul className="text-[11px] text-ink-500 mt-3 space-y-1">
               {Object.entries(data.details).map(([k, v]) => (
-                <li key={k}><span className="text-surface-50/30">{k}:</span> {String(v)}</li>
+                <li key={k}><span className="text-ink-500">{k}:</span> {String(v)}</li>
               ))}
             </ul>
           )}
@@ -178,7 +178,7 @@ function HealthRow({ label, status }: { label: string; status: "up" | "down" }) 
   const color = status === "up" ? "bg-emerald-400" : "bg-red-500";
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-surface-50/70">{label}</span>
+      <span className="text-sm text-ink-700">{label}</span>
       <span className="flex items-center gap-2">
         <span className={`w-2 h-2 rounded-full ${color}`} />
         <span className={status === "up" ? "text-emerald-400 text-xs" : "text-red-400 text-xs"}>
@@ -194,32 +194,32 @@ function HealthRow({ label, status }: { label: string; status: "up" | "down" }) 
 function QueueDepthCard({ rows }: { rows: QueueDepthRow[] }) {
   return (
     <div className="surface-card p-6" data-testid="queue-depth-card">
-      <h3 className="text-sm font-semibold text-surface-50 mb-4">BullMQ queues</h3>
+      <h3 className="text-sm font-semibold text-ink-900 mb-4">BullMQ queues</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="text-left py-2 pr-4 text-surface-50/40 font-medium">Queue</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Waiting</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Active</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Delayed</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Failed</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Done</th>
+            <tr className="border-b border-black/[0.10]">
+              <th className="text-left py-2 pr-4 text-ink-500 font-medium">Queue</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Waiting</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Active</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Delayed</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Failed</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Done</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.queue} className="border-b border-white/[0.03]">
-                <td className="py-2 pr-4 text-surface-50/70">{r.queue}</td>
-                <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.waiting}</td>
-                <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.active}</td>
-                <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.delayed}</td>
-                <td className={`text-right px-2 tabular-nums ${r.failed > 0 ? "text-red-400" : "text-surface-50/60"}`}>{r.failed}</td>
-                <td className="text-right px-2 text-surface-50/40 tabular-nums">{r.completed}</td>
+              <tr key={r.queue} className="border-b border-black/[0.06]">
+                <td className="py-2 pr-4 text-ink-700">{r.queue}</td>
+                <td className="text-right px-2 text-ink-700 tabular-nums">{r.waiting}</td>
+                <td className="text-right px-2 text-ink-700 tabular-nums">{r.active}</td>
+                <td className="text-right px-2 text-ink-700 tabular-nums">{r.delayed}</td>
+                <td className={`text-right px-2 tabular-nums ${r.failed > 0 ? "text-red-400" : "text-ink-700"}`}>{r.failed}</td>
+                <td className="text-right px-2 text-ink-500 tabular-nums">{r.completed}</td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={6} className="text-center py-4 text-surface-50/30">No queues reported</td></tr>
+              <tr><td colSpan={6} className="text-center py-4 text-ink-500">No queues reported</td></tr>
             )}
           </tbody>
         </table>
@@ -241,8 +241,8 @@ function ErrorRateCard({
     <div className="surface-card p-6" data-testid="error-rate-card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-surface-50">LLM error rate</h3>
-          <p className="text-xs text-surface-50/40 mt-0.5">
+          <h3 className="text-sm font-semibold text-ink-900">LLM error rate</h3>
+          <p className="text-xs text-ink-500 mt-0.5">
             Failed calls ÷ total calls per provider. Disable a provider here to remove it from the failover chain within 30s.
           </p>
         </div>
@@ -254,21 +254,21 @@ function ErrorRateCard({
           return (
             <div
               key={r.provider}
-              className="p-3 rounded-lg bg-white/[0.03]"
+              className="p-3 rounded-lg bg-black/[0.04]"
               data-testid={`error-rate-row-${r.provider}`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-surface-50">{r.provider}</span>
+                <span className="text-sm text-ink-900">{r.provider}</span>
                 <span className={`text-xs font-bold tabular-nums ${tone}`}>{pct.toFixed(1)}%</span>
               </div>
-              <p className="text-[11px] text-surface-50/40 mt-1 tabular-nums">
+              <p className="text-[11px] text-ink-500 mt-1 tabular-nums">
                 {r.errors.toLocaleString()} / {r.total.toLocaleString()} calls failed
               </p>
               {r.topErrors.length > 0 && (
-                <ul className="text-[11px] text-surface-50/40 mt-2 space-y-0.5">
+                <ul className="text-[11px] text-ink-500 mt-2 space-y-0.5">
                   {r.topErrors.map((t) => (
                     <li key={t.errorCode}>
-                      <span className="text-surface-50/60">{t.errorCode}</span>: {t.count}
+                      <span className="text-ink-700">{t.errorCode}</span>: {t.count}
                     </li>
                   ))}
                 </ul>
@@ -293,7 +293,7 @@ function ErrorRateCard({
           );
         })}
         {rows.length === 0 && (
-          <p className="text-xs text-surface-50/30 col-span-full text-center py-4">
+          <p className="text-xs text-ink-500 col-span-full text-center py-4">
             No LLM calls recorded in this window.
           </p>
         )}
@@ -307,30 +307,30 @@ function ErrorRateCard({
 function LatencyCard({ title, rows }: { title: string; rows: Array<{ key: string; count: number; p50: number; p95: number; p99: number }> }) {
   return (
     <div className="surface-card p-6" data-testid={`latency-${title.replace(/\s/g, "-").toLowerCase()}`}>
-      <h3 className="text-sm font-semibold text-surface-50 mb-4">{title}</h3>
+      <h3 className="text-sm font-semibold text-ink-900 mb-4">{title}</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="text-left py-2 pr-3 text-surface-50/40 font-medium">Key</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Count</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">p50</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">p95</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">p99</th>
+            <tr className="border-b border-black/[0.10]">
+              <th className="text-left py-2 pr-3 text-ink-500 font-medium">Key</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Count</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">p50</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">p95</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">p99</th>
             </tr>
           </thead>
           <tbody>
             {rows.slice(0, 10).map((r) => (
-              <tr key={r.key} className="border-b border-white/[0.03]">
-                <td className="py-2 pr-3 text-surface-50/70 truncate max-w-[140px]">{r.key}</td>
-                <td className="text-right px-2 text-surface-50/40 tabular-nums">{r.count.toLocaleString()}</td>
-                <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.p50}ms</td>
-                <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.p95}ms</td>
-                <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.p99}ms</td>
+              <tr key={r.key} className="border-b border-black/[0.06]">
+                <td className="py-2 pr-3 text-ink-700 truncate max-w-[140px]">{r.key}</td>
+                <td className="text-right px-2 text-ink-500 tabular-nums">{r.count.toLocaleString()}</td>
+                <td className="text-right px-2 text-ink-700 tabular-nums">{r.p50}ms</td>
+                <td className="text-right px-2 text-ink-700 tabular-nums">{r.p95}ms</td>
+                <td className="text-right px-2 text-ink-700 tabular-nums">{r.p99}ms</td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-3 text-surface-50/30">No data</td></tr>
+              <tr><td colSpan={5} className="text-center py-3 text-ink-500">No data</td></tr>
             )}
           </tbody>
         </table>
@@ -344,31 +344,31 @@ function LatencyCard({ title, rows }: { title: string; rows: Array<{ key: string
 function CacheHitCard({ rows }: { rows: Array<{ feature: string; total: number; hits: number; hitRate: number }> }) {
   return (
     <div className="surface-card p-6 mt-8" data-testid="cache-hit-card">
-      <h3 className="text-sm font-semibold text-surface-50 mb-4">Cache hit rate by feature</h3>
+      <h3 className="text-sm font-semibold text-ink-900 mb-4">Cache hit rate by feature</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="text-left py-2 pr-3 text-surface-50/40 font-medium">Feature</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Hits</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Total</th>
-              <th className="text-right px-2 py-2 text-surface-50/40 font-medium">Hit rate</th>
+            <tr className="border-b border-black/[0.10]">
+              <th className="text-left py-2 pr-3 text-ink-500 font-medium">Feature</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Hits</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Total</th>
+              <th className="text-right px-2 py-2 text-ink-500 font-medium">Hit rate</th>
             </tr>
           </thead>
           <tbody>
             {rows.slice(0, 15).map((r) => {
               const pct = (r.hitRate * 100).toFixed(1);
               return (
-                <tr key={r.feature} className="border-b border-white/[0.03]">
-                  <td className="py-2 pr-3 text-surface-50/70 truncate max-w-[220px]">{r.feature}</td>
-                  <td className="text-right px-2 text-surface-50/60 tabular-nums">{r.hits.toLocaleString()}</td>
-                  <td className="text-right px-2 text-surface-50/40 tabular-nums">{r.total.toLocaleString()}</td>
+                <tr key={r.feature} className="border-b border-black/[0.06]">
+                  <td className="py-2 pr-3 text-ink-700 truncate max-w-[220px]">{r.feature}</td>
+                  <td className="text-right px-2 text-ink-700 tabular-nums">{r.hits.toLocaleString()}</td>
+                  <td className="text-right px-2 text-ink-500 tabular-nums">{r.total.toLocaleString()}</td>
                   <td className="text-right px-2 text-emerald-400 tabular-nums">{pct}%</td>
                 </tr>
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-3 text-surface-50/30">No data</td></tr>
+              <tr><td colSpan={4} className="text-center py-3 text-ink-500">No data</td></tr>
             )}
           </tbody>
         </table>
@@ -384,9 +384,9 @@ function CapacityCard({ rows }: { rows: CapacityForecast[] }) {
     <div className="surface-card p-6 mt-8" data-testid="capacity-card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-surface-50">Capacity forecast</h3>
-          <p className="text-xs text-surface-50/40 mt-0.5">
-            Days until peak-minute TPM crosses the configured provider ceiling. Set <code className="text-surface-50/60">pricing.llm.&#123;provider&#125;.tpm_limit</code> to enable.
+          <h3 className="text-sm font-semibold text-ink-900">Capacity forecast</h3>
+          <p className="text-xs text-ink-500 mt-0.5">
+            Days until peak-minute TPM crosses the configured provider ceiling. Set <code className="text-ink-700">pricing.llm.&#123;provider&#125;.tpm_limit</code> to enable.
           </p>
         </div>
       </div>
@@ -398,31 +398,31 @@ function CapacityCard({ rows }: { rows: CapacityForecast[] }) {
           return (
             <div
               key={r.provider}
-              className="p-3 rounded-lg bg-white/[0.03]"
+              className="p-3 rounded-lg bg-black/[0.04]"
               data-testid={`capacity-row-${r.provider}`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-surface-50">{r.provider}</span>
+                <span className="text-sm text-ink-900">{r.provider}</span>
                 {r.tpmLimit === null ? (
-                  <span className="text-[11px] text-surface-50/30">no limit set</span>
+                  <span className="text-[11px] text-ink-500">no limit set</span>
                 ) : (
                   <span className={`text-xs font-bold tabular-nums ${tone}`}>
                     {r.daysUntilHit === null ? "stable" : `${r.daysUntilHit}d`}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-surface-50/40 tabular-nums">
+              <p className="text-[11px] text-ink-500 tabular-nums">
                 Peak: {r.currentPeakTpm.toLocaleString()} TPM
                 {r.tpmLimit !== null && ` / ${r.tpmLimit.toLocaleString()}`}
               </p>
-              <p className="text-[11px] text-surface-50/30 tabular-nums mt-0.5">
+              <p className="text-[11px] text-ink-500 tabular-nums mt-0.5">
                 slope: {r.slopePerDay >= 0 ? "+" : ""}{r.slopePerDay.toLocaleString()} TPM/day
               </p>
             </div>
           );
         })}
         {rows.length === 0 && (
-          <p className="text-xs text-surface-50/30 col-span-full text-center py-4">
+          <p className="text-xs text-ink-500 col-span-full text-center py-4">
             No capacity data — waiting on llm_usage rows for the last 7d.
           </p>
         )}
@@ -473,20 +473,20 @@ function BroadcastModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" data-testid="broadcast-modal">
       <div className="surface-card w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-surface-50">New broadcast</h3>
-          <button onClick={onClose} className="text-surface-50/40 hover:text-surface-50 text-xl">&times;</button>
+          <h3 className="text-lg font-semibold text-ink-900">New broadcast</h3>
+          <button onClick={onClose} className="text-ink-500 hover:text-ink-900 text-xl">&times;</button>
         </div>
         {err && (
           <div className="mb-4 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">{err}</div>
         )}
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-surface-50/40 mb-1">Audience</label>
+            <label className="block text-xs text-ink-500 mb-1">Audience</label>
             <select
               value={audienceType}
               onChange={(e) => setAudienceType(e.target.value as any)}
               data-testid="broadcast-audience"
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm"
             >
               <option value="all">All users</option>
               <option value="premium">Premium + admin</option>
@@ -495,41 +495,41 @@ function BroadcastModal({
           </div>
           {audienceType === "locale" && (
             <div>
-              <label className="block text-xs text-surface-50/40 mb-1">Locale code</label>
+              <label className="block text-xs text-ink-500 mb-1">Locale code</label>
               <input
                 value={locale}
                 onChange={(e) => setLocale(e.target.value)}
                 placeholder="hi"
-                className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm font-mono"
+                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm font-mono"
               />
             </div>
           )}
           <div>
-            <label className="block text-xs text-surface-50/40 mb-1">Subject</label>
+            <label className="block text-xs text-ink-500 mb-1">Subject</label>
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               data-testid="broadcast-subject"
               maxLength={200}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm"
             />
           </div>
           <div>
-            <label className="block text-xs text-surface-50/40 mb-1">Body</label>
+            <label className="block text-xs text-ink-500 mb-1">Body</label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               data-testid="broadcast-body"
               rows={4}
               maxLength={4000}
-              className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
+              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl surface-card text-sm text-surface-50/60 hover:bg-white/10"
+            className="px-4 py-2 rounded-xl surface-card text-sm text-ink-700 hover:bg-black/10"
           >
             Cancel
           </button>
@@ -542,7 +542,7 @@ function BroadcastModal({
             {sending ? "Enqueuing…" : "Send"}
           </button>
         </div>
-        <p className="text-[11px] text-surface-50/30 mt-3">
+        <p className="text-[11px] text-ink-500 mt-3">
           Rate-limited to 1 broadcast per admin per hour. Current transport: in-app notification.
         </p>
       </div>

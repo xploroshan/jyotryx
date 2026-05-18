@@ -76,13 +76,13 @@ export function FunnelTab({ token }: { token: string }) {
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-center mb-6">
         <div className="flex items-center gap-2">
-          <label htmlFor="funnel-period" className="text-xs text-surface-50/40">Period:</label>
+          <label htmlFor="funnel-period" className="text-xs text-ink-500">Period:</label>
           <select
             id="funnel-period"
             data-testid="funnel-period"
             value={days}
             onChange={(e) => setDays(Number(e.target.value) as 7 | 30 | 90)}
-            className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
+            className="px-3 py-2 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm"
           >
             {PERIOD_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -90,13 +90,13 @@ export function FunnelTab({ token }: { token: string }) {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="funnel-locale" className="text-xs text-surface-50/40">Locale:</label>
+          <label htmlFor="funnel-locale" className="text-xs text-ink-500">Locale:</label>
           <select
             id="funnel-locale"
             data-testid="funnel-locale"
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm"
+            className="px-3 py-2 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm"
           >
             {LOCALE_OPTIONS.map((o) => (
               <option key={o.value || "all"} value={o.value}>{o.label}</option>
@@ -104,21 +104,21 @@ export function FunnelTab({ token }: { token: string }) {
           </select>
         </div>
         {loading && (
-          <span className="text-xs text-surface-50/30">Loading…</span>
+          <span className="text-xs text-ink-500">Loading…</span>
         )}
       </div>
 
       <FunnelChart data={funnel} />
 
-      <h2 className="text-lg font-bold text-surface-50 mt-10 mb-4">Cohort retention</h2>
-      <p className="text-xs text-surface-50/40 mb-4">
+      <h2 className="text-lg font-bold text-ink-900 mt-10 mb-4">Cohort retention</h2>
+      <p className="text-xs text-ink-500 mb-4">
         Weekly signup cohorts. Each cell is the share of that cohort that opened
         a chat session in week N after signup.
       </p>
       <CohortGrid data={cohorts} weeks={weeks} />
 
-      <h2 className="text-lg font-bold text-surface-50 mt-10 mb-4">Payment failures</h2>
-      <p className="text-xs text-surface-50/40 mb-4">
+      <h2 className="text-lg font-bold text-ink-900 mt-10 mb-4">Payment failures</h2>
+      <p className="text-xs text-ink-500 mb-4">
         Payments in FAILED / REFUNDED status in the selected window. A sudden
         spike here usually precedes a churn uptick by 1–2 weeks.
       </p>
@@ -132,15 +132,15 @@ export function FunnelTab({ token }: { token: string }) {
 function FunnelChart({ data }: { data: FunnelCounts | null }) {
   if (!data) {
     return (
-      <div className="surface-card p-6 text-surface-50/30 text-sm">No funnel data.</div>
+      <div className="surface-card p-6 text-ink-500 text-sm">No funnel data.</div>
     );
   }
   const max = Math.max(1, ...data.stages.map((s) => s.count));
   return (
     <div className="surface-card p-6" data-testid="funnel-chart">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-surface-50">Acquisition funnel</h3>
-        <span className="text-xs text-surface-50/40 tabular-nums">
+        <h3 className="text-sm font-semibold text-ink-900">Acquisition funnel</h3>
+        <span className="text-xs text-ink-500 tabular-nums">
           {data.totalSignups} signups · {data.windowDays}d
           {data.locale ? ` · ${data.locale}` : ""}
         </span>
@@ -150,7 +150,7 @@ function FunnelChart({ data }: { data: FunnelCounts | null }) {
           const width = (s.count / max) * 100;
           return (
             <div key={s.stage} data-testid={`funnel-stage-${s.stage}`} className="group">
-              <div className="flex items-center justify-between text-xs text-surface-50/60 mb-1">
+              <div className="flex items-center justify-between text-xs text-ink-700 mb-1">
                 <span>{s.label}</span>
                 <span className="tabular-nums">
                   {s.count.toLocaleString()} ·
@@ -158,7 +158,7 @@ function FunnelChart({ data }: { data: FunnelCounts | null }) {
                   {" "}{formatPct(s.conversionFromPrev)} from prior
                 </span>
               </div>
-              <div className="h-6 rounded-lg bg-white/[0.04] overflow-hidden">
+              <div className="h-6 rounded-lg bg-black/[0.05] overflow-hidden">
                 <div
                   className="h-full rounded-lg bg-gradient-to-r from-primary-500/80 to-accent-500/60"
                   style={{ width: `${Math.max(width, 2)}%` }}
@@ -177,7 +177,7 @@ function FunnelChart({ data }: { data: FunnelCounts | null }) {
 function CohortGrid({ data, weeks }: { data: CohortRow[] | null; weeks: number }) {
   if (!data || data.length === 0) {
     return (
-      <div className="surface-card p-6 text-surface-50/30 text-sm">
+      <div className="surface-card p-6 text-ink-500 text-sm">
         No cohorts yet — check back once users have been active for a week.
       </div>
     );
@@ -188,19 +188,19 @@ function CohortGrid({ data, weeks }: { data: CohortRow[] | null; weeks: number }
       <div className="overflow-x-auto">
         <table className="w-full text-xs" data-testid="cohort-grid">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="text-left px-3 py-2 font-medium text-surface-50/40">Cohort</th>
-              <th className="text-left px-3 py-2 font-medium text-surface-50/40">Size</th>
+            <tr className="border-b border-black/[0.10]">
+              <th className="text-left px-3 py-2 font-medium text-ink-500">Cohort</th>
+              <th className="text-left px-3 py-2 font-medium text-ink-500">Size</th>
               {header.map((h) => (
-                <th key={h} className="text-right px-2 py-2 font-medium text-surface-50/40">{h}</th>
+                <th key={h} className="text-right px-2 py-2 font-medium text-ink-500">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {data.map((row) => (
-              <tr key={row.cohortWeek} className="border-b border-white/[0.03]">
-                <td className="px-3 py-2 text-surface-50/70 whitespace-nowrap">{row.cohortWeek}</td>
-                <td className="px-3 py-2 text-surface-50/60 tabular-nums">{row.size}</td>
+              <tr key={row.cohortWeek} className="border-b border-black/[0.06]">
+                <td className="px-3 py-2 text-ink-700 whitespace-nowrap">{row.cohortWeek}</td>
+                <td className="px-3 py-2 text-ink-700 tabular-nums">{row.size}</td>
                 {header.map((_, i) => {
                   const pct = row.retention[i] ?? 0;
                   return (
@@ -231,7 +231,7 @@ function CohortGrid({ data, weeks }: { data: CohortRow[] | null; weeks: number }
 function PaymentFailureList({ data, windowDays }: { data: PaymentFailureRow[] | null; windowDays: number }) {
   if (!data || data.length === 0) {
     return (
-      <div className="surface-card p-6 text-surface-50/30 text-sm">
+      <div className="surface-card p-6 text-ink-500 text-sm">
         No failed or refunded payments in the last {windowDays} days.
       </div>
     );
@@ -241,23 +241,23 @@ function PaymentFailureList({ data, windowDays }: { data: PaymentFailureRow[] | 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">User</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Amount</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Status</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Type</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">When</th>
+            <tr className="border-b border-black/[0.10]">
+              <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">User</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Amount</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Status</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Type</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">When</th>
             </tr>
           </thead>
           <tbody>
             {data.map((p) => (
-              <tr key={p.id} className="border-b border-white/5">
-                <td className="px-4 py-3 text-surface-50">
+              <tr key={p.id} className="border-b border-black/5">
+                <td className="px-4 py-3 text-ink-900">
                   {p.userName}
                   <br />
-                  <span className="text-xs text-surface-50/30">{p.userEmail}</span>
+                  <span className="text-xs text-ink-500">{p.userEmail}</span>
                 </td>
-                <td className="px-4 py-3 text-surface-50/60 tabular-nums">
+                <td className="px-4 py-3 text-ink-700 tabular-nums">
                   {p.currency} {p.amount.toLocaleString()}
                 </td>
                 <td className="px-4 py-3">
@@ -269,8 +269,8 @@ function PaymentFailureList({ data, windowDays }: { data: PaymentFailureRow[] | 
                     {p.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-surface-50/40">{p.type}</td>
-                <td className="px-4 py-3 text-surface-50/30 text-xs">
+                <td className="px-4 py-3 text-ink-500">{p.type}</td>
+                <td className="px-4 py-3 text-ink-500 text-xs">
                   {new Date(p.createdAt).toLocaleString("en-IN", {
                     day: "numeric", month: "short", year: "numeric",
                     hour: "2-digit", minute: "2-digit",

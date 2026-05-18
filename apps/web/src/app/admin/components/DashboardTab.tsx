@@ -85,7 +85,7 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
         ].map((stat) => (
           <div key={stat.label} className="surface-card p-6">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-surface-50/30">{stat.label}</p>
+              <p className="text-xs text-ink-500">{stat.label}</p>
               <span className="text-lg">{stat.icon}</span>
             </div>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -104,57 +104,57 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
             primary={`$${mrr.mrrUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
             secondary={`${mrr.momDelta >= 0 ? "+" : ""}${(mrr.momDelta * 100).toFixed(1)}% MoM`}
             tone={mrr.momDelta >= 0 ? "text-emerald-400" : "text-red-400"}
-            icon="\uD83D\uDCC8"
+            icon={"\uD83D\uDCC8"}
           />
           <GrowthTile
             label="ARR (USD)"
             primary={`$${mrr.arrUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             secondary={`6m proj. $${mrr.projection6m.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             tone="text-cyan-400"
-            icon="\uD83D\uDCCA"
+            icon={"\uD83D\uDCCA"}
           />
           <GrowthTile
             label="ARPU (USD)"
             primary={`$${mrr.arpuUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
             secondary={`${mrr.subscriberCount.toLocaleString()} paying`}
             tone="text-amber-400"
-            icon="\uD83E\uDDFE"
+            icon={"\uD83E\uDDFE"}
           />
           <GrowthTile
             label="LTV (USD)"
             primary={`$${mrr.ltvUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
             secondary={`Lifetime $${mrr.totalRevenueUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             tone="text-purple-400"
-            icon="\uD83D\uDCB0"
+            icon={"\uD83D\uDCB0"}
           />
         </div>
       )}
 
-      <h2 className="text-lg font-bold text-surface-50 mb-4">Quick Actions</h2>
+      <h2 className="text-lg font-bold text-ink-900 mb-4">Quick Actions</h2>
       <div className="grid sm:grid-cols-6 gap-4">
-        <button onClick={() => onTabChange("users")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
-          <p className="text-sm font-medium text-surface-50">Manage Users</p>
-          <p className="text-xs text-surface-50/30 mt-1">View, edit, delete users</p>
+        <button onClick={() => onTabChange("users")} className="surface-card p-4 text-left hover:bg-black/10 transition-all">
+          <p className="text-sm font-medium text-ink-900">Manage Users</p>
+          <p className="text-xs text-ink-500 mt-1">View, edit, delete users</p>
         </button>
-        <button onClick={() => onTabChange("funnel")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
-          <p className="text-sm font-medium text-surface-50">Funnel & cohorts</p>
-          <p className="text-xs text-surface-50/30 mt-1">Retention by locale</p>
+        <button onClick={() => onTabChange("funnel")} className="surface-card p-4 text-left hover:bg-black/10 transition-all">
+          <p className="text-sm font-medium text-ink-900">Funnel & cohorts</p>
+          <p className="text-xs text-ink-500 mt-1">Retention by locale</p>
         </button>
-        <button onClick={() => onTabChange("activity")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
-          <p className="text-sm font-medium text-surface-50">Activity Log</p>
-          <p className="text-xs text-surface-50/30 mt-1">Track and undo changes</p>
+        <button onClick={() => onTabChange("activity")} className="surface-card p-4 text-left hover:bg-black/10 transition-all">
+          <p className="text-sm font-medium text-ink-900">Activity Log</p>
+          <p className="text-xs text-ink-500 mt-1">Track and undo changes</p>
         </button>
-        <button onClick={() => onTabChange("cost")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
-          <p className="text-sm font-medium text-surface-50">Cost Control</p>
-          <p className="text-xs text-surface-50/30 mt-1">LLM spend & projections</p>
+        <button onClick={() => onTabChange("cost")} className="surface-card p-4 text-left hover:bg-black/10 transition-all">
+          <p className="text-sm font-medium text-ink-900">Cost Control</p>
+          <p className="text-xs text-ink-500 mt-1">LLM spend & projections</p>
         </button>
-        <button onClick={() => onTabChange("ai")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
-          <p className="text-sm font-medium text-surface-50">AI Agent Status</p>
-          <p className="text-xs text-surface-50/30 mt-1">Monitor active agents</p>
+        <button onClick={() => onTabChange("ai")} className="surface-card p-4 text-left hover:bg-black/10 transition-all">
+          <p className="text-sm font-medium text-ink-900">AI Agent Status</p>
+          <p className="text-xs text-ink-500 mt-1">Monitor active agents</p>
         </button>
-        <button onClick={() => onTabChange("analytics")} className="surface-card p-4 text-left hover:bg-white/10 transition-all">
-          <p className="text-sm font-medium text-surface-50">View Analytics</p>
-          <p className="text-xs text-surface-50/30 mt-1">Platform usage metrics</p>
+        <button onClick={() => onTabChange("analytics")} className="surface-card p-4 text-left hover:bg-black/10 transition-all">
+          <p className="text-sm font-medium text-ink-900">View Analytics</p>
+          <p className="text-xs text-ink-500 mt-1">Platform usage metrics</p>
         </button>
       </div>
 
@@ -164,8 +164,8 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
       <div className="mt-8 surface-card p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-surface-50">Stuck in Onboarding</h3>
-            <p className="text-xs text-surface-50/40 mt-0.5">
+            <h3 className="text-sm font-semibold text-ink-900">Stuck in Onboarding</h3>
+            <p className="text-xs text-ink-500 mt-0.5">
               Signed up in the last 7 days but didn&apos;t finish birth details or start chatting.
             </p>
           </div>
@@ -174,40 +174,40 @@ export function DashboardTab({ token, onTabChange }: { token: string; onTabChang
           </span>
         </div>
         {stuck.length === 0 ? (
-          <p className="text-sm text-surface-50/30 py-3">No stuck users in the last 7 days 🎉</p>
+          <p className="text-sm text-ink-500 py-3">No stuck users in the last 7 days 🎉</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-left text-[11px] text-surface-50/40 font-medium py-2 pr-4">User</th>
-                  <th className="text-left text-[11px] text-surface-50/40 font-medium py-2">Missing</th>
-                  <th className="text-right text-[11px] text-surface-50/40 font-medium py-2">Signed up</th>
+                <tr className="border-b border-black/[0.10]">
+                  <th className="text-left text-[11px] text-ink-500 font-medium py-2 pr-4">User</th>
+                  <th className="text-left text-[11px] text-ink-500 font-medium py-2">Missing</th>
+                  <th className="text-right text-[11px] text-ink-500 font-medium py-2">Signed up</th>
                 </tr>
               </thead>
               <tbody>
                 {stuck.slice(0, 10).map((u) => (
-                  <tr key={u.userId} className="border-b border-white/[0.03]">
+                  <tr key={u.userId} className="border-b border-black/[0.06]">
                     <td className="py-2 pr-4">
-                      <p className="text-surface-50/80">{u.name}</p>
-                      <p className="text-[11px] text-surface-50/40">{u.email}</p>
+                      <p className="text-ink-700">{u.name}</p>
+                      <p className="text-[11px] text-ink-500">{u.email}</p>
                     </td>
                     <td className="py-2">
                       <div className="flex flex-wrap gap-1">
                         {u.missing.map((m) => (
-                          <span key={m} className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/[0.05] text-surface-50/60">
+                          <span key={m} className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/[0.05] text-ink-700">
                             {m}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="py-2 text-right text-surface-50/40 text-xs">{formatDate(u.createdAt)}</td>
+                    <td className="py-2 text-right text-ink-500 text-xs">{formatDate(u.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {stuck.length > 10 && (
-              <p className="text-xs text-surface-50/30 mt-3">Showing 10 of {stuck.length}.</p>
+              <p className="text-xs text-ink-500 mt-3">Showing 10 of {stuck.length}.</p>
             )}
           </div>
         )}
@@ -232,11 +232,11 @@ function GrowthTile({
   return (
     <div className="surface-card p-6">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-surface-50/30">{label}</p>
+        <p className="text-xs text-ink-500">{label}</p>
         <span className="text-lg">{icon}</span>
       </div>
       <p className={`text-2xl font-bold ${tone} tabular-nums`}>{primary}</p>
-      <p className="text-xs text-surface-50/40 mt-1">{secondary}</p>
+      <p className="text-xs text-ink-500 mt-1">{secondary}</p>
     </div>
   );
 }

@@ -154,11 +154,11 @@ export function UsersTab({ token }: { token: string }) {
       {/* Search bar */}
       <div className="flex gap-4 mb-6">
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, email, or phone..."
-          className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 placeholder-white/20 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20"
+          className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 placeholder-ink-500/60 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20"
           onKeyDown={(e) => { if (e.key === "Enter") { setUserPage(1); loadUsers(); } }} />
-        <button onClick={() => { setUserPage(1); loadUsers(); }} className="px-5 py-2.5 rounded-xl surface-card text-sm text-primary-400 hover:bg-white/10">Search</button>
+        <button onClick={() => { setUserPage(1); loadUsers(); }} className="px-5 py-2.5 rounded-xl surface-card text-sm text-primary-400 hover:bg-black/10">Search</button>
       </div>
-      <p className="text-sm text-surface-50/30 mb-4">{userTotal} users total</p>
+      <p className="text-sm text-ink-500 mb-4">{userTotal} users total</p>
 
       {/* Churn-risk sidebar. Rendered inline at the top so admins see
           it before scrolling the users table. Each row jumps to the
@@ -206,30 +206,30 @@ export function UsersTab({ token }: { token: string }) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Name</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Email</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Role</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Credits</th>
+                  <tr className="border-b border-black/[0.10]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Name</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Email</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Role</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Credits</th>
                     <th
-                      className="text-left px-4 py-3 text-xs font-medium text-surface-50/40"
+                      className="text-left px-4 py-3 text-xs font-medium text-ink-500"
                       title="Credits used vs. credits given (current balance + lifetime usage)"
                     >
                       Usage
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Subscription</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Joined</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Actions</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Subscription</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Joined</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
-                    <tr key={u.id} className={`border-b border-white/5 hover:bg-white/[0.03] cursor-pointer ${selectedUserId === u.id ? "bg-primary-600/10" : ""}`}
+                    <tr key={u.id} className={`border-b border-black/5 hover:bg-black/[0.04] cursor-pointer ${selectedUserId === u.id ? "bg-primary-600/10" : ""}`}
                       onClick={() => setSelectedUserId(u.id === selectedUserId ? null : u.id)}>
-                      <td className="px-4 py-3 text-surface-50 font-medium">{u.name}</td>
-                      <td className="px-4 py-3 text-surface-50/60">{u.email}</td>
+                      <td className="px-4 py-3 text-ink-900 font-medium">{u.name}</td>
+                      <td className="px-4 py-3 text-ink-700">{u.email}</td>
                       <td className="px-4 py-3">{roleBadge(u.role)}</td>
-                      <td className="px-4 py-3 text-surface-50/60">{u.credits}</td>
+                      <td className="px-4 py-3 text-ink-700">{u.credits}</td>
                       <td className="px-4 py-3 text-xs">
                         {(() => {
                           const used = u.creditsUsed ?? 0;
@@ -240,7 +240,7 @@ export function UsersTab({ token }: { token: string }) {
                               <span className="text-amber-400 tabular-nums whitespace-nowrap">
                                 {used} / {given}
                               </span>
-                              <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                              <div className="flex-1 h-1.5 bg-black/[0.05] rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full transition-all"
                                   style={{ width: `${pct}%` }}
@@ -257,14 +257,14 @@ export function UsersTab({ token }: { token: string }) {
                             {u.subscriptionStatus && statusBadge(u.subscriptionStatus)}
                           </div>
                         ) : (
-                          <span className="text-xs text-surface-50/20">Free</span>
+                          <span className="text-xs text-ink-500">Free</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-surface-50/30 text-xs">{formatDate(u.createdAt)}</td>
+                      <td className="px-4 py-3 text-ink-500 text-xs">{formatDate(u.createdAt)}</td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-2">
                           <select onChange={(e) => handleQuickRoleChange(u.id, e.target.value)} value={u.role}
-                            className="text-xs px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-surface-50/60">
+                            className="text-xs px-2 py-1 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700">
                             <option value="USER">User</option>
                             <option value="PREMIUM">Premium</option>
                             <option value="ADMIN">Admin</option>
@@ -283,7 +283,7 @@ export function UsersTab({ token }: { token: string }) {
                     </tr>
                   ))}
                   {users.length === 0 && (
-                    <tr><td colSpan={8} className="px-4 py-8 text-center text-surface-50/30">No users found</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-ink-500">No users found</td></tr>
                   )}
                 </tbody>
               </table>
@@ -294,10 +294,10 @@ export function UsersTab({ token }: { token: string }) {
           {userTotalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-4">
               <button onClick={() => setUserPage(Math.max(1, userPage - 1))} disabled={userPage === 1}
-                className="px-3 py-1.5 rounded-lg surface-card text-xs text-surface-50/60 disabled:opacity-30">Prev</button>
-              <span className="text-sm text-surface-50/40">Page {userPage} of {userTotalPages}</span>
+                className="px-3 py-1.5 rounded-lg surface-card text-xs text-ink-700 disabled:opacity-30">Prev</button>
+              <span className="text-sm text-ink-500">Page {userPage} of {userTotalPages}</span>
               <button onClick={() => setUserPage(Math.min(userTotalPages, userPage + 1))} disabled={userPage === userTotalPages}
-                className="px-3 py-1.5 rounded-lg surface-card text-xs text-surface-50/60 disabled:opacity-30">Next</button>
+                className="px-3 py-1.5 rounded-lg surface-card text-xs text-ink-700 disabled:opacity-30">Next</button>
             </div>
           )}
         </>
@@ -320,8 +320,8 @@ function ChurnRiskSidebar({
     <div className="mb-6 surface-card p-6" data-testid="churn-risk-sidebar">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-surface-50">Churn risk</h3>
-          <p className="text-xs text-surface-50/40 mt-0.5">
+          <h3 className="text-sm font-semibold text-ink-900">Churn risk</h3>
+          <p className="text-xs text-ink-500 mt-0.5">
             Premium users renewing in ≤14d with no chat in 14d,
             plus users with ≥2 recent failed payments.
           </p>
@@ -334,7 +334,7 @@ function ChurnRiskSidebar({
         {rows.slice(0, 9).map((r) => (
           <div
             key={`${r.userId}-${r.reason}`}
-            className="text-left p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+            className="text-left p-3 rounded-lg bg-black/[0.04] hover:bg-black/[0.06] transition-all"
             data-testid={`churn-row-${r.userId}`}
           >
             <button
@@ -343,8 +343,8 @@ function ChurnRiskSidebar({
             >
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm text-surface-50 truncate">{r.name}</p>
-                  <p className="text-[11px] text-surface-50/40 truncate">{r.email}</p>
+                  <p className="text-sm text-ink-900 truncate">{r.name}</p>
+                  <p className="text-[11px] text-ink-500 truncate">{r.email}</p>
                 </div>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${
@@ -357,7 +357,7 @@ function ChurnRiskSidebar({
                 </span>
               </div>
               <div className="flex items-center justify-between mt-2 text-[11px]">
-                <span className="text-surface-50/50">
+                <span className="text-ink-500">
                   {r.reason === "payment_fail"
                     ? `${r.recentFailedPayments ?? 0} failed 30d`
                     : `${r.plan ?? ""} · renews ${

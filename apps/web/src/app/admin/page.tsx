@@ -127,18 +127,18 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gradient">Admin Dashboard</h1>
-            <p className="text-surface-50/40 text-sm mt-1">Manage your myastro360 platform</p>
+            <p className="text-ink-500 text-sm mt-1">Manage your myastro360 platform</p>
           </div>
-          <div className="surface-card px-4 py-2 rounded-xl text-sm text-surface-50/60">
+          <div className="surface-card px-4 py-2 rounded-xl text-sm text-ink-700">
             Logged in as <span className="text-primary-400 font-medium">{user?.name}</span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 rounded-xl bg-white/[0.03] p-1 w-fit overflow-x-auto">
+        <div className="flex gap-2 mb-8 rounded-xl bg-black/[0.04] p-1 w-fit overflow-x-auto">
           {tabs.map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? "btn-primary text-surface-50" : "text-surface-50/40 hover:text-surface-50"}`}>
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab.id ? "btn-primary text-white" : "text-ink-500 hover:text-ink-900"}`}>
               <span>{tab.icon}</span> {tab.label}
             </button>
           ))}
@@ -227,26 +227,26 @@ export default function AdminPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">User</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Amount</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Date</th>
+                  <tr className="border-b border-black/[0.10]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">User</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Amount</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Status</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {payments.map((p: any) => (
-                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.03]">
-                      <td className="px-4 py-3 text-surface-50">{p.userName}<br /><span className="text-xs text-surface-50/30">{p.userEmail}</span></td>
-                      <td className="px-4 py-3 text-surface-50/60">{formatCurrency(p.amount)}</td>
+                    <tr key={p.id} className="border-b border-black/5 hover:bg-black/[0.04]">
+                      <td className="px-4 py-3 text-ink-900">{p.userName}<br /><span className="text-xs text-ink-500">{p.userEmail}</span></td>
+                      <td className="px-4 py-3 text-ink-700">{formatCurrency(p.amount)}</td>
                       <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                      <td className="px-4 py-3 text-surface-50/40">{p.type}</td>
-                      <td className="px-4 py-3 text-surface-50/30 text-xs">{formatDate(p.createdAt)}</td>
+                      <td className="px-4 py-3 text-ink-500">{p.type}</td>
+                      <td className="px-4 py-3 text-ink-500 text-xs">{formatDate(p.createdAt)}</td>
                     </tr>
                   ))}
                   {payments.length === 0 && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-surface-50/30">No payments yet</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-500">No payments yet</td></tr>
                   )}
                 </tbody>
               </table>
@@ -259,26 +259,26 @@ export default function AdminPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">User</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Title</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Category</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Messages</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-surface-50/40">Last Active</th>
+                  <tr className="border-b border-black/[0.10]">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">User</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Title</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Category</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Messages</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Last Active</th>
                   </tr>
                 </thead>
                 <tbody>
                   {chats.map((c: any) => (
-                    <tr key={c.id} className="border-b border-white/5 hover:bg-white/[0.03]">
-                      <td className="px-4 py-3 text-surface-50">{c.userName}<br /><span className="text-xs text-surface-50/30">{c.userEmail}</span></td>
-                      <td className="px-4 py-3 text-surface-50/60">{c.title}</td>
+                    <tr key={c.id} className="border-b border-black/5 hover:bg-black/[0.04]">
+                      <td className="px-4 py-3 text-ink-900">{c.userName}<br /><span className="text-xs text-ink-500">{c.userEmail}</span></td>
+                      <td className="px-4 py-3 text-ink-700">{c.title}</td>
                       <td className="px-4 py-3"><Badge>{c.category}</Badge></td>
-                      <td className="px-4 py-3 text-surface-50/60">{c.messageCount}</td>
-                      <td className="px-4 py-3 text-surface-50/30 text-xs">{formatDate(c.updatedAt)}</td>
+                      <td className="px-4 py-3 text-ink-700">{c.messageCount}</td>
+                      <td className="px-4 py-3 text-ink-500 text-xs">{formatDate(c.updatedAt)}</td>
                     </tr>
                   ))}
                   {chats.length === 0 && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-surface-50/30">No chats yet</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-500">No chats yet</td></tr>
                   )}
                 </tbody>
               </table>
@@ -290,50 +290,50 @@ export default function AdminPage() {
           <div>
             <h2 className="text-xl font-bold text-gradient mb-6">Pricing Management</h2>
 
-            <h3 className="text-lg font-bold text-surface-50 mb-4">Subscription Plans</h3>
+            <h3 className="text-lg font-bold text-ink-900 mb-4">Subscription Plans</h3>
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
               <div className="surface-card p-6">
-                <h4 className="font-bold text-surface-50 mb-4">Premium Monthly</h4>
-                <label className="block text-xs text-surface-50/30 mb-2">Price (INR)</label>
+                <h4 className="font-bold text-ink-900 mb-4">Premium Monthly</h4>
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
                 <input type="number" value={pricingMonthly} onChange={(e) => setPricingMonthly(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm" />
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
               </div>
               <div className="surface-card p-6">
-                <h4 className="font-bold text-surface-50 mb-4">Premium Annual</h4>
-                <label className="block text-xs text-surface-50/30 mb-2">Price (INR)</label>
+                <h4 className="font-bold text-ink-900 mb-4">Premium Annual</h4>
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
                 <input type="number" value={pricingAnnual} onChange={(e) => setPricingAnnual(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm" />
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
               </div>
             </div>
 
-            <h3 className="text-lg font-bold text-surface-50 mb-4">Credit Packs</h3>
+            <h3 className="text-lg font-bold text-ink-900 mb-4">Credit Packs</h3>
             <div className="grid sm:grid-cols-3 gap-4 mb-8">
               <div className="surface-card p-6">
-                <h4 className="font-bold text-surface-50 mb-4">Starter Pack</h4>
-                <label className="block text-xs text-surface-50/30 mb-2">Credits</label>
+                <h4 className="font-bold text-ink-900 mb-4">Starter Pack</h4>
+                <label className="block text-xs text-ink-500 mb-2">Credits</label>
                 <input type="number" value={creditStarterCredits} onChange={(e) => setCreditStarterCredits(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm mb-3" />
-                <label className="block text-xs text-surface-50/30 mb-2">Price (INR)</label>
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm mb-3" />
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
                 <input type="number" value={creditStarterPrice} onChange={(e) => setCreditStarterPrice(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm" />
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
               </div>
               <div className="surface-card p-6">
-                <h4 className="font-bold text-surface-50 mb-4">Popular Pack</h4>
-                <label className="block text-xs text-surface-50/30 mb-2">Credits</label>
+                <h4 className="font-bold text-ink-900 mb-4">Popular Pack</h4>
+                <label className="block text-xs text-ink-500 mb-2">Credits</label>
                 <input type="number" value={creditPopularCredits} onChange={(e) => setCreditPopularCredits(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm mb-3" />
-                <label className="block text-xs text-surface-50/30 mb-2">Price (INR)</label>
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm mb-3" />
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
                 <input type="number" value={creditPopularPrice} onChange={(e) => setCreditPopularPrice(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm" />
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
               </div>
               <div className="surface-card p-6">
-                <h4 className="font-bold text-surface-50 mb-4">Pro Pack</h4>
-                <label className="block text-xs text-surface-50/30 mb-2">Credits</label>
+                <h4 className="font-bold text-ink-900 mb-4">Pro Pack</h4>
+                <label className="block text-xs text-ink-500 mb-2">Credits</label>
                 <input type="number" value={creditProCredits} onChange={(e) => setCreditProCredits(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm mb-3" />
-                <label className="block text-xs text-surface-50/30 mb-2">Price (INR)</label>
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm mb-3" />
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
                 <input type="number" value={creditProPrice} onChange={(e) => setCreditProPrice(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-surface-50 text-sm" />
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
               </div>
             </div>
 
@@ -365,7 +365,7 @@ export default function AdminPage() {
             >
               {pricingSaving ? "Saving..." : "Save Pricing"}
             </button>
-            <p className="text-xs text-surface-50/20 mt-3">Changes are applied immediately to the pricing page.</p>
+            <p className="text-xs text-ink-500 mt-3">Changes are applied immediately to the pricing page.</p>
           </div>
         )}
       </div>
