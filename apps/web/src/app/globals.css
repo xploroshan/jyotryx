@@ -464,6 +464,15 @@
   }
   .theme-v2 .grain { display: none; }  /* clean canvas, no paper grain */
 
+  /* When the theme-v2 root is full-screen (preview surfaces),
+     repaint the body bg and disable the warm radial sunwash so the
+     legacy cream canvas can't bleed in around the preview. */
+  body:has(.theme-v2-root) {
+    background-color: var(--color-bg);
+    background-image: none;
+  }
+  body:has(.theme-v2-root) > .grain { display: none; }
+
   .v2-surface {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
