@@ -67,29 +67,29 @@
   --color-ink-700: rgba(12, 8, 5, 0.82);
   --color-ink-900: #0c0805;
 
-  /* ── v2 semantic tokens — Linear-language refresh.
-        Phase 0 of the design overhaul. These coexist with the legacy
-        scales above so we can migrate page-by-page without breakage.
-        Naming: bg = page, surface = card, fg = text, border = hairline,
-        accent = single brand action color. Use these in new components. ── */
-  --color-bg: #faf9f7;             /* off-white with 1% warm tint */
-  --color-bg-subtle: #f4f3f0;      /* one step darker for striped rows / wells */
-  --color-surface: #ffffff;        /* pure white card */
-  --color-surface-hover: #fafafa;  /* card hover */
+  /* ── v2 semantic tokens — Linear-language refresh, Warm Linen palette.
+        Locked in Phase 0 review. Light with body, warm undertone, cream
+        cards on a linen canvas. Coexists with the legacy scales above
+        so we can migrate page-by-page without breakage. Opt in via the
+        `theme-v2` class on a page root. ── */
+  --color-bg: #ede4d0;             /* warm linen — has body, not paper-white */
+  --color-bg-subtle: #e3d9c1;      /* one step deeper for wells / striped rows */
+  --color-surface: #fbf7ec;        /* soft cream card — pops against linen */
+  --color-surface-hover: #f5efde;  /* card hover */
 
-  --color-fg: #0a0a0a;             /* primary text */
-  --color-fg-muted: #525252;       /* secondary text */
-  --color-fg-subtle: #737373;      /* captions, helper text */
+  --color-fg: #1a1410;             /* warm near-black — primary text */
+  --color-fg-muted: #5a5043;       /* warm gray — secondary text */
+  --color-fg-subtle: #807666;      /* captions, helper text */
   --color-fg-onaccent: #ffffff;    /* text on accent fill */
 
-  --color-border: #e7e5e1;         /* hairline, warm-neutral */
-  --color-border-strong: #d4d2cd;  /* emphasis border */
-  --color-border-accent: #ff4d00;  /* focus rings, selected states */
+  --color-border: #d4c9ad;         /* warm hairline */
+  --color-border-strong: #bdaf90;  /* emphasis border */
+  --color-border-accent: #c43200;  /* focus rings, selected states */
 
-  --color-accent: #ff4d00;
-  --color-accent-hover: #e63d00;
-  --color-accent-active: #c43200;
-  --color-accent-subtle: #fff1ea;  /* wash for accent-tinted cards */
+  --color-accent: #c43200;         /* deeper burnt-orange — stronger on linen */
+  --color-accent-hover: #a02900;
+  --color-accent-active: #7a2000;
+  --color-accent-subtle: #fce4d2;  /* wash for accent-tinted cards */
 
   /* Status tokens — used sparingly, only for genuine state */
   --color-success: #16a34a;
