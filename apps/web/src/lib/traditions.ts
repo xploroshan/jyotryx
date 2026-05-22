@@ -53,14 +53,16 @@ export interface WebTraditionConfig {
   features: TraditionFeature[];
 }
 
-/** Badge colour palette — lifted from `app/my-day/page.tsx` so both files share one source. */
+/** Badge colour palette — lifted from `app/my-day/page.tsx` so both files share one source.
+ *  Bumped from `-400` text / `/10` bg to `-700` text / `/15` bg so chips remain readable
+ *  on the Warm Linen canvas. */
 export const TRADITION_BADGE_COLORS: Record<TraditionId, string> = {
-  VEDIC: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  WESTERN: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-  CHINESE: 'bg-red-500/10 text-red-400 border-red-500/20',
-  HELLENISTIC: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-  HORARY: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
-  MEDICAL: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  VEDIC: 'bg-amber-500/15 text-amber-700 border-amber-500/30',
+  WESTERN: 'bg-sky-500/15 text-sky-700 border-sky-500/30',
+  CHINESE: 'bg-red-500/15 text-red-700 border-red-500/30',
+  HELLENISTIC: 'bg-violet-500/15 text-violet-700 border-violet-500/30',
+  HORARY: 'bg-teal-500/15 text-teal-700 border-teal-500/30',
+  MEDICAL: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
 };
 
 /** Hero gradient background for each tradition's dashboard. */
