@@ -38,20 +38,20 @@ const PlanetaryHoursSection = dynamic(
 );
 
 const QUALITY_STYLES = {
-  excellent: { emoji: "\u2728", color: "text-emerald-400", ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", bar: "bg-emerald-400", glow: "shadow-emerald-500/20", pct: 100 },
-  good: { emoji: "\u2600\ufe0f", color: "text-sky-400", ring: "ring-sky-500/30", bg: "bg-sky-500/10", bar: "bg-sky-400", glow: "shadow-sky-500/20", pct: 75 },
-  moderate: { emoji: "\u2696\ufe0f", color: "text-amber-400", ring: "ring-amber-500/30", bg: "bg-amber-500/10", bar: "bg-amber-400", glow: "shadow-amber-500/20", pct: 50 },
-  challenging: { emoji: "\ud83c\udf19", color: "text-orange-400", ring: "ring-orange-500/30", bg: "bg-orange-500/10", bar: "bg-orange-400", glow: "shadow-orange-500/20", pct: 25 },
+  excellent: { emoji: "\u2728", color: "text-emerald-700", ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", bar: "bg-emerald-400", glow: "shadow-emerald-500/20", pct: 100 },
+  good: { emoji: "\u2600\ufe0f", color: "text-sky-700", ring: "ring-sky-500/30", bg: "bg-sky-500/10", bar: "bg-sky-400", glow: "shadow-sky-500/20", pct: 75 },
+  moderate: { emoji: "\u2696\ufe0f", color: "text-amber-700", ring: "ring-amber-500/30", bg: "bg-amber-500/10", bar: "bg-amber-400", glow: "shadow-amber-500/20", pct: 50 },
+  challenging: { emoji: "\ud83c\udf19", color: "text-orange-700", ring: "ring-orange-500/30", bg: "bg-orange-500/10", bar: "bg-orange-400", glow: "shadow-orange-500/20", pct: 25 },
 };
 
 const planetIcons: Record<string, { symbol: string; color: string; bg: string }> = {
-  Sun: { symbol: "\u2609", color: "text-amber-400", bg: "bg-amber-500/10" },
-  Moon: { symbol: "\u263d", color: "text-slate-300", bg: "bg-slate-400/10" },
-  Mars: { symbol: "\u2642", color: "text-red-400", bg: "bg-red-500/10" },
-  Mercury: { symbol: "\u263f", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  Jupiter: { symbol: "\u2643", color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  Venus: { symbol: "\u2640", color: "text-pink-400", bg: "bg-pink-500/10" },
-  Saturn: { symbol: "\u2644", color: "text-indigo-400", bg: "bg-indigo-500/10" },
+  Sun: { symbol: "\u2609", color: "text-amber-700", bg: "bg-amber-500/10" },
+  Moon: { symbol: "\u263d", color: "text-slate-700", bg: "bg-slate-400/10" },
+  Mars: { symbol: "\u2642", color: "text-red-700", bg: "bg-red-500/10" },
+  Mercury: { symbol: "\u263f", color: "text-emerald-700", bg: "bg-emerald-500/10" },
+  Jupiter: { symbol: "\u2643", color: "text-yellow-700", bg: "bg-yellow-500/10" },
+  Venus: { symbol: "\u2640", color: "text-pink-700", bg: "bg-pink-500/10" },
+  Saturn: { symbol: "\u2644", color: "text-indigo-700", bg: "bg-indigo-500/10" },
 };
 
 const LOCALE_MAP: Record<string, string> = {
@@ -61,12 +61,12 @@ const LOCALE_MAP: Record<string, string> = {
 };
 
 const TRADITION_BADGE_COLORS: Record<string, string> = {
-  VEDIC: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  WESTERN: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  CHINESE: "bg-red-500/10 text-red-400 border-red-500/20",
-  HELLENISTIC: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  HORARY: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  MEDICAL: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  VEDIC: "bg-amber-500/15 text-amber-700 border-amber-500/30",
+  WESTERN: "bg-sky-500/15 text-sky-700 border-sky-500/30",
+  CHINESE: "bg-red-500/15 text-red-700 border-red-500/30",
+  HELLENISTIC: "bg-violet-500/15 text-violet-700 border-violet-500/30",
+  HORARY: "bg-teal-500/15 text-teal-700 border-teal-500/30",
+  MEDICAL: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
 };
 type TraditionSlug = 'vedic' | 'western' | 'chinese' | 'hellenistic' | 'horary' | 'medical';
 const TRADITION_I18N_KEY: Record<string, TraditionSlug> = {
@@ -167,7 +167,7 @@ export default function MyDayPage() {
                 <div className="h-3 w-40 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
                 <div className="h-9 w-72 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
               </div>
-              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-[rgba(255,252,245,0.78)] ring-1 ring-white/[0.06]">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#fbf7ec] ring-1 ring-white/[0.06]">
                 <div className="w-8 h-8 rounded-full bg-[rgba(12,8,5,0.05)] animate-pulse" />
                 <div className="space-y-2">
                   <div className="h-3 w-16 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
@@ -181,7 +181,7 @@ export default function MyDayPage() {
         </div>
 
         <div className="mx-auto max-w-5xl px-4 pb-16 fade-in-up">
-          <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-[rgba(12,8,5,0.08)]">
+          <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-[rgba(26,20,16,0.14)]">
             <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
             <div className="pl-4 space-y-2">
               <div className="h-3 w-full rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
@@ -192,7 +192,7 @@ export default function MyDayPage() {
 
           <div className="grid sm:grid-cols-2 gap-4 mb-8">
             {[0, 1].map((col) => (
-              <div key={col} className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+              <div key={col} className="p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-[rgba(255,252,245,0.92)] animate-pulse" />
                   <div className="h-3 w-32 rounded bg-[rgba(12,8,5,0.05)] animate-pulse" />
@@ -209,7 +209,7 @@ export default function MyDayPage() {
             ))}
           </div>
 
-          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+          <div className="p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
             <div className="h-4 w-40 rounded bg-[rgba(12,8,5,0.05)] animate-pulse mb-4" />
             <div className="space-y-3">
               {[0, 1, 2, 3].map((i) => (
@@ -235,12 +235,12 @@ export default function MyDayPage() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="surface-card p-8 text-center max-w-md">
           <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
-            <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-6 h-6 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
           </div>
-          <p className="text-red-400 mb-1 text-sm font-medium">{t.myDay.somethingWrong}</p>
-          <p className="text-[rgba(12,8,5,0.46)] text-xs mb-5">{error}</p>
+          <p className="text-red-700 mb-1 text-sm font-medium">{t.myDay.somethingWrong}</p>
+          <p className="text-[rgba(12,8,5,0.66)] text-xs mb-5">{error}</p>
           <button onClick={() => fetchBriefing(true)} className="px-6 py-2.5 btn-primary rounded-xl text-sm">{t.myDay.tryAgain}</button>
         </div>
       </div>
@@ -275,7 +275,7 @@ export default function MyDayPage() {
         <div className="relative mx-auto max-w-5xl px-4 pt-8 pb-6 sm:pt-12 sm:pb-10">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="text-xs font-medium text-primary-400/80 tracking-widest uppercase mb-2">
+              <p className="text-xs font-medium text-primary-700 tracking-widest uppercase mb-2">
                 {new Date(briefing.date).toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-950 tracking-tight">
@@ -313,7 +313,7 @@ export default function MyDayPage() {
 
       <div className="mx-auto max-w-5xl px-4 pb-16">
         {/* Summary */}
-        <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-[rgba(12,8,5,0.08)]">
+        <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-[rgba(26,20,16,0.14)]">
           <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
           <p className="text-emphasis leading-relaxed pl-4 text-[15px]">{translateSummary(briefing.summary, t, locale)}</p>
         </div>
@@ -323,12 +323,12 @@ export default function MyDayPage() {
           <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-purple-500/8 to-fuchsia-500/5 border border-purple-500/15">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center shrink-0">
-                <svg className="w-4.5 h-4.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-4.5 h-4.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-semibold text-purple-300 mb-1">{t.myDay.planetaryTransit}</p>
+                <p className="text-sm font-semibold text-purple-700 mb-1">{t.myDay.planetaryTransit}</p>
                 <p className="text-sm text-purple-200/60 leading-relaxed">{translateTransitAlert(briefing.transitAlert, t)}</p>
               </div>
             </div>
@@ -337,10 +337,10 @@ export default function MyDayPage() {
 
         {/* Do & Avoid */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
-          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+          <div className="p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               </div>
@@ -349,16 +349,16 @@ export default function MyDayPage() {
             <ul className="space-y-2.5">
               {doList.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-secondary">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500/50 shrink-0" />
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
                   {translateActivity(item, t)}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
+          <div className="p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-                <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
@@ -367,7 +367,7 @@ export default function MyDayPage() {
             <ul className="space-y-2.5">
               {avoidList.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-secondary">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500/50 shrink-0" />
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-600 shrink-0" />
                   {translateActivity(item, t)}
                 </li>
               ))}
@@ -379,12 +379,12 @@ export default function MyDayPage() {
         <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-primary-600/8 to-transparent border border-primary-500/10">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-xl bg-primary-500/15 flex items-center justify-center shrink-0">
-              <svg className="w-4.5 h-4.5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-4.5 h-4.5 text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-primary-400 mb-1">{t.myDay.careerWork}</h3>
+              <h3 className="text-sm font-semibold text-primary-700 mb-1">{t.myDay.careerWork}</h3>
               <p className="text-sm text-secondary leading-relaxed">{translateProfInsight(briefing.professionInsight, t)}</p>
             </div>
           </div>
@@ -393,8 +393,8 @@ export default function MyDayPage() {
         {/* Current Hora + Lucky Stats */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           {currentHora && (
-            <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
-              <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
+            <div className="p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
+              <h3 className="text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
               <div className="flex items-center gap-4">
                 <div className={`w-14 h-14 rounded-2xl ${planetIcons[currentHora.planet]?.bg || "bg-[rgba(255,252,245,0.92)]"} flex items-center justify-center`}>
                   <span className={`text-2xl ${planetIcons[currentHora.planet]?.color || "text-secondary"}`}>
@@ -405,51 +405,51 @@ export default function MyDayPage() {
                   <p className={`text-lg font-bold ${planetIcons[currentHora.planet]?.color || "text-surface-950"}`}>
                     {translatePlanet(currentHora.planet, t)}
                   </p>
-                  <p className="text-xs text-[rgba(12,8,5,0.40)] mt-0.5">
+                  <p className="text-xs text-[rgba(12,8,5,0.62)] mt-0.5">
                     {translateTimeRange(currentHora.startTime, locale)} – {translateTimeRange(currentHora.endTime, locale)}
                   </p>
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-[rgba(12,8,5,0.08)]">
-                <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.myDay.bestFor}</p>
+              <div className="mt-4 pt-3 border-t border-[rgba(26,20,16,0.14)]">
+                <p className="text-xs text-[rgba(12,8,5,0.62)] mb-1">{t.myDay.bestFor}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(currentHora.activities ?? []).map((a, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded-lg bg-[rgba(255,252,245,0.86)] text-[11px] text-[rgba(12,8,5,0.55)]">{translateActivity(a, t)}</span>
+                    <span key={i} className="px-2.5 py-1 rounded-lg bg-[rgba(255,252,245,0.86)] text-[11px] text-[rgba(12,8,5,0.78)]">{translateActivity(a, t)}</span>
                   ))}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
-            <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-4">{t.myDay.luckyToday}</h3>
+          <div className="p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
+            <h3 className="text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase tracking-wider mb-4">{t.myDay.luckyToday}</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center">
                   <div className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-orange-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider">{t.myDay.color}</p>
+                  <p className="text-[11px] text-[rgba(12,8,5,0.62)] uppercase tracking-wider">{t.myDay.color}</p>
                   <p className="text-sm text-surface-950 font-medium">{translateColor(briefing.luckyColor, t)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-accent-500/10 flex items-center justify-center">
-                  <span className="text-accent-400 font-bold text-lg">{briefing.luckyNumber}</span>
+                  <span className="text-accent-700 font-bold text-lg">{briefing.luckyNumber}</span>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider">{t.myDay.number}</p>
+                  <p className="text-[11px] text-[rgba(12,8,5,0.62)] uppercase tracking-wider">{t.myDay.number}</p>
                   <p className="text-sm text-surface-950 font-medium">{briefing.luckyNumber}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-5 h-5 text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[11px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider">{t.myDay.bestTime}</p>
+                  <p className="text-[11px] text-[rgba(12,8,5,0.62)] uppercase tracking-wider">{t.myDay.bestTime}</p>
                   <p className="text-sm text-surface-950 font-medium">{translateTimeRange(briefing.luckyTime, locale)}</p>
                 </div>
               </div>
@@ -461,8 +461,8 @@ export default function MyDayPage() {
         <PlanetaryHoursSection planetaryHours={planetaryHours} t={t} locale={locale} />
 
         {/* Panchang */}
-        <div className="mb-8 p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
-          <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
+        <div className="mb-8 p-5 rounded-2xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.14)]">
+          <h3 className="text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase tracking-wider mb-4">{t.myDay.todaysPanchang}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
               { label: t.myDay.tithi, value: translateTithi(panchang.tithi, locale), icon: "\ud83c\udf19" },
@@ -471,9 +471,9 @@ export default function MyDayPage() {
               { label: t.myDay.day, value: translateVara(panchang.vara, locale), icon: "\ud83d\udcc5" },
               { label: t.myDay.rahuKaal, value: translateTimeRange(panchang.rahukaal, locale), icon: "\u26a0\ufe0f" },
             ].map((item) => (
-              <div key={item.label} className="p-3 rounded-xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.06)] text-center">
+              <div key={item.label} className="p-3 rounded-xl bg-[#fbf7ec] border border-[rgba(26,20,16,0.10)] text-center">
                 <p className="text-lg mb-1">{item.icon}</p>
-                <p className="text-[10px] text-[rgba(12,8,5,0.40)] uppercase tracking-wider mb-1">{item.label}</p>
+                <p className="text-[10px] text-[rgba(12,8,5,0.62)] uppercase tracking-wider mb-1">{item.label}</p>
                 <p className="text-xs text-emphasis font-medium">{item.value}</p>
               </div>
             ))}
@@ -485,19 +485,19 @@ export default function MyDayPage() {
           <div className="p-5 rounded-2xl bg-gradient-to-br from-accent-500/8 to-transparent border border-accent-500/10">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-xl bg-accent-500/15 flex items-center justify-center shrink-0">
-                <svg className="w-4.5 h-4.5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-4.5 h-4.5 text-accent-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-accent-400 mb-1.5">{t.myDay.todaysRemedy}</h3>
+                <h3 className="text-sm font-semibold text-accent-700 mb-1.5">{t.myDay.todaysRemedy}</h3>
                 <p className="text-sm text-secondary leading-relaxed">{translateRemedy(briefing.remedy, t)}</p>
               </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-600/8 to-accent-500/5 border border-[rgba(12,8,5,0.08)] flex flex-col items-center justify-center text-center">
-            <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider mb-3">{t.myDay.todaysMantra}</h3>
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-600/8 to-accent-500/5 border border-[rgba(26,20,16,0.14)] flex flex-col items-center justify-center text-center">
+            <h3 className="text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase tracking-wider mb-3">{t.myDay.todaysMantra}</h3>
             <p className="text-xl sm:text-2xl text-emphasis font-semibold leading-relaxed tracking-wide">
               {briefing.mantra}
             </p>
