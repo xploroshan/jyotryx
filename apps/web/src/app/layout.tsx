@@ -10,6 +10,7 @@ import FeatureChips from "@/components/layout/FeatureChips";
 import RouteFocusReset from "@/components/layout/RouteFocusReset";
 import ImpersonateHandler from "@/components/auth/ImpersonateHandler";
 import ImpersonationBanner from "@/components/auth/ImpersonationBanner";
+import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShell";
 
 // We expose the next/font families as their own CSS variables and let the
 // theme tokens in globals.css extend them with system fallbacks. Doing it
@@ -83,20 +84,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <ImpersonateHandler />
         </Suspense>
-        <Navbar />
-        <TraditionRail />
-        <FeatureChips />
         <RouteFocusReset />
-        {/* Navbar is fixed (h-14). TraditionRail + FeatureChips are sticky
-            (in normal flow), so only offset for the Navbar height.
-            `tabIndex={-1}` lets RouteFocusReset move focus here on navigation
-            without making <main> a tab stop. `focus:outline-none` keeps the
-            focus transparent — a stray ring on the whole content area would
-            be more distracting than the nav ring we're trying to clear. */}
-        <main className="flex-1 pt-16 focus:outline-none" tabIndex={-1}>
+        {/* Chrome is conditional: legacy Navbar/TraditionRail/FeatureChips
+            sit on top of every route EXCEPT preview surfaces (/styleguide)
+            where we want to evaluate the v2 design system in isolation,
+            unobstructed by the cream-themed chrome we're about to replace.
+            See ConditionalLayoutShell for the route allow-list. */}
+        <ConditionalLayoutShell
+          topChrome={
+            <>
+              <Navbar />
+              <TraditionRail />
+              <FeatureChips />
+            </>
+          }
+          bottomChrome={<Footer />}
+        >
           <ProfileGate>{children}</ProfileGate>
-        </main>
-        <Footer />
+        </ConditionalLayoutShell>
       </body>
     </html>
   );
