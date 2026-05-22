@@ -2,15 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ProfileGate from "@/components/auth/ProfileGate";
-import TraditionRail from "@/components/layout/TraditionRail";
-import FeatureChips from "@/components/layout/FeatureChips";
 import RouteFocusReset from "@/components/layout/RouteFocusReset";
 import ImpersonateHandler from "@/components/auth/ImpersonateHandler";
 import ImpersonationBanner from "@/components/auth/ImpersonationBanner";
 import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShell";
+import NavbarV2 from "@/components/layout/v2/NavbarV2";
+import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 
 // We expose the next/font families as their own CSS variables and let the
 // theme tokens in globals.css extend them with system fallbacks. Doing it
@@ -62,7 +61,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#fffdfa",
+  themeColor: "#ede4d0",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -93,9 +92,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ConditionalLayoutShell
           topChrome={
             <>
-              <Navbar />
-              <TraditionRail />
-              <FeatureChips />
+              <NavbarV2 />
+              <FeatureBarV2 />
             </>
           }
           bottomChrome={<Footer />}
