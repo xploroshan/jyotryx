@@ -120,27 +120,23 @@
 
 @layer base {
   body {
-    /* Editorial cream canvas — warm parchment with a soft dawn wash at
-       the top so the hero feels lit from above. The body text colour is
-       the ink scale; on this cream both AAA contrast and an editorial
-       feel are achievable without saturation fatigue. We paint cream
-       directly via background-color rather than aliasing surface-50
-       (which legacy dark cards still use as warm-white text). */
-    background-color: var(--color-canvas-50);
-    color: var(--color-ink-900);
+    /* Phase 1 (Warm Linen): the canvas migrates from cream to linen.
+       A softer dawn wash sits above the fold so the hero still feels
+       lit from above, but it's much quieter than the cream era — the
+       hierarchy now comes from typography and surface contrast, not a
+       saturated background. Legacy cream-tile callers (surface-card)
+       have an alpha that lets a touch of the linen show through, so
+       they read as warm-white-on-linen until they're migrated. */
+    background-color: var(--color-bg);
+    color: var(--color-fg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-image:
       radial-gradient(
-        ellipse 90% 55% at 50% -10%,
-        rgba(255, 182, 39, 0.20) 0%,
-        rgba(255, 122, 64, 0.10) 35%,
-        rgba(253, 248, 238, 0) 75%
-      ),
-      radial-gradient(
-        ellipse 70% 50% at 100% 100%,
-        rgba(255, 122, 64, 0.06) 0%,
-        rgba(253, 248, 238, 0) 70%
+        ellipse 80% 45% at 50% -10%,
+        rgba(255, 182, 39, 0.10) 0%,
+        rgba(255, 122, 64, 0.05) 40%,
+        rgba(237, 228, 208, 0) 75%
       );
     background-attachment: fixed;
   }
@@ -366,21 +362,21 @@
     border-color: rgba(12, 8, 5, 0.10);
   }
 
-  /* ── Frosted glass on cream — used by Navbar/TraditionRail/FeatureChips
-        when scrolled. Cream tint so the chrome reads as a frosted page,
-        not a competing dark band. ── */
+  /* ── Frosted glass on linen — chrome tint follows the canvas. Any
+        legacy caller (toasts, overlays) reads as a frosted page band
+        instead of a competing surface. ── */
   .glass {
-    background: rgba(253, 248, 238, 0.72);
+    background: rgba(237, 228, 208, 0.72);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid rgba(12, 8, 5, 0.06);
+    border: 1px solid rgba(26, 20, 16, 0.06);
   }
 
   .glass-strong {
-    background: rgba(253, 248, 238, 0.86);
+    background: rgba(237, 228, 208, 0.86);
     backdrop-filter: blur(28px) saturate(160%);
     -webkit-backdrop-filter: blur(28px) saturate(160%);
-    border: 1px solid rgba(12, 8, 5, 0.08);
+    border: 1px solid rgba(26, 20, 16, 0.08);
   }
 
   /* Dark glass for pages that opt into a dark band (footer overlays,
@@ -587,6 +583,21 @@
     background-position: 0 100%;
     background-size: 100% 2px;
     padding-bottom: 2px;
+  }
+
+  /* Navbar background states — transparent at top of page (so it sits
+     flush against the hero), frosted linen once the user scrolls past
+     the first few px. Keeps a single bar from feeling like a heavy
+     band across the editorial layout. */
+  .v2-nav-top {
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+  }
+  .v2-nav-scrolled {
+    background-color: rgba(237, 228, 208, 0.85);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border-bottom: 1px solid var(--color-border);
   }
 
 }

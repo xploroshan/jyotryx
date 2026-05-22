@@ -27,7 +27,7 @@ export function ConditionalLayoutShell({
     <>
       {!bare && topChrome}
       <main
-        className={`flex-1 focus:outline-none ${bare ? "" : "pt-16"}`}
+        className={`flex-1 focus:outline-none ${bare ? "" : "pt-14"}`}
         tabIndex={-1}
       >
         {children}
