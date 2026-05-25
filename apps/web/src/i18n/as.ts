@@ -130,7 +130,7 @@ export const as_: TranslationKeys = {
   home: {
     badge: 'বৈদিক জ্যোতিষ প্লেটফৰ্ম',
     heroTitle: 'আপোনাৰ তৰাবোৰ,',
-    heroHighlight: 'জ্যোত্ৰিক্সৰ দ্বাৰা বিশ্লেষিত',
+    heroHighlight: 'myastro360 দ্বাৰা বিশ্লেষিত',
     heroDescription: 'তৎক্ষণাৎ, ব্যক্তিগত বৈদিক জ্যোতিষ পৰামৰ্শ। কুণ্ডলী, হস্তৰেখা, ৰাশিফল, সামঞ্জস্যতা আৰু আধ্যাত্মিক মাৰ্গদৰ্শন — ২৪/৭ উপলব্ধ।',
     startConsultation: 'পৰামৰ্শ আৰম্ভ কৰক',
     tryPalmReading: 'হস্তৰেখা পঢ়ক',

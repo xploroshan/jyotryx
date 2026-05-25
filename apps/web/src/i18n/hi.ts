@@ -130,7 +130,7 @@ export const hi: TranslationKeys = {
   home: {
     badge: 'वैदिक ज्योतिष मंच',
     heroTitle: 'आपके सितारे,',
-    heroHighlight: 'ज्योत्रोन द्वारा विश्लेषित',
+    heroHighlight: 'myastro360 द्वारा विश्लेषित',
     heroDescription: 'तुरंत, व्यक्तिगत वैदिक ज्योतिष परामर्श। कुंडली, हस्तरेखा, राशिफल, अनुकूलता, और आध्यात्मिक मार्गदर्शन — 24/7 उपलब्ध।',
     startConsultation: 'परामर्श शुरू करें',
     tryPalmReading: 'हस्तरेखा पढ़ें',
@@ -1000,7 +1000,7 @@ export const hi: TranslationKeys = {
     confirmPasswordPlaceholder: 'नया पासवर्ड फिर से दर्ज करें',
     errPasswordsMismatch: 'पासवर्ड मेल नहीं खाते।',
     updatePassword: 'पासवर्ड अपडेट करें',
-    brandName: 'ज्योत्रॉन',
+    brandName: 'myastro360',
   },
   profile: {
     title: 'प्रोफ़ाइल',

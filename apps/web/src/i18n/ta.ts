@@ -130,7 +130,7 @@ export const ta: TranslationKeys = {
   home: {
     badge: 'வேத ஜோதிட தளம்',
     heroTitle: 'உங்கள் நட்சத்திரங்கள்,',
-    heroHighlight: 'ஜோத்ரான் மூலம் பகுப்பாய்வு',
+    heroHighlight: 'myastro360 மூலம் பகுப்பாய்வு',
     heroDescription: 'உடனடி, தனிப்பயனாக்கப்பட்ட வேத ஜோதிட ஆலோசனைகள். குண்டலி, கைரேகை, ராசிபலன், பொருத்தம், மற்றும் ஆன்மீக வழிகாட்டுதல் — 24/7 கிடைக்கும்.',
     startConsultation: 'ஆலோசனை தொடங்கு',
     tryPalmReading: 'கைரேகை படிக்கவும்',

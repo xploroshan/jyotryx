@@ -130,7 +130,7 @@ export const ml: TranslationKeys = {
   home: {
     badge: 'വൈദിക ജ്യോതിഷ പ്ലാറ്റ്ഫോം',
     heroTitle: 'നിങ്ങളുടെ നക്ഷത്രങ്ങള്‍,',
-    heroHighlight: 'ജ്യോത്രോണ്‍ വഴി വിശകലനം ചെയ്തു',
+    heroHighlight: 'myastro360 വഴി വിശകലനം ചെയ്തു',
     heroDescription: 'തത്സമയ, വ്യക്തിഗത വൈദിക ജ്യോതിഷ കൂടിയാലോചനകള്‍. കുണ്ഡലി, ഹസ്തരേഖ, രാശിഫലം, അനുയോജ്യത, ആത്മീയ മാര്‍ഗ്ഗനിര്‍ദ്ദേശം — 24/7 ലഭ്യം.',
     startConsultation: 'ആലോചന ആരംഭിക്കുക',
     tryPalmReading: 'ഹസ്തരേഖ വായിക്കുക',

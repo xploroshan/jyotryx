@@ -130,7 +130,7 @@ export const or_: TranslationKeys = {
   home: {
     badge: 'ବୈଦିକ ଜ୍ୟୋତିଷ ପ୍ଲାଟଫର୍ମ',
     heroTitle: 'ଆପଣଙ୍କ ତାରା,',
-    heroHighlight: 'ଜ୍ୟୋତ୍ରନ ଦ୍ୱାରା ବିଶ୍ଲେଷଣ',
+    heroHighlight: 'myastro360 ଦ୍ୱାରା ବିଶ୍ଲେଷଣ',
     heroDescription: 'ତୁରନ୍ତ, ବ୍ୟକ୍ତିଗତ ବୈଦିକ ଜ୍ୟୋତିଷ ପରାମର୍ଶ। କୁଣ୍ଡଳୀ, ହସ୍ତରେଖା, ରାଶିଫଳ, ସୁସଂଗତତା ଏବଂ ଆଧ୍ୟାତ୍ମିକ ମାର୍ଗଦର୍ଶନ — ୨୪/୭ ଉପಲବ୍ଧ।',
     startConsultation: 'ପରାମର୍ଶ ଆରମ୍ଭ କରନ୍ତୁ',
     tryPalmReading: 'ହସ୍ତରେଖା ପଢ଼ନ୍ତୁ',
