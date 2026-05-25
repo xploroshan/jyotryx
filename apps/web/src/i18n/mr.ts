@@ -130,7 +130,7 @@ export const mr: TranslationKeys = {
   home: {
     badge: 'वैदिक ज्योतिष व्यासपीठ',
     heroTitle: 'तुमचे तारे,',
-    heroHighlight: 'ज्योत्रॉनद्वारे विश्लेषित',
+    heroHighlight: 'myastro360 द्वारे विश्लेषित',
     heroDescription: 'त्वरित, वैयक्तिक वैदिक ज्योतिष सल्ला। कुंडली, हस्तरेषा, राशिभविष्य, सुसंगतता आणि आध्यात्मिक मार्गदर्शन — २४/७ उपलब्ध.',
     startConsultation: 'सल्ला सुरू करा',
     tryPalmReading: 'हस्तरेषा वाचा',

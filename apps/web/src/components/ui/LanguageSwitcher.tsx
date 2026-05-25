@@ -66,20 +66,20 @@ export default function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-44 rounded-xl border divider bg-surface-900 shadow-xl shadow-black/30 py-1.5 z-50 max-h-80 overflow-y-auto">
+        <div className="absolute right-0 top-full mt-1.5 w-44 v2-surface py-1.5 z-50 max-h-80 overflow-y-auto shadow-xl shadow-black/10">
           {locales.map((l) => (
             <button
               key={l.code}
               onClick={() => handleSelect(l.code)}
               className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
                 locale === l.code
-                  ? 'text-primary-400 bg-primary-600/10'
-                  : 'text-secondary hover:text-surface-950 hover:bg-[rgba(255,252,245,0.86)]'
+                  ? 'text-primary-700 bg-primary-500/10 font-medium'
+                  : 'text-emphasis hover:text-surface-950 hover:bg-[rgba(255,252,245,0.86)]'
               }`}
             >
               <span>{l.native}</span>
               {locale === l.code && (
-                <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                 </svg>
               )}

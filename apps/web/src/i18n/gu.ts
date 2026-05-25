@@ -130,7 +130,7 @@ export const gu: TranslationKeys = {
   home: {
     badge: 'વૈદિક જ્યોતિષ પ્લેટફોર્મ',
     heroTitle: 'તમારા તારા,',
-    heroHighlight: 'જ્યોત્રોન દ્વારા વિશ્લેષિત',
+    heroHighlight: 'myastro360 દ્વારા વિશ્લેષિત',
     heroDescription: 'તાત્કાલિક, વ્યક્તિગત વૈદિક જ્યોતિષ પરામર્શ. કુંડળી, હસ્તરેખા, રાશિફળ, સુસંગતતા અને આધ્યાત્મિક માર્ગદર્શન — ૨૪/૭ ઉપલબ્ધ.',
     startConsultation: 'પરામર્શ શરૂ કરો',
     tryPalmReading: 'હસ્તરેખા વાંચો',

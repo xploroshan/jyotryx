@@ -130,7 +130,7 @@ export const pa: TranslationKeys = {
   home: {
     badge: 'ਵੈਦਿਕ ਜੋਤਿਸ਼ ਪਲੇਟਫਾਰਮ',
     heroTitle: 'ਤੁਹਾਡੇ ਤਾਰੇ,',
-    heroHighlight: 'ਜ੍ਯੋਤ੍ਰੋਨ ਰਾਹੀਂ ਵਿਸ਼ਲੇਸ਼ਣ',
+    heroHighlight: 'myastro360 ਰਾਹੀਂ ਵਿਸ਼ਲੇਸ਼ਣ',
     heroDescription: 'ਤੁਰੰਤ, ਨਿੱਜੀ ਵੈਦਿਕ ਜੋਤਿਸ਼ ਸਲਾਹ। ਕੁੰਡਲੀ, ਹਸਤਰੇਖਾ, ਰਾਸ਼ੀਫਲ, ਅਨੁਕੂਲਤਾ ਅਤੇ ਅਧਿਆਤਮਿਕ ਮਾਰਗਦਰਸ਼ਨ — 24/7 ਉਪਲਬਧ।',
     startConsultation: 'ਸਲਾਹ ਸ਼ੁਰੂ ਕਰੋ',
     tryPalmReading: 'ਹਸਤਰੇਖਾ ਪੜ੍ਹੋ',

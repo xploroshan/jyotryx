@@ -130,7 +130,7 @@ export const kn: TranslationKeys = {
   home: {
     badge: 'ವೈದಿಕ ಜ್ಯೋತಿಷ ವೇದಿಕೆ',
     heroTitle: 'ನಿಮ್ಮ ನಕ್ಷತ್ರಗಳು,',
-    heroHighlight: 'ಜ್ಯೋತ್ರಾನ್ ಮೂಲಕ ವಿಶ್ಲೇಷಿಸಲಾಗಿದೆ',
+    heroHighlight: 'myastro360 ಮೂಲಕ ವಿಶ್ಲೇಷಿಸಲಾಗಿದೆ',
     heroDescription: 'ತಕ್ಷಣ, ವೈಯಕ್ತಿಕ ವೈದಿಕ ಜ್ಯೋತಿಷ ಸಮಾಲೋಚನೆಗಳು. ಕುಂಡಲಿ, ಹಸ್ತರೇಖೆ, ರಾಶಿಫಲ, ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಆಧ್ಯಾತ್ಮಿಕ ಮಾರ್ಗದರ್ಶನ — 24/7 ಲಭ್ಯ.',
     startConsultation: 'ಸಮಾಲೋಚನೆ ಪ್ರಾರಂಭಿಸಿ',
     tryPalmReading: 'ಹಸ್ತರೇಖೆ ಓದಿ',
