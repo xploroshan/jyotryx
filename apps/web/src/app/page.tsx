@@ -69,9 +69,21 @@ function renderHighlight(text: string) {
  * collapses mid-word; the actual text content of the heading remains
  * intact for screen readers via aria-label on the parent <h1>.
  */
+// Split by grapheme cluster, not by codepoint. Devanagari/Tamil/etc.
+// vowel marks must stay attached to their base consonant — `Array.from`
+// would put "क" and "े" in separate inline-block spans, breaking "के"
+// into two disconnected glyphs.
+function splitGraphemes(text: string): string[] {
+  const Seg = (Intl as unknown as { Segmenter?: typeof Intl.Segmenter }).Segmenter;
+  if (typeof Seg === 'function') {
+    return Array.from(new Seg(undefined, { granularity: 'grapheme' }).segment(text), (s) => s.segment);
+  }
+  return Array.from(text);
+}
+
 function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
   const reduce = useReducedMotion();
-  const chars = Array.from(text);
+  const chars = splitGraphemes(text);
   if (reduce) return <>{text}</>;
   return (
     <>
