@@ -379,16 +379,16 @@ export default function KundliPage() {
                 <h3 className="text-lg font-bold text-gradient mb-6">{t.kundli.rashiChart}</h3>
                 <div className="relative w-80 h-80 sm:w-96 sm:h-96">
                   <svg viewBox="0 0 400 400" className="w-full h-full">
-                    <rect x="10" y="10" width="380" height="380" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
-                    <line x1="10" y1="10" x2="390" y2="390" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-                    <line x1="390" y1="10" x2="10" y2="390" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-                    <line x1="200" y1="10" x2="390" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
-                    <line x1="390" y1="200" x2="200" y2="390" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
-                    <line x1="200" y1="390" x2="10" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
-                    <line x1="10" y1="200" x2="200" y2="10" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
+                    <rect x="10" y="10" width="380" height="380" fill="none" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
+                    <line x1="10" y1="10" x2="390" y2="390" stroke="rgba(12,8,5,0.18)" strokeWidth="1" />
+                    <line x1="390" y1="10" x2="10" y2="390" stroke="rgba(12,8,5,0.18)" strokeWidth="1" />
+                    <line x1="200" y1="10" x2="390" y2="200" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
+                    <line x1="390" y1="200" x2="200" y2="390" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
+                    <line x1="200" y1="390" x2="10" y2="200" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
+                    <line x1="10" y1="200" x2="200" y2="10" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
                     {/* Ascendant label */}
-                    <text x="185" y="105" fill="rgba(217,70,239,0.6)" fontSize="11" fontFamily="sans-serif">{t.kundli.asc}</text>
-                    <text x="180" y="125" fill="rgba(255,255,255,0.7)" fontSize="10" fontFamily="sans-serif">
+                    <text x="185" y="105" fill="rgba(217,70,239,0.85)" fontSize="11" fontFamily="sans-serif">{t.kundli.asc}</text>
+                    <text x="180" y="125" fill="rgba(12,8,5,0.78)" fontSize="10" fontFamily="sans-serif">
                       {kundli.ascendant?.substring(0, 3)}
                     </text>
                     {/* Display planets in houses */}
@@ -397,7 +397,7 @@ export default function KundliPage() {
                       if (!pos) return null;
                       const planetText = house.planets?.join(", ") || "";
                       return planetText ? (
-                        <text key={i} x={pos.x} y={pos.y} fill="rgba(255,255,255,0.5)" fontSize="9" fontFamily="sans-serif">
+                        <text key={i} x={pos.x} y={pos.y} fill="rgba(12,8,5,0.66)" fontSize="9" fontFamily="sans-serif">
                           {planetText.length > 12 ? planetText.substring(0, 12) + "..." : planetText}
                         </text>
                       ) : null;
