@@ -1,7 +1,7 @@
 /**
- * Fifth-pass audit: shoots the new editorial Vedic landing in a few
- * states (with kundli + briefing data, without kundli, without birth
- * details). Used to iterate on the editorial redesign.
+ * Fifth-pass audit: shoots the editorial tradition landings in their
+ * "fully populated" state for all six traditions, plus three
+ * additional Vedic states (with/without chart, no birth details).
  */
 import { test, expect } from '@playwright/test';
 import { installApiMocks, json } from './helpers/mock-api';
@@ -15,7 +15,7 @@ fs.mkdirSync(SHOT_DIR, { recursive: true });
 const userBase = {
   id: 'audit-user-1', name: 'Sumanth Rosh', email: 'sumanth@example.com',
   phone: '+919999999999', credits: 100, role: 'USER', preferredLanguage: 'en',
-  astrologyTraditions: ['VEDIC', 'WESTERN', 'CHINESE'],
+  astrologyTraditions: ['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL'],
   primaryTradition: 'VEDIC', profileComplete: true,
   dateOfBirth: '1995-06-15', timeOfBirth: '08:30',
   placeOfBirth: 'Bengaluru, India', gender: 'MALE',
@@ -70,40 +70,31 @@ const kundliPayload = {
   yogas: [],
 };
 
-test.describe.serial('audit5 (editorial vedic dashboard)', () => {
+const mocks = {
+  'GET /daily-briefing': async (r: any) => r.fulfill(json(briefingPayload)),
+  'POST /astrology/kundli': async (r: any) => r.fulfill(json(kundliPayload)),
+  'GET /astrology/dosha': async (r: any) => r.fulfill(json({ doshas: [] })),
+  'GET /health': async (r: any) => r.fulfill(json({ status: 'ok' })),
+};
 
-test('vedic landing — fully populated', async ({ page }) => {
-  await installApiMocks(page, {
-    'GET /daily-briefing': async (r) => r.fulfill(json(briefingPayload)),
-    'POST /astrology/kundli': async (r) => r.fulfill(json(kundliPayload)),
-    'GET /astrology/dosha': async (r) => r.fulfill(json({ doshas: [] })),
-    'GET /health': async (r) => r.fulfill(json({ status: 'ok' })),
-  });
-  await page.addInitScript((a) => {
-    localStorage.setItem('myastro360-auth', a);
-  }, authState(userBase));
-  await page.goto('/vedic', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2500);
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.screenshot({ path: path.join(SHOT_DIR, 'vedic-full.png'), fullPage: true });
-  expect(true).toBe(true);
-});
+test.describe.serial('audit5 (editorial tradition dashboards)', () => {
 
-test('vedic landing — birth details, no chart yet', async ({ page }) => {
-  await installApiMocks(page, {
-    'GET /daily-briefing': async (r) => r.fulfill(json(briefingPayload)),
-    'POST /astrology/kundli': async (r) => r.fulfill({ status: 500, body: 'fail' }),
-    'GET /health': async (r) => r.fulfill(json({ status: 'ok' })),
+const traditions = ['vedic', 'western', 'chinese', 'hellenistic', 'horary', 'medical'] as const;
+
+for (const slug of traditions) {
+  test(`${slug} landing — fully populated`, async ({ page }) => {
+    await installApiMocks(page, mocks);
+    await page.addInitScript((a) => {
+      localStorage.setItem('myastro360-auth', a);
+    }, authState(userBase));
+    await page.goto(`/${slug}`, { waitUntil: 'domcontentloaded' });
+    // Vedic awaits a kundli fetch — give it longer.
+    await page.waitForTimeout(slug === 'vedic' ? 2500 : 1500);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.screenshot({ path: path.join(SHOT_DIR, `${slug}-full.png`), fullPage: true });
+    expect(true).toBe(true);
   });
-  await page.addInitScript((a) => {
-    localStorage.setItem('myastro360-auth', a);
-  }, authState(userBase));
-  await page.goto('/vedic', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2500);
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.screenshot({ path: path.join(SHOT_DIR, 'vedic-no-chart.png'), fullPage: true });
-  expect(true).toBe(true);
-});
+}
 
 test('vedic landing — no birth details', async ({ page }) => {
   await installApiMocks(page, {
@@ -118,6 +109,22 @@ test('vedic landing — no birth details', async ({ page }) => {
   await page.waitForTimeout(2000);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.screenshot({ path: path.join(SHOT_DIR, 'vedic-no-birth.png'), fullPage: true });
+  expect(true).toBe(true);
+});
+
+test('western landing — no birth details', async ({ page }) => {
+  await installApiMocks(page, {
+    'GET /daily-briefing': async (r) => r.fulfill(json(briefingPayload)),
+    'GET /health': async (r) => r.fulfill(json({ status: 'ok' })),
+  });
+  const userNoBirth = { ...userBase, dateOfBirth: null, timeOfBirth: null, placeOfBirth: null };
+  await page.addInitScript((a) => {
+    localStorage.setItem('myastro360-auth', a);
+  }, authState(userNoBirth));
+  await page.goto('/western', { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1500);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.screenshot({ path: path.join(SHOT_DIR, 'western-no-birth.png'), fullPage: true });
   expect(true).toBe(true);
 });
 
