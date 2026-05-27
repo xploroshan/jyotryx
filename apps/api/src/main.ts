@@ -46,17 +46,27 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api');
 
-  // CORS — explicit domain whitelist
+  // CORS — explicit domain whitelist. To add a new production domain,
+  // either append it here or set `CORS_ORIGINS` to a comma-separated
+  // list of additional origins (e.g.
+  // `CORS_ORIGINS=https://foo.com,https://www.foo.com`).
+  const extraOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:8081',
     'https://myastro360-web.vercel.app',
-    'https://myastro360-web.vercel.app',
     'https://www.myastro360.com',
     'https://myastro360.com',
+    'https://www.jyotron.com',
+    'https://jyotron.com',
     process.env.FRONTEND_URL,
     process.env.CORS_ORIGIN,
+    ...extraOrigins,
   ].filter(Boolean) as string[];
 
   app.enableCors({
