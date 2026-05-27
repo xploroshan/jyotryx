@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { ReportProcessor } from './report.processor';
@@ -29,6 +30,29 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE, BRIEFING_QUEUE };
       // per-field `REDIS_HOST` / `REDIS_PORT` config instead of crashing
       // with `TypeError: Invalid URL` at module init.
       useFactory: (config: ConfigService) => {
+        // When DISABLE_QUEUES=true, point BullMQ at a fail-fast dead
+        // endpoint so its workers can never establish a connection in
+        // the first place. The onModuleInit hook below closes workers
+        // *after* they've been constructed, which races BullMQ's own
+        // constructor that creates the Worker and immediately starts
+        // polling — by the time the close lands, polling has already
+        // fired off a few iterations against the real (rate-limited)
+        // Redis. Pointing at 127.0.0.1:1 with `retryStrategy: null`
+        // makes the very first connection attempt fail synchronously
+        // and ioredis never reconnects, so no Redis traffic at all.
+        if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true') {
+          return {
+            connection: {
+              host: '127.0.0.1',
+              port: 1,
+              lazyConnect: true,
+              enableOfflineQueue: false,
+              maxRetriesPerRequest: 0,
+              retryStrategy: () => null,
+              reconnectOnError: () => false,
+            },
+          };
+        }
         const url = process.env.REDIS_URL;
         if (url && /^rediss?:\/\//i.test(url)) {
           try {
@@ -115,4 +139,42 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE, BRIEFING_QUEUE };
   providers: [ReportProcessor, PalmistryProcessor, BroadcastProcessor, BriefingProcessor],
   exports: [BullModule],
 })
-export class QueueModule {}
+export class QueueModule implements OnModuleInit {
+  private readonly logger = new Logger(QueueModule.name);
+
+  constructor(private readonly moduleRef: ModuleRef) {}
+
+  /**
+   * When `DISABLE_QUEUES=true`, close every BullMQ Worker on boot.
+   *
+   * The escape hatch exists because BullMQ workers poll Redis many
+   * times per second across multiple queues; on a rate-limited
+   * provider (e.g. Upstash free-tier daily quota exhausted) this
+   * cascades into a thrashing loop that prevents the health-ready
+   * probe from succeeding and the deployment never goes live.
+   *
+   * Queue *clients* stay registered, so any callers that enqueue
+   * jobs (`broadcastQueue.add(...)`) still compile and inject;
+   * those calls will fail at runtime if Redis is still down, but
+   * the API as a whole boots healthy.
+   */
+  async onModuleInit() {
+    if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() !== 'true') return;
+
+    const processors = [ReportProcessor, PalmistryProcessor, BroadcastProcessor, BriefingProcessor];
+    for (const Processor of processors) {
+      try {
+        const instance = this.moduleRef.get<any>(Processor, { strict: false });
+        const worker = instance?.worker;
+        if (worker && typeof worker.close === 'function') {
+          await worker.close();
+          this.logger.warn(`Disabled queue worker: ${Processor.name}`);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Failed to disable ${Processor.name}: ${(err as Error)?.message ?? err}`,
+        );
+      }
+    }
+  }
+}

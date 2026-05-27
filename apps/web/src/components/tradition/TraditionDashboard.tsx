@@ -17,27 +17,18 @@ import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import { WEB_TRADITIONS, type TraditionId } from '@/lib/traditions';
 import { TraditionGlyph, FeatureGlyph } from '@/components/icons';
+import EditorialHero, { EDITORIAL_TINTS, type EditorialTint } from '@/components/editorial/EditorialHero';
 
-// ─── Per-tradition tint (echoes the hero glow on the dark band) ───────
-const TINT: Record<TraditionId, {
-  /** rgba color for the hero radial glow + section accents. */
-  glow: string;
-  /** Tailwind text class for chips + uppercase tags. */
-  tagText: string;
-  /** Tailwind text class for the orange-on-dark eyebrow tag. */
-  tagTextOnDark: string;
-  /** Tailwind bg class for the eyebrow tag on the dark band. */
-  tagBgOnDark: string;
-  tagBorderOnDark: string;
-  /** Italic accent color inside the headline. */
-  italicOnDark: string;
-}> = {
-  VEDIC:       { glow: 'rgba(255,150,40,0.42)',  tagText: 'text-amber-700',  tagTextOnDark: 'text-amber-300/90', tagBgOnDark: 'bg-amber-500/15',  tagBorderOnDark: 'border-amber-500/30',  italicOnDark: 'text-amber-200' },
-  WESTERN:     { glow: 'rgba(56,189,248,0.42)',  tagText: 'text-sky-700',    tagTextOnDark: 'text-sky-300/90',   tagBgOnDark: 'bg-sky-500/15',    tagBorderOnDark: 'border-sky-500/30',    italicOnDark: 'text-sky-200' },
-  CHINESE:     { glow: 'rgba(239,68,68,0.42)',   tagText: 'text-red-700',    tagTextOnDark: 'text-red-300/90',   tagBgOnDark: 'bg-red-500/15',    tagBorderOnDark: 'border-red-500/30',    italicOnDark: 'text-red-200' },
-  HELLENISTIC: { glow: 'rgba(167,139,250,0.42)', tagText: 'text-violet-700', tagTextOnDark: 'text-violet-300/90',tagBgOnDark: 'bg-violet-500/15', tagBorderOnDark: 'border-violet-500/30', italicOnDark: 'text-violet-200' },
-  HORARY:      { glow: 'rgba(45,212,191,0.42)',  tagText: 'text-teal-700',   tagTextOnDark: 'text-teal-300/90',  tagBgOnDark: 'bg-teal-500/15',   tagBorderOnDark: 'border-teal-500/30',   italicOnDark: 'text-teal-200' },
-  MEDICAL:     { glow: 'rgba(52,211,153,0.42)',  tagText: 'text-emerald-700',tagTextOnDark: 'text-emerald-300/90',tagBgOnDark: 'bg-emerald-500/15',tagBorderOnDark: 'border-emerald-500/30',italicOnDark: 'text-emerald-200' },
+// Each tradition maps to one named editorial tint. The tint owns its
+// colour tokens (see EDITORIAL_TINTS) so the dashboard doesn't have
+// to know hex values.
+const TRADITION_TINT: Record<TraditionId, EditorialTint> = {
+  VEDIC:       'amber',
+  WESTERN:     'sky',
+  CHINESE:     'red',
+  HELLENISTIC: 'violet',
+  HORARY:      'teal',
+  MEDICAL:     'emerald',
 };
 
 export interface TraditionDashboardProps {
@@ -68,7 +59,8 @@ export default function TraditionDashboard({
 }: TraditionDashboardProps) {
   const { t } = useTranslation();
   const cfg = WEB_TRADITIONS[traditionId];
-  const tint = TINT[traditionId];
+  const tintName = TRADITION_TINT[traditionId];
+  const tint = EDITORIAL_TINTS[tintName];
 
   const readLabel = (path: string, fallback?: string): string => {
     const parts = path.split('.');
@@ -86,89 +78,19 @@ export default function TraditionDashboard({
   const comingSoon = readLabel('traditionsUi.comingSoon', 'Coming soon');
 
   const displayHeadline = headline ?? `Your {em}${traditionName.toLowerCase()}{/em} reading`;
-  // Split on {em}…{/em} so the inner span can be styled distinctly.
-  const headlineParts = (() => {
-    const m = displayHeadline.match(/^(.*?)\{em\}(.*?)\{\/em\}(.*?)$/);
-    if (!m) return { before: displayHeadline, em: '', after: '' };
-    return { before: m[1], em: m[2], after: m[3] };
-  })();
 
   return (
     <div>
-      {/* ─── Editorial dark hero band ──────────────────────────────── */}
-      <section className="relative overflow-hidden bg-surface-950 text-white">
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            background:
-              `radial-gradient(ellipse 120% 80% at 80% 20%, ${tint.glow} 0%, ${replaceAlpha(tint.glow, 0.18)} 35%, transparent 65%), radial-gradient(ellipse 80% 60% at 20% 90%, ${replaceAlpha(tint.glow, 0.22)} 0%, transparent 60%)`,
-          }}
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-25"
-          style={{
-            backgroundImage:
-              'radial-gradient(1px 1px at 25% 30%, white 50%, transparent), radial-gradient(1px 1px at 60% 70%, white 50%, transparent), radial-gradient(1.5px 1.5px at 75% 20%, white 50%, transparent), radial-gradient(1px 1px at 40% 80%, white 50%, transparent), radial-gradient(1px 1px at 10% 60%, white 50%, transparent), radial-gradient(1px 1px at 90% 50%, white 50%, transparent)',
-            backgroundSize: '400px 400px',
-          }}
-        />
-
-        <div className="relative mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-20">
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className={`grid place-items-center w-9 h-9 rounded-lg border ${tint.tagBgOnDark} ${tint.tagBorderOnDark} ${tint.tagTextOnDark}`}>
-              <TraditionGlyph id={traditionId} size={18} weight={1.4} />
-            </div>
-            <span className={`text-[11px] font-medium uppercase tracking-[0.24em] ${tint.tagTextOnDark}`}>
-              {traditionName}
-            </span>
-          </div>
-
-          <h1
-            className="font-display font-semibold tracking-[-0.015em] leading-[0.95] text-white"
-            style={{ fontSize: 'clamp(44px, 7vw, 88px)' }}
-          >
-            {headlineParts.before}
-            {headlineParts.em && (
-              <span className={`italic ${tint.italicOnDark}`}>{headlineParts.em}</span>
-            )}
-            {headlineParts.after}
-          </h1>
-
-          {metaLine && (
-            <p className="mt-5 text-sm sm:text-[15px] text-white/60 font-light tracking-wide">
-              {metaLine}
-            </p>
-          )}
-
-          {!metaLine && tagline && (
-            <p className="mt-5 text-base sm:text-lg text-white/65 font-light max-w-2xl leading-relaxed">
-              {tagline}
-            </p>
-          )}
-
-          {chips && chips.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm sm:text-base font-medium">
-              {chips.map((c, i) => (
-                <span key={i} className="flex items-center gap-2">
-                  {i > 0 && <span className="text-white/30 select-none">·</span>}
-                  <span className={c.tone ?? 'text-white/85'}>{c.label}</span>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {heroCta && (
-            <Link
-              href={heroCta.href}
-              className={`mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${tint.tagBgOnDark} ${tint.tagBorderOnDark} ${tint.tagTextOnDark} hover:bg-white/10`}
-            >
-              {heroCta.label} →
-            </Link>
-          )}
-        </div>
-      </section>
+      <EditorialHero
+        tint={tintName}
+        eyebrow={traditionName}
+        eyebrowIcon={<TraditionGlyph id={traditionId} size={18} weight={1.4} />}
+        headline={displayHeadline}
+        metaLine={metaLine}
+        tagline={tagline}
+        chips={chips}
+        heroCta={heroCta}
+      />
 
       {personalContent}
 
@@ -222,11 +144,6 @@ export default function TraditionDashboard({
       </section>
     </div>
   );
-}
-
-/** Replace the alpha component of an rgba(...) string. */
-function replaceAlpha(rgba: string, newAlpha: number): string {
-  return rgba.replace(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/, `rgba($1, $2, $3, ${newAlpha})`);
 }
 
 /* ─── Shared content-band primitives ─────────────────────────────── */

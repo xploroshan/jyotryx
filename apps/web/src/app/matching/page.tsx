@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface PersonForm {
   name: string;
@@ -181,26 +183,16 @@ export default function MatchingPage() {
     pct >= 75 ? "text-emerald-400" : pct >= 50 ? "text-accent-400" : "text-red-400";
 
   return (
-    <div className="relative min-h-screen">
-      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
-      <div className="absolute top-32 left-1/4 w-80 h-80 bg-pink-500/8 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 right-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
+    <div>
+      <FeatureHeader
+        tint="pink"
+        eyebrow={t.matching.badge}
+        eyebrowIcon={<FeatureGlyph slug="matching" size={18} />}
+        headline={`${t.matching.title} {em}${t.matching.titleHighlight}{/em}`}
+        tagline={t.matching.description}
+      />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
-            <span className="text-lg">💞</span>
-            {t.matching.badge}
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            {t.matching.title}{" "}
-            <span className="text-gradient">{t.matching.titleHighlight}</span>
-          </h1>
-          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
-            {t.matching.description}
-          </p>
-        </div>
+      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:py-14 fade-in-up">
 
         {/* Forms */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">

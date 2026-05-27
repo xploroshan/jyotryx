@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface TarotCard {
   name: string;
@@ -54,10 +56,16 @@ export default function TarotPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
-      <h1 className="text-3xl font-bold text-surface-950 mb-2">{t.tarot.title}</h1>
-      <p className="text-[rgba(12,8,5,0.46)] mb-8">{t.tarot.description}</p>
+    <div>
+      <FeatureHeader
+        tint="violet"
+        eyebrow="Tarot"
+        eyebrowIcon={<FeatureGlyph slug="tarot" size={18} />}
+        headline={`{em}${t.tarot.title}{/em}`}
+        tagline={t.tarot.description}
+      />
 
+      <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
       {/* Spread Selection */}
       <div className="grid sm:grid-cols-3 gap-3 mb-6">
         {SPREADS.map((s) => (
@@ -128,6 +136,7 @@ export default function TarotPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

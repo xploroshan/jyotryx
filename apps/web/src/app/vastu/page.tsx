@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface VastuResult {
   propertyType: string;
@@ -58,10 +60,16 @@ export default function VastuPage() {
   const getScoreColor = (score: number) => score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : "text-red-400";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
-      <h1 className="text-3xl font-bold text-surface-950 mb-2">{t.vastu.title}</h1>
-      <p className="text-[rgba(12,8,5,0.46)] mb-8">{t.vastu.description}</p>
+    <div>
+      <FeatureHeader
+        tint="emerald"
+        eyebrow="Vastu"
+        eyebrowIcon={<FeatureGlyph slug="vastu" size={18} />}
+        headline={`{em}${t.vastu.title}{/em}`}
+        tagline={t.vastu.description}
+      />
 
+      <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
       <div className="surface-card p-6 mb-6 space-y-4">
         <div>
           <label className="text-sm text-secondary mb-2 block">{t.vastu.propertyType}</label>
@@ -162,6 +170,7 @@ export default function VastuPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

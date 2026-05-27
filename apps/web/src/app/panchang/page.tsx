@@ -10,6 +10,8 @@ import {
   translateVara,
   translateTimeRange,
 } from "@/i18n/panchang-terms";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface PanchangData {
   date: string;
@@ -84,26 +86,16 @@ export default function PanchangPage() {
     : [];
 
   return (
-    <div className="relative min-h-screen">
-      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
-      <div className="absolute top-32 left-1/4 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 right-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
+    <div>
+      <FeatureHeader
+        tint="amber"
+        eyebrow={t.panchang.badge}
+        eyebrowIcon={<FeatureGlyph slug="panchang" size={18} />}
+        headline={`${t.panchang.title} {em}${t.panchang.titleHighlight}{/em}`}
+        tagline={t.panchang.description}
+      />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
-            <span className="text-lg">🕉️</span>
-            {t.panchang.badge}
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            {t.panchang.title} <span className="text-gradient">{t.panchang.titleHighlight}</span>
-          </h1>
-          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
-            {t.panchang.description}
-          </p>
-        </div>
-
+      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:py-14 fade-in-up">
         {loading && (
           <div className="flex items-center justify-center py-20">
             <svg className="w-8 h-8 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">

@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface NameResult {
   name: string;
@@ -86,17 +88,16 @@ export default function NumerologyPage() {
   const vc = nameResult ? verdictConfig[nameResult.overallVerdict] || verdictConfig.neutral : null;
 
   return (
-    <div className="relative min-h-screen">
-      <div className="relative z-10 mx-auto max-w-3xl px-4 py-12 fade-in-up">
+    <div>
+      <FeatureHeader
+        tint="teal"
+        eyebrow="Numerology"
+        eyebrowIcon={<FeatureGlyph slug="numerology" size={18} />}
+        headline={`{em}${t.numerology.title}{/em} ${t.numerology.titleHighlight}`}
+        tagline={t.numerology.description}
+      />
 
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="text-gradient">{t.numerology.title}</span> {t.numerology.titleHighlight}
-          </h1>
-          <p className="text-[rgba(12,8,5,0.46)] text-sm">{t.numerology.description}</p>
-        </div>
-
+      <div className="relative mx-auto max-w-3xl px-4 py-10 sm:py-14 fade-in-up">
         {/* Tabs */}
         <div className="flex gap-2 mb-8 rounded-xl bg-[rgba(255,252,245,0.78)] p-1 w-fit mx-auto">
           {[
@@ -306,3 +307,4 @@ export default function NumerologyPage() {
     </div>
   );
 }
+
