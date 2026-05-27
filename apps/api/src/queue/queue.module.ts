@@ -30,6 +30,29 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE, BRIEFING_QUEUE };
       // per-field `REDIS_HOST` / `REDIS_PORT` config instead of crashing
       // with `TypeError: Invalid URL` at module init.
       useFactory: (config: ConfigService) => {
+        // When DISABLE_QUEUES=true, point BullMQ at a fail-fast dead
+        // endpoint so its workers can never establish a connection in
+        // the first place. The onModuleInit hook below closes workers
+        // *after* they've been constructed, which races BullMQ's own
+        // constructor that creates the Worker and immediately starts
+        // polling — by the time the close lands, polling has already
+        // fired off a few iterations against the real (rate-limited)
+        // Redis. Pointing at 127.0.0.1:1 with `retryStrategy: null`
+        // makes the very first connection attempt fail synchronously
+        // and ioredis never reconnects, so no Redis traffic at all.
+        if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true') {
+          return {
+            connection: {
+              host: '127.0.0.1',
+              port: 1,
+              lazyConnect: true,
+              enableOfflineQueue: false,
+              maxRetriesPerRequest: 0,
+              retryStrategy: () => null,
+              reconnectOnError: () => false,
+            },
+          };
+        }
         const url = process.env.REDIS_URL;
         if (url && /^rediss?:\/\//i.test(url)) {
           try {
