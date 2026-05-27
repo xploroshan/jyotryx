@@ -46,6 +46,15 @@ export class HealthController {
         }
       },
       async (): Promise<HealthIndicatorResult> => {
+        // When Redis is rate-limited or unreachable (e.g. Upstash daily
+        // quota exhausted) the API can still serve auth, profile, and
+        // most read paths — the queue workers are the only callers that
+        // hard-depend on Redis. Setting `REDIS_HEALTH_REQUIRED=false`
+        // (the default) makes the indicator soft: it logs the failure
+        // and reports degraded, but readiness stays green so Railway
+        // doesn't kill the replica while we fix the upstream provider.
+        const required =
+          (process.env.REDIS_HEALTH_REQUIRED ?? 'false').toLowerCase() === 'true';
         try {
           const pong = await Promise.race<string>([
             this.redis.ping(),
@@ -54,16 +63,18 @@ export class HealthController {
             ),
           ]);
           if (pong !== 'PONG') {
-            throw new HealthCheckError('Redis check failed', {
-              redis: { status: 'down', message: `unexpected response: ${pong}` },
-            });
+            throw new Error(`unexpected response: ${pong}`);
           }
           return { redis: { status: 'up' } };
         } catch (err: any) {
-          if (err instanceof HealthCheckError) throw err;
-          throw new HealthCheckError('Redis check failed', {
-            redis: { status: 'down', message: err?.message || String(err) },
-          });
+          const message = err?.message || String(err);
+          if (required) {
+            throw new HealthCheckError('Redis check failed', {
+              redis: { status: 'down', message },
+            });
+          }
+          // Soft mode: report degraded but keep readiness green.
+          return { redis: { status: 'up', degraded: true, message } };
         }
       },
     ]);

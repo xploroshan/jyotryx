@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { ReportProcessor } from './report.processor';
@@ -115,4 +116,42 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE, BRIEFING_QUEUE };
   providers: [ReportProcessor, PalmistryProcessor, BroadcastProcessor, BriefingProcessor],
   exports: [BullModule],
 })
-export class QueueModule {}
+export class QueueModule implements OnModuleInit {
+  private readonly logger = new Logger(QueueModule.name);
+
+  constructor(private readonly moduleRef: ModuleRef) {}
+
+  /**
+   * When `DISABLE_QUEUES=true`, close every BullMQ Worker on boot.
+   *
+   * The escape hatch exists because BullMQ workers poll Redis many
+   * times per second across multiple queues; on a rate-limited
+   * provider (e.g. Upstash free-tier daily quota exhausted) this
+   * cascades into a thrashing loop that prevents the health-ready
+   * probe from succeeding and the deployment never goes live.
+   *
+   * Queue *clients* stay registered, so any callers that enqueue
+   * jobs (`broadcastQueue.add(...)`) still compile and inject;
+   * those calls will fail at runtime if Redis is still down, but
+   * the API as a whole boots healthy.
+   */
+  async onModuleInit() {
+    if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() !== 'true') return;
+
+    const processors = [ReportProcessor, PalmistryProcessor, BroadcastProcessor, BriefingProcessor];
+    for (const Processor of processors) {
+      try {
+        const instance = this.moduleRef.get<any>(Processor, { strict: false });
+        const worker = instance?.worker;
+        if (worker && typeof worker.close === 'function') {
+          await worker.close();
+          this.logger.warn(`Disabled queue worker: ${Processor.name}`);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Failed to disable ${Processor.name}: ${(err as Error)?.message ?? err}`,
+        );
+      }
+    }
+  }
+}
