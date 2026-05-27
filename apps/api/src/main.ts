@@ -18,6 +18,41 @@ import { PrismaService } from './prisma/prisma.service';
 if (process.env.DATABASE_URL) {
   process.env.DATABASE_URL = PrismaService.normalizeUrl(process.env.DATABASE_URL);
 }
+
+// When DISABLE_QUEUES=true, BullMQ's Queue instances try to connect to
+// a deliberately-dead Redis (see queue.module.ts) and emit `error`
+// events. With no listener, those become uncaughtException /
+// unhandledRejection and crash the Node process — which means Railway
+// restarts the container in a loop and the deploy never goes live.
+//
+// Install process-level guards that swallow only the specific Redis
+// connection errors (ECONNREFUSED 127.0.0.1:1, "Connection is closed").
+// Anything else still propagates and crashes as it should.
+if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true') {
+  const isRedisDisableNoise = (err: unknown): boolean => {
+    const msg = (err as { message?: string })?.message ?? '';
+    const code = (err as { code?: string })?.code ?? '';
+    return (
+      code === 'ECONNREFUSED' ||
+      msg.includes('ECONNREFUSED 127.0.0.1:1') ||
+      msg === 'Connection is closed.' ||
+      msg.startsWith('Connection is closed')
+    );
+  };
+  process.on('unhandledRejection', (reason) => {
+    if (isRedisDisableNoise(reason)) return;
+    // Mirror Node's default: log and crash for anything else.
+    // eslint-disable-next-line no-console
+    console.error('Unhandled rejection:', reason);
+    throw reason;
+  });
+  process.on('uncaughtException', (err) => {
+    if (isRedisDisableNoise(err)) return;
+    // eslint-disable-next-line no-console
+    console.error('Uncaught exception:', err);
+    throw err;
+  });
+}
 if (process.env.DATABASE_READ_REPLICA_URL) {
   process.env.DATABASE_READ_REPLICA_URL = PrismaService.normalizeUrl(
     process.env.DATABASE_READ_REPLICA_URL,
