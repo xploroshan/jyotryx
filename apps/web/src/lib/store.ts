@@ -5,6 +5,10 @@ import { useEffect, useState } from 'react';
 interface User {
   id: string;
   name: string;
+  /** Optional informal name used to address the user across the app
+   *  (greetings, chat, feature-page heroes). Astrology artefacts —
+   *  kundli, matching, dasha reports — keep using the formal `name`. */
+  nickname?: string | null;
   email: string;
   phone?: string | null;
   credits: number;
@@ -34,7 +38,7 @@ interface AuthState {
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateCredits: (credits: number) => void;
   setProfileComplete: (complete: boolean) => void;
-  updateBirthDetails: (details: BirthDetails & { name?: string }) => void;
+  updateBirthDetails: (details: BirthDetails & { name?: string; nickname?: string | null }) => void;
   updateAstrologyTraditions: (traditions: string[]) => void;
   updatePrimaryTradition: (tradition: string | null) => void;
   logout: () => void;
@@ -63,6 +67,7 @@ export const useAuthStore = create<AuthState>()(
             ? {
                 ...state.user,
                 ...(details.name !== undefined && { name: details.name || state.user.name }),
+                ...(details.nickname !== undefined && { nickname: details.nickname }),
                 ...(details.dateOfBirth !== undefined && { dateOfBirth: details.dateOfBirth }),
                 ...(details.timeOfBirth !== undefined && { timeOfBirth: details.timeOfBirth }),
                 ...(details.placeOfBirth !== undefined && { placeOfBirth: details.placeOfBirth }),

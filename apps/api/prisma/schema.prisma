@@ -136,6 +136,12 @@ model User {
   phone               String?              @unique
   passwordHash        String?
   name                String
+  /// Optional informal name used to address the user in greetings,
+  /// the chat surface, and feature-page heroes. The formal `name`
+  /// field is still used as the chart subject inside astrology
+  /// reports (kundli, matching, dasha, etc.) where the user's full
+  /// legal name is what appears on the rendering.
+  nickname            String?
   dateOfBirth         DateTime?
   timeOfBirth         String?
   placeOfBirth        Json? /// { lat: number, lng: number, name: string }

@@ -10,6 +10,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { greetingName } from '@/lib/displayName';
 import TraditionDashboard, {
   SectionHead,
   FactCard,
@@ -17,7 +18,7 @@ import TraditionDashboard, {
 
 export default function HoraryDashboardPage() {
   const user = useAuthStore((s) => s.user);
-  const firstName = user?.name?.split(' ')[0];
+  const firstName = greetingName(user);
 
   const headline = firstName
     ? `${firstName}, {em}ask the chart{/em}`

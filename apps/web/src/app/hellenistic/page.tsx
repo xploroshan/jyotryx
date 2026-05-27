@@ -10,6 +10,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { greetingName } from '@/lib/displayName';
 import { westernSunSign, profectionForAge } from '@/lib/astro/signs';
 import TraditionDashboard, {
   SectionHead,
@@ -23,7 +24,7 @@ export default function HellenisticDashboardPage() {
   const user = useAuthStore((s) => s.user);
   const sign = user?.dateOfBirth ? westernSunSign(user.dateOfBirth) : null;
   const profection = user?.dateOfBirth ? profectionForAge(user.dateOfBirth) : null;
-  const firstName = user?.name?.split(' ')[0];
+  const firstName = greetingName(user);
 
   const headline = firstName
     ? `${firstName}, the {em}${profection ? ORDINAL[profection.house] + ' house' : 'ancient art'}{/em} year`
