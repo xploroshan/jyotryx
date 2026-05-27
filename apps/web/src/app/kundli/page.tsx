@@ -7,6 +7,8 @@ import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/Toast";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface KundliData {
   id: string;
@@ -183,26 +185,16 @@ export default function KundliPage() {
   ];
 
   return (
-    <div className="relative min-h-screen">
-      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
-      <div className="absolute top-32 right-1/4 w-80 h-80 bg-mystic-500/8 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 left-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
+    <div>
+      <FeatureHeader
+        tint="amber"
+        eyebrow={t.kundli.badge}
+        eyebrowIcon={<FeatureGlyph slug="kundli" size={18} />}
+        headline={`${t.kundli.title} {em}${t.kundli.titleHighlight}{/em}`}
+        tagline={t.kundli.description}
+      />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 fade-in-up">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-secondary mb-4">
-            {t.kundli.badge}
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-            {t.kundli.title}{" "}
-            <span className="text-gradient">{t.kundli.titleHighlight}</span>
-          </h1>
-          <p className="text-secondary max-w-xl mx-auto">
-            {t.kundli.description}
-          </p>
-        </div>
-
+      <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14 fade-in-up">
         {/* Birth Details Form */}
         {!kundli && (
           <div className="max-w-lg mx-auto">

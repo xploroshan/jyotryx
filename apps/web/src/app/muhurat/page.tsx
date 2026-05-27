@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 const LOCALE_MAP: Record<string, string> = {
   en: "en-IN", hi: "hi-IN", ta: "ta-IN", te: "te-IN", bn: "bn-IN", mr: "mr-IN",
@@ -80,26 +82,16 @@ export default function MuhuratPage() {
     q === "excellent" ? "text-emerald-400 bg-emerald-500/10" : q === "good" ? "text-blue-400 bg-blue-500/10" : "text-amber-400 bg-amber-500/10";
 
   return (
-    <div className="relative min-h-screen">
-      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
-      <div className="absolute top-32 left-1/3 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
+    <div>
+      <FeatureHeader
+        tint="sky"
+        eyebrow={t.muhurat.badge}
+        eyebrowIcon={<FeatureGlyph slug="muhurat" size={18} />}
+        headline={`{em}${t.muhurat.title}{/em} ${t.muhurat.titleHighlight}`}
+        tagline={t.muhurat.description}
+      />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-12 fade-in-up">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
-            <span className="text-lg">📅</span>
-            {t.muhurat.badge}
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            <span className="text-gradient">{t.muhurat.title}</span> {t.muhurat.titleHighlight}
-          </h1>
-          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
-            {t.muhurat.description}
-          </p>
-        </div>
-
+      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:py-14 fade-in-up">
         {/* Purpose Selection */}
         <div className="surface-card p-6 mb-6">
           <h2 className="text-sm font-medium text-[rgba(12,8,5,0.46)] mb-4">{t.muhurat.selectPurpose}</h2>

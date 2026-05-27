@@ -6,6 +6,8 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import { WEB_TRADITIONS } from '@/lib/traditions';
+import EditorialHero from '@/components/editorial/EditorialHero';
+import { TraditionGlyph } from '@/components/icons';
 
 interface DoshaEntry {
   name: string;
@@ -92,30 +94,23 @@ export default function VedicDoshaPage() {
   const traditionName = (t as any).traditionsUi?.vedic?.name || 'Vedic';
 
   return (
-    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 pt-4 fade-in-up">
-      <nav className="mb-5 text-sm text-[rgba(12,8,5,0.46)]">
-        <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
-          {traditionName}
-        </Link>{' '}
-        <span className="text-[rgba(12,8,5,0.32)]">/</span>{' '}
-        <span className="text-secondary">{featureName}</span>
-      </nav>
+    <div>
+      <EditorialHero
+        tint="amber"
+        eyebrow={`${traditionName} · ${featureName}`}
+        eyebrowIcon={<TraditionGlyph id="VEDIC" size={18} weight={1.4} />}
+        headline={`{em}${featureName}{/em}`}
+        tagline={t.kundli.doshaNote}
+      />
 
-      <section
-        className={`rounded-3xl bg-gradient-to-br ${cfg.heroClass} border border-[rgba(12,8,5,0.08)] px-8 sm:px-10 py-10 mb-8`}
-      >
-        <div className="flex items-center gap-5">
-          <span className="text-4xl leading-none" aria-hidden>
-            🔥
-          </span>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-surface-950 tracking-tight">
-              {featureName}
-            </h1>
-            <p className="mt-2 text-sm text-[rgba(12,8,5,0.55)] leading-relaxed">{t.kundli.doshaNote}</p>
-          </div>
-        </div>
-      </section>
+      <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 fade-in-up">
+        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.46)]">
+          <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
+            {traditionName}
+          </Link>{' '}
+          <span className="text-[rgba(12,8,5,0.32)]">/</span>{' '}
+          <span className="text-secondary">{featureName}</span>
+        </nav>
 
       {!isAuthenticated && (
         <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center">
@@ -186,6 +181,7 @@ export default function VedicDoshaPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
+import FeatureHeader from "@/components/editorial/FeatureHeader";
+import { FeatureGlyph } from "@/components/icons";
 
 interface HoroscopeData {
   overview: string;
@@ -211,26 +213,16 @@ export default function HoroscopePage() {
     : t.horoscope.yearlyCap;
 
   return (
-    <div className="relative min-h-screen">
-      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
-      <div className="absolute top-32 left-1/3 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
+    <div>
+      <FeatureHeader
+        tint="violet"
+        eyebrow={t.horoscope.badge}
+        eyebrowIcon={<FeatureGlyph slug="horoscope" size={18} />}
+        headline={`${t.horoscope.title} {em}${t.horoscope.titleHighlight}{/em}`}
+        tagline={t.horoscope.description}
+      />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 fade-in-up">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full surface-card text-sm text-secondary mb-4">
-            <span className="text-lg">{currentSign.symbol}</span>
-            {t.horoscope.badge}
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-            {t.horoscope.title} <span className="text-gradient">{t.horoscope.titleHighlight}</span>
-          </h1>
-          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
-            {t.horoscope.description}
-          </p>
-        </div>
-
+      <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14 fade-in-up">
         {/* Tradition Tabs - only shown when user has multiple traditions */}
         {isMultiTradition && (
           <div className="flex justify-center mb-8">
