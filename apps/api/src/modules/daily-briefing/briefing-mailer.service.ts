@@ -59,6 +59,20 @@ export class BriefingMailerService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    // When DISABLE_QUEUES=true, the BullMQ Queue this service injects
+    // is pointed at a dead-port sentinel (see queue.module.ts). Both
+    // `removeRepeatableByKey` and `add` would `await` Redis commands
+    // that never resolve, which hangs NestJS bootstrap → app never
+    // calls app.listen() → Railway healthcheck fails. Skip the
+    // scheduler init entirely; daily-briefings are intentionally off
+    // until queues are re-enabled.
+    if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true') {
+      this.logger.warn(
+        'DISABLE_QUEUES=true — skipping daily-briefing scheduler init.',
+      );
+      return;
+    }
+
     // Register the repeatable cron only once; BullMQ deduplicates by
     // (job name, repeat options), so multiple replicas calling this on
     // boot is safe.
