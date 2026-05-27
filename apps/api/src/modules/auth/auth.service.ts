@@ -33,6 +33,7 @@ import * as admin from 'firebase-admin';
 type PrismaUser = {
   id: string;
   name: string;
+  nickname?: string | null;
   email: string;
   phone: string | null;
   credits: number;
@@ -54,6 +55,7 @@ export interface AuthResponse {
   user: {
     id: string;
     name: string;
+    nickname?: string | null;
     email: string;
     phone?: string | null;
     credits: number;
@@ -81,6 +83,7 @@ function toAuthUser(user: PrismaUser & { preferredLanguage?: string }): AuthResp
   return {
     id: user.id,
     name: user.name,
+    nickname: (user as any).nickname ?? null,
     email: user.email,
     phone: user.phone,
     credits: user.credits,

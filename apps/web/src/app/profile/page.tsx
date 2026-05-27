@@ -13,6 +13,8 @@ import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSe
 interface UserProfile {
   id: string;
   name: string;
+  /** Optional informal name. See lib/displayName.ts for usage. */
+  nickname?: string | null;
   email: string;
   phone?: string | null;
   dateOfBirth?: string | null;
@@ -55,6 +57,7 @@ export default function ProfilePage() {
 
   // Profile form
   const [name, setName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
@@ -95,6 +98,7 @@ export default function ProfilePage() {
       setCreditInfo(creditsData);
       setHasPassword(authStatus.hasPassword);
       setName(profileData.name || "");
+      setNickname(profileData.nickname || "");
       setPhone(profileData.phone || "");
       setDob(profileData.dateOfBirth ? profileData.dateOfBirth.split("T")[0] : "");
       setTob(profileData.timeOfBirth || "");
@@ -106,6 +110,7 @@ export default function ProfilePage() {
       updateCredits(profileData.credits);
       updateBirthDetails({
         name: profileData.name,
+        nickname: profileData.nickname ?? null,
         dateOfBirth: profileData.dateOfBirth ? profileData.dateOfBirth.split("T")[0] : null,
         timeOfBirth: profileData.timeOfBirth || null,
         placeOfBirth: typeof profileData.placeOfBirth === "object" ? profileData.placeOfBirth?.name || null : profileData.placeOfBirth || null,
@@ -158,6 +163,9 @@ export default function ProfilePage() {
         "/users/me",
         {
           name: name || undefined,
+          // Always send nickname (even blank) so the user can clear it.
+          // The backend treats `nickname: ""` → null in the DB.
+          nickname: nickname.trim(),
           phone: phone || undefined,
           dateOfBirth: dob || undefined,
           timeOfBirth: tob || undefined,
@@ -174,6 +182,7 @@ export default function ProfilePage() {
       setProfileComplete(updated.profileComplete);
       updateBirthDetails({
         name: updated.name,
+        nickname: updated.nickname ?? null,
         dateOfBirth: updated.dateOfBirth ? updated.dateOfBirth.split("T")[0] : null,
         timeOfBirth: updated.timeOfBirth || null,
         placeOfBirth: typeof updated.placeOfBirth === "object" ? updated.placeOfBirth?.name || null : updated.placeOfBirth || null,
@@ -410,6 +419,17 @@ export default function ProfilePage() {
                     <label htmlFor="profile-name" className="block text-xs font-medium text-emphasis mb-2">{t.profile.name}</label>
                     <input id="profile-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
+                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.55)]">
+                      {t.profile.nameHint}
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="profile-nickname" className="block text-xs font-medium text-emphasis mb-2">{t.profile.nickname}</label>
+                    <input id="profile-nickname" type="text" autoComplete="nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.profile.nicknamePlaceholder}
+                      className="w-full px-4 py-3 rounded-xl surface-input" />
+                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.55)]">
+                      {t.profile.nicknameHint}
+                    </p>
                   </div>
                   <div>
                     <label htmlFor="profile-phone" className="block text-xs font-medium text-emphasis mb-2">{t.profile.phoneNumberLabel}</label>

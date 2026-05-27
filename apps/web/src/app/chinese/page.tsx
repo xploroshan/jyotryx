@@ -9,6 +9,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { greetingName } from '@/lib/displayName';
 import { chineseZodiac, chineseZodiacToday } from '@/lib/astro/signs';
 import TraditionDashboard, {
   SectionHead,
@@ -44,7 +45,7 @@ export default function ChineseDashboardPage() {
   const user = useAuthStore((s) => s.user);
   const sign = user?.dateOfBirth ? chineseZodiac(user.dateOfBirth) : null;
   const todaySign = chineseZodiacToday();
-  const firstName = user?.name?.split(' ')[0];
+  const firstName = greetingName(user);
 
   const headline = firstName
     ? `${firstName}, born in {em}the year of the ${sign?.animal ?? '…'}{/em}`

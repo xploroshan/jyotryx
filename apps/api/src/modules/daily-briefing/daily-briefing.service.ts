@@ -381,7 +381,14 @@ export class DailyBriefingService {
     locale?: string,
   ): Promise<UserBriefingOverlay> {
     const profession = (user?.profession as string) || 'OTHER';
-    const userName = user?.name?.split(' ')[0] || 'there';
+    // Prefer the user's informal nickname for the greeting ("Good
+    // Morning, Sums!"); fall back to the first name from their formal
+    // `name`, then to "there" if neither exists. The formal name is
+    // still used inside astrology artefacts (kundli, matching, etc.).
+    const userName =
+      ((user as any)?.nickname as string | undefined)?.trim() ||
+      user?.name?.split(' ')[0] ||
+      'there';
 
     const hour = today.getHours();
     const timeKey = hour < 12 ? 'greeting.morning' : hour < 17 ? 'greeting.afternoon' : 'greeting.evening';

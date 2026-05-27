@@ -11,6 +11,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { greetingName } from '@/lib/displayName';
 import {
   westernSunSign,
   westernSunSignToday,
@@ -32,7 +33,7 @@ export default function MedicalDashboardPage() {
   const user = useAuthStore((s) => s.user);
   const sign = user?.dateOfBirth ? westernSunSign(user.dateOfBirth) : null;
   const todaySign = westernSunSignToday();
-  const firstName = user?.name?.split(' ')[0];
+  const firstName = greetingName(user);
   const bodyPart = sign ? SIGN_BODY_PART[sign.name] : null;
   const humour = sign ? HUMOUR_BY_ELEMENT[sign.element] : null;
 

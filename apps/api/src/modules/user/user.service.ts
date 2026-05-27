@@ -4,6 +4,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 export interface UserProfile {
   id: string;
   name: string;
+  /** Optional informal name. See schema.prisma User.nickname. */
+  nickname?: string | null;
   email: string;
   phone?: string | null;
   dateOfBirth?: string | null;
@@ -52,6 +54,8 @@ const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 
 
 export interface UpdateProfileDto {
   name?: string;
+  /** Informal name. Empty string clears the nickname. */
+  nickname?: string | null;
   phone?: string;
   dateOfBirth?: string;
   timeOfBirth?: string;
@@ -85,6 +89,7 @@ export class UserService {
     return {
       id: user.id,
       name: user.name,
+      nickname: (user as any).nickname ?? null,
       email: user.email,
       phone: user.phone,
       dateOfBirth: user.dateOfBirth?.toISOString() ?? null,
@@ -134,6 +139,10 @@ export class UserService {
       where: { id: userId },
       data: {
         ...(dto.name && { name: dto.name }),
+        // Nickname is intentionally nullable — an empty string from
+        // the client clears it (so the UI can drop the informal
+        // greeting and fall back to the formal name).
+        ...(dto.nickname !== undefined && { nickname: dto.nickname?.trim() || null }),
         ...(dto.phone && { phone: dto.phone }),
         ...(dto.dateOfBirth && { dateOfBirth: new Date(dto.dateOfBirth) }),
         ...(dto.timeOfBirth && { timeOfBirth: dto.timeOfBirth }),
@@ -150,6 +159,7 @@ export class UserService {
     return {
       id: user.id,
       name: user.name,
+      nickname: (user as any).nickname ?? null,
       email: user.email,
       phone: user.phone,
       dateOfBirth: user.dateOfBirth?.toISOString() ?? null,

@@ -23,6 +23,7 @@ import TraditionDashboard, {
   MiniStat,
   FactCard,
 } from '@/components/tradition/TraditionDashboard';
+import { greetingName } from '@/lib/displayName';
 import {
   readBriefingCacheSync,
   writeBriefingCache,
@@ -159,7 +160,7 @@ export default function VedicDashboardPage() {
       .finally(() => setKundliLoading(false));
   }, [isHydrated, isAuthenticated, accessToken, user, kundli, kundliLoading]);
 
-  const firstName = user?.name?.split(' ')[0];
+  const firstName = greetingName(user);
   const ascendant = kundli?.ascendant;
   const moonSign = kundli?.moonSign;
   const sunSign = kundli?.sunSign;

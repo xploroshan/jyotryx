@@ -72,6 +72,39 @@ function clearStoredReferral(): void {
   }
 }
 
+// "Remember me" — persists only the email/username. The password is
+// intentionally NOT stored here; the browser's built-in password
+// manager handles it via the input's autoComplete attribute, which
+// keeps the secret in the OS keystore instead of plaintext localStorage.
+const REMEMBERED_EMAIL_KEY = "myastro360.rememberedEmail";
+
+function loadRememberedEmail(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveRememberedEmail(email: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function clearRememberedEmail(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 function AuthPageContent() {
   const { t, setLocale } = useTranslation();
   const router = useRouter();
@@ -141,6 +174,14 @@ function AuthPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  // "Remember me" persists the email so it's pre-filled on next visit.
+  // The password itself is never stored in localStorage — storing
+  // plaintext credentials is unsafe; we let the browser's built-in
+  // password manager handle the password (the autoComplete attrs on
+  // the input below give it the hook it needs). Defaults to true on
+  // first visit so users who tick "remember me" don't have to do it
+  // every session.
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -203,6 +244,20 @@ function AuthPageContent() {
   useEffect(() => {
     if (!otpSent) otpAutoSubmittedRef.current = false;
   }, [otpSent]);
+
+  // Hydrate "Remember me" from localStorage on mount. If we've stashed
+  // an email from a previous login, prefill it and pre-check the box
+  // so the user can hit Log in without retyping. The browser handles
+  // the password autofill (we never persist that ourselves).
+  useEffect(() => {
+    const remembered = loadRememberedEmail();
+    if (remembered) {
+      setEmail(remembered);
+      setRememberMe(true);
+    } else {
+      setRememberMe(false);
+    }
+  }, []);
 
   /**
    * Translate an ApiError/FirebaseError/Error into a user-facing string and
@@ -444,6 +499,11 @@ function AuthPageContent() {
       // stone-cold so we don't abort before that.
       const res = await api.post<any>(endpoint, body, { timeoutMs: 30_000 });
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+      // Persist or clear the remembered email based on the checkbox.
+      // We only ever store the email; the password stays with the
+      // browser's password manager.
+      if (rememberMe) saveRememberedEmail(email);
+      else clearRememberedEmail();
     // Promote any anonymous-cookie paywall assignment to this user id and
     // mark the conversion. Both calls are no-ops on a return-login (the
     // backend's `convertedAt IS NULL` guard makes this idempotent), so
@@ -848,7 +908,16 @@ function AuthPageContent() {
                     </div>
 
                     {tab === "login" && (
-                      <div className="text-right -mt-1">
+                      <div className="flex items-center justify-between gap-3 -mt-1">
+                        <label className="flex items-center gap-2 text-[12px] text-secondary cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="w-3.5 h-3.5 rounded border-[rgba(26,20,16,0.20)] text-primary-600 focus:ring-primary-500 focus:ring-1"
+                          />
+                          {t.auth.rememberMe}
+                        </label>
                         <button
                           type="button"
                           onClick={() => { setShowForgotPassword(true); setResetEmail(email); setError(""); setSuccess(""); }}
