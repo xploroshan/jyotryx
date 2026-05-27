@@ -249,7 +249,10 @@ export default function ProfilePage() {
       const res = await api.post<{ message: string }>(
         "/auth/change-password",
         { currentPassword, newPassword },
-        { token: accessToken! }
+        // skipAuthRefreshOn401: a 401 here means "current password
+        // was wrong", not "access token expired" — surface the
+        // error instead of bouncing the user to /auth.
+        { token: accessToken!, skipAuthRefreshOn401: true }
       );
       setSuccess(res.message);
       setCurrentPassword("");
