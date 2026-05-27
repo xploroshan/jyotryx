@@ -11,6 +11,13 @@ interface ApiOptions extends RequestInit {
   token?: string;
   /** Abort the request after this many ms. Defaults to 30s. */
   timeoutMs?: number;
+  /** Skip the auto-refresh-on-401 flow. Pass `true` for endpoints
+   *  where a 401 carries domain meaning rather than "access token
+   *  expired" — e.g. /auth/change-password returns 401 when the
+   *  user typed their current password wrong, and treating that as
+   *  a stale-token signal would log the user out instead of
+   *  surfacing the error. */
+  skipAuthRefreshOn401?: boolean;
 }
 
 /**
@@ -109,7 +116,7 @@ async function tryRefreshToken(): Promise<string | null> {
 }
 
 async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { token, timeoutMs = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options;
+  const { token, timeoutMs = DEFAULT_TIMEOUT_MS, skipAuthRefreshOn401, ...fetchOptions } = options;
 
   const headers: Record<string, string> = {
     ...getAuthHeaders(token),
@@ -122,8 +129,9 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
     timeoutMs,
   );
 
-  // Auto-refresh on 401 (expired access token)
-  if (response.status === 401) {
+  // Auto-refresh on 401 (expired access token) — skipped for
+  // endpoints that 401 on credential mismatch rather than stale token.
+  if (response.status === 401 && !skipAuthRefreshOn401) {
     const newToken = await tryRefreshToken();
     if (newToken) {
       headers["Authorization"] = `Bearer ${newToken}`;
