@@ -161,13 +161,27 @@ export class QueueModule implements OnModuleInit {
   async onModuleInit() {
     if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() !== 'true') return;
 
+    // `worker.close()` tries to acknowledge shutdown over Redis. With our
+    // dead-port sentinel that never responds, the close() promise will
+    // hang forever — and since NestJS awaits every onModuleInit before
+    // calling `app.listen()`, the API never binds to its port and
+    // Railway's edge never sees a healthy replica.
+    //
+    // Race each close() against a short timeout, and DON'T `await` the
+    // whole loop on the slow path — fire close() in the background and
+    // move on. The dead-port connection already keeps Workers from
+    // doing any real work; the close() is defence-in-depth.
     const processors = [ReportProcessor, PalmistryProcessor, BroadcastProcessor, BriefingProcessor];
     for (const Processor of processors) {
       try {
         const instance = this.moduleRef.get<any>(Processor, { strict: false });
         const worker = instance?.worker;
         if (worker && typeof worker.close === 'function') {
-          await worker.close();
+          // Fire-and-forget. Swallow rejections (the connection is dead).
+          Promise.race([
+            worker.close().catch(() => {}),
+            new Promise<void>((resolve) => setTimeout(resolve, 500)),
+          ]).catch(() => {});
           this.logger.warn(`Disabled queue worker: ${Processor.name}`);
         }
       } catch (err) {
