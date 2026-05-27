@@ -46,10 +46,20 @@ import { MetricsModule } from './metrics/metrics.module';
     EphemerisModule,
     ThrottlerModule.forRootAsync({
       inject: [REDIS_CLIENT],
-      useFactory: (redis: Redis) => ({
-        throttlers: [{ ttl: 60000, limit: 60 }],
-        storage: new ThrottlerStorageRedisService(redis),
-      }),
+      useFactory: (redis: Redis) => {
+        // ThrottlerGuard runs on every request (registered as APP_GUARD
+        // below). With a Redis-backed store, a rate-limited or
+        // unreachable Upstash makes every request 500 — including
+        // Railway's healthcheck, which then never sees a 200 and the
+        // deploy stays unrouted. When DISABLE_QUEUES=true we fall back
+        // to in-memory throttling (per-replica, so the limit is softer,
+        // but the API actually serves traffic).
+        const disable = (process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true';
+        return {
+          throttlers: [{ ttl: 60000, limit: 60 }],
+          ...(disable ? {} : { storage: new ThrottlerStorageRedisService(redis) }),
+        };
+      },
     }),
     PrismaModule,
     OpenAIModule,
