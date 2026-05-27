@@ -821,9 +821,23 @@ export class AuthService {
   }
 
   private async checkLoginAttempts(email: string): Promise<void> {
-    const locked = await this.redis.get(`login:lock:${email}`);
+    // Redis-backed lockout — best-effort. When Redis is unreachable
+    // (e.g. Upstash rate-limited) treat the account as "not locked"
+    // rather than 500-ing the login. Trading slightly weaker
+    // brute-force protection for the API actually responding to
+    // logins; password validation against the DB still applies.
+    let locked: string | null = null;
+    try {
+      locked = await this.redis.get(`login:lock:${email}`);
+    } catch (err) {
+      this.logger.warn(
+        `Login-lock check skipped (Redis unavailable): ${(err as Error)?.message ?? err}`,
+      );
+      return;
+    }
     if (locked) {
-      const ttl = await this.redis.ttl(`login:lock:${email}`);
+      let ttl = 0;
+      try { ttl = await this.redis.ttl(`login:lock:${email}`); } catch { /* best-effort */ }
       const minutesLeft = Math.ceil(ttl / 60);
       throw new ForbiddenException(
         `Account temporarily locked due to too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.`,
@@ -833,18 +847,32 @@ export class AuthService {
 
   private async recordFailedAttempt(email: string): Promise<void> {
     const key = `login:fail:${email}`;
-    const count = await this.redis.incr(key);
-    await this.redis.expire(key, LOCKOUT_SECONDS);
+    try {
+      const count = await this.redis.incr(key);
+      await this.redis.expire(key, LOCKOUT_SECONDS);
 
-    if (count >= MAX_LOGIN_ATTEMPTS) {
-      await this.redis.set(`login:lock:${email}`, '1', 'EX', LOCKOUT_SECONDS);
-      await this.redis.del(key);
-      this.logger.warn(`Account locked for ${email} after ${MAX_LOGIN_ATTEMPTS} failed attempts`);
+      if (count >= MAX_LOGIN_ATTEMPTS) {
+        await this.redis.set(`login:lock:${email}`, '1', 'EX', LOCKOUT_SECONDS);
+        await this.redis.del(key);
+        this.logger.warn(`Account locked for ${email} after ${MAX_LOGIN_ATTEMPTS} failed attempts`);
+      }
+    } catch (err) {
+      // Don't propagate — the caller is already returning a 401
+      // UnauthorizedException; we just lose the fail-count bump.
+      this.logger.warn(
+        `Failed-attempt tracking skipped (Redis unavailable): ${(err as Error)?.message ?? err}`,
+      );
     }
   }
 
   private async clearLoginAttempts(email: string): Promise<void> {
-    await this.redis.del(`login:fail:${email}`, `login:lock:${email}`);
+    try {
+      await this.redis.del(`login:fail:${email}`, `login:lock:${email}`);
+    } catch (err) {
+      this.logger.warn(
+        `Clearing login attempts skipped (Redis unavailable): ${(err as Error)?.message ?? err}`,
+      );
+    }
   }
 
   /**
@@ -916,14 +944,27 @@ export class AuthService {
     // `rt:*` key. Writing it here means both fresh logins and
     // refresh-rotation land in the set; the TTL is bumped every time
     // so the set's lifetime tracks the longest-living family.
+    //
+    // Best-effort: when Redis is unreachable, log a warning and still
+    // hand out tokens. The user gets a working access token for its
+    // TTL; refresh-rotation simply won't find the family record and
+    // will reject, so the user has to re-login once the access token
+    // expires. Preferable to failing login entirely.
     const ttlSeconds = this.parseExpiryToSeconds(refreshExpiresIn);
-    const pipeline = this.redis.pipeline();
-    pipeline.set(`rt:${jti}`, JSON.stringify({ userId, familyId, used: false }), 'EX', ttlSeconds);
-    pipeline.sadd(`rt:family:${familyId}`, jti);
-    pipeline.expire(`rt:family:${familyId}`, ttlSeconds);
-    pipeline.sadd(`rt:user-families:${userId}`, familyId);
-    pipeline.expire(`rt:user-families:${userId}`, ttlSeconds);
-    await pipeline.exec();
+    try {
+      const pipeline = this.redis.pipeline();
+      pipeline.set(`rt:${jti}`, JSON.stringify({ userId, familyId, used: false }), 'EX', ttlSeconds);
+      pipeline.sadd(`rt:family:${familyId}`, jti);
+      pipeline.expire(`rt:family:${familyId}`, ttlSeconds);
+      pipeline.sadd(`rt:user-families:${userId}`, familyId);
+      pipeline.expire(`rt:user-families:${userId}`, ttlSeconds);
+      await pipeline.exec();
+    } catch (err) {
+      this.logger.warn(
+        `Refresh-token persistence skipped (Redis unavailable): ${(err as Error)?.message ?? err}. ` +
+          `Tokens issued without rotation tracking — refresh will fail and user must re-login at access-token expiry.`,
+      );
+    }
 
     return {
       accessToken,
