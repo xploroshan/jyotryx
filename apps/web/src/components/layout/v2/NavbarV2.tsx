@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
+import { greetingName } from "@/lib/displayName";
 import { LogoMark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useTranslation } from "@/i18n";
@@ -229,9 +230,9 @@ export default function NavbarV2() {
                 <Link
                   href="/profile"
                   className={`${navLink} ${navLinkInactive} max-w-[12ch] truncate`}
-                  title={user?.name}
+                  title={user?.name ?? undefined}
                 >
-                  {user?.name}
+                  {greetingName(user)}
                 </Link>
                 <button onClick={logout} className={`${navLink} ${navLinkInactive}`}>
                   {t.common.logout}
@@ -353,8 +354,9 @@ export default function NavbarV2() {
                   href="/profile"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center px-3 h-10 rounded-md text-[14px] text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+                  title={user?.name ?? undefined}
                 >
-                  {user?.name}
+                  {greetingName(user)}
                 </Link>
                 <button
                   onClick={() => {

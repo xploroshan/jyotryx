@@ -69,6 +69,13 @@ describe('DailyBriefingService', () => {
       expect(result.greeting).toContain('Test');
     });
 
+    it('should prefer the informal nickname over the formal name in the greeting', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, name: 'Sumanth Roshan Raj Manuel', nickname: 'Roshan' });
+      const result = await service.getDailyBriefing('test-uuid');
+      expect(result.greeting).toContain('Roshan');
+      expect(result.greeting).not.toContain('Sumanth');
+    });
+
     it('should return profession-specific insight for SOFTWARE', async () => {
       prisma.user.findUnique.mockResolvedValue({ ...mockUser, profession: 'SOFTWARE' });
       const result = await service.getDailyBriefing('test-uuid');
