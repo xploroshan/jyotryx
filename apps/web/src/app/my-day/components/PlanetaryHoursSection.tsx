@@ -16,13 +16,13 @@ interface PlanetaryHour {
 }
 
 const planetIcons: Record<string, { symbol: string; color: string; bg: string }> = {
-  Sun: { symbol: "\u2609", color: "text-amber-400", bg: "bg-amber-500/10" },
-  Moon: { symbol: "\u263d", color: "text-slate-300", bg: "bg-slate-400/10" },
-  Mars: { symbol: "\u2642", color: "text-red-400", bg: "bg-red-500/10" },
-  Mercury: { symbol: "\u263f", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  Jupiter: { symbol: "\u2643", color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  Venus: { symbol: "\u2640", color: "text-pink-400", bg: "bg-pink-500/10" },
-  Saturn: { symbol: "\u2644", color: "text-indigo-400", bg: "bg-indigo-500/10" },
+  Sun: { symbol: "\u2609", color: "text-amber-700", bg: "bg-amber-500/10" },
+  Moon: { symbol: "\u263d", color: "text-slate-700", bg: "bg-slate-400/10" },
+  Mars: { symbol: "\u2642", color: "text-red-700", bg: "bg-red-500/10" },
+  Mercury: { symbol: "\u263f", color: "text-emerald-700", bg: "bg-emerald-500/10" },
+  Jupiter: { symbol: "\u2643", color: "text-yellow-700", bg: "bg-yellow-500/10" },
+  Venus: { symbol: "\u2640", color: "text-pink-700", bg: "bg-pink-500/10" },
+  Saturn: { symbol: "\u2644", color: "text-indigo-700", bg: "bg-indigo-500/10" },
 };
 
 export function PlanetaryHoursSection({
@@ -56,10 +56,10 @@ export function PlanetaryHoursSection({
   return (
     <div className="mb-8 p-5 rounded-2xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase tracking-wider">{t.myDay.planetaryHours}</h3>
+        <h3 className="text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase tracking-wider">{t.myDay.planetaryHours}</h3>
         <button
           onClick={() => setShowAllHours(!showAllHours)}
-          className="text-xs text-primary-400 hover:text-primary-300 transition-colors"
+          className="text-xs text-primary-700 hover:text-primary-600 transition-colors"
         >
           {showAllHours ? t.myDay.showRelevant : t.myDay.viewAll24}
         </button>
@@ -84,14 +84,14 @@ export function PlanetaryHoursSection({
                 <span className={`text-sm ${pi.color}`}>{pi.symbol}</span>
               </div>
               <span className={`text-sm font-medium w-16 ${pi.color}`}>{translatePlanet(hour.planet, t)}</span>
-              <span className="text-xs text-[rgba(12,8,5,0.36)] w-28 tabular-nums">
+              <span className="text-xs text-[rgba(12,8,5,0.58)] w-28 tabular-nums">
                 {translateTimeRange(hour.startTime, locale)} – {translateTimeRange(hour.endTime, locale)}
               </span>
-              <span className="text-xs text-[rgba(12,8,5,0.46)] flex-1 hidden sm:block">
+              <span className="text-xs text-[rgba(12,8,5,0.62)] flex-1 hidden sm:block">
                 {hour.activities.slice(0, 2).map(a => translateActivity(a, t)).join(", ")}
               </span>
               {isCurrent && (
-                <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-500/15 text-primary-300">
+                <span className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-500/15 text-primary-700">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-50" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-400" />
