@@ -10,8 +10,8 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useTranslation } from "@/i18n";
 import {
   TRADITION_LIST,
-  SLUG_TO_TRADITION,
   WEB_TRADITIONS,
+  resolveTraditionFromPath,
   type TraditionId,
 } from "@/lib/traditions";
 import { TraditionGlyph } from "@/components/icons";
@@ -26,7 +26,7 @@ import { api } from "@/lib/api";
 export default function NavbarV2() {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
-  const { user, isAuthenticated, logout, updatePrimaryTradition } = useAuthStore();
+  const { user, isAuthenticated, logout, updatePrimaryTradition, activeTradition, setActiveTradition } = useAuthStore();
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -66,20 +66,29 @@ export default function NavbarV2() {
     setTradOpen(false);
   }, [pathname]);
 
-  const firstSegment = pathname.split("/").filter(Boolean)[0] ?? "";
-  // `activeTrad` is the tradition of the *current page* — it drives the
-  // active-page highlight on the switcher button, so it stays URL-only.
-  const activeTrad: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
-  // `selectedTrad` is the tradition the user has *chosen*. It persists
-  // across cross-cutting pages (My Day, home, …) by falling back to the
-  // stored `primaryTradition`, so the switcher keeps showing the selection
-  // and the feature bar keeps its sub-features. Gated on hydration to
-  // avoid an SSR/client mismatch.
+  // `activeTrad` = the tradition of the *current page*, resolved from both
+  // tradition dashboards (/vedic) and feature pages (/horoscope → Vedic).
+  // Drives the active-page highlight on the switcher button.
+  const activeTrad = resolveTraditionFromPath(pathname);
   const hydrated = useAuthHydrated();
-  const storedTrad = hydrated ? ((user?.primaryTradition as TraditionId | null) ?? null) : null;
+  // `selectedTrad` = what the switcher shows. On tradition-agnostic pages
+  // (My Day, home, …) it falls back to the last tradition browsed, then
+  // the saved `primaryTradition`, so the selection persists. Gated on
+  // hydration to avoid an SSR/client mismatch.
+  const remembered = hydrated
+    ? ((activeTradition as TraditionId | null) ?? (user?.primaryTradition as TraditionId | null) ?? null)
+    : null;
   const selectedTrad: TraditionId | null =
-    activeTrad ?? (storedTrad && WEB_TRADITIONS[storedTrad] ? storedTrad : null);
+    activeTrad ?? (remembered && WEB_TRADITIONS[remembered] ? remembered : null);
   const isMyDay = pathname.startsWith("/my-day");
+
+  // Remember the tradition context as the user navigates tradition/feature
+  // pages, so neutral pages (My Day, home) can recall it. Kept separate
+  // from the saved `primaryTradition` preference, which only the switcher
+  // dropdown and the profile editor change.
+  useEffect(() => {
+    if (activeTrad && activeTrad !== activeTradition) setActiveTradition(activeTrad);
+  }, [activeTrad, activeTradition, setActiveTradition]);
 
   const readLabel = (path: string, fallback: string): string => {
     const parts = path.split(".");
