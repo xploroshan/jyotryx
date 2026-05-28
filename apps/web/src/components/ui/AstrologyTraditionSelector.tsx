@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/i18n";
+import { TraditionGlyph } from "@/components/icons";
 
 interface TraditionOption {
   id: string;
@@ -33,15 +34,8 @@ export default function AstrologyTraditionSelector({
       id: "VEDIC",
       name: t.traditions.vedic,
       description: t.traditions.vedicDesc,
-      icon: (
-        <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="18" fontFamily="serif">
-            Om
-          </text>
-        </svg>
-      ),
-      color: "text-amber-400",
+      icon: <TraditionGlyph id="VEDIC" size={40} />,
+      color: "text-amber-600",
       borderColor: "border-amber-500/50",
       glowColor: "shadow-amber-500/20",
       isAvailable: true,
@@ -50,18 +44,8 @@ export default function AstrologyTraditionSelector({
       id: "WESTERN",
       name: t.traditions.western,
       description: t.traditions.westernDesc,
-      icon: (
-        <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-          <circle cx="20" cy="20" r="12" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="20" y1="2" x2="20" y2="38" stroke="currentColor" strokeWidth="1" opacity="0.15" />
-          <line x1="2" y1="20" x2="38" y2="20" stroke="currentColor" strokeWidth="1" opacity="0.15" />
-          <text x="20" y="25" textAnchor="middle" fill="currentColor" fontSize="14">
-            &#9790;
-          </text>
-        </svg>
-      ),
-      color: "text-sky-400",
+      icon: <TraditionGlyph id="WESTERN" size={40} />,
+      color: "text-sky-600",
       borderColor: "border-sky-500/50",
       glowColor: "shadow-sky-500/20",
       isAvailable: true,
@@ -70,15 +54,8 @@ export default function AstrologyTraditionSelector({
       id: "CHINESE",
       name: t.traditions.chinese,
       description: t.traditions.chineseDesc,
-      icon: (
-        <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16">
-            &#40845;
-          </text>
-        </svg>
-      ),
-      color: "text-red-400",
+      icon: <TraditionGlyph id="CHINESE" size={40} />,
+      color: "text-red-600",
       borderColor: "border-red-500/50",
       glowColor: "shadow-red-500/20",
       isAvailable: true,
@@ -87,15 +64,8 @@ export default function AstrologyTraditionSelector({
       id: "HELLENISTIC",
       name: t.traditions.hellenistic,
       description: t.traditions.hellenisticDesc,
-      icon: (
-        <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16">
-            &#x2609;
-          </text>
-        </svg>
-      ),
-      color: "text-violet-400",
+      icon: <TraditionGlyph id="HELLENISTIC" size={40} />,
+      color: "text-violet-600",
       borderColor: "border-violet-500/50",
       glowColor: "shadow-violet-500/20",
       isAvailable: true,
@@ -104,15 +74,8 @@ export default function AstrologyTraditionSelector({
       id: "HORARY",
       name: t.traditions.horary,
       description: t.traditions.horaryDesc,
-      icon: (
-        <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="14">
-            ?
-          </text>
-        </svg>
-      ),
-      color: "text-teal-400",
+      icon: <TraditionGlyph id="HORARY" size={40} />,
+      color: "text-teal-600",
       borderColor: "border-teal-500/50",
       glowColor: "shadow-teal-500/20",
       isAvailable: true,
@@ -121,15 +84,8 @@ export default function AstrologyTraditionSelector({
       id: "MEDICAL",
       name: t.traditions.medical,
       description: t.traditions.medicalDesc,
-      icon: (
-        <svg viewBox="0 0 40 40" className="w-10 h-10" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-          <text x="20" y="26" textAnchor="middle" fill="currentColor" fontSize="16">
-            +
-          </text>
-        </svg>
-      ),
-      color: "text-emerald-400",
+      icon: <TraditionGlyph id="MEDICAL" size={40} />,
+      color: "text-emerald-600",
       borderColor: "border-emerald-500/50",
       glowColor: "shadow-emerald-500/20",
       isAvailable: true,
