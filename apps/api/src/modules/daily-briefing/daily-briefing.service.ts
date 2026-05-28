@@ -285,7 +285,7 @@ export class DailyBriefingService {
     if (!overlay) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
+        select: { name: true, nickname: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
       });
       userTraditions = (user as any)?.astrologyTraditions ?? ['VEDIC'];
       overlay = await this.computeUserOverlay(
@@ -372,7 +372,7 @@ export class DailyBriefingService {
 
   // ─── Per-user overlay: personalized fields only ─────────────────────────
   private async computeUserOverlay(
-    user: { name: string | null; dateOfBirth: Date | null; profession: string | null } | null,
+    user: { name: string | null; nickname?: string | null; dateOfBirth: Date | null; profession: string | null } | null,
     canonical: PanchangCanonical,
     currentPlanet: string,
     dayRuler: string,
@@ -386,7 +386,7 @@ export class DailyBriefingService {
     // `name`, then to "there" if neither exists. The formal name is
     // still used inside astrology artefacts (kundli, matching, etc.).
     const userName =
-      ((user as any)?.nickname as string | undefined)?.trim() ||
+      user?.nickname?.trim() ||
       user?.name?.split(' ')[0] ||
       'there';
 
