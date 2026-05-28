@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/store";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import { ZodiacGlyph } from "@/components/icons/astro";
 
 interface HoroscopeData {
   overview: string;
@@ -272,7 +273,15 @@ export default function HoroscopePage() {
                       : "hover:bg-[rgba(255,252,245,0.78)]"
                   }`}
                 >
-                  <span className="text-2xl mb-1">{z.symbol}</span>
+                  {isChinese ? (
+                    <span className="text-2xl mb-1">{z.symbol}</span>
+                  ) : (
+                    <ZodiacGlyph
+                      sign={z.id}
+                      size={28}
+                      className={`mb-1 ${selectedSign === z.id ? "text-primary-700" : "text-[rgba(12,8,5,0.55)]"}`}
+                    />
+                  )}
                   <span className={`text-xs font-medium ${selectedSign === z.id ? "text-surface-950" : "text-[rgba(12,8,5,0.46)]"}`}>
                     {z.name}
                   </span>
@@ -282,7 +291,11 @@ export default function HoroscopePage() {
 
             {/* Selected Sign Info */}
             <div className="surface-card p-6 mb-8 flex flex-col sm:flex-row items-center gap-4">
-              <div className="text-4xl">{currentSign.symbol}</div>
+              {isChinese ? (
+                <div className="text-4xl">{currentSign.symbol}</div>
+              ) : (
+                <ZodiacGlyph sign={currentSign.id} size={48} className="text-primary-700" />
+              )}
               <div className="text-center sm:text-left">
                 <h2 className="text-xl font-bold text-surface-950">{currentSign.name}</h2>
                 <div className="flex flex-wrap gap-3 mt-1 justify-center sm:justify-start">

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
+import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
  * Server-rendered SEO landing page for "<sign> daily horoscope today".
@@ -109,7 +110,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
         </nav>
 
         <header className="mb-6 flex items-start gap-4">
-          <span className="text-5xl leading-none" aria-hidden="true">{sign.symbol}</span>
+          <ZodiacGlyph sign={sign.slug} size={52} className="text-primary-700 shrink-0" />
           <div>
             <h1 className="text-3xl font-bold text-gradient">
               {sign.name} Horoscope Today
@@ -184,7 +185,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
                     : 'bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] text-emphasis'
                 }`}
               >
-                <span className="text-xl" aria-hidden="true">{s.symbol}</span>
+                <ZodiacGlyph sign={s.slug} size={24} />
                 <span className="text-xs mt-1">{s.name}</span>
               </Link>
             ))}
