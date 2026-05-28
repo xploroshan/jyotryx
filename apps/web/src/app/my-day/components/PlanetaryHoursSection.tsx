@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import type { Locale, TranslationKeys } from "@/i18n";
 import { translatePlanet, translateActivity } from "./translations";
 import { translateTimeRange } from "@/i18n/panchang-terms";
+import { PlanetGlyph } from "@/components/icons/astro";
 import { currentHourIndex, minutesSinceMidnight } from "../lib/planetaryTime";
 
 interface PlanetaryHour {
@@ -81,7 +82,7 @@ export function PlanetaryHoursSection({
               }`}
             >
               <div className={`w-8 h-8 rounded-lg ${pi.bg} flex items-center justify-center shrink-0`}>
-                <span className={`text-sm ${pi.color}`}>{pi.symbol}</span>
+                <PlanetGlyph planet={hour.planet} size={18} className={pi.color} />
               </div>
               <span className={`text-sm font-medium w-16 ${pi.color}`}>{translatePlanet(hour.planet, t)}</span>
               <span className="text-xs text-[rgba(12,8,5,0.58)] w-28 tabular-nums">

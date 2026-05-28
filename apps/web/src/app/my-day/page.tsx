@@ -4,6 +4,7 @@ import React, { useState, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
+import { PlanetGlyph } from "@/components/icons/astro";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import {
@@ -397,9 +398,7 @@ export default function MyDayPage() {
               <h3 className="text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase tracking-wider mb-4">{t.myDay.currentHora}</h3>
               <div className="flex items-center gap-4">
                 <div className={`w-14 h-14 rounded-2xl ${planetIcons[currentHora.planet]?.bg || "bg-[rgba(255,252,245,0.92)]"} flex items-center justify-center`}>
-                  <span className={`text-2xl ${planetIcons[currentHora.planet]?.color || "text-secondary"}`}>
-                    {planetIcons[currentHora.planet]?.symbol || "\u25cb"}
-                  </span>
+                  <PlanetGlyph planet={currentHora.planet} size={30} className={planetIcons[currentHora.planet]?.color || "text-secondary"} />
                 </div>
                 <div className="flex-1">
                   <p className={`text-lg font-bold ${planetIcons[currentHora.planet]?.color || "text-surface-950"}`}>
