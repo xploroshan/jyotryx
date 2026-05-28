@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { WEB_TRADITIONS, SLUG_TO_TRADITION, type TraditionId } from "@/lib/traditions";
+import { WEB_TRADITIONS, resolveTraditionFromPath, type TraditionId } from "@/lib/traditions";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { FeatureGlyph } from "@/components/icons";
@@ -20,17 +20,22 @@ import { FeatureGlyph } from "@/components/icons";
 export default function FeatureBarV2() {
   const pathname = usePathname() ?? "/";
   const { t } = useTranslation();
-  const { user } = useAuthStore();
+  const { user, activeTradition } = useAuthStore();
   const hydrated = useAuthHydrated();
 
-  const firstSegment = pathname.split("/").filter(Boolean)[0] ?? "";
-  const urlTrad: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
-  // Gate the persisted fallback on hydration so SSR and the first client
-  // render agree (no bar); the remembered bar slots in only after the
-  // auth store rehydrates, avoiding a hydration mismatch.
-  const storedTrad = hydrated ? ((user?.primaryTradition as TraditionId | null) ?? null) : null;
+  // Resolve the tradition from the URL — this covers tradition dashboards
+  // (/vedic) AND feature pages (/horoscope, /kundli, /western/natal), so
+  // the bar never vanishes when you open a sub-feature.
+  const urlTrad = resolveTraditionFromPath(pathname);
+  // On tradition-agnostic pages (My Day, home, …) fall back to the last
+  // tradition the user was in (then their saved primary). Gated on
+  // hydration so SSR and the first client render agree (no bar) and the
+  // remembered bar slots in only after the auth store rehydrates.
+  const remembered = hydrated
+    ? ((activeTradition as TraditionId | null) ?? (user?.primaryTradition as TraditionId | null) ?? null)
+    : null;
   const activeId: TraditionId | null =
-    urlTrad ?? (storedTrad && WEB_TRADITIONS[storedTrad] ? storedTrad : null);
+    urlTrad ?? (remembered && WEB_TRADITIONS[remembered] ? remembered : null);
   if (!activeId) return null;
   const cfg = WEB_TRADITIONS[activeId];
 

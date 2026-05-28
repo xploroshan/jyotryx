@@ -207,3 +207,37 @@ export function resolveActiveTradition(input: {
   }
   return 'VEDIC';
 }
+
+/**
+ * Reverse map: every feature's `href` → the tradition that owns it. Built
+ * once from the registry so a feature page like `/horoscope` or
+ * `/western/natal` can be traced back to its tradition. Hrefs are unique
+ * per feature; if two ever collided, the earlier tradition in
+ * `TRADITION_IDS` wins (a stable, deterministic tiebreak).
+ */
+export const FEATURE_PATH_TO_TRADITION: Record<string, TraditionId> = (() => {
+  const map: Record<string, TraditionId> = {};
+  for (const id of TRADITION_IDS) {
+    for (const f of WEB_TRADITIONS[id].features) {
+      if (!(f.href in map)) map[f.href] = id;
+    }
+  }
+  return map;
+})();
+
+/**
+ * Which tradition does this pathname belong to? Covers both tradition
+ * dashboards / tradition-scoped routes (`/vedic`, `/vedic/dasha`,
+ * `/western/natal`) via the first path segment, and top-level feature
+ * pages (`/kundli`, `/horoscope`, `/chat`) via the feature-href map.
+ * Returns null for tradition-agnostic routes (`/my-day`, `/`, `/profile`,
+ * `/pricing`, `/reports`) — callers fall back to remembered state there.
+ */
+export function resolveTraditionFromPath(pathname: string): TraditionId | null {
+  const seg = pathname.split('/').filter(Boolean)[0] ?? '';
+  if (SLUG_TO_TRADITION[seg]) return SLUG_TO_TRADITION[seg];
+  for (const [href, id] of Object.entries(FEATURE_PATH_TO_TRADITION)) {
+    if (pathname === href || pathname.startsWith(href + '/')) return id;
+  }
+  return null;
+}

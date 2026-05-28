@@ -41,6 +41,14 @@ interface AuthState {
   updateBirthDetails: (details: BirthDetails & { name?: string; nickname?: string | null }) => void;
   updateAstrologyTraditions: (traditions: string[]) => void;
   updatePrimaryTradition: (tradition: string | null) => void;
+  /** The tradition context the user is currently browsing (Vedic, …).
+   *  Distinct from the saved `primaryTradition` preference: this is
+   *  updated as the user navigates tradition/feature pages and is what
+   *  the navbar + feature bar fall back to on tradition-agnostic pages
+   *  (My Day, home), so the selected tradition and its sub-features stay
+   *  put until the user switches. */
+  activeTradition: string | null;
+  setActiveTradition: (tradition: string | null) => void;
   logout: () => void;
 }
 
@@ -51,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      activeTradition: null,
+      setActiveTradition: (tradition) => set({ activeTradition: tradition }),
       setAuth: (user, accessToken, refreshToken) =>
         set({ user, accessToken, refreshToken, isAuthenticated: true }),
       updateCredits: (credits) =>
@@ -100,7 +110,7 @@ export const useAuthStore = create<AuthState>()(
             window.localStorage.removeItem('myastro360-my-day-briefing');
           }
         } catch { /* quota / private mode */ }
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, activeTradition: null });
       },
     }),
     {
