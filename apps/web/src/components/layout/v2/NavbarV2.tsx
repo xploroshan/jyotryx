@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { greetingName } from "@/lib/displayName";
 import { LogoMark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -67,7 +67,18 @@ export default function NavbarV2() {
   }, [pathname]);
 
   const firstSegment = pathname.split("/").filter(Boolean)[0] ?? "";
+  // `activeTrad` is the tradition of the *current page* — it drives the
+  // active-page highlight on the switcher button, so it stays URL-only.
   const activeTrad: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
+  // `selectedTrad` is the tradition the user has *chosen*. It persists
+  // across cross-cutting pages (My Day, home, …) by falling back to the
+  // stored `primaryTradition`, so the switcher keeps showing the selection
+  // and the feature bar keeps its sub-features. Gated on hydration to
+  // avoid an SSR/client mismatch.
+  const hydrated = useAuthHydrated();
+  const storedTrad = hydrated ? ((user?.primaryTradition as TraditionId | null) ?? null) : null;
+  const selectedTrad: TraditionId | null =
+    activeTrad ?? (storedTrad && WEB_TRADITIONS[storedTrad] ? storedTrad : null);
   const isMyDay = pathname.startsWith("/my-day");
 
   const readLabel = (path: string, fallback: string): string => {
@@ -138,10 +149,10 @@ export default function NavbarV2() {
                 aria-expanded={tradOpen}
                 aria-haspopup="true"
               >
-                {activeTrad
+                {selectedTrad
                   ? readLabel(
-                      WEB_TRADITIONS[activeTrad].labelKey,
-                      WEB_TRADITIONS[activeTrad].slug,
+                      WEB_TRADITIONS[selectedTrad].labelKey,
+                      WEB_TRADITIONS[selectedTrad].slug,
                     )
                   : "Traditions"}
                 <svg
@@ -168,7 +179,7 @@ export default function NavbarV2() {
                   role="menu"
                 >
                   {TRADITION_LIST.map((cfg) => {
-                    const isActive = cfg.id === activeTrad;
+                    const isActive = cfg.id === selectedTrad;
                     const label = readLabel(cfg.labelKey, cfg.slug);
                     return (
                       <button
@@ -305,7 +316,7 @@ export default function NavbarV2() {
             Traditions
           </p>
           {TRADITION_LIST.map((cfg) => {
-            const isActive = cfg.id === activeTrad;
+            const isActive = cfg.id === selectedTrad;
             const label = readLabel(cfg.labelKey, cfg.slug);
             return (
               <button
