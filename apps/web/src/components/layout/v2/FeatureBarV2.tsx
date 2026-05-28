@@ -3,21 +3,34 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WEB_TRADITIONS, SLUG_TO_TRADITION, type TraditionId } from "@/lib/traditions";
+import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { FeatureGlyph } from "@/components/icons";
 
 /**
- * v2 feature bar. Slim secondary nav that renders only on tradition
- * pages (/vedic, /western, /chinese, etc). Replaces the FeatureChips
- * sticky strip. ~36px tall vs the previous ~44px, with a clean
- * underline indicator instead of an animated gradient.
+ * v2 feature bar. Slim secondary nav that renders the sub-features of the
+ * user's current tradition. On a tradition page (/vedic, /western, …) the
+ * tradition comes from the URL; on cross-cutting pages (My Day, home, …)
+ * it falls back to the user's persisted `primaryTradition`, so the
+ * selected tradition and its sub-features stay put until the user picks a
+ * different one. Replaces the FeatureChips sticky strip. ~36px tall vs the
+ * previous ~44px, with a clean underline indicator instead of an animated
+ * gradient.
  */
 export default function FeatureBarV2() {
   const pathname = usePathname() ?? "/";
   const { t } = useTranslation();
+  const { user } = useAuthStore();
+  const hydrated = useAuthHydrated();
 
   const firstSegment = pathname.split("/").filter(Boolean)[0] ?? "";
-  const activeId: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
+  const urlTrad: TraditionId | null = SLUG_TO_TRADITION[firstSegment] ?? null;
+  // Gate the persisted fallback on hydration so SSR and the first client
+  // render agree (no bar); the remembered bar slots in only after the
+  // auth store rehydrates, avoiding a hydration mismatch.
+  const storedTrad = hydrated ? ((user?.primaryTradition as TraditionId | null) ?? null) : null;
+  const activeId: TraditionId | null =
+    urlTrad ?? (storedTrad && WEB_TRADITIONS[storedTrad] ? storedTrad : null);
   if (!activeId) return null;
   const cfg = WEB_TRADITIONS[activeId];
 
