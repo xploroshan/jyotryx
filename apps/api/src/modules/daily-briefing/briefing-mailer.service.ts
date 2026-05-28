@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -50,6 +51,9 @@ const REPEATABLE_JOB_KEY = 'briefing-daily-fanout';
 export class BriefingMailerService implements OnModuleInit {
   private readonly logger = new Logger(BriefingMailerService.name);
   private readonly provider: EmailProvider = createEmailProvider();
+  /** Guards the in-process cron fan-out from overlapping with itself
+   *  within a single replica (a slow fan-out shouldn't be re-entered). */
+  private fanoutInFlight = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -59,16 +63,30 @@ export class BriefingMailerService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    // Surface the silent no-op delivery path. When RESEND_API_KEY is
+    // unset, createEmailProvider() returns the LogProvider, which only
+    // logs "would send…" — every "send" then succeeds without an email
+    // ever leaving the building. Warn loudly at boot so this doesn't
+    // masquerade as a working pipeline.
+    if (this.provider.kind === 'log') {
+      this.logger.warn(
+        'RESEND_API_KEY is not set — daily briefing emails will be LOGGED, not delivered. ' +
+          'Set RESEND_API_KEY to enable real email delivery.',
+      );
+    }
+
     // When DISABLE_QUEUES=true, the BullMQ Queue this service injects
     // is pointed at a dead-port sentinel (see queue.module.ts). Both
     // `removeRepeatableByKey` and `add` would `await` Redis commands
     // that never resolve, which hangs NestJS bootstrap → app never
-    // calls app.listen() → Railway healthcheck fails. Skip the
-    // scheduler init entirely; daily-briefings are intentionally off
-    // until queues are re-enabled.
+    // calls app.listen() → Railway healthcheck fails. Skip the BullMQ
+    // scheduler init entirely — the in-process @Cron fallback below
+    // (`hourlyBriefingTick`) drives the daily fan-out instead, so the
+    // emails still go out without depending on Redis.
     if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true') {
       this.logger.warn(
-        'DISABLE_QUEUES=true — skipping daily-briefing scheduler init.',
+        'DISABLE_QUEUES=true — BullMQ briefing scheduler skipped; ' +
+          'in-process cron fallback will drive the daily fan-out.',
       );
       return;
     }
@@ -98,6 +116,55 @@ export class BriefingMailerService implements OnModuleInit {
       // Don't crash the API on scheduler-init issues — the per-user
       // send path is still reachable from /admin/briefing/send-test.
       this.logger.warn(`Briefing scheduler init failed: ${(err as Error)?.message ?? err}`);
+    }
+  }
+
+  // ─── In-process scheduler (Redis-free fallback) ─────────────────────────
+
+  /**
+   * Hourly tick that drives the daily fan-out WITHOUT BullMQ/Redis.
+   *
+   * Fires at the top of every hour; runs the fan-out only on the hour
+   * that matches the configured `sendHourUtc`. This is the daily-mail
+   * path whenever `DISABLE_QUEUES=true` — when queues are enabled the
+   * BullMQ repeatable job owns the schedule and this tick stays a
+   * no-op, so the two mechanisms never both send.
+   *
+   * Cross-replica safety: if several API replicas run this cron at the
+   * same hour, the per-user guards still prevent duplicate mail — the
+   * `BriefingDelivery` unique index (userId, sendDate, channel) and the
+   * Resend `Idempotency-Key` (`briefing:<userId>:<date>`, deduped 24h)
+   * both collapse a repeat send to a no-op. The only cost is recomputing
+   * a briefing that's then skipped, which is acceptable for a once-a-day
+   * job.
+   */
+  @Cron('0 0 * * * *')
+  async hourlyBriefingTick(): Promise<void> {
+    // Only the fallback path. When queues are live, BullMQ handles it.
+    if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() !== 'true') return;
+
+    let settings: BriefingSettings;
+    try {
+      settings = await this.getSettings();
+    } catch (err) {
+      this.logger.warn(`Briefing cron: settings read failed: ${(err as Error)?.message ?? err}`);
+      return;
+    }
+    if (!settings.enabled) return;
+    if (new Date().getUTCHours() !== settings.sendHourUtc) return;
+
+    if (this.fanoutInFlight) {
+      this.logger.warn('Briefing cron: previous fan-out still running — skipping this tick.');
+      return;
+    }
+    this.fanoutInFlight = true;
+    try {
+      this.logger.log('Daily briefing fan-out tick (in-process cron — queues disabled).');
+      await this.runDailyFanout();
+    } catch (err) {
+      this.logger.error(`Briefing cron fan-out failed: ${(err as Error)?.message ?? err}`);
+    } finally {
+      this.fanoutInFlight = false;
     }
   }
 
