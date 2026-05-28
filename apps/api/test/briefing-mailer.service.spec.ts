@@ -171,6 +171,50 @@ describe('BriefingMailerService.sendForUser', () => {
   });
 });
 
+describe('BriefingMailerService.hourlyBriefingTick (in-process cron fallback)', () => {
+  const ORIGINAL_DISABLE = process.env.DISABLE_QUEUES;
+  afterEach(() => {
+    if (ORIGINAL_DISABLE === undefined) delete process.env.DISABLE_QUEUES;
+    else process.env.DISABLE_QUEUES = ORIGINAL_DISABLE;
+    jest.clearAllMocks();
+  });
+
+  function prismaWithSendHour(hour: number): AnyPrisma {
+    const prisma = makePrismaMock();
+    (prisma.siteSetting.findMany as any).mockResolvedValue([
+      { key: 'notification.briefing.send_hour_utc', value: String(hour) },
+    ]);
+    return prisma;
+  }
+
+  it('is a no-op when DISABLE_QUEUES is not true (BullMQ owns the schedule)', async () => {
+    delete process.env.DISABLE_QUEUES;
+    const svc = await buildService({ prisma: prismaWithSendHour(new Date().getUTCHours()) });
+    const fanout = jest.spyOn(svc, 'runDailyFanout');
+    await svc.hourlyBriefingTick();
+    expect(fanout).not.toHaveBeenCalled();
+  });
+
+  it('runs the fan-out when queues are disabled and the hour matches', async () => {
+    process.env.DISABLE_QUEUES = 'true';
+    const svc = await buildService({ prisma: prismaWithSendHour(new Date().getUTCHours()) });
+    const fanout = jest
+      .spyOn(svc, 'runDailyFanout')
+      .mockResolvedValue({ selected: 0, sent: 0, failed: 0, skipped: 0 });
+    await svc.hourlyBriefingTick();
+    expect(fanout).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not run when queues are disabled but the hour does not match', async () => {
+    process.env.DISABLE_QUEUES = 'true';
+    const otherHour = (new Date().getUTCHours() + 1) % 24;
+    const svc = await buildService({ prisma: prismaWithSendHour(otherHour) });
+    const fanout = jest.spyOn(svc, 'runDailyFanout');
+    await svc.hourlyBriefingTick();
+    expect(fanout).not.toHaveBeenCalled();
+  });
+});
+
 describe('renderBriefingEmail', () => {
   it('renders non-empty HTML and matching plaintext', () => {
     const out = renderBriefingEmail({
