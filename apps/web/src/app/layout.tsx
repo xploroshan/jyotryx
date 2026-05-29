@@ -11,6 +11,7 @@ import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShe
 import NavbarV2 from "@/components/layout/v2/NavbarV2";
 import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
+import HtmlLangSync from "@/components/i18n/HtmlLangSync";
 
 // Sitewide structured data. The Organization node feeds brand knowledge
 // panels and lets answer engines (ChatGPT, Perplexity, Gemini) attribute
@@ -94,6 +95,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen flex flex-col">
+        {/* Sync <html lang> with the active locale (root layout hard-codes
+            "en"; this keeps screen readers + SEO correct for all 12). */}
+        <HtmlLangSync />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}

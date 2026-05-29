@@ -87,7 +87,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-hidden">
       <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
       <div className="absolute top-32 left-1/3 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
