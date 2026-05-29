@@ -164,7 +164,7 @@ export default function BentoSummary() {
                     {t.home.heroHighlight}
                   </span>
                 </h3>
-                <p className="text-sm text-emphasis line-clamp-3 flex-1 leading-relaxed">
+                <p className="text-sm text-emphasis line-clamp-3 flex-1 leading-relaxed" title={t.home.heroDescription}>
                   {t.home.heroDescription}
                 </p>
                 <div className="mt-5 w-full h-1 rounded-full bg-black/[0.06] overflow-hidden">
@@ -317,7 +317,7 @@ export default function BentoSummary() {
               >
                 {qualityLabel}
               </h3>
-              <p className="text-sm text-emphasis line-clamp-3 flex-1 leading-relaxed">
+              <p className="text-sm text-emphasis line-clamp-3 flex-1 leading-relaxed" title={translateSummary(briefing.summary, t, locale)}>
                 {translateSummary(briefing.summary, t, locale)}
               </p>
               <div className="mt-5 w-full h-1 rounded-full bg-black/[0.06] overflow-hidden">

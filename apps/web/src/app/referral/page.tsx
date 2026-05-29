@@ -257,8 +257,8 @@ export default function ReferralPage() {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-surface-950 truncate">{r.refereeName}</p>
-                    <p className="text-xs text-[rgba(12,8,5,0.46)] truncate">{r.refereeEmail}</p>
+                    <p className="text-sm text-surface-950 truncate" title={r.refereeName}>{r.refereeName}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.46)] truncate" title={r.refereeEmail}>{r.refereeEmail}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-[rgba(12,8,5,0.46)]">
