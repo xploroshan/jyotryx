@@ -333,8 +333,17 @@ export class PaymentService {
       subscriptionId = `sub_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
-    // Persist subscription and upgrade role atomically
+    // Persist the subscription. We do NOT grant the PREMIUM role here in
+    // live mode: the Razorpay-hosted checkout (short_url) hasn't charged
+    // the customer yet, so granting Premium on creation would hand free
+    // access to anyone who opens — then abandons — the checkout. The role
+    // is granted from the subscription.activated / subscription.charged
+    // webhook once the first payment is captured.
+    //
+    // In mock mode (no Razorpay credentials) there is no webhook to fire,
+    // so we grant immediately to keep local development usable.
     const endDate = new Date(Date.now() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
+    const grantImmediately = !this.razorpayInstance;
     await this.prisma.$transaction(async (tx: any) => {
       await tx.subscription.create({
         data: {
@@ -346,10 +355,12 @@ export class PaymentService {
         },
       });
 
-      await tx.user.update({
-        where: { id: userId },
-        data: { role: 'PREMIUM' },
-      });
+      if (grantImmediately) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: 'PREMIUM' },
+        });
+      }
     });
 
     return {
@@ -438,9 +449,34 @@ export class PaymentService {
             });
           }
           break;
-        case 'subscription.charged':
-          this.logger.log('Subscription charge successful');
+        case 'subscription.activated':
+        case 'subscription.charged': {
+          // First (and recurring) successful charge. THIS is where Premium
+          // is granted — not at subscription creation — so an authorised
+          // payment is what unlocks access. Idempotent: re-grants the role
+          // on every renewal charge, which is a no-op if already PREMIUM.
+          const subEntity = payload?.payload?.subscription?.entity;
+          if (subEntity?.id) {
+            await this.prisma.$transaction(async (tx: any) => {
+              const { count } = await tx.subscription.updateMany({
+                where: { razorpaySubscriptionId: subEntity.id },
+                data: { status: 'ACTIVE' },
+              });
+              if (count === 0) return; // not one of our subscriptions
+              const sub = await tx.subscription.findFirst({
+                where: { razorpaySubscriptionId: subEntity.id },
+                select: { userId: true },
+              });
+              if (sub) {
+                await tx.user.update({
+                  where: { id: sub.userId },
+                  data: { role: 'PREMIUM' },
+                });
+              }
+            });
+          }
           break;
+        }
         case 'subscription.cancelled': {
           const subEntity = payload?.payload?.subscription?.entity;
           if (subEntity?.id) {

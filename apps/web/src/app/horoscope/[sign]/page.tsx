@@ -93,11 +93,43 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
     ],
   };
 
+  // Single source of truth for the FAQ: rendered visibly below AND emitted
+  // as FAQPage structured data, so the two never drift (Google requires the
+  // schema content to be present on the page).
+  const faqs: { q: string; a: string }[] = [
+    {
+      q: `What dates does the ${sign.name} zodiac sign cover?`,
+      a: `${sign.name} (${sign.symbol}) covers birthdays between ${sign.dateRange}. This is the Western/tropical sun-sign range; in Vedic (sidereal) astrology the dates shift by roughly three weeks, which is why your Vedic moon sign can differ from your sun sign.`,
+    },
+    {
+      q: `What element and ruling planet govern ${sign.name}?`,
+      a: `${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}. Its element shapes temperament, its modality describes how it acts, and its ruling planet colours its core motivations.`,
+    },
+    {
+      q: `Is the sun sign horoscope enough, or do I need my full kundli?`,
+      a: `A sun-sign horoscope is a broad daily snapshot for everyone born under ${sign.name}. For guidance specific to you, your Vedic kundli uses your exact date, time, and place of birth to calculate your moon sign (rashi) and ascendant (lagna), which matter more than the sun sign in Vedic astrology.`,
+    },
+    {
+      q: `How often is the ${sign.name} horoscope updated?`,
+      a: `The ${sign.name} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside myastro360.`,
+    },
+  ];
+  const jsonLdFaq = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
   return (
     <div className="relative min-h-screen">
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
           <ol className="flex flex-wrap items-center gap-1.5">
@@ -170,6 +202,18 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
           </p>
         </article>
 
+        {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
+        <section className="surface-card p-6 mb-6">
+          <h2 className="text-lg font-semibold text-surface-950 mb-3">
+            {sign.name} horoscope — frequently asked questions
+          </h2>
+          <dl className="space-y-4 text-sm">
+            {faqs.map((f) => (
+              <Faq key={f.q} q={f.q} a={f.a} />
+            ))}
+          </dl>
+        </section>
+
         {/* All signs nav */}
         <section className="surface-card p-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">Other zodiac signs</h2>
@@ -201,6 +245,15 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{label}</dt>
       <dd className="text-sm text-surface-950 mt-0.5">{value}</dd>
+    </div>
+  );
+}
+
+function Faq({ q, a }: { q: string; a: string }) {
+  return (
+    <div className="border-l-2 border-primary-500/30 pl-3">
+      <dt className="font-medium text-surface-950">{q}</dt>
+      <dd className="text-emphasis mt-1 leading-relaxed">{a}</dd>
     </div>
   );
 }

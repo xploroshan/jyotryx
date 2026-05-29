@@ -215,6 +215,50 @@ describe('PaymentService', () => {
       const result = await service.handleWebhook(payload, sig);
       expect(result.received).toBe(true);
     });
+
+    it('grants the PREMIUM role only when the subscription is charged', async () => {
+      const payload = {
+        event: 'subscription.charged',
+        payload: { subscription: { entity: { id: 'sub_live_1' } } },
+      };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdate = jest.fn().mockResolvedValue({});
+      const txStub = {
+        subscription: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
+        },
+        user: { update: userUpdate },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const result = await service.handleWebhook(payload, sig);
+      expect(result.received).toBe(true);
+      expect(userUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ role: 'PREMIUM' }) }),
+      );
+    });
+
+    it('does not grant PREMIUM for a charge on an unknown subscription', async () => {
+      const payload = {
+        event: 'subscription.activated',
+        payload: { subscription: { entity: { id: 'sub_not_ours' } } },
+      };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdate = jest.fn();
+      const txStub = {
+        subscription: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          findFirst: jest.fn(),
+        },
+        user: { update: userUpdate },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const result = await service.handleWebhook(payload, sig);
+      expect(result.received).toBe(true);
+      expect(userUpdate).not.toHaveBeenCalled();
+    });
   });
 
   describe('verifyPayment', () => {

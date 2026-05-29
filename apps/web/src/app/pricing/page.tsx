@@ -116,8 +116,46 @@ export default function PricingPage() {
 
   const fmt = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(n);
 
+  // Offer structured data, built from the live pricing once it loads, so
+  // search/answer engines can surface the plans and credit packs. Rendered
+  // only when prices are known to avoid emitting placeholder amounts.
+  const offerJsonLd =
+    plans && creditPacks
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "myastro360 Vedic Astrology",
+          serviceType: "Online astrology consultation",
+          provider: { "@type": "Organization", name: "myastro360" },
+          offers: [
+            ...plans
+              .filter((p) => p.price > 0)
+              .map((p) => ({
+                "@type": "Offer",
+                name: p.name,
+                price: p.price,
+                priceCurrency: "INR",
+                category: "Subscription",
+              })),
+            ...creditPacks.map((c) => ({
+              "@type": "Offer",
+              name: `${c.credits} credits`,
+              price: c.price,
+              priceCurrency: "INR",
+              category: "Credit pack",
+            })),
+          ],
+        }
+      : null;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 fade-in-up">
+      {offerJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(offerJsonLd) }}
+        />
+      )}
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-3xl sm:text-4xl font-bold text-surface-950 mb-3 tracking-tight">
