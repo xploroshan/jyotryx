@@ -1,0 +1,26 @@
+# myastro360
+
+> myastro360 is a Vedic astrology platform delivering instant, personalized
+> astrology guidance. It generates Kundli (birth charts), daily/weekly/monthly
+> horoscopes, Kundli matching (compatibility), palmistry analysis, numerology,
+> tarot, panchang (Hindu almanac), and muhurat (auspicious timing) — available
+> 24/7 across web, iOS, and Android. Content spans multiple traditions
+> (Vedic, KP, Hellenistic, Chinese) and 12 Indian languages.
+
+## Core features
+
+- [Horoscope](https://www.myastro360.com/horoscope): Daily, weekly, monthly, and yearly horoscopes for all 12 zodiac signs.
+- [Kundli](https://www.myastro360.com/kundli): Free Vedic birth-chart (janam kundli) generation with planetary positions, dashas, and divisional charts.
+- [Kundli Matching](https://www.myastro360.com/matching): Guna Milan / Ashtakoota compatibility matching for marriage.
+- [Panchang](https://www.myastro360.com/panchang): Daily Hindu almanac — tithi, nakshatra, yoga, karana, rahukaal — by city.
+- [Muhurat](https://www.myastro360.com/muhurat): Auspicious date and time finder for important events.
+- [Palmistry](https://www.myastro360.com/palmistry): AI-assisted palm reading from an uploaded photo.
+- [Numerology](https://www.myastro360.com/numerology): Name and birth-date numerology readings.
+- [Tarot](https://www.myastro360.com/tarot): Tarot card readings.
+- [Pricing](https://www.myastro360.com/pricing): Subscription plans and one-time credit packs.
+
+## Notes
+
+- Primary audience: India and the global Indian diaspora.
+- Languages: English, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Odia, Assamese.
+- Sitemap: https://www.myastro360.com/sitemap.xml

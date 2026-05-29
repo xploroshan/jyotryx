@@ -282,5 +282,84 @@ describe('PaymentService', () => {
       ).rejects.toThrow(InternalServerErrorException);
       configService.get = originalGet;
     });
+
+    it('grants the credit count captured in metadata, not an amount heuristic', async () => {
+      const orderId = 'order_pack';
+      const paymentId = 'pay_pack';
+      const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
+      prisma.payment.updateMany = jest.fn().mockResolvedValue({ count: 1 });
+      // ₹99 would heuristically map to 10 credits, but the pack stored 25.
+      prisma.payment.findFirstOrThrow = jest
+        .fn()
+        .mockResolvedValue({ amount: 99, metadata: { credits: 25, productId: 'credits_starter' } });
+
+      const result = await service.verifyPayment('test-uuid', {
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: sig,
+      });
+
+      expect(result.creditsAdded).toBe(25);
+      expect(userService.addCredits).toHaveBeenCalledWith('test-uuid', 25, 'PURCHASE', expect.any(String));
+    });
+  });
+
+  describe('createOrder', () => {
+    beforeEach(() => {
+      // Force mock mode so no real Razorpay network call is attempted.
+      (service as any).razorpayInstance = null;
+      prisma.payment.create = jest.fn().mockResolvedValue({});
+      prisma.siteSetting.findMany = jest.fn().mockResolvedValue([
+        { key: 'pricing.credits.starter.price', value: '99' },
+        { key: 'pricing.credits.starter.credits', value: '25' },
+      ]);
+    });
+
+    it('rejects an amount that does not match the pack price', async () => {
+      await expect(
+        service.createOrder('test-uuid', { amount: 100, productId: 'credits_starter' } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('accepts the correct amount and persists the advertised credit count', async () => {
+      const order = await service.createOrder('test-uuid', {
+        amount: 9900, // ₹99 in paise
+        productId: 'credits_starter',
+      } as any);
+
+      expect(order.amount).toBe(9900);
+      expect(prisma.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            metadata: expect.objectContaining({ credits: 25, productId: 'credits_starter' }),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('createSubscription', () => {
+    it('maps a logical plan to a stored subscription in mock mode', async () => {
+      (service as any).razorpayInstance = null;
+      const subCreate = jest.fn().mockResolvedValue({});
+      prisma.$transaction = jest.fn(async (cb: any) =>
+        cb({ subscription: { create: subCreate }, user: { update: jest.fn() } }),
+      );
+
+      const result = await service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any);
+
+      expect(result.status).toBe('active');
+      expect(subCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ plan: 'ANNUAL' }) }),
+      );
+    });
+
+    it('fails closed when live but no plan_id is configured', async () => {
+      // Truthy instance => live path, but config has no razorpay.planAnnual.
+      (service as any).razorpayInstance = {};
+      await expect(
+        service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
   });
 });
