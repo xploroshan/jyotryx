@@ -1,13 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateSubscriptionDto {
-  @ApiProperty({ example: 'plan_premium_monthly', description: 'Razorpay plan ID' })
+  @ApiProperty({
+    example: 'MONTHLY',
+    enum: ['MONTHLY', 'ANNUAL'],
+    description:
+      'Logical plan tier. The server maps this to the configured Razorpay plan_id (RAZORPAY_PLAN_MONTHLY / RAZORPAY_PLAN_ANNUAL).',
+  })
   @IsString()
   @IsNotEmpty()
-  planId!: string;
+  @IsIn(['MONTHLY', 'ANNUAL'])
+  plan!: string;
 
   @ApiProperty({ example: '12', description: 'Total billing cycles', required: false })
+  @IsOptional()
   @IsString()
   totalCount?: string;
 }

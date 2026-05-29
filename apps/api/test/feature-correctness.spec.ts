@@ -96,10 +96,13 @@ describe('Palmistry Service — Correctness & Bug Validation', () => {
   });
 
   describe('Fallback analysis structure validation', () => {
-    it('should return exactly 5 palm lines', async () => {
+    it('should return the seven standard palm lines in order', async () => {
       const result = await service.analyzePalm('user-1');
-      expect(result.lines).toHaveLength(5);
-      const expectedNames = ['Heart Line', 'Head Line', 'Life Line', 'Fate Line', 'Sun Line'];
+      expect(result.lines).toHaveLength(7);
+      const expectedNames = [
+        'Heart Line', 'Head Line', 'Life Line', 'Fate Line',
+        'Sun Line', 'Mercury Line', 'Marriage Line',
+      ];
       result.lines.forEach((line, i) => {
         expect(line.name).toBe(expectedNames[i]);
       });
@@ -114,9 +117,9 @@ describe('Palmistry Service — Correctness & Bug Validation', () => {
       });
     });
 
-    it('should return exactly 4 mounts with valid prominence', async () => {
+    it('should return the six standard mounts with valid prominence', async () => {
       const result = await service.analyzePalm('user-1');
-      expect(result.mounts).toHaveLength(4);
+      expect(result.mounts).toHaveLength(6);
       result.mounts.forEach((mount) => {
         expect(['elevated', 'normal', 'flat']).toContain(mount.prominence);
         expect(mount.name).toBeTruthy();

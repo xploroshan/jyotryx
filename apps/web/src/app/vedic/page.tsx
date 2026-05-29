@@ -17,6 +17,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { useTranslation } from '@/i18n';
 import { useAuthStore, useAuthHydrated } from '@/lib/store';
 import TraditionDashboard, {
   SectionHead,
@@ -107,6 +108,8 @@ function planetAccent(planet: string) {
 }
 
 export default function VedicDashboardPage() {
+  const { t } = useTranslation();
+  const d = t.dashboards.vedic;
   const { user, accessToken, isAuthenticated } = useAuthStore();
   const isHydrated = useAuthHydrated();
 
@@ -174,8 +177,8 @@ export default function VedicDashboardPage() {
   });
 
   const headline = firstName
-    ? `${firstName}'s {em}Vedic chart{/em}`
-    : `Your {em}Vedic chart{/em}`;
+    ? d.heroTitle.replace('{name}', firstName)
+    : d.heroTitleGuest;
 
   const metaLine = user?.placeOfBirth
     ? user.placeOfBirth
@@ -184,13 +187,13 @@ export default function VedicDashboardPage() {
     : undefined;
 
   const chips = [
-    ascendant ? { label: `${ascendant} Ascendant`, tone: 'text-amber-300' } : null,
-    moonSign ? { label: `${moonSign} Moon`, tone: 'text-white/85' } : null,
-    currentDasha ? { label: `${currentDasha.planet} Mahādaśā`, tone: 'text-yellow-300' } : null,
+    ascendant ? { label: d.ascendantChip.replace('{sign}', ascendant), tone: 'text-amber-300' } : null,
+    moonSign ? { label: d.moonChip.replace('{sign}', moonSign), tone: 'text-white/85' } : null,
+    currentDasha ? { label: d.mahadashaChip.replace('{planet}', currentDasha.planet), tone: 'text-yellow-300' } : null,
   ].filter(Boolean) as { label: string; tone: string }[];
 
   const heroCta = !user?.dateOfBirth
-    ? { label: 'Add birth details to see your chart', href: '/profile?complete=1' }
+    ? { label: d.ctaAddBirth, href: '/profile?complete=1' }
     : undefined;
 
   const hasChart = !!(ascendant || moonSign || sunSign || currentDasha);
@@ -208,21 +211,21 @@ export default function VedicDashboardPage() {
             <section className="border-b border-[rgba(26,20,16,0.10)]">
               <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12">
                 <SectionHead
-                  eyebrow="Today's sky"
+                  eyebrow={t.dashboards.common.todaysSky}
                   title={new Date(briefing.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                   tone="text-amber-700"
                   trailing={
                     <Link href="/my-day" className="text-xs text-primary-700 hover:text-primary-600 font-medium hidden sm:inline">
-                      Full briefing →
+                      {d.fullBriefing} →
                     </Link>
                   }
                 />
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                  <MiniStat label="Tithi" value={briefing.panchang?.tithi ?? '—'} />
-                  <MiniStat label="Nakshatra" value={briefing.panchang?.nakshatra ?? '—'} />
-                  <MiniStat label="Yoga" value={briefing.panchang?.yoga ?? '—'} />
-                  <MiniStat label="Rāhu Kāl" value={briefing.panchang?.rahukaal ?? '—'} tone="warn" />
+                  <MiniStat label={d.miniTithi} value={briefing.panchang?.tithi ?? '—'} />
+                  <MiniStat label={d.miniNakshatra} value={briefing.panchang?.nakshatra ?? '—'} />
+                  <MiniStat label={d.miniYoga} value={briefing.panchang?.yoga ?? '—'} />
+                  <MiniStat label={d.miniRahuKal} value={briefing.panchang?.rahukaal ?? '—'} tone="warn" />
                 </div>
 
                 {briefing.transitAlert && (
@@ -238,49 +241,49 @@ export default function VedicDashboardPage() {
             <section className="border-b border-[rgba(26,20,16,0.10)]">
               <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12">
                 <SectionHead
-                  eyebrow="Your chart"
-                  title="The four corners"
+                  eyebrow={d.chartEyebrow}
+                  title={d.chartTitle}
                   tone="text-amber-700"
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   {ascendant && (
                     <FactCard
-                      eyebrow="Ascendant (Lagna)"
+                      eyebrow={d.ascendantEyebrow}
                       headline={ascendant}
-                      subline={`Lord: ${SIGN_LORD[ascendant] ?? '—'}`}
+                      subline={`${d.lordPrefix} ${SIGN_LORD[ascendant] ?? '—'}`}
                       note={ASCENDANT_NOTE[ascendant]}
                       accent="amber"
                     />
                   )}
                   {moonSign && (
                     <FactCard
-                      eyebrow="Moon (Rāśi)"
+                      eyebrow={d.moonEyebrow}
                       headline={moonSign}
-                      subline={nakshatra ? `${nakshatra} nakshatra` : `Lord: ${SIGN_LORD[moonSign] ?? '—'}`}
-                      note="How you feel, what soothes you, the inner weather."
+                      subline={nakshatra ? d.nakshatraSuffix.replace('{nakshatra}', nakshatra) : `${d.lordPrefix} ${SIGN_LORD[moonSign] ?? '—'}`}
+                      note={d.moonNote}
                       accent="slate"
                     />
                   )}
                   {sunSign && (
                     <FactCard
-                      eyebrow="Sun (Sūrya)"
+                      eyebrow={d.sunEyebrow}
                       headline={sunSign}
-                      subline={`Lord: ${SIGN_LORD[sunSign] ?? '—'}`}
-                      note="The role you're here to play; the steady light."
+                      subline={`${d.lordPrefix} ${SIGN_LORD[sunSign] ?? '—'}`}
+                      note={d.sunNote}
                       accent="primary"
                     />
                   )}
                   {currentDasha && (
                     <FactCard
-                      eyebrow="Current Mahādaśā"
+                      eyebrow={d.dashaEyebrow}
                       headline={currentDasha.planet}
                       subline={
                         currentAntardasha
-                          ? `${currentDasha.planet} – ${currentAntardasha.planet} now, until ${new Date(currentAntardasha.endDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`
-                          : `Through ${new Date(currentDasha.endDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`
+                          ? `${currentDasha.planet} – ${d.dashaNowUntil.replace('{planet}', currentAntardasha.planet).replace('{date}', new Date(currentAntardasha.endDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }))}`
+                          : d.dashaThrough.replace('{date}', new Date(currentDasha.endDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }))
                       }
-                      note={`The chapter ${currentDasha.planet} is writing in your life right now.`}
+                      note={d.dashaNote.replace('{planet}', currentDasha.planet)}
                       accent={planetAccent(currentDasha.planet)}
                       toneText={PLANET_TONE[currentDasha.planet] ?? 'text-surface-950'}
                     />
@@ -291,7 +294,7 @@ export default function VedicDashboardPage() {
                   href="/kundli"
                   className="mt-6 inline-flex items-center gap-2 text-sm text-primary-700 hover:text-primary-600 font-medium"
                 >
-                  See the full chart → houses, planets, yogas, doshas
+                  {d.seeFullChart}
                 </Link>
               </div>
             </section>

@@ -89,7 +89,10 @@ describe('LlmService (Item 4 — Circuit Breaker + Failover)', () => {
       });
 
       expect(result).toBeNull();
-    });
+      // Both providers reject, so the service exhausts its retry/backoff
+      // on each before failing over — that real-time delay can exceed
+      // Jest's 5s default under full-suite load, so allow more headroom.
+    }, 20000);
 
     it('should skip unavailable OpenAI provider', async () => {
       openaiProvider.isAvailable.mockReturnValue(false);

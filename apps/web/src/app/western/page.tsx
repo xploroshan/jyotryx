@@ -9,6 +9,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { useTranslation } from '@/i18n';
 import { greetingName } from '@/lib/displayName';
 import { westernSunSign, westernSunSignToday } from '@/lib/astro/signs';
 import TraditionDashboard, {
@@ -16,30 +17,29 @@ import TraditionDashboard, {
   FactCard,
 } from '@/components/tradition/TraditionDashboard';
 
-const ELEMENT_NOTE: Record<string, string> = {
-  Fire:  "Spark, drive, the will to move — burns hot, burns out.",
-  Earth: "Substance, patience, what's actually built — slow and lasting.",
-  Air:   "Idea, exchange, the space between people — fast, social.",
-  Water: "Feeling, memory, what can't be said outright — deep, tidal.",
-};
-const MODE_NOTE: Record<string, string> = {
-  Cardinal: 'You start things. The season begins with you.',
-  Fixed:    'You hold things. The season settles into you.',
-  Mutable:  'You change things. The season passes through you.',
-};
 const ELEMENT_ACCENT: Record<string, 'red' | 'amber' | 'sky' | 'indigo'> = {
   Fire: 'red', Earth: 'amber', Air: 'sky', Water: 'indigo',
 };
 
 export default function WesternDashboardPage() {
+  const { t } = useTranslation();
+  const d = t.dashboards.western;
   const user = useAuthStore((s) => s.user);
   const sign = user?.dateOfBirth ? westernSunSign(user.dateOfBirth) : null;
   const todaySign = westernSunSignToday();
   const firstName = greetingName(user);
 
+  const elementNote: Record<string, string> = {
+    Fire: d.elementFireNote, Earth: d.elementEarthNote,
+    Air: d.elementAirNote, Water: d.elementWaterNote,
+  };
+  const modeNote: Record<string, string> = {
+    Cardinal: d.modeCardinalNote, Fixed: d.modeFixedNote, Mutable: d.modeMutableNote,
+  };
+
   const headline = firstName
-    ? `${firstName}'s {em}Western chart{/em}`
-    : `Your {em}Western chart{/em}`;
+    ? d.heroTitle.replace('{name}', firstName)
+    : d.heroTitleGuest;
 
   const metaLine = user?.dateOfBirth
     ? new Date(user.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -48,9 +48,9 @@ export default function WesternDashboardPage() {
 
   const chips = sign
     ? [
-        { label: `${sign.name} Sun`, tone: 'text-sky-300' },
-        { label: `${sign.element} element`, tone: 'text-white/85' },
-        { label: `${sign.mode} mode`, tone: 'text-white/85' },
+        { label: d.sunChip.replace('{sign}', sign.name), tone: 'text-sky-300' },
+        { label: d.elementChip.replace('{element}', sign.element), tone: 'text-white/85' },
+        { label: d.modeChip.replace('{mode}', sign.mode), tone: 'text-white/85' },
       ]
     : undefined;
 
@@ -64,38 +64,38 @@ export default function WesternDashboardPage() {
         <section className="border-b border-[rgba(26,20,16,0.10)]">
           <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12">
             <SectionHead
-              eyebrow={sign ? 'Your sun sign' : "Today's sky"}
-              title={sign ? 'The four corners' : 'The Sun right now'}
+              eyebrow={sign ? d.yourSunSignEyebrow : t.dashboards.common.todaysSky}
+              title={sign ? d.fourCornersTitle : d.sunRightNowTitle}
               tone="text-sky-700"
             />
 
             {sign ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <FactCard
-                  eyebrow="Sun (tropical)"
+                  eyebrow={d.sunTropicalEyebrow}
                   headline={sign.name}
-                  subline={`Ruler: ${sign.ruler}`}
-                  note="The role you're here to play; the steady light."
+                  subline={`${d.rulerPrefix} ${sign.ruler}`}
+                  note={d.sunNote}
                   accent="sky"
                 />
                 <FactCard
-                  eyebrow="Element"
+                  eyebrow={d.elementEyebrow}
                   headline={sign.element}
-                  note={ELEMENT_NOTE[sign.element]}
+                  note={elementNote[sign.element]}
                   accent={ELEMENT_ACCENT[sign.element]}
                 />
                 <FactCard
-                  eyebrow="Modality"
+                  eyebrow={d.modalityEyebrow}
                   headline={sign.mode}
-                  note={MODE_NOTE[sign.mode]}
+                  note={modeNote[sign.mode]}
                   accent="violet"
                 />
                 {todaySign && (
                   <FactCard
-                    eyebrow="The Sun today"
+                    eyebrow={d.sunTodayEyebrow}
                     headline={todaySign.name}
                     subline={`${todaySign.element} · ${todaySign.mode}`}
-                    note={`Season's flavor: ${ELEMENT_NOTE[todaySign.element].split('—')[0].trim()}.`}
+                    note={d.seasonFlavor.replace('{flavor}', elementNote[todaySign.element].split('—')[0].trim())}
                     accent="amber"
                   />
                 )}
@@ -103,17 +103,17 @@ export default function WesternDashboardPage() {
             ) : todaySign ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <FactCard
-                  eyebrow="The Sun today"
+                  eyebrow={d.sunTodayEyebrow}
                   headline={todaySign.name}
                   subline={`${todaySign.element} · ${todaySign.mode}`}
-                  note={ELEMENT_NOTE[todaySign.element]}
+                  note={elementNote[todaySign.element]}
                   accent="amber"
                 />
                 <FactCard
-                  eyebrow="Add your birth details"
-                  headline="See your chart"
-                  subline="Sun, element, mode, ruler"
-                  note="Your tropical sun sign and the chapter the sun is writing in your life."
+                  eyebrow={t.dashboards.common.addBirthEyebrow}
+                  headline={d.seeYourChart}
+                  subline={d.sunElementModeRuler}
+                  note={d.addBirthNote}
                   accent="sky"
                 />
               </div>

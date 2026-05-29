@@ -43,6 +43,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
+  // Weekly / monthly / yearly horoscope pages per sign (12 × 3 = 36).
+  // Each carries its own search volume and refreshes on the period's
+  // natural cadence.
+  const signPeriodPages: MetadataRoute.Sitemap = ZODIAC_SIGNS.flatMap((sign) =>
+    (['weekly', 'monthly', 'yearly'] as const).map((period) => ({
+      url: `${base}/horoscope/${sign.slug}/${period}`,
+      lastModified: now,
+      changeFrequency: period,
+      priority: 0.75,
+    })),
+  );
+
   const panchangCityPages: MetadataRoute.Sitemap = SEO_CITIES.map((city) => ({
     url: `${base}/panchang/${city.slug}`,
     lastModified: now,
@@ -57,5 +69,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.75,
   }));
 
-  return [...staticPages, ...signPages, ...panchangCityPages, ...kundliCityPages];
+  return [...staticPages, ...signPages, ...signPeriodPages, ...panchangCityPages, ...kundliCityPages];
 }

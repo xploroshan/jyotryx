@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/i18n";
@@ -311,9 +312,9 @@ export default function KundliPage() {
                     specific city's content rather than filling the form. */}
                 <p className="mt-3 text-xs text-[rgba(12,8,5,0.46)] text-center">
                   Or browse{' '}
-                  <a href="/kundli/cities" className="text-primary-300 hover:text-primary-300">
+                  <Link href="/kundli/cities" className="text-primary-300 hover:text-primary-300">
                     free Kundli pages by city
-                  </a>
+                  </Link>
                   .
                 </p>
               </div>

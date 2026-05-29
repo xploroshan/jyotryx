@@ -104,30 +104,32 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
  * To update: run `npx vitest run src/__tests__/i18n-parity.test.ts` and copy
  * the printed actual count into the matching entry below.
  *
- * Last update: translated traditionsUi.* (48), focusMode.* (6), footer.* (17),
- * and nav.tradition/switchTradition (2) for every locale — these were the
- * most user-visible English leakage on the tradition pages and global footer.
- * Remaining gaps are mostly in profile, auth, pricing, horoscope (date ranges),
- * and other secondary screens.
+ * Last update: added the fully-translated dashboards.* namespace for the six
+ * tradition landing pages across every locale. Two keys in that namespace are
+ * pure interpolation templates that are identical to English by design —
+ * dashboards.chinese.animalElementChip ("{element} {animal}") and
+ * dashboards.hellenistic.profectedHouseHeadline ("{ordinal} ({house})") — so
+ * each locale's baseline rises by exactly +2. All other dashboards.* strings
+ * are genuinely translated. Remaining gaps are mostly in profile, auth,
+ * pricing, horoscope (date ranges), and other secondary screens.
  */
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // hi stays at 67 — it's the only fully-translated locale that absorbed
-  // the 39 new palmistry keys when they landed (see commit 63e9a36).
-  hi: 67,
-  // ta: 67 baseline + 39 new untranslated palmistry keys = 106.
-  ta: 106,
-  // All other locales were already trailing on translation; the 39 new
-  // palmistry keys (insightSpirituality, atAGlance, …, reportSubtitle)
-  // pushed each baseline by +39 across the board.
-  te: 465,
-  bn: 465,
-  mr: 460,
-  gu: 465,
-  kn: 465,
-  ml: 465,
-  pa: 465,
-  or: 465,
-  as: 465,
+  // hi: 67 + 2 placeholder-only dashboards templates = 69.
+  hi: 69,
+  // ta: 106 + 2 placeholder-only dashboards templates = 108.
+  ta: 108,
+  // All other locales: previous 465 + 2 placeholder-only dashboards
+  // templates (animalElementChip, profectedHouseHeadline) = 467. mr was
+  // at 460, so 462.
+  te: 467,
+  bn: 467,
+  mr: 462,
+  gu: 467,
+  kn: 467,
+  ml: 467,
+  pa: 467,
+  or: 467,
+  as: 467,
 };
 
 const locales: Array<[string, Dict]> = [

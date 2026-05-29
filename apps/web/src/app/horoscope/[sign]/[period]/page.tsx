@@ -6,70 +6,81 @@ import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
- * Server-rendered SEO landing page for "<sign> daily horoscope today".
+ * Server-rendered SEO landing pages for the longer horoscope periods —
+ * "<sign> weekly/monthly/yearly horoscope". Daily lives at the parent
+ * /horoscope/[sign] route; this sibling covers the three other periods,
+ * which carry their own large search volume ("leo weekly horoscope",
+ * "scorpio horoscope 2026").
  *
- * The existing /horoscope page is "use client" + reads i18n translations
- * from a hook, so it's not crawlable as separate per-sign URLs. This
- * route fills the SEO-shaped hole: 12 statically-generated pages, daily
- * ISR for the forecast text, full structured data, and a CTA back to
- * the interactive page.
+ * Content is real, not boilerplate: the forecast text is fetched per
+ * period from the same API the interactive app uses, so each page has a
+ * distinct, period-appropriate body rather than a thin variant.
+ *
+ * 12 signs × 3 periods = 36 statically-generated pages, listed in the
+ * sitemap and ISR-refreshed on the period's natural cadence.
  */
 
+type Period = 'weekly' | 'monthly' | 'yearly';
+
+const PERIODS: Record<Period, { label: string; adjective: string; cadence: string }> = {
+  weekly: { label: 'Weekly', adjective: 'this week', cadence: 'every week' },
+  monthly: { label: 'Monthly', adjective: 'this month', cadence: 'every month' },
+  yearly: { label: 'Yearly', adjective: 'this year', cadence: 'every year' },
+};
+
+function isPeriod(value: string): value is Period {
+  return value === 'weekly' || value === 'monthly' || value === 'yearly';
+}
+
 export function generateStaticParams() {
-  return listSignSlugs().map((sign) => ({ sign }));
+  const periods: Period[] = ['weekly', 'monthly', 'yearly'];
+  return listSignSlugs().flatMap((sign) => periods.map((period) => ({ sign, period })));
 }
 
 interface RouteProps {
-  params: Promise<{ sign: string }>;
+  params: Promise<{ sign: string; period: string }>;
 }
 
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
-  const { sign: slug } = await params;
+  const { sign: slug, period } = await params;
   const sign = findSignBySlug(slug);
-  if (!sign) return {};
+  if (!sign || !isPeriod(period)) return {};
 
-  const today = new Date().toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  const title = `${sign.name} Horoscope Today — ${today} | myastro360`;
-  const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
-  const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
+  const meta = PERIODS[period];
+  const yearSuffix = period === 'yearly' ? ` ${new Date().getFullYear()}` : '';
+  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix} | myastro360`;
+  const description = `${sign.name} (${sign.symbol}) ${meta.label.toLowerCase()} horoscope — love, career, money and health predictions for ${meta.adjective}. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}.`;
+  const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`;
 
   return {
     title,
     description,
     alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      type: 'article',
-      url: canonical,
-      siteName: 'myastro360',
-    },
+    openGraph: { title, description, type: 'article', url: canonical, siteName: 'myastro360' },
     twitter: { card: 'summary', title, description },
   };
 }
 
-export default async function HoroscopeSignPage({ params }: RouteProps) {
-  const { sign: slug } = await params;
+export default async function HoroscopePeriodPage({ params }: RouteProps) {
+  const { sign: slug, period } = await params;
   const sign = findSignBySlug(slug);
-  if (!sign) notFound();
+  if (!sign || !isPeriod(period)) notFound();
 
-  const horoscope = await fetchHoroscope(sign.slug, 'daily');
+  const meta = PERIODS[period];
+  const horoscope = await fetchHoroscope(sign.slug, period);
   const today = new Date();
-  const todayDisplay = today.toLocaleDateString('en-IN', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+
+  const periodLinks: { key: string; label: string; href: string }[] = [
+    { key: 'daily', label: 'Daily', href: `/horoscope/${sign.slug}` },
+    { key: 'weekly', label: 'Weekly', href: `/horoscope/${sign.slug}/weekly` },
+    { key: 'monthly', label: 'Monthly', href: `/horoscope/${sign.slug}/monthly` },
+    { key: 'yearly', label: 'Yearly', href: `/horoscope/${sign.slug}/yearly` },
+  ];
 
   const jsonLdArticle = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: `${sign.name} Horoscope — ${todayDisplay}`,
+    headline: `${sign.name} ${meta.label} Horoscope`,
     datePublished: today.toISOString(),
     dateModified: today.toISOString(),
     author: { '@type': 'Organization', name: 'myastro360' },
@@ -78,10 +89,10 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
       name: 'myastro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
-    mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}`,
+    mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`,
     description:
       horoscope?.forecast?.slice(0, 200) ??
-      `Daily ${sign.name} horoscope covering love, career, health and lucky numbers.`,
+      `${sign.name} ${meta.label.toLowerCase()} horoscope covering love, career, money and health.`,
   };
   const jsonLdBreadcrumb = {
     '@context': 'https://schema.org',
@@ -90,28 +101,27 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
       { '@type': 'ListItem', position: 2, name: 'Horoscope', item: `${SITE_ORIGIN}/horoscope` },
       { '@type': 'ListItem', position: 3, name: sign.name, item: `${SITE_ORIGIN}/horoscope/${sign.slug}` },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: `${meta.label} Horoscope`,
+        item: `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`,
+      },
     ],
   };
 
-  // Single source of truth for the FAQ: rendered visibly below AND emitted
-  // as FAQPage structured data, so the two never drift (Google requires the
-  // schema content to be present on the page).
   const faqs: { q: string; a: string }[] = [
     {
-      q: `What dates does the ${sign.name} zodiac sign cover?`,
-      a: `${sign.name} (${sign.symbol}) covers birthdays between ${sign.dateRange}. This is the Western/tropical sun-sign range; in Vedic (sidereal) astrology the dates shift by roughly three weeks, which is why your Vedic moon sign can differ from your sun sign.`,
+      q: `How often is the ${sign.name} ${meta.label.toLowerCase()} horoscope updated?`,
+      a: `It refreshes ${meta.cadence}. You can also read ${sign.name}'s daily forecast and the other periods from the links at the top of this page.`,
     },
     {
-      q: `What element and ruling planet govern ${sign.name}?`,
-      a: `${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}. Its element shapes temperament, its modality describes how it acts, and its ruling planet colours its core motivations.`,
+      q: `Is the ${meta.label.toLowerCase()} horoscope based on the sun sign or moon sign?`,
+      a: `This forecast is a general guide for everyone born under ${sign.name}. For predictions specific to you — based on your moon sign (rashi) and ascendant (lagna) — generate your free Vedic kundli with your exact date, time and place of birth.`,
     },
     {
-      q: `Is the sun sign horoscope enough, or do I need my full kundli?`,
-      a: `A sun-sign horoscope is a broad daily snapshot for everyone born under ${sign.name}. For guidance specific to you, your Vedic kundli uses your exact date, time, and place of birth to calculate your moon sign (rashi) and ascendant (lagna), which matter more than the sun sign in Vedic astrology.`,
-    },
-    {
-      q: `How often is the ${sign.name} horoscope updated?`,
-      a: `The ${sign.name} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside myastro360.`,
+      q: `What does the ${sign.name} ${meta.label.toLowerCase()} horoscope cover?`,
+      a: `It looks at the major life areas for ${meta.adjective}: love and relationships, career and work, money and finances, and health and wellbeing.`,
     },
   ];
   const jsonLdFaq = {
@@ -137,7 +147,9 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
             <li>›</li>
             <li><Link href="/horoscope" className="hover:text-surface-950">Horoscope</Link></li>
             <li>›</li>
-            <li className="text-emphasis">{sign.name}</li>
+            <li><Link href={`/horoscope/${sign.slug}`} className="hover:text-surface-950">{sign.name}</Link></li>
+            <li>›</li>
+            <li className="text-emphasis">{meta.label}</li>
           </ol>
         </nav>
 
@@ -145,54 +157,51 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
           <ZodiacGlyph sign={sign.slug} size={52} className="text-primary-700 shrink-0" />
           <div>
             <h1 className="text-3xl font-bold text-gradient">
-              {sign.name} Horoscope Today
+              {sign.name} {meta.label} Horoscope
             </h1>
             <p className="text-sm text-[rgba(12,8,5,0.55)] mt-2">
-              {todayDisplay} · {sign.dateRange} · Ruled by {sign.rulingPlanet}
+              {sign.dateRange} · Ruled by {sign.rulingPlanet}
             </p>
           </div>
         </header>
 
-        {/* Period switcher — internal links to the weekly/monthly/yearly variants */}
+        {/* Period switcher */}
         <nav aria-label="Horoscope period" className="mb-6 flex flex-wrap gap-2">
-          <span
-            aria-current="page"
-            className="px-3 py-1.5 rounded-lg text-sm bg-primary-500/15 text-primary-300"
-          >
-            Daily
-          </span>
-          {(['weekly', 'monthly', 'yearly'] as const).map((p) => (
+          {periodLinks.map((p) => (
             <Link
-              key={p}
-              href={`/horoscope/${sign.slug}/${p}`}
-              className="px-3 py-1.5 rounded-lg text-sm bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] text-emphasis transition-colors capitalize"
+              key={p.key}
+              href={p.href}
+              aria-current={p.key === period ? 'page' : undefined}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                p.key === period
+                  ? 'bg-primary-500/15 text-primary-300'
+                  : 'bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] text-emphasis'
+              }`}
             >
-              {p}
+              {p.label}
             </Link>
           ))}
         </nav>
 
         {/* Forecast */}
         <section className="surface-card p-6 mb-6">
-          <h2 className="text-lg font-semibold text-surface-950 mb-3">Today's forecast</h2>
+          <h2 className="text-lg font-semibold text-surface-950 mb-3">
+            {sign.name} forecast for {meta.adjective}
+          </h2>
           {horoscope ? (
             <>
               <p className="text-sm text-emphasis leading-relaxed mb-4">{horoscope.forecast}</p>
               <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                {horoscope.lucky_color && (
-                  <Stat label="Lucky colour" value={horoscope.lucky_color} />
-                )}
+                {horoscope.lucky_color && <Stat label="Lucky colour" value={horoscope.lucky_color} />}
                 {horoscope.lucky_number !== undefined && (
                   <Stat label="Lucky number" value={String(horoscope.lucky_number)} />
                 )}
-                {horoscope.compatibility && (
-                  <Stat label="Compatible with" value={horoscope.compatibility} />
-                )}
+                {horoscope.compatibility && <Stat label="Compatible with" value={horoscope.compatibility} />}
               </dl>
             </>
           ) : (
             <p className="text-sm text-[rgba(12,8,5,0.55)]">
-              Today's forecast is being prepared — please refresh in a moment.
+              This forecast is being prepared — please refresh in a moment.
             </p>
           )}
         </section>
@@ -201,18 +210,11 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
         <article className="surface-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">About {sign.name}</h2>
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-5">
-            <Stat label="Element"  value={sign.element} />
+            <Stat label="Element" value={sign.element} />
             <Stat label="Modality" value={sign.modality} />
-            <Stat label="Ruler"    value={sign.rulingPlanet} />
-            <Stat label="Dates"    value={sign.dateRange} />
+            <Stat label="Ruler" value={sign.rulingPlanet} />
+            <Stat label="Dates" value={sign.dateRange} />
           </dl>
-          <p className="text-sm text-emphasis leading-relaxed mb-3">
-            {sign.name} is a {sign.modality.toLowerCase()} {sign.element.toLowerCase()} sign
-            ruled by {sign.rulingPlanet}. People born between {sign.dateRange} carry the
-            archetypes of {sign.name} as their <em>sun sign</em>; in Vedic astrology your moon
-            sign and ascendant matter even more, so a {sign.name} sun chart can pair with a very
-            different moon (rashi) personality.
-          </p>
           <p className="text-sm text-emphasis leading-relaxed">
             Want the full picture instead of just the sun sign?{' '}
             <Link href="/kundli" className="text-primary-300 hover:text-primary-300">
@@ -224,7 +226,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
         {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
         <section className="surface-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">
-            {sign.name} horoscope — frequently asked questions
+            {sign.name} {meta.label.toLowerCase()} horoscope — frequently asked questions
           </h2>
           <dl className="space-y-4 text-sm">
             {faqs.map((f) => (
@@ -240,7 +242,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
             {ZODIAC_SIGNS.map((s) => (
               <Link
                 key={s.slug}
-                href={`/horoscope/${s.slug}`}
+                href={`/horoscope/${s.slug}/${period}`}
                 aria-current={s.slug === sign.slug ? 'page' : undefined}
                 className={`flex flex-col items-center p-3 rounded-lg transition-colors ${
                   s.slug === sign.slug

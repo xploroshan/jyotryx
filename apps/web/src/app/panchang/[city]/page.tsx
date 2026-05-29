@@ -123,6 +123,40 @@ export default async function PanchangCityPage({ params }: RouteProps) {
     ],
   };
 
+  // FAQ — single source of truth, rendered visibly below and mirrored as
+  // FAQPage structured data so the schema content is present on the page.
+  const faqs: { q: string; a: string }[] = [
+    {
+      q: `What is the Panchang for ${city.name}?`,
+      a: `The Panchang is the Hindu almanac listing the five limbs (pancha-anga) of each day — tithi (lunar day), nakshatra (lunar mansion), yoga, karana, and vara (weekday) — together with sunrise, sunset, and inauspicious windows. For ${city.name} these are computed from Swiss Ephemeris using the city's exact latitude and longitude.`,
+    },
+    {
+      q: `Why is ${city.name}'s panchang different from a national panchang?`,
+      a: `Tithi, nakshatra, sunrise, and sunset change at different clock times depending on location. Because the moon and sun cross local horizons at ${city.name}'s coordinates (${city.lat.toFixed(4)}, ${city.lng.toFixed(4)}) rather than a national reference point, a generic panchang can be off by hours — the values here are local to ${city.name}.`,
+    },
+    {
+      q: `What are Rahu Kaal, Gulika Kaal, and Yamakantaka?`,
+      a: `They are short daily windows traditionally avoided for starting something new — signing a contract, beginning a journey, or starting a ceremony. Routine activities already in progress are unaffected; the convention is simply to time first acts outside these windows.`,
+    },
+    {
+      q: `Which ayanamsa and engine does myastro360 use?`,
+      a: `Sidereal values use the canonical Lahiri ayanamsa, and all positions are computed from Swiss Ephemeris — the same astronomical engine used by professional astrologers and standard panchangs. Re-running with the same date returns identical results.`,
+    },
+    {
+      q: `How often does this panchang update?`,
+      a: `It refreshes once per local day. Reload the page the next morning to see ${city.name}'s panchang for the new day.`,
+    },
+  ];
+  const jsonLdFaq = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
   return (
     <div className="relative min-h-screen">
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
@@ -133,6 +167,10 @@ export default async function PanchangCityPage({ params }: RouteProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
         />
 
         {/* Breadcrumbs */}
@@ -231,6 +269,18 @@ export default async function PanchangCityPage({ params }: RouteProps) {
           </p>
         </article>
 
+        {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
+        <section className="surface-card p-6 mb-6">
+          <h2 className="text-lg font-semibold text-surface-950 mb-3">
+            Panchang for {city.name} — frequently asked questions
+          </h2>
+          <dl className="space-y-4 text-sm">
+            {faqs.map((f) => (
+              <Faq key={f.q} q={f.q} a={f.a} />
+            ))}
+          </dl>
+        </section>
+
         {/* Cross-links */}
         <section className="surface-card p-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">More for {city.name}</h2>
@@ -263,6 +313,15 @@ export default async function PanchangCityPage({ params }: RouteProps) {
           </p>
         </section>
       </div>
+    </div>
+  );
+}
+
+function Faq({ q, a }: { q: string; a: string }) {
+  return (
+    <div className="border-l-2 border-primary-500/30 pl-3">
+      <dt className="font-medium text-surface-950">{q}</dt>
+      <dd className="text-emphasis mt-1 leading-relaxed">{a}</dd>
     </div>
   );
 }

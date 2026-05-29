@@ -59,6 +59,14 @@ describe('AstrologyService', () => {
 
     userService = {
       deductCredits: jest.fn().mockResolvedValue(true),
+      // Mirror the real deductWithRefund: deduct first (via the
+      // deductCredits mock so tests can force insufficiency), throw on
+      // failure, otherwise run the work callback and return its result.
+      deductWithRefund: jest.fn(async (userId: string, cost: number, description: string, work: () => Promise<unknown>) => {
+        const ok = await userService.deductCredits(userId, cost, description);
+        if (!ok) throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+        return work();
+      }),
       findById: jest.fn().mockResolvedValue(mockUser),
       getProfile: jest.fn().mockResolvedValue(mockUser),
     };

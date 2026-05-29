@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/v2/Button";
 import { Card, CardCaption, CardDescription, CardHeader, CardTitle } from "@/components/ui/v2/Card";
 import { Container } from "@/components/ui/v2/Container";
@@ -28,12 +29,12 @@ export default function StyleguidePage() {
             </span>
             <span className="v2-badge v2-badge-accent">Locked</span>
           </div>
-          <a
+          <Link
             href="/"
             className="text-[13px] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors"
           >
             ← back to live site
-          </a>
+          </Link>
         </header>
 
         {/* ── Hero ───────────────────────────────────────────────── */}

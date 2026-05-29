@@ -58,6 +58,11 @@ export default () => ({
     keyId: process.env.RAZORPAY_KEY_ID || '',
     keySecret: process.env.RAZORPAY_KEY_SECRET || '',
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
+    // Razorpay subscription plan IDs (created once in the Razorpay
+    // dashboard). The web /pricing page sends a logical plan
+    // (MONTHLY | ANNUAL); the service maps it to the real plan_id here.
+    planMonthly: process.env.RAZORPAY_PLAN_MONTHLY || '',
+    planAnnual: process.env.RAZORPAY_PLAN_ANNUAL || '',
   },
 
   openai: {

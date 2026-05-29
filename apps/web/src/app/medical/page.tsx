@@ -11,6 +11,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { useTranslation } from '@/i18n';
 import { greetingName } from '@/lib/displayName';
 import {
   westernSunSign,
@@ -22,24 +23,26 @@ import TraditionDashboard, {
   FactCard,
 } from '@/components/tradition/TraditionDashboard';
 
-const HUMOUR_BY_ELEMENT: Record<string, { humour: string; note: string }> = {
-  Fire:  { humour: 'Choleric', note: 'Hot and dry — sharp, swift, prone to inflammation and impatience.' },
-  Earth: { humour: 'Melancholic', note: 'Cold and dry — slow, retentive, prone to stagnation and stiffness.' },
-  Air:   { humour: 'Sanguine', note: 'Hot and moist — buoyant, social, prone to nervous excess.' },
-  Water: { humour: 'Phlegmatic', note: 'Cold and moist — soft, receptive, prone to congestion and damp.' },
-};
-
 export default function MedicalDashboardPage() {
+  const { t } = useTranslation();
+  const d = t.dashboards.medical;
   const user = useAuthStore((s) => s.user);
   const sign = user?.dateOfBirth ? westernSunSign(user.dateOfBirth) : null;
   const todaySign = westernSunSignToday();
   const firstName = greetingName(user);
   const bodyPart = sign ? SIGN_BODY_PART[sign.name] : null;
-  const humour = sign ? HUMOUR_BY_ELEMENT[sign.element] : null;
+
+  const humourByElement: Record<string, { humour: string; note: string }> = {
+    Fire:  { humour: d.humourCholeric, note: d.humourCholericNote },
+    Earth: { humour: d.humourMelancholic, note: d.humourMelancholicNote },
+    Air:   { humour: d.humourSanguine, note: d.humourSanguineNote },
+    Water: { humour: d.humourPhlegmatic, note: d.humourPhlegmaticNote },
+  };
+  const humour = sign ? humourByElement[sign.element] : null;
 
   const headline = firstName
-    ? `${firstName}'s {em}constitutional reading{/em}`
-    : `Your {em}medical chart{/em}`;
+    ? d.heroTitle.replace('{name}', firstName)
+    : d.heroTitleGuest;
 
   const metaLine = user?.dateOfBirth
     ? new Date(user.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -48,7 +51,7 @@ export default function MedicalDashboardPage() {
 
   const chips = sign
     ? [
-        { label: `${sign.name} Sun`, tone: 'text-emerald-300' },
+        { label: d.sunChip.replace('{sign}', sign.name), tone: 'text-emerald-300' },
         humour ? { label: humour.humour, tone: 'text-white/85' } : null,
       ].filter(Boolean) as { label: string; tone: string }[]
     : undefined;
@@ -63,56 +66,56 @@ export default function MedicalDashboardPage() {
         <section className="border-b border-[rgba(26,20,16,0.10)]">
           <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12">
             <SectionHead
-              eyebrow={sign ? 'Your constitution' : 'Medical at a glance'}
-              title={sign ? 'Body, humour, season' : 'Melothesia & decumbiture'}
+              eyebrow={sign ? d.yourConstitutionEyebrow : d.ataGlanceEyebrow}
+              title={sign ? d.bodyHumourSeasonTitle : d.melothesiaTitle}
               tone="text-emerald-700"
             />
 
             {sign && bodyPart && humour ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <FactCard
-                  eyebrow="Sun rules"
+                  eyebrow={d.sunRulesEyebrow}
                   headline={bodyPart.split(',')[0]}
                   subline={bodyPart}
-                  note="The body region your sun-sign governs in the classical melothesia — your vitality lives here."
+                  note={d.sunRulesNote}
                   accent="emerald"
                 />
                 <FactCard
-                  eyebrow="Humour"
+                  eyebrow={d.humourEyebrow}
                   headline={humour.humour}
-                  subline={`${sign.element} element`}
+                  subline={d.elementSuffix.replace('{element}', sign.element)}
                   note={humour.note}
                   accent="amber"
                 />
                 {todaySign && (
                   <FactCard
-                    eyebrow="Today's transit"
+                    eyebrow={d.todaysTransitEyebrow}
                     headline={SIGN_BODY_PART[todaySign.name].split(',')[0]}
-                    subline={`Sun in ${todaySign.name}`}
-                    note="The body region under accent today — extra care, or extra capacity, here."
+                    subline={d.sunInSuffix.replace('{sign}', todaySign.name)}
+                    note={d.todaysTransitNote}
                     accent="rose"
                   />
                 )}
                 <FactCard
-                  eyebrow="Practice"
-                  headline="Decumbiture chart"
-                  subline="Cast for the moment illness began"
-                  note="The chart of when you took to bed — read like a horary question for the body."
+                  eyebrow={d.practiceEyebrow}
+                  headline={d.decumbitureChartHeadline}
+                  subline={d.decumbitureChartSubline}
+                  note={d.decumbitureChartNote}
                   accent="violet"
                 />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <FactCard
-                  eyebrow="Melothesia"
-                  headline="The zodiac body"
-                  note="Each sign rules a region of the body — Aries the head, Pisces the feet, with everything in between."
+                  eyebrow={d.melothesiaEyebrow}
+                  headline={d.zodiacBodyHeadline}
+                  note={d.zodiacBodyNote}
                   accent="emerald"
                 />
                 <FactCard
-                  eyebrow="Decumbiture"
-                  headline="The chart of falling sick"
-                  note="A horary technique that reads the moment of decline to predict crisis, recovery, and best remedies."
+                  eyebrow={d.decumbitureEyebrow}
+                  headline={d.fallingSickHeadline}
+                  note={d.fallingSickNote}
                   accent="rose"
                 />
               </div>

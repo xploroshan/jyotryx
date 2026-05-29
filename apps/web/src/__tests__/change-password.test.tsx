@@ -124,7 +124,10 @@ describe('Change Password Flow (existing password)', () => {
       expect(mockApiPost).toHaveBeenCalledWith(
         '/auth/change-password',
         { currentPassword: 'OldPass123!', newPassword: 'NewPass456!' },
-        { token: 'valid-token' },
+        // The change-password call opts out of the 401 auto-refresh so a
+        // wrong current password surfaces as an error instead of logging
+        // the user out (see api.ts skipAuthRefreshOn401).
+        expect.objectContaining({ token: 'valid-token', skipAuthRefreshOn401: true }),
       );
     });
     expect(await screen.findByText('Password changed successfully')).toBeDefined();

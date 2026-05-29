@@ -10,6 +10,29 @@ import ImpersonationBanner from "@/components/auth/ImpersonationBanner";
 import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShell";
 import NavbarV2 from "@/components/layout/v2/NavbarV2";
 import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
+import { SITE_ORIGIN } from "@/lib/seo/server-api";
+
+// Sitewide structured data. The Organization node feeds brand knowledge
+// panels and lets answer engines (ChatGPT, Perplexity, Gemini) attribute
+// the product correctly; the WebSite node is what Google uses for the
+// sitelinks search box. Emitted once in the root layout so every route
+// carries it without per-page duplication.
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "myastro360",
+  url: SITE_ORIGIN,
+  logo: `${SITE_ORIGIN}/logo.svg`,
+  description:
+    "myastro360 is a Vedic astrology platform offering instant, personalized Kundli, horoscopes, palmistry, compatibility matching, panchang, and muhurat guidance.",
+};
+
+const WEBSITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "myastro360",
+  url: SITE_ORIGIN,
+};
 
 // We expose the next/font families as their own CSS variables and let the
 // theme tokens in globals.css extend them with system fallbacks. Doing it
@@ -43,6 +66,9 @@ export const metadata: Metadata = {
     "palmistry", "kundli matching", "panchang", "muhurat", "myastro360",
   ],
   metadataBase: new URL("https://www.myastro360.com"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "myastro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
@@ -68,6 +94,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSON_LD) }}
+        />
         {/* Warm paper grain overlay — sits below interactive content but
             above the body bg, so the entire surface gains a soft analog
             tactility without ever blocking pointer events. */}

@@ -10,6 +10,7 @@
  */
 
 import { useAuthStore } from '@/lib/store';
+import { useTranslation } from '@/i18n';
 import { greetingName } from '@/lib/displayName';
 import { westernSunSign, profectionForAge } from '@/lib/astro/signs';
 import TraditionDashboard, {
@@ -17,18 +18,23 @@ import TraditionDashboard, {
   FactCard,
 } from '@/components/tradition/TraditionDashboard';
 
-const ORDINAL = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth',
-  'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth'];
-
 export default function HellenisticDashboardPage() {
+  const { t } = useTranslation();
+  const d = t.dashboards.hellenistic;
   const user = useAuthStore((s) => s.user);
   const sign = user?.dateOfBirth ? westernSunSign(user.dateOfBirth) : null;
   const profection = user?.dateOfBirth ? profectionForAge(user.dateOfBirth) : null;
   const firstName = greetingName(user);
 
+  const ordinal = (n: number): string =>
+    (d as Record<string, string>)[`ordinal${n}`] ?? '';
+
+  const heroPhrase = profection
+    ? d.heroPhraseHouse.replace('{ordinal}', ordinal(profection.house))
+    : d.heroPhraseFallback;
   const headline = firstName
-    ? `${firstName}, the {em}${profection ? ORDINAL[profection.house] + ' house' : 'ancient art'}{/em} year`
-    : `Your {em}Hellenistic chart{/em}`;
+    ? d.heroTitle.replace('{name}', firstName).replace('{phrase}', heroPhrase)
+    : d.heroTitleGuest;
 
   const metaLine = user?.dateOfBirth
     ? new Date(user.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -37,9 +43,9 @@ export default function HellenisticDashboardPage() {
 
   const chips = sign
     ? [
-        { label: `${sign.name} Sun`, tone: 'text-violet-300' },
-        profection ? { label: `Age ${profection.age}`, tone: 'text-white/85' } : null,
-        profection ? { label: `${ORDINAL[profection.house]} house year`, tone: 'text-white/85' } : null,
+        { label: d.sunChip.replace('{sign}', sign.name), tone: 'text-violet-300' },
+        profection ? { label: d.ageChip.replace('{age}', String(profection.age)), tone: 'text-white/85' } : null,
+        profection ? { label: d.houseYearChip.replace('{ordinal}', ordinal(profection.house)), tone: 'text-white/85' } : null,
       ].filter(Boolean) as { label: string; tone: string }[]
     : undefined;
 
@@ -53,54 +59,54 @@ export default function HellenisticDashboardPage() {
         <section className="border-b border-[rgba(26,20,16,0.10)]">
           <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12">
             <SectionHead
-              eyebrow={sign ? 'Your year' : 'Hellenistic at a glance'}
-              title={sign ? 'Where the year lives' : 'Time-lord astrology'}
+              eyebrow={sign ? d.yourYearEyebrow : d.ataGlanceEyebrow}
+              title={sign ? d.whereYearLivesTitle : d.timeLordTitle}
               tone="text-violet-700"
             />
 
             {sign && profection ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <FactCard
-                  eyebrow="Profected house"
-                  headline={`${capitalize(ORDINAL[profection.house])} (${profection.house})`}
+                  eyebrow={d.profectedHouseEyebrow}
+                  headline={d.profectedHouseHeadline.replace('{ordinal}', capitalize(ordinal(profection.house))).replace('{house}', String(profection.house))}
                   subline={profection.topic}
-                  note="The lord of this house becomes the year's headline planet — where the story focuses."
+                  note={d.profectedHouseNote}
                   accent="violet"
                 />
                 <FactCard
-                  eyebrow="Age"
+                  eyebrow={d.ageEyebrow}
                   headline={String(profection.age)}
-                  subline="Years since you arrived"
-                  note="Profection moves clockwise one house each birthday — twelve-year cycles."
+                  subline={d.ageSubline}
+                  note={d.ageNote}
                   accent="indigo"
                 />
                 <FactCard
-                  eyebrow="Sun (tropical)"
+                  eyebrow={d.sunTropicalEyebrow}
                   headline={sign.name}
-                  subline={`Ruler: ${sign.ruler}`}
-                  note="The sect, the daimon, the daily light you live under."
+                  subline={`${d.rulerPrefix} ${sign.ruler}`}
+                  note={d.sunNote}
                   accent="amber"
                 />
                 <FactCard
-                  eyebrow="Element"
+                  eyebrow={d.elementEyebrow}
                   headline={sign.element}
-                  subline={`${sign.mode} modality`}
-                  note="Triplicity lords rule the day-sect and night-sect of this element."
+                  subline={d.modalitySuffix.replace('{mode}', sign.mode)}
+                  note={d.elementNote}
                   accent="emerald"
                 />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <FactCard
-                  eyebrow="Annual profections"
-                  headline="A house a year"
-                  note="Each birthday the locus moves one house clockwise from the Ascendant. The new house lord becomes the year's planet to watch."
+                  eyebrow={d.profectionsEyebrow}
+                  headline={d.profectionsHeadline}
+                  note={d.profectionsNote}
                   accent="violet"
                 />
                 <FactCard
-                  eyebrow="Zodiacal releasing"
-                  headline="Chapters of life"
-                  note="Vettius Valens's technique for finding the peak years of your career, partnerships, and pivots."
+                  eyebrow={d.releasingEyebrow}
+                  headline={d.releasingHeadline}
+                  note={d.releasingNote}
                   accent="indigo"
                 />
               </div>

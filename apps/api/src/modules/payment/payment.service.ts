@@ -44,6 +44,9 @@ export interface SubscriptionResult {
   status: string;
   currentStart: string;
   currentEnd: string;
+  /** Razorpay-hosted checkout URL the client redirects to in order to
+   *  authorise the first charge. Undefined in mock mode (no credentials). */
+  shortUrl?: string;
 }
 
 export interface PaymentHistoryItem {
@@ -102,14 +105,68 @@ export class PaymentService {
     return prices[productId] ?? null;
   }
 
+  /**
+   * Resolve a credit pack (starter / popular / pro …) from the
+   * admin-editable SiteSettings — the SAME source the web /pricing page
+   * reads. This is the single source of truth for both the price the
+   * client must pay and the number of credits we grant, so the two can
+   * never drift: a pack advertised as "25 credits for ₹99" charges ₹99
+   * and grants exactly 25.
+   *
+   * `productId` arrives as `credits_<packId>` (e.g. `credits_starter`);
+   * the leading `credits_`/`credits.` is stripped before lookup. Returns
+   * null for unknown packs or malformed/missing settings so the caller
+   * can fall back to legacy product handling.
+   */
+  private async resolveCreditPack(
+    productId: string,
+  ): Promise<{ packId: string; priceINR: number; credits: number } | null> {
+    const packId = productId.replace(/^credits[_.]/i, '');
+    if (!/^[a-z0-9_]+$/i.test(packId)) return null;
+
+    const priceKey = `pricing.credits.${packId}.price`;
+    const creditsKey = `pricing.credits.${packId}.credits`;
+    const rows = await this.prisma.siteSetting.findMany({
+      where: { key: { in: [priceKey, creditsKey] } },
+    });
+    const byKey: Record<string, string> = {};
+    for (const row of rows) byKey[row.key] = row.value;
+
+    const priceINR = parseInt(byKey[priceKey], 10);
+    const credits = parseInt(byKey[creditsKey], 10);
+    if (
+      !Number.isFinite(priceINR) ||
+      !Number.isFinite(credits) ||
+      priceINR <= 0 ||
+      credits <= 0
+    ) {
+      return null;
+    }
+    return { packId, priceINR, credits };
+  }
+
   async createOrder(userId: string, dto: CreateOrderDto): Promise<RazorpayOrder> {
     this.logger.log(`Creating order for user: ${userId}, amount: ${dto.amount}`);
 
-    // Validate amount against expected price for the product
+    // Resolve how many credits this purchase grants, and validate the
+    // amount, against the authoritative price. Credit packs are looked up
+    // in SiteSettings; everything else falls back to the static price map.
+    let grantedCredits: number | undefined;
     if (dto.productId) {
-      const expectedPrice = this.getExpectedPrice(dto.productId);
-      if (expectedPrice !== null && dto.amount !== expectedPrice) {
-        throw new BadRequestException(`Invalid amount for product ${dto.productId}. Expected ${expectedPrice}, got ${dto.amount}`);
+      const pack = await this.resolveCreditPack(dto.productId);
+      if (pack) {
+        const expectedPaise = pack.priceINR * 100;
+        if (dto.amount !== expectedPaise) {
+          throw new BadRequestException(
+            `Invalid amount for ${dto.productId}. Expected ${expectedPaise}, got ${dto.amount}`,
+          );
+        }
+        grantedCredits = pack.credits;
+      } else {
+        const expectedPrice = this.getExpectedPrice(dto.productId);
+        if (expectedPrice !== null && dto.amount !== expectedPrice) {
+          throw new BadRequestException(`Invalid amount for product ${dto.productId}. Expected ${expectedPrice}, got ${dto.amount}`);
+        }
       }
     }
 
@@ -145,7 +202,10 @@ export class PaymentService {
         status: 'PENDING',
         razorpayOrderId: orderId,
         type: 'CREDITS',
-        metadata: { productId: dto.productId, description: dto.description },
+        // `credits` is captured at order-creation time from the
+        // authoritative pack definition, so the grant on verify/webhook
+        // is deterministic and never re-derived from the amount.
+        metadata: { productId: dto.productId, description: dto.description, credits: grantedCredits },
       },
     });
 
@@ -225,9 +285,9 @@ export class PaymentService {
     // We won the update — safe to grant credits exactly once.
     const payment = await this.prisma.payment.findFirstOrThrow({
       where: { razorpayOrderId: dto.razorpayOrderId, userId },
-      select: { amount: true },
+      select: { amount: true, metadata: true },
     });
-    const creditsToAdd = this.calculateCredits(Number(payment.amount));
+    const creditsToAdd = this.creditsForPayment(payment);
     await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
 
     return {
@@ -239,18 +299,32 @@ export class PaymentService {
   }
 
   async createSubscription(userId: string, dto: CreateSubscriptionDto): Promise<SubscriptionResult> {
-    this.logger.log(`Creating subscription for user: ${userId}, plan: ${dto.planId}`);
+    const isAnnual = dto.plan.toUpperCase() === 'ANNUAL';
+    this.logger.log(`Creating subscription for user: ${userId}, plan: ${dto.plan}`);
+
+    // Map the logical tier to a real Razorpay plan_id configured out of
+    // band (dashboard → env). The client never supplies a raw plan_id, so
+    // it can't subscribe itself to an arbitrary/cheaper plan.
+    const razorpayPlanId = isAnnual
+      ? this.configService.get<string>('razorpay.planAnnual')
+      : this.configService.get<string>('razorpay.planMonthly');
 
     let subscriptionId: string;
+    let shortUrl: string | undefined;
 
     if (this.razorpayInstance) {
+      if (!razorpayPlanId) {
+        this.logger.error(`No Razorpay plan_id configured for ${isAnnual ? 'ANNUAL' : 'MONTHLY'}`);
+        throw new InternalServerErrorException('Subscription plan is not configured');
+      }
       try {
         const subscription = await this.razorpayInstance.subscriptions.create({
-          plan_id: dto.planId,
-          total_count: dto.totalCount ? parseInt(dto.totalCount) : 12,
+          plan_id: razorpayPlanId,
+          total_count: dto.totalCount ? parseInt(dto.totalCount) : isAnnual ? 5 : 12,
           notes: { userId },
         });
         subscriptionId = subscription.id;
+        shortUrl = subscription.short_url;
       } catch (error) {
         this.logger.error('Razorpay subscription creation failed', error);
         throw new InternalServerErrorException('Failed to create subscription');
@@ -259,9 +333,17 @@ export class PaymentService {
       subscriptionId = `sub_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
-    // Persist subscription and upgrade role atomically
-    const isAnnual = dto.planId.includes('annual');
+    // Persist the subscription. We do NOT grant the PREMIUM role here in
+    // live mode: the Razorpay-hosted checkout (short_url) hasn't charged
+    // the customer yet, so granting Premium on creation would hand free
+    // access to anyone who opens — then abandons — the checkout. The role
+    // is granted from the subscription.activated / subscription.charged
+    // webhook once the first payment is captured.
+    //
+    // In mock mode (no Razorpay credentials) there is no webhook to fire,
+    // so we grant immediately to keep local development usable.
     const endDate = new Date(Date.now() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
+    const grantImmediately = !this.razorpayInstance;
     await this.prisma.$transaction(async (tx: any) => {
       await tx.subscription.create({
         data: {
@@ -273,18 +355,21 @@ export class PaymentService {
         },
       });
 
-      await tx.user.update({
-        where: { id: userId },
-        data: { role: 'PREMIUM' },
-      });
+      if (grantImmediately) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: 'PREMIUM' },
+        });
+      }
     });
 
     return {
       id: subscriptionId,
-      planId: dto.planId,
+      planId: razorpayPlanId || (isAnnual ? 'ANNUAL' : 'MONTHLY'),
       status: 'active',
       currentStart: new Date().toISOString(),
       currentEnd: endDate.toISOString(),
+      shortUrl,
     };
   }
 
@@ -338,9 +423,9 @@ export class PaymentService {
               if (count === 0) return; // lost the race or not our order
               const payment = await tx.payment.findFirstOrThrow({
                 where: { razorpayOrderId: paymentEntity.order_id },
-                select: { userId: true, amount: true },
+                select: { userId: true, amount: true, metadata: true },
               });
-              const creditsToAdd = this.calculateCredits(Number(payment.amount));
+              const creditsToAdd = this.creditsForPayment(payment);
               await tx.user.update({
                 where: { id: payment.userId },
                 data: { credits: { increment: creditsToAdd } },
@@ -364,9 +449,34 @@ export class PaymentService {
             });
           }
           break;
-        case 'subscription.charged':
-          this.logger.log('Subscription charge successful');
+        case 'subscription.activated':
+        case 'subscription.charged': {
+          // First (and recurring) successful charge. THIS is where Premium
+          // is granted — not at subscription creation — so an authorised
+          // payment is what unlocks access. Idempotent: re-grants the role
+          // on every renewal charge, which is a no-op if already PREMIUM.
+          const subEntity = payload?.payload?.subscription?.entity;
+          if (subEntity?.id) {
+            await this.prisma.$transaction(async (tx: any) => {
+              const { count } = await tx.subscription.updateMany({
+                where: { razorpaySubscriptionId: subEntity.id },
+                data: { status: 'ACTIVE' },
+              });
+              if (count === 0) return; // not one of our subscriptions
+              const sub = await tx.subscription.findFirst({
+                where: { razorpaySubscriptionId: subEntity.id },
+                select: { userId: true },
+              });
+              if (sub) {
+                await tx.user.update({
+                  where: { id: sub.userId },
+                  data: { role: 'PREMIUM' },
+                });
+              }
+            });
+          }
           break;
+        }
         case 'subscription.cancelled': {
           const subEntity = payload?.payload?.subscription?.entity;
           if (subEntity?.id) {
@@ -413,6 +523,22 @@ export class PaymentService {
       result[row.key] = row.value;
     }
     return result;
+  }
+
+  /**
+   * Credits to grant for a completed payment. Prefers the `credits` value
+   * captured in the payment metadata at order-creation time (the
+   * authoritative pack definition), so the user receives exactly what was
+   * advertised. Falls back to the amount-based heuristic for legacy
+   * payments created before packs stored their credit count.
+   */
+  private creditsForPayment(payment: { amount: unknown; metadata?: unknown }): number {
+    const meta = (payment?.metadata ?? null) as { credits?: unknown } | null;
+    const metaCredits =
+      meta && typeof meta.credits === 'number' && Number.isFinite(meta.credits) && meta.credits > 0
+        ? meta.credits
+        : null;
+    return metaCredits ?? this.calculateCredits(Number(payment.amount));
   }
 
   private calculateCredits(amountINR: number): number {

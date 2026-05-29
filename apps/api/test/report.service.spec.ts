@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
@@ -55,6 +55,13 @@ describe('ReportService', () => {
 
     userService = {
       deductCredits: jest.fn().mockResolvedValue(true),
+      // Mirror the real deductWithRefund (deduct → run work → refund on
+      // throw) so the credit-deduction assertions still hold.
+      deductWithRefund: jest.fn(async (userId: string, cost: number, description: string, work: () => Promise<unknown>) => {
+        const ok = await userService.deductCredits(userId, cost, description);
+        if (!ok) throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+        return work();
+      }),
       findById: jest.fn().mockResolvedValue(mockUser),
       getProfile: jest.fn().mockResolvedValue(mockUser),
     };
