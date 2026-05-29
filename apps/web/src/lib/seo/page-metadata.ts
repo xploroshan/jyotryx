@@ -22,10 +22,15 @@ export function localeUrl(locale: Locale, path: string): string {
   return `${SITE_ORIGIN}${prefix}${p}`;
 }
 
-/** hreflang map across every locale + x-default → English. */
-function languagesFor(path: string): Record<string, string> {
+/**
+ * hreflang map + x-default → English. Defaults to every supported locale
+ * (Tier-A feature pages exist in all 12); pass a subset for pages that only
+ * exist in some locales (e.g. landing pages live in en + hi for now) so we
+ * never emit an hreflang to a URL that 404s.
+ */
+function languagesFor(path: string, locales: readonly Locale[] = SUPPORTED_LOCALES): Record<string, string> {
   const languages: Record<string, string> = {};
-  for (const l of SUPPORTED_LOCALES) languages[l] = localeUrl(l, path);
+  for (const l of locales) languages[l] = localeUrl(l, path);
   languages["x-default"] = localeUrl(DEFAULT_LOCALE, path);
   return languages;
 }
@@ -74,20 +79,23 @@ interface LocalizedMetaInput {
   title: string;
   description: string;
   keywords?: string[];
+  /** Locales this page actually exists in (for hreflang). Defaults to all 12. */
+  hreflangLocales?: readonly Locale[];
 }
 
 /**
  * Metadata for a localized `/<locale>/…` page: canonical points at the
- * localized URL, with reciprocal hreflang alternates (every locale +
- * x-default) so the language set is correctly linked for search engines.
+ * localized URL, with reciprocal hreflang alternates (the locales the page
+ * exists in + x-default) so the language set is correctly linked for search
+ * engines.
  */
-export function localizedMetadata({ locale, path, title, description, keywords }: LocalizedMetaInput): Metadata {
+export function localizedMetadata({ locale, path, title, description, keywords, hreflangLocales }: LocalizedMetaInput): Metadata {
   const canonical = localeUrl(locale, path);
   return {
     title,
     description,
     ...(keywords ? { keywords } : {}),
-    alternates: { canonical, languages: languagesFor(path) },
+    alternates: { canonical, languages: languagesFor(path, hreflangLocales) },
     openGraph: {
       title,
       description,
