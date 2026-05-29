@@ -4,7 +4,7 @@ import { ZODIAC_SIGNS } from '@/lib/seo/zodiac';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
 import { LOCALIZED_PATHS } from '@/lib/seo/feature-pages';
 import { localeUrl } from '@/lib/seo/page-metadata';
-import { PREFIXED_LOCALES } from '@/i18n/locales';
+import { PREFIXED_LOCALES, PREFIXED_LANDING_LOCALES } from '@/i18n/locales';
 
 /**
  * Dynamic sitemap.xml.
@@ -83,6 +83,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   );
 
+  // Localized SEO landing pages (Phase 2) — currently the per-sign horoscope
+  // pages in the enabled landing locales (Hindi). The English versions are in
+  // signPages above.
+  const localizedHoroscopePages: MetadataRoute.Sitemap = PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+    ZODIAC_SIGNS.map((sign) => ({
+      url: localeUrl(locale, `/horoscope/${sign.slug}`),
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    })),
+  );
+
   return [
     ...staticPages,
     ...signPages,
@@ -90,5 +102,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...panchangCityPages,
     ...kundliCityPages,
     ...localizedFeaturePages,
+    ...localizedHoroscopePages,
   ];
 }

@@ -57,9 +57,11 @@ export async function fetchPanchang(
   lat: number,
   lng: number,
   revalidateSeconds = 60 * 60 * 6,
+  locale?: string,
 ): Promise<PanchangPayload | null> {
   try {
-    const url = `${API_BASE_URL}/astrology/panchang?lat=${lat}&lng=${lng}`;
+    const localeQ = locale && locale !== 'en' ? `&locale=${encodeURIComponent(locale)}` : '';
+    const url = `${API_BASE_URL}/astrology/panchang?lat=${lat}&lng=${lng}${localeQ}`;
     const res = await fetch(url, {
       next: { revalidate: revalidateSeconds, tags: ['panchang'] },
       headers: { Accept: 'application/json' },
@@ -84,11 +86,13 @@ export async function fetchHoroscope(
   sign: string,
   period: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'daily',
   revalidateSeconds = 60 * 60 * 6,
+  locale?: string,
 ): Promise<HoroscopePayload | null> {
   try {
+    const localeQ = locale && locale !== 'en' ? `&locale=${encodeURIComponent(locale)}` : '';
     const url = `${API_BASE_URL}/astrology/horoscope/${encodeURIComponent(
       sign,
-    )}?period=${period}`;
+    )}?period=${period}${localeQ}`;
     const res = await fetch(url, {
       next: { revalidate: revalidateSeconds, tags: ['horoscope'] },
       headers: { Accept: 'application/json' },

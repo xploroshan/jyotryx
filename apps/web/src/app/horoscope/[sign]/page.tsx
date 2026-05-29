@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
+import { localeUrl } from '@/lib/seo/page-metadata';
+import { LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -37,10 +39,15 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
 
+  // Reciprocal hreflang for the locales this landing page is published in.
+  const languages: Record<string, string> = {};
+  for (const l of LANDING_LOCALES) languages[l] = localeUrl(l, `/horoscope/${sign.slug}`);
+  languages['x-default'] = localeUrl('en', `/horoscope/${sign.slug}`);
+
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: {
       title,
       description,
