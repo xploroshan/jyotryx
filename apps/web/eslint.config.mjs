@@ -24,6 +24,12 @@ export default [
       'react-hooks/immutability': 'off',
       'react-hooks/static-components': 'off',
       'react-hooks/purity': 'off',
+      // Cosmetic-only: flags literal ' and " inside JSX text (e.g.
+      // "Today's forecast"), which render correctly. Escaping every
+      // apostrophe across the marketing/SEO prose hurts readability for
+      // no runtime benefit, so we disable it rather than litter the copy
+      // with &apos;/&quot;. Genuine link/perf rules stay on.
+      'react/no-unescaped-entities': 'off',
     },
   },
 ];
