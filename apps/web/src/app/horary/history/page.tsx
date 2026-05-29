@@ -59,7 +59,6 @@ export default function HoraryHistoryPage() {
     <FeaturePageShell
       traditionId="HORARY"
       featureKey="traditionsUi.horary.features.history"
-      icon="📚"
       descriptionKey="featurePages.horaryHistory.description"
     >
       {!isAuthenticated ? (

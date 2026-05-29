@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+import { PlanetGlyph } from '@/components/icons/astro';
 
 interface HouseRow {
   house: number;
@@ -29,10 +30,6 @@ interface KundliResponse {
   interpretation?: string;
 }
 
-const PLANET_GLYPH: Record<string, string> = {
-  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂',
-  Jupiter: '♃', Saturn: '♄', Rahu: '☊', Ketu: '☋',
-};
 
 /**
  * Hellenistic natal chart — reuses the shared `/astrology/kundli`
@@ -83,7 +80,6 @@ export default function HellenisticNatalPage() {
     <FeaturePageShell
       traditionId="HELLENISTIC"
       featureKey="traditionsUi.hellenistic.features.natal"
-      icon="🌟"
       descriptionKey="featurePages.hellenisticNatal.description"
     >
       {!isAuthenticated ? (
@@ -159,9 +155,7 @@ export default function HellenisticNatalPage() {
                   className="flex items-center justify-between py-2 text-sm"
                 >
                   <span className="flex items-center gap-2 text-emphasis">
-                    <span className="text-lg" aria-hidden>
-                      {PLANET_GLYPH[p.planet] ?? '✦'}
-                    </span>
+                    <PlanetGlyph planet={p.planet} size={18} className="text-primary-700" />
                     {p.planet}
                     {p.isRetrograde && (
                       <span className="text-[10px] px-1.5 rounded bg-amber-500/20 text-amber-300">

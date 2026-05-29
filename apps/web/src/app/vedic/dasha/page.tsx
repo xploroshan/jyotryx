@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { WEB_TRADITIONS } from '@/lib/traditions';
 import EditorialHero from '@/components/editorial/EditorialHero';
 import { TraditionGlyph } from '@/components/icons';
+import { PlanetGlyph } from '@/components/icons/astro';
 
 interface DashaPeriod {
   planet: string;
@@ -21,17 +22,6 @@ interface KundliLite {
   dashas: DashaPeriod[];
 }
 
-const PLANET_EMOJI: Record<string, string> = {
-  Sun: '☉',
-  Moon: '☽',
-  Mars: '♂',
-  Mercury: '☿',
-  Jupiter: '♃',
-  Venus: '♀',
-  Saturn: '♄',
-  Rahu: '☊',
-  Ketu: '☋',
-};
 
 function fmtDate(s: string): string {
   try {
@@ -182,7 +172,6 @@ export default function VedicDashaPage() {
                 >
                   <div className="flex items-center gap-4">
                     <span
-                      className="text-2xl leading-none"
                       style={{
                         filter: isCurrent
                           ? 'drop-shadow(0 0 8px rgba(99,102,241,0.5))'
@@ -190,7 +179,7 @@ export default function VedicDashaPage() {
                       }}
                       aria-hidden
                     >
-                      {PLANET_EMOJI[d.planet] ?? '✦'}
+                      <PlanetGlyph planet={d.planet} size={26} className="text-primary-700" />
                     </span>
                     <div>
                       <div className="flex items-center gap-2.5">
@@ -225,7 +214,7 @@ export default function VedicDashaPage() {
                         className="flex items-center justify-between gap-2 text-sm py-1"
                       >
                         <span className="text-secondary flex items-center gap-2">
-                          <span aria-hidden>{PLANET_EMOJI[sp.planet] ?? '·'}</span>
+                          <PlanetGlyph planet={sp.planet} size={16} className="text-[rgba(12,8,5,0.55)]" />
                           {sp.planet}
                         </span>
                         <span className="text-[rgba(12,8,5,0.40)]">

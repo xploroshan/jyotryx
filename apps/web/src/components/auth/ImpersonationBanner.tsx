@@ -18,6 +18,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
+import { TriangleAlert } from "lucide-react";
 
 function decodeJwtPayload(token: string | null): Record<string, any> | null {
   if (!token) return null;
@@ -78,7 +79,7 @@ export default function ImpersonationBanner() {
     >
       <div className="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between gap-4 text-sm font-medium">
         <div className="flex items-center gap-3">
-          <span aria-hidden className="text-base">⚠️</span>
+          <TriangleAlert aria-hidden size={16} strokeWidth={2} className="shrink-0" />
           <span>
             Impersonating <span className="font-semibold">{claims?.email}</span>
             {" — session started by "}

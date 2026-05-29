@@ -115,6 +115,22 @@ const PLANET_PATHS: Record<string, React.ReactNode> = {
       <path d="M9.5 13c0-2 5.5-2 5.5 2 0 3-2.4 3.6-2.4 6.2" />
     </>
   ),
+  // ☊ — Rahu, the ascending lunar node (cap open downward, footed).
+  Rahu: (
+    <>
+      <path d="M7 16.5c0-6 2.2-9 5-9s5 3 5 9" />
+      <circle cx="6.6" cy="17.6" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="17.4" cy="17.6" r="1.5" fill="currentColor" stroke="none" />
+    </>
+  ),
+  // ☋ — Ketu, the descending lunar node (cup open upward, footed).
+  Ketu: (
+    <>
+      <path d="M7 7.5c0 6 2.2 9 5 9s5-3 5-9" />
+      <circle cx="6.6" cy="6.4" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="17.4" cy="6.4" r="1.5" fill="currentColor" stroke="none" />
+    </>
+  ),
 };
 
 export function PlanetGlyph({

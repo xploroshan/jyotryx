@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+import { PlanetGlyph } from '@/components/icons/astro';
 
 interface TransitPlanet {
   planet: string;
@@ -28,10 +29,6 @@ const ASPECT_CLASS: Record<string, string> = {
   Opposition: 'bg-red-500/15 text-red-300',
 };
 
-const PLANET_GLYPH: Record<string, string> = {
-  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀',
-  Mars: '♂', Jupiter: '♃', Saturn: '♄',
-};
 
 /**
  * Western transits — today's planetary positions plus exact aspects
@@ -77,7 +74,6 @@ export default function WesternTransitsPage() {
     <FeaturePageShell
       traditionId="WESTERN"
       featureKey="traditionsUi.western.features.transits"
-      icon="🌠"
       descriptionKey="featurePages.westernTransits.description"
     >
       {!isAuthenticated && (
@@ -113,9 +109,7 @@ export default function WesternTransitsPage() {
                   className="rounded-xl bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.08)] px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-lg" aria-hidden>
-                      {PLANET_GLYPH[p.planet] ?? '✦'}
-                    </span>
+                    <PlanetGlyph planet={p.planet} size={20} className="text-primary-700" />
                     <span className="text-surface-950 font-medium text-sm">{p.planet}</span>
                   </div>
                   <div className="text-xs text-secondary mt-1">

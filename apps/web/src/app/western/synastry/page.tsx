@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+import { Check, Zap } from 'lucide-react';
 
 interface Partner {
   ascendant: { sign: string; degree: number };
@@ -75,7 +76,6 @@ export default function WesternSynastryPage() {
     <FeaturePageShell
       traditionId="WESTERN"
       featureKey="traditionsUi.western.features.synastry"
-      icon="💞"
       descriptionKey="featurePages.westernSynastry.description"
     >
       {!isAuthenticated ? (
@@ -153,11 +153,11 @@ export default function WesternSynastryPage() {
             </p>
             <p className="text-sm text-emphasis mt-3">{result.compatibility.summary}</p>
             <div className="flex items-center justify-center gap-6 mt-4 text-xs">
-              <span className="text-emerald-300">
-                ✓ {result.compatibility.harmonious} {fp.harmonious}
+              <span className="inline-flex items-center gap-1 text-emerald-600">
+                <Check size={14} strokeWidth={2} /> {result.compatibility.harmonious} {fp.harmonious}
               </span>
-              <span className="text-amber-300">
-                ⚡ {result.compatibility.challenging} {fp.challenging}
+              <span className="inline-flex items-center gap-1 text-amber-600">
+                <Zap size={14} strokeWidth={2} /> {result.compatibility.challenging} {fp.challenging}
               </span>
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
 } from "@/i18n/panchang-terms";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import { Moon, Star, Link as LinkIcon, Zap, CalendarDays, Sunrise, Sunset, MoonStar } from "lucide-react";
 
 interface PanchangData {
   date: string;
@@ -61,19 +62,19 @@ export default function PanchangPage() {
 
   const panchangItems = panchang
     ? [
-        { label: t.panchang.tithi, value: translateTithi(panchang.tithi, locale), icon: "🌙", desc: t.panchang.tithiDesc },
-        { label: t.panchang.nakshatraLabel, value: translateNakshatra(panchang.nakshatra, locale), icon: "✨", desc: t.panchang.nakshatraDesc },
-        { label: t.panchang.yoga, value: translateYoga(panchang.yoga, locale), icon: "🔗", desc: t.panchang.yogaDesc },
-        { label: t.panchang.karana, value: panchang.karana, icon: "⚡", desc: t.panchang.karanaDesc },
-        { label: t.panchang.vara, value: translateVara(panchang.vara, locale), icon: "📆", desc: t.panchang.varaDesc },
+        { label: t.panchang.tithi, value: translateTithi(panchang.tithi, locale), icon: Moon, desc: t.panchang.tithiDesc },
+        { label: t.panchang.nakshatraLabel, value: translateNakshatra(panchang.nakshatra, locale), icon: Star, desc: t.panchang.nakshatraDesc },
+        { label: t.panchang.yoga, value: translateYoga(panchang.yoga, locale), icon: LinkIcon, desc: t.panchang.yogaDesc },
+        { label: t.panchang.karana, value: panchang.karana, icon: Zap, desc: t.panchang.karanaDesc },
+        { label: t.panchang.vara, value: translateVara(panchang.vara, locale), icon: CalendarDays, desc: t.panchang.varaDesc },
       ]
     : [];
 
   const timings = panchang
     ? [
-        { label: t.panchang.sunrise, value: translateTimeRange(panchang.sunrise, locale), icon: "🌅" },
-        { label: t.panchang.sunset, value: translateTimeRange(panchang.sunset, locale), icon: "🌇" },
-        { label: t.panchang.moonrise, value: translateTimeRange(panchang.moonrise, locale), icon: "🌕" },
+        { label: t.panchang.sunrise, value: translateTimeRange(panchang.sunrise, locale), icon: Sunrise },
+        { label: t.panchang.sunset, value: translateTimeRange(panchang.sunset, locale), icon: Sunset },
+        { label: t.panchang.moonrise, value: translateTimeRange(panchang.moonrise, locale), icon: MoonStar },
       ]
     : [];
 
@@ -132,7 +133,7 @@ export default function PanchangPage() {
               {panchangItems.map((item) => (
                 <div key={item.label} className="surface-card p-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{item.icon}</span>
+                    <item.icon size={22} strokeWidth={1.7} className="text-primary-700" aria-hidden />
                     <div>
                       <p className="text-xs text-[rgba(12,8,5,0.40)]">{item.desc}</p>
                       <p className="text-sm font-medium text-[rgba(12,8,5,0.46)]">{item.label}</p>
@@ -148,7 +149,7 @@ export default function PanchangPage() {
             <div className="grid grid-cols-3 gap-4 mb-8">
               {timings.map((tm) => (
                 <div key={tm.label} className="surface-card p-5 text-center">
-                  <span className="text-3xl block mb-2">{tm.icon}</span>
+                  <tm.icon size={28} strokeWidth={1.6} className="mb-2 mx-auto text-primary-700" aria-hidden />
                   <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{tm.label}</p>
                   <p className="text-lg font-bold text-surface-950">{tm.value}</p>
                 </div>

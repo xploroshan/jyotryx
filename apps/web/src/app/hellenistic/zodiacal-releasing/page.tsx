@@ -56,7 +56,6 @@ export default function HellenisticZodiacalReleasingPage() {
     <FeaturePageShell
       traditionId="HELLENISTIC"
       featureKey="traditionsUi.hellenistic.features.zodiacalReleasing"
-      icon="🗝️"
       descriptionKey="featurePages.hellenisticZodiacalReleasing.description"
     >
       {!isAuthenticated && (

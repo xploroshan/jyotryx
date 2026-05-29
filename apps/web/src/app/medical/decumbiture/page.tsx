@@ -69,7 +69,6 @@ export default function MedicalDecumbiturePage() {
     <FeaturePageShell
       traditionId="MEDICAL"
       featureKey="traditionsUi.medical.features.decumbiture"
-      icon="🛏️"
       descriptionKey="featurePages.medicalDecumbiture.description"
     >
       {!isAuthenticated ? (

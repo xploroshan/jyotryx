@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import { Heart, Building2, Plane, Home, Car, GraduationCap, Flame, DoorOpen } from "lucide-react";
 
 const LOCALE_MAP: Record<string, string> = {
   en: "en-IN", hi: "hi-IN", ta: "ta-IN", te: "te-IN", bn: "bn-IN", mr: "mr-IN",
@@ -32,14 +33,14 @@ export default function MuhuratPage() {
   const { accessToken, isAuthenticated } = useAuthStore();
 
   const purposes = [
-    { id: "marriage", label: t.muhurat.marriage, icon: "💒" },
-    { id: "business", label: t.muhurat.businessStart, icon: "🏢" },
-    { id: "travel", label: t.muhurat.travel, icon: "✈️" },
-    { id: "property", label: t.muhurat.property, icon: "🏠" },
-    { id: "vehicle", label: t.muhurat.vehicle, icon: "🚗" },
-    { id: "education", label: t.muhurat.education, icon: "📚" },
-    { id: "puja", label: t.muhurat.puja, icon: "🪔" },
-    { id: "housewarming", label: t.muhurat.housewarming, icon: "🏡" },
+    { id: "marriage", label: t.muhurat.marriage, icon: Heart },
+    { id: "business", label: t.muhurat.businessStart, icon: Building2 },
+    { id: "travel", label: t.muhurat.travel, icon: Plane },
+    { id: "property", label: t.muhurat.property, icon: Home },
+    { id: "vehicle", label: t.muhurat.vehicle, icon: Car },
+    { id: "education", label: t.muhurat.education, icon: GraduationCap },
+    { id: "puja", label: t.muhurat.puja, icon: Flame },
+    { id: "housewarming", label: t.muhurat.housewarming, icon: DoorOpen },
   ];
   const [selectedPurpose, setSelectedPurpose] = useState("marriage");
   const [fromDate, setFromDate] = useState("");
@@ -106,7 +107,7 @@ export default function MuhuratPage() {
                     : "text-[rgba(12,8,5,0.46)] hover:text-surface-950 hover:bg-[rgba(255,252,245,0.78)]"
                 }`}
               >
-                <span className="text-lg">{p.icon}</span>
+                <p.icon size={20} strokeWidth={1.7} className="text-primary-700" aria-hidden />
                 {p.label}
               </button>
             ))}
