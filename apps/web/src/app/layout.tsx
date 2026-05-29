@@ -67,27 +67,31 @@ export const metadata: Metadata = {
     "palmistry", "kundli matching", "panchang", "muhurat", "myastro360",
   ],
   metadataBase: new URL("https://www.myastro360.com"),
-  alternates: {
-    canonical: "/",
-  },
+  // NOTE: no `alternates.canonical` here on purpose. A static canonical in
+  // the root layout is inherited by every page that doesn't override it,
+  // which canonicalises all feature pages to "/". Each page sets its own
+  // self-canonical via `pageMetadata()`; pages without one self-canonicalise.
   openGraph: {
     title: "myastro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
     type: "website",
     url: "https://www.myastro360.com",
     siteName: "myastro360",
+    images: [{ url: "/og", width: 1200, height: 630, alt: "myastro360" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "myastro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
+    images: ["/og"],
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale/userScalable lock — pinch-zoom must stay available
+  // for accessibility (and it's a Lighthouse a11y audit).
   themeColor: "#ede4d0",
 };
 

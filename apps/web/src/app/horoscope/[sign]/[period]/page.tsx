@@ -56,8 +56,8 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     title,
     description,
     alternates: { canonical },
-    openGraph: { title, description, type: 'article', url: canonical, siteName: 'myastro360' },
-    twitter: { card: 'summary', title, description },
+    openGraph: { title, description, type: 'article', url: canonical, siteName: 'myastro360', images: [{ url: '/og', width: 1200, height: 630, alt: title }] },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og'] },
   };
 }
 
