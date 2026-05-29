@@ -5,6 +5,7 @@ import PalmDiagram from "@/components/palmistry/PalmDiagram";
 import CameraCapture from "@/components/palmistry/CameraCapture";
 import { useTranslation } from "@/i18n";
 import { Toast } from "@/components/ui/Toast";
+import { Sparkles, Compass, Heart, Flag } from "lucide-react";
 
 interface SpecialMarking {
   name: string;
@@ -854,7 +855,7 @@ export default function PalmistryPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {analysis.atAGlance.strengths && (
                         <div className="flex gap-2">
-                          <span aria-hidden className="mt-0.5 text-emerald-400">✦</span>
+                          <Sparkles aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-emerald-600" />
                           <div>
                             <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceStrengths}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.strengths}</p>
@@ -863,7 +864,7 @@ export default function PalmistryPage() {
                       )}
                       {analysis.atAGlance.lifePath && (
                         <div className="flex gap-2">
-                          <span aria-hidden className="mt-0.5 text-amber-300">✸</span>
+                          <Compass aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-amber-600" />
                           <div>
                             <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceLifePath}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.lifePath}</p>
@@ -872,7 +873,7 @@ export default function PalmistryPage() {
                       )}
                       {analysis.atAGlance.love && (
                         <div className="flex gap-2">
-                          <span aria-hidden className="mt-0.5 text-rose-400">♥</span>
+                          <Heart aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-rose-600" />
                           <div>
                             <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceLove}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.love}</p>
@@ -881,7 +882,7 @@ export default function PalmistryPage() {
                       )}
                       {analysis.atAGlance.bestSuitedFor && (
                         <div className="flex gap-2">
-                          <span aria-hidden className="mt-0.5 text-primary-300">⚑</span>
+                          <Flag aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-primary-700" />
                           <div>
                             <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceBestSuitedFor}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.bestSuitedFor}</p>

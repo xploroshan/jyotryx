@@ -9,6 +9,8 @@ import { translateColorName, translatePlanetName, translateTimeRange } from '@/i
 import { translateSummary } from '@/app/my-day/components/translations';
 import { Stagger } from '@/components/ui/PageTransition';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Sparkles, Sun, Scale, Moon } from 'lucide-react';
+import { PlanetGlyph } from '@/components/icons/astro';
 
 interface DailyBriefing {
   greeting: string;
@@ -43,10 +45,10 @@ interface DailyBriefing {
 }
 
 const QUALITY_STYLES = {
-  excellent: { emoji: '✨', wash: 'sunrise', label: 'qualityExcellent' as const, pct: 100, bar: 'bg-primary-500' },
-  good: { emoji: '☀️', wash: 'sunrise', label: 'qualityGood' as const, pct: 75, bar: 'bg-primary-400' },
-  moderate: { emoji: '⚖️', wash: 'amber', label: 'qualityModerate' as const, pct: 50, bar: 'bg-amber-500' },
-  challenging: { emoji: '🌙', wash: 'amber', label: 'qualityChallenging' as const, pct: 25, bar: 'bg-amber-600' },
+  excellent: { Icon: Sparkles, wash: 'sunrise', label: 'qualityExcellent' as const, pct: 100, bar: 'bg-primary-500' },
+  good: { Icon: Sun, wash: 'sunrise', label: 'qualityGood' as const, pct: 75, bar: 'bg-primary-400' },
+  moderate: { Icon: Scale, wash: 'amber', label: 'qualityModerate' as const, pct: 50, bar: 'bg-amber-500' },
+  challenging: { Icon: Moon, wash: 'amber', label: 'qualityChallenging' as const, pct: 25, bar: 'bg-amber-600' },
 } as const;
 
 // Wash washes — radial sunrise behind the hero card. Soft enough to not
@@ -66,10 +68,6 @@ function isLatinScript(text: string): boolean {
   return /^[\p{Script=Latin}\s\d.,;:'"\-—–!?]+$/u.test(text.trim());
 }
 
-const PLANET_SYMBOL: Record<string, string> = {
-  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿',
-  Jupiter: '♃', Venus: '♀', Saturn: '♄',
-};
 
 // Shared cache key with /my-day so visiting one warms the other.
 const BRIEFING_CACHE_KEY = 'myastro360-my-day-briefing';
@@ -154,7 +152,7 @@ export default function BentoSummary() {
                 style={{ background: QUALITY_WASH.sunrise }}
               />
               <div className="relative z-10 flex flex-col h-full">
-                <span className="text-5xl mb-4" aria-hidden>{'☀️'}</span>
+                <Sun size={40} strokeWidth={1.6} className="mb-4 text-primary-700/50" aria-hidden />
                 <p className={`${KICKER} mb-3`}>
                   {t.myDay.favorableToday}
                 </p>
@@ -208,7 +206,7 @@ export default function BentoSummary() {
               className={`${TILE} h-full p-5 flex items-center gap-5 group`}
             >
               <div className="w-14 h-14 rounded-2xl bg-primary-500/12 border border-primary-500/30 grid place-items-center shrink-0">
-                <span className="text-2xl text-primary-600">{'☉'}</span>
+                <PlanetGlyph planet="Sun" size={24} className="text-primary-600/60" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={KICKER}>{t.myDay.currentHora}</p>
@@ -268,9 +266,9 @@ export default function BentoSummary() {
   }
 
   const qs = QUALITY_STYLES[briefing.dayQuality];
+  const QualityIcon = qs.Icon;
   const qualityLabel = (t.myDay as any)[qs.label] ?? briefing.dayQuality;
   const planetKey = briefing.currentHora?.planet ?? '';
-  const planetSymbol = PLANET_SYMBOL[planetKey] ?? '○';
   const wash = QUALITY_WASH[qs.wash];
 
   return (
@@ -309,7 +307,7 @@ export default function BentoSummary() {
               style={{ background: wash }}
             />
             <div className="relative z-10 flex flex-col h-full">
-              <span className="text-5xl mb-4" aria-hidden>{qs.emoji}</span>
+              <QualityIcon size={40} strokeWidth={1.6} className="mb-4 text-primary-700" aria-hidden />
               <p className={`${KICKER} mb-3`}>
                 {t.myDay.favorableToday}
               </p>
@@ -363,7 +361,7 @@ export default function BentoSummary() {
             className={`${TILE} h-full p-5 flex items-center gap-5 group`}
           >
             <div className="w-14 h-14 rounded-2xl bg-primary-500/12 border border-primary-500/30 grid place-items-center shrink-0">
-              <span className="text-2xl text-primary-600">{planetSymbol}</span>
+              <PlanetGlyph planet={planetKey} size={26} className="text-primary-600" />
             </div>
             <div className="flex-1 min-w-0">
               <p className={KICKER}>{t.myDay.currentHora}</p>

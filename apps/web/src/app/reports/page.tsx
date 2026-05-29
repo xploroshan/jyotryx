@@ -7,6 +7,7 @@ import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import { Stagger } from "@/components/ui/PageTransition";
+import { Star, Briefcase, Heart, Coins, Hand, CalendarDays, FileText } from "lucide-react";
 
 interface Report {
   id: string;
@@ -31,12 +32,12 @@ export default function ReportsPage() {
   const [activeView, setActiveView] = useState<"generate" | "history">("generate");
 
   const reportTypes = [
-    { id: "LIFE", label: t.reports.typeLifeName, icon: "🌟", desc: t.reports.typeLifeDesc, cost: 5 },
-    { id: "CAREER", label: t.reports.typeCareerName, icon: "💼", desc: t.reports.typeCareerDesc, cost: 5 },
-    { id: "MARRIAGE", label: t.reports.typeMarriageName, icon: "💒", desc: t.reports.typeMarriageDesc, cost: 5 },
-    { id: "WEALTH", label: t.reports.typeWealthName, icon: "💰", desc: t.reports.typeWealthDesc, cost: 5 },
-    { id: "PALM", label: t.reports.typePalmName, icon: "🤚", desc: t.reports.typePalmDesc, cost: 5 },
-    { id: "ANNUAL", label: t.reports.typeAnnualName, icon: "📅", desc: t.reports.typeAnnualDesc, cost: 5 },
+    { id: "LIFE", label: t.reports.typeLifeName, icon: Star, desc: t.reports.typeLifeDesc, cost: 5 },
+    { id: "CAREER", label: t.reports.typeCareerName, icon: Briefcase, desc: t.reports.typeCareerDesc, cost: 5 },
+    { id: "MARRIAGE", label: t.reports.typeMarriageName, icon: Heart, desc: t.reports.typeMarriageDesc, cost: 5 },
+    { id: "WEALTH", label: t.reports.typeWealthName, icon: Coins, desc: t.reports.typeWealthDesc, cost: 5 },
+    { id: "PALM", label: t.reports.typePalmName, icon: Hand, desc: t.reports.typePalmDesc, cost: 5 },
+    { id: "ANNUAL", label: t.reports.typeAnnualName, icon: CalendarDays, desc: t.reports.typeAnnualDesc, cost: 5 },
   ];
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export default function ReportsPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-4">
-            <span className="text-lg">📄</span>
+            <FileText size={18} strokeWidth={1.7} aria-hidden />
             {t.reports.badge}
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
@@ -125,7 +126,7 @@ export default function ReportsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {reportTypes.map((rt) => (
               <div key={rt.id} className="surface-card p-6">
-                <span className="text-3xl block mb-3">{rt.icon}</span>
+                <rt.icon size={30} strokeWidth={1.6} className="mb-3 text-primary-700" aria-hidden />
                 <h3 className="text-lg font-bold text-surface-950 mb-2">{rt.label}</h3>
                 <p className="text-sm text-[rgba(12,8,5,0.46)] mb-4">{rt.desc}</p>
                 <div className="flex items-center justify-between">
@@ -167,7 +168,7 @@ export default function ReportsPage() {
                   <div key={report.id} className="surface-card p-6 flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">{reportTypes.find((r) => r.id === report.type)?.icon || "📄"}</span>
+                        {(() => { const RIcon = reportTypes.find((r) => r.id === report.type)?.icon ?? FileText; return <RIcon size={18} strokeWidth={1.7} className="text-primary-700" aria-hidden />; })()}
                         <h3 className="font-bold text-surface-950">{report.title}</h3>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadge(report.status)}`}>{report.status}</span>
                       </div>

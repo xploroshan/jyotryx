@@ -7,6 +7,7 @@ import { api, wakeUpBackend, ApiError } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { linkAnonymousAssignment, recordPaywallConversion } from "@/lib/experiment";
 import { Toast } from "@/components/ui/Toast";
+import { Gift } from "lucide-react";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { LogoMark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -745,7 +746,7 @@ function AuthPageContent() {
                   aria-live="polite"
                   className="mb-4 p-3 rounded-lg bg-primary-500/10 border border-primary-500/30 text-primary-300 text-xs flex items-start gap-2"
                 >
-                  <span aria-hidden="true">🎁</span>
+                  <Gift size={16} strokeWidth={1.8} aria-hidden className="mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <strong className="font-semibold">{referralPreview.referrerName}</strong>{" "}
                     invited you to myastro360 — you'll both get{" "}

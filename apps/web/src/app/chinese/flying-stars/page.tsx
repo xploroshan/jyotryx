@@ -68,7 +68,6 @@ export default function ChineseFlyingStarsPage() {
     <FeaturePageShell
       traditionId="CHINESE"
       featureKey="traditionsUi.chinese.features.flyingStars"
-      icon="⭐"
       descriptionKey="featurePages.chineseFlyingStars.description"
     >
       <div className="glass rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">

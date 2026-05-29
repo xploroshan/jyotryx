@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/i18n";
+import { Gift } from "lucide-react";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/Toast";
@@ -208,7 +209,7 @@ export default function KundliPage() {
                   free framing is purely the user-facing message. */}
               {!paywall.loading && paywall.variant === "first_free" && (
                 <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs flex items-start gap-2">
-                  <span aria-hidden="true">🎁</span>
+                  <Gift aria-hidden size={16} strokeWidth={1.8} className="mt-0.5 shrink-0" />
                   <span>
                     Your first kundli is on us — no credits required. Just fill in your birth
                     details and you'll have your full Vedic chart in seconds.

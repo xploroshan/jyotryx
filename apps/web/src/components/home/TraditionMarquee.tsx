@@ -2,6 +2,7 @@
 
 import { TRADITION_LIST } from '@/lib/traditions';
 import { useTranslation } from '@/i18n';
+import { Star } from 'lucide-react';
 
 /**
  * Two stacked infinite marquees of the tradition names, scrolling in
@@ -79,16 +80,7 @@ function Track({
             >
               {label}
             </span>
-            <span
-              aria-hidden
-              className="text-2xl sm:text-3xl shrink-0"
-              style={{
-                color: '#FF7A40',
-                filter: 'drop-shadow(0 1px 0 rgba(192,80,0,0.18))',
-              }}
-            >
-              ★
-            </span>
+            <Star aria-hidden size={20} strokeWidth={2} fill="#FF7A40" className="shrink-0 text-[#FF7A40]" style={{ filter: 'drop-shadow(0 1px 0 rgba(192,80,0,0.18))' }} />
           </span>
         ))}
       </div>

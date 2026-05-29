@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
 import { PlanetGlyph } from "@/components/icons/astro";
+import { Sparkles, Sun, Scale, Moon } from "lucide-react";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import {
@@ -39,10 +40,10 @@ const PlanetaryHoursSection = dynamic(
 );
 
 const QUALITY_STYLES = {
-  excellent: { emoji: "\u2728", color: "text-emerald-700", ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", bar: "bg-emerald-400", glow: "shadow-emerald-500/20", pct: 100 },
-  good: { emoji: "\u2600\ufe0f", color: "text-sky-700", ring: "ring-sky-500/30", bg: "bg-sky-500/10", bar: "bg-sky-400", glow: "shadow-sky-500/20", pct: 75 },
-  moderate: { emoji: "\u2696\ufe0f", color: "text-amber-700", ring: "ring-amber-500/30", bg: "bg-amber-500/10", bar: "bg-amber-400", glow: "shadow-amber-500/20", pct: 50 },
-  challenging: { emoji: "\ud83c\udf19", color: "text-orange-700", ring: "ring-orange-500/30", bg: "bg-orange-500/10", bar: "bg-orange-400", glow: "shadow-orange-500/20", pct: 25 },
+  excellent: { Icon: Sparkles, color: "text-emerald-700", ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", bar: "bg-emerald-400", glow: "shadow-emerald-500/20", pct: 100 },
+  good: { Icon: Sun, color: "text-sky-700", ring: "ring-sky-500/30", bg: "bg-sky-500/10", bar: "bg-sky-400", glow: "shadow-sky-500/20", pct: 75 },
+  moderate: { Icon: Scale, color: "text-amber-700", ring: "ring-amber-500/30", bg: "bg-amber-500/10", bar: "bg-amber-400", glow: "shadow-amber-500/20", pct: 50 },
+  challenging: { Icon: Moon, color: "text-orange-700", ring: "ring-orange-500/30", bg: "bg-orange-500/10", bar: "bg-orange-400", glow: "shadow-orange-500/20", pct: 25 },
 };
 
 const planetIcons: Record<string, { symbol: string; color: string; bg: string }> = {
@@ -251,6 +252,7 @@ export default function MyDayPage() {
   if (!briefing) return null;
 
   const qs = QUALITY_STYLES[briefing.dayQuality] ?? QUALITY_STYLES.moderate;
+  const QualityIcon = qs.Icon;
   const dateLocale = LOCALE_MAP[locale] || 'en-IN';
   const panchang = briefing.panchang ?? { tithi: '—', nakshatra: '—', yoga: '—', vara: '—', rahukaal: '—' };
   const doList = briefing.doList ?? [];
@@ -299,7 +301,7 @@ export default function MyDayPage() {
 
             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${qs.bg} ring-1 ${qs.ring} self-start sm:self-auto`}>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-2xl leading-none">{qs.emoji}</span>
+                <QualityIcon size={26} strokeWidth={1.6} className={qs.color} aria-hidden />
               </div>
               <div>
                 <p className={`text-sm font-semibold ${qs.color}`}>{getQualityLabel(briefing.dayQuality, t)}</p>
