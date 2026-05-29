@@ -1218,7 +1218,10 @@ describe('9. AstrologyService Integration', () => {
           }) },
         }},
         { provide: ConfigService, useValue: { get: jest.fn((k: string, d?: any) => d) } },
-        { provide: UserService, useValue: { deductCredits: jest.fn().mockResolvedValue(true) } },
+        { provide: UserService, useValue: {
+          deductCredits: jest.fn().mockResolvedValue(true),
+          deductWithRefund: jest.fn((_u: string, _c: number, _d: string, work: () => Promise<unknown>) => work()),
+        } },
         { provide: OpenAIService, useValue: {
           chatCompletion: jest.fn().mockResolvedValue(null),
           getModel: jest.fn().mockReturnValue('gpt-4o'),

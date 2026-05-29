@@ -66,7 +66,9 @@ describe('Numerology Page: Rendering', () => {
   it('should render header "Numerology Analyzer"', () => {
     render(<NumerologyPage />);
     expect(screen.getByText('Analyzer')).toBeDefined();
-    expect(screen.getByText('Numerology')).toBeDefined();
+    // The editorial hero renders "Numerology" in more than one place
+    // (eyebrow label + title), so assert presence rather than uniqueness.
+    expect(screen.getAllByText('Numerology').length).toBeGreaterThan(0);
   });
 
   it('should render Name Analysis and Brand / Business tabs', () => {
