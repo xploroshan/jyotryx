@@ -4,7 +4,7 @@ import { ZODIAC_SIGNS } from '@/lib/seo/zodiac';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
 import { LOCALIZED_PATHS } from '@/lib/seo/feature-pages';
 import { localeUrl } from '@/lib/seo/page-metadata';
-import { PREFIXED_LOCALES, PREFIXED_LANDING_LOCALES } from '@/i18n/locales';
+import { PREFIXED_LOCALES, PREFIXED_LANDING_LOCALES, PREFIXED_PANCHANG_LOCALES } from '@/i18n/locales';
 
 /**
  * Dynamic sitemap.xml.
@@ -106,7 +106,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ),
   );
 
-  const localizedPanchangCityPages: MetadataRoute.Sitemap = PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+  const localizedPanchangCityPages: MetadataRoute.Sitemap = PREFIXED_PANCHANG_LOCALES.flatMap((locale) =>
     SEO_CITIES.map((city) => ({
       url: localeUrl(locale, `/panchang/${city.slug}`),
       lastModified: now,

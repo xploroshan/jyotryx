@@ -5,7 +5,7 @@ import { SEO_CITIES, findCityBySlug } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
-import { prefixedLandingLocale, LANDING_LOCALES, PREFIXED_LANDING_LOCALES } from '@/i18n/locales';
+import { prefixedPanchangLocale, PANCHANG_LOCALES, PREFIXED_PANCHANG_LOCALES } from '@/i18n/locales';
 
 /**
  * Localized daily Panchang landing page per city (Phase 2, Tier B).
@@ -17,7 +17,7 @@ import { prefixedLandingLocale, LANDING_LOCALES, PREFIXED_LANDING_LOCALES } from
  */
 
 export function generateStaticParams() {
-  return PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+  return PREFIXED_PANCHANG_LOCALES.flatMap((locale) =>
     SEO_CITIES.map((city) => ({ locale, city: city.slug })),
   );
 }
@@ -28,7 +28,7 @@ interface RouteProps {
 
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { locale: rawLocale, city: slug } = await params;
-  const locale = prefixedLandingLocale(rawLocale);
+  const locale = prefixedPanchangLocale(rawLocale);
   const city = findCityBySlug(slug);
   if (!locale || !city) return {};
 
@@ -40,13 +40,13 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     path: `/panchang/${city.slug}`,
     title: `${cityName} ${t.panchang.titleHighlight} | myastro360`,
     description: t.panchang.description,
-    hreflangLocales: LANDING_LOCALES,
+    hreflangLocales: PANCHANG_LOCALES,
   });
 }
 
 export default async function LocalizedPanchangCityPage({ params }: RouteProps) {
   const { locale: rawLocale, city: slug } = await params;
-  const locale = prefixedLandingLocale(rawLocale);
+  const locale = prefixedPanchangLocale(rawLocale);
   const city = findCityBySlug(slug);
   if (!locale || !city) notFound();
 

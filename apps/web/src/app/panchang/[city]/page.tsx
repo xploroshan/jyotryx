@@ -8,7 +8,7 @@ import {
 } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { localeUrl } from '@/lib/seo/page-metadata';
-import { LANDING_LOCALES } from '@/i18n/locales';
+import { PANCHANG_LOCALES } from '@/i18n/locales';
 
 /**
  * Server-rendered SEO landing page for "Panchang for <city>".
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 
   const languages: Record<string, string> = {};
-  for (const l of LANDING_LOCALES) languages[l] = localeUrl(l, `/panchang/${city.slug}`);
+  for (const l of PANCHANG_LOCALES) languages[l] = localeUrl(l, `/panchang/${city.slug}`);
   languages['x-default'] = localeUrl('en', `/panchang/${city.slug}`);
 
   return {

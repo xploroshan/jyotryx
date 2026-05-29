@@ -5,7 +5,7 @@ import { findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
-import { prefixedLandingLocale, LANDING_LOCALES, PREFIXED_LANDING_LOCALES } from '@/i18n/locales';
+import { prefixedLandingLocale, LANDING_LOCALES, PREBUILD_LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -22,7 +22,7 @@ function isPeriod(v: string): v is Period {
 }
 
 export function generateStaticParams() {
-  return PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+  return PREBUILD_LANDING_LOCALES.flatMap((locale) =>
     listSignSlugs().flatMap((sign) => PERIODS.map((period) => ({ locale, sign, period }))),
   );
 }
