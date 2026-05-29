@@ -1,13 +1,8 @@
 import { pageMetadata } from "@/lib/seo/page-metadata";
+import { FEATURE_PAGES } from "@/lib/seo/feature-pages";
 import MuhuratClient from "./MuhuratClient";
 
-export const metadata = pageMetadata({
-  title: "Shubh Muhurat — Auspicious Dates & Timings | myastro360",
-  description:
-    "Find the shubh muhurat (auspicious timing) for marriage, griha pravesh, naming and travel — based on panchang and your birth details.",
-  path: "/muhurat",
-  keywords: ["shubh muhurat", "auspicious time", "muhurat for marriage", "griha pravesh muhurat"],
-});
+export const metadata = pageMetadata({ path: "/muhurat", ...FEATURE_PAGES["/muhurat"], hreflang: true });
 
 export default function Page() {
   return <MuhuratClient />;

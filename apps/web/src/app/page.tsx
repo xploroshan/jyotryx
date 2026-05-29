@@ -1,12 +1,8 @@
 import { pageMetadata } from "@/lib/seo/page-metadata";
+import { FEATURE_PAGES } from "@/lib/seo/feature-pages";
 import HomeClient from "./HomeClient";
 
-export const metadata = pageMetadata({
-  title: "myastro360 — Vedic Astrology, Kundli, Horoscope & Palm Reading",
-  description:
-    "Instant, personalized Vedic astrology — free Kundli, daily horoscopes, Kundli matching, palmistry, numerology and panchang. Talk to astrologers 24/7.",
-  path: "/",
-});
+export const metadata = pageMetadata({ path: "/", ...FEATURE_PAGES["/"], hreflang: true });
 
 export default function Page() {
   return <HomeClient />;
