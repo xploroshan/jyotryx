@@ -98,7 +98,7 @@ export default function TraditionDashboard({
       <section>
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12">
           <p className={`text-[11px] uppercase tracking-[0.24em] font-semibold mb-1 ${tint.tagText}`}>
-            Go deeper
+            {t.dashboards.common.goDeeper}
           </p>
           <h2 className="font-display text-2xl sm:text-3xl text-surface-950 mb-6">
             {exploreCta}
