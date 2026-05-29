@@ -125,14 +125,14 @@ export default function NumerologyPage() {
           <div>
             <div className="surface-card p-6 mb-6">
               <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.numerology.enterNameLabel}</label>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <input
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && analyzeName()}
                   placeholder={t.numerology.enterNamePlaceholder}
-                  className="flex-1 px-4 py-3 rounded-xl surface-input"
+                  className="flex-1 min-w-0 px-4 py-3 rounded-xl surface-input"
                 />
                 <button
                   onClick={analyzeName}
@@ -221,14 +221,14 @@ export default function NumerologyPage() {
           <div>
             <div className="surface-card p-6 mb-6">
               <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.numerology.enterBrandLabel}</label>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <input
                   type="text"
                   value={brandInput}
                   onChange={(e) => setBrandInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && analyzeBrand()}
                   placeholder={t.numerology.enterBrandPlaceholder}
-                  className="flex-1 px-4 py-3 rounded-xl surface-input"
+                  className="flex-1 min-w-0 px-4 py-3 rounded-xl surface-input"
                 />
                 <button
                   onClick={analyzeBrand}

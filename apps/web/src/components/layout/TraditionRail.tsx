@@ -13,6 +13,7 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import { TraditionGlyph } from '@/components/icons';
+import { ScrollableRow } from '@/components/ui/ScrollableRow';
 
 /* "My Day" sits outside the tradition registry, so it gets its own
    inline glyph rather than reusing VedicIcon. A simple sun reads
@@ -97,7 +98,7 @@ export default function TraditionRail() {
       role="tablist"
       aria-label={(t as any).nav?.switchTradition ?? 'Switch tradition'}
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 overflow-x-auto no-scrollbar">
+      <ScrollableRow className="mx-auto max-w-7xl" innerClassName="px-5 sm:px-8" fadeColor="rgb(237, 228, 208)">
         <ul className="flex gap-2.5 sm:gap-4 py-3 justify-start lg:justify-center">
           {/* My Day */}
           <li className="shrink-0">
@@ -157,7 +158,7 @@ export default function TraditionRail() {
             );
           })}
         </ul>
-      </div>
+      </ScrollableRow>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { WEB_TRADITIONS, resolveTraditionFromPath, type TraditionId } from "@/li
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { FeatureGlyph } from "@/components/icons";
+import { ScrollableRow } from "@/components/ui/ScrollableRow";
 
 /**
  * v2 feature bar. Slim secondary nav that renders the sub-features of the
@@ -57,7 +58,7 @@ export default function FeatureBarV2() {
       className="sticky top-14 z-40 border-b border-[var(--color-border)]"
       style={{ background: "rgba(237, 228, 208, 0.88)", backdropFilter: "blur(16px) saturate(140%)" }}
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 overflow-x-auto no-scrollbar">
+      <ScrollableRow className="mx-auto max-w-7xl" innerClassName="px-5 sm:px-8" fadeColor="rgb(237, 228, 208)">
         <ul className="flex gap-5 sm:gap-7 py-2.5" role="tablist">
           {cfg.features.map((f) => {
             const isActive = pathname === f.href;
@@ -100,7 +101,7 @@ export default function FeatureBarV2() {
             );
           })}
         </ul>
-      </div>
+      </ScrollableRow>
     </div>
   );
 }

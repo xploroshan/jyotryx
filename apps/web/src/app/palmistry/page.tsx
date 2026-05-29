@@ -5,6 +5,7 @@ import PalmDiagram from "@/components/palmistry/PalmDiagram";
 import CameraCapture from "@/components/palmistry/CameraCapture";
 import { useTranslation } from "@/i18n";
 import { Toast } from "@/components/ui/Toast";
+import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { Sparkles, Compass, Heart, Flag } from "lucide-react";
 
 interface SpecialMarking {
@@ -633,7 +634,7 @@ export default function PalmistryPage() {
     : t.palmistry.selectGenderFirst;
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-hidden">
       <div aria-hidden className="absolute inset-0 pointer-events-none" style={{background: "radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,182,39,0.14) 0%, rgba(255,77,0,0.06) 35%, transparent 70%)"}} />
       <div className="absolute top-32 left-1/4 w-80 h-80 bg-accent-500/8 rounded-full blur-3xl" />
       <div className="absolute bottom-32 right-1/4 w-80 h-80 bg-primary-500/8 rounded-full blur-3xl" />
@@ -949,23 +950,29 @@ export default function PalmistryPage() {
                   />
                 </div>
 
-                <div role="tablist" aria-label={t.palmistry.results} className="flex gap-1 mb-6 rounded-xl bg-[rgba(255,252,245,0.78)] p-1 overflow-x-auto no-scrollbar">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      role="tab"
-                      aria-selected={activeTab === tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`focus-ring flex-shrink-0 flex-1 py-2 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                        activeTab === tab.id
-                          ? "btn-primary text-white"
-                          : "text-emphasis hover:text-surface-950"
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
+                <ScrollableRow
+                  className="mb-6 rounded-xl bg-[rgba(255,252,245,0.78)] p-1"
+                  fadeColor="rgb(255, 252, 245)"
+                  controls={false}
+                >
+                  <div role="tablist" aria-label={t.palmistry.results} className="flex gap-1">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`focus-ring flex-shrink-0 flex-1 py-2 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                          activeTab === tab.id
+                            ? "btn-primary text-white"
+                            : "text-emphasis hover:text-surface-950"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </ScrollableRow>
 
                 <div className="space-y-4">
                   {activeTab === "major" && (

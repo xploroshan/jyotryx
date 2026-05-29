@@ -8,6 +8,7 @@ import { Gift } from "lucide-react";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/Toast";
+import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
@@ -349,23 +350,30 @@ export default function KundliPage() {
 
             {/* Tabs — on mobile scroll horizontally so all 6 stay reachable;
                 on md+ they stretch to equal widths. */}
-            <div role="tablist" aria-label={t.kundli.birthChart} className="flex gap-1 mb-6 rounded-xl bg-[rgba(255,252,245,0.78)] p-1 overflow-x-auto no-scrollbar snap-x">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`focus-ring flex-shrink-0 snap-start md:flex-1 py-2.5 px-4 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                    activeTab === tab.id
-                      ? "btn-primary"
-                      : "text-emphasis hover:text-surface-950"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            <ScrollableRow
+              className="mb-6 rounded-xl bg-[rgba(255,252,245,0.78)] p-1"
+              innerClassName="snap-x"
+              fadeColor="rgb(255, 252, 245)"
+              controls={false}
+            >
+              <div role="tablist" aria-label={t.kundli.birthChart} className="flex gap-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`focus-ring flex-shrink-0 snap-start md:flex-1 py-2.5 px-4 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                      activeTab === tab.id
+                        ? "btn-primary"
+                        : "text-emphasis hover:text-surface-950"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </ScrollableRow>
 
             {/* Tab Content */}
             {activeTab === "chart" && (
