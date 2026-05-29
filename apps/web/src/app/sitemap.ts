@@ -2,6 +2,9 @@ import type { MetadataRoute } from 'next';
 import { SEO_CITIES } from '@/lib/seo/cities';
 import { ZODIAC_SIGNS } from '@/lib/seo/zodiac';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
+import { LOCALIZED_PATHS } from '@/lib/seo/feature-pages';
+import { localeUrl } from '@/lib/seo/page-metadata';
+import { PREFIXED_LOCALES } from '@/i18n/locales';
 
 /**
  * Dynamic sitemap.xml.
@@ -69,5 +72,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.75,
   }));
 
-  return [...staticPages, ...signPages, ...signPeriodPages, ...panchangCityPages, ...kundliCityPages];
+  // Localized Tier-A pages: each non-English variant of the feature/marketing
+  // pages whose content is fully translated (en versions are in staticPages).
+  const localizedFeaturePages: MetadataRoute.Sitemap = PREFIXED_LOCALES.flatMap((locale) =>
+    LOCALIZED_PATHS.map((path) => ({
+      url: localeUrl(locale, path),
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: path === '/' ? 0.8 : 0.6,
+    })),
+  );
+
+  return [
+    ...staticPages,
+    ...signPages,
+    ...signPeriodPages,
+    ...panchangCityPages,
+    ...kundliCityPages,
+    ...localizedFeaturePages,
+  ];
 }

@@ -1,18 +1,11 @@
 import { Suspense } from "react";
 import { pageMetadata } from "@/lib/seo/page-metadata";
+import { FEATURE_PAGES } from "@/lib/seo/feature-pages";
 import KundliClient from "./KundliClient";
 
-export const metadata = pageMetadata({
-  title: "Free Kundli Online — Janam Kundali & Birth Chart | myastro360",
-  description:
-    "Generate your free Janam Kundali (birth chart) instantly with Swiss Ephemeris accuracy — planetary positions, dashas, doshas and personalized predictions.",
-  path: "/kundli",
-  keywords: ["free kundli", "janam kundali", "birth chart", "vedic astrology", "horoscope chart"],
-});
+export const metadata = pageMetadata({ path: "/kundli", ...FEATURE_PAGES["/kundli"], hreflang: true });
 
 export default function Page() {
-  // KundliClient reads useSearchParams, which requires a Suspense boundary
-  // now that the page shell is a server component.
   return (
     <Suspense fallback={null}>
       <KundliClient />

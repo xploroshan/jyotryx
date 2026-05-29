@@ -6,12 +6,12 @@ import { useState, useEffect } from 'react';
 
 // English is always statically loaded (type source + instant fallback)
 import { en, type TranslationKeys } from './en';
+// Single source of truth for the locale list (server-safe module) + the
+// context that localized /[locale] routes use to feed server translations.
+import { type Locale, SUPPORTED_LOCALES } from './locales';
+import { useI18nContext } from './I18nProvider';
 
-export type Locale = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr' | 'gu' | 'kn' | 'ml' | 'pa' | 'or' | 'as';
-
-export const SUPPORTED_LOCALES: Locale[] = [
-  'en', 'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa', 'or', 'as',
-];
+export { type Locale, SUPPORTED_LOCALES };
 
 // Dynamic locale loaders — each non-English locale is loaded on demand
 const localeLoaders: Record<string, () => Promise<TranslationKeys>> = {
@@ -103,18 +103,26 @@ export function useTranslation(): {
   setLocale: (l: Locale, opts?: { userSet?: boolean }) => void;
   resetLocale: () => void;
 } {
-  const { locale, setLocale, resetLocale } = useI18nStore();
-  const [t, setT] = useState<TranslationKeys>(loadedLocales.get(locale) ?? en);
+  // On a /[locale] route the layout provides server-loaded translations via
+  // context — prefer those so the language is correct in the SSR HTML. Root
+  // (English) routes have no provider and fall back to the client store.
+  const ctx = useI18nContext();
+  const { locale: storeLocale, setLocale, resetLocale } = useI18nStore();
+  const [storeT, setStoreT] = useState<TranslationKeys>(loadedLocales.get(storeLocale) ?? en);
 
   useEffect(() => {
+    if (ctx) return; // context already supplies translations
     let cancelled = false;
-    loadLocale(locale).then((loaded) => {
-      if (!cancelled) setT(loaded);
+    loadLocale(storeLocale).then((loaded) => {
+      if (!cancelled) setStoreT(loaded);
     });
     return () => { cancelled = true; };
-  }, [locale]);
+  }, [storeLocale, ctx]);
 
-  return { t, locale, setLocale, resetLocale };
+  if (ctx) {
+    return { t: ctx.t, locale: ctx.locale, setLocale, resetLocale };
+  }
+  return { t: storeT, locale: storeLocale, setLocale, resetLocale };
 }
 
 export { type TranslationKeys };
