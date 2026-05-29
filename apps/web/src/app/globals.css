@@ -280,6 +280,16 @@
     --tw-ring-offset-color: var(--color-surface-50);
   }
 
+  /* Global keyboard-focus fallback: any interactive element that doesn't opt
+     into .focus-ring still gets a visible focus indicator (a11y + Lighthouse).
+     The zero-specificity :where() means .focus-ring and the input styles above
+     cleanly override it, so this only fills the gaps. */
+  :where(a, button, [role="button"], select, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
   /* WCAG-friendly minimum hit area (44×44). */
   .touch-target {
     min-height: 44px;
