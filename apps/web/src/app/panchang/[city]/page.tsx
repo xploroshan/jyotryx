@@ -7,6 +7,8 @@ import {
   listCitySlugs,
 } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
+import { localeUrl } from '@/lib/seo/page-metadata';
+import { LANDING_LOCALES } from '@/i18n/locales';
 
 /**
  * Server-rendered SEO landing page for "Panchang for <city>".
@@ -55,10 +57,14 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const description = `Today's Hindu calendar (Panchang) for ${city.name}: tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal, Gulika Kaal and Yamakantaka — calculated from Swiss Ephemeris for ${city.name}'s exact latitude and longitude.`;
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 
+  const languages: Record<string, string> = {};
+  for (const l of LANDING_LOCALES) languages[l] = localeUrl(l, `/panchang/${city.slug}`);
+  languages['x-default'] = localeUrl('en', `/panchang/${city.slug}`);
+
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: {
       title,
       description,

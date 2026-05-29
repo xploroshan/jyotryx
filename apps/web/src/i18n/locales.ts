@@ -36,3 +36,14 @@ export const PREFIXED_LANDING_LOCALES: Locale[] = LANDING_LOCALES.filter(
 export function isLocale(value: string | undefined | null): value is Locale {
   return !!value && (SUPPORTED_LOCALES as string[]).includes(value);
 }
+
+/**
+ * Resolves a route's `[locale]` segment to a prefixed landing locale, or null
+ * if it isn't one (the default/English lives at the root, and locales outside
+ * LANDING_LOCALES aren't published as landing pages → the page should 404).
+ */
+export function prefixedLandingLocale(value: string | undefined | null): Locale | null {
+  return isLocale(value) && value !== DEFAULT_LOCALE && LANDING_LOCALES.includes(value)
+    ? value
+    : null;
+}

@@ -95,6 +95,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   );
 
+  const localizedHoroscopePeriodPages: MetadataRoute.Sitemap = PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+    ZODIAC_SIGNS.flatMap((sign) =>
+      (['weekly', 'monthly', 'yearly'] as const).map((period) => ({
+        url: localeUrl(locale, `/horoscope/${sign.slug}/${period}`),
+        lastModified: now,
+        changeFrequency: period,
+        priority: 0.6,
+      })),
+    ),
+  );
+
+  const localizedPanchangCityPages: MetadataRoute.Sitemap = PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+    SEO_CITIES.map((city) => ({
+      url: localeUrl(locale, `/panchang/${city.slug}`),
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    })),
+  );
+
   return [
     ...staticPages,
     ...signPages,
@@ -103,5 +123,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...kundliCityPages,
     ...localizedFeaturePages,
     ...localizedHoroscopePages,
+    ...localizedHoroscopePeriodPages,
+    ...localizedPanchangCityPages,
   ];
 }
