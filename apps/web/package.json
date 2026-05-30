@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:realapi": "playwright test --config playwright.realapi.config.ts",
     "indexnow": "node scripts/indexnow-submit.mjs"
   },
   "dependencies": {
