@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { SITE_ORIGIN } from "./server-api";
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
+import { getServerTranslations } from "@/i18n/server";
+import { FEATURE_PAGES } from "./feature-pages";
 
 interface PageMetaInput {
   title: string;
@@ -81,6 +83,45 @@ interface LocalizedMetaInput {
   keywords?: string[];
   /** Locales this page actually exists in (for hreflang). Defaults to all 12. */
   hreflangLocales?: readonly Locale[];
+}
+
+/**
+ * Maps a feature path to the translation namespace whose
+ * `{title, titleHighlight?, description}` drive the localized SEO meta. These
+ * are the SAME strings the page UI renders, so the `<title>` and meta
+ * description on `/<locale>/numerology` are real translations (no
+ * machine-translated SEO prose, no English leaking onto a localized page).
+ */
+const FEATURE_I18N_KEY: Record<string, string> = {
+  "/kundli": "kundli",
+  "/numerology": "numerology",
+  "/tarot": "tarot",
+  "/matching": "matching",
+  "/vastu": "vastu",
+  "/muhurat": "muhurat",
+  "/palmistry": "palmistry",
+};
+
+/**
+ * Localized metadata for a Tier-A feature page. Composes the title from the
+ * translated `title` (+ optional `titleHighlight`) and uses the translated
+ * `description`, falling back to the English `FEATURE_PAGES` entry for any
+ * locale/key whose dictionary section is missing a piece. Keywords stay on the
+ * English fallback (the meta-keywords tag is not locale-sensitive for ranking).
+ */
+export async function localizedFeatureMetadata(locale: Locale, path: string): Promise<Metadata> {
+  const fallback = FEATURE_PAGES[path];
+  const key = FEATURE_I18N_KEY[path];
+  const t = await getServerTranslations(locale);
+  const section = key ? (t as unknown as Record<string, { title?: string; titleHighlight?: string; description?: string }>)[key] : undefined;
+
+  const headline = section?.title
+    ? `${section.title}${section.titleHighlight ? ` ${section.titleHighlight}` : ""}`
+    : null;
+  const title = headline ? `${headline} | myastro360` : fallback.title;
+  const description = section?.description ?? fallback.description;
+
+  return localizedMetadata({ locale, path, title, description, keywords: fallback.keywords });
 }
 
 /**
