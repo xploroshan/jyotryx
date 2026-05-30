@@ -44,6 +44,22 @@ interface KundliData {
     subPeriods?: { planet: string; startDate: string; endDate: string }[];
   }[];
   yogas: { name: string; description: string; effect: string }[];
+  divisionalCharts?: {
+    D9?: DivisionalChart;
+    D10?: DivisionalChart;
+  };
+}
+
+interface DivisionalChart {
+  ascendant: string;
+  houses: { house: number; sign: string; planets: string[] }[];
+  planetaryPositions: {
+    planet: string;
+    sign: string;
+    house: number;
+    degree: number;
+    isRetrograde: boolean;
+  }[];
 }
 
 interface DoshaData {
@@ -365,6 +381,7 @@ export default function KundliPage() {
 
             {/* Tab Content */}
             {activeTab === "chart" && (
+              <>
               <div className="surface-card p-6 sm:p-8">
                 <h3 className="text-lg font-bold text-gradient mb-6 text-center">{t.kundli.rashiChart}</h3>
 
@@ -438,6 +455,41 @@ export default function KundliPage() {
                   </div>
                 )}
               </div>
+
+              {/* Divisional (varga) charts — Navamsa (D9) and Dashamsha (D10),
+                  the two most-consulted vargas, shown side by side like
+                  AstroTalk. They honour the same North/South toggle. */}
+              {kundli.divisionalCharts && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                  {([
+                    ["D9", "Navamsa (D9)", "Marriage, dharma & inner strength", kundli.divisionalCharts.D9],
+                    ["D10", "Dashamsha (D10)", "Career & profession", kundli.divisionalCharts.D10],
+                  ] as const).map(([key, title, subtitle, chart]) =>
+                    chart ? (
+                      <div key={key} className="surface-card p-6">
+                        <h3 className="text-base font-bold text-gradient text-center">{title}</h3>
+                        <p className="text-xs text-[rgba(12,8,5,0.40)] text-center mb-4">{subtitle}</p>
+                        {chartStyle === "north" ? (
+                          <NorthIndianChart
+                            houses={chart.houses}
+                            planetaryPositions={chart.planetaryPositions}
+                            ascendant={chart.ascendant}
+                            className="w-full max-w-sm mx-auto aspect-square"
+                          />
+                        ) : (
+                          <SouthIndianChart
+                            houses={chart.houses}
+                            planetaryPositions={chart.planetaryPositions}
+                            ascendant={chart.ascendant}
+                            className="w-full max-w-sm mx-auto aspect-square"
+                          />
+                        )}
+                      </div>
+                    ) : null,
+                  )}
+                </div>
+              )}
+              </>
             )}
 
             {activeTab === "planets" && (
