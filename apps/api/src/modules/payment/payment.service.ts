@@ -509,6 +509,56 @@ export class PaymentService {
           }
           break;
         }
+        case 'refund.created':
+        case 'refund.processed': {
+          // Razorpay refunded a captured payment (full or partial). Mark the
+          // payment REFUNDED and, for credit purchases, claw back the granted
+          // credits so a refunded user can't keep spending what they were
+          // reimbursed for. We clamp the deduction at the current balance so
+          // the wallet never goes negative (the user may have already spent
+          // some), and log a negative-amount PURCHASE transaction for the
+          // audit trail — CreditTransactionType has no dedicated REFUND value,
+          // so a signed PURCHASE keeps the ledger balanced without a schema
+          // migration. Idempotent: the status guard means a redelivered
+          // refund webhook claims nothing and reverses no further credits.
+          const refund = payload?.payload?.refund?.entity;
+          if (refund?.payment_id) {
+            await this.prisma.$transaction(async (tx: any) => {
+              const { count } = await tx.payment.updateMany({
+                where: { razorpayPaymentId: refund.payment_id, status: 'SUCCESS' },
+                data: { status: 'REFUNDED' },
+              });
+              if (count === 0) return; // already refunded, or not our payment
+              const payment = await tx.payment.findFirst({
+                where: { razorpayPaymentId: refund.payment_id },
+                select: { userId: true, amount: true, metadata: true, type: true },
+              });
+              if (!payment || payment.type !== 'CREDITS') return;
+              const granted = this.creditsForPayment(payment);
+              if (granted <= 0) return;
+              const user = await tx.user.findUnique({
+                where: { id: payment.userId },
+                select: { credits: true },
+              });
+              const deduct = Math.min(granted, user?.credits ?? 0);
+              if (deduct > 0) {
+                await tx.user.update({
+                  where: { id: payment.userId },
+                  data: { credits: { decrement: deduct } },
+                });
+              }
+              await tx.creditTransaction.create({
+                data: {
+                  userId: payment.userId,
+                  amount: -deduct,
+                  type: 'PURCHASE',
+                  description: `Refund: reversed ${deduct} credits (payment ${refund.payment_id})`,
+                },
+              });
+            });
+          }
+          break;
+        }
       }
     } catch (error) {
       this.logger.error(`Webhook processing failed for event ${event}`, error);

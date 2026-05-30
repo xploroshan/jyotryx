@@ -50,6 +50,7 @@ The integration is already built end‑to‑end:
    - `payment.captured`, `payment.failed`
    - `subscription.activated`, `subscription.charged`
    - `subscription.cancelled`, `subscription.halted`, `subscription.completed`
+   - `refund.created`, `refund.processed`
 
 ## 3. How UPI works here
 
@@ -68,6 +69,7 @@ The integration is already built end‑to‑end:
 | `subscription.activated` / `charged` | Subscription → ACTIVE, `endDate` rolled to the new period, user role → **PREMIUM** |
 | `subscription.cancelled` | Subscription → CANCELLED, role → USER (unless another active sub) |
 | `subscription.halted` / `completed` | Subscription → EXPIRED, role → USER (unless another active sub) |
+| `refund.created` / `refund.processed` | Payment → REFUNDED (atomic status‑guard); for credit purchases, claws back the granted credits (clamped at the current balance) and logs a negative‑amount `PURCHASE` ledger entry |
 
 Premium access is gated by **`user.role`**. ADMIN accounts are never downgraded
 (the revoke is guarded by `role: 'PREMIUM'`). Admin manual cancellation
@@ -79,13 +81,19 @@ Premium access is gated by **`user.role`**. ADMIN accounts are never downgraded
 - Verify: credits land once; Premium grants only after `subscription.charged`;
   cancelling revokes Premium.
 - Unit coverage: `apps/api/test/payment.service.spec.ts` (idempotency +
-  full subscription lifecycle).
+  full subscription lifecycle + refund clawback).
 - Swap in **live** keys + live Plan ids + the live webhook, and confirm KYC is
   activated.
 
 ## 6. Known follow‑ups
 
-- **Refunds** (`refund.processed`) don't yet reverse credits/Premium.
+- **Refunds** reverse credits for credit‑pack purchases. They do **not** yet
+  auto‑revoke Premium on a refunded subscription charge — refund a recurring
+  charge and then cancel the subscription (or revoke the role via `/admin`) if
+  the user should lose access immediately.
+- The clawback logs a signed `PURCHASE` ledger entry because
+  `CreditTransactionType` has no dedicated `REFUND` value. Add one (a schema
+  migration) if refund reporting needs to distinguish reversals from purchases.
 - Subscriptions use a finite `total_count` (12 monthly / 5 annual); the
   `completed` handler now revokes Premium, but consider a longer count or
   auto‑renew strategy for true open‑ended billing.
