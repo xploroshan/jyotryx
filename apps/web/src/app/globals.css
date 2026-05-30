@@ -115,8 +115,14 @@
   /* next/font/google injects --font-sans-inter and --font-display-fraunces
      onto <html> via the className applied in layout.tsx. We layer system
      fallbacks behind them here so the page never renders unstyled. */
-  --font-sans: var(--font-sans-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-display-fraunces), ui-serif, "Times New Roman", Georgia, serif;
+  /* Latin uses Inter/Fraunces; Indic glyphs (absent from those) cascade to the
+     matching bundled Noto family. Browsers download a Noto file only when a
+     glyph in its unicode-range is rendered, so a page pulls just its script. */
+  --font-noto-indic: var(--font-noto-deva), var(--font-noto-beng), var(--font-noto-taml),
+    var(--font-noto-telu), var(--font-noto-gujr), var(--font-noto-knda),
+    var(--font-noto-mlym), var(--font-noto-guru), var(--font-noto-orya);
+  --font-sans: var(--font-sans-inter), var(--font-noto-indic), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-display-fraunces), var(--font-noto-indic), ui-serif, "Times New Roman", Georgia, serif;
 }
 
 @layer base {
