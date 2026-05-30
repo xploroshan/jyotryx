@@ -373,12 +373,17 @@ function AuthPageContent() {
 
       // Configuration-class Firebase errors mean the project / env isn't set
       // up for phone auth. Rather than leaving the user stuck, transparently
-      // fall back to the backend OTP flow.
+      // fall back to the backend OTP flow (which uses its own SMS provider,
+      // independent of Firebase's billing/plan state).
       const configFailure =
         err?.code === "auth/operation-not-allowed" ||
         err?.code === "auth/invalid-app-credential" ||
         err?.code === "auth/captcha-check-failed" ||
-        err?.code === "auth/internal-error";
+        err?.code === "auth/internal-error" ||
+        // Firebase Phone Auth now requires the Blaze plan; on a project
+        // without billing it throws this. The backend OTP path doesn't go
+        // through Firebase, so fall back to it instead of dead-ending.
+        err?.code === "auth/billing-not-enabled";
 
       if (configFailure) {
         try {

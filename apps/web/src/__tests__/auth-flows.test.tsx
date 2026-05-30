@@ -400,6 +400,31 @@ describe('Auth Flow: Phone OTP Login', () => {
     expect(await screen.findByText('Too many attempts. Please try again later.')).toBeDefined();
   });
 
+  it('falls back to the backend OTP flow when Firebase phone auth has no billing', async () => {
+    // Firebase Phone Auth requires the Blaze plan; a project without billing
+    // throws auth/billing-not-enabled. The backend OTP path uses its own SMS
+    // provider, so the app should transparently fall back rather than show
+    // the raw Firebase error.
+    mockSignInWithPhoneNumber.mockRejectedValueOnce({ code: 'auth/billing-not-enabled' });
+    mockApiPost.mockResolvedValueOnce({ message: 'sent', expiresIn: 300 });
+
+    render(<AuthPage />);
+    fireEvent.change(screen.getByPlaceholderText('Phone number'), { target: { value: '9876543210' } });
+    fireEvent.click(screen.getByText('Send OTP'));
+
+    // Backend send was hit, and the user lands on the verify step — no raw
+    // "Firebase: Error (auth/billing-not-enabled)" leaks to the UI.
+    await waitFor(() => {
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/auth/otp/send',
+        { phone: '+919876543210' },
+        expect.anything(),
+      );
+    });
+    expect(await screen.findByText('Verify & Continue')).toBeDefined();
+    expect(screen.queryByText(/billing-not-enabled/)).toBeNull();
+  });
+
   it('should show resend OTP and change number options after OTP sent', async () => {
     const mockConfirmation = { confirm: vi.fn() };
     mockSignInWithPhoneNumber.mockResolvedValueOnce(mockConfirmation);
