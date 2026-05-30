@@ -22,15 +22,20 @@ test.describe('Navigation smoke', () => {
   test('home page renders hero, badge, and CTA buttons', async ({ page }) => {
     await page.goto('/');
 
-    // Badge in the hero. `Vedic astrology platform` also appears (lowercase)
-    // in the footer tagline/subtitle, so scope the match to the hero badge
-    // via its exact casing + surrounding dot element.
-    await expect(page.getByText('Vedic Astrology Platform', { exact: true })).toBeVisible();
+    // Badge in the hero. It renders with a leading em-dash ("— Vedic Astrology
+    // Platform"), so an exact match misses it; a substring match scoped to the
+    // first occurrence (the hero badge precedes the footer tagline in the DOM)
+    // is the stable assertion.
+    await expect(page.getByText('Vedic Astrology Platform').first()).toBeVisible();
 
-    // Hero headline — "Your stars," + "decoded by myastro360"
-    const hero = page.getByRole('heading', { level: 1 });
-    await expect(hero).toContainText('Your stars');
-    await expect(hero).toContainText('decoded by myastro360');
+    // Hero headline — "Your stars," + "decoded by myastro360". The visible
+    // text is split into per-character animation spans (and "myastro360" onto
+    // its own line), so it has no space before the brand; assert against the
+    // h1's aria-label, which carries the full, clean phrase.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute(
+      'aria-label',
+      /Your stars.*decoded by myastro360/,
+    );
 
     // Primary CTAs
     await expect(page.getByRole('link', { name: 'Start Consultation' })).toBeVisible();
@@ -57,14 +62,14 @@ test.describe('Navigation smoke', () => {
   });
 
   test('feature rail above the fold links every Vedic feature', async ({ page }) => {
-    await page.goto('/');
-
-    // The FeatureChips rail (rendered under the navbar) is the canonical
-    // way users navigate into a feature now. Default tradition = Vedic →
-    // 14 chips, each a <Link>. Labels come from
-    // `t.traditionsUi.vedic.features.*`. Some also appear in the footer
-    // list, so we use `.first()` to stay scoped to the rail (the rail
-    // renders earlier in the DOM).
+    // The feature bar (FeatureBarV2, under the navbar) renders only when a
+    // tradition is active — it's driven by the route on a tradition page and
+    // by the remembered/primary tradition elsewhere, so it is NOT shown on a
+    // logged-out `/`. The Vedic tradition page is where its rail appears, so
+    // that's what we exercise here. Each feature is a <Link>; labels come from
+    // `t.traditionsUi.vedic.features.*`. Some also appear in the footer list,
+    // so we use `.first()` to stay scoped to the rail (it renders earlier).
+    await page.goto('/vedic');
     const expected = [
       'Chat with Astrologer',
       'Kundli',
@@ -95,7 +100,9 @@ test.describe('Navigation smoke', () => {
     // verify the contract: the rail renders an anchor with the right
     // href. The actual /numerology route rendering is covered by
     // numerology.spec.ts (direct navigation).
-    await gotoAndHydrate(page, '/');
+    // The feature bar only renders with an active tradition (see the test
+    // above), so exercise it on the Vedic tradition page.
+    await gotoAndHydrate(page, '/vedic');
     const chip = page.getByRole('link', { name: 'Numerology', exact: true }).first();
     await expect(chip).toHaveAttribute('href', '/numerology');
   });
