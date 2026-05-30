@@ -27,7 +27,12 @@ export function ConditionalLayoutShell({
     <>
       {!bare && topChrome}
       <main
-        className={`flex-1 focus:outline-none ${bare ? "" : "pt-14"}`}
+        // min-h-screen reserves a viewport of height so the footer always
+        // starts BELOW the fold. Client-only/Suspense content (e.g. kundli's
+        // fallback={null}, the ssr:false BentoSummary) renders after first
+        // paint and grows `main`; without the reservation that pushed the
+        // in-viewport footer down and registered a large layout shift (CLS).
+        className={`flex-1 min-h-screen focus:outline-none ${bare ? "" : "pt-14"}`}
         tabIndex={-1}
       >
         {children}
