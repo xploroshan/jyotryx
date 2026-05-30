@@ -848,7 +848,12 @@ export class AstrologyService {
     // to memoize across users. This eliminates the dominant Swiss Ephemeris cost
     // for the 2nd+ kundli request with identical inputs (e.g. a user re-opening
     // their own chart or matching both partners repeatedly).
-    const cacheKey = `kundli:chart:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
+    // The cache key carries an engine version (`v2`). Charts are cached in
+    // Redis for 24h and persist across deploys, so whenever the chart
+    // computation changes (e.g. the sidereal-ascendant / mean-node fixes, the
+    // outer planets, and the D9/D10 vargas) the version MUST be bumped —
+    // otherwise stale pre-fix charts keep being served until the TTL expires.
+    const cacheKey = `kundli:chart:v2:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
     const cached = await this.cacheService.get<any>(cacheKey);
     if (cached) return cached;
     const chartData = await this.generateSwissEphKundliAsync(birthDetails);
