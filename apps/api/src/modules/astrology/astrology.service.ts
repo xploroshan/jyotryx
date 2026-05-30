@@ -33,6 +33,56 @@ const EXALTATION: Record<string, number> = { Sun: 0, Moon: 1, Mars: 9, Mercury: 
 // Own signs
 const OWN_SIGNS: Record<string, number[]> = { Sun: [4], Moon: [3], Mars: [0, 7], Mercury: [2, 5], Jupiter: [8, 11], Venus: [1, 6], Saturn: [9, 10] };
 
+// Moolatrikona sign per planet (the planet's strongest functional sign).
+const MOOLATRIKONA: Record<string, number> = { Sun: 4, Moon: 1, Mars: 0, Mercury: 5, Jupiter: 8, Venus: 6, Saturn: 10 };
+
+// Naisargik (natural) planetary friendships — used to label a planet's
+// relationship with the lord of the sign it occupies when it isn't in an
+// essential dignity (exalted/debilitated/own/moolatrikona). Drives the
+// "Status" column (Friendly / Neutral / Enemy), mirroring mainstream Vedic
+// software like AstroTalk.
+const NATURAL_FRIENDS: Record<string, { friends: string[]; neutral: string[]; enemies: string[] }> = {
+  Sun: { friends: ['Moon', 'Mars', 'Jupiter'], neutral: ['Mercury'], enemies: ['Venus', 'Saturn'] },
+  Moon: { friends: ['Sun', 'Mercury'], neutral: ['Mars', 'Jupiter', 'Venus', 'Saturn'], enemies: [] },
+  Mars: { friends: ['Sun', 'Moon', 'Jupiter'], neutral: ['Venus', 'Saturn'], enemies: ['Mercury'] },
+  // Mercury↔Saturn are treated as mutual friends (Saturn lists Mercury as a
+  // friend too), matching mainstream software like AstroTalk.
+  Mercury: { friends: ['Sun', 'Venus', 'Saturn'], neutral: ['Mars', 'Jupiter'], enemies: ['Moon'] },
+  Jupiter: { friends: ['Sun', 'Moon', 'Mars'], neutral: ['Saturn'], enemies: ['Mercury', 'Venus'] },
+  Venus: { friends: ['Mercury', 'Saturn'], neutral: ['Mars', 'Jupiter'], enemies: ['Sun', 'Moon'] },
+  Saturn: { friends: ['Mercury', 'Venus'], neutral: ['Jupiter'], enemies: ['Sun', 'Moon', 'Mars'] },
+};
+
+// The classical seven grahas (excludes the shadow nodes and the modern outer
+// planets) — used wherever dignity/friendship reasoning applies.
+const CLASSICAL_GRAHAS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+
+// Modern outer planets. They're shown in the chart + planet table for parity
+// with AstroTalk, but take NO part in classical yoga/dosha/dasha logic.
+const OUTER_PLANETS = ['Uranus', 'Neptune', 'Pluto'];
+
+/**
+ * Essential-dignity / friendship label for a planet, mirroring the "Status"
+ * column on mainstream Vedic kundli software. Returns '' for the nodes and
+ * outer planets, which have no classical dignity.
+ */
+function planetStatus(planet: string, signIdx: number, degree: number): string {
+  if (!CLASSICAL_GRAHAS.includes(planet)) return '';
+  const exalt = EXALTATION[planet];
+  if (exalt === signIdx) return 'Exalted';
+  if (((exalt + 6) % 12) === signIdx) return 'Debilitated';
+  // Moolatrikona is a degree-bounded portion of the sign, but it's universally
+  // labelled by sign in these tables, so a sign match is sufficient here.
+  if (MOOLATRIKONA[planet] === signIdx) return 'Mooltrikona';
+  if (OWN_SIGNS[planet]?.includes(signIdx)) return 'Own Sign';
+  const lord = SIGN_LORDS[signIdx];
+  if (lord === planet) return 'Own Sign';
+  const rel = NATURAL_FRIENDS[planet];
+  if (rel?.friends.includes(lord)) return 'Friendly';
+  if (rel?.enemies.includes(lord)) return 'Enemy';
+  return 'Neutral';
+}
+
 export interface BirthDetails {
   dateOfBirth: string;
   timeOfBirth: string;
@@ -69,6 +119,9 @@ export interface PlanetPosition {
   degree: number;
   isRetrograde: boolean;
   nakshatra: string;
+  /** Essential-dignity / friendship label (Exalted, Own Sign, Friendly, …).
+   *  Empty for the nodes and outer planets. */
+  status?: string;
 }
 
 export interface DashaPeriod {
@@ -284,6 +337,11 @@ export class AstrologyService {
       { id: swisseph.SE_SATURN, name: 'Saturn' },
       // Mean node — see ephemeris.worker.ts; matches the Indian Vedic default.
       { id: swisseph.SE_MEAN_NODE, name: 'Rahu' },
+      // Modern outer planets — shown for parity with AstroTalk; they don't
+      // participate in classical yoga/dosha/dasha logic.
+      { id: swisseph.SE_URANUS, name: 'Uranus' },
+      { id: swisseph.SE_NEPTUNE, name: 'Neptune' },
+      { id: swisseph.SE_PLUTO, name: 'Pluto' },
     ];
     const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
     const positions = PLANETS.map(p => {
@@ -311,6 +369,10 @@ export class AstrologyService {
 
   // ─── Deterministic Yoga Detection ───────────────────────────────────────────
   private detectYogas(positions: PlanetPosition[]): Yoga[] {
+    // Classical yoga rules reason over the seven grahas + nodes only; strip
+    // the modern outer planets so they can't accidentally satisfy or cancel
+    // a yoga (e.g. an outer planet next to the Moon cancelling Kemadruma).
+    positions = positions.filter(p => !OUTER_PLANETS.includes(p.planet));
     const yogas: Yoga[] = [];
     const find = (name: string) => positions.find(p => p.planet === name);
     const findHouse = (name: string) => find(name)?.house;
@@ -459,6 +521,9 @@ export class AstrologyService {
   // final string from KbBriefingPhrase templates. Severity + present flags
   // are the same shape the public DoshaResult carries.
   private detectDoshas(positions: PlanetPosition[]): InternalDosha[] {
+    // Doshas are classical — exclude the modern outer planets (e.g. so a
+    // Kaal Sarp can't be falsely broken by an outer planet outside the nodal axis).
+    positions = positions.filter(p => !OUTER_PLANETS.includes(p.planet));
     const doshas: InternalDosha[] = [];
     const findHouse = (name: string) => positions.find(p => p.planet === name)?.house;
     const findSign = (name: string) => positions.find(p => p.planet === name)?.sign;
@@ -516,7 +581,11 @@ export class AstrologyService {
     const ketuHouse = findHouse('Ketu');
     let isKaalSarp = false;
     if (rahuHouse != null && ketuHouse != null) {
-      const otherPlanets = positions.filter(p => !['Rahu', 'Ketu'].includes(p.planet));
+      // Classical Kaal Sarp considers only the seven grahas hemmed between the
+      // nodes — exclude the nodes themselves AND the modern outer planets.
+      const otherPlanets = positions.filter(
+        p => !['Rahu', 'Ketu', ...OUTER_PLANETS].includes(p.planet),
+      );
       // Check if all planets are between Rahu and Ketu (going forward from Rahu)
       const span = ((ketuHouse - rahuHouse + 12) % 12);
       const allBetween = otherPlanets.every(p => {
@@ -645,6 +714,7 @@ export class AstrologyService {
         degree: parseFloat((p.longitude % 30).toFixed(2)),
         isRetrograde: p.name === 'Rahu' || p.name === 'Ketu' ? true : p.speed < 0,
         nakshatra: NAKSHATRA_NAMES[nakIdx],
+        status: planetStatus(p.name, signIdx, p.longitude % 30),
       };
     });
 

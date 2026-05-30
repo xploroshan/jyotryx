@@ -14,19 +14,9 @@
  * The SVG scales to its container, so it stays crisp at any size.
  */
 
-export interface ChartHouse {
-  house: number;
-  sign: string;
-  planets: string[];
-}
+import { ChartHouse, ChartPlanet, abbr, signNumber } from "./chart-common";
 
-export interface ChartPlanet {
-  planet: string;
-  sign: string;
-  house: number;
-  degree: number;
-  isRetrograde: boolean;
-}
+export type { ChartHouse, ChartPlanet };
 
 interface NorthIndianChartProps {
   houses: ChartHouse[];
@@ -34,28 +24,6 @@ interface NorthIndianChartProps {
   ascendant?: string;
   /** Wrapper class — defaults to a responsive, centred, square box. */
   className?: string;
-}
-
-// 1-based Vedic sign order. Used to print the rashi number inside each house.
-const SIGN_NUMBER: Record<string, number> = {
-  aries: 1, taurus: 2, gemini: 3, cancer: 4, leo: 5, virgo: 6,
-  libra: 7, scorpio: 8, sagittarius: 9, capricorn: 10, aquarius: 11, pisces: 12,
-};
-
-// Full planet name → compact glyph used inside the small house cells.
-const PLANET_ABBR: Record<string, string> = {
-  sun: "Su", moon: "Mo", mars: "Ma", mercury: "Me", jupiter: "Ju",
-  venus: "Ve", saturn: "Sa", rahu: "Ra", ketu: "Ke",
-  uranus: "Ur", neptune: "Ne", pluto: "Pl", ascendant: "As",
-};
-
-function abbr(planet: string): string {
-  return PLANET_ABBR[planet.trim().toLowerCase()] ?? planet.slice(0, 2);
-}
-
-function signNumber(sign: string | undefined): number | null {
-  if (!sign) return null;
-  return SIGN_NUMBER[sign.trim().toLowerCase()] ?? null;
 }
 
 // Label centroids for each house (1-based) in the 400×400 viewBox. These are
