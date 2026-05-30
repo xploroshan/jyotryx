@@ -56,4 +56,23 @@ describe('EphemerisService — sidereal ascendant (production path)', () => {
     expect(signOf(sun.longitude)).toBe('Aquarius');
     expect(sunHouse).toBe(2);
   });
+
+  it('uses MEAN node for Rahu/Ketu (Indian Vedic convention), not true node', async () => {
+    // Delhi 26 Jan 1990 14:30 IST: mean and true nodes fall in DIFFERENT
+    // nakshatras (mean → Dhanishta ~Cap 23.4°, true → Shravana ~Cap 22.7°),
+    // so this distinguishes the two. Production must match the mean node.
+    const chart = await svc.computeChart({
+      year: 1990, month: 1, day: 26, hour: 14, minute: 30,
+      lat: 28.6139, lng: 77.209,
+    });
+    const rahu = chart.positions.find((p) => p.name === 'Rahu')!;
+    expect(signOf(rahu.longitude)).toBe('Capricorn');
+    // Mean node ≈ 23.4°; true node ≈ 22.7°. Assert we're on the mean side.
+    expect(rahu.longitude % 30).toBeGreaterThan(23.0);
+
+    // Ketu is exactly 180° opposite Rahu.
+    const ketu = chart.positions.find((p) => p.name === 'Ketu')!;
+    const opposed = (((ketu.longitude - rahu.longitude) % 360) + 360) % 360;
+    expect(opposed).toBeCloseTo(180, 3);
+  });
 });
