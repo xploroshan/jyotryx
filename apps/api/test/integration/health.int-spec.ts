@@ -68,41 +68,63 @@ describe('HealthController', () => {
     );
   });
 
-  it('GET /health/ready returns 503 when Redis is unreachable', async () => {
-    // Kill the connection to simulate Redis outage. `quit()` issues a
-    // QUIT to the server and closes the socket — subsequent commands
-    // reject with ClientClosedError, which the 2s Promise.race in the
-    // health indicator turns into a `down` status.
+  // Build a Nest app whose Redis client is disconnected, so the readiness
+  // ping fails. The caller controls REDIS_HEALTH_REQUIRED to choose between
+  // the hard (down/503) and soft (degraded/200) behaviours.
+  async function buildAppWithBrokenRedis() {
     const brokenRedis = new Redis({
       host: process.env.TEST_REDIS_HOST!,
       port: Number(process.env.TEST_REDIS_PORT),
       lazyConnect: true,
     });
-
-    // Build a second Nest app that points at the broken client.
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [TerminusModule],
       controllers: [HealthController],
-      providers: [
-        PrismaService,
-        { provide: REDIS_CLIENT, useValue: brokenRedis },
-      ],
+      providers: [PrismaService, { provide: REDIS_CLIENT, useValue: brokenRedis }],
     }).compile();
+    const app = moduleFixture.createNestApplication();
+    await app.init();
+    brokenRedis.disconnect(); // subsequent ping() rejects → indicator sees it as down
+    return app;
+  }
 
-    const brokenApp = moduleFixture.createNestApplication();
-    await brokenApp.init();
+  it('GET /health/ready returns 503 when Redis is unreachable AND required', async () => {
+    // Redis is a SOFT dependency by default; declaring it required
+    // (REDIS_HEALTH_REQUIRED=true) makes an outage surface as 503/down.
+    const prev = process.env.REDIS_HEALTH_REQUIRED;
+    process.env.REDIS_HEALTH_REQUIRED = 'true';
+    const brokenApp = await buildAppWithBrokenRedis();
+    try {
+      const res = await request(brokenApp.getHttpServer()).get('/health/ready');
+      expect(res.status).toBe(503);
+      // Terminus packs the failing indicator into `error`.
+      expect(res.body.status).toBe('error');
+      expect(res.body.error).toEqual(
+        expect.objectContaining({ redis: expect.objectContaining({ status: 'down' }) }),
+      );
+    } finally {
+      process.env.REDIS_HEALTH_REQUIRED = prev;
+      await brokenApp.close();
+    }
+  });
 
-    // Disconnect so ping() can't complete.
-    brokenRedis.disconnect();
-
-    const res = await request(brokenApp.getHttpServer()).get('/health/ready');
-    expect(res.status).toBe(503);
-    // Terminus packs the failing indicator into `error`.
-    expect(res.body.status).toBe('error');
-    expect(res.body.error).toEqual(
-      expect.objectContaining({ redis: expect.objectContaining({ status: 'down' }) }),
-    );
-
-    await brokenApp.close();
+  it('GET /health/ready stays 200 (degraded) when Redis is down but NOT required (default)', async () => {
+    // Production default: a Redis blip must not evict the replica — the API
+    // still serves auth/profile/read paths, so readiness reports degraded
+    // but stays green.
+    const prev = process.env.REDIS_HEALTH_REQUIRED;
+    delete process.env.REDIS_HEALTH_REQUIRED; // default = soft
+    const brokenApp = await buildAppWithBrokenRedis();
+    try {
+      const res = await request(brokenApp.getHttpServer()).get('/health/ready');
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+      expect(res.body.info).toEqual(
+        expect.objectContaining({ redis: expect.objectContaining({ status: 'up', degraded: true }) }),
+      );
+    } finally {
+      process.env.REDIS_HEALTH_REQUIRED = prev;
+      await brokenApp.close();
+    }
   });
 });
