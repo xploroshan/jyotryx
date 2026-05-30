@@ -131,10 +131,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    // `lang="en"` is intentionally STATIC here, and HtmlLangSync patches it to
+    // the real locale on the client. This is a deliberate trade-off, not an
+    // oversight: the root layout sits ABOVE the `[locale]` segment, so it can't
+    // read the locale from params, and deriving it from `headers()` would make
+    // the root layout dynamic — opting EVERY route out of static generation and
+    // gutting the SSG/ISR the localized SEO surfaces depend on. The strong
+    // language signals (hreflang, canonical, and the fully-translated SSR
+    // content via I18nProvider) are already correct at first byte; only the
+    // `lang` attribute on the 11 prefixed locales is client-corrected. The
+    // SSR-correct alternative is rooting all routes under `[locale]` with a
+    // rewrite middleware — see docs; deferred as too large for the payoff.
     <html lang="en" className={`${sans.variable} ${display.variable} ${notoVars}`}>
       <body className="min-h-screen flex flex-col">
-        {/* Sync <html lang> with the active locale (root layout hard-codes
-            "en"; this keeps screen readers + SEO correct for all 12). */}
         <HtmlLangSync />
         <script
           type="application/ld+json"
