@@ -306,14 +306,26 @@ function AuthPageContent() {
   }, [setAuth, router, applyUserLanguage, referralCode]);
 
   const setupRecaptcha = useCallback(() => {
-    // Clear previous verifier to avoid stale instances
+    // Tear down any previous verifier instance.
     if (recaptchaVerifierRef.current) {
       try { recaptchaVerifierRef.current.clear(); } catch {}
       recaptchaVerifierRef.current = null;
     }
-    if (!recaptchaContainerRef.current) return;
+    const wrapper = recaptchaContainerRef.current;
+    if (!wrapper) return;
 
-    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+    // Firebase's clear() doesn't reliably remove the grecaptcha widget from
+    // the DOM, so pointing a new RecaptchaVerifier at the SAME node throws
+    // "reCAPTCHA has already been rendered in this element" on the next
+    // attempt (Resend OTP, or a retry after an earlier send failed). That
+    // error aborts signInWithPhoneNumber before any SMS goes out. Render into
+    // a FRESH child node each time: wipe the wrapper and hand grecaptcha a
+    // virgin element it has never rendered into.
+    wrapper.innerHTML = "";
+    const host = document.createElement("div");
+    wrapper.appendChild(host);
+
+    recaptchaVerifierRef.current = new RecaptchaVerifier(auth, host, {
       size: "invisible",
     });
   }, []);
