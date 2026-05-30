@@ -9,6 +9,7 @@ import { KbService } from '../../knowledge/kb.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
+import { resolveUtHour } from '../../common/timezone.util';
 import * as path from 'path';
 
 // ─── Swiss Ephemeris Setup (kept as sync fallback for methods not yet ported) ─
@@ -251,9 +252,20 @@ export class AstrologyService {
     const timeParts = bd.timeOfBirth?.split(':') || ['6', '0'];
     const hour = parseInt(timeParts[0], 10);
     const minute = parseInt(timeParts[1], 10) || 0;
-    // Derive timezone offset from longitude if available, otherwise default to IST (+5:30)
-    const tzOffset = bd.longitude != null ? bd.longitude / 15 : 5.5;
-    const utHour = hour + minute / 60 - tzOffset;
+    // Convert the recorded CIVIL (clock) birth time to UT using the actual
+    // IANA timezone of the birthplace — including historical DST — rather
+    // than the old longitude/15 (local mean solar time) approximation, which
+    // was off by ~27 min for Indian longitudes and could shift the ascendant
+    // across a whole sign. Falls back to IST when coordinates are absent.
+    const utHour = resolveUtHour({
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      hour,
+      minute,
+      latitude: bd.latitude,
+      longitude: bd.longitude,
+    });
     return swisseph.swe_julday(
       date.getFullYear(), date.getMonth() + 1, date.getDate(),
       utHour, swisseph.SE_GREG_CAL,
@@ -284,9 +296,15 @@ export class AstrologyService {
     return positions;
   }
 
-  // ─── Swiss Ephemeris: compute ascendant via swe_houses ──────────────────────
+  // ─── Swiss Ephemeris: compute ascendant via swe_houses_ex (sidereal) ─────────
   private computeAscendant(jd: number, lat: number, lng: number): number {
-    const houses = swisseph.swe_houses(jd, lat, lng, 'E'); // Equal house system
+    // MUST pass SEFLG_SIDEREAL: plain swe_houses() returns the TROPICAL
+    // ascendant, but every planet here is computed sidereally (Lahiri). Mixing
+    // the two zodiacs put the ascendant ~23.6° (≈ one whole sign) off, which
+    // shifted every house placement by a house. swe_houses_ex with the
+    // sidereal flag returns the Lahiri-sidereal ascendant that matches the
+    // planetary longitudes.
+    const houses = swisseph.swe_houses_ex(jd, swisseph.SEFLG_SIDEREAL, lat, lng, 'E'); // Equal house
     return ((houses.ascendant % 360) + 360) % 360;
   }
 
