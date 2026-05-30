@@ -63,71 +63,6 @@ function renderHighlight(text: string) {
   return <>{out}</>;
 }
 
-/**
- * Splits a string into per-character motion spans for the hero headline.
- * Whitespace is preserved as a non-breaking space so the layout never
- * collapses mid-word; the actual text content of the heading remains
- * intact for screen readers via aria-label on the parent <h1>.
- */
-// Split by grapheme cluster, not by codepoint. Devanagari/Tamil/etc.
-// vowel marks must stay attached to their base consonant — `Array.from`
-// would put "क" and "े" in separate inline-block spans, breaking "के"
-// into two disconnected glyphs.
-function splitGraphemes(text: string): string[] {
-  const Seg = (Intl as unknown as { Segmenter?: typeof Intl.Segmenter }).Segmenter;
-  if (typeof Seg === 'function') {
-    return Array.from(new Seg(undefined, { granularity: 'grapheme' }).segment(text), (s) => s.segment);
-  }
-  return Array.from(text);
-}
-
-// Indic scripts (Devanagari U+0900 … Malayalam U+0D7F) build conjuncts and
-// vowel signs that span grapheme clusters; wrapping each grapheme in its own
-// inline-block span gives it a separate shaping context, so the cluster can't
-// form and the virama surfaces as a stray mark (e.g. Kannada ಕ್ಷ → "ಕ್ ಷ").
-// For such text, animate the whole string as a single unit instead.
-// U+0900–U+0D7F: Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil,
-// Telugu, Kannada, Malayalam — every Indic script the app ships.
-const COMPLEX_SCRIPT_RE = /[ऀ-ൿ]/;
-
-function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
-  const reduce = useReducedMotion();
-  if (reduce) return <>{text}</>;
-  if (COMPLEX_SCRIPT_RE.test(text)) {
-    return (
-      <motion.span
-        initial={{ y: 28, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: baseDelay }}
-        className="inline-block"
-      >
-        {text}
-      </motion.span>
-    );
-  }
-  const chars = splitGraphemes(text);
-  return (
-    <>
-      {chars.map((c, i) => (
-        <motion.span
-          key={`${c}-${i}`}
-          initial={{ y: 28, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{
-            duration: 0.55,
-            ease: [0.22, 1, 0.36, 1],
-            delay: baseDelay + i * 0.025,
-          }}
-          className="inline-block whitespace-pre"
-          aria-hidden
-        >
-          {c === " " ? " " : c}
-        </motion.span>
-      ))}
-    </>
-  );
-}
-
 export default function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { t } = useTranslation();
@@ -183,18 +118,15 @@ export default function HomePage() {
                 className="font-display font-semibold text-surface-950 leading-[1.0] tracking-[-0.02em] mb-8"
                 style={{ fontSize: "clamp(56px, 9vw, 144px)" }}
               >
-                <span className="block leading-[0.94]">
-                  <CharReveal text={t.home.heroTitle.replace(/[,.]?\s*$/, "")} />
+                {/* Static text + CSS slide-up (see .hero-rise): this is the LCP
+                    element, so it must paint at first frame. Rendering the full
+                    string (not per-character spans) also fixes Indic shaping. */}
+                <span className="block leading-[0.94] hero-rise">
+                  {t.home.heroTitle.replace(/[,.]?\s*$/, "")}
                 </span>
-                <motion.span
-                  initial={reduce ? false : { y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{
-                    duration: 0.7,
-                    ease: [0.22, 1, 0.36, 1],
-                    delay: 0.45,
-                  }}
-                  className="serif-italic block mt-3 sm:mt-4 pb-[0.05em] leading-[1.05]"
+                <span
+                  className="serif-italic block mt-3 sm:mt-4 pb-[0.05em] leading-[1.05] hero-rise"
+                  style={{ animationDelay: "0.1s" }}
                 >
                   {/* The gradient lives per-fragment inside renderHighlight
                       (not on this parent) so the brand word stays visible
@@ -202,23 +134,19 @@ export default function HomePage() {
                       block-level line inside renderHighlight so the italic
                       J ascender never gets clipped by the line above. */}
                   {renderHighlight(t.home.heroHighlight)}
-                </motion.span>
+                </span>
               </h1>
 
-              <motion.p
-                initial={reduce ? false : { y: 14, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.7 }}
-                className="text-emphasis text-[17px] sm:text-lg max-w-xl leading-relaxed mb-10"
+              <p
+                className="text-emphasis text-[17px] sm:text-lg max-w-xl leading-relaxed mb-10 hero-rise"
+                style={{ animationDelay: "0.18s" }}
               >
                 {t.home.heroDescription}
-              </motion.p>
+              </p>
 
-              <motion.div
-                initial={reduce ? false : { y: 14, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.85 }}
-                className="flex flex-wrap items-center gap-6 sm:gap-8"
+              <div
+                className="flex flex-wrap items-center gap-6 sm:gap-8 hero-rise"
+                style={{ animationDelay: "0.26s" }}
               >
                 <CtaPrimary href="/chat" label={t.home.startConsultation} />
                 <Link
@@ -233,14 +161,16 @@ export default function HomePage() {
                     →
                   </span>
                 </Link>
-              </motion.div>
+              </div>
             </div>
 
             {/* Orb column — bleeds past the right gutter at lg+. On mobile
                 the orb is shrunk and centered below the headline. */}
             <div className="col-span-12 lg:col-span-5 order-2 relative">
+              {/* Visible at first frame (opacity:1) so it never blocks LCP;
+                  the subtle scale-in is composite-only, so no CLS. */}
               <motion.div
-                initial={reduce ? false : { scale: 0.85, opacity: 0 }}
+                initial={reduce ? false : { scale: 0.92, opacity: 1 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
                 className="relative mx-auto lg:translate-x-[6%] xl:translate-x-[10%]"
