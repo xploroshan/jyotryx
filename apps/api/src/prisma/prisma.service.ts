@@ -29,9 +29,29 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     super({
       adapter: new PrismaPg({
         connectionString: PrismaService.stripSslmode(process.env.DATABASE_URL),
-        ssl: { rejectUnauthorized: false },
+        // TLS only when the target actually supports it. Managed Postgres
+        // (production / any URL that asked for sslmode) needs it with relaxed
+        // verification (Supabase's CA isn't in Node's trust store). A local or
+        // CI-spawned postgres has SSL OFF, and forcing `ssl` there makes pg
+        // throw "The server does not support SSL connections" on every query —
+        // which broke the entire integration suite.
+        ssl: PrismaService.wantsSsl(process.env.DATABASE_URL)
+          ? { rejectUnauthorized: false }
+          : false,
       }),
     });
+  }
+
+  /**
+   * Whether the runtime adapter should negotiate TLS. True in production
+   * (managed PG requires it) or whenever the connection string explicitly
+   * asked for SSL via `sslmode`. False for a plain local/CI postgres, which
+   * has no SSL — forcing it there fails every query.
+   */
+  static wantsSsl(input: string | undefined): boolean {
+    if (process.env.NODE_ENV === 'production') return true;
+    if (!input) return false;
+    return /[?&]sslmode=(require|prefer|verify-ca|verify-full)/i.test(input);
   }
 
   /**
