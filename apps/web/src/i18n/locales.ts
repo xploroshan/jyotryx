@@ -43,14 +43,25 @@ export const PREBUILD_LANDING_LOCALES: Locale[] = ['hi'];
 
 /**
  * Locales the PANCHANG/city landing pages are published in. These need a
- * localized CITY NAME (city.i18n), which currently only exists for en + hi —
- * so panchang stays en/hi until city-name translations are added (otherwise
- * an English city name would leak into an otherwise-localized page).
+ * localized CITY NAME (city.i18n) so an English city name never leaks into an
+ * otherwise-localized page. Now that city.i18n carries every landing locale,
+ * panchang tracks LANDING_LOCALES — keep the two sets aligned so a city page
+ * is published for exactly the locales whose city name + dictionary exist.
  */
-export const PANCHANG_LOCALES: Locale[] = ['en', 'hi'];
+export const PANCHANG_LOCALES: Locale[] = ['en', 'hi', 'bn', 'kn', 'ta', 'te', 'ml'];
 export const PREFIXED_PANCHANG_LOCALES: Locale[] = PANCHANG_LOCALES.filter(
   (l) => l !== DEFAULT_LOCALE,
 );
+
+/**
+ * Which prefixed panchang locales to PRE-RENDER at build. Each panchang page
+ * fetches the locale-aware API at build time, so prebuilding every locale ×
+ * city would multiply build-time API calls (6 × 50). We prebuild Hindi (the
+ * largest market) and let the rest render on demand via ISR — they stay
+ * crawlable and sitemap-listed. Mirrors PREBUILD_LANDING_LOCALES for
+ * horoscope. English lives at the root route, prebuilt there separately.
+ */
+export const PREBUILD_PANCHANG_LOCALES: Locale[] = ['hi'];
 
 export function isLocale(value: string | undefined | null): value is Locale {
   return !!value && (SUPPORTED_LOCALES as string[]).includes(value);
