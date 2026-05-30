@@ -6,8 +6,13 @@ import { api } from "@/lib/api";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
-import { Stagger } from "@/components/ui/PageTransition";
-import { Star, Briefcase, Heart, Coins, Hand, CalendarDays, FileText } from "lucide-react";
+import { Star, Briefcase, Heart, Coins, Hand, CalendarDays, FileText, X, Download, Eye } from "lucide-react";
+
+interface ReportSection {
+  title: string;
+  content: string;
+  order: number;
+}
 
 interface Report {
   id: string;
@@ -15,6 +20,7 @@ interface Report {
   title: string;
   status: string;
   summary: string;
+  sections?: ReportSection[];
   pdfUrl?: string | null;
   creditsCharged: number;
   createdAt: string;
@@ -30,6 +36,9 @@ export default function ReportsPage() {
   const [generating, setGenerating] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [activeView, setActiveView] = useState<"generate" | "history">("generate");
+  // In-app viewer: holds the fully-loaded report (with sections) being read.
+  const [viewing, setViewing] = useState<Report | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
 
   const reportTypes = [
     { id: "LIFE", label: t.reports.typeLifeName, icon: Star, desc: t.reports.typeLifeDesc, cost: 5 },
@@ -79,11 +88,49 @@ export default function ReportsPage() {
     }
   };
 
+  // Open the in-app reader. The list endpoint omits `sections` (and the
+  // legacy `pdfUrl` is actually a JSON blob, not a file), so we fetch the
+  // full report by id, which always returns the section content.
+  const handleView = async (report: Report) => {
+    setOpening(report.id);
+    setError("");
+    try {
+      const full = await api.get<Report>(`/reports/${report.id}`, { token: accessToken! });
+      setViewing(full);
+    } catch {
+      setError(t.reports.viewFailed);
+    } finally {
+      setOpening(null);
+    }
+  };
+
+  // Build a downloadable text file from the report sections, client-side.
+  // (There is no server-rendered PDF; the prior "Download PDF" linked to a
+  // JSON string and always failed.)
+  const handleDownload = (report: Report) => {
+    const sections = report.sections ?? [];
+    const body = sections
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((s) => `${s.title}\n${"-".repeat(s.title.length)}\n${s.content}`)
+      .join("\n\n");
+    const text = `${report.title}\n${"=".repeat(report.title.length)}\n\n${body}\n`;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${report.type.toLowerCase()}-report.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const statusBadge = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "completed" || s === "ready") return "bg-emerald-500/20 text-emerald-400";
-    if (s === "generating") return "bg-amber-500/20 text-amber-400";
-    return "bg-red-500/20 text-red-400";
+    if (s === "completed" || s === "ready") return "bg-emerald-100 text-emerald-800";
+    if (s === "generating") return "bg-amber-100 text-amber-800";
+    return "bg-red-100 text-red-800";
   };
 
   return (
@@ -177,11 +224,16 @@ export default function ReportsPage() {
                         {t.reports.generatedOn} {new Date(report.createdAt).toLocaleDateString(locale === "en" ? "en-IN" : locale)}
                       </p>
                     </div>
-                    {report.pdfUrl && (
-                      <a href={report.pdfUrl} target="_blank" rel="noopener noreferrer"
-                        className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)] transition-all shrink-0">
-                        {t.reports.downloadPdf}
-                      </a>
+                    {(report.status.toLowerCase() === "completed" ||
+                      report.status.toLowerCase() === "ready") && (
+                      <button
+                        onClick={() => handleView(report)}
+                        disabled={opening === report.id}
+                        className="px-4 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)] transition-all shrink-0 inline-flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Eye size={15} strokeWidth={1.8} aria-hidden />
+                        {opening === report.id ? t.common.loading : t.reports.view}
+                      </button>
                     )}
                   </div>
                 ))}
@@ -190,6 +242,57 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
+
+      {/* In-app report reader */}
+      {viewing && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label={viewing.title}
+          onClick={() => setViewing(null)}
+        >
+          <div
+            className="surface-card relative w-full max-w-2xl my-8 p-6 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <h2 className="text-xl font-bold text-surface-950">{viewing.title}</h2>
+              <button
+                onClick={() => setViewing(null)}
+                aria-label={t.common.close}
+                className="shrink-0 rounded-lg p-1.5 text-[rgba(12,8,5,0.5)] hover:bg-[rgba(12,8,5,0.06)] hover:text-surface-950 transition-colors"
+              >
+                <X size={20} strokeWidth={1.8} aria-hidden />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              {(viewing.sections ?? [])
+                .slice()
+                .sort((a, b) => a.order - b.order)
+                .map((s) => (
+                  <section key={s.order}>
+                    <h3 className="font-semibold text-surface-950 mb-1.5">{s.title}</h3>
+                    <p className="text-sm leading-relaxed text-[rgba(12,8,5,0.7)] whitespace-pre-line">
+                      {s.content}
+                    </p>
+                  </section>
+                ))}
+            </div>
+
+            <div className="mt-7 flex justify-end">
+              <button
+                onClick={() => handleDownload(viewing)}
+                className="px-4 py-2 rounded-xl btn-primary text-sm text-white font-medium inline-flex items-center gap-1.5"
+              >
+                <Download size={15} strokeWidth={1.8} aria-hidden />
+                {t.reports.download}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

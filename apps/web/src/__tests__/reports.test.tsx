@@ -55,11 +55,19 @@ const mockReportsList = [
     title: 'Life Analysis Report',
     status: 'completed',
     summary: 'Comprehensive life analysis',
-    pdfUrl: 'https://example.com/report.pdf',
     creditsCharged: 5,
     createdAt: '2026-04-01',
   },
 ];
+
+// Full report (with sections) returned by GET /reports/:id when viewing.
+const mockFullReport = {
+  ...mockReportsList[0],
+  sections: [
+    { title: 'Birth Chart Overview', content: 'Your chart shows strong determination.', order: 1 },
+    { title: 'Remedies', content: 'Practice meditation daily.', order: 2 },
+  ],
+};
 
 // ─── Import component AFTER mocks ──────────────────────────────────────────
 import ReportsPage from '@/app/reports/page';
@@ -118,16 +126,33 @@ describe('Reports Page', () => {
     expect(screen.getByText('Comprehensive life analysis')).toBeDefined();
   });
 
-  it('should show Download PDF link when pdfUrl exists', async () => {
+  it('shows a View action for completed reports', async () => {
     mockApiGet.mockResolvedValueOnce(mockReportsList);
     render(<ReportsPage />);
 
-    // Switch to history tab
     const historyTab = await screen.findByText(/My Reports/);
     fireEvent.click(historyTab);
 
-    const pdfLink = await screen.findByText('Download PDF');
-    expect(pdfLink).toBeDefined();
-    expect(pdfLink.closest('a')?.getAttribute('href')).toBe('https://example.com/report.pdf');
+    expect(await screen.findByText('View')).toBeDefined();
+  });
+
+  it('opens the in-app reader and renders section content on View', async () => {
+    // List load returns the summary rows; any subsequent GET (the by-id
+    // fetch) returns the full report with sections.
+    mockApiGet.mockImplementation((url: string) =>
+      Promise.resolve(url === '/reports' ? mockReportsList : mockFullReport),
+    );
+    render(<ReportsPage />);
+
+    const historyTab = await screen.findByText(/My Reports/);
+    fireEvent.click(historyTab);
+
+    fireEvent.click(await screen.findByText('View'));
+
+    expect(await screen.findByText('Birth Chart Overview')).toBeDefined();
+    expect(screen.getByText('Your chart shows strong determination.')).toBeDefined();
+    expect(screen.getByText('Remedies')).toBeDefined();
+    // The reader fetched the full report via the by-id endpoint.
+    expect(mockApiGet).toHaveBeenCalledWith('/reports/r1', expect.anything());
   });
 });
