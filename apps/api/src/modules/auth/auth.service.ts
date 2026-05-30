@@ -28,6 +28,7 @@ import {
 import { isProfileComplete } from '../user/user.service';
 import { SignupContext } from './signup-context';
 import { ReferralService } from '../referral/referral.service';
+import { normalizePhone, phoneMatchCandidates } from '../../common/phone.util';
 import * as admin from 'firebase-admin';
 
 type PrismaUser = {
@@ -432,9 +433,12 @@ export class AuthService {
 
     await this.redis.del(`otp:${phone}`);
 
-    // Find or create user by phone
-    let user = await this.prisma.user.findUnique({
-      where: { phone },
+    // Find or create user by phone. Match every equivalent format (and prefer
+    // the oldest row) so a returning user whose number was stored unnormalized
+    // is recognised rather than duplicated — same matching as firebaseAuth.
+    let user = await this.prisma.user.findFirst({
+      where: { phone: { in: phoneMatchCandidates(phone) } },
+      orderBy: { createdAt: 'asc' },
     });
 
     if (!user) {
@@ -472,13 +476,8 @@ export class AuthService {
    * +91 country code for bare 10-digit numbers).
    */
   private normalizePhone(raw: string): string {
-    if (!raw) return raw;
-    let digits = raw.replace(/[\s\-()]/g, '').trim();
-    if (!digits.startsWith('+')) {
-      // Bare 10-digit → assume Indian number. Otherwise leave as-is with +.
-      digits = digits.length === 10 ? `+91${digits}` : `+${digits}`;
-    }
-    return digits;
+    // Delegates to the shared util so auth and profile use one canonical form.
+    return normalizePhone(raw);
   }
 
   /**
@@ -639,15 +638,22 @@ export class AuthService {
     const isPhone = sign_in_provider === 'phone' || !!phone_number;
     const isGoogle = sign_in_provider === 'google.com';
 
-    // Find existing user
+    // Find existing user. Phone is matched against every equivalent format
+    // (E.164, no-plus, 10-digit, trunk-zero) so a returning user whose number
+    // was stored before normalization — e.g. "9880141543" in their profile vs
+    // Firebase's "+919880141543" — is recognised instead of duplicated.
+    // Oldest-first so we land on the original account, never an accidental
+    // duplicate that a prior version of this bug may have created.
+    const phoneCandidates = phone_number ? phoneMatchCandidates(phone_number) : [];
     let user = await this.prisma.user.findFirst({
       where: {
         OR: [
-          ...(phone_number ? [{ phone: phone_number }] : []),
+          ...(phoneCandidates.length ? [{ phone: { in: phoneCandidates } }] : []),
           ...(email ? [{ email }] : []),
           { providerId: uid },
         ],
       },
+      orderBy: { createdAt: 'asc' },
     });
 
     if (user) {

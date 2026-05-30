@@ -904,6 +904,44 @@ describe('Auth: Firebase Auth', () => {
       }),
     );
   });
+
+  it('matches an existing account whose phone was stored unnormalized — no duplicate', async () => {
+    // The reported bug: profile saved "9880141543" (national), Firebase sends
+    // "+919880141543" (E.164). The lookup must recognise the existing account
+    // via the candidate forms and log in, NOT create a second account.
+    verifyIdTokenMock.mockResolvedValue({
+      uid: 'firebase-phone-newuid',
+      phone_number: '+919880141543',
+      firebase: { sign_in_provider: 'phone' },
+    });
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'original-account',
+      name: 'Roshan',
+      email: 'roshan@example.com',
+      phone: '9880141543', // stored national, pre-normalization
+      provider: 'GOOGLE',
+      providerId: 'some-google-uid',
+      credits: 42,
+      role: 'USER',
+    });
+
+    const result = await service.firebaseAuth({ idToken: 'phone-token' });
+
+    // The lookup queried every equivalent phone format...
+    expect(prisma.user.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            { phone: { in: expect.arrayContaining(['+919880141543', '9880141543', '919880141543']) } },
+          ]),
+        }),
+        orderBy: { createdAt: 'asc' },
+      }),
+    );
+    // ...landed on the original account, and did NOT create a new one.
+    expect(result.user.id).toBe('original-account');
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
 });
 
 // ─── CHANGE PASSWORD TESTS ─────────────────────────────────────────────────

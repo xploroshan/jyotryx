@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { normalizePhone } from '../../common/phone.util';
 
 export interface UserProfile {
   id: string;
@@ -143,7 +144,9 @@ export class UserService {
         // the client clears it (so the UI can drop the informal
         // greeting and fall back to the formal name).
         ...(dto.nickname !== undefined && { nickname: dto.nickname?.trim() || null }),
-        ...(dto.phone && { phone: dto.phone }),
+        // Normalize to the canonical E.164 form so phone login (which sees
+        // Firebase's E.164 number) always matches what's saved here.
+        ...(dto.phone && { phone: normalizePhone(dto.phone) }),
         ...(dto.dateOfBirth && { dateOfBirth: new Date(dto.dateOfBirth) }),
         ...(dto.timeOfBirth && { timeOfBirth: dto.timeOfBirth }),
         ...(dto.placeOfBirth && { placeOfBirth: { name: dto.placeOfBirth } }),
