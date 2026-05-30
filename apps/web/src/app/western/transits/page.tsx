@@ -22,11 +22,14 @@ interface TransitsResponse {
 }
 
 const ASPECT_CLASS: Record<string, string> = {
-  Conjunction: 'bg-primary-500/15 text-primary-300',
-  Sextile: 'bg-emerald-500/15 text-emerald-300',
-  Square: 'bg-amber-500/15 text-amber-300',
-  Trine: 'bg-sky-500/15 text-sky-300',
-  Opposition: 'bg-red-500/15 text-red-300',
+  // Light tint bg + dark text so the pill reads on the app's cream surface.
+  // The previous bg-*-500/15 + text-*-300 combo was a faint tint under a
+  // light shade — washed out and barely legible (see the transits badges).
+  Conjunction: 'bg-primary-100 text-primary-800',
+  Sextile: 'bg-emerald-100 text-emerald-800',
+  Square: 'bg-amber-100 text-amber-800',
+  Trine: 'bg-sky-100 text-sky-800',
+  Opposition: 'bg-red-100 text-red-800',
 };
 
 

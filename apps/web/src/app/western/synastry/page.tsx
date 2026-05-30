@@ -207,8 +207,8 @@ export default function WesternSynastryPage() {
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
                         a.quality === 'harmonious'
-                          ? 'bg-emerald-500/15 text-emerald-300'
-                          : 'bg-amber-500/15 text-amber-300'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
                       }`}
                     >
                       {a.aspect} · {a.orb}°

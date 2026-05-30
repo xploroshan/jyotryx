@@ -158,7 +158,7 @@ export default function HellenisticNatalPage() {
                     <PlanetGlyph planet={p.planet} size={18} className="text-primary-700" />
                     {p.planet}
                     {p.isRetrograde && (
-                      <span className="text-[10px] px-1.5 rounded bg-amber-500/20 text-amber-300">
+                      <span className="text-[10px] px-1.5 rounded bg-amber-100 text-amber-800">
                         R
                       </span>
                     )}
