@@ -282,7 +282,8 @@ export class AstrologyService {
       { id: swisseph.SE_JUPITER, name: 'Jupiter' },
       { id: swisseph.SE_VENUS, name: 'Venus' },
       { id: swisseph.SE_SATURN, name: 'Saturn' },
-      { id: swisseph.SE_TRUE_NODE, name: 'Rahu' },
+      // Mean node — see ephemeris.worker.ts; matches the Indian Vedic default.
+      { id: swisseph.SE_MEAN_NODE, name: 'Rahu' },
     ];
     const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
     const positions = PLANETS.map(p => {

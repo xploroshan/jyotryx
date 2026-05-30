@@ -23,7 +23,11 @@ const PLANETS = [
   { id: swisseph.SE_JUPITER, name: 'Jupiter' },
   { id: swisseph.SE_VENUS, name: 'Venus' },
   { id: swisseph.SE_SATURN, name: 'Saturn' },
-  { id: swisseph.SE_TRUE_NODE, name: 'Rahu' },
+  // Mean node (not true/osculating) — the classical Parashari convention used
+  // by mainstream Indian Vedic platforms (AstroTalk, AstroSage). Ketu is
+  // derived 180° opposite. True node would differ ~0.5–0.8° and can land
+  // Rahu/Ketu in a different nakshatra.
+  { id: swisseph.SE_MEAN_NODE, name: 'Rahu' },
 ];
 
 interface ChartRequest {
