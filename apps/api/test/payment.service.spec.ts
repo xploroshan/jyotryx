@@ -259,6 +259,75 @@ describe('PaymentService', () => {
       expect(result.received).toBe(true);
       expect(userUpdate).not.toHaveBeenCalled();
     });
+
+    it('rolls the local endDate forward on a renewal charge', async () => {
+      const currentEnd = Math.floor(Date.UTC(2027, 0, 1) / 1000);
+      const payload = {
+        event: 'subscription.charged',
+        payload: { subscription: { entity: { id: 'sub_live_1', current_end: currentEnd } } },
+      };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const txStub = {
+        subscription: { updateMany: subUpdateMany, findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }) },
+        user: { update: jest.fn().mockResolvedValue({}) },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(subUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'ACTIVE', endDate: new Date(currentEnd * 1000) }) }),
+      );
+    });
+
+    it.each([
+      ['subscription.cancelled', 'CANCELLED'],
+      ['subscription.halted', 'EXPIRED'],
+      ['subscription.completed', 'EXPIRED'],
+    ])('revokes PREMIUM on %s when no other active subscription remains', async (event, expectedStatus) => {
+      const payload = { event, payload: { subscription: { entity: { id: 'sub_live_1' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const txStub = {
+        subscription: {
+          updateMany: subUpdateMany,
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
+          count: jest.fn().mockResolvedValue(0), // no other active subscription
+        },
+        user: { updateMany: userUpdateMany },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(subUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: expectedStatus }) }),
+      );
+      expect(userUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: 'test-uuid', role: 'PREMIUM' }),
+          data: { role: 'USER' },
+        }),
+      );
+    });
+
+    it('keeps PREMIUM on cancellation when another active subscription remains', async () => {
+      const payload = { event: 'subscription.cancelled', payload: { subscription: { entity: { id: 'sub_live_1' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdateMany = jest.fn();
+      const txStub = {
+        subscription: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
+          count: jest.fn().mockResolvedValue(1), // a second active subscription
+        },
+        user: { updateMany: userUpdateMany },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(userUpdateMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('verifyPayment', () => {

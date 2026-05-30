@@ -454,13 +454,18 @@ export class PaymentService {
           // First (and recurring) successful charge. THIS is where Premium
           // is granted — not at subscription creation — so an authorised
           // payment is what unlocks access. Idempotent: re-grants the role
-          // on every renewal charge, which is a no-op if already PREMIUM.
+          // on every renewal charge, which is a no-op if already PREMIUM,
+          // and rolls the local endDate forward to the new period end.
           const subEntity = payload?.payload?.subscription?.entity;
           if (subEntity?.id) {
+            const currentEnd =
+              typeof subEntity.current_end === 'number'
+                ? new Date(subEntity.current_end * 1000)
+                : null;
             await this.prisma.$transaction(async (tx: any) => {
               const { count } = await tx.subscription.updateMany({
                 where: { razorpaySubscriptionId: subEntity.id },
-                data: { status: 'ACTIVE' },
+                data: { status: 'ACTIVE', ...(currentEnd ? { endDate: currentEnd } : {}) },
               });
               if (count === 0) return; // not one of our subscriptions
               const sub = await tx.subscription.findFirst({
@@ -477,12 +482,29 @@ export class PaymentService {
           }
           break;
         }
-        case 'subscription.cancelled': {
+        case 'subscription.cancelled':
+        case 'subscription.halted':
+        case 'subscription.completed': {
+          // Terminal states: cancelled by the user, halted after repeated
+          // failed renewal charges, or completed (total_count reached). In
+          // every case the subscription no longer entitles the user to
+          // Premium, so we mark it terminal AND revoke the role — previously
+          // only the status was updated, which left lapsed/cancelled
+          // subscribers with Premium access indefinitely.
           const subEntity = payload?.payload?.subscription?.entity;
           if (subEntity?.id) {
-            await this.prisma.subscription.updateMany({
-              where: { razorpaySubscriptionId: subEntity.id },
-              data: { status: 'CANCELLED' },
+            const newStatus = event === 'subscription.cancelled' ? 'CANCELLED' : 'EXPIRED';
+            await this.prisma.$transaction(async (tx: any) => {
+              const { count } = await tx.subscription.updateMany({
+                where: { razorpaySubscriptionId: subEntity.id },
+                data: { status: newStatus },
+              });
+              if (count === 0) return; // not one of our subscriptions
+              const sub = await tx.subscription.findFirst({
+                where: { razorpaySubscriptionId: subEntity.id },
+                select: { userId: true },
+              });
+              if (sub) await this.revokePremiumIfNoActiveSub(tx, sub.userId);
             });
           }
           break;
@@ -539,6 +561,24 @@ export class PaymentService {
         ? meta.credits
         : null;
     return metaCredits ?? this.calculateCredits(Number(payment.amount));
+  }
+
+  /**
+   * Revoke Premium when a subscription ends, but only if the user has no
+   * OTHER still-active subscription, and only for a currently-PREMIUM user
+   * (the `role: 'PREMIUM'` guard in updateMany leaves ADMIN accounts and
+   * already-downgraded users untouched). Runs inside the caller's
+   * transaction so the status change and the downgrade commit atomically.
+   */
+  private async revokePremiumIfNoActiveSub(tx: any, userId: string): Promise<void> {
+    const activeCount = await tx.subscription.count({
+      where: { userId, status: 'ACTIVE' },
+    });
+    if (activeCount > 0) return; // another active subscription still entitles them
+    await tx.user.updateMany({
+      where: { id: userId, role: 'PREMIUM' },
+      data: { role: 'USER' },
+    });
   }
 
   private calculateCredits(amountINR: number): number {
