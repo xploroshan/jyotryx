@@ -988,9 +988,23 @@ export class AdminService {
       },
     });
 
-    await this.prisma.subscription.update({
-      where: { id: subscriptionId },
-      data: { status: 'CANCELLED', endDate: new Date() },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.subscription.update({
+        where: { id: subscriptionId },
+        data: { status: 'CANCELLED', endDate: new Date() },
+      });
+      // Revoke Premium unless the user has another active subscription.
+      // The `role: 'PREMIUM'` guard leaves ADMIN accounts untouched.
+      // Without this the cancelled member kept Premium access indefinitely.
+      const activeCount = await tx.subscription.count({
+        where: { userId: sub.userId, status: 'ACTIVE' },
+      });
+      if (activeCount === 0) {
+        await tx.user.updateMany({
+          where: { id: sub.userId, role: 'PREMIUM' },
+          data: { role: 'USER' },
+        });
+      }
     });
 
     this.logger.log(`Admin ${adminEmail} cancelled subscription ${subscriptionId}`);

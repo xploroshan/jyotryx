@@ -259,6 +259,183 @@ describe('PaymentService', () => {
       expect(result.received).toBe(true);
       expect(userUpdate).not.toHaveBeenCalled();
     });
+
+    it('rolls the local endDate forward on a renewal charge', async () => {
+      const currentEnd = Math.floor(Date.UTC(2027, 0, 1) / 1000);
+      const payload = {
+        event: 'subscription.charged',
+        payload: { subscription: { entity: { id: 'sub_live_1', current_end: currentEnd } } },
+      };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const txStub = {
+        subscription: { updateMany: subUpdateMany, findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }) },
+        user: { update: jest.fn().mockResolvedValue({}) },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(subUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'ACTIVE', endDate: new Date(currentEnd * 1000) }) }),
+      );
+    });
+
+    it.each([
+      ['subscription.cancelled', 'CANCELLED'],
+      ['subscription.halted', 'EXPIRED'],
+      ['subscription.completed', 'EXPIRED'],
+    ])('revokes PREMIUM on %s when no other active subscription remains', async (event, expectedStatus) => {
+      const payload = { event, payload: { subscription: { entity: { id: 'sub_live_1' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const txStub = {
+        subscription: {
+          updateMany: subUpdateMany,
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
+          count: jest.fn().mockResolvedValue(0), // no other active subscription
+        },
+        user: { updateMany: userUpdateMany },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(subUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: expectedStatus }) }),
+      );
+      expect(userUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: 'test-uuid', role: 'PREMIUM' }),
+          data: { role: 'USER' },
+        }),
+      );
+    });
+
+    it('keeps PREMIUM on cancellation when another active subscription remains', async () => {
+      const payload = { event: 'subscription.cancelled', payload: { subscription: { entity: { id: 'sub_live_1' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdateMany = jest.fn();
+      const txStub = {
+        subscription: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
+          count: jest.fn().mockResolvedValue(1), // a second active subscription
+        },
+        user: { updateMany: userUpdateMany },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(userUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it('marks the payment REFUNDED and claws back granted credits on refund.processed', async () => {
+      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_1', payment_id: 'pay_abc' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const payUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const userUpdate = jest.fn().mockResolvedValue({});
+      const ctCreate = jest.fn().mockResolvedValue({});
+      const txStub = {
+        payment: {
+          updateMany: payUpdateMany,
+          findFirst: jest.fn().mockResolvedValue({
+            userId: 'test-uuid',
+            amount: 99,
+            metadata: { credits: 10 },
+            type: 'CREDITS',
+          }),
+        },
+        user: { findUnique: jest.fn().mockResolvedValue({ credits: 30 }), update: userUpdate },
+        creditTransaction: { create: ctCreate },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(payUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { razorpayPaymentId: 'pay_abc', status: 'SUCCESS' },
+          data: { status: 'REFUNDED' },
+        }),
+      );
+      expect(userUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { decrement: 10 } } }),
+      );
+      expect(ctCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ amount: -10, type: 'PURCHASE' }) }),
+      );
+    });
+
+    it('clamps the clawback at the current balance so credits never go negative', async () => {
+      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_2', payment_id: 'pay_low' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdate = jest.fn().mockResolvedValue({});
+      const ctCreate = jest.fn().mockResolvedValue({});
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({
+            userId: 'test-uuid',
+            amount: 99,
+            metadata: { credits: 10 },
+            type: 'CREDITS',
+          }),
+        },
+        user: { findUnique: jest.fn().mockResolvedValue({ credits: 4 }), update: userUpdate },
+        creditTransaction: { create: ctCreate },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(userUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { decrement: 4 } } }),
+      );
+      expect(ctCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ amount: -4 }) }),
+      );
+    });
+
+    it('is idempotent — a redelivered refund that claims nothing reverses no credits', async () => {
+      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_3', payment_id: 'pay_done' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const findFirst = jest.fn();
+      const userUpdate = jest.fn();
+      const txStub = {
+        payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirst },
+        user: { findUnique: jest.fn(), update: userUpdate },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const result = await service.handleWebhook(payload, sig);
+      expect(result).toEqual({ received: true });
+      expect(findFirst).not.toHaveBeenCalled();
+      expect(userUpdate).not.toHaveBeenCalled();
+    });
+
+    it('does not claw back credits when refunding a non-CREDITS payment', async () => {
+      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_4', payment_id: 'pay_sub' } } } };
+      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const userUpdate = jest.fn();
+      const ctCreate = jest.fn();
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({
+            userId: 'test-uuid',
+            amount: 499,
+            metadata: null,
+            type: 'SUBSCRIPTION',
+          }),
+        },
+        user: { findUnique: jest.fn(), update: userUpdate },
+        creditTransaction: { create: ctCreate },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(payload, sig);
+      expect(userUpdate).not.toHaveBeenCalled();
+      expect(ctCreate).not.toHaveBeenCalled();
+    });
   });
 
   describe('verifyPayment', () => {

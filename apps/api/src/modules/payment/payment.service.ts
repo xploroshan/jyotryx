@@ -454,13 +454,18 @@ export class PaymentService {
           // First (and recurring) successful charge. THIS is where Premium
           // is granted — not at subscription creation — so an authorised
           // payment is what unlocks access. Idempotent: re-grants the role
-          // on every renewal charge, which is a no-op if already PREMIUM.
+          // on every renewal charge, which is a no-op if already PREMIUM,
+          // and rolls the local endDate forward to the new period end.
           const subEntity = payload?.payload?.subscription?.entity;
           if (subEntity?.id) {
+            const currentEnd =
+              typeof subEntity.current_end === 'number'
+                ? new Date(subEntity.current_end * 1000)
+                : null;
             await this.prisma.$transaction(async (tx: any) => {
               const { count } = await tx.subscription.updateMany({
                 where: { razorpaySubscriptionId: subEntity.id },
-                data: { status: 'ACTIVE' },
+                data: { status: 'ACTIVE', ...(currentEnd ? { endDate: currentEnd } : {}) },
               });
               if (count === 0) return; // not one of our subscriptions
               const sub = await tx.subscription.findFirst({
@@ -477,12 +482,79 @@ export class PaymentService {
           }
           break;
         }
-        case 'subscription.cancelled': {
+        case 'subscription.cancelled':
+        case 'subscription.halted':
+        case 'subscription.completed': {
+          // Terminal states: cancelled by the user, halted after repeated
+          // failed renewal charges, or completed (total_count reached). In
+          // every case the subscription no longer entitles the user to
+          // Premium, so we mark it terminal AND revoke the role — previously
+          // only the status was updated, which left lapsed/cancelled
+          // subscribers with Premium access indefinitely.
           const subEntity = payload?.payload?.subscription?.entity;
           if (subEntity?.id) {
-            await this.prisma.subscription.updateMany({
-              where: { razorpaySubscriptionId: subEntity.id },
-              data: { status: 'CANCELLED' },
+            const newStatus = event === 'subscription.cancelled' ? 'CANCELLED' : 'EXPIRED';
+            await this.prisma.$transaction(async (tx: any) => {
+              const { count } = await tx.subscription.updateMany({
+                where: { razorpaySubscriptionId: subEntity.id },
+                data: { status: newStatus },
+              });
+              if (count === 0) return; // not one of our subscriptions
+              const sub = await tx.subscription.findFirst({
+                where: { razorpaySubscriptionId: subEntity.id },
+                select: { userId: true },
+              });
+              if (sub) await this.revokePremiumIfNoActiveSub(tx, sub.userId);
+            });
+          }
+          break;
+        }
+        case 'refund.created':
+        case 'refund.processed': {
+          // Razorpay refunded a captured payment (full or partial). Mark the
+          // payment REFUNDED and, for credit purchases, claw back the granted
+          // credits so a refunded user can't keep spending what they were
+          // reimbursed for. We clamp the deduction at the current balance so
+          // the wallet never goes negative (the user may have already spent
+          // some), and log a negative-amount PURCHASE transaction for the
+          // audit trail — CreditTransactionType has no dedicated REFUND value,
+          // so a signed PURCHASE keeps the ledger balanced without a schema
+          // migration. Idempotent: the status guard means a redelivered
+          // refund webhook claims nothing and reverses no further credits.
+          const refund = payload?.payload?.refund?.entity;
+          if (refund?.payment_id) {
+            await this.prisma.$transaction(async (tx: any) => {
+              const { count } = await tx.payment.updateMany({
+                where: { razorpayPaymentId: refund.payment_id, status: 'SUCCESS' },
+                data: { status: 'REFUNDED' },
+              });
+              if (count === 0) return; // already refunded, or not our payment
+              const payment = await tx.payment.findFirst({
+                where: { razorpayPaymentId: refund.payment_id },
+                select: { userId: true, amount: true, metadata: true, type: true },
+              });
+              if (!payment || payment.type !== 'CREDITS') return;
+              const granted = this.creditsForPayment(payment);
+              if (granted <= 0) return;
+              const user = await tx.user.findUnique({
+                where: { id: payment.userId },
+                select: { credits: true },
+              });
+              const deduct = Math.min(granted, user?.credits ?? 0);
+              if (deduct > 0) {
+                await tx.user.update({
+                  where: { id: payment.userId },
+                  data: { credits: { decrement: deduct } },
+                });
+              }
+              await tx.creditTransaction.create({
+                data: {
+                  userId: payment.userId,
+                  amount: -deduct,
+                  type: 'PURCHASE',
+                  description: `Refund: reversed ${deduct} credits (payment ${refund.payment_id})`,
+                },
+              });
             });
           }
           break;
@@ -539,6 +611,24 @@ export class PaymentService {
         ? meta.credits
         : null;
     return metaCredits ?? this.calculateCredits(Number(payment.amount));
+  }
+
+  /**
+   * Revoke Premium when a subscription ends, but only if the user has no
+   * OTHER still-active subscription, and only for a currently-PREMIUM user
+   * (the `role: 'PREMIUM'` guard in updateMany leaves ADMIN accounts and
+   * already-downgraded users untouched). Runs inside the caller's
+   * transaction so the status change and the downgrade commit atomically.
+   */
+  private async revokePremiumIfNoActiveSub(tx: any, userId: string): Promise<void> {
+    const activeCount = await tx.subscription.count({
+      where: { userId, status: 'ACTIVE' },
+    });
+    if (activeCount > 0) return; // another active subscription still entitles them
+    await tx.user.updateMany({
+      where: { id: userId, role: 'PREMIUM' },
+      data: { role: 'USER' },
+    });
   }
 
   private calculateCredits(amountINR: number): number {
