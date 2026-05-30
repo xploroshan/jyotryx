@@ -85,6 +85,7 @@
     "swisseph": "^0.5.17",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
+    "tz-lookup": "^6.1.25",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

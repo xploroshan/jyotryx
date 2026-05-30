@@ -7,6 +7,7 @@
  */
 import { parentPort } from 'worker_threads';
 import * as path from 'path';
+import { resolveUtHour } from '../common/timezone.util';
 
 // Load swisseph inside the worker
 const swisseph = require('swisseph');
@@ -56,9 +57,13 @@ interface ChartResult {
 function computeChart(payload: ChartRequest['payload']): ChartResult {
   const { year, month, day, hour, minute, lat, lng, tzOffset } = payload;
 
-  // Compute Julian Day
-  const tz = tzOffset != null ? tzOffset : (lng / 15);
-  const utHour = hour + minute / 60 - tz;
+  // Compute Julian Day. Respect an explicit tzOffset (e.g. 0 for UTC charts);
+  // otherwise resolve the real IANA-zone offset for the birthplace + date
+  // rather than the old lng/15 local-mean-solar-time approximation, which
+  // could shift the ascendant across a whole sign.
+  const utHour = tzOffset != null
+    ? hour + minute / 60 - tzOffset
+    : resolveUtHour({ year, month, day, hour, minute, latitude: lat, longitude: lng });
   const jd = swisseph.swe_julday(year, month, day, utHour, swisseph.SE_GREG_CAL);
 
   // Compute planetary positions (sidereal)
@@ -73,8 +78,11 @@ function computeChart(payload: ChartRequest['payload']): ChartResult {
   const rahu = positions.find((p) => p.name === 'Rahu')!;
   positions.push({ name: 'Ketu', longitude: (rahu.longitude + 180) % 360, speed: rahu.speed });
 
-  // Compute houses and ascendant (Equal house system)
-  const housesResult = swisseph.swe_houses(jd, lat, lng, 'E');
+  // Compute houses and ascendant (Equal house). swe_houses_ex with
+  // SEFLG_SIDEREAL gives the Lahiri-sidereal ascendant that matches the
+  // sidereal planet longitudes; plain swe_houses returns a tropical
+  // ascendant that was ~one whole sign off.
+  const housesResult = swisseph.swe_houses_ex(jd, swisseph.SEFLG_SIDEREAL, lat, lng, 'E');
   const ascendant = ((housesResult.ascendant % 360) + 360) % 360;
   const houses: number[] = [];
   for (let i = 1; i <= 12; i++) {

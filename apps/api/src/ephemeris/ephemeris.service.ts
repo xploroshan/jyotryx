@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { MemoryCacheService } from '../common/cache.service';
 import { WorkerPool } from './worker-pool';
+import { resolveUtHour } from '../common/timezone.util';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
@@ -175,8 +176,17 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
   private computeChartSync(input: ChartInput): ChartResult {
     if (!this.swisseph) throw new Error('Swiss Ephemeris not available');
 
-    const tz = input.tzOffset != null ? input.tzOffset : (input.lng / 15);
-    const utHour = input.hour + input.minute / 60 - tz;
+    // Use the explicit tzOffset when supplied (e.g. the "current chart" path
+    // passes 0 because it already works in UTC); otherwise resolve the real
+    // IANA-zone offset for the birthplace + date instead of the old lng/15
+    // local-mean-solar-time approximation.
+    const utHour = input.tzOffset != null
+      ? input.hour + input.minute / 60 - input.tzOffset
+      : resolveUtHour({
+          year: input.year, month: input.month, day: input.day,
+          hour: input.hour, minute: input.minute,
+          latitude: input.lat, longitude: input.lng,
+        });
     const jd = this.swisseph.swe_julday(input.year, input.month, input.day, utHour, this.swisseph.SE_GREG_CAL);
 
     const PLANETS = [
@@ -200,7 +210,10 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
     const rahu = positions.find((p) => p.name === 'Rahu')!;
     positions.push({ name: 'Ketu', longitude: (rahu.longitude + 180) % 360, speed: rahu.speed });
 
-    const housesResult = this.swisseph.swe_houses(jd, input.lat, input.lng, 'E');
+    // swe_houses_ex with SEFLG_SIDEREAL — the ascendant must be sidereal
+    // (Lahiri) to match the sidereal planetary longitudes above. Plain
+    // swe_houses returns a tropical ascendant, which was ~one sign off.
+    const housesResult = this.swisseph.swe_houses_ex(jd, this.swisseph.SEFLG_SIDEREAL, input.lat, input.lng, 'E');
     const ascendant = ((housesResult.ascendant % 360) + 360) % 360;
     const houses: number[] = [];
     for (let i = 1; i <= 12; i++) {
