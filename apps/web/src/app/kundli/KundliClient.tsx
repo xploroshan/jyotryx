@@ -32,6 +32,10 @@ interface KundliData {
     nakshatra: string;
     /** Essential-dignity / friendship label (Exalted, Own Sign, Friendly, …). */
     status?: string;
+    /** Baladi Avastha — the planet's degree-based "age" (Bala…Mrita). */
+    avastha?: string;
+    /** True when the planet is combust (too close to the Sun). */
+    isCombust?: boolean;
   }[];
   dashas: {
     planet: string;
@@ -447,6 +451,8 @@ export default function KundliPage() {
                         <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.house}</th>
                         <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.degree}</th>
                         <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.nakshatra}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">Avastha</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">Combust</th>
                         <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.status}</th>
                       </tr>
                     </thead>
@@ -463,6 +469,12 @@ export default function KundliPage() {
                             )}
                           </td>
                           <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">{p.nakshatra}</td>
+                          <td className="px-6 py-3 text-secondary">{p.avastha || "—"}</td>
+                          <td className="px-6 py-3">
+                            {p.isCombust
+                              ? <span className="text-xs font-medium text-red-500">Yes</span>
+                              : <span className="text-[rgba(12,8,5,0.40)]">No</span>}
+                          </td>
                           <td className="px-6 py-3 text-secondary">{p.status || "—"}</td>
                         </tr>
                       ))}
