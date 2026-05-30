@@ -28,6 +28,11 @@ const PLANETS = [
   // derived 180° opposite. True node would differ ~0.5–0.8° and can land
   // Rahu/Ketu in a different nakshatra.
   { id: swisseph.SE_MEAN_NODE, name: 'Rahu' },
+  // Modern outer planets — shown for parity with AstroTalk; they take no part
+  // in classical yoga/dosha/dasha logic.
+  { id: swisseph.SE_URANUS, name: 'Uranus' },
+  { id: swisseph.SE_NEPTUNE, name: 'Neptune' },
+  { id: swisseph.SE_PLUTO, name: 'Pluto' },
 ];
 
 interface ChartRequest {

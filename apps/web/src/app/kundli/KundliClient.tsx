@@ -13,6 +13,8 @@ import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
+import { SouthIndianChart } from "@/components/kundli/SouthIndianChart";
+import { orderPlanets } from "@/components/kundli/chart-common";
 
 interface KundliData {
   id: string;
@@ -28,6 +30,8 @@ interface KundliData {
     degree: number;
     isRetrograde: boolean;
     nakshatra: string;
+    /** Essential-dignity / friendship label (Exalted, Own Sign, Friendly, …). */
+    status?: string;
   }[];
   dashas: {
     planet: string;
@@ -73,6 +77,8 @@ export default function KundliPage() {
   ];
 
   const [activeTab, setActiveTab] = useState("chart");
+  // North vs South Indian Rashi chart style (like AstroTalk's toggle).
+  const [chartStyle, setChartStyle] = useState<"north" | "south">("north");
   const [kundli, setKundli] = useState<KundliData | null>(null);
   const [doshas, setDoshas] = useState<DoshaData | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -358,25 +364,55 @@ export default function KundliPage() {
               <div className="surface-card p-6 sm:p-8">
                 <h3 className="text-lg font-bold text-gradient mb-6 text-center">{t.kundli.rashiChart}</h3>
 
-                {/* The chart now scales to a generous width and renders each
-                    planet with its degree + retrograde marker inside the
-                    correct house, instead of a small box with truncated text. */}
-                <NorthIndianChart
-                  houses={kundli.houses}
-                  planetaryPositions={kundli.planetaryPositions}
-                  ascendant={kundli.ascendant}
-                  className="w-full max-w-lg mx-auto aspect-square"
-                />
+                {/* North / South Indian style toggle (mirrors AstroTalk). */}
+                <div className="flex justify-center mb-6">
+                  <div role="tablist" aria-label="Chart style" className="inline-flex rounded-full bg-[rgba(255,252,245,0.78)] p-1 border divider">
+                    {([["north", "North Indian"], ["south", "South Indian"]] as const).map(([style, label]) => (
+                      <button
+                        key={style}
+                        role="tab"
+                        aria-selected={chartStyle === style}
+                        onClick={() => setChartStyle(style)}
+                        className={`focus-ring px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                          chartStyle === style ? "btn-primary" : "text-emphasis hover:text-surface-950"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                <p className="text-xs text-[rgba(12,8,5,0.40)] mt-4 text-center">{t.kundli.chartNote}</p>
+                {/* The chart scales to a generous width and renders each planet
+                    with its degree + retrograde marker in the correct cell. */}
+                {chartStyle === "north" ? (
+                  <NorthIndianChart
+                    houses={kundli.houses}
+                    planetaryPositions={kundli.planetaryPositions}
+                    ascendant={kundli.ascendant}
+                    className="w-full max-w-lg mx-auto aspect-square"
+                  />
+                ) : (
+                  <SouthIndianChart
+                    houses={kundli.houses}
+                    planetaryPositions={kundli.planetaryPositions}
+                    ascendant={kundli.ascendant}
+                    className="w-full max-w-lg mx-auto aspect-square"
+                  />
+                )}
+
+                <p className="text-xs text-[rgba(12,8,5,0.40)] mt-4 text-center">
+                  {chartStyle === "north"
+                    ? t.kundli.chartNote
+                    : "South Indian style birth chart — signs are fixed, the ascendant marks the 1st house."}
+                </p>
 
                 {/* Planet legend — decodes the chart's abbreviations and adds
-                    the per-planet sign / house / degree / nakshatra detail so
-                    everything visible in the chart is spelled out below it. */}
+                    each planet's sign / house / degree / dignity. */}
                 {kundli.planetaryPositions && kundli.planetaryPositions.length > 0 && (
                   <div className="mt-8 border-t divider pt-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
-                      {kundli.planetaryPositions.map((p) => (
+                      {orderPlanets(kundli.planetaryPositions).map((p) => (
                         <div
                           key={p.planet}
                           className="flex items-center justify-between gap-3 py-1.5 border-b border-[rgba(12,8,5,0.06)] last:border-0"
@@ -385,6 +421,7 @@ export default function KundliPage() {
                           <span className="text-sm text-secondary flex-1">
                             {p.sign} {Math.floor(p.degree)}&deg;
                             <span className="text-[rgba(12,8,5,0.40)]"> &bull; {t.kundli.houseLabel} {p.house}</span>
+                            {p.status ? <span className="text-[rgba(12,8,5,0.40)]"> &bull; {p.status}</span> : null}
                           </span>
                           {p.isRetrograde && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 whitespace-nowrap">
@@ -414,20 +451,19 @@ export default function KundliPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {kundli.planetaryPositions?.map((p) => (
+                      {orderPlanets(kundli.planetaryPositions ?? []).map((p) => (
                         <tr key={p.planet} className="border-b border-[rgba(12,8,5,0.08)] hover:bg-[rgba(255,252,245,0.78)] transition-colors">
                           <td className="px-6 py-3 font-medium text-surface-950">{p.planet}</td>
                           <td className="px-6 py-3 text-secondary">{p.sign}</td>
                           <td className="px-6 py-3 text-secondary">{p.house}</td>
-                          <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">{p.degree}&deg;</td>
-                          <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">{p.nakshatra}</td>
-                          <td className="px-6 py-3">
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              p.isRetrograde ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
-                            }`}>
-                              {p.isRetrograde ? t.kundli.retrograde : t.kundli.direct}
-                            </span>
+                          <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">
+                            {p.degree}&deg;
+                            {p.isRetrograde && (
+                              <span className="ml-1.5 text-[10px] font-semibold text-red-500" title={t.kundli.retrograde}>(R)</span>
+                            )}
                           </td>
+                          <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">{p.nakshatra}</td>
+                          <td className="px-6 py-3 text-secondary">{p.status || "—"}</td>
                         </tr>
                       ))}
                     </tbody>

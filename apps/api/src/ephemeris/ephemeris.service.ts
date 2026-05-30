@@ -199,6 +199,10 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
       { id: this.swisseph.SE_SATURN, name: 'Saturn' },
       // Mean node — see ephemeris.worker.ts; matches the Indian Vedic default.
       { id: this.swisseph.SE_MEAN_NODE, name: 'Rahu' },
+      // Modern outer planets — parity with AstroTalk; no role in classical logic.
+      { id: this.swisseph.SE_URANUS, name: 'Uranus' },
+      { id: this.swisseph.SE_NEPTUNE, name: 'Neptune' },
+      { id: this.swisseph.SE_PLUTO, name: 'Pluto' },
     ];
 
     const flags = this.swisseph.SEFLG_SIDEREAL | this.swisseph.SEFLG_SPEED;
