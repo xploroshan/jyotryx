@@ -831,6 +831,14 @@ export class AstrologyService {
       planetaryPositions,
       dashas,
       yogas,
+      // Divisional (varga) charts, computed inline from the same longitudes so
+      // they ship with the kundli — no extra API call or credits. D9 Navamsa
+      // (marriage/dharma/strength) and D10 Dashamsha (career) are the two most
+      // consulted vargas.
+      divisionalCharts: {
+        D9: this.buildVarga(rawPositions, ascLongitude, 9),
+        D10: this.buildVarga(rawPositions, ascLongitude, 10),
+      },
     };
   }
 
@@ -2375,6 +2383,50 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
         return { planet, sign: ALL_SIGNS[divSign], degree: parseFloat((posInSign % (30 / divisor) * divisor).toFixed(2)) };
       }
     });
+  }
+
+  /**
+   * Build a full divisional (varga) chart — including the divisional ascendant
+   * and whole-sign houses — so it renders just like the D1. Retrograde state is
+   * carried over from the D1 (it's a physical property of the planet, not of
+   * the divisional projection).
+   */
+  private buildVarga(
+    d1: { name: string; longitude: number; speed: number }[],
+    ascLongitude: number,
+    divisor: number,
+  ): { ascendant: string; houses: HousePlacement[]; planetaryPositions: PlanetPosition[] } {
+    const input = [
+      { planet: '__ASC__', longitude: ((ascLongitude % 360) + 360) % 360 },
+      ...d1.map(p => ({ planet: p.name, longitude: p.longitude })),
+    ];
+    const div = this.computeDivisionalChart(input, divisor);
+    const ascDiv = div.find(d => d.planet === '__ASC__')!;
+    const ascIdx = ALL_SIGNS.indexOf(ascDiv.sign as any);
+    const houses: HousePlacement[] = Array.from({ length: 12 }, (_, i) => ({
+      house: i + 1,
+      sign: ALL_SIGNS[(ascIdx + i) % 12],
+      planets: [] as string[],
+    }));
+    const retroOf = new Map(
+      d1.map(p => [p.name, p.name === 'Rahu' || p.name === 'Ketu' ? true : p.speed < 0]),
+    );
+    const planetaryPositions: PlanetPosition[] = div
+      .filter(d => d.planet !== '__ASC__')
+      .map(d => {
+        const signIdx = ALL_SIGNS.indexOf(d.sign as any);
+        const houseNum = ((signIdx - ascIdx + 12) % 12) + 1;
+        houses[houseNum - 1].planets.push(d.planet);
+        return {
+          planet: d.planet,
+          sign: d.sign,
+          house: houseNum,
+          degree: d.degree,
+          isRetrograde: retroOf.get(d.planet) ?? false,
+          nakshatra: '',
+        };
+      });
+    return { ascendant: ALL_SIGNS[ascIdx], houses, planetaryPositions };
   }
 
   async getDivisionalChart(userId: string, birthDetails: BirthDetails, type: string): Promise<any> {
