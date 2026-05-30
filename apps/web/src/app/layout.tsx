@@ -24,6 +24,7 @@ import NavbarV2 from "@/components/layout/v2/NavbarV2";
 import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
 import HtmlLangSync from "@/components/i18n/HtmlLangSync";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 // Sitewide structured data. The Organization node feeds brand knowledge
 // panels and lets answer engines (ChatGPT, Perplexity, Gemini) attribute
@@ -152,6 +153,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // rewrite middleware — see docs; deferred as too large for the payoff.
     <html lang="en" className={`${sans.variable} ${display.variable} ${notoVars}`}>
       <body className="min-h-screen flex flex-col">
+        {process.env.NEXT_PUBLIC_GA_ID ? (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        ) : null}
         <HtmlLangSync />
         <script
           type="application/ld+json"
