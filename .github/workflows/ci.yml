@@ -176,6 +176,53 @@ jobs:
           path: apps/web/playwright-report
           retention-days: 7
 
+  e2e-web-realapi:
+    name: Web — Full-stack E2E (real API)
+    needs: build-and-test-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: cd apps/web && npx playwright install --with-deps chromium
+      - name: Install self-spawned daemons
+        # The real-API E2E boots its OWN Postgres/Redis on ephemeral ports via
+        # the integration infra helpers (test/integration/infra/*) — same as
+        # the integration suite — so it needs the binaries on PATH, not the
+        # service containers. Stop the auto-started default clusters so the
+        # spawn helpers own the ports.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq redis-server postgresql-16 postgresql-16-pgvector pgbouncer
+          sudo systemctl stop postgresql || true
+          sudo systemctl stop redis-server || true
+          sudo systemctl stop pgbouncer || true
+      - name: Prisma — generate client
+        working-directory: apps/api
+        run: npx prisma generate
+      - name: Pre-build API
+        # global-setup skips its own `nest build` when dist/main.js exists,
+        # so building here keeps the Playwright webServer startup window from
+        # being eaten by a cold compile.
+        working-directory: apps/api
+        run: npx nest build
+      - name: Run full-stack E2E
+        working-directory: apps/web
+        run: npm run test:e2e:realapi
+        env:
+          CI: "true"
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-realapi-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
   lighthouse:
     name: Lighthouse CI
     needs: build-and-test-web

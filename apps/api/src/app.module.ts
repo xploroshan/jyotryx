@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { APP_GUARD } from '@nestjs/core';
 import Redis from 'ioredis';
+import { ConditionalThrottlerGuard } from './common/guards/conditional-throttler.guard';
 import configuration from './config/configuration';
 import { RedisModule, REDIS_CLIENT } from './redis/redis.module';
 import { HealthModule } from './health/health.module';
@@ -87,7 +88,9 @@ import { MetricsModule } from './metrics/metrics.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      // Throttling is fully active in prod/dev; the guard only steps aside
+      // when THROTTLE_DISABLED=true (set solely by the real-API E2E harness).
+      useClass: ConditionalThrottlerGuard,
     },
   ],
 })
