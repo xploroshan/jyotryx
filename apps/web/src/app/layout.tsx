@@ -1,6 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Inter, Fraunces } from "next/font/google";
+import {
+  Inter,
+  Fraunces,
+  Noto_Sans_Devanagari,
+  Noto_Sans_Bengali,
+  Noto_Sans_Tamil,
+  Noto_Sans_Telugu,
+  Noto_Sans_Gujarati,
+  Noto_Sans_Kannada,
+  Noto_Sans_Malayalam,
+  Noto_Sans_Gurmukhi,
+  Noto_Sans_Oriya,
+} from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import ProfileGate from "@/components/auth/ProfileGate";
@@ -54,6 +66,28 @@ const display = Fraunces({
   display: "swap",
 });
 
+// Indic webfonts so the 11 non-English languages render consistently on every
+// device instead of depending on whatever Indic font the visitor happens to
+// have installed (which left scripts like Telugu poorly shaped). Each is
+// `preload: false` + carries its own script subset, so a page only downloads
+// the one family matching its script (via the @font-face unicode-range) — an
+// English page fetches none of them. Chained after Inter/Fraunces in
+// globals.css so Latin keeps using the brand fonts.
+const notoDeva = Noto_Sans_Devanagari({ subsets: ["devanagari"], weight: ["400", "500", "600", "700"], variable: "--font-noto-deva", display: "swap", preload: false }); // hi, mr
+const notoBeng = Noto_Sans_Bengali({ subsets: ["bengali"], weight: ["400", "500", "600", "700"], variable: "--font-noto-beng", display: "swap", preload: false }); // bn, as
+const notoTaml = Noto_Sans_Tamil({ subsets: ["tamil"], weight: ["400", "500", "600", "700"], variable: "--font-noto-taml", display: "swap", preload: false });
+const notoTelu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "500", "600", "700"], variable: "--font-noto-telu", display: "swap", preload: false });
+const notoGujr = Noto_Sans_Gujarati({ subsets: ["gujarati"], weight: ["400", "500", "600", "700"], variable: "--font-noto-gujr", display: "swap", preload: false });
+const notoKnda = Noto_Sans_Kannada({ subsets: ["kannada"], weight: ["400", "500", "600", "700"], variable: "--font-noto-knda", display: "swap", preload: false });
+const notoMlym = Noto_Sans_Malayalam({ subsets: ["malayalam"], weight: ["400", "500", "600", "700"], variable: "--font-noto-mlym", display: "swap", preload: false });
+const notoGuru = Noto_Sans_Gurmukhi({ subsets: ["gurmukhi"], weight: ["400", "500", "600", "700"], variable: "--font-noto-guru", display: "swap", preload: false }); // pa
+const notoOrya = Noto_Sans_Oriya({ subsets: ["oriya"], weight: ["400", "500", "600", "700"], variable: "--font-noto-orya", display: "swap", preload: false });
+
+const notoVars = [
+  notoDeva, notoBeng, notoTaml, notoTelu, notoGujr,
+  notoKnda, notoMlym, notoGuru, notoOrya,
+].map((f) => f.variable).join(" ");
+
 export const metadata: Metadata = {
   title: "myastro360 — Vedic Astrology Platform",
   description:
@@ -97,7 +131,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable}`}>
+    <html lang="en" className={`${sans.variable} ${display.variable} ${notoVars}`}>
       <body className="min-h-screen flex flex-col">
         {/* Sync <html lang> with the active locale (root layout hard-codes
             "en"; this keeps screen readers + SEO correct for all 12). */}
