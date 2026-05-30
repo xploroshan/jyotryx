@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
+import { localeUrl } from '@/lib/seo/page-metadata';
+import { LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -52,10 +54,14 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const description = `${sign.name} (${sign.symbol}) ${meta.label.toLowerCase()} horoscope — love, career, money and health predictions for ${meta.adjective}. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`;
 
+  const languages: Record<string, string> = {};
+  for (const l of LANDING_LOCALES) languages[l] = localeUrl(l, `/horoscope/${sign.slug}/${period}`);
+  languages['x-default'] = localeUrl('en', `/horoscope/${sign.slug}/${period}`);
+
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: { title, description, type: 'article', url: canonical, siteName: 'myastro360', images: [{ url: '/og', width: 1200, height: 630, alt: title }] },
     twitter: { card: 'summary_large_image', title, description, images: ['/og'] },
   };

@@ -9,7 +9,7 @@ import {
   isLocale,
   type Locale,
   LANDING_LOCALES,
-  PREFIXED_LANDING_LOCALES,
+  PREBUILD_LANDING_LOCALES,
 } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
@@ -24,7 +24,7 @@ import { ZodiacGlyph } from '@/components/icons/astro';
  */
 
 export function generateStaticParams() {
-  return PREFIXED_LANDING_LOCALES.flatMap((locale) =>
+  return PREBUILD_LANDING_LOCALES.flatMap((locale) =>
     listSignSlugs().map((sign) => ({ locale, sign })),
   );
 }
