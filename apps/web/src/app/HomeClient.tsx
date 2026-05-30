@@ -81,10 +81,31 @@ function splitGraphemes(text: string): string[] {
   return Array.from(text);
 }
 
+// Indic scripts (Devanagari U+0900 … Malayalam U+0D7F) build conjuncts and
+// vowel signs that span grapheme clusters; wrapping each grapheme in its own
+// inline-block span gives it a separate shaping context, so the cluster can't
+// form and the virama surfaces as a stray mark (e.g. Kannada ಕ್ಷ → "ಕ್ ಷ").
+// For such text, animate the whole string as a single unit instead.
+// U+0900–U+0D7F: Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil,
+// Telugu, Kannada, Malayalam — every Indic script the app ships.
+const COMPLEX_SCRIPT_RE = /[ऀ-ൿ]/;
+
 function CharReveal({ text, baseDelay = 0 }: { text: string; baseDelay?: number }) {
   const reduce = useReducedMotion();
-  const chars = splitGraphemes(text);
   if (reduce) return <>{text}</>;
+  if (COMPLEX_SCRIPT_RE.test(text)) {
+    return (
+      <motion.span
+        initial={{ y: 28, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: baseDelay }}
+        className="inline-block"
+      >
+        {text}
+      </motion.span>
+    );
+  }
+  const chars = splitGraphemes(text);
   return (
     <>
       {chars.map((c, i) => (
