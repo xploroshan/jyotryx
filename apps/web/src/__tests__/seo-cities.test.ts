@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   SEO_CITIES,
+  SUPPORTED_SEO_LOCALES,
   findCityBySlug,
   listCitySlugs,
   slugifyCityName,
@@ -51,10 +52,29 @@ describe('SEO_CITIES integrity', () => {
     }
   });
 
-  it('every city carries en + hi labels', () => {
+  it('every city carries a label in every supported SEO locale', () => {
     for (const c of SEO_CITIES) {
-      expect(c.i18n.en).toBeTruthy();
-      expect(c.i18n.hi).toBeTruthy();
+      for (const locale of SUPPORTED_SEO_LOCALES) {
+        expect((c.i18n as Record<string, string>)[locale]).toBeTruthy();
+      }
+    }
+  });
+
+  it('localized city names use the expected script per locale', () => {
+    // Guard against a copy-paste that leaves, say, the Devanagari name in
+    // the Tamil slot. Each Indic locale has a distinct Unicode block.
+    const scripts: Record<string, RegExp> = {
+      hi: /[ऀ-ॿ]/, // Devanagari
+      bn: /[ঀ-৿]/, // Bengali
+      kn: /[ಀ-೿]/, // Kannada
+      ta: /[஀-௿]/, // Tamil
+      te: /[ఀ-౿]/, // Telugu
+      ml: /[ഀ-ൿ]/, // Malayalam
+    };
+    for (const c of SEO_CITIES) {
+      for (const [locale, re] of Object.entries(scripts)) {
+        expect((c.i18n as Record<string, string>)[locale]).toMatch(re);
+      }
     }
   });
 

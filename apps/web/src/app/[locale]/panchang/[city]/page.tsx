@@ -5,7 +5,7 @@ import { SEO_CITIES, findCityBySlug } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
-import { prefixedPanchangLocale, PANCHANG_LOCALES, PREFIXED_PANCHANG_LOCALES } from '@/i18n/locales';
+import { prefixedPanchangLocale, PANCHANG_LOCALES, PREBUILD_PANCHANG_LOCALES } from '@/i18n/locales';
 
 /**
  * Localized daily Panchang landing page per city (Phase 2, Tier B).
@@ -16,8 +16,12 @@ import { prefixedPanchangLocale, PANCHANG_LOCALES, PREFIXED_PANCHANG_LOCALES } f
  * `i18n` entry. No machine-translated prose.
  */
 
+// Prebuild only the high-volume locale(s); the rest of PANCHANG_LOCALES are
+// generated on demand via ISR (dynamicParams stays default-true) so the build
+// doesn't fan out to 6 × 50 locale-aware panchang fetches. All locales remain
+// crawlable and sitemap-listed.
 export function generateStaticParams() {
-  return PREFIXED_PANCHANG_LOCALES.flatMap((locale) =>
+  return PREBUILD_PANCHANG_LOCALES.flatMap((locale) =>
     SEO_CITIES.map((city) => ({ locale, city: city.slug })),
   );
 }
