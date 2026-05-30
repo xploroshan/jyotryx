@@ -57,6 +57,30 @@ const NATURAL_FRIENDS: Record<string, { friends: string[]; neutral: string[]; en
 // planets) — used wherever dignity/friendship reasoning applies.
 const CLASSICAL_GRAHAS = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
 
+// Baladi Avastha — the planet's "age" by degree within its sign. In odd signs
+// the five stages run Bala→Mrita from 0°; in even signs they run in reverse.
+const BALADI = ['Bala', 'Kumara', 'Yuva', 'Vriddha', 'Mrita'];
+function baladiAvastha(signIdx: number, degree: number): string {
+  const stage = Math.min(4, Math.max(0, Math.floor(degree / 6)));
+  const isEvenSign = signIdx % 2 === 1; // index 1 = Taurus = 2nd (even) sign
+  return isEvenSign ? BALADI[4 - stage] : BALADI[stage];
+}
+
+// Combustion (Asta) orbs in degrees from the Sun — Mercury and Venus take a
+// tighter orb when retrograde. Matches mainstream Vedic software.
+const COMBUSTION_ORB: Record<string, { direct: number; retro: number }> = {
+  Moon: { direct: 12, retro: 12 },
+  Mars: { direct: 17, retro: 17 },
+  Mercury: { direct: 14, retro: 12 },
+  Jupiter: { direct: 11, retro: 11 },
+  Venus: { direct: 10, retro: 8 },
+  Saturn: { direct: 15, retro: 15 },
+};
+function angularSeparation(a: number, b: number): number {
+  const d = (((a - b) % 360) + 360) % 360;
+  return Math.min(d, 360 - d);
+}
+
 // Modern outer planets. They're shown in the chart + planet table for parity
 // with AstroTalk, but take NO part in classical yoga/dosha/dasha logic.
 const OUTER_PLANETS = ['Uranus', 'Neptune', 'Pluto'];
@@ -122,6 +146,10 @@ export interface PlanetPosition {
   /** Essential-dignity / friendship label (Exalted, Own Sign, Friendly, …).
    *  Empty for the nodes and outer planets. */
   status?: string;
+  /** Baladi Avastha — the planet's degree-based "age" (Bala…Mrita). */
+  avastha?: string;
+  /** True when the planet is combust (too close to the Sun). */
+  isCombust?: boolean;
 }
 
 export interface DashaPeriod {
@@ -701,20 +729,31 @@ export class AstrologyService {
       planets: [] as string[],
     }));
 
+    // Sun longitude is needed up-front to flag combustion for the other planets.
+    const sunLongitude = rawPositions.find(p => p.name === 'Sun')!.longitude;
+
     // 4. Map planets to positions
     const planetaryPositions: PlanetPosition[] = rawPositions.map(p => {
       const signIdx = Math.floor(p.longitude / 30) % 12;
       const houseNum = ((signIdx - ascIdx + 12) % 12) + 1;
       houses[houseNum - 1].planets.push(p.name);
       const nakIdx = Math.floor(p.longitude / (360 / 27)) % 27;
+      const degInSign = p.longitude % 30;
+      const isRetrograde = p.name === 'Rahu' || p.name === 'Ketu' ? true : p.speed < 0;
+      // Combustion: classical grahas only, within the Sun-distance orb.
+      const orb = COMBUSTION_ORB[p.name];
+      const isCombust = !!orb
+        && angularSeparation(p.longitude, sunLongitude) < (isRetrograde ? orb.retro : orb.direct);
       return {
         planet: p.name,
         sign: ALL_SIGNS[signIdx],
         house: houseNum,
-        degree: parseFloat((p.longitude % 30).toFixed(2)),
-        isRetrograde: p.name === 'Rahu' || p.name === 'Ketu' ? true : p.speed < 0,
+        degree: parseFloat(degInSign.toFixed(2)),
+        isRetrograde,
         nakshatra: NAKSHATRA_NAMES[nakIdx],
-        status: planetStatus(p.name, signIdx, p.longitude % 30),
+        status: planetStatus(p.name, signIdx, degInSign),
+        avastha: baladiAvastha(signIdx, degInSign),
+        isCombust,
       };
     });
 
