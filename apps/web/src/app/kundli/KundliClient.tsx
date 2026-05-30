@@ -12,6 +12,7 @@ import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
 
 interface KundliData {
   id: string;
@@ -163,29 +164,6 @@ export default function KundliPage() {
       setGenerating(false);
     }
   };
-
-  // Build chart SVG data from houses
-  const getChartPlanets = (houseNum: number) => {
-    if (!kundli?.houses) return "";
-    const house = kundli.houses.find(h => h.house === houseNum);
-    return house?.planets?.join(", ") || "";
-  };
-
-  // North Indian chart house positions (approximate SVG text coords)
-  const housePositions = [
-    { x: 185, y: 120 }, // 1 - top center
-    { x: 295, y: 95 },  // 2 - top right
-    { x: 315, y: 200 }, // 3 - right top
-    { x: 295, y: 310 }, // 4 - right bottom
-    { x: 185, y: 290 }, // 5 - bottom center
-    { x: 75, y: 310 },  // 6 - left bottom
-    { x: 55, y: 200 },  // 7 - left top
-    { x: 75, y: 95 },   // 8 - top left
-    { x: 185, y: 60 },  // 9 - far top
-    { x: 340, y: 60 },  // 10 - far top right
-    { x: 340, y: 340 }, // 11 - far bottom right
-    { x: 55, y: 340 },  // 12 - far bottom left
-  ];
 
   return (
     <div>
@@ -377,36 +355,47 @@ export default function KundliPage() {
 
             {/* Tab Content */}
             {activeTab === "chart" && (
-              <div className="surface-card p-8 flex flex-col items-center">
-                <h3 className="text-lg font-bold text-gradient mb-6">{t.kundli.rashiChart}</h3>
-                <div className="relative w-80 h-80 sm:w-96 sm:h-96">
-                  <svg viewBox="0 0 400 400" className="w-full h-full">
-                    <rect x="10" y="10" width="380" height="380" fill="none" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
-                    <line x1="10" y1="10" x2="390" y2="390" stroke="rgba(12,8,5,0.18)" strokeWidth="1" />
-                    <line x1="390" y1="10" x2="10" y2="390" stroke="rgba(12,8,5,0.18)" strokeWidth="1" />
-                    <line x1="200" y1="10" x2="390" y2="200" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
-                    <line x1="390" y1="200" x2="200" y2="390" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
-                    <line x1="200" y1="390" x2="10" y2="200" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
-                    <line x1="10" y1="200" x2="200" y2="10" stroke="rgba(12,8,5,0.22)" strokeWidth="1.5" />
-                    {/* Ascendant label */}
-                    <text x="185" y="105" fill="rgba(217,70,239,0.85)" fontSize="11" fontFamily="sans-serif">{t.kundli.asc}</text>
-                    <text x="180" y="125" fill="rgba(12,8,5,0.78)" fontSize="10" fontFamily="sans-serif">
-                      {kundli.ascendant?.substring(0, 3)}
-                    </text>
-                    {/* Display planets in houses */}
-                    {kundli.houses?.slice(0, 12).map((house, i) => {
-                      const pos = housePositions[i];
-                      if (!pos) return null;
-                      const planetText = house.planets?.join(", ") || "";
-                      return planetText ? (
-                        <text key={i} x={pos.x} y={pos.y} fill="rgba(12,8,5,0.66)" fontSize="9" fontFamily="sans-serif">
-                          {planetText.length > 12 ? planetText.substring(0, 12) + "..." : planetText}
-                        </text>
-                      ) : null;
-                    })}
-                  </svg>
-                </div>
-                <p className="text-xs text-[rgba(12,8,5,0.40)] mt-4">{t.kundli.chartNote}</p>
+              <div className="surface-card p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-gradient mb-6 text-center">{t.kundli.rashiChart}</h3>
+
+                {/* The chart now scales to a generous width and renders each
+                    planet with its degree + retrograde marker inside the
+                    correct house, instead of a small box with truncated text. */}
+                <NorthIndianChart
+                  houses={kundli.houses}
+                  planetaryPositions={kundli.planetaryPositions}
+                  ascendant={kundli.ascendant}
+                  className="w-full max-w-lg mx-auto aspect-square"
+                />
+
+                <p className="text-xs text-[rgba(12,8,5,0.40)] mt-4 text-center">{t.kundli.chartNote}</p>
+
+                {/* Planet legend — decodes the chart's abbreviations and adds
+                    the per-planet sign / house / degree / nakshatra detail so
+                    everything visible in the chart is spelled out below it. */}
+                {kundli.planetaryPositions && kundli.planetaryPositions.length > 0 && (
+                  <div className="mt-8 border-t divider pt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+                      {kundli.planetaryPositions.map((p) => (
+                        <div
+                          key={p.planet}
+                          className="flex items-center justify-between gap-3 py-1.5 border-b border-[rgba(12,8,5,0.06)] last:border-0"
+                        >
+                          <span className="font-medium text-surface-950 min-w-[5.5rem]">{p.planet}</span>
+                          <span className="text-sm text-secondary flex-1">
+                            {p.sign} {Math.floor(p.degree)}&deg;
+                            <span className="text-[rgba(12,8,5,0.40)]"> &bull; {t.kundli.houseLabel} {p.house}</span>
+                          </span>
+                          {p.isRetrograde && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 whitespace-nowrap">
+                              {t.kundli.retrograde}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
