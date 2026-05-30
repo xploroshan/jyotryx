@@ -101,6 +101,14 @@ export const metadata: Metadata = {
     "palmistry", "kundli matching", "panchang", "muhurat", "myastro360",
   ],
   metadataBase: new URL("https://www.myastro360.com"),
+  // Google Search Console site verification. Set NEXT_PUBLIC_GSC_VERIFICATION
+  // in the Vercel env to the token GSC gives you (the value of the
+  // `google-site-verification` meta tag) to verify ownership without a code
+  // change. Omitted from the <head> when unset. (DNS TXT verification is an
+  // alternative and doesn't need this.)
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } }
+    : {}),
   // NOTE: no `alternates.canonical` here on purpose. A static canonical in
   // the root layout is inherited by every page that doesn't override it,
   // which canonicalises all feature pages to "/". Each page sets its own
