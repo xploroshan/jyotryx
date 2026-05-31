@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
 import { PlanetGlyph } from '@/components/icons/astro';
+import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
 
 interface HouseRow {
   house: number;
@@ -41,15 +42,13 @@ interface KundliResponse {
 export default function HellenisticNatalPage() {
   const { t, locale } = useTranslation();
   const fp = t.featurePages.hellenisticNatal;
-  const { user, accessToken, isAuthenticated } = useAuthStore();
-  const [dob, setDob] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
-  const [tob, setTob] = useState(user?.timeOfBirth ?? '');
-  const [pob, setPob] = useState(user?.placeOfBirth ?? '');
+  const { accessToken, isAuthenticated } = useAuthStore();
+  const [birth, setBirth] = useState<BirthDetailsValue>({ dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' });
   const [result, setResult] = useState<KundliResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const canSubmit = dob && tob && pob && !loading;
+  const canSubmit = birth.dateOfBirth && birth.timeOfBirth && birth.placeOfBirth && !loading;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +59,9 @@ export default function HellenisticNatalPage() {
       const res = await api.post<KundliResponse>(
         '/astrology/kundli',
         {
-          dateOfBirth: dob,
-          timeOfBirth: tob,
-          placeOfBirth: pob,
+          dateOfBirth: birth.dateOfBirth,
+          timeOfBirth: birth.timeOfBirth,
+          placeOfBirth: birth.placeOfBirth,
           locale,
           tradition: 'HELLENISTIC',
         },
@@ -88,30 +87,9 @@ export default function HellenisticNatalPage() {
         </div>
       ) : (
         <div className="glass rounded-2xl p-5 sm:p-6 mb-4">
-          <form onSubmit={submit} className="grid gap-3 sm:grid-cols-3">
-            <input
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              required
-              className="surface-input rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              type="time"
-              value={tob}
-              onChange={(e) => setTob(e.target.value)}
-              required
-              className="surface-input rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              type="text"
-              value={pob}
-              onChange={(e) => setPob(e.target.value)}
-              placeholder={t.form.placePlaceholder}
-              required
-              className="surface-input rounded-lg px-3 py-2 text-sm"
-            />
-            <div className="sm:col-span-3 flex items-center justify-between gap-3">
+          <form onSubmit={submit} className="space-y-3">
+            <SavedBirthDetails value={birth} onChange={setBirth} idPrefix="hellenistic-natal" />
+            <div className="flex items-center justify-between gap-3">
               <button
                 type="submit"
                 disabled={!canSubmit}
