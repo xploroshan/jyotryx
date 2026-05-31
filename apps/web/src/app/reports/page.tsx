@@ -246,49 +246,53 @@ export default function ReportsPage() {
       {/* In-app report reader */}
       {viewing && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 sm:p-8"
           role="dialog"
           aria-modal="true"
           aria-label={viewing.title}
           onClick={() => setViewing(null)}
         >
           <div
-            className="surface-card relative w-full max-w-2xl my-8 p-6 sm:p-8"
+            className="surface-card relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden p-0"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <h2 className="text-xl font-bold text-surface-950">{viewing.title}</h2>
-              <button
-                onClick={() => setViewing(null)}
-                aria-label={t.common.close}
-                className="shrink-0 rounded-lg p-1.5 text-[rgba(12,8,5,0.5)] hover:bg-[rgba(12,8,5,0.06)] hover:text-surface-950 transition-colors"
-              >
-                <X size={20} strokeWidth={1.8} aria-hidden />
-              </button>
+            {/* Sticky header — title, download and close stay put while the
+                report body scrolls beneath them. */}
+            <div className="flex items-center justify-between gap-3 border-b border-[rgba(12,8,5,0.08)] px-6 py-4 sm:px-8">
+              <h2 className="min-w-0 flex-1 truncate text-xl font-bold text-surface-950">{viewing.title}</h2>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => handleDownload(viewing)}
+                  className="px-3 py-2 rounded-xl btn-primary text-sm text-white font-medium inline-flex items-center gap-1.5"
+                >
+                  <Download size={15} strokeWidth={1.8} aria-hidden />
+                  <span className="hidden sm:inline">{t.reports.download}</span>
+                </button>
+                <button
+                  onClick={() => setViewing(null)}
+                  aria-label={t.common.close}
+                  className="rounded-lg p-1.5 text-[rgba(12,8,5,0.5)] hover:bg-[rgba(12,8,5,0.06)] hover:text-surface-950 transition-colors"
+                >
+                  <X size={20} strokeWidth={1.8} aria-hidden />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-5">
-              {(viewing.sections ?? [])
-                .slice()
-                .sort((a, b) => a.order - b.order)
-                .map((s) => (
-                  <section key={s.order}>
-                    <h3 className="font-semibold text-surface-950 mb-1.5">{s.title}</h3>
-                    <p className="text-sm leading-relaxed text-[rgba(12,8,5,0.7)] whitespace-pre-line">
-                      {s.content}
-                    </p>
-                  </section>
-                ))}
-            </div>
-
-            <div className="mt-7 flex justify-end">
-              <button
-                onClick={() => handleDownload(viewing)}
-                className="px-4 py-2 rounded-xl btn-primary text-sm text-white font-medium inline-flex items-center gap-1.5"
-              >
-                <Download size={15} strokeWidth={1.8} aria-hidden />
-                {t.reports.download}
-              </button>
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+              <div className="space-y-5">
+                {(viewing.sections ?? [])
+                  .slice()
+                  .sort((a, b) => a.order - b.order)
+                  .map((s) => (
+                    <section key={s.order}>
+                      <h3 className="font-semibold text-surface-950 mb-1.5">{s.title}</h3>
+                      <p className="text-sm leading-relaxed text-[rgba(12,8,5,0.7)] whitespace-pre-line">
+                        {s.content}
+                      </p>
+                    </section>
+                  ))}
+              </div>
             </div>
           </div>
         </div>
