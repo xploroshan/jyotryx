@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
 
 interface NatalPlanet {
   planet: string;
@@ -22,10 +23,8 @@ interface NatalResponse {
 export default function WesternNatalPage() {
   const { t, locale } = useTranslation();
   const fp = t.featurePages.westernNatal;
-  const { user, accessToken, isAuthenticated } = useAuthStore();
-  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
-  const [timeOfBirth, setTimeOfBirth] = useState(user?.timeOfBirth ?? '');
-  const [placeOfBirth, setPlaceOfBirth] = useState(user?.placeOfBirth ?? '');
+  const { accessToken, isAuthenticated } = useAuthStore();
+  const [birth, setBirth] = useState<BirthDetailsValue>({ dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' });
   const [result, setResult] = useState<NatalResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +36,7 @@ export default function WesternNatalPage() {
     try {
       const res = await api.post<NatalResponse>(
         '/astrology/western/natal',
-        { dateOfBirth, timeOfBirth, placeOfBirth, locale },
+        { ...birth, locale },
         { token: accessToken ?? undefined },
       );
       setResult(res);
@@ -61,31 +60,10 @@ export default function WesternNatalPage() {
       ) : (
         <>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              required
-              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
-            />
-            <input
-              type="time"
-              value={timeOfBirth}
-              onChange={(e) => setTimeOfBirth(e.target.value)}
-              required
-              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
-            />
-            <input
-              type="text"
-              value={placeOfBirth}
-              onChange={(e) => setPlaceOfBirth(e.target.value)}
-              placeholder={t.form.placePlaceholder}
-              required
-              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
-            />
+            <SavedBirthDetails value={birth} onChange={setBirth} idPrefix="western-natal" />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !birth.dateOfBirth || !birth.timeOfBirth || !birth.placeOfBirth}
               className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
             >
               {loading ? t.common.processing : fp.submit}

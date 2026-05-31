@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
 
 interface ProfectionsResponse {
   ageYears: number;
@@ -17,8 +18,8 @@ interface ProfectionsResponse {
 export default function HellenisticProfectionsPage() {
   const { t, locale } = useTranslation();
   const fp = t.featurePages.hellenisticProfections;
-  const { user, accessToken, isAuthenticated } = useAuthStore();
-  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth?.slice(0, 10) ?? '');
+  const { accessToken, isAuthenticated } = useAuthStore();
+  const [birth, setBirth] = useState<BirthDetailsValue>({ dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' });
   const [result, setResult] = useState<ProfectionsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +31,7 @@ export default function HellenisticProfectionsPage() {
     try {
       const res = await api.post<ProfectionsResponse>(
         '/astrology/hellenistic/profections',
-        { dateOfBirth, locale },
+        { dateOfBirth: birth.dateOfBirth, locale },
         { token: accessToken ?? undefined },
       );
       setResult(res);
@@ -54,16 +55,15 @@ export default function HellenisticProfectionsPage() {
       ) : (
         <>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              required
-              className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
+            <SavedBirthDetails
+              value={birth}
+              onChange={setBirth}
+              fields={{ time: false, place: false }}
+              idPrefix="profections"
             />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !birth.dateOfBirth}
               className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
             >
               {loading ? t.common.processing : fp.submit}
