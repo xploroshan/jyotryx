@@ -7,6 +7,7 @@ import { LlmService } from '../llm/llm.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { KbService, KbReportSectionPayload } from '../knowledge/kb.service';
 import { UserService } from '../modules/user/user.service';
+import { FeatureAccessService } from '../common/feature-access/feature-access.service';
 import { getLocaleInstruction } from '../common/locale';
 import { REPORT_QUEUE } from './queue.constants';
 
@@ -33,6 +34,7 @@ export class ReportProcessor extends WorkerHost {
     private readonly knowledgeService: KnowledgeService,
     private readonly kbService: KbService,
     private readonly userService: UserService,
+    private readonly featureAccess: FeatureAccessService,
   ) {
     super();
   }
@@ -62,10 +64,16 @@ export class ReportProcessor extends WorkerHost {
         data: { status: 'FAILED' },
       }).catch(() => {});
 
-      // Refund credits on final attempt
+      // Refund on final attempt. Reports are now pay-to-unlock, so restore
+      // the one-time entitlement bound to this report (no-op for
+      // subscriber/free generations). Legacy credit-charged jobs
+      // (creditCost > 0) still get a credit refund.
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
-        this.logger.log(`Refunding ${creditCost} credits for failed report ${reportId}`);
-        await this.userService.addCredits(userId, creditCost, 'PURCHASE', `Refund: ${type} report generation failed`);
+        await this.featureAccess.refundEntitlementByRef(reportId);
+        if (creditCost > 0) {
+          this.logger.log(`Refunding ${creditCost} credits for failed report ${reportId}`);
+          await this.userService.addCredits(userId, creditCost, 'PURCHASE', `Refund: ${type} report generation failed`);
+        }
       }
 
       throw error;

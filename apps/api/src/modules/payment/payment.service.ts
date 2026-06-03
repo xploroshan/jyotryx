@@ -8,7 +8,42 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import {
+  FeatureAccessService,
+  EntitlementTypeName,
+} from '../../common/feature-access/feature-access.service';
 import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto } from './dto';
+
+/** Default INR prices for one-time entitlement products (admin-overridable). */
+const DEFAULT_REPORT_PRICE_INR = 199;
+const DEFAULT_PALMISTRY_PRICE_INR = 250;
+
+/**
+ * Map a one-time-purchase productId to its EntitlementType, or null if the
+ * productId is not an entitlement product (e.g. a credit pack). All report
+ * variants unlock that specific report type; `palm_reading` is the
+ * canonical palmistry product (legacy `report_palm` maps to REPORT_PALM).
+ */
+function entitlementTypeForProduct(productId: string): EntitlementTypeName | null {
+  switch (productId) {
+    case 'report_life':
+      return 'REPORT_LIFE';
+    case 'report_career':
+      return 'REPORT_CAREER';
+    case 'report_marriage':
+      return 'REPORT_MARRIAGE';
+    case 'report_wealth':
+      return 'REPORT_WEALTH';
+    case 'report_annual':
+      return 'REPORT_ANNUAL';
+    case 'report_palm':
+      return 'REPORT_PALM';
+    case 'palm_reading':
+      return 'PALMISTRY';
+    default:
+      return null;
+  }
+}
 
 /**
  * Constant-time HMAC-signature comparison. Razorpay signatures are hex
@@ -36,6 +71,10 @@ export interface PaymentVerificationResult {
   paymentId: string;
   orderId: string;
   creditsAdded?: number;
+  /** True when this payment granted a one-time pay-to-unlock entitlement
+   *  (report/palmistry) rather than credits, so the web can proceed
+   *  straight to generation. */
+  entitlementGranted?: boolean;
 }
 
 export interface SubscriptionResult {
@@ -68,6 +107,7 @@ export class PaymentService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private featureAccess: FeatureAccessService,
   ) {
     this.initRazorpay();
   }
@@ -89,18 +129,31 @@ export class PaymentService {
     }
   }
 
-  private getExpectedPrice(productId: string): number | null {
+  /**
+   * Authoritative price (in paise) the client must pay for a productId.
+   * One-time entitlement products (reports / palmistry) read their INR
+   * price from the admin-editable `site_settings` (`pricing.report.price`,
+   * `pricing.palmistry.price`) so the operator can re-price without a
+   * redeploy — the SAME source the web pricing surface reads. Legacy
+   * credit-pack productIds keep their static fallbacks. Returns null for
+   * unknown products.
+   */
+  private async getExpectedPrice(productId: string): Promise<number | null> {
+    const entType = entitlementTypeForProduct(productId);
+    if (entType) {
+      const isPalmistry = entType === 'PALMISTRY';
+      const key = isPalmistry ? 'pricing.palmistry.price' : 'pricing.report.price';
+      const fallback = isPalmistry ? DEFAULT_PALMISTRY_PRICE_INR : DEFAULT_REPORT_PRICE_INR;
+      const row = await this.prisma.siteSetting.findUnique({ where: { key } });
+      const inr = parseInt(row?.value ?? '', 10);
+      const priceINR = Number.isFinite(inr) && inr > 0 ? inr : fallback;
+      return priceINR * 100;
+    }
+
     const prices: Record<string, number> = {
-      'credits_10': 9900,    // 99 INR in paise
-      'credits_50': 39900,   // 399 INR
-      'credits_100': 69900,  // 699 INR
-      'report_life': 59900,
-      'report_career': 59900,
-      'report_marriage': 59900,
-      'report_wealth': 59900,
-      'report_palm': 19900,
-      'report_annual': 99900,
-      'palm_reading': 19900,
+      'credits_10': 9900, // 99 INR in paise
+      'credits_50': 39900, // 399 INR
+      'credits_100': 69900, // 699 INR
     };
     return prices[productId] ?? null;
   }
@@ -152,6 +205,8 @@ export class PaymentService {
     // amount, against the authoritative price. Credit packs are looked up
     // in SiteSettings; everything else falls back to the static price map.
     let grantedCredits: number | undefined;
+    let entitlementType: EntitlementTypeName | null = null;
+    let paymentType: 'CREDITS' | 'REPORT' = 'CREDITS';
     if (dto.productId) {
       const pack = await this.resolveCreditPack(dto.productId);
       if (pack) {
@@ -163,10 +218,14 @@ export class PaymentService {
         }
         grantedCredits = pack.credits;
       } else {
-        const expectedPrice = this.getExpectedPrice(dto.productId);
+        const expectedPrice = await this.getExpectedPrice(dto.productId);
         if (expectedPrice !== null && dto.amount !== expectedPrice) {
           throw new BadRequestException(`Invalid amount for product ${dto.productId}. Expected ${expectedPrice}, got ${dto.amount}`);
         }
+        // One-time pay-to-unlock products (reports/palmistry) grant an
+        // Entitlement on success instead of credits.
+        entitlementType = entitlementTypeForProduct(dto.productId);
+        if (entitlementType) paymentType = 'REPORT';
       }
     }
 
@@ -201,11 +260,19 @@ export class PaymentService {
         currency: orderCurrency,
         status: 'PENDING',
         razorpayOrderId: orderId,
-        type: 'CREDITS',
+        type: paymentType,
         // `credits` is captured at order-creation time from the
         // authoritative pack definition, so the grant on verify/webhook
         // is deterministic and never re-derived from the amount.
-        metadata: { productId: dto.productId, description: dto.description, credits: grantedCredits },
+        // `entitlementType` marks one-time pay-to-unlock purchases so the
+        // verify/webhook handler grants an Entitlement instead of credits.
+        metadata: {
+          productId: dto.productId,
+          description: dto.description,
+          credits: grantedCredits,
+          entitlementType: entitlementType ?? undefined,
+          kind: entitlementType ? 'entitlement' : 'credits',
+        },
       },
     });
 
@@ -282,11 +349,24 @@ export class PaymentService {
       };
     }
 
-    // We won the update — safe to grant credits exactly once.
+    // We won the update — safe to grant exactly once.
     const payment = await this.prisma.payment.findFirstOrThrow({
       where: { razorpayOrderId: dto.razorpayOrderId, userId },
-      select: { amount: true, metadata: true },
+      select: { id: true, amount: true, metadata: true },
     });
+    const entType = this.entitlementTypeFromMetadata(payment.metadata);
+    if (entType) {
+      // One-time pay-to-unlock: grant an entitlement instead of credits.
+      await this.featureAccess.grantEntitlement(userId, payment.id, entType);
+      return {
+        verified: true,
+        paymentId: dto.razorpayPaymentId,
+        orderId: dto.razorpayOrderId,
+        creditsAdded: 0,
+        entitlementGranted: true,
+      };
+    }
+
     const creditsToAdd = this.creditsForPayment(payment);
     await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
 
@@ -296,6 +376,13 @@ export class PaymentService {
       orderId: dto.razorpayOrderId,
       creditsAdded: creditsToAdd,
     };
+  }
+
+  /** Extract the EntitlementType captured in a payment's metadata, if any. */
+  private entitlementTypeFromMetadata(metadata: unknown): EntitlementTypeName | null {
+    const meta = (metadata ?? null) as { entitlementType?: unknown } | null;
+    const v = meta?.entitlementType;
+    return typeof v === 'string' ? (v as EntitlementTypeName) : null;
   }
 
   async createSubscription(userId: string, dto: CreateSubscriptionDto): Promise<SubscriptionResult> {
@@ -423,8 +510,15 @@ export class PaymentService {
               if (count === 0) return; // lost the race or not our order
               const payment = await tx.payment.findFirstOrThrow({
                 where: { razorpayOrderId: paymentEntity.order_id },
-                select: { userId: true, amount: true, metadata: true },
+                select: { id: true, userId: true, amount: true, metadata: true },
               });
+              const entType = this.entitlementTypeFromMetadata(payment.metadata);
+              if (entType) {
+                // One-time pay-to-unlock: grant an entitlement (idempotent
+                // on the unique paymentId) instead of crediting the wallet.
+                await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
+                return;
+              }
               const creditsToAdd = this.creditsForPayment(payment);
               await tx.user.update({
                 where: { id: payment.userId },
@@ -587,13 +681,41 @@ export class PaymentService {
   }
 
   async getPricingConfig(): Promise<Record<string, string>> {
+    // Pull every pricing.* key plus the monetization feature flags and the
+    // social-proof seed in one round trip, so the public web surface can
+    // read prices, mode flags, and the report counter from this single
+    // endpoint without auth.
+    const featureKeys = ['feature.subscriptions_enabled', 'feature.pricing_page_enabled'];
+    const socialKeys = ['social.report_count_base'];
     const rows = await this.prisma.siteSetting.findMany({
-      where: { key: { startsWith: 'pricing.' } },
+      where: {
+        OR: [
+          { key: { startsWith: 'pricing.' } },
+          { key: { in: [...featureKeys, ...socialKeys] } },
+        ],
+      },
     });
     const result: Record<string, string> = {};
     for (const row of rows) {
       result[row.key] = row.value;
     }
+
+    // Sensible defaults so the client always has values even before an
+    // operator has saved anything in the admin pricing tab.
+    if (result['feature.subscriptions_enabled'] === undefined) result['feature.subscriptions_enabled'] = 'false';
+    if (result['feature.pricing_page_enabled'] === undefined) result['feature.pricing_page_enabled'] = 'false';
+    if (result['pricing.report.price'] === undefined) result['pricing.report.price'] = String(DEFAULT_REPORT_PRICE_INR);
+    if (result['pricing.palmistry.price'] === undefined) result['pricing.palmistry.price'] = String(DEFAULT_PALMISTRY_PRICE_INR);
+
+    // Social proof: seed base + real successful report purchases. Rises by
+    // one on every paid report so the number is "fake but moving".
+    const base = parseInt(result['social.report_count_base'] ?? '', 10);
+    const seed = Number.isFinite(base) && base > 0 ? base : 41345;
+    const sold = await this.prisma.payment.count({
+      where: { type: 'REPORT', status: 'SUCCESS' },
+    });
+    result['social.reports_delivered'] = String(seed + sold);
+
     return result;
   }
 

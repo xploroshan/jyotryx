@@ -4,6 +4,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
@@ -13,6 +14,7 @@ describe('ReportService', () => {
   let service: ReportService;
   let prisma: any;
   let userService: any;
+  let featureAccess: any;
   let openaiService: any;
 
   const mockUser = {
@@ -66,6 +68,15 @@ describe('ReportService', () => {
       getProfile: jest.fn().mockResolvedValue(mockUser),
     };
 
+    // Reports are pay-to-unlock: default the gate to an available
+    // entitlement so generation proceeds, and let tests assert it was
+    // consulted/consumed.
+    featureAccess = {
+      resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
+      consumeEntitlement: jest.fn().mockResolvedValue(undefined),
+      isActiveSubscriber: jest.fn().mockResolvedValue(false),
+    };
+
     openaiService = {
       chat: jest.fn().mockResolvedValue(null),
       chatCompletion: jest.fn().mockResolvedValue(null),
@@ -77,6 +88,7 @@ describe('ReportService', () => {
       providers: [
         ReportService,
         { provide: PrismaService, useValue: prisma },
+        { provide: FeatureAccessService, useValue: featureAccess },
         {
           provide: ConfigService,
           useValue: {
@@ -100,13 +112,26 @@ describe('ReportService', () => {
   });
 
   describe('generateReport', () => {
-    it('should deduct credits before generating report', async () => {
+    it('should gate on a one-time entitlement before generating report', async () => {
       prisma.report.create.mockResolvedValue(mockReport);
       prisma.report.update.mockResolvedValue(mockReport);
 
       await service.generateReport('test-uuid', { type: 'CAREER' });
 
-      expect(userService.deductCredits).toHaveBeenCalledWith('test-uuid', 5, expect.any(String));
+      // Pay-to-unlock: resolve the unlock for this report type, then
+      // consume it once the report row exists.
+      expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'REPORT_CAREER');
+      expect(featureAccess.consumeEntitlement).toHaveBeenCalledWith('test-uuid', 'REPORT_CAREER', mockReport.id);
+      expect(userService.deductCredits).not.toHaveBeenCalled();
+    });
+
+    it('should not consume an entitlement for an active subscriber', async () => {
+      featureAccess.resolveUnlock.mockResolvedValue('subscriber');
+      prisma.report.create.mockResolvedValue(mockReport);
+
+      await service.generateReport('test-uuid', { type: 'CAREER' });
+
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
     });
 
     it('should create report with correct type', async () => {

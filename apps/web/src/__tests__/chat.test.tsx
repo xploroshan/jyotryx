@@ -1,8 +1,9 @@
 /**
- * Chat Page Tests
+ * Chat ("Talk to an Astrologer") Page Tests
  *
- * Validates initial greeting, category sidebar, suggested questions,
- * input/send elements, auth guard, and assistant response rendering.
+ * Validates the astrologer picker, then — after choosing an astrologer —
+ * the persona greeting, input/send elements, auth guard, and assistant
+ * response rendering.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -58,6 +59,13 @@ Element.prototype.scrollIntoView = vi.fn();
 // ─── Import component AFTER mocks ──────────────────────────────────────────
 import ChatPage from '@/app/chat/page';
 
+/** Render the page and pick the first astrologer to enter the chat view. */
+function renderAndConsult() {
+  const utils = render(<ChatPage />);
+  fireEvent.click(screen.getByText('Acharya Vikram Shastri'));
+  return utils;
+}
+
 describe('Chat Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,33 +73,23 @@ describe('Chat Page', () => {
     mockStoreState.accessToken = 'valid-token';
   });
 
-  it('should render initial greeting message', () => {
+  it('should render the astrologer picker first', () => {
     render(<ChatPage />);
-    expect(screen.getByText(/Namaste! I am your Vedic Astrologer/)).toBeDefined();
+    expect(screen.getByText('Talk to an Astrologer')).toBeDefined();
+    expect(screen.getByText('Acharya Vikram Shastri')).toBeDefined();
+    expect(screen.getByText('Pandita Meera Joshi')).toBeDefined();
+    expect(screen.getByText('Guru Anand Nath')).toBeDefined();
+    expect(screen.getByText('Jyotishi Kavya Reddy')).toBeDefined();
   });
 
-  it('should render category sidebar buttons', () => {
-    render(<ChatPage />);
-    // "Career" appears in both the sidebar button and the chat area header, so use getAllByText
-    expect(screen.getAllByText('Career').length).toBeGreaterThanOrEqual(1);
-    const otherCategories = ['Relationships', 'General', 'Kundli', 'Remedies', 'Wealth', 'Health', 'Numerology'];
-    for (const cat of otherCategories) {
-      expect(screen.getByText(cat)).toBeDefined();
-    }
+  it('should greet in the chosen astrologer voice after selection', () => {
+    renderAndConsult();
+    expect(screen.getByText(/I'm Acharya Vikram Shastri/)).toBeDefined();
   });
 
-  it('should render suggested questions', () => {
-    render(<ChatPage />);
-    expect(screen.getByText('What does my career look like in 2026?')).toBeDefined();
-    expect(screen.getByText('Is this a good time for investment?')).toBeDefined();
-    expect(screen.getByText('When will I find my life partner?')).toBeDefined();
-    expect(screen.getByText('What remedies can improve my health?')).toBeDefined();
-  });
-
-  it('should show input field and send button', () => {
-    render(<ChatPage />);
+  it('should show input field and send button after selecting an astrologer', () => {
+    renderAndConsult();
     expect(screen.getByPlaceholderText('Ask your question...')).toBeDefined();
-    // Send button is an SVG icon button
     const buttons = document.querySelectorAll('button');
     const sendButton = Array.from(buttons).find((btn) => btn.querySelector('svg path[d*="M6 12"]'));
     expect(sendButton).toBeDefined();
@@ -99,12 +97,11 @@ describe('Chat Page', () => {
 
   it('should redirect to /auth when not authenticated and trying to send', async () => {
     mockStoreState.isAuthenticated = false;
-    render(<ChatPage />);
+    renderAndConsult();
 
     const input = screen.getByPlaceholderText('Ask your question...');
     fireEvent.change(input, { target: { value: 'What is my future?' } });
 
-    // Find the send button (button with SVG arrow icon)
     const buttons = document.querySelectorAll('button');
     const sendButton = Array.from(buttons).find((btn) => btn.querySelector('svg path[d*="M6 12"]'));
     fireEvent.click(sendButton!);
@@ -114,7 +111,7 @@ describe('Chat Page', () => {
 
   it('should render assistant response after sending message', async () => {
     mockApiPost.mockResolvedValueOnce(mockChatResponse);
-    render(<ChatPage />);
+    renderAndConsult();
 
     const input = screen.getByPlaceholderText('Ask your question...');
     fireEvent.change(input, { target: { value: 'Tell me about my career' } });
@@ -124,5 +121,23 @@ describe('Chat Page', () => {
     fireEvent.click(sendButton!);
 
     expect(await screen.findByText('Based on your birth chart, career prospects look positive.')).toBeDefined();
+  });
+
+  it('should send the selected astrologerId with the message', async () => {
+    mockApiPost.mockResolvedValueOnce(mockChatResponse);
+    renderAndConsult();
+
+    const input = screen.getByPlaceholderText('Ask your question...');
+    fireEvent.change(input, { target: { value: 'Hello' } });
+    const buttons = document.querySelectorAll('button');
+    const sendButton = Array.from(buttons).find((btn) => btn.querySelector('svg path[d*="M6 12"]'));
+    fireEvent.click(sendButton!);
+
+    await screen.findByText('Based on your birth chart, career prospects look positive.');
+    expect(mockApiPost).toHaveBeenCalledWith(
+      '/chat/message',
+      expect.objectContaining({ astrologerId: 'acharya-vikram' }),
+      expect.anything(),
+    );
   });
 });

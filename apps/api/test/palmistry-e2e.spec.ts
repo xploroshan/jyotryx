@@ -64,6 +64,8 @@ import { PalmistryController } from '../src/modules/palmistry/palmistry.controll
 import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
 import { JwtStrategy } from '../src/modules/auth/strategies/jwt.strategy';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
@@ -96,11 +98,13 @@ describe('Palmistry E2E (HTTP)', () => {
   let app: INestApplication;
   let jwtService: JwtService;
   let userService: ReturnType<typeof mockUserService>;
+  let featureAccess: ReturnType<typeof mockFeatureAccessService>;
   let prisma: ReturnType<typeof mockPrismaService>;
 
   beforeAll(async () => {
     prisma = mockPrismaService();
     userService = mockUserService();
+    featureAccess = mockFeatureAccessService();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -136,6 +140,7 @@ describe('Palmistry E2E (HTTP)', () => {
         Reflector,
         { provide: PrismaService, useValue: prisma },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: featureAccess },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: StorageService, useValue: mockStorageService() },
@@ -160,6 +165,8 @@ describe('Palmistry E2E (HTTP)', () => {
   beforeEach(() => {
     // Reset mocks before each test
     userService.deductCredits.mockResolvedValue(true);
+    // Default: a one-time unlock is available so analysis proceeds.
+    featureAccess.resolveUnlock.mockResolvedValue('entitlement');
     prisma.palmistryReading.create.mockResolvedValue({
       id: 'palm-e2e-1',
       createdAt: new Date(),
@@ -301,20 +308,21 @@ describe('Palmistry E2E (HTTP)', () => {
   // CREDITS TESTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  describe('Credits', () => {
-    it('should return 400 when user has insufficient credits', async () => {
-      userService.deductCredits.mockResolvedValue(false);
+  describe('Unlock', () => {
+    it('should return 402 when the reading is not unlocked', async () => {
+      const { PaymentRequiredException } = await import('../src/common/exceptions/payment-required.exception');
+      featureAccess.resolveUnlock.mockRejectedValue(new PaymentRequiredException());
       const token = signToken();
 
       const res = await request(app.getHttpServer())
         .post('/palmistry/analyze')
         .set('Authorization', `Bearer ${token}`)
-        .expect(400);
+        .expect(402);
 
-      expect(res.body.message).toMatch(/Insufficient credits/i);
+      expect(res.body.message).toMatch(/payment required|purchase|subscription/i);
     });
 
-    it('should deduct credits on successful analysis', async () => {
+    it('should consult the entitlement gate on a successful analysis', async () => {
       const token = signToken();
 
       await request(app.getHttpServer())
@@ -322,11 +330,8 @@ describe('Palmistry E2E (HTTP)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(202);
 
-      expect(userService.deductCredits).toHaveBeenCalledWith(
-        'test-uuid',
-        3,
-        'Palmistry reading',
-      );
+      expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
+      expect(userService.deductCredits).not.toHaveBeenCalled();
     });
   });
 

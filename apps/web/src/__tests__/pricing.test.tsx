@@ -55,7 +55,7 @@ describe('Pricing Page', () => {
     vi.clearAllMocks();
     mockStoreState.isAuthenticated = true;
     mockStoreState.accessToken = 'valid-token';
-    mockApiGet.mockResolvedValueOnce({ 'pricing.monthly.price': '499', 'pricing.annual.price': '4999' });
+    mockApiGet.mockResolvedValueOnce({ 'feature.pricing_page_enabled': 'true', 'pricing.monthly.price': '499', 'pricing.annual.price': '4999' });
   });
 
   it('renders header with pricing text', async () => {
@@ -130,7 +130,7 @@ describe('Pricing Page', () => {
     // Simulate admin saving pricing.monthly.price = 100.
     mockApiGet.mockReset();
     mockApiGet.mockResolvedValueOnce({
-      'pricing.monthly.price': '100',
+      'feature.pricing_page_enabled': 'true', 'pricing.monthly.price': '100',
       'pricing.annual.price': '999',
     });
     render(<PricingPage />);
@@ -143,7 +143,7 @@ describe('Pricing Page', () => {
   it('renders credit packs from settings', async () => {
     mockApiGet.mockReset();
     mockApiGet.mockResolvedValueOnce({
-      'pricing.monthly.price': '499',
+      'feature.pricing_page_enabled': 'true', 'pricing.monthly.price': '499',
       'pricing.annual.price': '4999',
       'pricing.credits.starter.credits': '50',
       'pricing.credits.starter.price': '99',

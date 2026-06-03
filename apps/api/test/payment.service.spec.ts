@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import { PaymentService } from '../src/modules/payment/payment.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 
 const TEST_WEBHOOK_SECRET = 'test-webhook-secret';
 function razorpaySig(secret: string, orderId: string, paymentId: string): string {
@@ -35,6 +36,8 @@ describe('PaymentService', () => {
         findMany: jest.fn().mockResolvedValue([]),
         findUnique: jest.fn(),
         findFirst: jest.fn(),
+        // Used by the social-proof counter in getPricingConfig.
+        count: jest.fn().mockResolvedValue(0),
       },
       subscription: {
         create: jest.fn(),
@@ -60,10 +63,18 @@ describe('PaymentService', () => {
       findById: jest.fn().mockResolvedValue(mockUser),
     };
 
+    const featureAccess = {
+      grantEntitlement: jest.fn().mockResolvedValue(true),
+      resolveUnlock: jest.fn(),
+      consumeEntitlement: jest.fn(),
+      isActiveSubscriber: jest.fn().mockResolvedValue(false),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: prisma },
+        { provide: FeatureAccessService, useValue: featureAccess },
         {
           provide: ConfigService,
           useValue: {

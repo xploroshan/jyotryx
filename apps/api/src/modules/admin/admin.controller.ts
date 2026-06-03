@@ -197,7 +197,7 @@ export class AdminController {
     @Body() dto: Record<string, string>,
     @Request() req: any,
   ): Promise<Record<string, string>> {
-    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.', 'paywall.'];
+    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.', 'paywall.', 'social.'];
     const invalidKeys = Object.keys(dto).filter(
       (key) => !ALLOWED_PREFIXES.some((prefix) => key.startsWith(prefix)),
     );

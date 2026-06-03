@@ -4,6 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { UserService } from '../src/modules/user/user.service';
 import { PaymentService } from '../src/modules/payment/payment.service';
 import { ChatService } from '../src/modules/chat/chat.service';
@@ -240,6 +242,7 @@ describe('Security: Input Validation', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },

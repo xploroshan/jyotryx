@@ -77,6 +77,10 @@ export default function PricingPage() {
 
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [creditPacks, setCreditPacks] = useState<CreditPack[] | null>(null);
+  // null = still loading the flag; true/false once known. When the operator
+  // has disabled the pricing page (Mode A "Free launch") we render a simple
+  // "everything is free" panel instead of plans + credit packs.
+  const [pricingEnabled, setPricingEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +91,7 @@ export default function PricingPage() {
     api.get<Record<string, string>>("/payments/pricing")
       .then((settings) => {
         if (cancelled) return;
+        setPricingEnabled(settings["feature.pricing_page_enabled"] === "true");
         setPlans(buildPlans(settings));
         setCreditPacks(buildCreditPacks(settings));
       })
@@ -147,6 +152,35 @@ export default function PricingPage() {
           ],
         }
       : null;
+
+  // Mode A: pricing/subscriptions disabled by the operator. The app is free
+  // except the pay-per-use features (handled on their own pages), so we
+  // don't show plans or credit packs here.
+  if (pricingEnabled === false) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-24 text-center fade-in-up">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-6">
+          ✨ 100% Free
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-surface-950 mb-4 tracking-tight">
+          Everything is <span className="text-gradient">free</span> right now
+        </h1>
+        <p className="text-sm text-[rgba(12,8,5,0.55)] max-w-md mx-auto mb-8">
+          Explore your kundli, matching, panchang, horoscope, daily guidance and more — no
+          subscription needed. Detailed reports and palm readings are available as one-time
+          unlocks whenever you want them.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button onClick={() => router.push("/chat")} className="btn-primary px-6 py-2.5 rounded-xl text-sm text-white font-medium">
+            Chat with an astrologer
+          </button>
+          <button onClick={() => router.push("/reports")} className="btn-secondary px-6 py-2.5 rounded-xl text-sm font-medium">
+            Get a report
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 fade-in-up">

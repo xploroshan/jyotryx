@@ -16,6 +16,7 @@ import {
 } from "@/lib/traditions";
 import { TraditionGlyph } from "@/components/icons";
 import { api } from "@/lib/api";
+import { usePricingConfig } from "@/lib/usePricingConfig";
 
 /**
  * v2 navbar. Single 56px fixed bar that replaces the previous trio of
@@ -28,6 +29,7 @@ export default function NavbarV2() {
   const router = useRouter();
   const { user, isAuthenticated, logout, updatePrimaryTradition, activeTradition, setActiveTradition } = useAuthStore();
   const { t } = useTranslation();
+  const { pricingEnabled } = usePricingConfig();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tradOpen, setTradOpen] = useState(false);
@@ -225,12 +227,14 @@ export default function NavbarV2() {
               </Link>
             )}
 
-            <Link
-              href="/pricing"
-              className={`${navLink} ${pathname.startsWith("/pricing") ? navLinkActive : navLinkInactive}`}
-            >
-              {t.common.pricing}
-            </Link>
+            {pricingEnabled && (
+              <Link
+                href="/pricing"
+                className={`${navLink} ${pathname.startsWith("/pricing") ? navLinkActive : navLinkInactive}`}
+              >
+                {t.common.pricing}
+              </Link>
+            )}
 
             {showAuth && user?.role === "ADMIN" && (
               <Link
@@ -363,13 +367,15 @@ export default function NavbarV2() {
                 >
                   {t.common.reports}
                 </Link>
-                <Link
-                  href="/pricing"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center px-3 h-10 rounded-md text-[14px] text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
-                >
-                  {t.common.pricing}
-                </Link>
+                {pricingEnabled && (
+                  <Link
+                    href="/pricing"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center px-3 h-10 rounded-md text-[14px] text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+                  >
+                    {t.common.pricing}
+                  </Link>
+                )}
                 <Link
                   href="/profile"
                   onClick={() => setMobileOpen(false)}

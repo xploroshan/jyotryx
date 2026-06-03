@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReportProcessor } from '../src/queue/report.processor';
 import { PalmistryProcessor } from '../src/queue/palmistry.processor';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { LlmService } from '../src/llm/llm.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
@@ -41,6 +43,7 @@ describe('ReportProcessor (Item 2 — BullMQ)', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
     }).compile();
 
@@ -157,6 +160,7 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: StorageService, useValue: storageService },
       ],
     }).compile();

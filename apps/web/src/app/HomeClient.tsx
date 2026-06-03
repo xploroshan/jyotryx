@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+import { usePricingConfig } from "@/lib/usePricingConfig";
 import { Stagger } from "@/components/ui/PageTransition";
 import HeroSun from "@/components/home/HeroSun";
 import TraditionMarquee from "@/components/home/TraditionMarquee";
@@ -67,6 +68,9 @@ export default function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { t } = useTranslation();
   const reduce = useReducedMotion();
+  // In Mode A (subscriptions off) the whole app is free — surface a "Free"
+  // badge in the hero. Hidden once subscriptions are enabled.
+  const { subscriptionsEnabled } = usePricingConfig();
 
   const stats = [
     { label: t.home.available, value: "24/7" },
@@ -111,6 +115,11 @@ export default function HomePage() {
             <div className="col-span-12 lg:col-span-7 order-1">
               <p className="font-display italic text-[15px] sm:text-base text-primary-600 mb-6 sm:mb-8 tracking-wide">
                 — {t.home.badge}
+                {!subscriptionsEnabled && (
+                  <span className="not-italic ml-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2.5 py-0.5 align-middle text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                    ✨ 100% Free
+                  </span>
+                )}
               </p>
 
               <h1

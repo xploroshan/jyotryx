@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import PalmDiagram from "@/components/palmistry/PalmDiagram";
 import CameraCapture from "@/components/palmistry/CameraCapture";
 import { useTranslation } from "@/i18n";
+import { usePricingConfig } from "@/lib/usePricingConfig";
 import { Toast } from "@/components/ui/Toast";
 import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { Sparkles, Compass, Heart, Flag } from "lucide-react";
@@ -408,8 +410,14 @@ function buildReportHtml(analysis: AnalysisResult, t: any): string {
 </html>`;
 }
 
+const PALM_PENDING_IMAGE = "palm_pending_image";
+const PALM_PENDING_GENDER = "palm_pending_gender";
+
 export default function PalmistryPage() {
   const { t, locale } = useTranslation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pricing = usePricingConfig();
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -510,8 +518,9 @@ export default function PalmistryPage() {
     throw new Error(t.palmistry.analysisTimeout);
   };
 
-  const handleAnalyze = async () => {
-    if (!imageFile) {
+  const handleAnalyze = async (fileArg?: File) => {
+    const file = fileArg ?? imageFile;
+    if (!file) {
       setError(t.palmistry.uploadFirst);
       setErrorRetryable(false);
       return;
@@ -530,7 +539,7 @@ export default function PalmistryPage() {
       }
       const { api } = await import("@/lib/api");
       const formData = new FormData();
-      formData.append("image", imageFile);
+      formData.append("image", file);
       if (locale !== "en") formData.append("locale", locale);
       if (gender) formData.append("gender", gender);
 
@@ -553,6 +562,18 @@ export default function PalmistryPage() {
         setError(t.palmistry.noResultsError);
       }
     } catch (err: any) {
+      // 402 → palm reading not paid for. Stash the chosen image so we can
+      // resume after checkout, then redirect to the one-time purchase.
+      if (err?.status === 402) {
+        try {
+          if (image) sessionStorage.setItem(PALM_PENDING_IMAGE, image);
+          sessionStorage.setItem(PALM_PENDING_GENDER, gender ?? "");
+        } catch {
+          /* sessionStorage may be unavailable; checkout still works, user re-uploads */
+        }
+        router.push("/checkout?type=palmistry");
+        return;
+      }
       setError(err.message || t.palmistry.analysisFailed);
       setErrorRetryable(
         Boolean(err?.isNetwork || err?.isTimeout) || (err?.status ?? 0) >= 500 || !err?.status,
@@ -562,6 +583,42 @@ export default function PalmistryPage() {
       setProgressMessage("");
     }
   };
+
+  // Returning from a successful palmistry checkout (?unlocked=1): restore
+  // the stashed image and auto-run the analysis once.
+  useEffect(() => {
+    if (searchParams.get("unlocked") !== "1") return;
+    let cancelled = false;
+    (async () => {
+      let dataUrl: string | null = null;
+      let savedGender = "";
+      try {
+        dataUrl = sessionStorage.getItem(PALM_PENDING_IMAGE);
+        savedGender = sessionStorage.getItem(PALM_PENDING_GENDER) ?? "";
+        sessionStorage.removeItem(PALM_PENDING_IMAGE);
+        sessionStorage.removeItem(PALM_PENDING_GENDER);
+      } catch {
+        /* ignore */
+      }
+      router.replace("/palmistry");
+      if (!dataUrl) return;
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], "palm.jpg", { type: blob.type || "image/jpeg" });
+        if (cancelled) return;
+        setImage(dataUrl);
+        setImageFile(file);
+        if (savedGender === "male" || savedGender === "female") setGender(savedGender);
+        handleAnalyze(file);
+      } catch {
+        /* user can re-upload */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDownload = () => {
     if (!analysis) return;
@@ -802,7 +859,7 @@ export default function PalmistryPage() {
 
             {image && !analysis && (
               <button
-                onClick={handleAnalyze}
+                onClick={() => handleAnalyze()}
                 disabled={analyzing}
                 className="focus-ring w-full py-4 rounded-xl btn-primary text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -814,8 +871,10 @@ export default function PalmistryPage() {
                     </svg>
                     {progressMessage || t.palmistry.analyzing}
                   </span>
-                ) : (
+                ) : pricing.subscriptionsEnabled ? (
                   t.palmistry.analyzePalm
+                ) : (
+                  `${t.palmistry.analyzePalm} · ₹${pricing.palmistryPrice}`
                 )}
               </button>
             )}

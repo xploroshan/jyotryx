@@ -75,6 +75,16 @@ enum PaymentType {
   REPORT
 }
 
+enum EntitlementType {
+  REPORT_LIFE
+  REPORT_CAREER
+  REPORT_MARRIAGE
+  REPORT_WEALTH
+  REPORT_ANNUAL
+  REPORT_PALM
+  PALMISTRY
+}
+
 enum ReportType {
   LIFE
   CAREER
@@ -204,6 +214,7 @@ model User {
   reports            Report[]
   creditTransactions CreditTransaction[]
   tarotReadings      TarotReading[]
+  entitlements       Entitlement[]
 
   // Relations removed for partitioned tables (FK constraints dropped):
   // notifications, llmUsage — see 20260413_partition_tables migration
@@ -325,6 +336,11 @@ model ChatSession {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
   category  String
+  /// Optional persona the user picked on the "Chat with Astrologer"
+  /// surface. Maps to a named astrologer config on the web; the API uses
+  /// it to select a first-person human persona system prompt. Null for
+  /// legacy/topic-only sessions.
+  astrologerId String?
   title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -418,13 +434,35 @@ model Payment {
   metadata          Json?
   createdAt         DateTime      @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entitlement Entitlement?
 
   @@index([userId])
   @@index([status])
   @@index([razorpayOrderId])
   @@index([razorpayPaymentId])
   @@map("payments")
+}
+
+/// One-time pay-to-unlock grant for a paid feature (Reports, Palmistry).
+/// A single SUCCESS payment grants exactly one Entitlement (paymentId is
+/// unique → idempotent across the verify + webhook race). `consumedAt`
+/// null means unused; it is set atomically when the user redeems the
+/// unlock for one generation. Re-generation requires a fresh purchase.
+model Entitlement {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @db.Uuid
+  type        EntitlementType
+  paymentId   String          @unique @db.Uuid
+  consumedAt  DateTime?
+  consumedRef String?         @db.Uuid
+  createdAt   DateTime        @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, consumedAt])
+  @@map("entitlements")
 }
 
 model Report {

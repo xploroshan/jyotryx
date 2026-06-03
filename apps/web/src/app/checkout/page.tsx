@@ -8,23 +8,38 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 
 /**
- * One-time credit-pack checkout.
+ * One-time Razorpay checkout for credit packs AND pay-to-unlock products
+ * (reports, palmistry).
  *
  * Flow (Razorpay "Orders" + client Checkout):
- *   1. Read `?type=credits&pack=<id>` (the /pricing "Buy Now" buttons
- *      link here).
- *   2. Fetch the authoritative price + credit count from /payments/pricing
- *      (the same SiteSettings the pricing page renders).
+ *   1. Read `?type=<credits|report|palmistry>&pack=<id>`.
+ *        • credits   → pack = credit pack id (starter/popular/pro)
+ *        • report    → pack = report type (LIFE/CAREER/MARRIAGE/…)
+ *        • palmistry → pack ignored
+ *   2. Fetch the authoritative price from /payments/pricing (the same
+ *      SiteSettings the pricing page renders).
  *   3. POST /payments/create-order → Razorpay order_id.
  *   4. Open the Razorpay Checkout modal with that order.
  *   5. On success, POST /payments/verify (server checks the HMAC signature
- *      and grants credits exactly once) and reflect the new balance.
+ *      and grants credits OR a one-time entitlement exactly once).
+ *   6. credits → reflect new balance and go to /chat. report/palmistry →
+ *      bounce back to the feature page with `?unlocked=…` so it generates
+ *      immediately.
  *
  * Subscriptions are NOT handled here — those use Razorpay's hosted page
  * via a server-returned shortUrl from /pricing.
  */
 
 const RAZORPAY_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
+
+const REPORT_TITLES: Record<string, string> = {
+  LIFE: "Detailed Life Report",
+  CAREER: "Career & Finance Report",
+  MARRIAGE: "Marriage & Compatibility Report",
+  WEALTH: "Wealth & Money Report",
+  ANNUAL: "Annual Forecast Report",
+  PALM: "Palmistry Report",
+};
 
 interface RazorpayHandlerResponse {
   razorpay_order_id: string;
@@ -89,6 +104,20 @@ interface RazorpayOrder {
 interface VerifyResult {
   verified: boolean;
   creditsAdded?: number;
+  entitlementGranted?: boolean;
+}
+
+/** What the checkout is selling, derived from the query string. */
+interface ResolvedProduct {
+  kind: "credits" | "report" | "palmistry";
+  productId: string;
+  /** SiteSettings key holding the INR price. */
+  priceKey: string;
+  /** SiteSettings key holding the credit count (credits only). */
+  creditsKey?: string;
+  title: string;
+  /** Where to send the user after a successful purchase. */
+  successRedirect: string;
 }
 
 function CheckoutInner() {
@@ -101,12 +130,45 @@ function CheckoutInner() {
   const type = params.get("type") ?? "credits";
   const pack = params.get("pack") ?? "";
 
+  const product: ResolvedProduct | null = useMemo(() => {
+    if (type === "report") {
+      const rt = (pack || "LIFE").toUpperCase();
+      return {
+        kind: "report",
+        productId: `report_${rt.toLowerCase()}`,
+        priceKey: "pricing.report.price",
+        title: REPORT_TITLES[rt] ?? "Astrology Report",
+        successRedirect: `/reports?unlocked=${rt}`,
+      };
+    }
+    if (type === "palmistry") {
+      return {
+        kind: "palmistry",
+        productId: "palm_reading",
+        priceKey: "pricing.palmistry.price",
+        title: "Palm Reading",
+        successRedirect: "/palmistry?unlocked=1",
+      };
+    }
+    if (type === "credits" && pack) {
+      return {
+        kind: "credits",
+        productId: `credits_${pack}`,
+        priceKey: `pricing.credits.${pack}.price`,
+        creditsKey: `pricing.credits.${pack}.credits`,
+        title: `${t.pricing.creditPacksTitle}`,
+        successRedirect: "/chat",
+      };
+    }
+    return null;
+  }, [type, pack, t]);
+
   const [price, setPrice] = useState<number | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [loadingPack, setLoadingPack] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [addedCredits, setAddedCredits] = useState<number | null>(null);
+  const [success, setSuccess] = useState<{ credits: number | null } | null>(null);
 
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
@@ -130,9 +192,10 @@ function CheckoutInner() {
     }
   }, [hydrated, isAuthenticated, router, type, pack]);
 
-  // Resolve the pack's price + credit count from the public pricing config.
+  // Resolve the product's price (+ credit count for packs) from the public
+  // pricing config.
   useEffect(() => {
-    if (type !== "credits" || !pack) {
+    if (!product) {
       setLoadingPack(false);
       return;
     }
@@ -142,10 +205,14 @@ function CheckoutInner() {
       .get<Record<string, string>>("/payments/pricing")
       .then((settings) => {
         if (cancelled) return;
-        const p = parseInt(settings[`pricing.credits.${pack}.price`] || "", 10);
-        const c = parseInt(settings[`pricing.credits.${pack}.credits`] || "", 10);
+        const p = parseInt(settings[product.priceKey] || "", 10);
         setPrice(Number.isFinite(p) && p > 0 ? p : null);
-        setCredits(Number.isFinite(c) && c > 0 ? c : null);
+        if (product.creditsKey) {
+          const c = parseInt(settings[product.creditsKey] || "", 10);
+          setCredits(Number.isFinite(c) && c > 0 ? c : null);
+        } else {
+          setCredits(null);
+        }
       })
       .catch(() => {
         if (!cancelled) {
@@ -159,10 +226,11 @@ function CheckoutInner() {
     return () => {
       cancelled = true;
     };
-  }, [type, pack]);
+  }, [product]);
 
   const startPayment = async () => {
-    if (price === null || credits === null) return;
+    if (!product || price === null) return;
+    if (product.kind === "credits" && credits === null) return;
     setError("");
 
     if (!keyId) {
@@ -184,8 +252,8 @@ function CheckoutInner() {
         {
           amount: price * 100, // paise
           currency: "INR",
-          productId: `credits_${pack}`,
-          description: `${credits} ${t.pricing.credits}`,
+          productId: product.productId,
+          description: product.title,
         },
         { token: accessToken! },
       );
@@ -196,7 +264,7 @@ function CheckoutInner() {
         currency: order.currency,
         order_id: order.id,
         name: "myastro360",
-        description: `${credits} ${t.pricing.credits}`,
+        description: product.title,
         prefill: {
           name: user?.name ?? undefined,
           email: user?.email ?? undefined,
@@ -215,10 +283,14 @@ function CheckoutInner() {
               { token: accessToken! },
             );
             if (result.verified) {
-              const added = result.creditsAdded ?? credits;
-              if (user) updateCredits(user.credits + added);
-              setAddedCredits(added);
-              setTimeout(() => router.push("/chat"), 1800);
+              if (product.kind === "credits") {
+                const added = result.creditsAdded ?? credits ?? 0;
+                if (user) updateCredits(user.credits + added);
+                setSuccess({ credits: added });
+              } else {
+                setSuccess({ credits: null });
+              }
+              setTimeout(() => router.push(product.successRedirect), 1600);
             } else {
               setError(t.common.error);
             }
@@ -254,25 +326,28 @@ function CheckoutInner() {
   }
 
   const invalidPack =
-    !loadingPack && (type !== "credits" || !pack || price === null || credits === null);
+    !loadingPack &&
+    (!product || price === null || (product.kind === "credits" && credits === null));
+
+  const backHref = product?.kind === "report" ? "/reports" : product?.kind === "palmistry" ? "/palmistry" : "/pricing";
 
   return (
     <div className="mx-auto max-w-md px-4 py-16 fade-in-up">
       <Link
-        href="/pricing"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-xs text-[rgba(12,8,5,0.55)] hover:text-surface-950 mb-6"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        {t.common.pricing}
+        {t.common.back}
       </Link>
 
       <h1 className="text-2xl font-bold text-surface-950 mb-6 tracking-tight">
-        {t.pricing.creditPacksTitle}
+        {product?.kind === "credits" ? t.pricing.creditPacksTitle : product?.title}
       </h1>
 
-      {addedCredits !== null ? (
+      {success !== null ? (
         <div className="surface-card p-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
             <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -280,7 +355,9 @@ function CheckoutInner() {
             </svg>
           </div>
           <div className="text-2xl font-bold text-surface-950">
-            +{addedCredits} {t.pricing.credits}
+            {success.credits !== null
+              ? `+${success.credits} ${t.pricing.credits}`
+              : "Unlocked!"}
           </div>
           <p className="mt-2 text-xs text-[rgba(12,8,5,0.46)]">{t.common.loading}</p>
         </div>
@@ -293,7 +370,7 @@ function CheckoutInner() {
       ) : invalidPack ? (
         <div className="surface-card p-6 text-center">
           <p className="text-sm text-[rgba(12,8,5,0.55)] mb-4">{t.common.error}</p>
-          <button onClick={() => router.push("/pricing")} className="btn-secondary px-4 py-2 rounded-lg text-sm">
+          <button onClick={() => router.push(backHref)} className="btn-secondary px-4 py-2 rounded-lg text-sm">
             {t.common.back}
           </button>
         </div>
@@ -301,7 +378,9 @@ function CheckoutInner() {
         <div className="surface-card p-6">
           <div className="flex items-baseline justify-between border-b border-[rgba(12,8,5,0.08)] pb-4 mb-4">
             <span className="text-sm font-medium text-surface-950">
-              {credits} {t.pricing.credits}
+              {product?.kind === "credits"
+                ? `${credits} ${t.pricing.credits}`
+                : product?.title}
             </span>
             <span className="text-2xl font-bold text-surface-950">{fmt(price!)}</span>
           </div>

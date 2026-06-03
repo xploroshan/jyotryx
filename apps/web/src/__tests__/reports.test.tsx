@@ -10,8 +10,10 @@ import React from 'react';
 
 // ─── Mock next/navigation ───────────────────────────────────────────────────
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 // ─── Mock store state ───────────────────────────────────────────────────────
@@ -77,6 +79,14 @@ describe('Reports Page', () => {
     vi.clearAllMocks();
     mockStoreState.isAuthenticated = true;
     mockStoreState.accessToken = 'valid-token';
+    // URL-aware default so usePricingConfig's extra /payments/pricing
+    // fetch never starves the /reports list call. Per-test
+    // mockResolvedValueOnce still wins for the very first call.
+    mockApiGet.mockImplementation((url: string) => {
+      if (url === '/payments/pricing') return Promise.resolve({});
+      if (url === '/reports') return Promise.resolve(mockReportsList);
+      return Promise.resolve(mockFullReport);
+    });
   });
 
   it('should redirect to /auth when not authenticated', () => {

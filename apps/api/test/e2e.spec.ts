@@ -8,6 +8,8 @@ import { UserService } from '../src/modules/user/user.service';
 import { PaymentService } from '../src/modules/payment/payment.service';
 import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
@@ -51,6 +53,7 @@ describe('E2E: Auth → Chat Flow', () => {
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -193,6 +196,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -253,6 +257,7 @@ describe('E2E: Chat Session Lifecycle', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -401,6 +406,7 @@ describe('E2E: Payment Flow', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
     }).compile();
 
@@ -508,6 +514,7 @@ describe('E2E: Report Flow', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -553,7 +560,8 @@ describe('E2E: Report Flow', () => {
     expect(generateResult.id).toBe('report-1');
     expect(generateResult.type).toBe('LIFE');
     expect(generateResult.sections.length).toBeGreaterThan(0);
-    expect(generateResult.creditsCharged).toBe(5);
+    // Reports are pay-to-unlock now, not credit-charged.
+    expect(generateResult.creditsCharged).toBe(0);
 
     // Now retrieve — should use cached sections, not regenerate
     prisma.report.findFirst.mockResolvedValue({
@@ -594,9 +602,11 @@ describe('E2E: Report Flow', () => {
     }
   });
 
-  it('should fail report generation with insufficient credits', async () => {
+  it('should fail report generation when no unlock is available', async () => {
+    const { PaymentRequiredException } = await import('../src/common/exceptions/payment-required.exception');
     const userService = mockUserService();
-    userService.deductCredits.mockResolvedValue(false);
+    const featureAccess = mockFeatureAccessService();
+    featureAccess.resolveUnlock.mockRejectedValue(new PaymentRequiredException());
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -604,6 +614,7 @@ describe('E2E: Report Flow', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: featureAccess },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -616,7 +627,7 @@ describe('E2E: Report Flow', () => {
 
     await expect(
       svc.generateReport('test-uuid', { type: 'LIFE' }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(PaymentRequiredException);
   });
 
   it('should reject report access for wrong user', async () => {
@@ -748,6 +759,7 @@ describe('E2E: Webhook Processing', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
     }).compile();
 
@@ -1006,6 +1018,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userServiceMock },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -1063,6 +1076,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userServiceMock },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: openaiMock },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: knowledgeMock },
