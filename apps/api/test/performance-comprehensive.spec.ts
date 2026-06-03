@@ -13,6 +13,8 @@ import { KbService } from '../src/knowledge/kb.service';
 import { VectorSearchService } from '../src/knowledge/vector-search.service';
 import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
@@ -202,6 +204,7 @@ describe('Performance: Chat Operations', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -310,6 +313,7 @@ describe('Performance: Report Operations', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },

@@ -4,6 +4,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import {
+  FeatureAccessService,
+  UnlockMode,
+} from '../../common/feature-access/feature-access.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
@@ -97,6 +101,7 @@ export class PalmistryService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private featureAccess: FeatureAccessService,
     private openaiService: OpenAIService,
     private knowledgeService: KnowledgeService,
     private storageService: StorageService,
@@ -114,10 +119,12 @@ export class PalmistryService {
   ): Promise<PalmistryAnalysis> {
     this.logger.log(`Analyzing palm for user: ${userId}`);
 
-    const creditCost = this.configService.get<number>('credits.palmistryCost', 3);
-    return this.userService.deductWithRefund(userId, creditCost, 'Palmistry reading', () =>
-      this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, creditCost),
-    );
+    // Palmistry is pay-to-unlock: subscribers (Mode B) get it free, else
+    // the user must hold an unused one-time PALMISTRY entitlement.
+    // resolveUnlock throws 402 when neither path applies; the unlock is
+    // consumed inside runPalmistryAnalysis once the reading row exists.
+    const mode = await this.featureAccess.resolveUnlock(userId, 'PALMISTRY');
+    return this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, mode);
   }
 
   private async runPalmistryAnalysis(
@@ -126,7 +133,7 @@ export class PalmistryService {
     imageMimeType: string | undefined,
     locale: string | undefined,
     gender: string | undefined,
-    creditCost: number,
+    mode: UnlockMode,
   ): Promise<PalmistryAnalysis> {
     // Upload image to R2 first (needed by both sync and async paths)
     let imageKey: string | null = null;
@@ -157,10 +164,16 @@ export class PalmistryService {
           },
         });
 
+        // Spend the one-time unlock now that the reading row exists (no-op
+        // for subscribers). The processor restores it if analysis fails.
+        if (mode === 'entitlement') {
+          await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', reading.id);
+        }
+
         await this.palmistryQueue!.add('analyze', {
           readingId: reading.id,
           userId,
-          creditCost,
+          creditCost: 0,
           imageKey: imageKey ?? undefined,
           imageMimeType,
           locale,
@@ -274,6 +287,9 @@ export class PalmistryService {
       });
       readingId = reading.id;
       createdAt = reading.createdAt.toISOString();
+      if (mode === 'entitlement') {
+        await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', reading.id);
+      }
     } catch (err) {
       this.logger.error(
         `Palmistry DB write failed, returning analysis without persistence: ${(err as Error)?.message}`,

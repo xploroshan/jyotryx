@@ -34,9 +34,16 @@ vi.mock('@/lib/store', () => ({
 // ─── Mock API (dynamic import pattern) ────────────────────────────────────
 const mockApiUpload = vi.fn();
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => ({ get: () => null }),
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
-    get: vi.fn(),
+    // usePricingConfig fetches /payments/pricing — return an empty config
+    // so it resolves to defaults instead of throwing on undefined.
+    get: vi.fn(() => Promise.resolve({})),
     post: vi.fn(),
     put: vi.fn(),
     delete: vi.fn(),
@@ -100,7 +107,7 @@ describe('Palmistry Page: Rendering', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     // Click analyze button
-    const analyzeButton = await screen.findByText('Analyze Palm');
+    const analyzeButton = await screen.findByText(/Analyze Palm/);
     fireEvent.click(analyzeButton);
 
     expect(await screen.findByText('Please log in to analyze your palm.')).toBeDefined();
@@ -117,7 +124,7 @@ describe('Palmistry Page: Rendering', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     // Click analyze button
-    const analyzeButton = await screen.findByText('Analyze Palm');
+    const analyzeButton = await screen.findByText(/Analyze Palm/);
     fireEvent.click(analyzeButton);
 
     // Check results heading
@@ -146,7 +153,7 @@ describe('Palmistry Page: Rendering', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     // Click analyze button
-    const analyzeButton = await screen.findByText('Analyze Palm');
+    const analyzeButton = await screen.findByText(/Analyze Palm/);
     fireEvent.click(analyzeButton);
 
     // Wait for results and check PalmDiagram

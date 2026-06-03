@@ -24,4 +24,13 @@ export class SendMessageDto {
   @IsOptional()
   @IsString()
   locale?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Selected astrologer persona id from the "Chat with Astrologer" surface. Determines the named persona and specialty.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  astrologerId?: string;
 }

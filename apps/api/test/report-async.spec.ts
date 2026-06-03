@@ -7,14 +7,24 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../src/common/exceptions/payment-required.exception';
 import { REPORT_QUEUE } from '../src/queue/queue.module';
 import { mockOpenAIService, mockKnowledgeService, mockKbService, mockUserService, mockUser } from './helpers/mocks';
+
+// Pay-to-unlock gate. Default: a one-time entitlement is available.
+const mockFeatureAccess = () => ({
+  resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
+  consumeEntitlement: jest.fn().mockResolvedValue(undefined),
+  isActiveSubscriber: jest.fn().mockResolvedValue(false),
+});
 
 describe('ReportService — Async Queue Path (Item 2)', () => {
   let service: ReportService;
   let prisma: any;
   let reportQueue: any;
   let userService: any;
+  let featureAccess: any;
 
   beforeEach(async () => {
     prisma = {
@@ -32,6 +42,7 @@ describe('ReportService — Async Queue Path (Item 2)', () => {
     };
 
     userService = mockUserService();
+    featureAccess = mockFeatureAccess();
 
     const openaiService = mockOpenAIService();
     openaiService.chatCompletion.mockResolvedValue({
@@ -55,6 +66,7 @@ describe('ReportService — Async Queue Path (Item 2)', () => {
           },
         },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: featureAccess },
         { provide: OpenAIService, useValue: openaiService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
@@ -75,7 +87,7 @@ describe('ReportService — Async Queue Path (Item 2)', () => {
         reportId: 'report-1',
         userId: 'test-uuid',
         type: 'LIFE',
-        creditCost: 5,
+        creditCost: 0,
       }));
     });
 
@@ -89,19 +101,19 @@ describe('ReportService — Async Queue Path (Item 2)', () => {
       );
     });
 
-    it('should deduct credits and enqueue job', async () => {
+    it('should consume the entitlement and enqueue job', async () => {
       await service.generateReport('test-uuid', { type: 'LIFE' });
 
-      expect(userService.deductCredits).toHaveBeenCalled();
+      expect(featureAccess.consumeEntitlement).toHaveBeenCalledWith('test-uuid', 'REPORT_LIFE', 'report-1');
       expect(reportQueue.add).toHaveBeenCalled();
     });
 
-    it('should reject when credits are insufficient', async () => {
-      userService.deductCredits.mockResolvedValue(false);
+    it('should reject when no unlock is available', async () => {
+      featureAccess.resolveUnlock.mockRejectedValue(new PaymentRequiredException());
 
       await expect(
         service.generateReport('test-uuid', { type: 'LIFE' }),
-      ).rejects.toThrow('Insufficient credits');
+      ).rejects.toThrow(PaymentRequiredException);
     });
   });
 
@@ -178,6 +190,7 @@ describe('ReportService — Sync Fallback', () => {
           },
         },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccess() },
         { provide: OpenAIService, useValue: openaiService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },

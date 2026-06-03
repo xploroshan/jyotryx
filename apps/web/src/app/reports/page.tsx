@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
+import { usePricingConfig } from "@/lib/usePricingConfig";
 import { useTranslation } from "@/i18n";
 import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import { Star, Briefcase, Heart, Coins, Hand, CalendarDays, FileText, X, Download, Eye } from "lucide-react";
@@ -28,9 +29,11 @@ interface Report {
 
 export default function ReportsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, locale } = useTranslation();
   const { isAuthenticated, accessToken } = useAuthStore();
   const isHydrated = useAuthHydrated();
+  const pricing = usePricingConfig();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
@@ -82,11 +85,31 @@ export default function ReportsPage() {
       setReports((prev) => [res, ...prev]);
       setActiveView("history");
     } catch (err: any) {
+      // 402 → the user hasn't paid for this report yet. Send them to
+      // checkout; on success they return with ?unlocked=<type> and we
+      // auto-generate.
+      if (err?.status === 402) {
+        router.push(`/checkout?type=report&pack=${type}`);
+        return;
+      }
       setError(err.message || t.reports.reportFailed);
     } finally {
       setGenerating(null);
     }
   };
+
+  // Returning from a successful checkout (?unlocked=<TYPE>): generate the
+  // just-purchased report once, then strip the query param so a refresh
+  // doesn't re-trigger it.
+  useEffect(() => {
+    if (!isHydrated || !isAuthenticated) return;
+    const unlocked = searchParams.get("unlocked");
+    if (!unlocked) return;
+    const type = unlocked.toUpperCase();
+    router.replace("/reports");
+    handleGenerate(type);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, isAuthenticated]);
 
   // Open the in-app reader. The list endpoint omits `sections` (and the
   // legacy `pdfUrl` is actually a JSON blob, not a file), so we fetch the
@@ -152,6 +175,15 @@ export default function ReportsPage() {
           <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
             {t.reports.subtitle}
           </p>
+          {pricing.reportsDelivered !== null && (
+            <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary-700">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              {pricing.reportsDelivered.toLocaleString("en-IN")} personalized reports delivered
+            </p>
+          )}
         </div>
 
         {/* Tabs */}
@@ -182,7 +214,11 @@ export default function ReportsPage() {
                     disabled={generating === rt.id}
                     className="px-4 py-2 rounded-xl btn-primary text-sm text-white font-medium  transition-all disabled:opacity-50"
                   >
-                    {generating === rt.id ? t.reports.generating : t.reports.generate}
+                    {generating === rt.id
+                      ? t.reports.generating
+                      : pricing.subscriptionsEnabled
+                        ? t.reports.generate
+                        : `${t.reports.generate} · ₹${pricing.reportPrice}`}
                   </button>
                 </div>
               </div>

@@ -353,6 +353,20 @@ export const mockUserService = () => {
   };
 };
 
+/**
+ * Mock the monetization gate. Defaults: subscriptions disabled (Mode A),
+ * a one-time entitlement available so report/palmistry generation proceeds,
+ * and non-subscriber so chat still deducts credits. Tests override as needed.
+ */
+export const mockFeatureAccessService = () => ({
+  subscriptionsEnabled: jest.fn().mockResolvedValue(false),
+  isActiveSubscriber: jest.fn().mockResolvedValue(false),
+  resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
+  consumeEntitlement: jest.fn().mockResolvedValue(undefined),
+  refundEntitlementByRef: jest.fn().mockResolvedValue(0),
+  grantEntitlement: jest.fn().mockResolvedValue(true),
+});
+
 export const mockConfigService = (overrides: Record<string, any> = {}) => ({
   get: jest.fn((key: string, defaultValue?: any) => {
     const config: Record<string, any> = {

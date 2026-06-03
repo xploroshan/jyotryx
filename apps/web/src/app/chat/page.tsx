@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
+import { ASTROLOGERS, getAstrologer } from "@/lib/astrologers";
 
 interface Message {
   role: "user" | "assistant";
@@ -29,6 +31,10 @@ export default function ChatPage() {
 
   const suggestedQuestions = [t.chat.q1, t.chat.q2, t.chat.q3, t.chat.q4];
   const [selectedCategory, setSelectedCategory] = useState("career");
+  // The chosen astrologer persona drives the consultation. Until one is
+  // picked we show the roster; selecting one starts a fresh session.
+  const [astrologerId, setAstrologerId] = useState<string | null>(null);
+  const astrologer = getAstrologer(astrologerId);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: t.chat.welcomeMsg },
   ]);
@@ -38,6 +44,29 @@ export default function ChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Begin a consultation with the chosen astrologer: reset the thread and
+  // seed a personalized greeting in their voice.
+  const startConsultation = (id: string) => {
+    const a = getAstrologer(id);
+    if (!a) return;
+    setAstrologerId(id);
+    setSelectedCategory(a.category);
+    setSessionId(null);
+    setError("");
+    setMessages([
+      {
+        role: "assistant",
+        content: `Namaste 🙏 I'm ${a.name}. I've spent ${a.experienceYears} years guiding people on ${a.specialty.toLowerCase()}. Share what's on your mind, and I'll look into it for you.`,
+      },
+    ]);
+  };
+
+  const leaveConsultation = () => {
+    setAstrologerId(null);
+    setSessionId(null);
+    setMessages([{ role: "assistant", content: t.chat.welcomeMsg }]);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,6 +85,7 @@ export default function ChatPage() {
     try {
       const res = await api.post<any>("/chat/message", {
         sessionId, message: input, category: selectedCategory, locale,
+        ...(astrologerId ? { astrologerId } : {}),
       }, { token: accessToken! });
       setSessionId(res.session.id);
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply.content }]);
@@ -78,6 +108,71 @@ export default function ChatPage() {
       setIsTyping(false);
     }
   };
+
+  // ── Astrologer picker ──────────────────────────────────────────────
+  // Shown until the user selects who they want to consult. This is the
+  // "Chat with Astrologer" entry point.
+  if (!astrologer) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:py-14 fade-in">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-surface-950 tracking-tight mb-2">
+            Talk to an Astrologer
+          </h1>
+          <p className="text-sm text-[rgba(12,8,5,0.5)] max-w-md mx-auto">
+            Choose an astrologer to start a private consultation. Each specialises in a
+            different area of your life.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {ASTROLOGERS.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => startConsultation(a.id)}
+              className="surface-card group flex items-start gap-4 p-5 text-left transition-all hover:shadow-md"
+            >
+              <span className="relative shrink-0">
+                <Image
+                  src={a.photo}
+                  alt={a.name}
+                  width={64}
+                  height={64}
+                  unoptimized
+                  className="h-16 w-16 rounded-full object-cover"
+                />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white ${a.online ? "bg-emerald-500" : "bg-gray-400"}`}
+                  aria-label={a.online ? "Online" : "Offline"}
+                />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-surface-950 truncate">{a.name}</span>
+                  <span className="flex items-center gap-0.5 text-xs font-semibold text-amber-600">
+                    ★ {a.rating}
+                  </span>
+                </span>
+                <span className="block text-xs font-medium text-primary-700 mb-1">{a.specialty}</span>
+                <span className="block text-xs text-[rgba(12,8,5,0.5)] leading-snug mb-2">{a.tagline}</span>
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgba(12,8,5,0.42)]">
+                  <span>{a.experienceYears}+ yrs</span>
+                  <span>{a.reviews.toLocaleString("en-IN")} reviews</span>
+                  <span>{a.languages.join(", ")}</span>
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {!isAuthenticated && (
+          <p className="text-center text-xs text-[rgba(12,8,5,0.45)] mt-6">
+            You&apos;ll be asked to sign in when you send your first message.
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] fade-in">
@@ -131,15 +226,28 @@ export default function ChatPage() {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
+        {/* Header — the astrologer the user is consulting */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 border-b divider">
-          <div>
-            <h3 className="font-medium text-surface-950 text-sm">{categories.find((c) => c.id === selectedCategory)?.label}</h3>
-            <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />{t.chat.online}
-            </span>
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={leaveConsultation}
+              aria-label="Back to astrologers"
+              className="focus-ring -ml-1 rounded-lg p-1 text-[rgba(12,8,5,0.5)] hover:bg-[rgba(12,8,5,0.05)] hover:text-surface-950"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <Image src={astrologer.photo} alt={astrologer.name} width={36} height={36} unoptimized className="h-9 w-9 rounded-full object-cover" />
+            <div className="min-w-0">
+              <h3 className="font-medium text-surface-950 text-sm truncate">{astrologer.name}</h3>
+              <span className="flex items-center gap-1.5 text-[11px] text-emerald-500">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                {astrologer.online ? t.chat.online : t.chat.online}
+              </span>
+            </div>
           </div>
-          <span className="text-[11px] text-[rgba(12,8,5,0.32)] border divider px-2 py-0.5 rounded-md">{t.chat.askAnything}</span>
+          <span className="hidden sm:inline text-[11px] text-[rgba(12,8,5,0.42)] border divider px-2 py-0.5 rounded-md">{astrologer.specialty}</span>
         </div>
 
         {/* Messages */}

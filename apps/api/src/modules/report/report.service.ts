@@ -4,6 +4,11 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import {
+  FeatureAccessService,
+  EntitlementTypeName,
+  UnlockMode,
+} from '../../common/feature-access/feature-access.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
@@ -51,6 +56,7 @@ export class ReportService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
+    private featureAccess: FeatureAccessService,
     private openaiService: OpenAIService,
     private knowledgeService: KnowledgeService,
     private kbService: KbService,
@@ -61,13 +67,23 @@ export class ReportService {
 
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
-    const creditCost = this.configService.get<number>('credits.reportCost', 5);
-    return this.userService.deductWithRefund(userId, creditCost, `${dto.type} report generation`, () =>
-      this.runReportGeneration(userId, dto, creditCost),
-    );
+    // Reports are pay-to-unlock: a subscriber (Mode B) gets it free, else
+    // the user must hold an unused one-time entitlement. resolveUnlock
+    // throws 402 (PaymentRequired) when neither path is available, which
+    // the web turns into a checkout redirect. The entitlement is consumed
+    // inside runReportGeneration, only after the Report row exists, so a
+    // failed generation never silently burns the unlock.
+    const entType = `REPORT_${dto.type}` as EntitlementTypeName;
+    const mode = await this.featureAccess.resolveUnlock(userId, entType);
+    return this.runReportGeneration(userId, dto, entType, mode);
   }
 
-  private async runReportGeneration(userId: string, dto: GenerateReportDto, creditCost: number): Promise<ReportResponse> {
+  private async runReportGeneration(
+    userId: string,
+    dto: GenerateReportDto,
+    entType: EntitlementTypeName,
+    mode: UnlockMode,
+  ): Promise<ReportResponse> {
     // Fetch user's profile for personalized reports
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -96,15 +112,22 @@ export class ReportService {
           userId,
           type: dto.type,
           status: 'GENERATING',
-          price: creditCost,
+          price: 0,
         },
       });
+
+      // Spend the one-time unlock now that the report row exists. Skipped
+      // for subscribers (Mode B). If a concurrent request already spent the
+      // only unlock, this throws 402 before any LLM cost is incurred.
+      if (mode === 'entitlement') {
+        await this.featureAccess.consumeEntitlement(userId, entType, report.id);
+      }
 
       await this.reportQueue!.add('generate', {
         reportId: report.id,
         userId,
         type: dto.type,
-        creditCost,
+        creditCost: 0,
         birthDetails,
         name: user?.name || 'User',
         gender: user?.gender,
@@ -119,7 +142,7 @@ export class ReportService {
         status: 'generating',
         summary: `Your ${dto.type.toLowerCase()} report is being generated. Check back shortly.`,
         sections: [],
-        creditsCharged: creditCost,
+        creditsCharged: 0,
         createdAt: report.createdAt.toISOString(),
       };
     }
@@ -132,10 +155,14 @@ export class ReportService {
         userId,
         type: dto.type,
         status: 'READY',
-        price: creditCost,
+        price: 0,
         fileUrl: JSON.stringify({ sections }),
       },
     });
+
+    if (mode === 'entitlement') {
+      await this.featureAccess.consumeEntitlement(userId, entType, report.id);
+    }
 
     return {
       id: report.id,
@@ -146,7 +173,7 @@ export class ReportService {
       summary: sections[0]?.content?.substring(0, 200) + '...' || `Your comprehensive ${dto.type.toLowerCase()} report has been generated.`,
       sections,
       pdfUrl: report.fileUrl,
-      creditsCharged: creditCost,
+      creditsCharged: 0,
       createdAt: report.createdAt.toISOString(),
       completedAt: new Date().toISOString(),
     };

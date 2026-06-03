@@ -4,9 +4,10 @@ import { ReportService } from './report.service';
 import { UserModule } from '../user/user.module';
 import { KnowledgeModule } from '../../knowledge/knowledge.module';
 import { QueueModule } from '../../queue/queue.module';
+import { FeatureAccessModule } from '../../common/feature-access/feature-access.module';
 
 @Module({
-  imports: [UserModule, KnowledgeModule, QueueModule],
+  imports: [UserModule, KnowledgeModule, QueueModule, FeatureAccessModule],
   controllers: [ReportController],
   providers: [ReportService],
   exports: [ReportService],

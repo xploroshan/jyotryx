@@ -26,6 +26,8 @@ import { ReportService } from '../src/modules/report/report.service';
 import { AstrologyService } from '../src/modules/astrology/astrology.service';
 import { UserService } from '../src/modules/user/user.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
@@ -193,6 +195,7 @@ describe('LLM cost regression budget', () => {
           { provide: PrismaService, useValue: mockPrismaService() },
           { provide: ConfigService, useValue: mockConfigService() },
           { provide: UserService, useValue: mockUserService() },
+          { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
           { provide: OpenAIService, useValue: counter.stub },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
           { provide: KbService, useValue: mockKbService() },
@@ -240,6 +243,7 @@ describe('LLM cost regression budget', () => {
           { provide: PrismaService, useValue: mockPrismaService() },
           { provide: ConfigService, useValue: mockConfigService() },
           { provide: UserService, useValue: mockUserService() },
+          { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
           { provide: OpenAIService, useValue: counter.stub },
           { provide: MemoryCacheService, useValue: mockCacheService() },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },

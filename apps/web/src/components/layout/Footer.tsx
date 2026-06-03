@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { LogoMark } from "@/components/ui/Logo";
 import { useTranslation } from "@/i18n";
+import { usePricingConfig } from "@/lib/usePricingConfig";
 
 export default function Footer() {
   const { t } = useTranslation();
+  const { pricingEnabled } = usePricingConfig();
 
   const footerGroups = [
     {
@@ -22,7 +24,8 @@ export default function Footer() {
     {
       title: t.footer.groupResources,
       links: [
-        { label: t.common.pricing, href: "/pricing" },
+        // Pricing link only when the operator has enabled the pricing page.
+        ...(pricingEnabled ? [{ label: t.common.pricing, href: "/pricing" }] : []),
         { label: t.common.reports, href: "/reports" },
         { label: t.common.signup, href: "/auth?mode=signup" },
       ],
@@ -32,7 +35,7 @@ export default function Footer() {
       links: [
         { label: t.profile.title, href: "/profile" },
         { label: t.common.login, href: "/auth?mode=login" },
-        { label: t.common.pricing, href: "/pricing" },
+        ...(pricingEnabled ? [{ label: t.common.pricing, href: "/pricing" }] : []),
       ],
     },
   ];

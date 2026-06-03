@@ -3,6 +3,8 @@ import { INestApplication, CanActivate, ExecutionContext } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
@@ -78,6 +80,7 @@ describe('E2E: Astrology Endpoints', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: cacheService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -296,11 +299,13 @@ describe('E2E: Numerology Endpoints', () => {
 describe('E2E: Palmistry Endpoint', () => {
   let service: PalmistryService;
   let userService: any;
+  let featureAccess: any;
   let prisma: any;
 
   beforeEach(async () => {
     prisma = mockPrismaService();
     userService = mockUserService();
+    featureAccess = mockFeatureAccessService();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PalmistryController],
@@ -309,6 +314,7 @@ describe('E2E: Palmistry Endpoint', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: featureAccess },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
@@ -344,9 +350,10 @@ describe('E2E: Palmistry Endpoint', () => {
       expect(result.lines.length).toBeGreaterThan(0);
     });
 
-    it('should reject when credits are insufficient', async () => {
-      userService.deductCredits.mockResolvedValue(false);
-      await expect(service.analyzePalm('test-uuid')).rejects.toThrow();
+    it('should reject when no unlock is available', async () => {
+      const { PaymentRequiredException } = await import('../src/common/exceptions/payment-required.exception');
+      featureAccess.resolveUnlock.mockRejectedValue(new PaymentRequiredException());
+      await expect(service.analyzePalm('test-uuid')).rejects.toThrow(PaymentRequiredException);
     });
 
     it('BUG CONFIRMATION: different images produce identical fallback results', async () => {
@@ -474,6 +481,7 @@ describe('E2E: Chat (Consult) Endpoints', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: openai },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -567,6 +575,7 @@ describe('E2E: Cross-Feature Consistency', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },

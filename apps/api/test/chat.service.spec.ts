@@ -8,6 +8,7 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
 import { LlmService } from '../src/llm/llm.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 import { mockKnowledgeService, mockLlmService } from './helpers/mocks';
 
 describe('ChatService', () => {
@@ -93,6 +94,10 @@ describe('ChatService', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        {
+          provide: FeatureAccessService,
+          useValue: { isActiveSubscriber: jest.fn().mockResolvedValue(false) },
+        },
       ],
     }).compile();
 

@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { UserService } from '../modules/user/user.service';
+import { FeatureAccessService } from '../common/feature-access/feature-access.service';
 import { StorageService } from '../storage/storage.service';
 import { PALMISTRY_QUEUE } from './queue.constants';
 import {
@@ -32,6 +33,7 @@ export class PalmistryProcessor extends WorkerHost {
     private readonly openaiService: OpenAIService,
     private readonly knowledgeService: KnowledgeService,
     private readonly userService: UserService,
+    private readonly featureAccess: FeatureAccessService,
     private readonly storageService: StorageService,
   ) {
     super();
@@ -104,15 +106,20 @@ export class PalmistryProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(`Palmistry ${readingId} failed: ${(error as Error).message}`);
 
-      // Refund credits on final attempt
+      // Refund on final attempt. Palmistry is pay-to-unlock, so restore the
+      // one-time entitlement bound to this reading (no-op for subscriber/
+      // free readings). Legacy credit-charged jobs still get credits back.
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
-        this.logger.log(`Refunding ${creditCost} credits for failed palmistry ${readingId}`);
-        await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: Palmistry analysis failed');
+        await this.featureAccess.refundEntitlementByRef(readingId);
+        if (creditCost > 0) {
+          this.logger.log(`Refunding ${creditCost} credits for failed palmistry ${readingId}`);
+          await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: Palmistry analysis failed');
+        }
         // Mark the reading as failed so the client polling stops with a clear status
         try {
           await this.prisma.palmistryReading.update({
             where: { id: readingId },
-            data: { analysisData: { status: 'failed', message: 'Analysis failed. Credits refunded.' } },
+            data: { analysisData: { status: 'failed', message: 'Analysis failed. Your purchase has been restored.' } },
           });
         } catch (updateErr) {
           this.logger.error('Failed to mark reading as failed', updateErr as Error);

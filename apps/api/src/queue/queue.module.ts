@@ -7,6 +7,7 @@ import { PalmistryProcessor } from './palmistry.processor';
 import { BroadcastProcessor } from './broadcast.processor';
 import { BriefingProcessor } from './briefing.processor';
 import { UserModule } from '../modules/user/user.module';
+import { FeatureAccessModule } from '../common/feature-access/feature-access.module';
 import { KnowledgeModule } from '../knowledge/knowledge.module';
 import { NotificationModule } from '../modules/notification/notification.module';
 import { DailyBriefingModule } from '../modules/daily-briefing/daily-briefing.module';
@@ -132,6 +133,7 @@ export { REPORT_QUEUE, PALMISTRY_QUEUE, BROADCAST_QUEUE, BRIEFING_QUEUE };
       },
     ),
     UserModule,
+    FeatureAccessModule,
     KnowledgeModule,
     NotificationModule,
     DailyBriefingModule,

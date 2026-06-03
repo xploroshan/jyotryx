@@ -8,6 +8,8 @@ import { UserService } from '../src/modules/user/user.service';
 import { PaymentService } from '../src/modules/payment/payment.service';
 import { ReportService } from '../src/modules/report/report.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
@@ -127,6 +129,7 @@ describe('Security: Payment Amount Validation', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
     }).compile();
 
@@ -232,6 +235,7 @@ describe('Security: Payment Signature Verification', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
     }).compile();
 
@@ -649,6 +653,7 @@ describe('Security: Credit Refund on AI Failure', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userServiceMock },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: openaiMock },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: knowledgeMock },
@@ -696,6 +701,7 @@ describe('Security: Report Content Caching', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: openaiMock },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
@@ -814,6 +820,7 @@ describe('Security: Data Isolation', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
@@ -839,6 +846,7 @@ describe('Security: Data Isolation', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
@@ -899,6 +907,7 @@ describe('Security: Webhook Integrity', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
     }).compile();
 
@@ -949,6 +958,7 @@ describe('Security: Input Sanitization', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
+        { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },

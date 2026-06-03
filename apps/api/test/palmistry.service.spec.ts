@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { StorageService } from '../src/storage/storage.service';
@@ -12,6 +13,7 @@ describe('PalmistryService', () => {
   let service: PalmistryService;
   let prisma: any;
   let userService: any;
+  let featureAccess: any;
   let openaiService: any;
 
   const mockUser = {
@@ -48,6 +50,12 @@ describe('PalmistryService', () => {
       ) => work()),
     };
 
+    featureAccess = {
+      resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
+      consumeEntitlement: jest.fn().mockResolvedValue(undefined),
+      isActiveSubscriber: jest.fn().mockResolvedValue(false),
+    };
+
     openaiService = {
       chat: jest.fn().mockResolvedValue(null),
       chatCompletion: jest.fn().mockResolvedValue(null),
@@ -60,6 +68,7 @@ describe('PalmistryService', () => {
       providers: [
         PalmistryService,
         { provide: PrismaService, useValue: prisma },
+        { provide: FeatureAccessService, useValue: featureAccess },
         {
           provide: ConfigService,
           useValue: {
@@ -83,17 +92,16 @@ describe('PalmistryService', () => {
   });
 
   describe('analyzePalm', () => {
-    it('should deduct credits for palm analysis', async () => {
+    it('should gate palm analysis on a one-time entitlement', async () => {
       const imageBuffer = Buffer.from('fake-image-data');
 
       await service.analyzePalm('test-uuid', imageBuffer, 'image/jpeg');
 
-      expect(userService.deductWithRefund).toHaveBeenCalledWith(
-        'test-uuid',
-        3,
-        expect.any(String),
-        expect.any(Function),
-      );
+      // Pay-to-unlock: resolve then consume the PALMISTRY entitlement once
+      // the reading row exists; no credit deduction.
+      expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
+      expect(featureAccess.consumeEntitlement).toHaveBeenCalledWith('test-uuid', 'PALMISTRY', 'palm-1');
+      expect(userService.deductWithRefund).not.toHaveBeenCalled();
     });
 
     it('should return fallback analysis when OpenAI fails', async () => {
@@ -131,7 +139,7 @@ describe('PalmistryService', () => {
       const result = await service.analyzePalm('test-uuid');
 
       expect(result).toBeDefined();
-      expect(userService.deductWithRefund).toHaveBeenCalled();
+      expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
     });
   });
 });

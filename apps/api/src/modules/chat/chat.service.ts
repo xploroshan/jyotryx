@@ -7,7 +7,9 @@ import { OpenAIService } from '../../openai/openai.service';
 import { LlmService } from '../../llm/llm.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { ModerationService } from '../../safety/moderation.service';
+import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
 import { getLocaleInstruction } from '../../common/locale';
+import { getAstrologer } from './astrologers';
 
 export interface ChatMessage {
   id: string;
@@ -41,6 +43,7 @@ export class ChatService {
     private llmService: LlmService,
     private knowledgeService: KnowledgeService,
     private moderationService: ModerationService,
+    private featureAccess: FeatureAccessService,
   ) {}
 
   async sendMessage(
@@ -49,9 +52,17 @@ export class ChatService {
   ): Promise<{ session: ChatSession; reply: ChatMessage }> {
     const creditCost = this.configService.get<number>('credits.chatCost', 1);
 
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
-    if (!deducted) {
-      throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+    // Active subscribers (Mode B) chat for free; everyone else spends a
+    // credit per message. `charged` gates the refund paths below so we
+    // never credit a user we didn't debit.
+    const isSubscriber = await this.featureAccess.isActiveSubscriber(userId);
+    let charged = false;
+    if (!isSubscriber) {
+      const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
+      if (!deducted) {
+        throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
+      }
+      charged = true;
     }
 
     let dbSession;
@@ -70,10 +81,14 @@ export class ChatService {
     }
 
     if (!dbSession) {
+      // When an astrologer persona is chosen, derive the category from the
+      // persona's specialty so KB grounding matches the named astrologer.
+      const persona = getAstrologer(dto.astrologerId);
       dbSession = await this.prisma.chatSession.create({
         data: {
           userId,
-          category: dto.category || 'general',
+          category: dto.category || persona?.category || 'general',
+          astrologerId: persona?.id ?? null,
           title: dto.message.substring(0, 50) + (dto.message.length > 50 ? '...' : ''),
         },
       });
@@ -120,10 +135,13 @@ export class ChatService {
         userProfile,
         dto.locale,
         userId,
+        dbSession.astrologerId,
       );
     } catch (error) {
       this.logger.error('AI response generation failed, refunding credit', error);
-      await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: AI response failed');
+      if (charged) {
+        await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: AI response failed');
+      }
       throw new BadRequestException('Unable to generate a response. Your credit has been refunded. Please try again.');
     }
 
@@ -206,11 +224,17 @@ export class ChatService {
   ): Promise<void> {
     const creditCost = this.configService.get<number>('credits.chatCost', 1);
 
-    const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
-    if (!deducted) {
-      subscriber.next({ data: JSON.stringify({ message: 'Insufficient credits', refunded: false }) } as MessageEvent);
-      subscriber.complete();
-      return;
+    // Subscribers (Mode B) stream for free; everyone else spends a credit.
+    const isSubscriber = await this.featureAccess.isActiveSubscriber(userId);
+    let charged = false;
+    if (!isSubscriber) {
+      const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
+      if (!deducted) {
+        subscriber.next({ data: JSON.stringify({ message: 'Insufficient credits', refunded: false }) } as MessageEvent);
+        subscriber.complete();
+        return;
+      }
+      charged = true;
     }
 
     // Load or create session
@@ -228,10 +252,12 @@ export class ChatService {
       }
     }
     if (!dbSession) {
+      const persona = getAstrologer(dto.astrologerId);
       dbSession = await this.prisma.chatSession.create({
         data: {
           userId,
-          category: dto.category || 'general',
+          category: dto.category || persona?.category || 'general',
+          astrologerId: persona?.id ?? null,
           title: dto.message.substring(0, 50) + (dto.message.length > 50 ? '...' : ''),
         },
       });
@@ -259,7 +285,7 @@ export class ChatService {
     const kbResults = await this.knowledgeService.search(dto.message, kbCategory, 5);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
-    const systemPrompt = this.getSystemPrompt(dbSession.category, userProfile) + getLocaleInstruction(dto.locale);
+    const systemPrompt = this.getSystemPrompt(dbSession.category, userProfile, dbSession.astrologerId) + getLocaleInstruction(dto.locale);
     const enrichedPrompt = kbContext
       ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
       : systemPrompt;
@@ -310,8 +336,10 @@ export class ChatService {
       subscriber.complete();
     } catch (error) {
       this.logger.error('Stream generation failed, refunding credit', error);
-      await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: Stream failed');
-      subscriber.next({ data: JSON.stringify({ message: (error as Error).message, refunded: true }) } as MessageEvent);
+      if (charged) {
+        await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: Stream failed');
+      }
+      subscriber.next({ data: JSON.stringify({ message: (error as Error).message, refunded: charged }) } as MessageEvent);
       subscriber.complete();
     }
   }
@@ -371,13 +399,14 @@ export class ChatService {
     userProfile: any,
     locale?: string,
     userId?: string,
+    astrologerId?: string | null,
   ): Promise<string> {
     // Fetch relevant knowledge base context for RAG
     const kbCategory = this.mapCategoryToKB(category);
     const kbResults = await this.knowledgeService.search(message, kbCategory, 5);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
-    const systemPrompt = this.getSystemPrompt(category, userProfile) + getLocaleInstruction(locale);
+    const systemPrompt = this.getSystemPrompt(category, userProfile, astrologerId) + getLocaleInstruction(locale);
     const enrichedPrompt = kbContext
       ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
       : systemPrompt;
@@ -436,7 +465,7 @@ export class ChatService {
     return this.getFallbackResponse(category, userProfile);
   }
 
-  private getSystemPrompt(category: string, userProfile: any): string {
+  private getSystemPrompt(category: string, userProfile: any, astrologerId?: string | null): string {
     let profileContext = '';
     if (userProfile) {
       const parts: string[] = [];
@@ -473,7 +502,14 @@ export class ChatService {
       ? ` When the user's question is relevant, provide insights from each tradition you are versed in, and note where they align or differ.`
       : '';
 
-    const basePrompt = `You are myastro360, an expert AI astrologer versed in ${traditionDescriptor}. You provide insightful, compassionate guidance based on ${traditionDescriptor} principles.${multiTraditionNote} Always be respectful and positive. Include specific references and terminology appropriate to the tradition(s). Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
+    // When the user is consulting a named astrologer, speak in that
+    // astrologer's first-person human voice rather than as a branded AI.
+    // The persona never self-identifies as an AI/model so the "Chat with
+    // Astrologer" experience reads like a real consultation.
+    const persona = getAstrologer(astrologerId);
+    const basePrompt = persona
+      ? `You are ${persona.name}, a real human astrologer with ${persona.experienceYears} years of experience, specializing in ${persona.specialty} grounded in ${traditionDescriptor}.${multiTraditionNote} Your manner is ${persona.tone}. Speak personally and warmly in the first person, addressing the seeker directly as a practising astrologer would in a one-on-one consultation. Use specific references and terminology from the tradition(s). Keep responses concise (2-3 paragraphs). Never state or imply that you are an AI, a language model, a bot, or a computer program; if asked, simply say you are ${persona.name}. You may gently note that astrological guidance is for reflection, not a substitute for professional advice.${profileContext}`
+      : `You are myastro360, an expert AI astrologer versed in ${traditionDescriptor}. You provide insightful, compassionate guidance based on ${traditionDescriptor} principles.${multiTraditionNote} Always be respectful and positive. Include specific references and terminology appropriate to the tradition(s). Keep responses concise (2-3 paragraphs). Add a disclaimer that this is for guidance purposes.${profileContext}`;
 
     const categoryPrompts: Record<string, string> = {
       career: `${basePrompt}\n\nFocus on career guidance, professional growth, and work-related planetary transits. Reference the user's birth chart specifics if available.`,

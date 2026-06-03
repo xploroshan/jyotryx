@@ -58,6 +58,14 @@ export default function AdminPage() {
   const [creditProPrice, setCreditProPrice] = useState("599");
   const [pricingSaving, setPricingSaving] = useState(false);
 
+  // Monetization mode + one-time pricing (stored as feature.* / pricing.* /
+  // social.* SiteSettings). Booleans are stored as "true"/"false" strings.
+  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(false);
+  const [pricingPageEnabled, setPricingPageEnabled] = useState(false);
+  const [reportPrice, setReportPrice] = useState("199");
+  const [palmistryPrice, setPalmistryPrice] = useState("250");
+  const [socialReportBase, setSocialReportBase] = useState("41345");
+
   useEffect(() => {
     if (!isHydrated) return;
     if (!isAuthenticated || user?.role !== "ADMIN") {
@@ -90,6 +98,14 @@ export default function AdminPage() {
         if (settings["pricing.credits.popular.price"]) setCreditPopularPrice(settings["pricing.credits.popular.price"]);
         if (settings["pricing.credits.pro.credits"]) setCreditProCredits(settings["pricing.credits.pro.credits"]);
         if (settings["pricing.credits.pro.price"]) setCreditProPrice(settings["pricing.credits.pro.price"]);
+        if (settings["pricing.report.price"]) setReportPrice(settings["pricing.report.price"]);
+        if (settings["pricing.palmistry.price"]) setPalmistryPrice(settings["pricing.palmistry.price"]);
+        // Mode flags + social seed live under the feature./social. prefixes.
+        const flags = await api.get<Record<string, string>>("/admin/settings?prefix=feature.", { token: accessToken });
+        setSubscriptionsEnabled(flags["feature.subscriptions_enabled"] === "true");
+        setPricingPageEnabled(flags["feature.pricing_page_enabled"] === "true");
+        const social = await api.get<Record<string, string>>("/admin/settings?prefix=social.", { token: accessToken });
+        if (social["social.report_count_base"]) setSocialReportBase(social["social.report_count_base"]);
       }
     } catch (err: any) {
       setError(err.message || "Failed to load data");
@@ -290,6 +306,70 @@ export default function AdminPage() {
           <div>
             <h2 className="text-xl font-bold text-gradient mb-6">Pricing Management</h2>
 
+            {/* ── Monetization mode ───────────────────────────────────── */}
+            <h3 className="text-lg font-bold text-ink-900 mb-4">Monetization Mode</h3>
+            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+              <div className="surface-card p-6 flex items-start justify-between gap-4">
+                <div>
+                  <h4 className="font-bold text-ink-900 mb-1">Subscriptions enabled</h4>
+                  <p className="text-xs text-ink-500">
+                    Off = whole app free except Chat, Palmistry &amp; Reports (pay-per-use).
+                    On = paid subscribers get everything free.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={subscriptionsEnabled}
+                  onClick={() => setSubscriptionsEnabled((v) => !v)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${subscriptionsEnabled ? "bg-emerald-500" : "bg-black/20"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${subscriptionsEnabled ? "translate-x-5" : ""}`} />
+                </button>
+              </div>
+              <div className="surface-card p-6 flex items-start justify-between gap-4">
+                <div>
+                  <h4 className="font-bold text-ink-900 mb-1">Show pricing page</h4>
+                  <p className="text-xs text-ink-500">
+                    Off = hide /pricing, nav &amp; footer links and show the &ldquo;Free&rdquo; hero.
+                    Turn on once you&apos;re ready to sell subscriptions.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={pricingPageEnabled}
+                  onClick={() => setPricingPageEnabled((v) => !v)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${pricingPageEnabled ? "bg-emerald-500" : "bg-black/20"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${pricingPageEnabled ? "translate-x-5" : ""}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* ── One-time unlock prices ──────────────────────────────── */}
+            <h3 className="text-lg font-bold text-ink-900 mb-4">One-time Unlocks</h3>
+            <div className="grid sm:grid-cols-3 gap-4 mb-8">
+              <div className="surface-card p-6">
+                <h4 className="font-bold text-ink-900 mb-4">Report price</h4>
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
+                <input type="number" value={reportPrice} onChange={(e) => setReportPrice(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
+              </div>
+              <div className="surface-card p-6">
+                <h4 className="font-bold text-ink-900 mb-4">Palmistry price</h4>
+                <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
+                <input type="number" value={palmistryPrice} onChange={(e) => setPalmistryPrice(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
+              </div>
+              <div className="surface-card p-6">
+                <h4 className="font-bold text-ink-900 mb-4">Report counter seed</h4>
+                <label className="block text-xs text-ink-500 mb-2">Base &ldquo;reports delivered&rdquo;</label>
+                <input type="number" value={socialReportBase} onChange={(e) => setSocialReportBase(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
+              </div>
+            </div>
+
             <h3 className="text-lg font-bold text-ink-900 mb-4">Subscription Plans</h3>
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
               <div className="surface-card p-6">
@@ -352,6 +432,11 @@ export default function AdminPage() {
                     "pricing.credits.popular.price": creditPopularPrice,
                     "pricing.credits.pro.credits": creditProCredits,
                     "pricing.credits.pro.price": creditProPrice,
+                    "pricing.report.price": reportPrice,
+                    "pricing.palmistry.price": palmistryPrice,
+                    "feature.subscriptions_enabled": subscriptionsEnabled ? "true" : "false",
+                    "feature.pricing_page_enabled": pricingPageEnabled ? "true" : "false",
+                    "social.report_count_base": socialReportBase,
                   }, { token: accessToken! });
                   setSuccess("Pricing updated successfully");
                   setTimeout(() => setSuccess(""), 3000);

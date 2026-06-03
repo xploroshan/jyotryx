@@ -7,8 +7,17 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { LlmService } from '../src/llm/llm.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockUser } from './helpers/mocks';
 import { firstValueFrom, toArray } from 'rxjs';
+
+// Non-subscriber by default so the existing credit-deduction assertions
+// hold; subscribers bypass deduction.
+const mockFeatureAccess = () => ({
+  isActiveSubscriber: jest.fn().mockResolvedValue(false),
+  resolveUnlock: jest.fn(),
+  consumeEntitlement: jest.fn(),
+});
 
 describe('ChatService — SSE Streaming (Item 3)', () => {
   let service: ChatService;
@@ -68,7 +77,7 @@ describe('ChatService — SSE Streaming (Item 3)', () => {
         { provide: LlmService, useValue: llmService },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
-        { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: FeatureAccessService, useValue: mockFeatureAccess() },
       ],
     }).compile();
 
@@ -237,6 +246,7 @@ describe('ChatService — SSE Streaming (Item 3)', () => {
           { provide: LlmService, useValue: llmService },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: FeatureAccessService, useValue: mockFeatureAccess() },
         ],
       }).compile();
 
