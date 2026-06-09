@@ -15,6 +15,7 @@ import { firstValueFrom, toArray } from 'rxjs';
 // hold; subscribers bypass deduction.
 const mockFeatureAccess = () => ({
   isActiveSubscriber: jest.fn().mockResolvedValue(false),
+  paidFeaturesFree: jest.fn().mockResolvedValue(false),
   resolveUnlock: jest.fn(),
   consumeEntitlement: jest.fn(),
 });

@@ -360,6 +360,7 @@ export const mockUserService = () => {
  */
 export const mockFeatureAccessService = () => ({
   subscriptionsEnabled: jest.fn().mockResolvedValue(false),
+  paidFeaturesFree: jest.fn().mockResolvedValue(false),
   isActiveSubscriber: jest.fn().mockResolvedValue(false),
   resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
   consumeEntitlement: jest.fn().mockResolvedValue(undefined),

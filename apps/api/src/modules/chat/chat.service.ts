@@ -52,12 +52,15 @@ export class ChatService {
   ): Promise<{ session: ChatSession; reply: ChatMessage }> {
     const creditCost = this.configService.get<number>('credits.chatCost', 1);
 
-    // Active subscribers (Mode B) chat for free; everyone else spends a
-    // credit per message. `charged` gates the refund paths below so we
-    // never credit a user we didn't debit.
-    const isSubscriber = await this.featureAccess.isActiveSubscriber(userId);
+    // Chat is free when the master free switch is on or the user is an
+    // active subscriber (Mode B); everyone else spends a credit per message.
+    // `charged` gates the refund paths below so we never credit a user we
+    // never debited.
+    const free =
+      (await this.featureAccess.paidFeaturesFree()) ||
+      (await this.featureAccess.isActiveSubscriber(userId));
     let charged = false;
-    if (!isSubscriber) {
+    if (!free) {
       const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
       if (!deducted) {
         throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
@@ -224,10 +227,13 @@ export class ChatService {
   ): Promise<void> {
     const creditCost = this.configService.get<number>('credits.chatCost', 1);
 
-    // Subscribers (Mode B) stream for free; everyone else spends a credit.
-    const isSubscriber = await this.featureAccess.isActiveSubscriber(userId);
+    // Free when the master free switch is on or the user is a subscriber
+    // (Mode B); everyone else spends a credit.
+    const free =
+      (await this.featureAccess.paidFeaturesFree()) ||
+      (await this.featureAccess.isActiveSubscriber(userId));
     let charged = false;
-    if (!isSubscriber) {
+    if (!free) {
       const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
       if (!deducted) {
         subscriber.next({ data: JSON.stringify({ message: 'Insufficient credits', refunded: false }) } as MessageEvent);

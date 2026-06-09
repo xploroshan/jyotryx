@@ -96,7 +96,10 @@ describe('ChatService', () => {
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         {
           provide: FeatureAccessService,
-          useValue: { isActiveSubscriber: jest.fn().mockResolvedValue(false) },
+          useValue: {
+            isActiveSubscriber: jest.fn().mockResolvedValue(false),
+            paidFeaturesFree: jest.fn().mockResolvedValue(false),
+          },
         },
       ],
     }).compile();

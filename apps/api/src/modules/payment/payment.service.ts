@@ -685,7 +685,7 @@ export class PaymentService {
     // social-proof seed in one round trip, so the public web surface can
     // read prices, mode flags, and the report counter from this single
     // endpoint without auth.
-    const featureKeys = ['feature.subscriptions_enabled', 'feature.pricing_page_enabled'];
+    const featureKeys = ['feature.subscriptions_enabled', 'feature.pricing_page_enabled', 'feature.free_mode'];
     const socialKeys = ['social.report_count_base'];
     const rows = await this.prisma.siteSetting.findMany({
       where: {
@@ -704,6 +704,7 @@ export class PaymentService {
     // operator has saved anything in the admin pricing tab.
     if (result['feature.subscriptions_enabled'] === undefined) result['feature.subscriptions_enabled'] = 'false';
     if (result['feature.pricing_page_enabled'] === undefined) result['feature.pricing_page_enabled'] = 'false';
+    if (result['feature.free_mode'] === undefined) result['feature.free_mode'] = 'false';
     if (result['pricing.report.price'] === undefined) result['pricing.report.price'] = String(DEFAULT_REPORT_PRICE_INR);
     if (result['pricing.palmistry.price'] === undefined) result['pricing.palmistry.price'] = String(DEFAULT_PALMISTRY_PRICE_INR);
 
