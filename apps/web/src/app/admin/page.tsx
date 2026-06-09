@@ -62,6 +62,7 @@ export default function AdminPage() {
   // social.* SiteSettings). Booleans are stored as "true"/"false" strings.
   const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(false);
   const [pricingPageEnabled, setPricingPageEnabled] = useState(false);
+  const [freeMode, setFreeMode] = useState(false);
   const [reportPrice, setReportPrice] = useState("199");
   const [palmistryPrice, setPalmistryPrice] = useState("250");
   const [socialReportBase, setSocialReportBase] = useState("41345");
@@ -104,6 +105,7 @@ export default function AdminPage() {
         const flags = await api.get<Record<string, string>>("/admin/settings?prefix=feature.", { token: accessToken });
         setSubscriptionsEnabled(flags["feature.subscriptions_enabled"] === "true");
         setPricingPageEnabled(flags["feature.pricing_page_enabled"] === "true");
+        setFreeMode(flags["feature.free_mode"] === "true");
         const social = await api.get<Record<string, string>>("/admin/settings?prefix=social.", { token: accessToken });
         if (social["social.report_count_base"]) setSocialReportBase(social["social.report_count_base"]);
       }
@@ -308,7 +310,29 @@ export default function AdminPage() {
 
             {/* ── Monetization mode ───────────────────────────────────── */}
             <h3 className="text-lg font-bold text-ink-900 mb-4">Monetization Mode</h3>
-            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+
+            {/* Master free switch — overrides per-feature pricing. */}
+            <div className="surface-card p-6 mb-4 flex items-start justify-between gap-4 border border-emerald-500/30">
+              <div>
+                <h4 className="font-bold text-ink-900 mb-1">Make app completely free</h4>
+                <p className="text-xs text-ink-500">
+                  Master switch. When on, <strong>Chat with Astrologer, Palmistry and Reports
+                  are free for everyone</strong> — no payment, no credits. Overrides the
+                  per-feature pricing below.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={freeMode}
+                onClick={() => setFreeMode((v) => !v)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${freeMode ? "bg-emerald-500" : "bg-black/20"}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${freeMode ? "translate-x-5" : ""}`} />
+              </button>
+            </div>
+
+            <div className={`grid sm:grid-cols-2 gap-4 mb-8 ${freeMode ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="surface-card p-6 flex items-start justify-between gap-4">
                 <div>
                   <h4 className="font-bold text-ink-900 mb-1">Subscriptions enabled</h4>
@@ -349,7 +373,7 @@ export default function AdminPage() {
 
             {/* ── One-time unlock prices ──────────────────────────────── */}
             <h3 className="text-lg font-bold text-ink-900 mb-4">One-time Unlocks</h3>
-            <div className="grid sm:grid-cols-3 gap-4 mb-8">
+            <div className={`grid sm:grid-cols-3 gap-4 mb-8 ${freeMode ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="surface-card p-6">
                 <h4 className="font-bold text-ink-900 mb-4">Report price</h4>
                 <label className="block text-xs text-ink-500 mb-2">Price (INR)</label>
@@ -436,6 +460,7 @@ export default function AdminPage() {
                     "pricing.palmistry.price": palmistryPrice,
                     "feature.subscriptions_enabled": subscriptionsEnabled ? "true" : "false",
                     "feature.pricing_page_enabled": pricingPageEnabled ? "true" : "false",
+                    "feature.free_mode": freeMode ? "true" : "false",
                     "social.report_count_base": socialReportBase,
                   }, { token: accessToken! });
                   setSuccess("Pricing updated successfully");

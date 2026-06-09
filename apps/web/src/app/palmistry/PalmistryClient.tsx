@@ -871,7 +871,7 @@ export default function PalmistryPage() {
                     </svg>
                     {progressMessage || t.palmistry.analyzing}
                   </span>
-                ) : pricing.subscriptionsEnabled ? (
+                ) : pricing.subscriptionsEnabled || pricing.freeMode ? (
                   t.palmistry.analyzePalm
                 ) : (
                   `${t.palmistry.analyzePalm} · ₹${pricing.palmistryPrice}`

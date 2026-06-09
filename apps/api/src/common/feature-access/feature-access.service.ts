@@ -45,6 +45,18 @@ export class FeatureAccessService {
   }
 
   /**
+   * Master "make the app completely free" switch. When on, the three
+   * normally-paid features (Reports, Palmistry, Chat) are free for everyone
+   * — no entitlement required and no credits deducted. Default false.
+   */
+  async paidFeaturesFree(): Promise<boolean> {
+    const row = await this.prisma.siteSetting.findUnique({
+      where: { key: 'feature.free_mode' },
+    });
+    return row?.value === 'true';
+  }
+
+  /**
    * True only when Mode B is on AND the user holds a non-expired ACTIVE
    * subscription. Mirrors the active-subscription definition used by the
    * payment webhook (status ACTIVE and endDate null or in the future).
@@ -74,6 +86,8 @@ export class FeatureAccessService {
    * before the expensive generation starts.
    */
   async resolveUnlock(userId: string, type: EntitlementTypeName): Promise<UnlockMode> {
+    // Master free switch: treat as free for everyone (no entitlement spent).
+    if (await this.paidFeaturesFree()) return 'subscriber';
     if (await this.isActiveSubscriber(userId)) return 'subscriber';
     const unused = await this.prisma.entitlement.count({
       where: { userId, type: type as any, consumedAt: null },

@@ -69,6 +69,22 @@ describe('FeatureAccessService', () => {
       prisma.entitlement.count.mockResolvedValue(0);
       await expect(service.resolveUnlock('u1', 'PALMISTRY')).rejects.toThrow(PaymentRequiredException);
     });
+
+    it('returns "subscriber" (free) for everyone when the master free switch is on', async () => {
+      // feature.free_mode = true short-circuits before any entitlement check.
+      prisma.siteSetting.findUnique.mockImplementation(({ where }: any) =>
+        Promise.resolve(where.key === 'feature.free_mode' ? { value: 'true' } : null),
+      );
+      prisma.entitlement.count.mockResolvedValue(0);
+      expect(await service.resolveUnlock('u1', 'REPORT_LIFE')).toBe('subscriber');
+    });
+  });
+
+  describe('paidFeaturesFree', () => {
+    it('reflects the feature.free_mode flag', async () => {
+      prisma.siteSetting.findUnique.mockResolvedValue({ value: 'true' });
+      expect(await service.paidFeaturesFree()).toBe(true);
+    });
   });
 
   describe('consumeEntitlement', () => {

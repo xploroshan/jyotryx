@@ -216,7 +216,7 @@ export default function ReportsPage() {
                   >
                     {generating === rt.id
                       ? t.reports.generating
-                      : pricing.subscriptionsEnabled
+                      : pricing.subscriptionsEnabled || pricing.freeMode
                         ? t.reports.generate
                         : `${t.reports.generate} · ₹${pricing.reportPrice}`}
                   </button>

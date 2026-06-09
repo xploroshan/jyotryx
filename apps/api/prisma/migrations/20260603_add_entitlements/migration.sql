@@ -79,6 +79,7 @@ ALTER TABLE "chat_sessions" ADD COLUMN IF NOT EXISTS "astrologerId" TEXT;
 INSERT INTO "site_settings" ("key", "value", "updatedAt") VALUES
   ('feature.subscriptions_enabled', 'false', CURRENT_TIMESTAMP),
   ('feature.pricing_page_enabled',  'false', CURRENT_TIMESTAMP),
+  ('feature.free_mode',             'false', CURRENT_TIMESTAMP),
   ('pricing.report.price',          '199',   CURRENT_TIMESTAMP),
   ('pricing.palmistry.price',       '250',   CURRENT_TIMESTAMP),
   ('social.report_count_base',      '41345', CURRENT_TIMESTAMP)

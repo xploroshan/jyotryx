@@ -20,6 +20,8 @@ export interface PricingConfig {
   raw: Record<string, string>;
   subscriptionsEnabled: boolean;
   pricingEnabled: boolean;
+  /** Master switch: when true the three paid features are free for everyone. */
+  freeMode: boolean;
   reportPrice: number;
   palmistryPrice: number;
   reportsDelivered: number | null;
@@ -29,6 +31,7 @@ export interface PricingConfig {
 const DEFAULTS: Omit<PricingConfig, "raw" | "loading"> = {
   subscriptionsEnabled: false,
   pricingEnabled: false,
+  freeMode: false,
   reportPrice: 199,
   palmistryPrice: 250,
   reportsDelivered: null,
@@ -43,6 +46,7 @@ function parseConfig(raw: Record<string, string>): Omit<PricingConfig, "raw" | "
   return {
     subscriptionsEnabled: raw["feature.subscriptions_enabled"] === "true",
     pricingEnabled: raw["feature.pricing_page_enabled"] === "true",
+    freeMode: raw["feature.free_mode"] === "true",
     reportPrice: num("pricing.report.price", DEFAULTS.reportPrice),
     palmistryPrice: num("pricing.palmistry.price", DEFAULTS.palmistryPrice),
     reportsDelivered: Number.isFinite(delivered) ? delivered : null,
