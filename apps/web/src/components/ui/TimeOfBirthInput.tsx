@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 /**
  * A reliable time-of-birth selector built from plain <select> dropdowns
  * (Hour / Minute / AM-PM) instead of the native `<input type="time">`.
@@ -9,8 +11,16 @@
  * button, so a chosen time can never be committed and the field stays empty.
  * Dropdowns work consistently across every device and browser.
  *
- * The value is the same 24-hour "HH:mm" string the native input produced, so
- * this is a drop-in replacement everywhere `tob`/`timeOfBirth` is used.
+ * Hour / minute / period are tracked as independent internal state so a
+ * partial selection (e.g. the user picks the minute before the hour) is kept
+ * on screen. The combined "HH:mm" value can only be formed once both hour and
+ * minute are set, so deriving the dropdowns purely from that string would make
+ * the first selection snap back to its placeholder — the component holds the
+ * pieces itself and emits "HH:mm" (or "" while incomplete) to the parent.
+ *
+ * The emitted value is the same 24-hour "HH:mm" string the native input
+ * produced, so this is a drop-in replacement everywhere `tob`/`timeOfBirth`
+ * is used.
  */
 
 type Period = "AM" | "PM";
@@ -61,11 +71,32 @@ export default function TimeOfBirthInput({
   required = false,
   className = "",
 }: TimeOfBirthInputProps) {
-  const { hour12, minute, period } = parse(value);
+  const [hour12, setHour12] = useState("");
+  const [minute, setMinute] = useState("");
+  const [period, setPeriod] = useState<Period>("AM");
+
+  // Pull in externally-driven values (e.g. when an existing profile loads), but
+  // only when they actually differ from what our dropdowns already represent —
+  // otherwise a partial selection that hasn't formed a complete "HH:mm" yet
+  // would be wiped on the next render.
+  useEffect(() => {
+    if ((value ?? "") !== to24(hour12, minute, period)) {
+      const parsed = parse(value);
+      setHour12(parsed.hour12);
+      setMinute(parsed.minute);
+      setPeriod(parsed.period);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   const selectClass = "px-3 py-3 rounded-xl surface-input min-w-0";
 
-  const emit = (h: string, m: string, p: Period) => onChange(to24(h, m, p));
+  const emit = (h: string, m: string, p: Period) => {
+    setHour12(h);
+    setMinute(m);
+    setPeriod(p);
+    onChange(to24(h, m, p));
+  };
 
   return (
     <div className={`flex items-center gap-2 ${className}`.trim()}>
