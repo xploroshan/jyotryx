@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
 import { MemoryCacheService } from '../../common/cache.service';
+import { GocharPersonalization, GocharService } from './gochar.service';
 
 export interface PlanetaryHour {
   planet: string;
@@ -261,6 +262,10 @@ export class DailyBriefingService {
     private readonly knowledgeService: KnowledgeService,
     private readonly cacheService: MemoryCacheService,
     private readonly kbService: KbService,
+    // Optional so the unit suite (which builds this service standalone) and any
+    // environment without the ephemeris still work — personalization simply
+    // stays dormant and the shared almanac is served.
+    @Optional() private readonly gocharService?: GocharService,
   ) {}
 
   async getDailyBriefing(userId: string, locale?: string): Promise<DailyBriefingResult> {
@@ -282,14 +287,19 @@ export class DailyBriefingService {
     const userKey = `briefing:user:${userId}:${dateStr}:${hourBucket}:${localeKey}`;
     let overlay = await this.cacheService.get<UserBriefingOverlay>(userKey);
     let userTraditions: string[] = ['VEDIC'];
+    // The user record is needed both for the overlay and for the Gochar
+    // personalization; fetch it once and reuse.
+    let userRecord:
+      | { name: string | null; nickname?: string | null; dateOfBirth: Date | null; timeOfBirth: string | null; placeOfBirth: unknown; gender: string | null; profession: string | null; astrologyTraditions?: string[] }
+      | null = null;
     if (!overlay) {
-      const user = await this.prisma.user.findUnique({
+      userRecord = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, nickname: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
       });
-      userTraditions = (user as any)?.astrologyTraditions ?? ['VEDIC'];
+      userTraditions = (userRecord as any)?.astrologyTraditions ?? ['VEDIC'];
       overlay = await this.computeUserOverlay(
-        user,
+        userRecord,
         global.canonical,
         global.currentPlanet,
         global.dayRuler,
@@ -300,24 +310,59 @@ export class DailyBriefingService {
       await this.cacheService.set(userKey, overlay, 30 * 60 * 1000);
     }
 
-    // ── 3. Merge into final response ────────────────────────────────────
+    // ── 3. Per-user Gochar (transit) personalization ────────────────────
+    // Cached separately so a cold overlay cache doesn't force a chart recompute
+    // and vice-versa. Falls back to null (→ shared almanac) when the ephemeris
+    // is unavailable or the user has no usable birth data.
+    let personal: GocharPersonalization | null = null;
+    if (this.gocharService) {
+      const personalKey = `briefing:gochar:${userId}:${dateStr}:${hourBucket}`;
+      const cached = await this.cacheService.get<GocharPersonalization | { __none: true }>(personalKey);
+      if (cached) {
+        personal = (cached as any).__none ? null : (cached as GocharPersonalization);
+      } else {
+        if (!userRecord) {
+          userRecord = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true, nickname: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
+          });
+        }
+        personal = userRecord
+          ? await this.gocharService.computePersonalization(
+              { dateOfBirth: userRecord.dateOfBirth, timeOfBirth: userRecord.timeOfBirth, placeOfBirth: userRecord.placeOfBirth },
+              today,
+            )
+          : null;
+        await this.cacheService.set(personalKey, personal ?? { __none: true }, 30 * 60 * 1000);
+      }
+    }
+
+    // ── 4. Merge into final response (personalization overrides global) ──
+    const summary = personal
+      ? `${personal.summaryInsight} ${overlay.summary}`
+      : overlay.summary;
+
     return {
       greeting: overlay.greeting,
       date: dateStr,
-      dayQuality: global.dayQuality,
-      summary: overlay.summary,
+      dayQuality: personal?.dayQuality ?? global.dayQuality,
+      summary,
       doList: global.doList,
       avoidList: global.avoidList,
       planetaryHours: global.planetaryHours,
       currentHora: global.currentHora,
-      luckyColor: global.luckyColor,
-      luckyNumber: global.luckyNumber,
+      luckyColor: personal?.luckyColor ?? global.luckyColor,
+      luckyNumber: personal?.luckyNumber ?? global.luckyNumber,
       luckyTime: global.luckyTime,
       professionInsight: overlay.professionInsight,
       remedy: global.remedy,
       mantra: global.mantra,
       panchang: global.panchang,
-      transitAlert: overlay.transitAlert,
+      // When personalization is available it is authoritative for the transit
+      // (a null means "no notable transit today" — don't fall back to the
+      // approximate age-based alert in that case).
+      transitAlert: personal ? personal.transitAlert : overlay.transitAlert,
+      moonSign: personal?.moonSign ?? null,
       astrologyTraditions: userTraditions,
     } as any;
   }
@@ -327,7 +372,7 @@ export class DailyBriefingService {
     const dayOfWeek = today.getDay();
     const dayRuler = DAY_RULERS[dayOfWeek];
 
-    const canonical = this.getBasicPanchang(today);
+    const canonical = await this.getPanchangCanonical(today);
 
     // Preload the 7 planet KB rows once; reused for lucky color, day
     // activities, hora activities, and planetary-hours localization.
@@ -502,6 +547,21 @@ export class DailyBriefingService {
     const period = h >= 12 ? 'PM' : 'AM';
     const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
     return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
+  }
+
+  /**
+   * Panchang from the real Swiss Ephemeris when available, falling back to the
+   * approximate mean-longitude computation if the ephemeris errors or is absent.
+   */
+  private async getPanchangCanonical(today: Date): Promise<PanchangCanonical> {
+    if (this.gocharService) {
+      try {
+        return await this.gocharService.computeEphemerisPanchang(today);
+      } catch (err) {
+        this.logger.warn(`Ephemeris panchang failed, using approximate: ${(err as Error)?.message ?? err}`);
+      }
+    }
+    return this.getBasicPanchang(today);
   }
 
   private getBasicPanchang(today: Date): PanchangCanonical {

@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { DailyBriefingController } from './daily-briefing.controller';
 import { DailyBriefingService } from './daily-briefing.service';
+import { GocharService } from './gochar.service';
 import { BriefingMailerService } from './briefing-mailer.service';
 import { BriefingPreferencesController } from './briefing-preferences.controller';
 import { KnowledgeModule } from '../../knowledge/knowledge.module';
@@ -15,7 +16,7 @@ import { BRIEFING_QUEUE } from '../../queue/queue.constants';
     BullModule.registerQueue({ name: BRIEFING_QUEUE }),
   ],
   controllers: [DailyBriefingController, BriefingPreferencesController],
-  providers: [DailyBriefingService, BriefingMailerService],
+  providers: [DailyBriefingService, GocharService, BriefingMailerService],
   exports: [DailyBriefingService, BriefingMailerService],
 })
 export class DailyBriefingModule {}
