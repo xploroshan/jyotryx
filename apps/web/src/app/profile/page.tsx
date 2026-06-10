@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
 import { Toast, RequiredMark } from "@/components/ui/Toast";
 import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSection";
+import TimeOfBirthInput from "@/components/ui/TimeOfBirthInput";
 
 interface UserProfile {
   id: string;
@@ -448,8 +449,7 @@ export default function ProfilePage() {
                       <label htmlFor="profile-tob" className="flex items-center text-xs font-medium text-emphasis mb-2">
                         {t.profile.tob} <RequiredMark />
                       </label>
-                      <input id="profile-tob" type="time" required value={tob} onChange={(e) => setTob(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]" />
+                      <TimeOfBirthInput id="profile-tob" required value={tob} onChange={setTob} />
                     </div>
                   </div>
                   <div>
