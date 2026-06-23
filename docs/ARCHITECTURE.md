@@ -54,7 +54,7 @@ graph TB
         Static[Static Assets<br/>+ CDN]
     end
 
-    subgraph Backend["Render / Railway — apps/api"]
+    subgraph Backend["Railway — apps/api"]
         API[NestJS API<br/>:4000]
         Worker[BullMQ Workers<br/>reports / emails / palmistry]
         Ephem[Ephemeris Worker Pool<br/>CPU-bound astro calc]
@@ -243,7 +243,7 @@ graph TB
 
 | Store | Engine | Role |
 |-------|--------|------|
-| Primary DB | PostgreSQL 16 + `pgvector` (Supabase / Railway / managed DO) | All transactional state, embeddings inline |
+| Primary DB | PostgreSQL 16 + `pgvector` (Supabase managed; DO managed PG in Phase 2) | All transactional state, embeddings inline |
 | Cache + Queues | Redis 7 (Upstash / managed DO) | Session cache, rate limit, BullMQ jobs, hot site-settings |
 | Vector DB (optional) | Pinecone | Knowledge-base retrieval at scale (alternative to pgvector) |
 | Object Storage | Cloudflare R2 (S3-compat) | Palmistry uploads, generated reports, exports |
@@ -524,7 +524,7 @@ The repo encodes a **three-phase** progression. Phase 1 is the current/near-term
 
 ```mermaid
 graph LR
-    P1[Phase 1<br/>Vercel + Railway/Render<br/>Supabase + Upstash<br/>~$130–210/mo<br/>under 10K users] --> P2[Phase 2<br/>DigitalOcean K8s<br/>managed PG + Redis<br/>~$170–255/mo<br/>50K–200K users]
+    P1[Phase 1<br/>Vercel + Railway<br/>Supabase + Upstash<br/>~$130–210/mo<br/>under 10K users] --> P2[Phase 2<br/>DigitalOcean K8s<br/>managed PG + Redis<br/>~$170–255/mo<br/>50K–200K users]
     P2 --> P3[Phase 3<br/>Cloudflare CDN + WAF<br/>R2 + Workers + Edge<br/>~+$0–50/mo<br/>200K+ users]
 ```
 
@@ -534,7 +534,7 @@ graph LR
 graph TB
     Users[Users] --> CF[Cloudflare DNS<br/>+ optional proxy]
     CF -->|www.myastro360.com| V[Vercel<br/>Next.js auto-build from main]
-    CF -->|api.myastro360.com| Rwy[Railway or Render<br/>API container]
+    CF -->|api.myastro360.com| Rwy[Railway<br/>API container]
 
     V --> Rwy
     Rwy --> SB[(Supabase<br/>Postgres + pgvector)]
@@ -547,7 +547,7 @@ graph TB
 
 **Active components today**:
 - Frontend: Vercel (Next.js auto-deploy from `main`, env vars in Vercel dashboard).
-- Backend: a container host — historically Render (`jyotryx.onrender.com`), being migrated to Railway (`ishxajzg.up.railway.app`). The CNAME `api.myastro360.com` points at whichever host is serving prod traffic.
+- Backend: **Railway** — origin `ishxajzg.up.railway.app`, with the CNAME `api.myastro360.com` pointing at it. (Previously Render at `jyotryx.onrender.com`, now retired.) ⚠️ Railway **suspends the service on a pending or failed payment** — the most common prod-down cause; see the [Incident Runbook](DEPLOYMENT.md#incident-runbook--troubleshooting).
 - Image registry: `ghcr.io/xploroshan/myastro360-api:latest` published by GitHub Actions on every push to `main` that touches `apps/api/**`.
 - Local dev: `docker-compose.yml` brings up Postgres + pgvector, Redis, PgBouncer, pgAdmin, API, and web in one command.
 
@@ -615,7 +615,6 @@ flowchart LR
     Build --> GHCR[(ghcr.io/xploroshan/<br/>myastro360-api)]
     GHCR --> Deploy{Deploy target}
     Deploy --> Railway
-    Deploy --> Render
     Deploy --> K8s[k8s rollout]
 ```
 
@@ -659,7 +658,7 @@ flowchart LR
 |----------|-------------|------------------|---------|
 | `myastro360.com` (apex) | Redirect → `www.myastro360.com` | — | Bare domain |
 | `www.myastro360.com` | `cname.vercel-dns.com` | OFF (Vercel handles TLS) | Frontend |
-| `api.myastro360.com` | Railway / Render CNAME | OFF (origin handles TLS) | Backend API |
+| `api.myastro360.com` | Railway CNAME | OFF (origin handles TLS) | Backend API |
 | `uploads.myastro360.com` | Cloudflare R2 custom domain | ON | Public R2 bucket |
 
 **Cloudflare Tunnel** (`cloudflare-tunnel.yml`) is a fallback for local-origin deployments — routes `api.` to `localhost:4000` and `www.` to `localhost:3000` via `cloudflared tunnel`. Useful in early dev / self-hosted scenarios.
@@ -668,7 +667,7 @@ flowchart LR
 graph LR
     U[User browser] -->|HTTPS| CF[Cloudflare DNS]
     CF -->|www| Vercel
-    CF -->|api| Origin[Railway or Render<br/>or k8s ingress]
+    CF -->|api| Origin[Railway<br/>or k8s ingress]
     CF -->|uploads| R2[(R2)]
     Vercel -->|fetch /api/*| Origin
     Origin -->|presigned URLs| R2
@@ -680,7 +679,7 @@ graph LR
 
 | Phase | Hosting | Monthly est. | Capacity ceiling | Trigger to move |
 |-------|---------|--------------|------------------|------------------|
-| **1** | Vercel + Railway/Render + Supabase + Upstash + R2 + LLM APIs | $130–210 | ~10 K MAU | Vercel function bill > $50/mo *or* API container saturating |
+| **1** | Vercel + Railway + Supabase + Upstash + R2 + LLM APIs | $130–210 | ~10 K MAU | Vercel function bill > $50/mo *or* API container saturating |
 | **2** | DigitalOcean K8s (3 × s-2vcpu-4gb) + managed PG/Redis + R2 + LLM APIs | $170–255 (infra) + LLM | 50 K – 200 K MAU | Sustained ingress > 200 RPS *or* multi-region needed |
 | **3** | Same + Cloudflare paid plans (WAF, Workers, Argo) | + $0–50 baseline (LLM dominates) | 200 K+ MAU | Geographic latency or DDoS pressure |
 

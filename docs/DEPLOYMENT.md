@@ -1,6 +1,12 @@
 # myastro360 Deployment Guide — Scaling to 200K Users
 
 ## Table of Contents
+
+**▶ Operating the live system — start here during an incident:**
+- [Production Topology at a Glance](#production-topology-at-a-glance) — what runs where, and which dashboard to open
+- [Incident Runbook & Troubleshooting](#incident-runbook--troubleshooting) — "site down / can't log in" triage
+
+**Setup & scaling guides:**
 1. [Current Architecture Overview](#1-current-architecture-overview)
 2. [Phase 1: Railway (API) + Vercel (Web) + Managed DB](#2-phase-1-railway--vercel--managed-db)
 3. [Phase 2: Kubernetes on DigitalOcean](#3-phase-2-kubernetes-on-digitalocean)
@@ -11,20 +17,128 @@
 
 ---
 
+## Production Topology at a Glance
+
+> **This is the map. During an incident, open the dashboard for the failing component — don't guess.**
+> All secrets and identifiers (project refs, team IDs, tokens) live in the provider dashboards and `apps/api/.env` — never in this repo.
+
+| # | Component | Provider | What it does | Where to look | Most common failure |
+|---|---|---|---|---|---|
+| 1 | **Web** | **Vercel** (project `jyotryx-web`) | Serves the Next.js app at `www.myastro360.com`; auto-deploys `main`. | Vercel → Deployments / Runtime Logs | Build/deploy failed (last good stays live); bad `NEXT_PUBLIC_*` env |
+| 2 | **API** | **Railway** | NestJS backend at `api.myastro360.com` — handles auth/login and all data. Builds `apps/api/Dockerfile`; healthcheck `/api/health/ready`. | Railway → service → Deployments + Logs + **Billing** | **Service suspended on a pending/failed payment**; crash-loop; failed migration |
+| 3 | **Postgres** | **Supabase** (`ap-south-1`) | Primary DB + pgvector. Pooler `:6543` at runtime, direct `:5432` for migrations. | Supabase → project status; Logs → Postgres | Project **paused** (inactivity); connection limit; wrong `DATABASE_URL` |
+| 4 | **Redis** | **Upstash** (`ap-south-1`) | Cache, BullMQ queues, OTP store, login rate-limit/lockout. `rediss://`, `noeviction`. | Upstash → usage/metrics | Daily quota exhausted → queues/OTP degrade (login still works — soft dep) |
+| 5 | **DNS / TLS / CDN** | **Cloudflare** | `www` proxied (CDN); `api` **DNS-only** so Railway terminates TLS. | Cloudflare → DNS, SSL/TLS | Wrong/un-proxied record; SSL mode mismatch (521/523/525) |
+| 6 | **Object storage** | **Cloudflare R2** | Palm uploads, PDF reports at `uploads.myastro360.com`. | Cloudflare → R2 | Bucket/key/CORS misconfig |
+| 7 | **LLM** | OpenAI · Gemini · Anthropic | Reading generation, failover chain (order in `site_settings`). | Provider dashboards; API logs | Spend cap hit / key revoked → failover or feature errors |
+| 8 | **Errors** | Sentry | Exception tracking (API + web). | Sentry dashboard | — |
+
+**The login request path is only three of these:** browser → **Web (Vercel)** loads the page → it POSTs to **API (Railway)** `/api/auth/login` → API reads **Postgres (Supabase)**. So *"the site loads but I can't log in"* almost always means **#2 (Railway API)** or **#3 (Supabase DB)** — not the web app itself.
+
+---
+
+## Incident Runbook & Troubleshooting
+
+### 0. First 60 seconds — run these three checks
+
+```bash
+# Is the web shell up? (Vercel)
+curl -I https://www.myastro360.com
+# → HTTP 200/308 = web OK.  Connection/DNS/TLS error = jump to §DNS (Cloudflare) or §Web (Vercel)
+
+# Is the API process up? (Railway) — liveness has NO dependencies
+curl -i https://api.myastro360.com/api/health/live
+# → {"status":"ok"} = process alive.  502/503/timeout/"Application failed to respond" = jump to §API (Railway)
+
+# Can the API reach its data stores? (DB hard-required, Redis soft)
+curl -s https://api.myastro360.com/api/health/ready
+# → 200 with database:"up" = DB reachable.  503 with database:"down" = jump to §Database (Supabase)
+```
+
+**Symptom → component:**
+
+| Symptom | Most likely | Section |
+|---|---|---|
+| Whole site unreachable; browser TLS/DNS error (Cloudflare 1016 / 521 / 523) | DNS/CDN | §DNS |
+| Site loads, but **login + everything data-driven fails** | **API (Railway)** | §API |
+| `…/api/health/live` returns 502 / "Application failed to respond" | **API (Railway)** | §API |
+| `…/api/health/ready` is 503 with `database: down` | Postgres (Supabase) | §Database |
+| Login works, but OTP / queued jobs / reports are stuck | Redis (Upstash) / worker | §Redis |
+| The web URL itself errors while the API is healthy | Web (Vercel) | §Web |
+
+### §API — API down (Railway) · the most common cause
+
+**Symptoms:** `www.myastro360.com` loads but login and all authenticated/data calls fail; `…/api/health/live` returns 502/503/timeout or *"Application failed to respond"*; Supabase shows `ACTIVE_HEALTHY` **but nearly idle** (because requests never reach it).
+
+**Check these in order:**
+
+1. **Billing — check this first.** Railway **suspends the service when a payment is pending or a card fails**, and the API simply stops responding. Railway → your project shows a *"payment required" / resource-limited* banner. **This was the root cause of the 2026-06-23 login outage** — settling the pending Railway payment restored service.
+   - **Fix:** settle the outstanding invoice / update the payment method. The service resumes automatically; if it doesn't, redeploy (Railway → Deployments → Redeploy).
+   - **Prevent:** enable Railway billing/usage alerts and keep a valid backup card on file (see [Prevention](#prevention--make-the-next-incident-loud-and-early)).
+2. **Deploy status / logs.** Railway → service → Deployments. Is the latest deploy *crashed* or *crash-looping*? Open its logs. Boot failures we've seen: a bad/missing env var, `npx prisma migrate deploy` failing against the DB, or an unhandled exception at startup.
+   - **Fix:** redeploy the last green build or roll back; correct the offending variable (Variables tab) and redeploy.
+3. **Resource limits.** Out-of-memory or hitting the plan's usage cap can also kill/suspend the service (same banner area).
+
+**Confirm recovery:** `curl -i https://api.myastro360.com/api/health/live` → `{"status":"ok"}`, then `…/api/health/ready` → 200.
+
+### §Database — DB unreachable (Supabase)
+
+**Symptoms:** API logs show DB connection errors; `…/api/health/ready` → **503** with `database: { status: "down" }`; login throws 500s.
+
+**Checks:**
+- Supabase → project **status**: `ACTIVE_HEALTHY` or **paused**? (Inactive projects can auto-pause — a classic "everything's down" cause.)
+- Connections vs. limit, and Logs → Postgres for `too many clients` / `FATAL`.
+- `DATABASE_URL` correct? Runtime uses the **pooler URL (`:6543`, `?pgbouncer=true`)**; migrations use the **direct URL (`:5432`)**.
+
+**Fixes:** resume a paused project; correct the connection string in Railway Variables; raise compute / pool size if connection-exhausted.
+
+> If Supabase is `ACTIVE_HEALTHY` but almost idle while users report an outage, the DB is fine — traffic isn't reaching it. Look **upstream at the API (§API)**.
+
+### §Redis — Redis degraded (Upstash)
+
+Login is intentionally resilient to Redis: `auth.service.ts` treats the rate-limit/lockout store as best-effort, and `/api/health/ready` keeps Redis **soft** (`REDIS_HEALTH_REQUIRED=false` default), so a Redis blip reports `degraded` but readiness stays green and **login keeps working**. What *does* break: OTP send/verify, BullMQ jobs (reports/PDFs), and rate-limiting. Check the Upstash console for daily-quota exhaustion; raise the plan/quota.
+
+### §Web — Web down (Vercel)
+
+If `www.myastro360.com` itself errors while the API is healthy: Vercel → `jyotryx-web` → Deployments (is the latest **production** deploy `READY`?) and Runtime Logs. Fix by redeploying or rolling back to the last `READY` production deployment. (Dependabot/PR-branch deploys are *preview* targets and don't affect production.)
+
+### §DNS — DNS / TLS / CDN (Cloudflare)
+
+**Symptoms:** total unreachability, browser TLS errors, Cloudflare 1016/521/523/525.
+
+**Checks:** Cloudflare → DNS —
+- `www` → CNAME `cname.vercel-dns.com`, **proxied (orange)**.
+- `api` → the target Railway gives you, **DNS-only (gray)** so Railway can terminate TLS.
+- SSL/TLS mode = **Full (strict)**.
+
+### Prevention — make the next incident loud and early
+
+- **Billing alerts on every paid provider** — Railway, Vercel, Supabase, Upstash. The 2026-06-23 outage was a *billing* failure with no infra fault; an alert would have caught it before users did. Keep a valid backup payment method on Railway.
+- **External uptime monitoring** hitting `https://api.myastro360.com/api/health/ready` every 1–5 min with alerting (UptimeRobot, BetterStack, or Cloudflare Health Checks). This pages you on any of §API / §Database / §DNS before a user complains.
+- **Sentry alerts** for API error-rate spikes.
+
+---
+
 ## 1. Current Architecture Overview
 
 ```
-┌─────────────┐     ┌───────────────┐     ┌──────────────┐
-│  Vercel      │────▶│  Render       │────▶│  PostgreSQL   │
-│  (Next.js)   │     │  (NestJS API) │     │  + pgvector   │
-│  Port 3000   │     │  Port 4000    │     │  Port 5432    │
-└─────────────┘     └───────┬───────┘     └──────────────┘
-                            │
-                    ┌───────┴───────┐
-                    │    Redis      │
-                    │  (BullMQ +    │
-                    │   Sessions)   │
-                    └───────────────┘
+   Browser
+      │  HTTPS
+      ▼
+┌──────────────┐  POST /api/*  ┌──────────────────┐   SQL   ┌─────────────────────────┐
+│ Vercel        │ ────────────▶ │ Railway           │ ──────▶ │ Supabase Postgres 16     │
+│ Next.js web   │               │ NestJS API        │         │ + pgvector (ap-south-1)  │
+│ www.myastro…  │               │ api.myastro…      │         └─────────────────────────┘
+└──────────────┘               └────────┬─────────┘
+                                        │
+                                        ▼
+                               ┌──────────────────┐
+                               │ Upstash Redis     │
+                               │ cache · BullMQ ·  │
+                               │ OTP · rate-limit  │
+                               └──────────────────┘
+
+Cloudflare: DNS + TLS + CDN (www proxied · api DNS-only) · R2 storage (uploads.myastro…)
 ```
 
 **Services your app needs:**
@@ -35,11 +149,11 @@
 - Object storage (Cloudflare R2 — already configured)
 - LLM API keys (OpenAI, Gemini, Anthropic)
 
-**Key endpoints:**
-- `GET /health/live` — liveness probe (returns `{status: "ok"}`)
-- `GET /health/ready` — readiness probe (checks DB + Redis)
+**Key endpoints** (everything is behind the global `/api` prefix):
+- `GET /api/health/live` — liveness; returns `{"status":"ok"}` with **no dependencies**
+- `GET /api/health/ready` — readiness; **DB is hard-required** (HTTP 503 if down), **Redis is soft by default** (reports `degraded` but stays green unless `REDIS_HEALTH_REQUIRED=true`)
 - `GET /api/docs` — Swagger docs (dev only)
-- All API routes are prefixed with `/api`
+- `GET /api/metrics` — Prometheus metrics
 
 ---
 
@@ -181,7 +295,7 @@ RATE_LIMIT_MAX_REQUESTS=60
 
 **Step 4: Configure health checks**
 In Railway service settings:
-- Health check path: `/health/ready`
+- Health check path: `/api/health/ready` (note the global `/api` prefix — `/health/ready` will 404)
 - Health check port: `4000`
 
 **Step 5: Set up custom domain**
@@ -230,10 +344,10 @@ In Vercel project settings:
 
 ```bash
 # 1. Check API health
-curl https://api.myastro360.com/health/live
+curl https://api.myastro360.com/api/health/live
 # Expected: {"status":"ok"}
 
-curl https://api.myastro360.com/health/ready
+curl https://api.myastro360.com/api/health/ready
 # Expected: {"status":"ok","info":{"database":{"status":"up"},"redis":{"status":"up"}}}
 
 # 2. Check web frontend
@@ -471,7 +585,7 @@ www.myastro360.com  → A record → <LB-IP> (proxy ON for CDN)
 kubectl get pods -n myastro360 -o wide
 
 # Check API readiness
-kubectl exec -n myastro360 deploy/api -- wget -qO- http://localhost:4000/health/ready
+kubectl exec -n myastro360 deploy/api -- wget -qO- http://localhost:4000/api/health/ready
 
 # Check logs
 kubectl logs -n myastro360 deploy/api --tail=50
