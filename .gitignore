@@ -48,6 +48,11 @@ tmp/
 # Coverage
 coverage/
 
+# Python (ui-ux-pro-max skill scripts)
+__pycache__/
+*.pyc
+.coverage
+
 # Playwright
 test-results/
 playwright-report/
