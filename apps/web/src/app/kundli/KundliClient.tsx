@@ -15,6 +15,7 @@ import { FeatureGlyph } from "@/components/icons";
 import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
 import { SouthIndianChart } from "@/components/kundli/SouthIndianChart";
 import { orderPlanets } from "@/components/kundli/chart-common";
+import { ShowYourWork, type ChartFactor } from "@/components/transparency/ShowYourWork";
 
 interface KundliData {
   id: string;
@@ -48,6 +49,7 @@ interface KundliData {
     D9?: DivisionalChart;
     D10?: DivisionalChart;
   };
+  factors?: ChartFactor[];
 }
 
 interface DivisionalChart {
@@ -70,6 +72,7 @@ interface DoshaData {
     description: string;
     remedies: string[];
   }[];
+  factors?: ChartFactor[];
 }
 
 export default function KundliPage() {
@@ -94,6 +97,7 @@ export default function KundliPage() {
     { id: "dasha", label: t.kundli.dashaPeriods },
     { id: "yogas", label: t.kundli.yogas },
     { id: "doshas", label: t.kundli.doshasTab },
+    { id: "transparency", label: t.showYourWork.tab },
   ];
 
   const [activeTab, setActiveTab] = useState("chart");
@@ -105,6 +109,14 @@ export default function KundliPage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", dob: "", time: "", place: "" });
   const [prefilled, setPrefilled] = useState(false);
+
+  // "Show Your Work": merge the deterministic factors the API returns for the
+  // chart with those from the dosha analysis so the transparency tab presents
+  // a single, unified list of the reasons behind the reading.
+  const factors: ChartFactor[] = [
+    ...(kundli?.factors ?? []),
+    ...(doshas?.factors ?? []),
+  ];
 
   // Prepopulate from user profile when available
   useEffect(() => {
@@ -678,6 +690,8 @@ export default function KundliPage() {
                 )}
               </div>
             )}
+
+            {activeTab === "transparency" && <ShowYourWork factors={factors} />}
           </div>
         )}
       </div>

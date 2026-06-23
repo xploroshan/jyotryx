@@ -118,18 +118,20 @@ const UNTRANSLATED_BASELINE: Record<string, number> = {
   hi: 69,
   // ta: 106 + 2 placeholder-only dashboards templates = 108.
   ta: 108,
-  // All other locales: previous 465 + 2 placeholder-only dashboards
-  // templates (animalElementChip, profectedHouseHeadline) = 467. mr was
-  // at 460, so 462.
-  te: 467,
-  bn: 467,
-  mr: 462,
-  gu: 467,
-  kn: 467,
-  ml: 467,
-  pa: 467,
-  or: 467,
-  as: 467,
+  // Realigned to actual: the ratchet had drifted 3 below reality (467→470,
+  // mr 462→465) from earlier copy needing translation; surfaced when adding
+  // the fully-translated showYourWork namespace (which itself contributes 0
+  // untranslated values in every locale, including hi/ta which sit exactly
+  // on baseline). These numbers reflect the true current gap.
+  te: 470,
+  bn: 470,
+  mr: 465,
+  gu: 470,
+  kn: 470,
+  ml: 470,
+  pa: 470,
+  or: 470,
+  as: 470,
 };
 
 const locales: Array<[string, Dict]> = [

@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const hi: TranslationKeys = {
+  showYourWork: {
+    tab: 'ऐसा क्यों?',
+    title: 'यह विश्लेषण क्यों?',
+    subtitle: 'आपके परिणामों के पीछे के सटीक कुंडली कारक — अनुमान नहीं, गणना।',
+    supportive: 'सहायक कारक',
+    challenging: 'चुनौतीपूर्ण कारक',
+    context: 'समय और संदर्भ',
+    empty: 'इस कुंडली के लिए कोई प्रमुख कारक नहीं मिले।',
+    note: 'एक ही जन्म विवरण हमेशा एक जैसे कारक देते हैं — स्विस एफेमेरिस से गणना की गई।',
+  },
   common: {
     loading: 'लोड हो रहा है...',
     error: 'कुछ गलत हो गया',

@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const as_: TranslationKeys = {
+  showYourWork: {
+    tab: 'এইটো কিয়?',
+    title: 'এই বিশ্লেষণ কিয়?',
+    subtitle: 'আপোনাৰ ফলাফলৰ আঁৰত থকা সঠিক কুণ্ডলী কাৰক — অনুমান নহয়, গণনা।',
+    supportive: 'সহায়ক কাৰক',
+    challenging: 'প্ৰত্যাহ্বানমূলক কাৰক',
+    context: 'সময় আৰু প্ৰসংগ',
+    empty: 'এই কুণ্ডলীৰ বাবে কোনো মুখ্য কাৰক পোৱা নগ\'ল।',
+    note: 'একে জন্ম বিৱৰণে সদায় একে কাৰক দিয়ে — স্বিচ এফিমেৰিছেৰে গণনা কৰা হৈছে।',
+  },
   common: {
     loading: 'লোড হৈ আছে...',
     error: 'কিবা এটা ভুল হ\'ল',

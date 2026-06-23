@@ -664,6 +664,18 @@ export const en = {
     withNoPlanets: 'house with no planets placed here.',
   },
 
+  // Show Your Work — transparency panel surfacing the chart factors behind a reading.
+  showYourWork: {
+    tab: 'Why this?',
+    title: 'Why this reading?',
+    subtitle: 'The exact chart factors behind your results — calculated, not guessed.',
+    supportive: 'Supportive factors',
+    challenging: 'Challenging factors',
+    context: 'Timing & context',
+    empty: 'No standout factors stood out for this chart.',
+    note: 'The same birth details always produce the same factors — computed with the Swiss Ephemeris.',
+  },
+
   // Horoscope
   horoscope: {
     badge: 'Vedic Horoscope',

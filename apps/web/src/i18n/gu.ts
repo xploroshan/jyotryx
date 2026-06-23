@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const gu: TranslationKeys = {
+  showYourWork: {
+    tab: 'આ શા માટે?',
+    title: 'આ વિશ્લેષણ શા માટે?',
+    subtitle: 'તમારા પરિણામો પાછળના ચોક્કસ કુંડળી પરિબળો — અનુમાન નહીં, ગણતરી.',
+    supportive: 'સહાયક પરિબળો',
+    challenging: 'પડકારજનક પરિબળો',
+    context: 'સમય અને સંદર્ભ',
+    empty: 'આ કુંડળી માટે કોઈ મુખ્ય પરિબળો મળ્યા નથી.',
+    note: 'એક જ જન્મ વિગતો હંમેશા એક જ પરિબળો આપે છે — સ્વિસ એફિમેરિસથી ગણતરી કરેલ.',
+  },
   common: {
     loading: 'લોડ થઈ રહ્યું છે...',
     error: 'કંઈક ખોટું થયું',

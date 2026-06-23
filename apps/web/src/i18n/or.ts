@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const or_: TranslationKeys = {
+  showYourWork: {
+    tab: 'ଏହା କାହିଁକି?',
+    title: 'ଏହି ବିଶ୍ଳେଷଣ କାହିଁକି?',
+    subtitle: 'ଆପଣଙ୍କ ଫଳାଫଳ ପଛରେ ଥିବା ସଠିକ୍ କୁଣ୍ଡଳୀ କାରକ — ଅନୁମାନ ନୁହେଁ, ଗଣନା।',
+    supportive: 'ସହାୟକ କାରକ',
+    challenging: 'ଆହ୍ୱାନପୂର୍ଣ୍ଣ କାରକ',
+    context: 'ସମୟ ଓ ପ୍ରସଙ୍ଗ',
+    empty: 'ଏହି କୁଣ୍ଡଳୀ ପାଇଁ କୌଣସି ମୁଖ୍ୟ କାରକ ମିଳିଲା ନାହିଁ।',
+    note: 'ସମାନ ଜନ୍ମ ବିବରଣୀ ସର୍ବଦା ସମାନ କାରକ ଦିଏ — ସ୍ୱିସ୍ ଏଫିମେରିସ୍ ଦ୍ୱାରା ଗଣନା କରାଯାଇଛି।',
+  },
   common: {
     loading: 'ଲୋଡ ହେଉଛି...',
     error: 'କିଛି ଭୁଲ ହୋଇଗଲା',

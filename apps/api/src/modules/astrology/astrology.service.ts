@@ -10,6 +10,7 @@ import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import { resolveUtHour } from '../../common/timezone.util';
+import { buildKundliFactors, buildDoshaFactors, ChartFactor } from './factors.util';
 import * as path from 'path';
 
 // ─── Swiss Ephemeris Setup (kept as sync fallback for methods not yet ported) ─
@@ -128,6 +129,8 @@ export interface KundliResult {
   dashas: DashaPeriod[];
   yogas: Yoga[];
   createdAt: string;
+  /** "Show Your Work" — the specific chart factors behind this reading. */
+  factors?: ChartFactor[];
 }
 
 export interface HousePlacement {
@@ -240,6 +243,8 @@ export interface DoshaResult {
     description: string;
     remedies: string[];
   }[];
+  /** "Show Your Work" — factors for each dosha present in the chart. */
+  factors?: ChartFactor[];
 }
 
 // Internal shape produced by detectDoshas(): carries the template key +
@@ -317,13 +322,17 @@ export class AstrologyService {
           chartData,
         },
       });
-      return {
+      const result: KundliResult = {
         id: kundli.id,
         userId,
         birthDetails,
         ...chartData,
         createdAt: kundli.createdAt.toISOString(),
       };
+      // "Show Your Work": derive the transparency factor list from the
+      // already-computed chart. Additive on the response only — not persisted.
+      result.factors = buildKundliFactors(result);
+      return result;
     });
   }
 
@@ -2218,7 +2227,8 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       };
       const chart = await this.generateSwissEphKundliAsync(birthDetails);
       const doshas = this.detectDoshas(chart.planetaryPositions);
-      return { userId, doshas: await this.localizeDoshas(doshas, locale) };
+      const localized = await this.localizeDoshas(doshas, locale);
+      return { userId, doshas: localized, factors: buildDoshaFactors(localized) };
     }
 
     // No birth details available — emit the `birth_required` branch per
@@ -2229,7 +2239,8 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       { key: 'kaal_sarp', name: 'Kaal Sarp Dosha',        present: false, severity: 'none', descriptionKey: 'dosha.kaal_sarp.birth_required', descriptionVars: {}, hadRemedies: false },
       { key: 'pitra',     name: 'Pitra Dosha',            present: false, severity: 'none', descriptionKey: 'dosha.pitra.birth_required',     descriptionVars: {}, hadRemedies: false },
     ];
-    return { userId, doshas: await this.localizeDoshas(fallback, locale) };
+    const localized = await this.localizeDoshas(fallback, locale);
+    return { userId, doshas: localized, factors: buildDoshaFactors(localized) };
   }
 
   private async localizeDoshas(

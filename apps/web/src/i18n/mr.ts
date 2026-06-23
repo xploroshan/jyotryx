@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const mr: TranslationKeys = {
+  showYourWork: {
+    tab: 'हे का?',
+    title: 'हे विश्लेषण का?',
+    subtitle: 'तुमच्या निकालांमागील नेमके कुंडली घटक — अंदाज नाही, गणना.',
+    supportive: 'सहाय्यक घटक',
+    challenging: 'आव्हानात्मक घटक',
+    context: 'वेळ आणि संदर्भ',
+    empty: 'या कुंडलीसाठी कोणतेही ठळक घटक आढळले नाहीत.',
+    note: 'एकच जन्मतपशील नेहमी सारखेच घटक देतात — स्विस एफिमेरिसने गणना केली.',
+  },
   common: {
     loading: 'लोड होत आहे...',
     error: 'काहीतरी चूक झाली',
