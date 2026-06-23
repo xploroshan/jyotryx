@@ -325,6 +325,8 @@ psql $DATABASE_URL -c "UPDATE users SET role='ADMIN' WHERE email='you@example.co
 | LLM | OpenAI · Gemini · Anthropic | Failover order configurable in `site_settings` table. |
 | Errors | Sentry | Both API and web instrumented. |
 
+> **🚨 Something down / can't log in?** The login path is **Web (Vercel) → API (Railway) → Postgres (Supabase)**, so a site that loads but won't authenticate is almost always the **Railway API** — the #1 cause being that **Railway suspends the service on a pending/failed payment** — or **Supabase**. Go straight to the **[Incident Runbook](docs/DEPLOYMENT.md#incident-runbook--troubleshooting)** for 60-second triage and per-component fixes.
+
 ### Deployment flow
 
 1. Push to `main` (or merge a PR).
@@ -332,7 +334,7 @@ psql $DATABASE_URL -c "UPDATE users SET role='ADMIN' WHERE email='you@example.co
 3. Railway sees the change under `apps/api/**`, builds the Dockerfile, runs `npx prisma migrate deploy && node dist/main`.
 4. `.github/workflows/publish-api.yml` independently pushes a tagged container to GHCR (`ghcr.io/xploroshan/myastro360-api:latest` and `:sha-<commit>`) for K8s deploys.
 
-For the long-form deployment guide — Supabase + Upstash + Railway setup, custom-domain wiring, K8s migration plan, monitoring hookup, and cost summary — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+For the long-form deployment guide — Supabase + Upstash + Railway setup, custom-domain wiring, K8s migration plan, monitoring hookup, and cost summary — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). When operating the live system, start with the [Production Topology at a Glance](docs/DEPLOYMENT.md#production-topology-at-a-glance) and the [Incident Runbook](docs/DEPLOYMENT.md#incident-runbook--troubleshooting).
 
 ### Environment variables
 
