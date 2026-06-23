@@ -52,6 +52,13 @@ export function isProfileComplete(user: {
 }
 
 const VALID_TRADITIONS = new Set(['VEDIC', 'WESTERN', 'CHINESE', 'HELLENISTIC', 'HORARY', 'MEDICAL']);
+// Mirrors the Prisma `Profession` enum. The profile body is an interface, so
+// the global ValidationPipe can't enforce it — we validate here before the
+// raw value hits the typed enum column (which would otherwise 500).
+const VALID_PROFESSIONS = new Set([
+  'SOFTWARE', 'SALES', 'MARKETING', 'FINANCE', 'STUDENT',
+  'BUSINESS', 'HEALTHCARE', 'CREATIVE', 'GOVERNMENT', 'OTHER',
+]);
 
 export interface UpdateProfileDto {
   name?: string;
@@ -60,7 +67,7 @@ export interface UpdateProfileDto {
   phone?: string;
   dateOfBirth?: string;
   timeOfBirth?: string;
-  placeOfBirth?: string;
+  placeOfBirth?: string | { name: string; lat?: number; lng?: number };
   gender?: string;
   profession?: string;
   profilePhoto?: string;
@@ -136,6 +143,33 @@ export class UserService {
       }
     }
 
+    // placeOfBirth: accept a structured { name, lat, lng } object and store
+    // it as-is; for a bare string, MERGE into the existing JSON so we don't
+    // wipe the lat/lng the ephemeris engine needs (the old code replaced the
+    // whole object with { name }, silently breaking chart generation).
+    let placeOfBirthUpdate: Record<string, any> = {};
+    if (dto.placeOfBirth !== undefined && dto.placeOfBirth !== null) {
+      if (typeof dto.placeOfBirth === 'object') {
+        placeOfBirthUpdate = { placeOfBirth: dto.placeOfBirth };
+      } else {
+        const current = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { placeOfBirth: true },
+        });
+        const prev = (current?.placeOfBirth ?? {}) as Record<string, any>;
+        placeOfBirthUpdate = { placeOfBirth: { ...prev, name: dto.placeOfBirth } };
+      }
+    }
+
+    // profession: validate against the Prisma enum before writing.
+    let professionUpdate: Record<string, any> = {};
+    if (dto.profession !== undefined && dto.profession !== null) {
+      if (!VALID_PROFESSIONS.has(dto.profession)) {
+        throw new BadRequestException(`Unsupported profession: ${dto.profession}`);
+      }
+      professionUpdate = { profession: dto.profession as any };
+    }
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -149,9 +183,9 @@ export class UserService {
         ...(dto.phone && { phone: normalizePhone(dto.phone) }),
         ...(dto.dateOfBirth && { dateOfBirth: new Date(dto.dateOfBirth) }),
         ...(dto.timeOfBirth && { timeOfBirth: dto.timeOfBirth }),
-        ...(dto.placeOfBirth && { placeOfBirth: { name: dto.placeOfBirth } }),
+        ...placeOfBirthUpdate,
         ...(dto.gender && { gender: dto.gender }),
-        ...(dto.profession && { profession: dto.profession as any }),
+        ...professionUpdate,
         ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
         ...(dto.preferredLanguage && { preferredLanguage: dto.preferredLanguage }),
         ...traditionsUpdate,

@@ -460,14 +460,24 @@ export class PaymentService {
     };
   }
 
-  async handleWebhook(payload: Record<string, any>, signatureHeader?: string): Promise<{ received: boolean }> {
-    // Signature verification — fail-CLOSED when secret missing (same as
-    // verifyPayment). A webhook endpoint with no signature check is a
-    // public credit-grant API; refuse to run without configuration.
-    const webhookSecret = this.configService.get<string>('razorpay.webhookSecret') ||
-                          this.configService.get<string>('razorpay.keySecret');
+  async handleWebhook(
+    payload: Record<string, any>,
+    signatureHeader?: string,
+    rawBody?: Buffer,
+  ): Promise<{ received: boolean }> {
+    // Signature verification — fail-CLOSED when the secret is missing. A
+    // webhook endpoint with no signature check is a public credit-grant API;
+    // refuse to run without configuration.
+    //
+    // Razorpay webhooks are signed with the *webhook* secret (configured on
+    // the dashboard webhook), which is a DIFFERENT value from the API
+    // key-secret used for the client-side `verifyPayment` checkout
+    // signature. We do NOT fall back to `keySecret` here: that fallback
+    // silently breaks every webhook on a deploy that only set
+    // RAZORPAY_KEY_SECRET, and conflates two unrelated secrets.
+    const webhookSecret = this.configService.get<string>('razorpay.webhookSecret');
     if (!webhookSecret) {
-      this.logger.error('handleWebhook: no Razorpay secret configured — refusing to process');
+      this.logger.error('handleWebhook: RAZORPAY_WEBHOOK_SECRET not configured — refusing to process');
       throw new InternalServerErrorException('Webhook processing is not configured');
     }
     if (!signatureHeader) {
@@ -475,9 +485,26 @@ export class PaymentService {
       throw new BadRequestException('Missing webhook signature');
     }
 
+    // The signature must be computed over the EXACT bytes Razorpay sent.
+    // `req.rawBody` (enabled via `rawBody: true` in main.ts) preserves them;
+    // JSON.stringify(parsedBody) does NOT reproduce key order/whitespace and
+    // would fail verification for every legitimate webhook. In production we
+    // therefore REQUIRE the raw buffer; outside production we fall back to a
+    // canonical re-serialization so unit tests (which pass a parsed payload)
+    // keep working.
+    let bodyBuf: Buffer;
+    if (rawBody && rawBody.length > 0) {
+      bodyBuf = rawBody;
+    } else if ((process.env.NODE_ENV ?? '') === 'production') {
+      this.logger.error('handleWebhook: raw request body unavailable — cannot verify signature');
+      throw new BadRequestException('Webhook body unavailable');
+    } else {
+      bodyBuf = Buffer.from(JSON.stringify(payload));
+    }
+
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(payload))
+      .update(bodyBuf)
       .digest('hex');
 
     if (!safeSignatureEqual(expectedSignature, signatureHeader)) {
@@ -537,8 +564,15 @@ export class PaymentService {
           break;
         case 'payment.failed':
           if (paymentEntity?.order_id) {
+            // Guard against out-of-order / duplicate delivery flipping an
+            // already-settled payment to FAILED (which would corrupt the
+            // ledger and orphan a granted entitlement). Only still-pending
+            // rows may transition to FAILED.
             await this.prisma.payment.updateMany({
-              where: { razorpayOrderId: paymentEntity.order_id },
+              where: {
+                razorpayOrderId: paymentEntity.order_id,
+                status: { notIn: ['SUCCESS', 'REFUNDED'] },
+              },
               data: { status: 'FAILED' },
             });
           }
@@ -625,9 +659,17 @@ export class PaymentService {
               if (count === 0) return; // already refunded, or not our payment
               const payment = await tx.payment.findFirst({
                 where: { razorpayPaymentId: refund.payment_id },
-                select: { userId: true, amount: true, metadata: true, type: true },
+                select: { id: true, userId: true, amount: true, metadata: true, type: true },
               });
-              if (!payment || payment.type !== 'CREDITS') return;
+              if (!payment) return;
+              // One-time pay-to-unlock (report/palmistry) refunds: void the
+              // granted entitlement so the refunded user can't still redeem
+              // the unlock. (Previously only CREDITS refunds were reversed,
+              // leaving a buy→refund→keep-the-report revenue leak.)
+              if (payment.type !== 'CREDITS') {
+                await this.featureAccess.voidEntitlementByPayment(payment.id, tx);
+                return;
+              }
               const granted = this.creditsForPayment(payment);
               if (granted <= 0) return;
               const user = await tx.user.findUnique({

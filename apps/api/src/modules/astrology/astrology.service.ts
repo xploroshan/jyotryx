@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { assertValidBirthDetails } from './birth-details.validation';
 import { UserService } from '../user/user.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
@@ -300,6 +301,7 @@ export class AstrologyService {
 
   async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
+    assertValidBirthDetails(birthDetails);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
     return this.userService.deductWithRefund(userId, creditCost, 'Kundli generation', async () => {
       const chartData = await this.generateAIKundli(birthDetails);
@@ -876,6 +878,8 @@ export class AstrologyService {
 
   async getMatching(userId: string, partner1: BirthDetails, partner2: BirthDetails, locale?: string): Promise<MatchingResult> {
     this.logger.log('Performing Kundli matching');
+    assertValidBirthDetails(partner1);
+    assertValidBirthDetails(partner2);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
     return this.userService.deductWithRefund(userId, creditCost, 'Kundli matching', async () => {
       const gunaDetails = this.calculateGunaScores(partner1, partner2);
@@ -2443,6 +2447,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     if (!divisor || divisor < 2 || divisor > 60) {
       throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
     }
+    assertValidBirthDetails(birthDetails);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
     return this.userService.deductWithRefund(userId, creditCost, `Divisional chart D${type}`, async () => {
       const chart = await this.generateAIKundli(birthDetails);
@@ -2463,6 +2468,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
 
   // ─── KP Astrology ────────────────────────────────────────────────────────────
   async generateKPChart(userId: string, birthDetails: BirthDetails): Promise<any> {
+    assertValidBirthDetails(birthDetails);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
     return this.userService.deductWithRefund(userId, creditCost, 'KP chart generation', () => this.computeKPChart(birthDetails));
   }

@@ -153,6 +153,31 @@ export class FeatureAccessService {
   }
 
   /**
+   * Void the entitlement granted for a refunded payment so a user who buys
+   * a one-time unlock and is then refunded cannot still redeem it. Only
+   * voids entitlements that have NOT yet been consumed (`consumedAt IS
+   * NULL`) — an already-redeemed unlock is left as-is (the report/reading
+   * was already delivered). We "void" by stamping `consumedAt` with a null
+   * `consumedRef`, which removes it from the unused-entitlement pool
+   * (`resolveUnlock`/`consumeEntitlement` both filter `consumedAt IS NULL`)
+   * without needing a schema migration. Idempotent. Returns the count voided.
+   *
+   * Accepts an optional transaction client so it runs inside the refund's
+   * atomic claim.
+   */
+  async voidEntitlementByPayment(paymentId: string, tx?: any): Promise<number> {
+    const client = tx ?? this.prisma;
+    const { count } = await client.entitlement.updateMany({
+      where: { paymentId, consumedAt: null },
+      data: { consumedAt: new Date(), consumedRef: null },
+    });
+    if (count > 0) {
+      this.logger.log(`Voided ${count} entitlement(s) for refunded payment ${paymentId}`);
+    }
+    return count;
+  }
+
+  /**
    * Grant a one-time entitlement for a successful payment. Idempotent: the
    * unique `paymentId` constraint means a verify + webhook double-fire
    * grants exactly one unlock (the second hits P2002 and is treated as
