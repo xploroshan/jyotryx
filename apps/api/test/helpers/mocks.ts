@@ -366,6 +366,7 @@ export const mockFeatureAccessService = () => ({
   consumeEntitlement: jest.fn().mockResolvedValue(undefined),
   refundEntitlementByRef: jest.fn().mockResolvedValue(0),
   grantEntitlement: jest.fn().mockResolvedValue(true),
+  voidEntitlementByPayment: jest.fn().mockResolvedValue(0),
 });
 
 export const mockConfigService = (overrides: Record<string, any> = {}) => ({
