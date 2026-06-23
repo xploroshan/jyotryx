@@ -19,12 +19,16 @@ export class PrismaReadReplicaService
     const replicaUrl = process.env.DATABASE_READ_REPLICA_URL || '';
     const url = replicaUrl || process.env.DATABASE_URL || '';
 
-    // See `prisma.service.ts` constructor for why we strip `sslmode=`
-    // and pass `ssl: { rejectUnauthorized: false }` explicitly.
+    // See `prisma.service.ts` constructor for why we strip `sslmode=` and
+    // gate SSL on the URL. Mirror the primary EXACTLY: forcing
+    // `ssl: { rejectUnauthorized: false }` unconditionally makes every read
+    // throw "The server does not support SSL connections" against a plain
+    // local/CI Postgres (SSL off) — which is where the replica client falls
+    // back to DATABASE_URL.
     super({
       adapter: new PrismaPg({
         connectionString: PrismaService.stripSslmode(url),
-        ssl: { rejectUnauthorized: false },
+        ssl: PrismaService.wantsSsl(url) ? { rejectUnauthorized: false } : false,
       }),
     });
 

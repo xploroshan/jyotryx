@@ -534,11 +534,22 @@ export class AuthService {
   }
 
   async googleAuth(dto: GoogleAuthDto, signupContext?: SignupContext): Promise<AuthResponse> {
-    // Verify Google ID token via Google's tokeninfo endpoint
+    // Verify Google ID token via Google's tokeninfo endpoint (which validates
+    // the signature and expiry server-side and 4xxs on invalid/expired
+    // tokens).
     let googlePayload: { sub: string; email: string; name: string; picture?: string; email_verified?: string };
 
+    // Fail CLOSED when the client id isn't configured. Previously the
+    // audience check was skipped entirely when GOOGLE_CLIENT_ID was unset
+    // (the default ''), which meant a valid Google ID token minted for ANY
+    // other OAuth client was accepted → account takeover by email.
+    const googleClientId = this.configService.get<string>('google.clientId');
+    if (!googleClientId) {
+      this.logger.error('Google sign-in attempted but GOOGLE_CLIENT_ID is not configured');
+      throw new UnauthorizedException('Google sign-in is not available right now.');
+    }
+
     try {
-      const googleClientId = this.configService.get<string>('google.clientId');
       const verifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(dto.idToken)}`;
       const response = await fetch(verifyUrl);
 
@@ -548,13 +559,20 @@ export class AuthService {
 
       const payload = await response.json();
 
-      // Verify the token was issued for our client
-      if (googleClientId && payload.aud !== googleClientId) {
+      // ALWAYS verify the token was issued for our client (aud === clientId).
+      if (payload.aud !== googleClientId) {
         throw new Error('Token was not issued for this application');
       }
 
-      if (payload.email_verified === 'false') {
+      // Require a verified email — accept only an explicit truthy value, not
+      // merely "not the string false" (a token missing the field would
+      // otherwise slip through).
+      if (payload.email_verified !== true && payload.email_verified !== 'true') {
         throw new Error('Google email not verified');
+      }
+
+      if (!payload.sub || !payload.email) {
+        throw new Error('Google token missing subject or email');
       }
 
       googlePayload = {
