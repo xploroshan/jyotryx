@@ -59,7 +59,11 @@ export default function FeatureBarV2() {
       style={{ background: "rgba(237, 228, 208, 0.88)", backdropFilter: "blur(16px) saturate(140%)" }}
     >
       <ScrollableRow className="mx-auto max-w-7xl" innerClassName="px-5 sm:px-8" fadeColor="rgb(237, 228, 208)">
-        <ul className="flex gap-5 sm:gap-7 py-2.5" role="tablist">
+        {/* On phones/tablets (touch) the row stays a single swipeable line with
+            scroll affordances. On desktop (≥lg, where horizontal scrolling is
+            unnatural) it wraps to as many rows as needed so no sub-feature is
+            ever hidden off-screen — important for traditions with ~17 features. */}
+        <ul className="flex flex-nowrap lg:flex-wrap gap-x-5 sm:gap-x-7 gap-y-3 py-2.5" role="tablist">
           {cfg.features.map((f) => {
             const isActive = pathname === f.href;
             const label = readLabel(f.labelKey, f.slug);
