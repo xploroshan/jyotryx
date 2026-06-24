@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { useScrollProgress } from '@/lib/motion';
 
 interface HeroSunProps {
   className?: string;
@@ -14,32 +13,29 @@ interface HeroSunProps {
  * so we never need a raster or canvas. Drives a subtle scroll-parallax
  * (-80px over the section's viewport range) plus a 6s breathing corona.
  *
+ * The parallax uses the framer-motion-free `useScrollProgress` hook (a CSS
+ * variable + transform), and the corona/ring loops are CSS animations disabled
+ * under prefers-reduced-motion by the global rule in globals.css — so the orb
+ * pulls no animation library into the home page's bundle.
+ *
  * This is the only place in the app where yellow appears as a material
  * surface — everywhere else, sun-* tokens stay in micro-accents.
  */
 export default function HeroSun({ className = '' }: HeroSunProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end start'],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const ref = useScrollProgress<HTMLDivElement>();
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      style={reduce ? undefined : { y }}
       aria-hidden
+      style={{ transform: 'translateY(calc(var(--scroll-progress, 0) * -80px))' }}
       className={`relative aspect-square w-full mx-auto select-none ${className}`}
     >
       {/* Outer corona — yellow → orange halo. On the cream canvas we
           push the corona warmer and slightly stronger so the orb still
           reads as a luminous mass against a light page. */}
       <div
-        className={`absolute inset-[-16%] rounded-full blur-[64px] ${
-          reduce ? '' : 'animate-[corona-pulse_6s_ease-in-out_infinite]'
-        }`}
+        className="absolute inset-[-16%] rounded-full blur-[64px] animate-[corona-pulse_6s_ease-in-out_infinite]"
         style={{
           background:
             'radial-gradient(circle, rgba(255,182,39,0.70) 0%, rgba(255,122,64,0.42) 42%, rgba(255,77,0,0.18) 65%, transparent 80%)',
@@ -67,18 +63,10 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
 
       {/* Slow ring — soft saffron at higher opacity so it stays visible
           over the lit canvas. */}
-      <div
-        className={`absolute inset-[4%] rounded-full border border-[#FFCB52]/70 ${
-          reduce ? '' : '[animation:astro-spin_80s_linear_infinite]'
-        }`}
-      />
+      <div className="absolute inset-[4%] rounded-full border border-[#FFCB52]/70 [animation:astro-spin_80s_linear_infinite]" />
       {/* Outer thin orbit — adds a second concentric ring so the orb
           reads as a small celestial system, not a single disc. */}
-      <div
-        className={`absolute inset-[-4%] rounded-full border border-[#FF7A40]/35 ${
-          reduce ? '' : '[animation:astro-spin-rev_120s_linear_infinite]'
-        }`}
-      />
-    </motion.div>
+      <div className="absolute inset-[-4%] rounded-full border border-[#FF7A40]/35 [animation:astro-spin-rev_120s_linear_infinite]" />
+    </div>
   );
 }

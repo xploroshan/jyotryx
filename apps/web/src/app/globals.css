@@ -678,6 +678,53 @@
   .hero-rise { animation: none; }
 }
 
+/* Stagger / page entrances — CSS replacements for the framer-motion
+   PageTransition + Stagger.* primitives. The cascade comes purely from
+   nth-child animation-delay, so no animation library ships on these pages. */
+@keyframes stagger-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stagger-item {
+  animation: stagger-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger-item:nth-child(1) { animation-delay: 0.04s; }
+.stagger-item:nth-child(2) { animation-delay: 0.10s; }
+.stagger-item:nth-child(3) { animation-delay: 0.16s; }
+.stagger-item:nth-child(4) { animation-delay: 0.22s; }
+.stagger-item:nth-child(5) { animation-delay: 0.28s; }
+.stagger-item:nth-child(6) { animation-delay: 0.34s; }
+.stagger-item:nth-child(7) { animation-delay: 0.40s; }
+.stagger-item:nth-child(n+8) { animation-delay: 0.46s; }
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Hero orb mount — composite-only scale-in (opacity stays 1 → no CLS). */
+@keyframes hero-scale-in {
+  from { transform: scale(0.92); }
+  to   { transform: scale(1); }
+}
+.hero-scale-in {
+  animation: hero-scale-in 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+/* Hero background wash drift (was an inline framer-gated animation; as a class
+   it's disabled by the [class*="mesh-drift"] reduced-motion rule above). */
+.mesh-drift-bg {
+  animation: mesh-drift 22s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stagger-item,
+  .page-enter,
+  .hero-scale-in { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [class*="astro-spin"],
   [class*="astro-pulse"],

@@ -12,6 +12,7 @@
  * `prefers-reduced-motion: reduce` enabled — respected at the per-use
  * level via the `useReducedMotion` hook from framer-motion.
  */
+import { useEffect, useRef } from 'react';
 import type { Transition, Variants } from 'framer-motion';
 
 export const timing = {
@@ -55,3 +56,42 @@ export const reducedVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0 } },
 };
+
+/**
+ * Scroll progress without framer-motion. Writes a `--scroll-progress` CSS
+ * variable (0→1, clamped) onto the returned element as it scrolls up through
+ * the viewport, throttled to rAF. A lightweight stand-in for
+ * `useScroll`/`useTransform`: consumers read the variable inside a CSS
+ * transform (translateY, scaleX, …) so the effect stays composite-only and
+ * pulls no animation library into the bundle. No-ops under
+ * `prefers-reduced-motion`, leaving the variable unset so callers fall back to
+ * the default in their `var(--scroll-progress, <fallback>)`.
+ */
+export function useScrollProgress<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const rect = el.getBoundingClientRect();
+      const span = rect.height || window.innerHeight || 1;
+      const p = Math.min(1, Math.max(0, -rect.top / span));
+      el.style.setProperty('--scroll-progress', p.toFixed(4));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return ref;
+}
