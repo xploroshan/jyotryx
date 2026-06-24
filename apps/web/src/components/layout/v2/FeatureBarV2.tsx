@@ -106,6 +106,24 @@ export default function FeatureBarV2() {
     );
   };
 
+  // Interleave a thin warm hairline (--color-border) between items so each
+  // feature is visually separated from its neighbours. The separator is a
+  // short, vertically-centred 1px line that sits in the gap; with
+  // justify-between it lands centred between the two items it divides.
+  const renderRow = (items: TraditionFeature[]) =>
+    items.flatMap((f, i) =>
+      i === 0
+        ? [renderItem(f)]
+        : [
+            <li
+              key={`${f.slug}-sep`}
+              aria-hidden
+              className="self-center h-4 w-px bg-[var(--color-border)] shrink-0"
+            />,
+            renderItem(f),
+          ],
+    );
+
   return (
     <div
       className="sticky top-14 z-40 border-b border-[var(--color-border)]"
@@ -121,11 +139,11 @@ export default function FeatureBarV2() {
             twoRows ? "justify-between gap-x-1 pb-1" : "justify-start gap-x-6 pb-2"
           }`}
         >
-          {row1.map(renderItem)}
+          {renderRow(row1)}
         </ul>
         {row2.length > 0 && (
           <ul className="flex items-center justify-between gap-x-1 pt-1 pb-2">
-            {row2.map(renderItem)}
+            {renderRow(row2)}
           </ul>
         )}
       </nav>
@@ -139,7 +157,7 @@ export default function FeatureBarV2() {
           fadeColor="rgb(237, 228, 208)"
         >
           <nav aria-label={readLabel(cfg.labelKey, cfg.slug)}>
-            <ul className="flex gap-x-4 sm:gap-x-5 py-2.5">{feats.map(renderItem)}</ul>
+            <ul className="flex items-center gap-x-3 sm:gap-x-4 py-2.5">{renderRow(feats)}</ul>
           </nav>
         </ScrollableRow>
       </div>
