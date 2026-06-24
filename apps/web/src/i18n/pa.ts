@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const pa: TranslationKeys = {
+  showYourWork: {
+    tab: 'ਇਹ ਕਿਉਂ?',
+    title: 'ਇਹ ਵਿਸ਼ਲੇਸ਼ਣ ਕਿਉਂ?',
+    subtitle: 'ਤੁਹਾਡੇ ਨਤੀਜਿਆਂ ਪਿੱਛੇ ਸਹੀ ਕੁੰਡਲੀ ਕਾਰਕ — ਅਨੁਮਾਨ ਨਹੀਂ, ਗਣਨਾ।',
+    supportive: 'ਸਹਾਇਕ ਕਾਰਕ',
+    challenging: 'ਚੁਣੌਤੀ ਭਰੇ ਕਾਰਕ',
+    context: 'ਸਮਾਂ ਅਤੇ ਪ੍ਰਸੰਗ',
+    empty: 'ਇਸ ਕੁੰਡਲੀ ਲਈ ਕੋਈ ਮੁੱਖ ਕਾਰਕ ਨਹੀਂ ਮਿਲੇ।',
+    note: 'ਇੱਕੋ ਜਨਮ ਵੇਰਵੇ ਹਮੇਸ਼ਾ ਇੱਕੋ ਜਿਹੇ ਕਾਰਕ ਦਿੰਦੇ ਹਨ — ਸਵਿਸ ਐਫੇਮੇਰਿਸ ਨਾਲ ਗਣਨਾ ਕੀਤੀ ਗਈ।',
+  },
   common: {
     loading: 'ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...',
     error: 'ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ',

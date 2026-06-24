@@ -1,6 +1,16 @@
 import type { TranslationKeys } from './en';
 
 export const bn: TranslationKeys = {
+  showYourWork: {
+    tab: 'কেন এটি?',
+    title: 'এই বিশ্লেষণ কেন?',
+    subtitle: 'আপনার ফলাফলের পেছনে থাকা সঠিক কুণ্ডলী উপাদান — অনুমান নয়, গণনা।',
+    supportive: 'সহায়ক উপাদান',
+    challenging: 'চ্যালেঞ্জিং উপাদান',
+    context: 'সময় ও প্রসঙ্গ',
+    empty: 'এই কুণ্ডলীর জন্য কোনো উল্লেখযোগ্য উপাদান পাওয়া যায়নি।',
+    note: 'একই জন্মবিবরণ সবসময় একই উপাদান দেয় — সুইস এফিমেরিস দিয়ে গণনা করা।',
+  },
   common: {
     loading: 'লোড হচ্ছে...',
     error: 'কিছু ভুল হয়েছে',
