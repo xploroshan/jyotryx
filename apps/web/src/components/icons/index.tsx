@@ -22,6 +22,7 @@ import {
   Calculator,
   CalendarClock,
   CalendarDays,
+  CalendarRange,
   Columns3,
   Compass,
   Flame,
@@ -42,6 +43,7 @@ import {
   PersonStanding,
   Rabbit,
   RotateCw,
+  Scale,
   Sparkles,
   Star,
   Sun,
@@ -80,6 +82,8 @@ const FEATURE_ICONS: Record<string, LucideIcon> = {
   horoscope: Telescope, // reading the stars ahead
   panchang: CalendarDays, // the Hindu almanac
   muhurat: CalendarClock, // auspicious date + time
+  'decision-room': Scale, // weighing options against the timing
+  'cosmic-calendar': CalendarRange, // the month's sky events
   dasha: Timer, // planetary time periods
   dosha: Flame, // afflictions (Mangal etc.)
   divisional: BarChart3, // divisional / varga charts
@@ -106,6 +110,13 @@ const FEATURE_ICONS: Record<string, LucideIcon> = {
   // Medical
   decumbiture: Bed, // chart for the moment of falling ill
   'body-zodiac': PersonStanding, // zodiac rulership over the body
+  // Tradition / category landing chips — mirror the TRADITION_ICONS choices.
+  vedic: Sun,
+  western: Aperture,
+  chinese: Compass,
+  hellenistic: Landmark,
+  horary: Hourglass,
+  medical: HeartPulse,
 };
 
 /* ── Public components (stable API) ──────────────────────────────── */

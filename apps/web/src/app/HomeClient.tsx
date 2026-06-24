@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useScrollProgress } from "@/lib/motion";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { usePricingConfig } from "@/lib/usePricingConfig";
@@ -67,7 +66,6 @@ function renderHighlight(text: string) {
 export default function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { t } = useTranslation();
-  const reduce = useReducedMotion();
   // In Mode A (subscriptions off) the whole app is free — surface a "Free"
   // badge in the hero. Hidden once subscriptions are enabled.
   const { subscriptionsEnabled } = usePricingConfig();
@@ -91,11 +89,10 @@ export default function HomePage() {
               tying the section to the marquee strip below. Soft enough
               that black hero text still passes AAA on cream. */}
           <div
-            className="absolute top-[-12%] right-[-18%] w-[85%] h-[95%] rounded-full opacity-90"
+            className="mesh-drift-bg absolute top-[-12%] right-[-18%] w-[85%] h-[95%] rounded-full opacity-90"
             style={{
               background:
                 "radial-gradient(circle, rgba(255,182,39,0.36) 0%, rgba(255,77,0,0.22) 35%, transparent 70%)",
-              animation: reduce ? undefined : "mesh-drift 22s ease-in-out infinite",
             }}
           />
           <div
@@ -177,16 +174,13 @@ export default function HomePage() {
                 the orb is shrunk and centered below the headline. */}
             <div className="col-span-12 lg:col-span-5 order-2 relative">
               {/* Visible at first frame (opacity:1) so it never blocks LCP;
-                  the subtle scale-in is composite-only, so no CLS. */}
-              <motion.div
-                initial={reduce ? false : { scale: 0.92, opacity: 1 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-                className="relative mx-auto lg:translate-x-[6%] xl:translate-x-[10%]"
+                  the subtle scale-in is composite-only (CSS), so no CLS. */}
+              <div
+                className="hero-scale-in relative mx-auto lg:translate-x-[6%] xl:translate-x-[10%]"
                 style={{ width: "100%", maxWidth: "min(520px, 78vw)" }}
               >
                 <HeroSun />
-              </motion.div>
+              </div>
             </div>
           </div>
 
@@ -354,13 +348,7 @@ function HowItWorks({
   title: string;
   steps: { step: string; title: string; desc: string }[];
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 80%", "end 60%"],
-  });
-  const lineScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  const ref = useScrollProgress<HTMLDivElement>();
 
   return (
     <section className="py-28 sm:py-36 px-5 sm:px-8">
@@ -380,11 +368,13 @@ function HowItWorks({
 
         <div ref={ref} className="relative">
           {/* Scroll-driven hairline behind the row. Hidden on mobile where
-              cards stack and the connector wouldn't make sense. */}
-          <motion.div
+              cards stack and the connector wouldn't make sense. scaleX tracks
+              the section's scroll progress via the --scroll-progress CSS var
+              (falls back to a fully-drawn line under reduced motion). */}
+          <div
             aria-hidden
             className="hidden md:block absolute top-[34%] left-[10%] right-[10%] h-px origin-left bg-gradient-to-r from-primary-500 via-sun-400 to-primary-500"
-            style={{ scaleX: reduce ? 1 : lineScale }}
+            style={{ transform: "scaleX(var(--scroll-progress, 1))" }}
           />
 
           <Stagger.Container className="grid md:grid-cols-3 gap-8 md:gap-10 relative">
@@ -435,11 +425,10 @@ function CtaPrimary({
   label: string;
   size?: "md" | "lg";
 }) {
-  const reduce = useReducedMotion();
   const padding = size === "lg" ? "px-9 py-4 text-[16px]" : "px-8 py-3.5 text-[15px]";
 
   const handleMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (reduce) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rect = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty("--mx", `${e.clientX - rect.left}px`);
     e.currentTarget.style.setProperty("--my", `${e.clientY - rect.top}px`);

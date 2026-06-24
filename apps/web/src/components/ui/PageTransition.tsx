@@ -1,13 +1,15 @@
-'use client';
-
-import { motion, useReducedMotion } from 'framer-motion';
 import type { ReactNode, HTMLAttributes } from 'react';
-import { pageVariants, reducedVariants, staggerContainer, itemVariants } from '@/lib/motion';
 
 /**
- * Wraps a page body in a fade+lift entrance. Use once per route as the
- * top-level element inside the page component. Child `<Stagger.Item>`
- * elements will cascade in after the parent finishes.
+ * Entrance + stagger primitives.
+ *
+ * These used framer-motion, which put the whole animation library (~45 KB gzip)
+ * into the First Load of every page that revealed content this way (home,
+ * pricing, …). The visual intent — a fade+lift entrance, with grouped children
+ * cascading in — is fully expressible in CSS, so these now render plain elements
+ * carrying `.page-enter` / `.stagger-item` classes (see globals.css). The
+ * cascade comes from `:nth-child` animation-delays; reduced-motion is honoured
+ * there too. The public API is unchanged, so consumers need no edits.
  */
 export function PageTransition({
   children,
@@ -20,26 +22,14 @@ export function PageTransition({
   /** Defaults to 'div'. Use 'section' / 'main' if the page needs semantics. */
   as?: 'div' | 'section' | 'main';
 } & Omit<HTMLAttributes<HTMLDivElement>, 'className' | 'children'>) {
-  const reduce = useReducedMotion();
-  const Component = (motion as any)[_as ?? 'div'];
+  const Component = (_as ?? 'div') as 'div';
   return (
-    <Component
-      className={className}
-      initial="hidden"
-      animate="visible"
-      variants={reduce ? reducedVariants : pageVariants}
-      {...rest}
-    >
+    <Component className={`page-enter${className ? ` ${className}` : ''}`} {...rest}>
       {children}
     </Component>
   );
 }
 
-/**
- * Stagger.Container + Stagger.Item compound component for cascaded reveals.
- * Use for card grids, feature lists, form fields — anywhere a group of
- * sibling elements benefits from a ripple-in.
- */
 function StaggerContainer({
   children,
   className,
@@ -49,18 +39,8 @@ function StaggerContainer({
   className?: string;
   as?: 'div' | 'ul' | 'ol' | 'section';
 }) {
-  const reduce = useReducedMotion();
-  const Component = (motion as any)[_as ?? 'div'];
-  return (
-    <Component
-      className={className}
-      initial="hidden"
-      animate="visible"
-      variants={reduce ? reducedVariants : staggerContainer}
-    >
-      {children}
-    </Component>
-  );
+  const Component = (_as ?? 'div') as 'div';
+  return <Component className={className}>{children}</Component>;
 }
 
 function StaggerItem({
@@ -72,12 +52,9 @@ function StaggerItem({
   className?: string;
   as?: 'div' | 'li' | 'section' | 'article';
 }) {
-  const reduce = useReducedMotion();
-  const Component = (motion as any)[_as ?? 'div'];
+  const Component = (_as ?? 'div') as 'div';
   return (
-    <Component className={className} variants={reduce ? reducedVariants : itemVariants}>
-      {children}
-    </Component>
+    <Component className={`stagger-item${className ? ` ${className}` : ''}`}>{children}</Component>
   );
 }
 
