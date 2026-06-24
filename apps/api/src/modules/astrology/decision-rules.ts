@@ -201,6 +201,19 @@ export function rahuKaalWindow(
 }
 
 /**
+ * Compose a human-readable tithi name from its 0–29 index, special-casing the
+ * New Moon (index 29 → "Amavasya"), which the 15-entry Pratipada…Purnima name
+ * table cannot represent — `29 % 15 === 14` would otherwise mislabel it
+ * "Krishna Purnima" (a Full Moon). The canonical name table is supplied by the
+ * caller so this stays a pure, table-free helper.
+ */
+export function tithiLabel(tithiIndex: number, names: readonly string[]): string {
+  if (tithiIndex === 29) return 'Amavasya';
+  const paksha = tithiIndex < 15 ? 'Shukla' : 'Krishna';
+  return `${paksha} ${names[tithiIndex % 15]}`;
+}
+
+/**
  * Score how auspicious a moment is for an activity, with a transparent list of
  * the factors behind the verdict. Pure and deterministic.
  */

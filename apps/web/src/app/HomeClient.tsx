@@ -327,9 +327,9 @@ function TrustStrip({
           {pillars.map((p, i) => (
             <Stagger.Item key={p.title} className="relative md:px-6">
               {i > 0 && <span aria-hidden className="hidden md:block absolute left-0 top-1 bottom-1 w-px bg-[rgba(12,8,5,0.08)]" />}
-              <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 mb-3 leading-tight">
+              <h2 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 mb-3 leading-tight">
                 {p.title}
-              </h3>
+              </h2>
               <p className="text-sm text-emphasis leading-relaxed">{p.desc}</p>
             </Stagger.Item>
           ))}

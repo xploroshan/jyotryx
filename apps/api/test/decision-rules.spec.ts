@@ -7,6 +7,7 @@ import {
   scoreTiming,
   rahuKaalWindow,
   formatMinutes,
+  tithiLabel,
   DECISION_ACTIVITIES,
   PanchangSnapshot,
   DecisionActivity,
@@ -161,5 +162,28 @@ describe('formatMinutes', () => {
     expect(formatMinutes(90)).toBe('1:30 AM');
     expect(formatMinutes(720)).toBe('12:00 PM');
     expect(formatMinutes(870)).toBe('2:30 PM');
+  });
+});
+
+describe('tithiLabel', () => {
+  // Mirrors the 15-entry Pratipada…Purnima canonical table the service passes.
+  const NAMES = [
+    'Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami',
+    'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima',
+  ];
+
+  it('labels the New Moon (index 29) as Amavasya, not "Krishna Purnima"', () => {
+    expect(tithiLabel(29, NAMES)).toBe('Amavasya');
+  });
+
+  it('labels the Full Moon (index 14) as Shukla Purnima', () => {
+    expect(tithiLabel(14, NAMES)).toBe('Shukla Purnima');
+  });
+
+  it('prefixes the paksha for ordinary tithis in both halves', () => {
+    expect(tithiLabel(0, NAMES)).toBe('Shukla Pratipada');
+    expect(tithiLabel(9, NAMES)).toBe('Shukla Dashami');
+    expect(tithiLabel(15, NAMES)).toBe('Krishna Pratipada'); // 15 % 15 = 0
+    expect(tithiLabel(23, NAMES)).toBe('Krishna Navami'); // 23 % 15 = 8
   });
 });
