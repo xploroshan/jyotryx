@@ -4,7 +4,7 @@ import {
   reduceWithSteps,
   relationship,
   buildMulankReading,
-  MULANK_INTERNALS,
+  __test__,
   Digit,
   CompatRating,
 } from '../src/modules/numerology/mulank';
@@ -102,6 +102,21 @@ describe('Mulank engine — reduction & calculation', () => {
       expect(computeBhagyank(1, 1, 2000).value).toBe(4);
     });
 
+    it('renders an arithmetically honest derivation (every +/=/→ connects equal values)', () => {
+      // The displayed reduction must never claim a false equality like
+      // "15 + 8 + 1990 = 33"; it sums the individual digits.
+      expect(computeBhagyank(15, 8, 1990).expression).toBe('1 + 5 + 8 + 1 + 9 + 9 + 0 = 33 → 3 + 3 = 6');
+      expect(computeBhagyank(1, 1, 2000).expression).toBe('1 + 1 + 2 + 0 + 0 + 0 = 4');
+      for (const [d, m, y] of [[15, 8, 1990], [1, 1, 2000], [3, 7, 1992], [29, 2, 2000]] as const) {
+        const expr = computeBhagyank(d, m, y).expression;
+        // The leading "a + b + c ... = total" segment must actually sum to total.
+        const [lhs, rhs] = expr.split(' = ');
+        const summed = lhs.split(' + ').reduce((s, n) => s + Number(n), 0);
+        const total = Number(rhs.split(' ')[0]);
+        expect(summed).toBe(total);
+      }
+    });
+
     it('is grouping-independent (sum-of-parts == sum-of-all-digits)', () => {
       for (let y = 1980; y <= 2024; y += 7) {
         for (let m = 1; m <= 12; m += 3) {
@@ -139,7 +154,7 @@ describe('Mulank engine — compatibility relation', () => {
   });
 
   it('never marks a pair as both friend and enemy in the source data', () => {
-    const { FRIENDS, ENEMIES } = MULANK_INTERNALS;
+    const { FRIENDS, ENEMIES } = __test__;
     for (const a of DIGITS) {
       for (const b of DIGITS) {
         const bothFriend = FRIENDS[a].includes(b) || FRIENDS[b].includes(a);
@@ -243,7 +258,7 @@ describe('Mulank engine — buildMulankReading', () => {
 });
 
 describe('Mulank engine — number profiles', () => {
-  const { PROFILES } = MULANK_INTERNALS;
+  const { PROFILES } = __test__;
   const expectedPlanets: Record<Digit, string> = {
     1: 'Sun', 2: 'Moon', 3: 'Jupiter', 4: 'Rahu', 5: 'Mercury',
     6: 'Venus', 7: 'Ketu', 8: 'Saturn', 9: 'Mars',

@@ -97,7 +97,6 @@ export interface MulankReading {
 }
 
 const DIGITS: Digit[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-const MASTERS: MasterNumber[] = [11, 22, 33];
 
 function isMaster(n: number): n is MasterNumber {
   return n === 11 || n === 22 || n === 33;
@@ -150,17 +149,19 @@ export function computeMulank(day: number): CalcStep {
  * order-independent, so we sum the lot and reduce once.
  */
 export function computeBhagyank(day: number, month: number, year: number): CalcStep {
-  const total = sumDigits(day) + sumDigits(month) + sumDigits(year);
+  const digits = [
+    ...day.toString().split('').map(Number),
+    ...month.toString().split('').map(Number),
+    ...year.toString().split('').map(Number),
+  ];
+  const total = digits.reduce((s, d) => s + d, 0);
   const step = reduceWithSteps(total);
-  // Show the source figures in the expression for transparency.
+  // Show the genuine per-digit derivation so every "+", "=" and "→" connects
+  // equal quantities, e.g. "1 + 5 + 8 + 1 + 9 + 9 + 0 = 33 → 3 + 3 = 6".
   return {
     ...step,
-    expression: `${day} + ${month} + ${year} → ${step.expression}`,
-    digits: [
-      ...day.toString().split('').map(Number),
-      ...month.toString().split('').map(Number),
-      ...year.toString().split('').map(Number),
-    ],
+    expression: `${digits.join(' + ')} = ${step.expression}`,
+    digits,
   };
 }
 
@@ -170,6 +171,10 @@ export function computeBhagyank(day: number, month: number, year: number): CalcS
 // placed by their conventional numerological affinities. The relation is read
 // symmetrically below, so authoring asymmetry here cannot leak out.
 
+// Note the deliberate 2↔5 (Moon–Mercury) overlap: 5 is in FRIENDS[2] and 2 is
+// in ENEMIES[5]. This encodes the classical asymmetry (Moon befriends Mercury,
+// Mercury treats Moon as an enemy); relationship() resolves such mixed pairs to
+// 'neutral' rather than picking a side. It is intentional, not an authoring slip.
 const FRIENDS: Record<Digit, Digit[]> = {
   1: [2, 3, 9],
   2: [1, 5],
@@ -454,4 +459,5 @@ export function buildMulankReading(dateOfBirth: string): MulankReading {
   };
 }
 
-export const MULANK_INTERNALS = { FRIENDS, ENEMIES, PROFILES, DIGITS, MASTERS };
+// Re-exported for unit tests only (see mulank.spec.ts).
+export const __test__ = { FRIENDS, ENEMIES, PROFILES };

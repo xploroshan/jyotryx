@@ -230,7 +230,7 @@ export default function VedicMulankPage() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuthStore();
   const cfg = WEB_TRADITIONS.VEDIC;
-  const m = (t as any).featurePages.vedicMulank;
+  const m = (t as any).featurePages?.vedicMulank ?? {};
 
   const [data, setData] = useState<MulankResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -263,6 +263,9 @@ export default function VedicMulankPage() {
   const traditionName = (t as any).traditionsUi?.vedic?.name || 'Vedic';
 
   const reading = data && data.hasBirthDetails ? data : null;
+  // Prompt to complete the profile when the client has no DOB OR the API reports
+  // none (e.g. the DOB was cleared server-side) — otherwise the page is blank.
+  const showProfilePrompt = isAuthenticated && (!hasBirthDetails || (!!data && !data.hasBirthDetails));
   const ratingLabel = (r: CompatRating): string =>
     r === 'best' ? m.ratingBest : r === 'friend' ? m.ratingFriend : r === 'neutral' ? m.ratingNeutral : m.ratingChallenging;
 
@@ -294,7 +297,7 @@ export default function VedicMulankPage() {
           </div>
         )}
 
-        {isAuthenticated && !hasBirthDetails && (
+        {showProfilePrompt && (
           <div className={`${CARD} p-10 text-center`}>
             <p className="text-[rgba(12,8,5,0.55)] mb-5">{m.completeProfile}</p>
             <Link href="/profile" className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm">
@@ -303,7 +306,7 @@ export default function VedicMulankPage() {
           </div>
         )}
 
-        {isAuthenticated && hasBirthDetails && loading && (
+        {isAuthenticated && hasBirthDetails && !showProfilePrompt && loading && (
           <div className={`${CARD} p-10 text-center text-[rgba(12,8,5,0.46)] text-sm`}>{t.common.loading}</div>
         )}
 
@@ -317,6 +320,7 @@ export default function VedicMulankPage() {
           <div className="space-y-10">
             {/* Summary — the two anchor numbers */}
             <section className="space-y-4">
+              <p className={RULE}>{m.summaryTitle}</p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <NumberBadge value={reading.mulank} planet={reading.mulankProfile.planet} title={m.mulankTitle} caption={m.mulankCaption} />
                 <NumberBadge value={reading.bhagyank} planet={reading.bhagyankProfile.planet} title={m.bhagyankTitle} caption={m.bhagyankCaption} />
