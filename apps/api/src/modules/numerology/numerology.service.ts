@@ -2,6 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService, KbNumberMeaningPayload, KbBusinessSectorPayload, KbPersonalYearThemePayload } from '../../knowledge/kb.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { buildMulankReading, MulankReading } from './mulank';
+
+export type MulankResult =
+  | ({ hasBirthDetails: true } & MulankReading)
+  | { hasBirthDetails: false };
 
 export interface NameAnalysisResult {
   name: string;
@@ -134,7 +140,26 @@ export class NumerologyService {
     private readonly openaiService: OpenAIService,
     private readonly knowledgeService: KnowledgeService,
     private readonly kbService: KbService,
+    private readonly prisma: PrismaService,
   ) {}
+
+  /**
+   * Mulank (root number) + Bhagyank (destiny number) reading derived from the
+   * authenticated user's saved date of birth. Fully deterministic — see
+   * `mulank.ts`. Returns `{ hasBirthDetails: false }` when the profile has no
+   * DOB so the web layer can prompt the user to complete their profile.
+   */
+  async getMulank(userId: string): Promise<MulankResult> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { dateOfBirth: true },
+    });
+    if (!user?.dateOfBirth) {
+      return { hasBirthDetails: false };
+    }
+    const dob = user.dateOfBirth.toISOString().split('T')[0];
+    return { hasBirthDetails: true, ...buildMulankReading(dob) };
+  }
 
   async analyzeName(name: string, locale?: string): Promise<NameAnalysisResult> {
     const cleanName = name.toLowerCase().replace(/[^a-z]/g, '');

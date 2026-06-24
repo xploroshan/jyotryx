@@ -192,6 +192,7 @@ describe('Numerology Service — Mathematical Correctness', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
+        { provide: PrismaService, useValue: mockPrismaService() },
       ],
     }).compile();
     service = module.get<NumerologyService>(NumerologyService);

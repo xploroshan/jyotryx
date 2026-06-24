@@ -368,6 +368,7 @@ describe('Stability: Error Recovery', () => {
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
           { provide: KbService, useValue: mockKbService() },
+          { provide: PrismaService, useValue: mockPrismaService() },
         ],
       }).compile();
 

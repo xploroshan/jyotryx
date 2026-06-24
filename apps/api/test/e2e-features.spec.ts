@@ -235,6 +235,7 @@ describe('E2E: Numerology Endpoints', () => {
         { provide: KbService, useValue: mockKbService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: KbService, useValue: mockKbService() },
+        { provide: PrismaService, useValue: mockPrismaService() },
       ],
     })
       .overrideGuard(JwtAuthGuard)

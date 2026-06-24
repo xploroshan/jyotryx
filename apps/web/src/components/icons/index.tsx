@@ -86,6 +86,7 @@ const FEATURE_ICONS: Record<string, LucideIcon> = {
   'kp-astrology': Sparkles, // KP cusp sub-lords
   palmistry: Hand,
   numerology: Calculator,
+  mulank: Calculator, // root-number numerology (Mulank / Bhagyank)
   tarot: Layers, // a deck of cards
   vastu: Home, // directional architecture
   // Western

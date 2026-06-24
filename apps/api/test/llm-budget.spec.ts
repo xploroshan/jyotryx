@@ -153,6 +153,7 @@ describe('LLM cost regression budget', () => {
           { provide: OpenAIService, useValue: counter.stub },
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
           { provide: KbService, useValue: mockKbService() },
+          { provide: PrismaService, useValue: mockPrismaService() },
         ],
       }).compile();
       service = module.get(NumerologyService);

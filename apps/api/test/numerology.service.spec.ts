@@ -3,18 +3,22 @@ import { NumerologyService } from '../src/modules/numerology/numerology.service'
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
-import { mockOpenAIService, mockKnowledgeService, mockKbService } from './helpers/mocks';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { mockOpenAIService, mockKnowledgeService, mockKbService, mockPrismaService } from './helpers/mocks';
 
 describe('NumerologyService', () => {
   let service: NumerologyService;
+  let prisma: ReturnType<typeof mockPrismaService>;
 
   beforeEach(async () => {
+    prisma = mockPrismaService();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NumerologyService,
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
@@ -182,6 +186,51 @@ describe('NumerologyService', () => {
         expect(m.month).toBe(monthNames[i]);
         expect(m.focus).toBeTruthy();
       });
+    });
+  });
+
+  // ─── Mulank (profile-driven) ───────────────────────────────────
+
+  describe('getMulank', () => {
+    it('returns hasBirthDetails:false when the profile has no DOB', async () => {
+      prisma.user.findUnique.mockResolvedValue({ dateOfBirth: null });
+      const result = await service.getMulank('user-1');
+      expect(result.hasBirthDetails).toBe(false);
+      expect((result as any).mulank).toBeUndefined();
+    });
+
+    it('returns hasBirthDetails:false when the user does not exist', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      const result = await service.getMulank('ghost');
+      expect(result.hasBirthDetails).toBe(false);
+    });
+
+    it('computes a full reading from the saved DOB', async () => {
+      // 15 Aug 1990 → Mulank 1+5=6, Bhagyank 1+5+0+8+1+9+9+0=33→6
+      prisma.user.findUnique.mockResolvedValue({ dateOfBirth: new Date('1990-08-15T00:00:00.000Z') });
+      const result = await service.getMulank('user-1');
+
+      expect(result.hasBirthDetails).toBe(true);
+      if (!result.hasBirthDetails) throw new Error('unreachable');
+      expect(result.mulank).toBe(6);
+      expect(result.bhagyank).toBe(6);
+      expect(result.mulankProfile.planet).toBe('Venus');
+      expect(result.compatibility).toHaveLength(9);
+      expect(result.summary).toContain('Mulank');
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        select: { dateOfBirth: true },
+      });
+    });
+
+    it('is timezone-stable: a date-only DOB keeps its calendar day', async () => {
+      prisma.user.findUnique.mockResolvedValue({ dateOfBirth: new Date('2000-01-29T00:00:00.000Z') });
+      const result = await service.getMulank('user-1');
+      if (!result.hasBirthDetails) throw new Error('unreachable');
+      // 29 → 2+9 = 11 → 2, passing through master 11
+      expect(result.day).toBe(29);
+      expect(result.mulank).toBe(2);
+      expect(result.mulankMaster).toBe(11);
     });
   });
 });

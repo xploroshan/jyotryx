@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { NumerologyService, NameAnalysisResult, BrandAnalysisResult, PersonalYearResult } from './numerology.service';
+import { NumerologyService, NameAnalysisResult, BrandAnalysisResult, PersonalYearResult, MulankResult } from './numerology.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
 import { AnalyzeNameDto, AnalyzeBrandDto } from './dto/analyze-name.dto';
@@ -33,5 +33,11 @@ export class NumerologyController {
     @Query('locale') locale?: string,
   ): Promise<PersonalYearResult> {
     return this.numerologyService.getPersonalYear(dateOfBirth, locale);
+  }
+
+  @Get('mulank')
+  @ApiOperation({ summary: 'Get Mulank + Bhagyank reading from the current user’s profile DOB' })
+  async getMulank(@CurrentUser() user: JwtPayload): Promise<MulankResult> {
+    return this.numerologyService.getMulank(user.sub);
   }
 }

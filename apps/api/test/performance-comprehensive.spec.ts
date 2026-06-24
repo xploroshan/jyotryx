@@ -407,6 +407,7 @@ describe('Performance: Numerology Calculations', () => {
         { provide: OpenAIService, useValue: mockOpenAIService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
+        { provide: PrismaService, useValue: mockPrismaService() },
       ],
     }).compile();
 
