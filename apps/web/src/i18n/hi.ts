@@ -712,6 +712,8 @@ export const hi: TranslationKeys = {
     adding: 'सहेजा जा रहा है…',
     remove: 'हटाएं',
     loadFailed: 'आपकी यादें लोड नहीं हो सकीं।',
+    addFailed: 'इसे सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
+    kindLabel: 'श्रेणी',
     kindFact: 'तथ्य',
     kindPreference: 'पसंद',
     kindGoal: 'लक्ष्य',

@@ -745,6 +745,8 @@ export const en = {
     adding: 'Saving…',
     remove: 'Remove',
     loadFailed: 'Could not load your memories.',
+    addFailed: 'Could not save that. Please try again.',
+    kindLabel: 'Category',
     kindFact: 'Fact',
     kindPreference: 'Preference',
     kindGoal: 'Goal',

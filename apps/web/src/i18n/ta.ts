@@ -712,6 +712,8 @@ export const ta: TranslationKeys = {
     adding: 'சேமிக்கிறது…',
     remove: 'நீக்கு',
     loadFailed: 'உங்கள் நினைவுகளை ஏற்ற முடியவில்லை.',
+    addFailed: 'அதை சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.',
+    kindLabel: 'வகை',
     kindFact: 'தகவல்',
     kindPreference: 'விருப்பம்',
     kindGoal: 'இலக்கு',

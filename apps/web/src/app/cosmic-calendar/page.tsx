@@ -242,6 +242,7 @@ export default function CosmicCalendarPage() {
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                   <p className="font-display text-lg font-semibold text-surface-950">
                     {new Date(selected.date).toLocaleDateString(intlLocale, {
+                      timeZone: "UTC",
                       weekday: "long",
                       year: "numeric",
                       month: "long",

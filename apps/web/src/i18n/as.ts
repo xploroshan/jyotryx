@@ -712,6 +712,8 @@ export const as_: TranslationKeys = {
     adding: 'সাঁচি থকা হৈছে…',
     remove: 'আঁতৰাওক',
     loadFailed: 'আপোনাৰ স্মৃতিবোৰ ল\'ড কৰিব পৰা নগল।',
+    addFailed: 'ইয়াক ৰক্ষা কৰিব পৰা নগল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।',
+    kindLabel: 'শ্ৰেণী',
     kindFact: 'তথ্য',
     kindPreference: 'পছন্দ',
     kindGoal: 'লক্ষ্য',

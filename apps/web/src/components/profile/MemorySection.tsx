@@ -65,7 +65,7 @@ export default function MemorySection({ token }: { token: string }) {
       setMemories((prev) => [created, ...(prev ?? [])]);
       setContent("");
     } catch (err: any) {
-      setError(err?.message || t.memory.loadFailed);
+      setError(err?.message || t.memory.addFailed);
     } finally {
       setAdding(false);
     }
@@ -120,7 +120,7 @@ export default function MemorySection({ token }: { token: string }) {
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as Kind)}
-          aria-label={t.memory.kindFact}
+          aria-label={t.memory.kindLabel}
           className="rounded-xl border border-[rgba(12,8,5,0.12)] bg-[rgba(255,252,245,0.78)] px-3 py-2.5 text-sm text-surface-950 focus-ring sm:w-36"
         >
           {KINDS.map((k) => (

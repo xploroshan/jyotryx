@@ -712,6 +712,8 @@ export const te: TranslationKeys = {
     adding: 'సేవ్ చేస్తోంది…',
     remove: 'తొలగించు',
     loadFailed: 'మీ జ్ఞాపకాలను లోడ్ చేయలేకపోయాం.',
+    addFailed: 'దాన్ని సేవ్ చేయలేకపోయాం. దయచేసి మళ్లీ ప్రయత్నించండి.',
+    kindLabel: 'వర్గం',
     kindFact: 'వాస్తవం',
     kindPreference: 'ప్రాధాన్యత',
     kindGoal: 'లక్ష్యం',
