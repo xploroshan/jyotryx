@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
@@ -11,6 +11,7 @@ import {
   zonedNow,
   type ZonedNow,
 } from '../../common/timezone.util';
+import { GocharPersonalization, GocharService } from './gochar.service';
 
 /**
  * Map a local hour-of-day to the briefing greeting KB key. Exported for tests
@@ -19,6 +20,12 @@ import {
 export function greetingKeyForHour(hour: number): 'greeting.morning' | 'greeting.afternoon' | 'greeting.evening' {
   return hour < 12 ? 'greeting.morning' : hour < 17 ? 'greeting.afternoon' : 'greeting.evening';
 }
+
+// Vara (weekday) and Rahukaal are civil-day concepts, indexed 0=Sunday … 6=Saturday.
+// Hoisted to module scope so both the approximate panchang and the ephemeris
+// path can pin them to the user's LOCAL weekday.
+const VARA_KEYS = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
+const RAHU_KAALS = ['4:30 PM - 6:00 PM', '7:30 AM - 9:00 AM', '3:00 PM - 4:30 PM', '12:00 PM - 1:30 PM', '1:30 PM - 3:00 PM', '10:30 AM - 12:00 PM', '9:00 AM - 10:30 AM'];
 
 export interface PlanetaryHour {
   planet: string;
@@ -276,6 +283,10 @@ export class DailyBriefingService {
     private readonly knowledgeService: KnowledgeService,
     private readonly cacheService: MemoryCacheService,
     private readonly kbService: KbService,
+    // Optional so the unit suite (which builds this service standalone) and any
+    // environment without the ephemeris still work — personalization simply
+    // stays dormant and the shared almanac is served.
+    @Optional() private readonly gocharService?: GocharService,
   ) {}
 
   /**
@@ -298,17 +309,23 @@ export class DailyBriefingService {
 
   async getDailyBriefing(userId: string, locale?: string, timeZone?: string): Promise<DailyBriefingResult> {
     const tz = await this.resolveUserTimezone(userId, timeZone);
-    const z = zonedNow(new Date(), tz);
+    // `now` is the real instant — used for ephemeris/transit positions (which
+    // are the same physical sky for everyone). `z` is that instant expressed in
+    // the user's zone — used for the civil date, weekday and greeting.
+    const now = new Date();
+    const z = zonedNow(now, tz);
     const dateStr = z.dateStr;
     // 30-min bucket aligns with hora changes (computed in the user's zone)
     const hourBucket = Math.floor((z.hour * 60 + z.minute) / 30);
     const localeKey = locale || 'en';
 
-    // ── 1. Global portion (shared across ALL users in same locale) ──────
-    const globalKey = `briefing:global:${dateStr}:${hourBucket}:${localeKey}`;
+    // ── 1. Global portion (shared across users in the same zone + locale) ──
+    // The zone is part of the key because the panchang/vara are now zone-aware,
+    // so two users at the same local time but different zones must not share it.
+    const globalKey = `briefing:global:${dateStr}:${hourBucket}:${z.zone}:${localeKey}`;
     let global = await this.cacheService.get<GlobalBriefingData>(globalKey);
     if (!global) {
-      global = await this.computeGlobalBriefing(z, locale);
+      global = await this.computeGlobalBriefing(z, now, locale);
       await this.cacheService.set(globalKey, global, 30 * 60 * 1000);
     }
 
@@ -316,14 +333,19 @@ export class DailyBriefingService {
     const userKey = `briefing:user:${userId}:${dateStr}:${hourBucket}:${localeKey}`;
     let overlay = await this.cacheService.get<UserBriefingOverlay>(userKey);
     let userTraditions: string[] = ['VEDIC'];
+    // The user record is needed both for the overlay and for the Gochar
+    // personalization; fetch it once and reuse.
+    let userRecord:
+      | { name: string | null; nickname?: string | null; dateOfBirth: Date | null; timeOfBirth: string | null; placeOfBirth: unknown; gender: string | null; profession: string | null; astrologyTraditions?: string[] }
+      | null = null;
     if (!overlay) {
-      const user = await this.prisma.user.findUnique({
+      userRecord = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, nickname: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
       });
-      userTraditions = (user as any)?.astrologyTraditions ?? ['VEDIC'];
+      userTraditions = (userRecord as any)?.astrologyTraditions ?? ['VEDIC'];
       overlay = await this.computeUserOverlay(
-        user,
+        userRecord,
         global.canonical,
         global.currentPlanet,
         global.dayRuler,
@@ -334,34 +356,69 @@ export class DailyBriefingService {
       await this.cacheService.set(userKey, overlay, 30 * 60 * 1000);
     }
 
-    // ── 3. Merge into final response ────────────────────────────────────
+    // ── 3. Per-user Gochar (transit) personalization ────────────────────
+    // Cached separately so a cold overlay cache doesn't force a chart recompute
+    // and vice-versa. Falls back to null (→ shared almanac) when the ephemeris
+    // is unavailable or the user has no usable birth data.
+    let personal: GocharPersonalization | null = null;
+    if (this.gocharService) {
+      const personalKey = `briefing:gochar:${userId}:${dateStr}:${hourBucket}`;
+      const cached = await this.cacheService.get<GocharPersonalization | { __none: true }>(personalKey);
+      if (cached) {
+        personal = (cached as any).__none ? null : (cached as GocharPersonalization);
+      } else {
+        if (!userRecord) {
+          userRecord = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true, nickname: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, profession: true, astrologyTraditions: true },
+          });
+        }
+        personal = userRecord
+          ? await this.gocharService.computePersonalization(
+              { dateOfBirth: userRecord.dateOfBirth, timeOfBirth: userRecord.timeOfBirth, placeOfBirth: userRecord.placeOfBirth },
+              now,
+            )
+          : null;
+        await this.cacheService.set(personalKey, personal ?? { __none: true }, 30 * 60 * 1000);
+      }
+    }
+
+    // ── 4. Merge into final response (personalization overrides global) ──
+    const summary = personal
+      ? `${personal.summaryInsight} ${overlay.summary}`
+      : overlay.summary;
+
     return {
       greeting: overlay.greeting,
       date: dateStr,
-      dayQuality: global.dayQuality,
-      summary: overlay.summary,
+      dayQuality: personal?.dayQuality ?? global.dayQuality,
+      summary,
       doList: global.doList,
       avoidList: global.avoidList,
       planetaryHours: global.planetaryHours,
       currentHora: global.currentHora,
-      luckyColor: global.luckyColor,
-      luckyNumber: global.luckyNumber,
+      luckyColor: personal?.luckyColor ?? global.luckyColor,
+      luckyNumber: personal?.luckyNumber ?? global.luckyNumber,
       luckyTime: global.luckyTime,
       professionInsight: overlay.professionInsight,
       remedy: global.remedy,
       mantra: global.mantra,
       panchang: global.panchang,
-      transitAlert: overlay.transitAlert,
+      // When personalization is available it is authoritative for the transit
+      // (a null means "no notable transit today" — don't fall back to the
+      // approximate age-based alert in that case).
+      transitAlert: personal ? personal.transitAlert : overlay.transitAlert,
+      moonSign: personal?.moonSign ?? null,
       astrologyTraditions: userTraditions,
     } as any;
   }
 
   // ─── Global briefing: identical for every user in the same 30-min slot ──
-  private async computeGlobalBriefing(z: ZonedNow, locale?: string): Promise<GlobalBriefingData> {
+  private async computeGlobalBriefing(z: ZonedNow, now: Date, locale?: string): Promise<GlobalBriefingData> {
     const dayOfWeek = z.weekday;
     const dayRuler = DAY_RULERS[dayOfWeek];
 
-    const canonical = this.getBasicPanchang(z);
+    const canonical = await this.getPanchangCanonical(now, z);
 
     // Preload the 7 planet KB rows once; reused for lucky color, day
     // activities, hora activities, and planetary-hours localization.
@@ -540,12 +597,32 @@ export class DailyBriefingService {
     return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
   }
 
+  /**
+   * Panchang from the real Swiss Ephemeris when available, falling back to the
+   * approximate mean-longitude computation if the ephemeris errors or is absent.
+   * Astronomical elements (tithi/nakshatra/yoga) come from the real instant
+   * `now`; the civil weekday (vara) and rahukaal are pinned to the user's LOCAL
+   * day via `z`, so they always agree with the displayed date.
+   */
+  private async getPanchangCanonical(now: Date, z: ZonedNow): Promise<PanchangCanonical> {
+    let base: PanchangCanonical;
+    if (this.gocharService) {
+      try {
+        base = await this.gocharService.computeEphemerisPanchang(now);
+      } catch (err) {
+        this.logger.warn(`Ephemeris panchang failed, using approximate: ${(err as Error)?.message ?? err}`);
+        base = this.getBasicPanchang(z);
+      }
+    } else {
+      base = this.getBasicPanchang(z);
+    }
+    return { ...base, varaKey: VARA_KEYS[z.weekday], rahukaal: RAHU_KAALS[z.weekday] };
+  }
+
   private getBasicPanchang(z: ZonedNow): PanchangCanonical {
-    const dayNameKeys = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
     const tithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
     const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
     const yogas = ['Vishkambha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarman', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
-    const rahuKaals = ['4:30 PM - 6:00 PM', '7:30 AM - 9:00 AM', '3:00 PM - 4:30 PM', '12:00 PM - 1:30 PM', '1:30 PM - 3:00 PM', '10:30 AM - 12:00 PM', '9:00 AM - 10:30 AM'];
 
     // Compute Julian Day for astronomical calculations (local calendar date)
     const year = z.year;
@@ -581,8 +658,8 @@ export class DailyBriefingService {
       tithiKey: tithis[tithiIdx % 15],
       nakshatraKey: nakshatras[nakIdx],
       yogaKey: yogas[yogaIdx],
-      varaKey: dayNameKeys[z.weekday],
-      rahukaal: rahuKaals[z.weekday],
+      varaKey: VARA_KEYS[z.weekday],
+      rahukaal: RAHU_KAALS[z.weekday],
     };
   }
 

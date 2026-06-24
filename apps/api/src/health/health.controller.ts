@@ -8,8 +8,12 @@ import {
 import Redis from 'ioredis';
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.module';
+import { Public } from '../common/decorators/current-user.decorator';
 
+// Liveness/readiness probes must stay reachable without a JWT — `@Public()`
+// opts the whole controller out of the global auth guard.
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,

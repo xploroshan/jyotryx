@@ -36,4 +36,7 @@ export interface DailyBriefing {
     rahukaal: string;
   };
   transitAlert: string | null;
+  /** Natal Moon sign (Rashi) when the briefing is personalized to the user's
+   *  birth chart; null when only the shared almanac is available. */
+  moonSign?: string | null;
 }

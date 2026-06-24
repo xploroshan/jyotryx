@@ -5,6 +5,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
 import { APP_GUARD } from '@nestjs/core';
 import Redis from 'ioredis';
 import { ConditionalThrottlerGuard } from './common/guards/conditional-throttler.guard';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import configuration from './config/configuration';
 import { RedisModule, REDIS_CLIENT } from './redis/redis.module';
 import { HealthModule } from './health/health.module';
@@ -95,6 +96,15 @@ import { MetricsModule } from './metrics/metrics.module';
       // Throttling is fully active in prod/dev; the guard only steps aside
       // when THROTTLE_DISABLED=true (set solely by the real-API E2E harness).
       useClass: ConditionalThrottlerGuard,
+    },
+    {
+      // Authenticate EVERY route by default. Routes that must stay open
+      // opt out with `@Public()` (auth, health, pricing, webhook, public
+      // experiment/numerology/astrology endpoints, etc.). This closes the
+      // fail-open gap where a controller missing `@UseGuards(JwtAuthGuard)`
+      // was silently unauthenticated.
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

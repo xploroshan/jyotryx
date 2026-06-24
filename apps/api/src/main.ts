@@ -70,7 +70,11 @@ if (process.env.SENTRY_DSN) {
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  // `rawBody: true` preserves the unparsed request buffer on `req.rawBody`,
+  // which the Razorpay webhook needs to verify the HMAC signature over the
+  // exact bytes Razorpay signed (re-serializing the parsed JSON does not
+  // reproduce them).
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
 
   // Use pino as the underlying logger
   app.useLogger(app.get(PinoLogger));
@@ -104,6 +108,11 @@ async function bootstrap() {
     ...extraOrigins,
   ].filter(Boolean) as string[];
 
+  // Never allow a wildcard origin alongside `credentials: true` — a stray
+  // `CORS_ORIGINS=*` (or `FRONTEND_URL=*`) would otherwise reflect-allow any
+  // site to make credentialed requests. Drop any such entry defensively.
+  const safeOrigins = allowedOrigins.filter((o) => o !== '*');
+
   app.enableCors({
     origin: (
       origin: string | undefined,
@@ -111,7 +120,7 @@ async function bootstrap() {
     ) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (safeOrigins.includes(origin)) return callback(null, true);
       callback(null, false);
     },
     credentials: true,

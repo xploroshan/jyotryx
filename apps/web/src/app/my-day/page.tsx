@@ -294,6 +294,11 @@ export default function MyDayPage() {
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-950 tracking-tight">
                 {translateGreeting(briefing.greeting, t)}
               </h1>
+              {briefing.moonSign && (
+                <span className="inline-flex items-center gap-1.5 mt-2 text-[11px] font-medium px-2.5 py-1 rounded-full border bg-indigo-500/15 text-indigo-700 border-indigo-500/30">
+                  <span aria-hidden="true">☽</span> {briefing.moonSign}
+                </span>
+              )}
               {isMultiTradition && (
                 <div className="flex gap-2 mt-3">
                   {userTraditions.map((trad) => {

@@ -154,8 +154,13 @@ export class PalmistryService {
     // If either the DB write or queue.add fails, fall through to the sync
     // path rather than 500ing — the user has already paid credits.
     if (this.queueEnabled) {
+      // Only the create+enqueue is inside the fallback try. The entitlement
+      // consume is done AFTER, outside the try — so a consume failure (e.g.
+      // a concurrent 402 race) surfaces to the caller instead of silently
+      // falling through to the sync path and burning a SECOND unlock.
+      let reading: any = null;
       try {
-        const reading = await this.prisma.palmistryReading.create({
+        reading = await this.prisma.palmistryReading.create({
           data: {
             userId,
             imageUrl,
@@ -163,12 +168,6 @@ export class PalmistryService {
             analysisData: { status: 'processing' },
           },
         });
-
-        // Spend the one-time unlock now that the reading row exists (no-op
-        // for subscribers). The processor restores it if analysis fails.
-        if (mode === 'entitlement') {
-          await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', reading.id);
-        }
 
         await this.palmistryQueue!.add('analyze', {
           readingId: reading.id,
@@ -179,6 +178,20 @@ export class PalmistryService {
           locale,
           gender,
         } satisfies PalmistryJobData);
+      } catch (err) {
+        this.logger.error(
+          `Palmistry async enqueue failed (${(err as Error)?.message}); falling back to sync analysis`,
+        );
+        reading = null; // signal fall-through to the sync path below
+      }
+
+      if (reading) {
+        // Enqueue succeeded — spend the one-time unlock exactly once now that
+        // the reading row exists (no-op for subscribers). The processor
+        // restores it if analysis ultimately fails.
+        if (mode === 'entitlement') {
+          await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', reading.id);
+        }
 
         return {
           id: reading.id,
@@ -198,11 +211,6 @@ export class PalmistryService {
           cautions: '',
           createdAt: reading.createdAt.toISOString(),
         };
-      } catch (err) {
-        this.logger.error(
-          `Palmistry async enqueue failed (${(err as Error)?.message}); falling back to sync analysis`,
-        );
-        // Fall through to sync path below
       }
     }
 

@@ -4,10 +4,13 @@ import {
   Post,
   Body,
   Headers,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
+  RawBodyRequest,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import {
   PaymentService,
@@ -73,10 +76,13 @@ export class PaymentController {
   @ApiOperation({ summary: 'Razorpay webhook endpoint' })
   @ApiResponse({ status: 200, description: 'Webhook received' })
   async handleWebhook(
+    @Req() req: RawBodyRequest<Request>,
     @Body() payload: Record<string, any>,
     @Headers('x-razorpay-signature') signature?: string,
   ): Promise<{ received: boolean }> {
-    return this.paymentService.handleWebhook(payload, signature);
+    // Pass the exact raw bytes Razorpay signed so the signature is verified
+    // against them, not a re-serialization of the parsed body.
+    return this.paymentService.handleWebhook(payload, signature, req.rawBody);
   }
 
   @Get('history')

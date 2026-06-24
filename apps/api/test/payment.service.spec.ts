@@ -65,6 +65,7 @@ describe('PaymentService', () => {
 
     const featureAccess = {
       grantEntitlement: jest.fn().mockResolvedValue(true),
+      voidEntitlementByPayment: jest.fn().mockResolvedValue(0),
       resolveUnlock: jest.fn(),
       consumeEntitlement: jest.fn(),
       isActiveSubscriber: jest.fn().mockResolvedValue(false),
