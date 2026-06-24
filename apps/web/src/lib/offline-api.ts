@@ -36,6 +36,17 @@ function isOnline(): boolean {
   return navigator.onLine;
 }
 
+/** `?tz=` query string for the browser's IANA zone, so server-computed
+ *  day/greeting match the user's actual location. Empty when unavailable. */
+function tzQuery(prefix: '?' | '&' = '?'): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz ? `${prefix}tz=${encodeURIComponent(tz)}` : '';
+  } catch {
+    return '';
+  }
+}
+
 export const offlineApi = {
   /**
    * Get daily briefing — works offline with local computation
@@ -43,7 +54,7 @@ export const offlineApi = {
   async getDailyBriefing() {
     if (isOnline()) {
       try {
-        const result = await api.get<any>('/daily-briefing');
+        const result = await api.get<any>(`/daily-briefing${tzQuery()}`);
         // Cache for offline use
         setOfflineCache({
           dailyBriefing: result,
@@ -73,7 +84,7 @@ export const offlineApi = {
   async getPlanetaryHours() {
     if (isOnline()) {
       try {
-        const result = await api.get<any>('/daily-briefing/planetary-hours');
+        const result = await api.get<any>(`/daily-briefing/planetary-hours${tzQuery()}`);
         return { data: result, source: 'server' as const };
       } catch {
         // Fall through
@@ -151,7 +162,7 @@ export const offlineApi = {
 
     try {
       const [briefing, panchang] = await Promise.all([
-        api.get<any>('/daily-briefing').catch(() => null),
+        api.get<any>(`/daily-briefing${tzQuery()}`).catch(() => null),
         api.get<any>('/astrology/panchang').catch(() => null),
       ]);
 

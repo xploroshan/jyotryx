@@ -73,3 +73,86 @@ export function resolveUtHour(params: {
   }
   return hour + minute / 60 - offset;
 }
+
+/** App is India-first; the safest default when a zone can't be resolved. */
+export const DEFAULT_TZ = 'Asia/Kolkata';
+
+/** True if `zone` is an IANA timezone the runtime (ICU/tzdata) understands. */
+export function isValidTimeZone(zone: string | null | undefined): zone is string {
+  if (!zone) return false;
+  try {
+    // Throws RangeError for unknown zones.
+    new Intl.DateTimeFormat('en-US', { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve an IANA timezone from coordinates (e.g. a user's birthplace),
+ * falling back to {@link DEFAULT_TZ} when coords are missing/out of range.
+ */
+export function resolveTimezoneFromCoords(
+  latitude?: number | null,
+  longitude?: number | null,
+): string {
+  if (latitude != null && longitude != null) {
+    try {
+      return tzLookup(latitude, longitude);
+    } catch {
+      // tz-lookup throws on out-of-range coords; fall through to default.
+    }
+  }
+  return DEFAULT_TZ;
+}
+
+/** A moment expressed as wall-clock parts in a specific timezone. */
+export interface ZonedNow {
+  /** Local calendar date as `YYYY-MM-DD` in the zone. */
+  dateStr: string;
+  /** Local year (e.g. 2026). */
+  year: number;
+  /** Local month, 1–12. */
+  month: number;
+  /** Local day of month, 1–31. */
+  day: number;
+  /** Local hour, 0–23. */
+  hour: number;
+  /** Local minute, 0–59. */
+  minute: number;
+  /** Local day of week, 0=Sunday … 6=Saturday. */
+  weekday: number;
+  /** The resolved zone actually used (after validation/fallback). */
+  zone: string;
+}
+
+/**
+ * Express an instant as wall-clock parts in `zone`. Uses `Intl` rather than
+ * `Date`'s local accessors, so the result is independent of the server's own
+ * timezone — the bug this replaces was the server (UTC) deciding the date and
+ * greeting for users in other zones. Invalid zones fall back to {@link DEFAULT_TZ}.
+ */
+export function zonedNow(instant: Date, zone: string): ZonedNow {
+  const tz = isValidTimeZone(zone) ? zone : DEFAULT_TZ;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(instant);
+  const num = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  const year = num('year');
+  const month = num('month');
+  const day = num('day');
+  let hour = num('hour');
+  if (hour === 24) hour = 0; // some ICU builds emit hour 24 at midnight
+  const minute = num('minute');
+  // `getUTCDay` of the local Y/M/D is the local weekday, with no tz ambiguity.
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const dateStr = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return { dateStr, year, month, day, hour, minute, weekday, zone: tz };
+}
