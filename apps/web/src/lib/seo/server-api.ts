@@ -104,6 +104,47 @@ export async function fetchHoroscope(
   }
 }
 
+export interface SharedMatchGuna {
+  guna: string;
+  maxPoints: number;
+  obtainedPoints: number;
+  description: string;
+}
+
+export interface SharedMatchPayload {
+  token: string;
+  personAName: string;
+  personBName: string;
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  compatibility: string;
+  recommendation: string;
+  manglikA: boolean;
+  manglikB: boolean;
+  gunaDetails: SharedMatchGuna[];
+  locale?: string | null;
+  createdAt: string;
+}
+
+/**
+ * Fetch a publicly shared Kundli-match snapshot by token. Snapshots are
+ * immutable once created, so a server-render per request is fine; we use
+ * `no-store` to keep the (best-effort) view counter meaningful and avoid any
+ * ISR segment-config coupling. Never throws — returns null on miss/error so
+ * the page can render its own not-found state.
+ */
+export async function fetchSharedMatch(token: string): Promise<SharedMatchPayload | null> {
+  try {
+    const url = `${API_BASE_URL}/astrology/matching/shared/${encodeURIComponent(token)}`;
+    const res = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    return (await res.json()) as SharedMatchPayload;
+  } catch {
+    return null;
+  }
+}
+
 /** Origin used in canonical URLs and JSON-LD. */
 export const SITE_ORIGIN =
   process.env.NEXT_PUBLIC_SITE_URL || 'https://www.myastro360.com';

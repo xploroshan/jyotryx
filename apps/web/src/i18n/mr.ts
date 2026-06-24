@@ -860,6 +860,29 @@ export const mr: TranslationKeys = {
     kootaNadiDesc: 'Health and progeny',
     mockSummary: 'Overall, this is a favorable match with strong compatibility in key areas. Consider the specific analyses for a complete picture.',
   },
+
+  // Kundli-match share links
+  matchShare: {
+    share: 'निकाल शेअर करा',
+    sharing: 'लिंक तयार करत आहे…',
+    shareTitle: 'हा सुसंगतता निकाल शेअर करा',
+    shareHint: 'लिंक असलेली कोणतीही व्यक्ती गुण पाहू शकते. जन्म तपशील कधीही शेअर केले जात नाहीत.',
+    copyLink: 'लिंक कॉपी करा',
+    copied: 'कॉपी झाले!',
+    shareWhatsapp: 'WhatsApp वर शेअर करा',
+    shareFailed: 'शेअर लिंक तयार करता आली नाही. कृपया पुन्हा प्रयत्न करा.',
+    whatsappText: 'myastro360 वर आमची Kundli सुसंगतता {score}/{max} ({percentage}%) आहे. संपूर्ण तपशील पाहा:',
+    publicEyebrow: 'Kundli सुसंगतता',
+    publicSubtitle: 'Ashtakoota Guna Milan सुसंगतता',
+    computedOn: 'myastro360 वर गणना केली',
+    ctaHeadline: 'तुमची स्वतःची सुसंगतता तपासा',
+    ctaSubtitle: 'मोफत Ashtakoota Guna Milan — Manglik तपासणी, koota-नुसार तपशील आणि मार्गदर्शन.',
+    ctaButton: 'तुमची Kundli जुळवा',
+    notFoundTitle: 'हा शेअर केलेला निकाल उपलब्ध नाही',
+    notFoundBody: 'लिंकची मुदत संपली असावी किंवा ती काढून टाकली असावी.',
+    notFoundCta: 'Kundli Matching वापरून पाहा',
+  },
+
   panchang: {
     badge: 'हिंदू दिनदर्शिका',
     title: 'आजचे',

@@ -196,6 +196,8 @@ export interface MatchingResult {
   gunaDetails: GunaDetail[];
   compatibility: string;
   recommendation: string;
+  manglikA: boolean;
+  manglikB: boolean;
 }
 
 export interface GunaDetail {
@@ -999,7 +1001,7 @@ export class AstrologyService {
         },
       });
 
-      return { id: result.id, partner1, partner2, totalScore, maxScore: 36, gunaDetails, compatibility, recommendation };
+      return { id: result.id, partner1, partner2, totalScore, maxScore: 36, gunaDetails, compatibility, recommendation, manglikA, manglikB };
     });
   }
 

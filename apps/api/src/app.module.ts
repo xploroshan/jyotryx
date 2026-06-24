@@ -15,6 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MemoryModule } from './modules/memory/memory.module';
+import { MatchShareModule } from './modules/match-share/match-share.module';
 import { AstrologyModule } from './modules/astrology/astrology.module';
 import { PalmistryModule } from './modules/palmistry/palmistry.module';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -71,6 +72,7 @@ import { MetricsModule } from './metrics/metrics.module';
     UserModule,
     ChatModule,
     MemoryModule,
+    MatchShareModule,
     AstrologyModule,
     PalmistryModule,
     PaymentModule,

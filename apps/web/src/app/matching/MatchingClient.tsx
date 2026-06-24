@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
@@ -48,6 +48,14 @@ export default function MatchingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [personAPrefilled, setPersonAPrefilled] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+  }, []);
 
   // Prepopulate Person A from the logged-in user's profile (Person B is always the partner).
   useEffect(() => {
@@ -98,8 +106,8 @@ export default function MatchingPage() {
         totalScore,
         maxScore,
         percentage,
-        manglikA: false,
-        manglikB: false,
+        manglikA: Boolean(res.manglikA),
+        manglikB: Boolean(res.manglikB),
         koota: res.gunaDetails?.map((g: any) => ({
           name: g.guna,
           description: g.description,
@@ -109,10 +117,67 @@ export default function MatchingPage() {
         verdict: res.compatibility || (percentage >= 75 ? t.matching.verdictExcellent : percentage >= 50 ? t.matching.verdictGood : t.matching.verdictAverage),
         summary: res.recommendation || mockResults.summary,
       });
+      // A fresh match invalidates any previously created share link.
+      setShareUrl("");
+      setShareError("");
+      setCopied(false);
     } catch (err: any) {
       setError(err.message || t.matching.checkFailed);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!results) return;
+    setShareLoading(true);
+    setShareError("");
+    setCopied(false);
+    try {
+      const token = useAuthStore.getState().accessToken;
+      if (!token) {
+        setShareError(t.matching.loginRequired);
+        return;
+      }
+      const { api } = await import("@/lib/api");
+      const { token: shareToken } = await api.post<{ token: string }>(
+        "/astrology/matching/share",
+        {
+          partner1Name: personA.name,
+          partner2Name: personB.name,
+          totalScore: results.totalScore,
+          maxScore: results.maxScore,
+          compatibility: results.verdict,
+          recommendation: results.summary,
+          manglikA: results.manglikA,
+          manglikB: results.manglikB,
+          gunaDetails: results.koota.map((k) => ({
+            guna: k.name,
+            description: k.description,
+            maxPoints: k.max,
+            obtainedPoints: k.obtained,
+          })),
+          locale,
+        },
+        { token },
+      );
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      setShareUrl(`${origin}/match/${shareToken}`);
+    } catch (err: any) {
+      setShareError(err?.message || t.matchShare.shareFailed);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyShareUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context); the field stays selectable.
     }
   };
 
@@ -322,11 +387,58 @@ export default function MatchingPage() {
             <div className="surface-card p-6">
               <h3 className="text-lg font-bold text-gradient mb-4">{t.matching.analysisSummary}</h3>
               <p className="text-secondary leading-relaxed">{results.summary}</p>
-              <div className="mt-4 pt-4 border-t divider">
+              <div className="mt-4 pt-4 border-t divider flex flex-wrap gap-3">
+                <button
+                  onClick={handleShare}
+                  disabled={shareLoading}
+                  className="px-6 py-3 rounded-xl btn-primary text-sm font-medium disabled:opacity-50"
+                >
+                  {shareLoading ? t.matchShare.sharing : t.matchShare.share}
+                </button>
                 <button className="px-6 py-3 rounded-xl btn-secondary text-sm font-medium text-primary-400 hover:bg-[rgba(12,8,5,0.06)] transition-all">
                   {t.matching.downloadReport}
                 </button>
               </div>
+
+              {shareError && <p className="mt-3 text-sm text-red-400">{shareError}</p>}
+
+              {shareUrl && (
+                <div className="mt-4 p-4 rounded-xl bg-[rgba(255,252,245,0.78)] border divider">
+                  <p className="text-sm font-semibold text-surface-950">{t.matchShare.shareTitle}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.46)] mt-0.5 mb-3">{t.matchShare.shareHint}</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      readOnly
+                      value={shareUrl}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="flex-1 px-4 py-2.5 rounded-xl surface-input text-sm"
+                      aria-label={t.matchShare.shareTitle}
+                    />
+                    <button
+                      onClick={copyShareUrl}
+                      className="px-5 py-2.5 rounded-xl btn-secondary text-sm font-medium whitespace-nowrap"
+                    >
+                      {copied ? t.matchShare.copied : t.matchShare.copyLink}
+                    </button>
+                  </div>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `${t.matchShare.whatsappText
+                        .replace("{score}", String(results.totalScore))
+                        .replace("{max}", String(results.maxScore))
+                        .replace("{percentage}", String(results.percentage))} ${shareUrl}`,
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-3 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[#25D366] hover:bg-[#1ebe5b] transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.74-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.521.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.074-.149-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z" />
+                    </svg>
+                    {t.matchShare.shareWhatsapp}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         )}

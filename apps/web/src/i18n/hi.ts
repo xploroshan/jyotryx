@@ -860,6 +860,29 @@ export const hi: TranslationKeys = {
     kootaNadiDesc: 'स्वास्थ्य और संतान',
     mockSummary: 'कुल मिलाकर, यह मुख्य क्षेत्रों में मजबूत अनुकूलता के साथ एक अनुकूल मेल है। पूरी तस्वीर के लिए विशिष्ट विश्लेषणों पर विचार करें।',
   },
+
+  // Kundli-match share links
+  matchShare: {
+    share: 'परिणाम साझा करें',
+    sharing: 'लिंक बना रहे हैं…',
+    shareTitle: 'इस अनुकूलता परिणाम को साझा करें',
+    shareHint: 'लिंक रखने वाला कोई भी व्यक्ति अंक देख सकता है। जन्म विवरण कभी साझा नहीं किए जाते।',
+    copyLink: 'लिंक कॉपी करें',
+    copied: 'कॉपी हो गया!',
+    shareWhatsapp: 'WhatsApp पर साझा करें',
+    shareFailed: 'साझा लिंक नहीं बना सके। कृपया पुनः प्रयास करें।',
+    whatsappText: 'myastro360 पर हमारी कुंडली अनुकूलता {score}/{max} ({percentage}%) है। पूरा विवरण देखें:',
+    publicEyebrow: 'कुंडली अनुकूलता',
+    publicSubtitle: 'अष्टकूट गुण मिलान अनुकूलता',
+    computedOn: 'myastro360 पर गणना की गई',
+    ctaHeadline: 'अपनी अनुकूलता जांचें',
+    ctaSubtitle: 'निःशुल्क अष्टकूट गुण मिलान — मांगलिक जांच, कूट-दर-कूट विवरण और मार्गदर्शन।',
+    ctaButton: 'अपनी कुंडली मिलाएं',
+    notFoundTitle: 'यह साझा परिणाम उपलब्ध नहीं है',
+    notFoundBody: 'यह लिंक समाप्त हो गया होगा या हटा दिया गया होगा।',
+    notFoundCta: 'कुंडली मिलान आज़माएं',
+  },
+
   panchang: {
     badge: 'हिंदू कैलेंडर',
     title: 'आज का',

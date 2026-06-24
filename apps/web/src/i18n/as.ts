@@ -860,6 +860,29 @@ export const as_: TranslationKeys = {
     kootaNadiDesc: 'Health and progeny',
     mockSummary: 'Overall, this is a favorable match with strong compatibility in key areas. Consider the specific analyses for a complete picture.',
   },
+
+  // Kundli-match share links
+  matchShare: {
+    share: 'ফলাফল শ্বেয়াৰ কৰক',
+    sharing: 'লিংক সৃষ্টি কৰি আছে…',
+    shareTitle: 'এই সংগতি ফলাফল শ্বেয়াৰ কৰক',
+    shareHint: 'লিংক থকা যিকোনো ব্যক্তিয়ে স্কোৰ চাব পাৰে। জন্মৰ বিৱৰণ কেতিয়াও শ্বেয়াৰ কৰা নহয়।',
+    copyLink: 'লিংক কপি কৰক',
+    copied: 'কপি কৰা হ\'ল!',
+    shareWhatsapp: 'WhatsApp-ত শ্বেয়াৰ কৰক',
+    shareFailed: 'শ্বেয়াৰ লিংক সৃষ্টি কৰিব পৰা নগ\'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।',
+    whatsappText: 'myastro360-ত আমাৰ Kundli সংগতি {score}/{max} ({percentage}%)। সম্পূৰ্ণ বিৱৰণ চাওক:',
+    publicEyebrow: 'Kundli সংগতি',
+    publicSubtitle: 'Ashtakoota Guna Milan সংগতি',
+    computedOn: 'myastro360-ত গণনা কৰা হৈছে',
+    ctaHeadline: 'আপোনাৰ নিজৰ সংগতি পৰীক্ষা কৰক',
+    ctaSubtitle: 'বিনামূলীয়া Ashtakoota Guna Milan — Manglik পৰীক্ষা, koota অনুসৰি বিৱৰণ আৰু নিৰ্দেশনা।',
+    ctaButton: 'আপোনাৰ Kundli মিলাওক',
+    notFoundTitle: 'এই শ্বেয়াৰ কৰা ফলাফল উপলব্ধ নহয়',
+    notFoundBody: 'লিংকটোৰ ম্যাদ উকলি যাব পাৰে অথবা আঁতৰাই দিয়া হ\'ব পাৰে।',
+    notFoundCta: 'Kundli Matching চেষ্টা কৰক',
+  },
+
   panchang: {
     badge: 'হিন্দু পঞ্জিকা',
     title: 'আজৰ',
