@@ -102,6 +102,7 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
       { slug: 'kp-astrology', labelKey: 'traditionsUi.vedic.features.kpAstrology', href: '/kp-astrology', available: true, icon: '✨' },
       { slug: 'palmistry', labelKey: 'traditionsUi.vedic.features.palmistry', href: '/palmistry', available: true, icon: '✋' },
       { slug: 'numerology', labelKey: 'traditionsUi.vedic.features.numerology', href: '/numerology', available: true, icon: '🔢' },
+      { slug: 'mulank', labelKey: 'traditionsUi.vedic.features.mulank', href: '/vedic/mulank', available: true, icon: '🔟' },
       { slug: 'tarot', labelKey: 'traditionsUi.vedic.features.tarot', href: '/tarot', available: true, icon: '🎴' },
       { slug: 'vastu', labelKey: 'traditionsUi.vedic.features.vastu', href: '/vastu', available: true, icon: '🏛️' },
     ],
