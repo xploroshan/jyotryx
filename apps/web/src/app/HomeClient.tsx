@@ -8,34 +8,41 @@ import { useTranslation } from "@/i18n";
 import { usePricingConfig } from "@/lib/usePricingConfig";
 import { Stagger } from "@/components/ui/PageTransition";
 import HeroSun from "@/components/home/HeroSun";
-import TraditionMarquee from "@/components/home/TraditionMarquee";
-import Orb3D from "@/components/ui/Orb3D";
+import { WEB_TRADITIONS, TRADITION_IDS, TRADITION_BADGE_COLORS } from "@/lib/traditions";
+import { TraditionGlyph } from "@/components/icons";
 
 const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
   ssr: false,
 });
 
+/** Resolve a dotted i18n path (e.g. "traditionsUi.vedic.tagline") off the
+ *  translation object. Used for the tradition showcase, whose labels live in
+ *  the localized traditionsUi.* tree — so every card is fully localized. */
+function readLabel(t: unknown, path: string, fallback = ""): string {
+  const parts = path.split(".");
+  let node: unknown = t;
+  for (const p of parts) {
+    if (node && typeof node === "object" && p in (node as Record<string, unknown>)) {
+      node = (node as Record<string, unknown>)[p];
+    } else return fallback;
+  }
+  return typeof node === "string" ? node : fallback;
+}
+
 /**
- * Renders a highlight phrase with the .accent-underline scoped to the
- * brand name "myastro360" only. Each fragment carries its own gradient
- * because `text-gradient-sunrise` clips background to text — putting it
- * on a parent leaves the children with `color: transparent` and no
- * gradient of their own (they go invisible). Brand string is locale-
- * stable; if a translation drops it for any reason the whole phrase
- * still renders with the gradient and no underline.
+ * Renders a highlight phrase with the .accent-underline scoped to the brand
+ * name "myastro360" only. Each fragment carries its own gradient because
+ * `text-gradient-sunrise` clips background to text — putting it on a parent
+ * leaves the children with `color: transparent` and no gradient of their own.
+ * Brand string is locale-stable; if a translation drops it the whole phrase
+ * still renders with the gradient and no underline. The gradient + display
+ * weight carries the emphasis in every script (no Latin-only italic relied on).
  */
 function renderHighlight(text: string) {
   const BRAND = "myastro360";
   if (!text.includes(BRAND)) {
     return <span className="text-gradient-sunrise">{text}</span>;
   }
-  // The italic Fraunces "J" has a generous ascender that gets clipped by the
-  // headline above it when "myastro360" wraps onto a second line of its own.
-  // To guarantee full visibility we render the brand on a forced new line
-  // (display:block) with extra top spacing so the J's curl never collides
-  // with the line above. The leading text fragment ("decoded by ") trims its
-  // trailing space — without that trim the new-line block leaves a hanging
-  // gap on the prior line.
   const parts = text.split(BRAND);
   const out: React.ReactNode[] = [];
   parts.forEach((p, i) => {
@@ -66,8 +73,6 @@ function renderHighlight(text: string) {
 export default function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { t } = useTranslation();
-  // In Mode A (subscriptions off) the whole app is free — surface a "Free"
-  // badge in the hero. Hidden once subscriptions are enabled.
   const { subscriptionsEnabled } = usePricingConfig();
 
   const stats = [
@@ -79,150 +84,166 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* ── Hero — editorial-asymmetric grid ── */}
+      {/* ── Hero — a cosmic stage. Oversized bold headline (carries hierarchy
+          through scale/weight/colour, so it holds up in every script), the sun
+          orb as the focal mass, dual CTA, and an honest proof line. ── */}
       <section className="relative overflow-hidden">
-        {/* One large warm mesh blob behind the orb. We dropped the previous
-            three-blob composition: a single, confident wash sells the warm
-            atmosphere without competing with the sun for attention. */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          {/* Two warm washes — one behind the orb for depth, one low-left
-              tying the section to the marquee strip below. Soft enough
-              that black hero text still passes AAA on cream. */}
+        <div aria-hidden className="absolute inset-0 pointer-events-none">
           <div
-            className="mesh-drift-bg absolute top-[-12%] right-[-18%] w-[85%] h-[95%] rounded-full opacity-90"
+            className="mesh-drift-bg absolute top-[-14%] right-[-16%] w-[82%] h-[92%] rounded-full opacity-90"
             style={{
               background:
-                "radial-gradient(circle, rgba(255,182,39,0.36) 0%, rgba(255,77,0,0.22) 35%, transparent 70%)",
+                "radial-gradient(circle, rgba(255,182,39,0.36) 0%, rgba(255,77,0,0.20) 38%, transparent 72%)",
             }}
           />
           <div
-            className="absolute bottom-[-20%] left-[-12%] w-[55%] h-[60%] rounded-full opacity-60"
+            className="absolute bottom-[-22%] left-[-12%] w-[56%] h-[62%] rounded-full opacity-60"
             style={{
               background:
-                "radial-gradient(circle, rgba(255,122,64,0.20) 0%, rgba(255,77,0,0.10) 40%, transparent 75%)",
+                "radial-gradient(circle, rgba(255,122,64,0.18) 0%, rgba(255,77,0,0.08) 42%, transparent 75%)",
             }}
           />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-5 sm:px-8 pt-12 sm:pt-16 lg:pt-24 pb-16 sm:pb-24">
           <div className="grid grid-cols-12 gap-y-10 lg:gap-x-8 items-center">
-            {/* Headline column — sits FIRST on every viewport so the
-                value prop never falls below the fold on mobile. The
-                orb follows on small screens. */}
             <div className="col-span-12 lg:col-span-7 order-1">
-              <p className="font-display italic text-[15px] sm:text-base text-primary-600 mb-6 sm:mb-8 tracking-wide">
+              <p className="font-display italic text-[15px] sm:text-base text-primary-600 mb-6 sm:mb-8 tracking-wide hero-rise">
                 — {t.home.badge}
                 {!subscriptionsEnabled && (
-                  <span className="not-italic ml-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/12 px-2.5 py-0.5 align-middle text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
-                    ✨ 100% Free
+                  <span className="not-italic ml-3 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 align-middle text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                    ✨ {t.home.freeBadge}
                   </span>
                 )}
               </p>
 
               <h1
                 aria-label={`${t.home.heroTitle} ${t.home.heroHighlight}`}
-                className="font-display font-semibold text-surface-950 leading-[1.0] tracking-[-0.02em] mb-8"
-                style={{ fontSize: "clamp(56px, 9vw, 144px)" }}
+                className="font-display font-semibold text-surface-950 leading-[0.96] tracking-[-0.02em] mb-8"
+                style={{ fontSize: "clamp(52px, 8.5vw, 132px)" }}
               >
-                {/* Static text + CSS slide-up (see .hero-rise): this is the LCP
-                    element, so it must paint at first frame. Rendering the full
-                    string (not per-character spans) also fixes Indic shaping. */}
-                <span className="block leading-[0.94] hero-rise">
+                <span className="block hero-rise">
                   {t.home.heroTitle.replace(/[,.]?\s*$/, "")}
                 </span>
-                <span
-                  className="serif-italic block mt-3 sm:mt-4 pb-[0.05em] leading-[1.05] hero-rise"
-                  style={{ animationDelay: "0.1s" }}
-                >
-                  {/* The gradient lives per-fragment inside renderHighlight
-                      (not on this parent) so the brand word stays visible
-                      under bg-clip-text. The brand "myastro360" forces its own
-                      block-level line inside renderHighlight so the italic
-                      J ascender never gets clipped by the line above. */}
+                <span className="block mt-2 sm:mt-3 hero-rise" style={{ animationDelay: "0.1s" }}>
                   {renderHighlight(t.home.heroHighlight)}
                 </span>
               </h1>
 
               <p
-                className="text-emphasis text-[17px] sm:text-lg max-w-xl leading-relaxed mb-10 hero-rise"
+                className="text-emphasis text-[17px] sm:text-lg max-w-xl leading-relaxed mb-8 hero-rise"
                 style={{ animationDelay: "0.18s" }}
               >
                 {t.home.heroDescription}
               </p>
 
               <div
-                className="flex flex-wrap items-center gap-6 sm:gap-8 hero-rise"
+                className="flex flex-wrap items-center gap-5 sm:gap-6 mb-6 hero-rise"
                 style={{ animationDelay: "0.26s" }}
               >
-                <CtaPrimary href="/chat" label={t.home.startConsultation} />
+                <CtaPrimary href="/chat" label={t.home.startConsultation} size="lg" />
                 <Link
                   href="/palmistry"
                   className="group inline-flex items-center gap-2 text-[15px] font-semibold text-surface-950 hover:text-primary-600 transition-colors focus-ring rounded-full px-5 py-2.5 btn-ghost"
                 >
                   {t.home.tryPalmReading}
-                  <span
-                    aria-hidden
-                    className="inline-block transition-transform duration-300 group-hover:translate-x-1"
-                  >
-                    →
-                  </span>
+                  <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
                 </Link>
               </div>
+
+              <p className="text-xs text-muted max-w-md hero-rise" style={{ animationDelay: "0.32s" }}>
+                {t.home.heroProof}
+              </p>
             </div>
 
-            {/* Orb column — bleeds past the right gutter at lg+. On mobile
-                the orb is shrunk and centered below the headline. */}
             <div className="col-span-12 lg:col-span-5 order-2 relative">
-              {/* Visible at first frame (opacity:1) so it never blocks LCP;
-                  the subtle scale-in is composite-only (CSS), so no CLS. */}
               <div
                 className="hero-scale-in relative mx-auto lg:translate-x-[6%] xl:translate-x-[10%]"
-                style={{ width: "100%", maxWidth: "min(520px, 78vw)" }}
+                style={{ width: "100%", maxWidth: "min(540px, 80vw)" }}
               >
                 <HeroSun />
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Stats — thin baseline strip, hairline dividers between items.
-              Lives outside the grid so it spans full hero width regardless
-              of whether the orb has bled. */}
-          <Stagger.Container className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 border-t hairline">
-            {stats.map((stat, i) => (
-              <Stagger.Item
-                key={stat.label}
-                className={`flex items-baseline gap-3 py-5 ${
-                  i > 0 ? "sm:border-l hairline" : ""
-                } ${i > 0 ? "sm:pl-6" : ""}`}
-              >
-                <span className="font-display font-semibold text-surface-950 text-3xl sm:text-4xl tabular-nums leading-none">
-                  {stat.value}
-                </span>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-secondary">
-                  {stat.label}
-                </span>
+      {/* ── Stats proof band — oversized tabular numerals on a faint cream
+          strip. Honest, verifiable figures only. ── */}
+      <section className="border-y hairline bg-[rgba(255,252,245,0.45)]">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12 sm:py-16">
+          <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-8 sm:mb-10 text-center">
+            {t.home.statsEyebrow}
+          </p>
+          <Stagger.Container className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-4">
+            {stats.map((s) => (
+              <Stagger.Item key={s.label} className="text-center">
+                <div
+                  className="font-display font-semibold text-surface-950 tabular-nums leading-none"
+                  style={{ fontSize: "clamp(40px, 6vw, 76px)" }}
+                >
+                  {s.value}
+                </div>
+                <div className="mt-2 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-muted">
+                  {s.label}
+                </div>
               </Stagger.Item>
             ))}
           </Stagger.Container>
         </div>
       </section>
 
-      {/* ── Trust strip — the three positioning pillars ("the meter never
-          runs / same math every time / no fake astrologers"). Additive band
-          that threads the brand promise between the hero and the marquee. ── */}
-      <TrustStrip
-        eyebrow={t.home.trustEyebrow}
-        pillars={[
-          { title: t.home.trustMeterTitle, desc: t.home.trustMeterDesc },
-          { title: t.home.trustMathTitle, desc: t.home.trustMathDesc },
-          { title: t.home.trustHumanTitle, desc: t.home.trustHumanDesc },
-        ]}
-      />
+      {/* ── Tradition showcase — the product's USP: six systems, each a tappable
+          card with its glyph, tint and localized tagline. ── */}
+      <section className="px-5 sm:px-8 py-24 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
+            <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-4">
+              {t.home.traditionsEyebrow}
+            </p>
+            <h2
+              className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.04] mb-5"
+              style={{ fontSize: "clamp(34px, 5vw, 64px)" }}
+            >
+              {t.home.traditionsTitle}{" "}
+              <span className="text-gradient-sunrise">{t.home.traditionsHighlight}</span>
+            </h2>
+            <p className="text-base text-emphasis leading-relaxed reading-measure mx-auto">
+              {t.home.traditionsDesc}
+            </p>
+          </div>
 
-      {/* ── Tradition marquee — editorial signature strip between hero and
-          authenticated bento. Decorative; labels are reachable via the
-          TraditionRail in the chrome. ── */}
-      <TraditionMarquee />
+          <Stagger.Container className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {TRADITION_IDS.map((id) => {
+              const cfg = WEB_TRADITIONS[id];
+              const name = readLabel(t, cfg.labelKey, cfg.slug);
+              const tagline = readLabel(t, cfg.taglineKey, "");
+              return (
+                <Stagger.Item key={id}>
+                  <Link
+                    href={`/${cfg.slug}`}
+                    className="group flex h-full flex-col rounded-2xl surface-card-hover shadow-warm-sm p-6 focus-ring transition-transform hover:-translate-y-0.5"
+                  >
+                    <span
+                      className={`inline-flex items-center justify-center w-11 h-11 rounded-xl border mb-4 ${TRADITION_BADGE_COLORS[id]}`}
+                    >
+                      <TraditionGlyph id={id} size={22} weight={1.5} />
+                    </span>
+                    <h3 className="font-display text-xl font-semibold text-surface-950 mb-1.5">
+                      {name}
+                    </h3>
+                    <p className="text-sm text-emphasis leading-relaxed mb-4 grow">{tagline}</p>
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-primary-600">
+                      {t.home.exploreTradition}
+                      <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+                    </span>
+                  </Link>
+                </Stagger.Item>
+              );
+            })}
+          </Stagger.Container>
+        </div>
+      </section>
 
       {/* ── Bento summary ── */}
       <BentoSummary />
@@ -238,9 +259,20 @@ export default function HomePage() {
         ]}
       />
 
-      {/* ── Closing CTA — sits on a soft sunrise wash that closes the page
-          before the dark Footer anchor. Two corner orb echoes balance the
-          headline rather than crowding one side. ── */}
+      {/* ── Trust — a dark cosmic band. The page's bold contrast moment: deep
+          ink + a faint starfield, with the three honest brand promises in
+          warm white. ── */}
+      <TrustBandDark
+        eyebrow={t.home.trustEyebrow}
+        pillars={[
+          { title: t.home.trustMeterTitle, desc: t.home.trustMeterDesc },
+          { title: t.home.trustMathTitle, desc: t.home.trustMathDesc },
+          { title: t.home.trustHumanTitle, desc: t.home.trustHumanDesc },
+        ]}
+      />
+
+      {/* ── Closing CTA — soft sunrise wash that closes the page before the
+          dark Footer anchor. ── */}
       <section className="relative py-28 sm:py-36 px-5 sm:px-8 overflow-hidden">
         <div
           aria-hidden
@@ -250,39 +282,13 @@ export default function HomePage() {
               "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(255,182,39,0.18) 0%, rgba(255,77,0,0.08) 45%, transparent 75%)",
           }}
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute top-10 right-6 sm:right-12 opacity-85 hidden md:block"
-        >
-          <Orb3D
-            size={108}
-            fromClass="from-sun-300/80"
-            viaClass="via-primary-500/40"
-            toClass="to-transparent"
-          />
-        </div>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-12 left-6 sm:left-12 opacity-70 hidden md:block"
-        >
-          <Orb3D
-            size={72}
-            fromClass="from-primary-300/70"
-            viaClass="via-sun-400/30"
-            toClass="to-transparent"
-          />
-        </div>
-
         <div className="relative mx-auto max-w-3xl text-center">
           <h2
             className="font-display font-semibold text-surface-950 mb-6 tracking-[-0.01em] leading-[1.02]"
             style={{ fontSize: "clamp(40px, 6vw, 80px)" }}
           >
             {t.home.ctaTitle}{" "}
-            <span className="serif-italic accent-underline text-gradient-sunrise">
-              {t.home.ctaHighlight}
-            </span>
-            ?
+            <span className="text-gradient-sunrise">{t.home.ctaHighlight}</span>?
           </h2>
           <p className="text-base sm:text-lg text-emphasis mb-10 max-w-xl mx-auto leading-relaxed">
             {isAuthenticated ? t.home.ctaLoggedIn : t.home.ctaLoggedOut}
@@ -299,12 +305,12 @@ export default function HomePage() {
 }
 
 /**
- * Trust strip — three editorial pillars stating the brand promise. Sits on a
- * hairline-bounded band so it reads as a confident statement of difference,
- * not a feature grid. Decorative numerals are intentionally absent here; the
- * claims carry the weight.
+ * Trust band on a deep cosmic ground — the page's one dark, dramatic moment.
+ * Three honest brand promises in warm white over a faint CSS starfield (zero
+ * DOM nodes — the stars are layered radial-gradients). High contrast on dark
+ * clears WCAG AA comfortably.
  */
-function TrustStrip({
+function TrustBandDark({
   eyebrow,
   pillars,
 }: {
@@ -312,19 +318,38 @@ function TrustStrip({
   pillars: { title: string; desc: string }[];
 }) {
   return (
-    <section className="px-5 sm:px-8 py-16 sm:py-20 border-t hairline">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-10 text-center">
+    <section className="relative overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(160deg, #1c1207 0%, #2c1d0d 52%, #0d0904 100%)" }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-70"
+        style={{
+          backgroundImage:
+            "radial-gradient(1px 1px at 18% 28%, rgba(255,236,200,0.55), transparent), radial-gradient(1px 1px at 72% 62%, rgba(255,236,200,0.45), transparent), radial-gradient(1.5px 1.5px at 44% 82%, rgba(255,200,120,0.45), transparent), radial-gradient(1px 1px at 86% 24%, rgba(255,236,200,0.45), transparent), radial-gradient(1px 1px at 32% 54%, rgba(255,236,200,0.35), transparent), radial-gradient(1px 1px at 60% 16%, rgba(255,236,200,0.4), transparent)",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+      <div className="relative mx-auto max-w-6xl px-5 sm:px-8 py-24 sm:py-32">
+        <p className="text-[12px] font-medium text-amber-300/90 uppercase tracking-[0.22em] mb-12 text-center">
           {eyebrow}
         </p>
-        <Stagger.Container className="grid md:grid-cols-3 gap-8 md:gap-10">
+        <Stagger.Container className="grid md:grid-cols-3 gap-10 md:gap-12">
           {pillars.map((p, i) => (
-            <Stagger.Item key={p.title} className="relative md:px-6">
-              {i > 0 && <span aria-hidden className="hidden md:block absolute left-0 top-1 bottom-1 w-px bg-[rgba(12,8,5,0.08)]" />}
-              <h2 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 mb-3 leading-tight">
+            <Stagger.Item key={p.title} className="relative md:px-2">
+              {i > 0 && (
+                <span
+                  aria-hidden
+                  className="hidden md:block absolute -left-6 top-1 bottom-1 w-px bg-white/10"
+                />
+              )}
+              <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-50 mb-3 leading-tight">
                 {p.title}
-              </h2>
-              <p className="text-sm text-emphasis leading-relaxed">{p.desc}</p>
+              </h3>
+              <p className="text-sm text-white/70 leading-relaxed">{p.desc}</p>
             </Stagger.Item>
           ))}
         </Stagger.Container>
@@ -335,9 +360,8 @@ function TrustStrip({
 
 /**
  * How-it-works section with editorial breakout numerals (hollow, oversized,
- * crashing into the top of each card) and a hairline that draws across
- * the row as the section scrolls into view. The connector is hidden on
- * narrow viewports where the cards stack vertically.
+ * crashing into the top of each card) and a hairline that draws across the row
+ * as the section scrolls into view.
  */
 function HowItWorks({
   eyebrow,
@@ -361,16 +385,11 @@ function HowItWorks({
             className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
             style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
           >
-            <span className="serif-italic accent-underline text-gradient-sunrise">myastro360</span>{" "}
-            {title}
+            <span className="text-gradient-sunrise">myastro360</span> {title}
           </h2>
         </div>
 
         <div ref={ref} className="relative">
-          {/* Scroll-driven hairline behind the row. Hidden on mobile where
-              cards stack and the connector wouldn't make sense. scaleX tracks
-              the section's scroll progress via the --scroll-progress CSS var
-              (falls back to a fully-drawn line under reduced motion). */}
           <div
             aria-hidden
             className="hidden md:block absolute top-[34%] left-[10%] right-[10%] h-px origin-left bg-gradient-to-r from-primary-500 via-sun-400 to-primary-500"
@@ -383,9 +402,6 @@ function HowItWorks({
                 key={item.step}
                 className="group relative rounded-2xl surface-card-hover shadow-warm-sm pt-16 px-7 pb-7"
               >
-                {/* Hollow editorial numeral — breaks out of the card top-left.
-                    Transparent fill + webkit-text-stroke gives an architectural
-                    look without needing a background image. */}
                 <span
                   aria-hidden
                   className="font-display font-semibold leading-none absolute -top-6 sm:-top-8 -left-1 select-none pointer-events-none"
@@ -411,10 +427,9 @@ function HowItWorks({
 }
 
 /**
- * Primary CTA with a cursor-tracking glow. The radial gradient is positioned
- * via CSS variables (--mx, --my) updated on mousemove, so the glow tracks
- * the cursor without re-rendering. Falls back to a static glow on touch /
- * reduced-motion.
+ * Primary CTA with a cursor-tracking glow positioned via CSS variables, so the
+ * glow tracks the cursor without re-rendering. Falls back to a static glow on
+ * touch / reduced-motion.
  */
 function CtaPrimary({
   href,
