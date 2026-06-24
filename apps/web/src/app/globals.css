@@ -309,6 +309,17 @@
   .text-emphasis {
     color: var(--color-ink-700);
   }
+  /* Muted/helper text — the lighter of the two AA-compliant tiers on the
+     linen canvas (~5.9:1). Use this (or .text-secondary) instead of ad-hoc
+     low-alpha rgba so muted copy stays readable and tokenised. */
+  .text-muted {
+    color: rgba(12, 8, 5, 0.66);
+  }
+  /* Reading measure — cap long-form prose at a comfortable line length
+     (~65–70ch) so paragraphs don't run edge-to-edge on wide screens. */
+  .reading-measure {
+    max-width: 68ch;
+  }
 
   /* ── Buttons ── */
   .btn-primary {

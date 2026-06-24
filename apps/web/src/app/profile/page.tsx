@@ -56,6 +56,10 @@ export default function ProfilePage() {
 
   // Onboarding step: 1 = birth details, 2 = astrology traditions
   const [onboardingStep, setOnboardingStep] = useState(1);
+  // Set after a failed required-fields submit so empty birth fields render an
+  // inline error in addition to the top banner. Each field's error clears
+  // itself once filled because it's derived from the live value below.
+  const [showBirthFieldErrors, setShowBirthFieldErrors] = useState(false);
 
   // Profile form
   const [name, setName] = useState("");
@@ -125,6 +129,21 @@ export default function ProfilePage() {
     }
   };
 
+  // Move keyboard focus to the first empty required birth field so the user
+  // is taken straight to what they need to fix.
+  const focusFirstMissingBirthField = () => {
+    const firstMissingId = !dob
+      ? "profile-dob"
+      : !tob
+        ? "profile-tob"
+        : !pob.trim()
+          ? "profile-pob"
+          : !gender
+            ? "profile-gender"
+            : null;
+    if (firstMissingId) document.getElementById(firstMissingId)?.focus();
+  };
+
   // During onboarding step 1, validate birth details and proceed to step 2
   const handleNextStep = () => {
     setError("");
@@ -135,8 +154,11 @@ export default function ProfilePage() {
     if (!gender) missing.push(t.profile.missingGender);
     if (missing.length) {
       setError(`${t.profile.pleaseFillIn} ${missing.join(", ")}`);
+      setShowBirthFieldErrors(true);
+      focusFirstMissingBirthField();
       return;
     }
+    setShowBirthFieldErrors(false);
     setOnboardingStep(2);
   };
 
@@ -155,9 +177,12 @@ export default function ProfilePage() {
       if (!gender) missing.push(t.profile.missingGender);
       if (missing.length) {
         setError(`${t.profile.pleaseFillIn} ${missing.join(", ")}`);
+        setShowBirthFieldErrors(true);
+        focusFirstMissingBirthField();
         return;
       }
     }
+    setShowBirthFieldErrors(false);
 
     setSaving(true);
     try {
@@ -444,13 +469,20 @@ export default function ProfilePage() {
                         {t.profile.dob} <RequiredMark />
                       </label>
                       <input id="profile-dob" type="date" required value={dob} onChange={(e) => setDob(e.target.value)}
+                        aria-invalid={showBirthFieldErrors && !dob}
                         className="w-full px-4 py-3 rounded-xl surface-input [color-scheme:dark]" />
+                      {showBirthFieldErrors && !dob && (
+                        <p role="alert" className="text-xs text-red-600 mt-1">{t.profile.missingDob}</p>
+                      )}
                     </div>
                     <div>
                       <label htmlFor="profile-tob" className="flex items-center text-xs font-medium text-emphasis mb-2">
                         {t.profile.tob} <RequiredMark />
                       </label>
                       <TimeOfBirthInput id="profile-tob" required value={tob} onChange={setTob} />
+                      {showBirthFieldErrors && !tob && (
+                        <p role="alert" className="text-xs text-red-600 mt-1">{t.profile.missingTob}</p>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -458,7 +490,11 @@ export default function ProfilePage() {
                       {t.profile.pob} <RequiredMark />
                     </label>
                     <input id="profile-pob" type="text" required value={pob} onChange={(e) => setPob(e.target.value)} placeholder={t.profile.pobPlaceholderEg}
+                      aria-invalid={showBirthFieldErrors && !pob.trim()}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
+                    {showBirthFieldErrors && !pob.trim() && (
+                      <p role="alert" className="text-xs text-red-600 mt-1">{t.profile.missingPob}</p>
+                    )}
                     <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
                       City where you were born — used for precise latitude/longitude in chart calculations.
                     </p>
@@ -469,12 +505,16 @@ export default function ProfilePage() {
                         {t.profile.gender} <RequiredMark />
                       </label>
                       <select id="profile-gender" required value={gender} onChange={(e) => setGender(e.target.value)}
+                        aria-invalid={showBirthFieldErrors && !gender}
                         className="w-full px-4 py-3 rounded-xl surface-input">
                         <option value="">{t.profile.selectGender}</option>
                         <option value="Male">{t.profile.genderMale}</option>
                         <option value="Female">{t.profile.genderFemale}</option>
                         <option value="Other">{t.profile.genderOther}</option>
                       </select>
+                      {showBirthFieldErrors && !gender && (
+                        <p role="alert" className="text-xs text-red-600 mt-1">{t.profile.missingGender}</p>
+                      )}
                     </div>
                     <div>
                       <label htmlFor="profile-profession" className="block text-xs font-medium text-emphasis mb-2">{t.profile.profession}</label>

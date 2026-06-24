@@ -5,6 +5,7 @@ import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import { RequiredMark } from "@/components/ui/Toast";
 
 interface PersonForm {
   name: string;
@@ -47,6 +48,9 @@ export default function MatchingPage() {
   const [results, setResults] = useState<typeof mockResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Set after a failed "Check Compatibility" so empty person fields surface an
+  // inline error and aria-invalid alongside the top banner.
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
   const [personAPrefilled, setPersonAPrefilled] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [shareLoading, setShareLoading] = useState(false);
@@ -80,8 +84,31 @@ export default function MatchingPage() {
 
   const isValid = personA.name && personA.dob && personA.time && personA.place && personB.name && personB.dob && personB.time && personB.place;
 
+  // Focus the first empty field, walking Person A (name → dob → time → place)
+  // then Person B in the same order. Ids are assigned in PersonFormComponent.
+  const focusFirstEmptyMatchField = () => {
+    const checks: Array<[boolean, string]> = [
+      [!personA.name, "person-a-name"],
+      [!personA.dob, "person-a-dob"],
+      [!personA.time, "person-a-time"],
+      [!personA.place, "person-a-place"],
+      [!personB.name, "person-b-name"],
+      [!personB.dob, "person-b-dob"],
+      [!personB.time, "person-b-time"],
+      [!personB.place, "person-b-place"],
+    ];
+    const first = checks.find(([empty]) => empty);
+    if (first) document.getElementById(first[1])?.focus();
+  };
+
   const handleMatch = async () => {
-    if (!isValid) return;
+    if (!isValid) {
+      setError(t.form.fillAllFields);
+      setShowFieldErrors(true);
+      focusFirstEmptyMatchField();
+      return;
+    }
+    setShowFieldErrors(false);
     setLoading(true);
     setError("");
     try {
@@ -189,11 +216,15 @@ export default function MatchingPage() {
     person,
     setPerson,
     gradient,
+    idPrefix,
+    showErrors,
   }: {
     label: string;
     person: PersonForm;
     setPerson: (p: PersonForm) => void;
     gradient: string;
+    idPrefix: string;
+    showErrors: boolean;
   }) => (
     <div className="surface-card p-6">
       <h3 className={`text-lg font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-5`}>
@@ -201,44 +232,64 @@ export default function MatchingPage() {
       </h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.matching.fullName}</label>
+          <label htmlFor={`${idPrefix}-name`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.matching.fullName} <RequiredMark /></label>
           <input
+            id={`${idPrefix}-name`}
             type="text"
             value={person.name}
             onChange={(e) => setPerson({ ...person, name: e.target.value })}
             placeholder={t.matching.enterName}
+            aria-invalid={showErrors && !person.name}
             className={inputClass}
           />
+          {showErrors && !person.name && (
+            <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.dateOfBirth}</label>
+            <label htmlFor={`${idPrefix}-dob`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.dateOfBirth} <RequiredMark /></label>
             <input
+              id={`${idPrefix}-dob`}
               type="date"
               value={person.dob}
               onChange={(e) => setPerson({ ...person, dob: e.target.value })}
+              aria-invalid={showErrors && !person.dob}
               className={`${inputClass} [color-scheme:dark]`}
             />
+            {showErrors && !person.dob && (
+              <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+            )}
           </div>
           <div>
-            <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.timeOfBirth}</label>
+            <label htmlFor={`${idPrefix}-time`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.timeOfBirth} <RequiredMark /></label>
             <input
+              id={`${idPrefix}-time`}
               type="time"
               value={person.time}
               onChange={(e) => setPerson({ ...person, time: e.target.value })}
+              aria-invalid={showErrors && !person.time}
               className={`${inputClass} [color-scheme:dark]`}
             />
+            {showErrors && !person.time && (
+              <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+            )}
           </div>
         </div>
         <div>
-          <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.placeOfBirth}</label>
+          <label htmlFor={`${idPrefix}-place`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.placeOfBirth} <RequiredMark /></label>
           <input
+            id={`${idPrefix}-place`}
             type="text"
             value={person.place}
             onChange={(e) => setPerson({ ...person, place: e.target.value })}
             placeholder={t.matching.searchCity}
+            aria-invalid={showErrors && !person.place}
             className={inputClass}
           />
+          {showErrors && !person.place && (
+            <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+          )}
         </div>
       </div>
     </div>
@@ -275,6 +326,8 @@ export default function MatchingPage() {
               person={personA}
               setPerson={setPersonA}
               gradient="from-pink-400 to-red-400"
+              idPrefix="person-a"
+              showErrors={showFieldErrors}
             />
           </div>
           <PersonFormComponent
@@ -282,6 +335,8 @@ export default function MatchingPage() {
             person={personB}
             setPerson={setPersonB}
             gradient="from-blue-400 to-cyan-400"
+            idPrefix="person-b"
+            showErrors={showFieldErrors}
           />
         </div>
 
@@ -289,8 +344,9 @@ export default function MatchingPage() {
         <div className="text-center mb-12">
           <button
             onClick={handleMatch}
-            disabled={!isValid || loading}
-            className="px-10 py-4 rounded-xl btn-primary text-lg disabled:opacity-50"
+            disabled={loading}
+            aria-disabled={!isValid}
+            className={`px-10 py-4 rounded-xl btn-primary text-lg disabled:opacity-50 ${!isValid ? "opacity-50" : ""}`}
           >
             {loading ? (
               <span className="flex items-center gap-2">

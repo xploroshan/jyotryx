@@ -170,6 +170,10 @@ function AuthPageContent() {
 
   const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
+  // Inline (field-level) validation errors surfaced onBlur, independent of the
+  // top error banner. Cleared once the value becomes valid again.
+  const [phoneFieldError, setPhoneFieldError] = useState("");
+  const [emailFieldError, setEmailFieldError] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState("");
@@ -352,8 +356,8 @@ function AuthPageContent() {
   };
 
   const handleSendOtp = async () => {
-    if (phone.length < 10) { setError(t.auth.errPhoneInvalid); return; }
-    if (tab === "signup" && !name.trim()) { setError(t.auth.errEnterName); return; }
+    if (phone.length < 10) { setError(t.auth.errPhoneInvalid); document.getElementById("auth-phone")?.focus(); return; }
+    if (tab === "signup" && !name.trim()) { setError(t.auth.errEnterName); document.getElementById("auth-name")?.focus(); return; }
     setLoading(true); setError(""); setSuccess(""); setLastAction(null);
     const phoneNumber = `+91${phone}`;
 
@@ -422,7 +426,7 @@ function AuthPageContent() {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length < 6) { setError(t.auth.errEnterOtp); return; }
+    if (otp.length < 6) { setError(t.auth.errEnterOtp); document.getElementById("auth-otp")?.focus(); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       if (otpChannelRef.current === "backend") {
@@ -497,9 +501,9 @@ function AuthPageContent() {
   };
 
   const handleEmailAuth = async () => {
-    if (!email) { setError(t.auth.errEnterEmail); return; }
-    if (!password || password.length < 8) { setError(t.auth.errPasswordShort); return; }
-    if (tab === "signup" && !name) { setError(t.auth.errEnterName); return; }
+    if (!email) { setError(t.auth.errEnterEmail); document.getElementById("auth-email")?.focus(); return; }
+    if (!password || password.length < 8) { setError(t.auth.errPasswordShort); document.getElementById("auth-password")?.focus(); return; }
+    if (tab === "signup" && !name) { setError(t.auth.errEnterName); document.getElementById("auth-name")?.focus(); return; }
     setLoading(true); setError(""); setSuccess(""); setLastAction(null);
     try {
       const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
@@ -839,13 +843,19 @@ function AuthPageContent() {
                           inputMode="numeric"
                           autoComplete="tel-national"
                           aria-describedby="auth-phone-hint"
+                          aria-invalid={Boolean(phoneFieldError)}
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          onChange={(e) => {
+                            setPhone(e.target.value.replace(/\D/g, "").slice(0, 10));
+                            if (phoneFieldError) setPhoneFieldError("");
+                          }}
+                          onBlur={() => setPhoneFieldError(phone.length > 0 && phone.length < 10 ? t.auth.errPhoneInvalid : "")}
                           placeholder={t.auth.phoneNumberPlaceholder}
                           disabled={otpSent}
                           className="flex-1 px-3 py-2.5 rounded-lg surface-input text-sm disabled:opacity-40"
                         />
                       </div>
+                      {phoneFieldError && <p role="alert" className="text-xs text-red-600 mt-1">{phoneFieldError}</p>}
                       <p id="auth-phone-hint" className="text-[10px] text-[rgba(12,8,5,0.66)] mt-1">10-digit Indian mobile number.</p>
                     </div>
 
@@ -891,8 +901,12 @@ function AuthPageContent() {
                   <>
                     <div>
                       <label htmlFor="auth-email" className="block text-xs text-secondary mb-1.5">{t.auth.emailLabel}</label>
-                      <input id="auth-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.auth.emailPlaceholder}
+                      <input id="auth-email" type="email" autoComplete="email" aria-invalid={Boolean(emailFieldError)} value={email}
+                        onChange={(e) => { setEmail(e.target.value); if (emailFieldError) setEmailFieldError(""); }}
+                        onBlur={() => setEmailFieldError(email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? t.auth.errEmailInvalid : "")}
+                        placeholder={t.auth.emailPlaceholder}
                         className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
+                      {emailFieldError && <p role="alert" className="text-xs text-red-600 mt-1">{emailFieldError}</p>}
                     </div>
                     <div>
                       <label htmlFor="auth-password" className="block text-xs text-secondary mb-1.5">{t.auth.passwordLabel}</label>
