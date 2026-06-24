@@ -712,6 +712,8 @@ export const pa: TranslationKeys = {
     adding: 'ਸੰਭਾਲ ਰਿਹਾ ਹੈ…',
     remove: 'ਹਟਾਓ',
     loadFailed: 'ਤੁਹਾਡੀਆਂ ਯਾਦਾਂ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ।',
+    addFailed: 'ਇਸਨੂੰ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+    kindLabel: 'ਸ਼੍ਰੇਣੀ',
     kindFact: 'ਤੱਥ',
     kindPreference: 'ਤਰਜੀਹ',
     kindGoal: 'ਟੀਚਾ',

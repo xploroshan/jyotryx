@@ -712,6 +712,8 @@ export const bn: TranslationKeys = {
     adding: 'সংরক্ষণ করা হচ্ছে…',
     remove: 'সরান',
     loadFailed: 'আপনার স্মৃতিগুলি লোড করা যায়নি।',
+    addFailed: 'এটি সংরক্ষণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।',
+    kindLabel: 'বিভাগ',
     kindFact: 'তথ্য',
     kindPreference: 'পছন্দ',
     kindGoal: 'লক্ষ্য',

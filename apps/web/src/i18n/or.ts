@@ -712,6 +712,8 @@ export const or_: TranslationKeys = {
     adding: 'ସେଭ୍ ହେଉଛି…',
     remove: 'ହଟାନ୍ତୁ',
     loadFailed: 'ଆପଣଙ୍କ ସ୍ମୃତି ଲୋଡ଼ କରିହେଲା ନାହିଁ।',
+    addFailed: 'ଏହାକୁ ସଞ୍ଚୟ କରିହେଲା ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।',
+    kindLabel: 'ବର୍ଗ',
     kindFact: 'ତଥ୍ୟ',
     kindPreference: 'ପସନ୍ଦ',
     kindGoal: 'ଲକ୍ଷ୍ୟ',

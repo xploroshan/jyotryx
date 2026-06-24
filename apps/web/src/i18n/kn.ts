@@ -712,6 +712,8 @@ export const kn: TranslationKeys = {
     adding: 'ಉಳಿಸಲಾಗುತ್ತಿದೆ…',
     remove: 'ತೆಗೆದುಹಾಕಿ',
     loadFailed: 'ನಿಮ್ಮ ನೆನಪುಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗಲಿಲ್ಲ.',
+    addFailed: 'ಅದನ್ನು ಉಳಿಸಲಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    kindLabel: 'ವರ್ಗ',
     kindFact: 'ಸಂಗತಿ',
     kindPreference: 'ಆದ್ಯತೆ',
     kindGoal: 'ಗುರಿ',

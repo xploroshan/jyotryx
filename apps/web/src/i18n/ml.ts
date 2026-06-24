@@ -712,6 +712,8 @@ export const ml: TranslationKeys = {
     adding: 'സംരക്ഷിക്കുന്നു…',
     remove: 'നീക്കം ചെയ്യുക',
     loadFailed: 'നിങ്ങളുടെ ഓര്‍മ്മകള്‍ ലോഡ് ചെയ്യാന്‍ കഴിഞ്ഞില്ല.',
+    addFailed: 'അത് സംരക്ഷിക്കാന്‍ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+    kindLabel: 'വിഭാഗം',
     kindFact: 'വസ്തുത',
     kindPreference: 'മുന്‍ഗണന',
     kindGoal: 'ലക്ഷ്യം',

@@ -712,6 +712,8 @@ export const mr: TranslationKeys = {
     adding: 'जतन होत आहे…',
     remove: 'काढून टाका',
     loadFailed: 'तुमच्या आठवणी लोड करता आल्या नाहीत.',
+    addFailed: 'ते जतन करता आले नाही. कृपया पुन्हा प्रयत्न करा.',
+    kindLabel: 'श्रेणी',
     kindFact: 'वस्तुस्थिती',
     kindPreference: 'आवड',
     kindGoal: 'ध्येय',

@@ -712,6 +712,8 @@ export const gu: TranslationKeys = {
     adding: 'સાચવી રહ્યું છે…',
     remove: 'દૂર કરો',
     loadFailed: 'તમારી યાદો લોડ કરી શકાઈ નહીં.',
+    addFailed: 'તે સાચવી શકાયું નહીં. કૃપા કરીને ફરી પ્રયાસ કરો.',
+    kindLabel: 'શ્રેણી',
     kindFact: 'હકીકત',
     kindPreference: 'પસંદગી',
     kindGoal: 'ધ્યેય',

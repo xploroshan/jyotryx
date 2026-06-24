@@ -201,6 +201,7 @@ export default function DecisionRoomPage() {
                 {t.decisionRoom.activities[result.activity as Activity]}
                 {" · "}
                 {new Date(result.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", {
+                  timeZone: "UTC",
                   weekday: "long",
                   year: "numeric",
                   month: "long",

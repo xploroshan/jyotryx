@@ -2421,9 +2421,12 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       location ||
       (lat != null && lng != null ? `${pLat.toFixed(4)}°N, ${pLng.toFixed(4)}°E` : 'New Delhi, India');
 
+    // The key intentionally omits the free-text `location` label: the `days`
+    // data depends only on coordinates. Overwrite the echoed label on a hit so
+    // two callers sharing coords but different labels each see their own.
     const cacheKey = `cosmic-cal:${year}-${month}:${activity}:${pLat.toFixed(2)}:${pLng.toFixed(2)}`;
     const cached = await this.cacheService.get<CosmicCalendarResult>(cacheKey);
-    if (cached) return cached;
+    if (cached) return { ...cached, location: locationLabel };
 
     const lastDay = daysInMonth(year, month);
     const days: CosmicCalendarDay[] = [];
