@@ -93,8 +93,10 @@ describe('Auth Page: Rendering', () => {
 
   it('should render login and signup tabs', () => {
     render(<AuthPage />);
-    expect(screen.getByText('Log in')).toBeDefined();
-    expect(screen.getByText('Sign up')).toBeDefined();
+    // Query the tabs by role — robust against the page also carrying an
+    // sr-only <h1> with the same "Log in" label for a11y/SEO.
+    expect(screen.getByRole('tab', { name: 'Log in' })).toBeDefined();
+    expect(screen.getByRole('tab', { name: 'Sign up' })).toBeDefined();
   });
 
   it('should render Google sign-in button', () => {

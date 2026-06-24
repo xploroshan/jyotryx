@@ -104,7 +104,10 @@ describe('Matching Page: Form', () => {
   it('should disable Check Compatibility button when forms are incomplete', () => {
     render(<MatchingPage />);
     const button = screen.getByText('Check Compatibility');
-    expect((button as HTMLButtonElement).disabled).toBe(true);
+    // The button stays clickable but is marked aria-disabled while invalid, so
+    // a click can surface inline "required" errors and focus the first empty
+    // field (instead of a dead disabled button giving no feedback).
+    expect(button.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('should show auth error when not logged in', async () => {
