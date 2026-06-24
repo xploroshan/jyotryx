@@ -18,7 +18,7 @@
  */
 
 export type FactorContribution = 'positive' | 'negative' | 'neutral';
-export type FactorSource = 'planet' | 'yoga' | 'dasha' | 'dosha';
+export type FactorSource = 'planet' | 'yoga' | 'dasha' | 'dosha' | 'panchang';
 
 export interface ChartFactor {
   /** Stable, locale-independent identifier (e.g. "planet.Sun.exalted"). */

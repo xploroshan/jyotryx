@@ -12,6 +12,15 @@ import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
 import { resolveUtHour } from '../../common/timezone.util';
 import { buildKundliFactors, buildDoshaFactors, ChartFactor } from './factors.util';
+import {
+  scoreTiming,
+  rahuKaalWindow,
+  formatMinutes,
+  DECISION_ACTIVITIES,
+  DecisionActivity,
+  PanchangSnapshot,
+  Recommendation,
+} from './decision-rules';
 import * as path from 'path';
 
 // ─── Swiss Ephemeris Setup (kept as sync fallback for methods not yet ported) ─
@@ -26,6 +35,13 @@ const ALL_SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra
 const NAKSHATRA_NAMES = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'] as const;
 const DASHA_LORDS = ['Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury'] as const;
 const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17] as const;
+
+// Panchang element names (English canonical). These mirror the names composed
+// in getPanchang's deterministic fallback and are reused by the Decision Room
+// date-derivation helper so it never re-derives the name tables.
+const PANCHANG_VARA_NAMES = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'] as const;
+const PANCHANG_TITHI_NAMES = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'] as const;
+const PANCHANG_YOGA_NAMES = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'] as const;
 
 // Sign lords: Aries=Mars, Taurus=Venus, Gemini=Mercury, Cancer=Moon, Leo=Sun, Virgo=Mercury, Libra=Venus, Scorpio=Mars, Sagittarius=Jupiter, Capricorn=Saturn, Aquarius=Saturn, Pisces=Jupiter
 const SIGN_LORDS = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'] as const;
@@ -246,6 +262,41 @@ export interface DoshaResult {
   }[];
   /** "Show Your Work" — factors for each dosha present in the chart. */
   factors?: ChartFactor[];
+}
+
+export interface TimingDecisionRequest {
+  activity: DecisionActivity;
+  /** Target date, YYYY-MM-DD. */
+  date: string;
+  /** Optional clock time, HH:MM (24h). When omitted the verdict ignores Rahu Kaal overlap. */
+  time?: string;
+  latitude?: number;
+  longitude?: number;
+  /** Human-readable location label for display; defaults to New Delhi. */
+  location?: string;
+  locale?: string;
+}
+
+export interface TimingDecisionResult {
+  activity: DecisionActivity;
+  date: string;
+  time: string | null;
+  location: string;
+  /** 0–100 auspiciousness score. */
+  score: number;
+  recommendation: Recommendation;
+  /** "Show Your Work" — the panchang factors behind the verdict. */
+  factors: ChartFactor[];
+  /** The derived Panchang for the moment, localized for display. */
+  panchang: {
+    tithi: string;
+    nakshatra: string;
+    yoga: string;
+    vara: string;
+    rahuKaal: string;
+    sunrise: string;
+    sunset: string;
+  };
 }
 
 // Internal shape produced by detectDoshas(): carries the template key +
@@ -2211,6 +2262,159 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
     }
 
     return { purpose: dto.purpose, auspiciousTimes };
+  }
+
+  /**
+   * Decision Room — score a specific date (and optional time) for an activity.
+   *
+   * Deterministic: it derives the Panchang for the moment from the Swiss
+   * Ephemeris, then runs the pure electional rules (decision-rules.ts). No AI,
+   * no persistence — the same request always yields the same verdict and the
+   * same "Show Your Work" factor list.
+   */
+  getTimingDecision(dto: TimingDecisionRequest): TimingDecisionResult {
+    if (!DECISION_ACTIVITIES.includes(dto.activity)) {
+      throw new BadRequestException(`Unknown activity: ${dto.activity}`);
+    }
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dto.date ?? '');
+    if (!dateMatch) {
+      throw new BadRequestException('date must be in YYYY-MM-DD format');
+    }
+    const year = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const day = Number(dateMatch[3]);
+    const probe = new Date(Date.UTC(year, month - 1, day));
+    if (
+      probe.getUTCFullYear() !== year ||
+      probe.getUTCMonth() !== month - 1 ||
+      probe.getUTCDate() !== day
+    ) {
+      throw new BadRequestException('date is not a valid calendar date');
+    }
+
+    let timeMinutes: number | null = null;
+    if (dto.time) {
+      const timeMatch = /^(\d{1,2}):(\d{2})$/.exec(dto.time);
+      if (!timeMatch) {
+        throw new BadRequestException('time must be in HH:MM format');
+      }
+      const hh = Number(timeMatch[1]);
+      const mm = Number(timeMatch[2]);
+      if (hh > 23 || mm > 59) {
+        throw new BadRequestException('time is out of range');
+      }
+      timeMinutes = hh * 60 + mm;
+    }
+
+    const pLat = dto.latitude ?? 28.6139;
+    const pLng = dto.longitude ?? 77.209;
+    const locationLabel =
+      dto.location ||
+      (dto.latitude != null && dto.longitude != null
+        ? `${pLat.toFixed(4)}°N, ${pLng.toFixed(4)}°E`
+        : 'New Delhi, India');
+
+    // ── Derive the Panchang for the target moment ──────────────────────────
+    const d = this.deriveDatePanchang(year, month, day, pLat, pLng);
+    const paksha = d.tithiIndex < 15 ? 'Shukla' : 'Krishna';
+    const rahu = rahuKaalWindow(d.weekday, d.sunriseMinutes, d.sunsetMinutes);
+
+    const snapshot: PanchangSnapshot = {
+      weekday: d.weekday,
+      tithiIndex: d.tithiIndex,
+      nakshatraIndex: d.nakshatraIndex,
+      yogaIndex: d.yogaIndex,
+      tithiName: `${paksha} ${PANCHANG_TITHI_NAMES[d.tithiIndex % 15]}`,
+      nakshatraName: NAKSHATRA_NAMES[d.nakshatraIndex],
+      yogaName: PANCHANG_YOGA_NAMES[d.yogaIndex],
+      varaName: PANCHANG_VARA_NAMES[d.weekday],
+      timeMinutes,
+      rahuKaal: rahu,
+    };
+
+    const decision = scoreTiming(dto.activity, snapshot);
+
+    // Return canonical English panchang terms; the web localizes them with the
+    // shared panchang-terms helpers (same contract the Panchang page uses), so
+    // this endpoint stays deterministic and free of any KB/DB dependency.
+    return {
+      activity: dto.activity,
+      date: dto.date,
+      time: dto.time ?? null,
+      location: locationLabel,
+      score: decision.score,
+      recommendation: decision.recommendation,
+      factors: decision.factors,
+      panchang: {
+        tithi: snapshot.tithiName,
+        nakshatra: snapshot.nakshatraName,
+        yoga: snapshot.yogaName,
+        vara: snapshot.varaName,
+        rahuKaal: `${formatMinutes(rahu.startMinutes)} - ${formatMinutes(rahu.endMinutes)}`,
+        sunrise: formatMinutes(d.sunriseMinutes),
+        sunset: formatMinutes(d.sunsetMinutes),
+      },
+    };
+  }
+
+  /**
+   * Derive the deterministic Panchang indices + sunrise/sunset for an arbitrary
+   * calendar date at a location, using the Swiss Ephemeris. Mirrors the math in
+   * getPanchang's fallback but parameterised by date and free of local-timezone
+   * ambiguity (the date parts are supplied as integers).
+   */
+  private deriveDatePanchang(
+    year: number,
+    month: number,
+    day: number,
+    lat: number,
+    lng: number,
+  ): {
+    weekday: number;
+    tithiIndex: number;
+    nakshatraIndex: number;
+    yogaIndex: number;
+    sunriseMinutes: number;
+    sunsetMinutes: number;
+  } {
+    // Sun & Moon at ~6:00 IST (0:30 UT) on the target date.
+    const jd = swisseph.swe_julday(year, month, day, 0.5, swisseph.SE_GREG_CAL);
+    const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
+    const sunSid = ((swisseph.swe_calc_ut(jd, swisseph.SE_SUN, flags).longitude % 360) + 360) % 360;
+    const moonSid = ((swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags).longitude % 360) + 360) % 360;
+
+    // Tithi from tropical elongation (Moon − Sun).
+    const sunTrop = swisseph.swe_calc_ut(jd, swisseph.SE_SUN, swisseph.SEFLG_SPEED).longitude;
+    const moonTrop = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, swisseph.SEFLG_SPEED).longitude;
+    const elongation = (((moonTrop - sunTrop) % 360) + 360) % 360;
+    const tithiIndex = Math.floor(elongation / 12) % 30;
+    const nakshatraIndex = Math.floor(moonSid / (360 / 27)) % 27;
+    const yogaAngle = (((moonSid + sunSid) % 360) + 360) % 360;
+    const yogaIndex = Math.floor(yogaAngle / (360 / 27)) % 27;
+
+    // Sunrise/sunset via the same astronomical approximation getPanchang uses,
+    // computed from a UTC day-of-year so the result is server-timezone-stable.
+    const dayOfYear = Math.floor(
+      (Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 86400000,
+    );
+    const declination = 23.45 * Math.sin((2 * Math.PI * (284 + dayOfYear)) / 365);
+    const latRad = (lat * Math.PI) / 180;
+    const decRad = (declination * Math.PI) / 180;
+    // Clamp guards against the acos domain error at polar latitudes.
+    const cosH = Math.max(-1, Math.min(1, -Math.tan(latRad) * Math.tan(decRad)));
+    const hourAngle = (Math.acos(cosH) * 180) / Math.PI;
+    const solarNoon = 12 + (lng - 82.5) / 15; // IST meridian = 82.5°E
+    const sunriseHour = solarNoon - hourAngle / 15;
+    const sunsetHour = solarNoon + hourAngle / 15;
+
+    return {
+      weekday: new Date(Date.UTC(year, month - 1, day)).getUTCDay(),
+      tithiIndex,
+      nakshatraIndex,
+      yogaIndex,
+      sunriseMinutes: sunriseHour * 60,
+      sunsetMinutes: sunsetHour * 60,
+    };
   }
 
   async getDosha(userId: string, locale?: string): Promise<DoshaResult> {
