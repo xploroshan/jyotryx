@@ -16,6 +16,104 @@ interface PersonForm {
 
 const emptyPerson: PersonForm = { name: "", dob: "", time: "", place: "" };
 
+const inputClass = "w-full px-4 py-3 rounded-xl surface-input";
+
+/**
+ * Person form — hoisted to module scope so it keeps a STABLE component identity.
+ * Defining it inside MatchingPage created a new function type on every render,
+ * which made React unmount + remount the whole subtree each time — losing input
+ * focus on every keystroke, and defeating the focus-first-empty-field behaviour
+ * on submit (the `.focus()` ran against a node that was immediately destroyed).
+ * `t` is passed in as a prop instead of captured from the parent closure.
+ */
+function PersonFormComponent({
+  label,
+  person,
+  setPerson,
+  gradient,
+  idPrefix,
+  showErrors,
+  t,
+}: {
+  label: string;
+  person: PersonForm;
+  setPerson: (p: PersonForm) => void;
+  gradient: string;
+  idPrefix: string;
+  showErrors: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <div className="surface-card p-6">
+      <h3 className={`text-lg font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-5`}>
+        {label}
+      </h3>
+      <div className="space-y-4">
+        <div>
+          <label htmlFor={`${idPrefix}-name`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.matching.fullName} <RequiredMark /></label>
+          <input
+            id={`${idPrefix}-name`}
+            type="text"
+            value={person.name}
+            onChange={(e) => setPerson({ ...person, name: e.target.value })}
+            placeholder={t.matching.enterName}
+            aria-invalid={showErrors && !person.name}
+            className={inputClass}
+          />
+          {showErrors && !person.name && (
+            <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor={`${idPrefix}-dob`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.dateOfBirth} <RequiredMark /></label>
+            <input
+              id={`${idPrefix}-dob`}
+              type="date"
+              value={person.dob}
+              onChange={(e) => setPerson({ ...person, dob: e.target.value })}
+              aria-invalid={showErrors && !person.dob}
+              className={`${inputClass} [color-scheme:dark]`}
+            />
+            {showErrors && !person.dob && (
+              <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+            )}
+          </div>
+          <div>
+            <label htmlFor={`${idPrefix}-time`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.timeOfBirth} <RequiredMark /></label>
+            <input
+              id={`${idPrefix}-time`}
+              type="time"
+              value={person.time}
+              onChange={(e) => setPerson({ ...person, time: e.target.value })}
+              aria-invalid={showErrors && !person.time}
+              className={`${inputClass} [color-scheme:dark]`}
+            />
+            {showErrors && !person.time && (
+              <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+            )}
+          </div>
+        </div>
+        <div>
+          <label htmlFor={`${idPrefix}-place`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.placeOfBirth} <RequiredMark /></label>
+          <input
+            id={`${idPrefix}-place`}
+            type="text"
+            value={person.place}
+            onChange={(e) => setPerson({ ...person, place: e.target.value })}
+            placeholder={t.matching.searchCity}
+            aria-invalid={showErrors && !person.place}
+            className={inputClass}
+          />
+          {showErrors && !person.place && (
+            <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MatchingPage() {
   const { t, locale } = useTranslation();
   const user = useAuthStore((s) => s.user);
@@ -208,93 +306,6 @@ export default function MatchingPage() {
     }
   };
 
-  const inputClass =
-    "w-full px-4 py-3 rounded-xl surface-input";
-
-  const PersonFormComponent = ({
-    label,
-    person,
-    setPerson,
-    gradient,
-    idPrefix,
-    showErrors,
-  }: {
-    label: string;
-    person: PersonForm;
-    setPerson: (p: PersonForm) => void;
-    gradient: string;
-    idPrefix: string;
-    showErrors: boolean;
-  }) => (
-    <div className="surface-card p-6">
-      <h3 className={`text-lg font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-5`}>
-        {label}
-      </h3>
-      <div className="space-y-4">
-        <div>
-          <label htmlFor={`${idPrefix}-name`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.matching.fullName} <RequiredMark /></label>
-          <input
-            id={`${idPrefix}-name`}
-            type="text"
-            value={person.name}
-            onChange={(e) => setPerson({ ...person, name: e.target.value })}
-            placeholder={t.matching.enterName}
-            aria-invalid={showErrors && !person.name}
-            className={inputClass}
-          />
-          {showErrors && !person.name && (
-            <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor={`${idPrefix}-dob`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.dateOfBirth} <RequiredMark /></label>
-            <input
-              id={`${idPrefix}-dob`}
-              type="date"
-              value={person.dob}
-              onChange={(e) => setPerson({ ...person, dob: e.target.value })}
-              aria-invalid={showErrors && !person.dob}
-              className={`${inputClass} [color-scheme:dark]`}
-            />
-            {showErrors && !person.dob && (
-              <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor={`${idPrefix}-time`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.timeOfBirth} <RequiredMark /></label>
-            <input
-              id={`${idPrefix}-time`}
-              type="time"
-              value={person.time}
-              onChange={(e) => setPerson({ ...person, time: e.target.value })}
-              aria-invalid={showErrors && !person.time}
-              className={`${inputClass} [color-scheme:dark]`}
-            />
-            {showErrors && !person.time && (
-              <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
-            )}
-          </div>
-        </div>
-        <div>
-          <label htmlFor={`${idPrefix}-place`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.placeOfBirth} <RequiredMark /></label>
-          <input
-            id={`${idPrefix}-place`}
-            type="text"
-            value={person.place}
-            onChange={(e) => setPerson({ ...person, place: e.target.value })}
-            placeholder={t.matching.searchCity}
-            aria-invalid={showErrors && !person.place}
-            className={inputClass}
-          />
-          {showErrors && !person.place && (
-            <p role="alert" className="text-xs text-red-600 mt-1">{t.form.fillAllFields}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
   const scoreColor = (pct: number) =>
     pct >= 75 ? "text-emerald-400" : pct >= 50 ? "text-accent-400" : "text-red-400";
 
@@ -328,6 +339,7 @@ export default function MatchingPage() {
               gradient="from-pink-400 to-red-400"
               idPrefix="person-a"
               showErrors={showFieldErrors}
+              t={t}
             />
           </div>
           <PersonFormComponent
@@ -337,6 +349,7 @@ export default function MatchingPage() {
             gradient="from-blue-400 to-cyan-400"
             idPrefix="person-b"
             showErrors={showFieldErrors}
+            t={t}
           />
         </div>
 
