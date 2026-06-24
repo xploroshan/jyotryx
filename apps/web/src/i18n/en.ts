@@ -64,6 +64,7 @@ export const en = {
         panchang: 'Panchang',
         muhurat: 'Muhurat',
         decisionRoom: 'Decision Room',
+        cosmicCalendar: 'Cosmic Calendar',
         dasha: 'Dasha Periods',
         dosha: 'Dosha Check',
         divisional: 'Divisional Charts',
@@ -718,6 +719,36 @@ export const en = {
       medical: 'Medical procedure',
       general: 'General — anything',
     },
+  },
+
+  // Cosmic Calendar — a month of per-day auspiciousness, colour-coded.
+  cosmicCalendar: {
+    badge: 'Cosmic Calendar',
+    title: 'Your month at a',
+    titleHighlight: 'glance',
+    subtitle: 'Every day this month scored for your occasion — auspicious days in green, days to avoid in red.',
+    occasionLabel: 'Occasion',
+    locationLabel: 'Location',
+    openDecisionRoom: 'Open in the Decision Room',
+    loadFailed: 'Could not load the calendar. Please try again.',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+  },
+
+  // Memory — persistent personalization the user controls.
+  memory: {
+    title: 'What I remember about you',
+    subtitle: 'Add anything you would like your astrologer to keep in mind — it is woven into every reading. You are always in control: remove anything, any time.',
+    empty: 'Nothing yet. Add a fact, preference, or goal below.',
+    placeholder: 'e.g. I work in software and want to switch careers in 2026',
+    add: 'Remember this',
+    adding: 'Saving…',
+    remove: 'Remove',
+    loadFailed: 'Could not load your memories.',
+    kindFact: 'Fact',
+    kindPreference: 'Preference',
+    kindGoal: 'Goal',
+    kindEvent: 'Event',
   },
 
   // Horoscope

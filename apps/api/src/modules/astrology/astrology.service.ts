@@ -16,6 +16,7 @@ import {
   rahuKaalWindow,
   formatMinutes,
   tithiLabel,
+  daysInMonth,
   DECISION_ACTIVITIES,
   DecisionActivity,
   PanchangSnapshot,
@@ -297,6 +298,29 @@ export interface TimingDecisionResult {
     sunrise: string;
     sunset: string;
   };
+}
+
+/** One day in the Cosmic Calendar — the panchang + an at-a-glance rating. */
+export interface CosmicCalendarDay {
+  date: string; // YYYY-MM-DD
+  /** 0 = Sunday … 6 = Saturday. */
+  weekday: number;
+  tithi: string;
+  nakshatra: string;
+  yoga: string;
+  vara: string;
+  rahuKaal: string;
+  /** General/activity-specific auspiciousness score (0–100), time-agnostic. */
+  score: number;
+  recommendation: Recommendation;
+}
+
+export interface CosmicCalendarResult {
+  year: number;
+  month: number; // 1–12
+  activity: DecisionActivity;
+  location: string;
+  days: CosmicCalendarDay[];
 }
 
 // Internal shape produced by detectDoshas(): carries the template key +
@@ -2329,22 +2353,9 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
         : 'New Delhi, India');
 
     // ── Derive the Panchang for the target moment ──────────────────────────
-    const d = this.deriveDatePanchang(year, month, day, pLat, pLng);
-    const rahu = rahuKaalWindow(d.weekday, d.sunriseMinutes, d.sunsetMinutes);
-
-    const snapshot: PanchangSnapshot = {
-      weekday: d.weekday,
-      tithiIndex: d.tithiIndex,
-      nakshatraIndex: d.nakshatraIndex,
-      yogaIndex: d.yogaIndex,
-      tithiName: tithiLabel(d.tithiIndex, PANCHANG_TITHI_NAMES),
-      nakshatraName: NAKSHATRA_NAMES[d.nakshatraIndex],
-      yogaName: PANCHANG_YOGA_NAMES[d.yogaIndex],
-      varaName: PANCHANG_VARA_NAMES[d.weekday],
-      timeMinutes,
-      rahuKaal: rahu,
-    };
-
+    const { snapshot, rahu, sunriseMinutes, sunsetMinutes } = this.buildDaySnapshot(
+      year, month, day, pLat, pLng, timeMinutes,
+    );
     const decision = scoreTiming(dto.activity, snapshot);
 
     // Return canonical English panchang terms; the web localizes them with the
@@ -2364,10 +2375,110 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
         yoga: snapshot.yogaName,
         vara: snapshot.varaName,
         rahuKaal: `${formatMinutes(rahu.startMinutes)} - ${formatMinutes(rahu.endMinutes)}`,
-        sunrise: formatMinutes(d.sunriseMinutes),
-        sunset: formatMinutes(d.sunsetMinutes),
+        sunrise: formatMinutes(sunriseMinutes),
+        sunset: formatMinutes(sunsetMinutes),
       },
     };
+  }
+
+  /**
+   * Cosmic Calendar — a month of per-day auspiciousness for an activity. Each
+   * day reuses the exact same panchang derivation + electional scoring as the
+   * Decision Room (scored date-only, so Rahu Kaal is context rather than a
+   * penalty). Deterministic and cached for 24h — a month's panchang is fixed.
+   */
+  async getCosmicCalendar(
+    year: number,
+    month: number,
+    activity: DecisionActivity = 'general',
+    lat?: number,
+    lng?: number,
+    location?: string,
+  ): Promise<CosmicCalendarResult> {
+    if (!Number.isInteger(year) || year < 1900 || year > 2100) {
+      throw new BadRequestException('year must be an integer between 1900 and 2100');
+    }
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      throw new BadRequestException('month must be an integer between 1 and 12');
+    }
+    if (!DECISION_ACTIVITIES.includes(activity)) {
+      throw new BadRequestException(`Unknown activity: ${activity}`);
+    }
+    if (lat != null && (typeof lat !== 'number' || !Number.isFinite(lat) || lat < -90 || lat > 90)) {
+      throw new BadRequestException('lat must be a number between -90 and 90');
+    }
+    if (lng != null && (typeof lng !== 'number' || !Number.isFinite(lng) || lng < -180 || lng > 180)) {
+      throw new BadRequestException('lng must be a number between -180 and 180');
+    }
+
+    const pLat = lat ?? 28.6139;
+    const pLng = lng ?? 77.209;
+    const locationLabel =
+      location ||
+      (lat != null && lng != null ? `${pLat.toFixed(4)}°N, ${pLng.toFixed(4)}°E` : 'New Delhi, India');
+
+    const cacheKey = `cosmic-cal:${year}-${month}:${activity}:${pLat.toFixed(2)}:${pLng.toFixed(2)}`;
+    const cached = await this.cacheService.get<CosmicCalendarResult>(cacheKey);
+    if (cached) return cached;
+
+    const lastDay = daysInMonth(year, month);
+    const days: CosmicCalendarDay[] = [];
+    for (let day = 1; day <= lastDay; day++) {
+      const { snapshot, rahu } = this.buildDaySnapshot(year, month, day, pLat, pLng, null);
+      const decision = scoreTiming(activity, snapshot);
+      const mm = String(month).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      days.push({
+        date: `${year}-${mm}-${dd}`,
+        weekday: snapshot.weekday,
+        tithi: snapshot.tithiName,
+        nakshatra: snapshot.nakshatraName,
+        yoga: snapshot.yogaName,
+        vara: snapshot.varaName,
+        rahuKaal: `${formatMinutes(rahu.startMinutes)} - ${formatMinutes(rahu.endMinutes)}`,
+        score: decision.score,
+        recommendation: decision.recommendation,
+      });
+    }
+
+    const result: CosmicCalendarResult = { year, month, activity, location: locationLabel, days };
+    await this.cacheService.set(cacheKey, result, 24 * 60 * 60 * 1000);
+    return result;
+  }
+
+  /**
+   * Build the deterministic Panchang snapshot for one calendar day — shared by
+   * the Decision Room (a single moment) and the Cosmic Calendar (a month of
+   * days), so both score against identical inputs.
+   */
+  private buildDaySnapshot(
+    year: number,
+    month: number,
+    day: number,
+    lat: number,
+    lng: number,
+    timeMinutes: number | null,
+  ): {
+    snapshot: PanchangSnapshot;
+    rahu: { startMinutes: number; endMinutes: number };
+    sunriseMinutes: number;
+    sunsetMinutes: number;
+  } {
+    const d = this.deriveDatePanchang(year, month, day, lat, lng);
+    const rahu = rahuKaalWindow(d.weekday, d.sunriseMinutes, d.sunsetMinutes);
+    const snapshot: PanchangSnapshot = {
+      weekday: d.weekday,
+      tithiIndex: d.tithiIndex,
+      nakshatraIndex: d.nakshatraIndex,
+      yogaIndex: d.yogaIndex,
+      tithiName: tithiLabel(d.tithiIndex, PANCHANG_TITHI_NAMES),
+      nakshatraName: NAKSHATRA_NAMES[d.nakshatraIndex],
+      yogaName: PANCHANG_YOGA_NAMES[d.yogaIndex],
+      varaName: PANCHANG_VARA_NAMES[d.weekday],
+      timeMinutes,
+      rahuKaal: rahu,
+    };
+    return { snapshot, rahu, sunriseMinutes: d.sunriseMinutes, sunsetMinutes: d.sunsetMinutes };
   }
 
   /**

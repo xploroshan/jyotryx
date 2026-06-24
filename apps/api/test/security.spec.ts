@@ -12,9 +12,10 @@ import { ChatService } from '../src/modules/chat/chat.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { MemoryService } from '../src/modules/memory/memory.service';
 import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
-import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService, mockLlmService, createMockRedis } from './helpers/mocks';
+import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockPrismaService, mockLlmService, createMockRedis, mockMemoryService } from './helpers/mocks';
 import * as crypto from 'crypto';
 
 // ─── Authentication Security Tests ───────────────────────────────────────────
@@ -247,6 +248,7 @@ describe('Security: Input Validation', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
       ],
     }).compile();
 

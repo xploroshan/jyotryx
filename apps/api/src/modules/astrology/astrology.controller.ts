@@ -20,7 +20,9 @@ import {
   DoshaResult,
   TimingDecisionRequest,
   TimingDecisionResult,
+  CosmicCalendarResult,
 } from './astrology.service';
+import { DecisionActivity } from './decision-rules';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
 
@@ -126,6 +128,33 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Timing decision returned' })
   getTimingDecision(@Body() dto: TimingDecisionRequest): TimingDecisionResult {
     return this.astrologyService.getTimingDecision(dto);
+  }
+
+  @Get('cosmic-calendar')
+  @Public()
+  @ApiOperation({ summary: 'Cosmic Calendar — per-day auspiciousness for a month' })
+  @ApiResponse({ status: 200, description: 'Cosmic calendar returned' })
+  async getCosmicCalendar(
+    @Query('year') year?: string,
+    @Query('month') month?: string,
+    @Query('activity') activity?: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+    @Query('location') location?: string,
+  ): Promise<CosmicCalendarResult> {
+    const now = new Date();
+    const y = year ? parseInt(year, 10) : now.getUTCFullYear();
+    const m = month ? parseInt(month, 10) : now.getUTCMonth() + 1;
+    const latitude = lat ? parseFloat(lat) : undefined;
+    const longitude = lng ? parseFloat(lng) : undefined;
+    return this.astrologyService.getCosmicCalendar(
+      y,
+      m,
+      (activity as DecisionActivity) || 'general',
+      latitude,
+      longitude,
+      location,
+    );
   }
 
   @Get('dosha')

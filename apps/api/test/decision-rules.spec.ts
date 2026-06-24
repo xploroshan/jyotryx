@@ -8,6 +8,7 @@ import {
   rahuKaalWindow,
   formatMinutes,
   tithiLabel,
+  daysInMonth,
   DECISION_ACTIVITIES,
   PanchangSnapshot,
   DecisionActivity,
@@ -185,5 +186,20 @@ describe('tithiLabel', () => {
     expect(tithiLabel(9, NAMES)).toBe('Shukla Dashami');
     expect(tithiLabel(15, NAMES)).toBe('Krishna Pratipada'); // 15 % 15 = 0
     expect(tithiLabel(23, NAMES)).toBe('Krishna Navami'); // 23 % 15 = 8
+  });
+});
+
+describe('daysInMonth', () => {
+  it('counts ordinary months', () => {
+    expect(daysInMonth(2024, 1)).toBe(31);
+    expect(daysInMonth(2024, 4)).toBe(30);
+    expect(daysInMonth(2024, 12)).toBe(31);
+  });
+
+  it('accounts for leap years in February', () => {
+    expect(daysInMonth(2024, 2)).toBe(29); // leap
+    expect(daysInMonth(2023, 2)).toBe(28); // non-leap
+    expect(daysInMonth(2000, 2)).toBe(29); // century leap
+    expect(daysInMonth(1900, 2)).toBe(28); // century non-leap
   });
 });

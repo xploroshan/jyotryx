@@ -213,6 +213,11 @@ export function tithiLabel(tithiIndex: number, names: readonly string[]): string
   return `${paksha} ${names[tithiIndex % 15]}`;
 }
 
+/** Number of days in a 1–12 month, leap-year aware. Day 0 of next month = last of this. */
+export function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
 /**
  * Score how auspicious a moment is for an activity, with a transparent list of
  * the factors behind the verdict. Pure and deterministic.

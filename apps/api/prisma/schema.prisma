@@ -215,6 +215,7 @@ model User {
   creditTransactions CreditTransaction[]
   tarotReadings      TarotReading[]
   entitlements       Entitlement[]
+  memories           UserMemory[]
 
   // Relations removed for partitioned tables (FK constraints dropped):
   // notifications, llmUsage — see 20260413_partition_tables migration
@@ -226,6 +227,25 @@ model User {
   @@index([createdAt, locale])
   @@index([referredById])
   @@map("users")
+}
+
+/// Persistent personalization for the AI astrologer: durable facts, stated
+/// preferences, goals and life events the user shares, so readings can say
+/// "based on what you told me before…" across sessions. `kind` and `source`
+/// are free-form strings (not enums) so new categories never need a migration.
+model UserMemory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  kind      String   @default("fact") /// fact | preference | goal | event
+  content   String
+  source    String   @default("user") /// user (entered) | system (captured)
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("user_memories")
 }
 
 model Subscription {

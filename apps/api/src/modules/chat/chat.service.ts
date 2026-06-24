@@ -8,6 +8,7 @@ import { LlmService } from '../../llm/llm.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { ModerationService } from '../../safety/moderation.service';
 import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
+import { MemoryService } from '../memory/memory.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getAstrologer } from './astrologers';
 
@@ -44,6 +45,7 @@ export class ChatService {
     private knowledgeService: KnowledgeService,
     private moderationService: ModerationService,
     private featureAccess: FeatureAccessService,
+    private memoryService: MemoryService,
   ) {}
 
   async sendMessage(
@@ -412,7 +414,13 @@ export class ChatService {
     const kbResults = await this.knowledgeService.search(message, kbCategory, 5);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
-    const systemPrompt = this.getSystemPrompt(category, userProfile, astrologerId) + getLocaleInstruction(locale);
+    // "Memory": fold in the durable facts/preferences the user has shared so
+    // readings can recall them across sessions. Bounded + pinned-first inside
+    // the service; empty string when the user has stored nothing.
+    const memoryBlock = userId ? await this.memoryService.buildMemoryBlock(userId) : '';
+
+    const systemPrompt =
+      this.getSystemPrompt(category, userProfile, astrologerId) + getLocaleInstruction(locale) + memoryBlock;
     const enrichedPrompt = kbContext
       ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
       : systemPrompt;

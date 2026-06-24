@@ -9,6 +9,7 @@ import { NumerologyService } from '../src/modules/numerology/numerology.service'
 import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { MemoryService } from '../src/modules/memory/memory.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { VectorSearchService } from '../src/knowledge/vector-search.service';
 import { EmbeddingService } from '../src/ai/embeddings/embedding-service';
@@ -32,6 +33,7 @@ import {
   mockLlmService,
   mockVectorSearchService,
   mockEmbeddingService,
+  mockMemoryService,
 } from './helpers/mocks';
 
 // ─── Performance: Auth Service ─────────────────────────────────────────────
@@ -209,6 +211,7 @@ describe('Performance: Chat Operations', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
       ],
     }).compile();
 

@@ -9,6 +9,7 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { MemoryService } from '../src/modules/memory/memory.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
@@ -38,6 +39,7 @@ import {
   mockLlmService,
   mockEphemerisService,
   mockStorageService,
+  mockMemoryService,
 } from './helpers/mocks';
 
 // ─── Mock Auth Guard ─────────────────────────────────────────────────────────
@@ -487,6 +489,7 @@ describe('E2E: Chat (Consult) Endpoints', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
       ],
     })
       .overrideGuard(JwtAuthGuard)

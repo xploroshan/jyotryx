@@ -95,6 +95,7 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
       { slug: 'panchang', labelKey: 'traditionsUi.vedic.features.panchang', href: '/panchang', available: true, icon: '📜' },
       { slug: 'muhurat', labelKey: 'traditionsUi.vedic.features.muhurat', href: '/muhurat', available: true, icon: '⏰' },
       { slug: 'decision-room', labelKey: 'traditionsUi.vedic.features.decisionRoom', href: '/decision-room', available: true, icon: '⚖️' },
+      { slug: 'cosmic-calendar', labelKey: 'traditionsUi.vedic.features.cosmicCalendar', href: '/cosmic-calendar', available: true, icon: '🗓️' },
       { slug: 'dasha', labelKey: 'traditionsUi.vedic.features.dasha', href: '/vedic/dasha', available: true, icon: '🌀' },
       { slug: 'dosha', labelKey: 'traditionsUi.vedic.features.dosha', href: '/vedic/dosha', available: true, icon: '🔥' },
       { slug: 'divisional', labelKey: 'traditionsUi.vedic.features.divisional', href: '/divisional', available: true, icon: '📊' },

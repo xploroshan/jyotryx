@@ -190,6 +190,19 @@ export const mockModerationService = () => ({
 });
 
 /**
+ * "Memory" personalization. ChatService injects this to fold the user's
+ * stored memories into the system prompt, so every spec that instantiates
+ * ChatService via NestJS DI needs a provider. The default returns an empty
+ * block so the prompt under test is unchanged.
+ */
+export const mockMemoryService = () => ({
+  buildMemoryBlock: jest.fn().mockResolvedValue(''),
+  list: jest.fn().mockResolvedValue([]),
+  add: jest.fn(),
+  remove: jest.fn(),
+});
+
+/**
  * In-memory mock of the ioredis client. Supports the ops the app uses:
  * get, set (with EX/PX), del, ping, incr, expire, ttl, quit, on.
  * Honors TTLs so tests that depend on expiry behavior still work.

@@ -113,6 +113,38 @@ describe('AstrologyService', () => {
     service = module.get<AstrologyService>(AstrologyService);
   });
 
+  // ─── Cosmic Calendar Tests ────────────────────────────────────────────────
+
+  describe('getCosmicCalendar', () => {
+    it('returns a deterministic month of scored days', async () => {
+      const a = await service.getCosmicCalendar(2025, 2, 'marriage', 28.6139, 77.209);
+      expect(a.year).toBe(2025);
+      expect(a.month).toBe(2);
+      expect(a.activity).toBe('marriage');
+      expect(a.days).toHaveLength(28); // February 2025 (non-leap)
+      for (const d of a.days) {
+        expect(d.date).toMatch(/^2025-02-\d{2}$/);
+        expect(d.score).toBeGreaterThanOrEqual(0);
+        expect(d.score).toBeLessThanOrEqual(100);
+        expect(['excellent', 'good', 'neutral', 'caution', 'avoid']).toContain(d.recommendation);
+        expect(d.tithi).toBeTruthy();
+        expect(d.weekday).toBeGreaterThanOrEqual(0);
+        expect(d.weekday).toBeLessThanOrEqual(6);
+      }
+      // Same inputs → same output.
+      const b = await service.getCosmicCalendar(2025, 2, 'marriage', 28.6139, 77.209);
+      expect(b.days).toEqual(a.days);
+    });
+
+    it('rejects an out-of-range month', async () => {
+      await expect(service.getCosmicCalendar(2025, 13, 'general')).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects an out-of-range latitude', async () => {
+      await expect(service.getCosmicCalendar(2025, 1, 'general', 999, 77)).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
   // ─── Horoscope Tests ──────────────────────────────────────────────────────
 
   describe('getHoroscope', () => {
