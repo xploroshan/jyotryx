@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchSharedMatch, SITE_ORIGIN } from "@/lib/seo/server-api";
@@ -6,6 +7,11 @@ import SharedMatchView from "@/components/match/SharedMatchView";
 interface RouteProps {
   params: Promise<{ token: string }>;
 }
+
+// generateMetadata and the page render both need the snapshot. Wrapping the
+// (no-store) fetch in React's per-request cache() collapses them into a single
+// upstream call, so a visit bumps the view counter once rather than twice.
+const getSharedMatch = cache((token: string) => fetchSharedMatch(token));
 
 /**
  * Public, link-only view of a shared Kundli-match result.
@@ -16,7 +22,7 @@ interface RouteProps {
  */
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { token } = await params;
-  const data = await fetchSharedMatch(token);
+  const data = await getSharedMatch(token);
   if (!data) {
     return { title: "Shared compatibility result | myastro360", robots: { index: false, follow: false } };
   }
@@ -46,7 +52,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
 
 export default async function SharedMatchPage({ params }: RouteProps) {
   const { token } = await params;
-  const data = await fetchSharedMatch(token);
+  const data = await getSharedMatch(token);
   if (!data) notFound();
   return <SharedMatchView data={data} />;
 }

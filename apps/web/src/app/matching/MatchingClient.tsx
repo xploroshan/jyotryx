@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
@@ -52,6 +52,10 @@ export default function MatchingPage() {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState("");
   const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+  }, []);
 
   // Prepopulate Person A from the logged-in user's profile (Person B is always the partner).
   useEffect(() => {
@@ -102,8 +106,8 @@ export default function MatchingPage() {
         totalScore,
         maxScore,
         percentage,
-        manglikA: false,
-        manglikB: false,
+        manglikA: Boolean(res.manglikA),
+        manglikB: Boolean(res.manglikB),
         koota: res.gunaDetails?.map((g: any) => ({
           name: g.guna,
           description: g.description,
@@ -170,7 +174,8 @@ export default function MatchingPage() {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard API unavailable (e.g. insecure context); the field stays selectable.
     }
