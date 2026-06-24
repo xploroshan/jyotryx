@@ -213,6 +213,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Trust strip — the three positioning pillars ("the meter never
+          runs / same math every time / no fake astrologers"). Additive band
+          that threads the brand promise between the hero and the marquee. ── */}
+      <TrustStrip
+        eyebrow={t.home.trustEyebrow}
+        pillars={[
+          { title: t.home.trustMeterTitle, desc: t.home.trustMeterDesc },
+          { title: t.home.trustMathTitle, desc: t.home.trustMathDesc },
+          { title: t.home.trustHumanTitle, desc: t.home.trustHumanDesc },
+        ]}
+      />
+
       {/* ── Tradition marquee — editorial signature strip between hero and
           authenticated bento. Decorative; labels are reachable via the
           TraditionRail in the chrome. ── */}
@@ -289,6 +301,41 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * Trust strip — three editorial pillars stating the brand promise. Sits on a
+ * hairline-bounded band so it reads as a confident statement of difference,
+ * not a feature grid. Decorative numerals are intentionally absent here; the
+ * claims carry the weight.
+ */
+function TrustStrip({
+  eyebrow,
+  pillars,
+}: {
+  eyebrow: string;
+  pillars: { title: string; desc: string }[];
+}) {
+  return (
+    <section className="px-5 sm:px-8 py-16 sm:py-20 border-t hairline">
+      <div className="mx-auto max-w-6xl">
+        <p className="text-[12px] font-medium text-primary-600 uppercase tracking-[0.22em] mb-10 text-center">
+          {eyebrow}
+        </p>
+        <Stagger.Container className="grid md:grid-cols-3 gap-8 md:gap-10">
+          {pillars.map((p, i) => (
+            <Stagger.Item key={p.title} className="relative md:px-6">
+              {i > 0 && <span aria-hidden className="hidden md:block absolute left-0 top-1 bottom-1 w-px bg-[rgba(12,8,5,0.08)]" />}
+              <h3 className="font-display text-xl sm:text-2xl font-semibold text-surface-950 mb-3 leading-tight">
+                {p.title}
+              </h3>
+              <p className="text-sm text-emphasis leading-relaxed">{p.desc}</p>
+            </Stagger.Item>
+          ))}
+        </Stagger.Container>
+      </div>
+    </section>
   );
 }
 

@@ -18,6 +18,8 @@ import {
   MuhuratRequest,
   MuhuratResult,
   DoshaResult,
+  TimingDecisionRequest,
+  TimingDecisionResult,
 } from './astrology.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
@@ -116,6 +118,14 @@ export class AstrologyController {
   @ApiResponse({ status: 201, description: 'Muhurat times returned' })
   async getMuhurat(@Body() dto: MuhuratRequest): Promise<MuhuratResult> {
     return this.astrologyService.getMuhurat(dto);
+  }
+
+  @Post('timing-decision')
+  @Public()
+  @ApiOperation({ summary: 'Decision Room — score a date/time for an activity (Muhurta)' })
+  @ApiResponse({ status: 201, description: 'Timing decision returned' })
+  getTimingDecision(@Body() dto: TimingDecisionRequest): TimingDecisionResult {
+    return this.astrologyService.getTimingDecision(dto);
   }
 
   @Get('dosha')

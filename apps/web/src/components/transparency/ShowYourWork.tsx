@@ -11,7 +11,7 @@ export interface ChartFactor {
   label: string;
   detail?: string;
   contribution: "positive" | "negative" | "neutral";
-  source: "planet" | "yoga" | "dasha" | "dosha";
+  source: "planet" | "yoga" | "dasha" | "dosha" | "panchang";
 }
 
 /**
