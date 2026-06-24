@@ -4,6 +4,21 @@ import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
 import { MemoryCacheService } from '../../common/cache.service';
+import {
+  DEFAULT_TZ,
+  isValidTimeZone,
+  resolveTimezoneFromCoords,
+  zonedNow,
+  type ZonedNow,
+} from '../../common/timezone.util';
+
+/**
+ * Map a local hour-of-day to the briefing greeting KB key. Exported for tests
+ * so the morning/afternoon/evening boundaries are pinned and can't drift.
+ */
+export function greetingKeyForHour(hour: number): 'greeting.morning' | 'greeting.afternoon' | 'greeting.evening' {
+  return hour < 12 ? 'greeting.morning' : hour < 17 ? 'greeting.afternoon' : 'greeting.evening';
+}
 
 export interface PlanetaryHour {
   planet: string;
@@ -263,18 +278,37 @@ export class DailyBriefingService {
     private readonly kbService: KbService,
   ) {}
 
-  async getDailyBriefing(userId: string, locale?: string): Promise<DailyBriefingResult> {
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    // 30-min bucket aligns with hora changes
-    const hourBucket = Math.floor((today.getHours() * 60 + today.getMinutes()) / 30);
+  /**
+   * Resolve the timezone to compute "today" in. Priority:
+   *   1. an explicit IANA zone from the caller (the browser's current zone —
+   *      correct even when the user is travelling / an NRI), when valid;
+   *   2. the user's birthplace coordinates (works server-side, e.g. the email
+   *      fanout, where there is no browser);
+   *   3. {@link DEFAULT_TZ} (Asia/Kolkata) as the India-first fallback.
+   */
+  private async resolveUserTimezone(userId: string, timeZone?: string): Promise<string> {
+    if (isValidTimeZone(timeZone)) return timeZone;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { placeOfBirth: true },
+    });
+    const pob = (user?.placeOfBirth as { lat?: number; lng?: number } | null) ?? null;
+    return resolveTimezoneFromCoords(pob?.lat, pob?.lng);
+  }
+
+  async getDailyBriefing(userId: string, locale?: string, timeZone?: string): Promise<DailyBriefingResult> {
+    const tz = await this.resolveUserTimezone(userId, timeZone);
+    const z = zonedNow(new Date(), tz);
+    const dateStr = z.dateStr;
+    // 30-min bucket aligns with hora changes (computed in the user's zone)
+    const hourBucket = Math.floor((z.hour * 60 + z.minute) / 30);
     const localeKey = locale || 'en';
 
     // ── 1. Global portion (shared across ALL users in same locale) ──────
     const globalKey = `briefing:global:${dateStr}:${hourBucket}:${localeKey}`;
     let global = await this.cacheService.get<GlobalBriefingData>(globalKey);
     if (!global) {
-      global = await this.computeGlobalBriefing(today, locale);
+      global = await this.computeGlobalBriefing(z, locale);
       await this.cacheService.set(globalKey, global, 30 * 60 * 1000);
     }
 
@@ -294,7 +328,7 @@ export class DailyBriefingService {
         global.currentPlanet,
         global.dayRuler,
         global.dayQuality,
-        today,
+        z,
         locale,
       );
       await this.cacheService.set(userKey, overlay, 30 * 60 * 1000);
@@ -323,11 +357,11 @@ export class DailyBriefingService {
   }
 
   // ─── Global briefing: identical for every user in the same 30-min slot ──
-  private async computeGlobalBriefing(today: Date, locale?: string): Promise<GlobalBriefingData> {
-    const dayOfWeek = today.getDay();
+  private async computeGlobalBriefing(z: ZonedNow, locale?: string): Promise<GlobalBriefingData> {
+    const dayOfWeek = z.weekday;
     const dayRuler = DAY_RULERS[dayOfWeek];
 
-    const canonical = this.getBasicPanchang(today);
+    const canonical = this.getBasicPanchang(z);
 
     // Preload the 7 planet KB rows once; reused for lucky color, day
     // activities, hora activities, and planetary-hours localization.
@@ -342,7 +376,7 @@ export class DailyBriefingService {
       return PLANET_ACTIVITIES[planet] || PLANET_ACTIVITIES.Sun;
     };
 
-    const planetaryHours = this.calculatePlanetaryHours(dayOfWeek, today, planetActivities);
+    const planetaryHours = this.calculatePlanetaryHours(dayOfWeek, z.hour * 60 + z.minute, planetActivities);
     const currentHora = planetaryHours.find((h) => h.isCurrent) || null;
     const currentPlanet = currentHora?.planet || dayRuler;
 
@@ -359,7 +393,7 @@ export class DailyBriefingService {
     const remedy = dayRulerRendered?.remedy ?? DEFAULT_REMEDIES[dayRuler] ?? DEFAULT_REMEDIES.Sun;
     const mantra = dayRulerRendered?.mantra ?? DEFAULT_MANTRAS[dayRuler] ?? DEFAULT_MANTRAS.Sun;
 
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    const dayOfYear = Math.floor((Date.UTC(z.year, z.month - 1, z.day) - Date.UTC(z.year, 0, 0)) / 86400000);
     const luckyNumber = ((dayOfYear + dayOfWeek) % 9) + 1;
     const luckyTime = currentHora ? `${currentHora.startTime} - ${currentHora.endTime}` : '10:00 AM - 11:30 AM';
 
@@ -377,7 +411,7 @@ export class DailyBriefingService {
     currentPlanet: string,
     dayRuler: string,
     dayQuality: DailyBriefingResult['dayQuality'],
-    today: Date,
+    z: ZonedNow,
     locale?: string,
   ): Promise<UserBriefingOverlay> {
     const profession = (user?.profession as string) || 'OTHER';
@@ -390,8 +424,7 @@ export class DailyBriefingService {
       user?.name?.split(' ')[0] ||
       'there';
 
-    const hour = today.getHours();
-    const timeKey = hour < 12 ? 'greeting.morning' : hour < 17 ? 'greeting.afternoon' : 'greeting.evening';
+    const timeKey = greetingKeyForHour(z.hour);
     const qualityKey: `quality.${DailyBriefingResult['dayQuality']}` = `quality.${dayQuality}`;
 
     const [greetingRow, qualityRow, summaryRow, insightRow, otherInsightRow, dayRulerPlanetRow, varaRow, nakshatraRow] = await Promise.all([
@@ -437,20 +470,24 @@ export class DailyBriefingService {
 
     let transitAlert: string | null = null;
     if (user?.dateOfBirth) {
-      transitAlert = await this.getTransitAlert(user.dateOfBirth, today, locale);
+      transitAlert = await this.getTransitAlert(user.dateOfBirth, z, locale);
     }
 
     return { greeting, professionInsight, summary, transitAlert };
   }
 
-  async getPlanetaryHoursOnly(): Promise<PlanetaryHour[]> {
-    const today = new Date();
-    return this.calculatePlanetaryHours(today.getDay(), today, (p) => PLANET_ACTIVITIES[p] || PLANET_ACTIVITIES.Sun);
+  async getPlanetaryHoursOnly(timeZone?: string): Promise<PlanetaryHour[]> {
+    const z = zonedNow(new Date(), isValidTimeZone(timeZone) ? timeZone : DEFAULT_TZ);
+    return this.calculatePlanetaryHours(
+      z.weekday,
+      z.hour * 60 + z.minute,
+      (p) => PLANET_ACTIVITIES[p] || PLANET_ACTIVITIES.Sun,
+    );
   }
 
   private calculatePlanetaryHours(
     dayOfWeek: number,
-    now: Date,
+    nowMinutes: number,
     activitiesFor: (planet: string) => { do: string[]; avoid: string[] },
   ): PlanetaryHour[] {
     // Approximate sunrise 6:00 AM, sunset 6:00 PM (India)
@@ -463,7 +500,6 @@ export class DailyBriefingService {
 
     // Day hora sequence starts with the day ruler
     const startIdx = HORA_ORDER.indexOf(DAY_RULERS[dayOfWeek]);
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
     const hours: PlanetaryHour[] = [];
 
@@ -504,17 +540,17 @@ export class DailyBriefingService {
     return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
   }
 
-  private getBasicPanchang(today: Date): PanchangCanonical {
+  private getBasicPanchang(z: ZonedNow): PanchangCanonical {
     const dayNameKeys = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
     const tithis = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
     const nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
     const yogas = ['Vishkambha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarman', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
     const rahuKaals = ['4:30 PM - 6:00 PM', '7:30 AM - 9:00 AM', '3:00 PM - 4:30 PM', '12:00 PM - 1:30 PM', '1:30 PM - 3:00 PM', '10:30 AM - 12:00 PM', '9:00 AM - 10:30 AM'];
 
-    // Compute Julian Day for astronomical calculations
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
+    // Compute Julian Day for astronomical calculations (local calendar date)
+    const year = z.year;
+    const month = z.month;
+    const day = z.day;
     const a = Math.floor((14 - month) / 12);
     const y = year + 4800 - a;
     const m = month + 12 * a - 3;
@@ -545,8 +581,8 @@ export class DailyBriefingService {
       tithiKey: tithis[tithiIdx % 15],
       nakshatraKey: nakshatras[nakIdx],
       yogaKey: yogas[yogaIdx],
-      varaKey: dayNameKeys[today.getDay()],
-      rahukaal: rahuKaals[today.getDay()],
+      varaKey: dayNameKeys[z.weekday],
+      rahukaal: rahuKaals[z.weekday],
     };
   }
 
@@ -647,10 +683,10 @@ export class DailyBriefingService {
     return qualities[nakshatra] || 'balanced';
   }
 
-  private async getTransitAlert(dateOfBirth: Date, today: Date, locale?: string): Promise<string | null> {
+  private async getTransitAlert(dateOfBirth: Date, z: ZonedNow, locale?: string): Promise<string | null> {
     const dob = new Date(dateOfBirth);
-    const age = today.getFullYear() - dob.getFullYear();
-    const month = today.getMonth();
+    const age = z.year - dob.getFullYear();
+    const month = z.month - 1; // 0-based, matching the previous Date#getMonth()
 
     let transitKey: string | null = null;
     if (age >= 28 && age <= 30) {

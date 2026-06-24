@@ -1,11 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DailyBriefingService } from '../src/modules/daily-briefing/daily-briefing.service';
+import { DailyBriefingService, greetingKeyForHour } from '../src/modules/daily-briefing/daily-briefing.service';
+import { zonedNow } from '../src/common/timezone.util';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { mockPrismaService, mockOpenAIService, mockKnowledgeService, mockKbService, mockCacheService, mockUser } from './helpers/mocks';
+
+describe('greetingKeyForHour', () => {
+  it('maps local hours to greeting buckets at the right boundaries', () => {
+    expect(greetingKeyForHour(0)).toBe('greeting.morning');
+    expect(greetingKeyForHour(11)).toBe('greeting.morning');
+    expect(greetingKeyForHour(12)).toBe('greeting.afternoon');
+    expect(greetingKeyForHour(16)).toBe('greeting.afternoon');
+    expect(greetingKeyForHour(17)).toBe('greeting.evening');
+    expect(greetingKeyForHour(23)).toBe('greeting.evening');
+  });
+});
 
 describe('DailyBriefingService', () => {
   let service: DailyBriefingService;
@@ -67,6 +79,18 @@ describe('DailyBriefingService', () => {
     it('should include user name in greeting', async () => {
       const result = await service.getDailyBriefing('test-uuid');
       expect(result.greeting).toContain('Test');
+    });
+
+    it('computes the briefing date in the caller-provided timezone', async () => {
+      // The date the user sees must be their local day, not the server's UTC day.
+      const result = await service.getDailyBriefing('test-uuid', 'en', 'Asia/Kolkata');
+      expect(result.date).toBe(zonedNow(new Date(), 'Asia/Kolkata').dateStr);
+    });
+
+    it('falls back to the default zone for an invalid timezone (still returns a briefing)', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, placeOfBirth: null });
+      const result = await service.getDailyBriefing('test-uuid', 'en', 'Not/AZone');
+      expect(result.date).toBe(zonedNow(new Date(), 'Asia/Kolkata').dateStr);
     });
 
     it('should prefer the informal nickname over the formal name in the greeting', async () => {

@@ -1,4 +1,10 @@
-import { resolveUtHour } from '../src/common/timezone.util';
+import {
+  resolveUtHour,
+  zonedNow,
+  isValidTimeZone,
+  resolveTimezoneFromCoords,
+  DEFAULT_TZ,
+} from '../src/common/timezone.util';
 
 /**
  * Guards the birth-time → UT conversion. The previous longitude/15 (local
@@ -45,5 +51,69 @@ describe('resolveUtHour', () => {
       latitude: null, longitude: null,
     });
     expect(ut).toBeCloseTo(10 - 5.5, 5);
+  });
+});
+
+/**
+ * Guards the My Day timezone fix. The bug: the briefing's date and greeting
+ * were computed from the server clock (UTC), so a user in IST just past
+ * local midnight saw the *previous* day and "Good Evening". zonedNow must
+ * express an instant in the user's own zone, independent of the server's tz.
+ */
+describe('zonedNow', () => {
+  // The exact instant from the bug report: 00:36 IST on Thu 25 Jun 2026,
+  // which is 19:06 UTC on Wed 24 Jun 2026.
+  const instant = new Date('2026-06-24T19:06:00Z');
+
+  it('reports the local date/hour in Asia/Kolkata (next day, early morning)', () => {
+    const z = zonedNow(instant, 'Asia/Kolkata');
+    expect(z.dateStr).toBe('2026-06-25');
+    expect(z.year).toBe(2026);
+    expect(z.month).toBe(6);
+    expect(z.day).toBe(25);
+    expect(z.hour).toBe(0);
+    expect(z.minute).toBe(36);
+    expect(z.weekday).toBe(4); // Thursday
+    expect(z.zone).toBe('Asia/Kolkata');
+  });
+
+  it('gives a different, locally-correct day for the SAME instant in New York', () => {
+    const z = zonedNow(instant, 'America/New_York'); // EDT, UTC-4 in June
+    expect(z.dateStr).toBe('2026-06-24');
+    expect(z.hour).toBe(15);
+    expect(z.weekday).toBe(3); // Wednesday
+  });
+
+  it('falls back to Asia/Kolkata for an invalid zone', () => {
+    const z = zonedNow(instant, 'Mars/Phobos');
+    expect(z.zone).toBe(DEFAULT_TZ);
+    expect(z.dateStr).toBe('2026-06-25');
+  });
+});
+
+describe('isValidTimeZone', () => {
+  it('accepts real IANA zones', () => {
+    expect(isValidTimeZone('Asia/Kolkata')).toBe(true);
+    expect(isValidTimeZone('America/New_York')).toBe(true);
+    expect(isValidTimeZone('UTC')).toBe(true);
+  });
+  it('rejects junk, empty, and missing values', () => {
+    expect(isValidTimeZone('Mars/Phobos')).toBe(false);
+    expect(isValidTimeZone('')).toBe(false);
+    expect(isValidTimeZone(undefined)).toBe(false);
+    expect(isValidTimeZone(null)).toBe(false);
+  });
+});
+
+describe('resolveTimezoneFromCoords', () => {
+  it('resolves Indian coordinates to Asia/Kolkata', () => {
+    expect(resolveTimezoneFromCoords(28.61, 77.2)).toBe('Asia/Kolkata'); // New Delhi
+  });
+  it('resolves New York coordinates to America/New_York', () => {
+    expect(resolveTimezoneFromCoords(40.71, -74.0)).toBe('America/New_York');
+  });
+  it('falls back to the default zone when coords are missing/out of range', () => {
+    expect(resolveTimezoneFromCoords(null, null)).toBe(DEFAULT_TZ);
+    expect(resolveTimezoneFromCoords(undefined, undefined)).toBe(DEFAULT_TZ);
   });
 });

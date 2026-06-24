@@ -142,7 +142,14 @@ export default function MyDayPage() {
     if (showLoader) setLoading(true);
     setError("");
     try {
-      const data = await api.get<DailyBriefing>(`/daily-briefing?locale=${locale}`, { token: accessToken! });
+      // Send the browser's IANA timezone so the briefing's day + greeting
+      // reflect where the user actually is (incl. travel / NRI), not the
+      // server's UTC clock.
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const data = await api.get<DailyBriefing>(
+        `/daily-briefing?locale=${locale}${tz ? `&tz=${encodeURIComponent(tz)}` : ""}`,
+        { token: accessToken! },
+      );
       setBriefing(data);
       if (user?.id) writeBriefingCache(user.id, locale, data);
     } catch (err: any) {
@@ -279,7 +286,10 @@ export default function MyDayPage() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <p className="text-xs font-medium text-primary-700 tracking-widest uppercase mb-2">
-                {new Date(briefing.date).toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                {/* `briefing.date` is already the user's local calendar date
+                    (YYYY-MM-DD). Format it in UTC so the weekday/date shown is
+                    exactly that date, never re-shifted by the browser zone. */}
+                {new Date(`${briefing.date}T00:00:00Z`).toLocaleDateString(dateLocale, { timeZone: "UTC", weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-950 tracking-tight">
                 {translateGreeting(briefing.greeting, t)}
