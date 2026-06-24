@@ -16,6 +16,7 @@ import {
   scoreTiming,
   rahuKaalWindow,
   formatMinutes,
+  tithiLabel,
   DECISION_ACTIVITIES,
   DecisionActivity,
   PanchangSnapshot,
@@ -2076,10 +2077,10 @@ export class AstrologyService {
       return result as PanchangResult;
     }
 
-    // Fallback: compute Panchang using Swiss Ephemeris for precision
-    const dayNames = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
-    const tithiNames = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'];
-    const yogaNames = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
+    // Fallback: compute Panchang using Swiss Ephemeris for precision.
+    // Vara/tithi/yoga names are the shared module constants (PANCHANG_*_NAMES),
+    // so this path and the Decision Room derivation stay in lockstep; karana
+    // has no shared constant and stays local.
     const karanaNames = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja', 'Vanija', 'Vishti', 'Shakuni', 'Chatushpada', 'Nagava', 'Kimstughna'];
 
     // Swiss Ephemeris: compute Sun & Moon tropical longitudes at ~6:00 IST (0:30 UT)
@@ -2096,7 +2097,7 @@ export class AstrologyService {
     const elongation = ((moonTropical.longitude - sunTropical.longitude) % 360 + 360) % 360;
     const tithiIdx = Math.floor(elongation / 12) % 30;
     const paksha = tithiIdx < 15 ? 'Shukla' : 'Krishna';
-    const tithiName = tithiNames[tithiIdx % 15];
+    const tithiName = PANCHANG_TITHI_NAMES[tithiIdx % 15];
 
     // Nakshatra from Moon's sidereal longitude
     const nakIdx = Math.floor(moonSid / (360 / 27)) % 27;
@@ -2136,9 +2137,9 @@ export class AstrologyService {
       date: dateStr,
       tithi: `${paksha} ${tithiName}`,
       nakshatra: NAKSHATRA_NAMES[nakIdx],
-      yoga: yogaNames[yogaIdx],
+      yoga: PANCHANG_YOGA_NAMES[yogaIdx],
       karana: karanaNames[karanaIdx],
-      vara: dayNames[today.getDay()],
+      vara: PANCHANG_VARA_NAMES[today.getDay()],
       sunrise: formatHour(sunriseHour),
       sunset: formatHour(sunsetHour),
       moonrise: formatHour(moonriseHour),
@@ -2306,6 +2307,23 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       timeMinutes = hh * 60 + mm;
     }
 
+    // The DTO is a plain interface, so the global ValidationPipe does not guard
+    // these — validate the (optional) coordinates explicitly. This rejects both
+    // a non-numeric body (which would otherwise 500 on .toFixed) and absurd
+    // out-of-range values (which would otherwise yield a garbage-but-200 reply).
+    if (
+      dto.latitude != null &&
+      (typeof dto.latitude !== 'number' || !Number.isFinite(dto.latitude) || dto.latitude < -90 || dto.latitude > 90)
+    ) {
+      throw new BadRequestException('latitude must be a number between -90 and 90');
+    }
+    if (
+      dto.longitude != null &&
+      (typeof dto.longitude !== 'number' || !Number.isFinite(dto.longitude) || dto.longitude < -180 || dto.longitude > 180)
+    ) {
+      throw new BadRequestException('longitude must be a number between -180 and 180');
+    }
+
     const pLat = dto.latitude ?? 28.6139;
     const pLng = dto.longitude ?? 77.209;
     const locationLabel =
@@ -2316,7 +2334,6 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
 
     // ── Derive the Panchang for the target moment ──────────────────────────
     const d = this.deriveDatePanchang(year, month, day, pLat, pLng);
-    const paksha = d.tithiIndex < 15 ? 'Shukla' : 'Krishna';
     const rahu = rahuKaalWindow(d.weekday, d.sunriseMinutes, d.sunsetMinutes);
 
     const snapshot: PanchangSnapshot = {
@@ -2324,7 +2341,7 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
       tithiIndex: d.tithiIndex,
       nakshatraIndex: d.nakshatraIndex,
       yogaIndex: d.yogaIndex,
-      tithiName: `${paksha} ${PANCHANG_TITHI_NAMES[d.tithiIndex % 15]}`,
+      tithiName: tithiLabel(d.tithiIndex, PANCHANG_TITHI_NAMES),
       nakshatraName: NAKSHATRA_NAMES[d.nakshatraIndex],
       yogaName: PANCHANG_YOGA_NAMES[d.yogaIndex],
       varaName: PANCHANG_VARA_NAMES[d.weekday],
