@@ -900,6 +900,28 @@ export const en = {
     mockSummary: 'Overall, this is a favorable match with strong compatibility in key areas. Consider the specific analyses for a complete picture.',
   },
 
+  // Kundli-match share links
+  matchShare: {
+    share: 'Share result',
+    sharing: 'Creating link…',
+    shareTitle: 'Share this compatibility result',
+    shareHint: 'Anyone with the link can view the score. Birth details are never shared.',
+    copyLink: 'Copy link',
+    copied: 'Copied!',
+    shareWhatsapp: 'Share on WhatsApp',
+    shareFailed: 'Could not create a share link. Please try again.',
+    whatsappText: 'Our Kundli compatibility is {score}/{max} ({percentage}%) on myastro360. See the full breakdown:',
+    publicEyebrow: 'Kundli Compatibility',
+    publicSubtitle: 'Ashtakoota Guna Milan compatibility',
+    computedOn: 'Computed on myastro360',
+    ctaHeadline: 'Check your own compatibility',
+    ctaSubtitle: 'Free Ashtakoota Guna Milan — Manglik check, koota-by-koota breakdown, and guidance.',
+    ctaButton: 'Match your Kundli',
+    notFoundTitle: 'This shared result is unavailable',
+    notFoundBody: 'The link may have expired or been removed.',
+    notFoundCta: 'Try Kundli Matching',
+  },
+
   // Panchang
   panchang: {
     badge: 'Hindu Calendar',

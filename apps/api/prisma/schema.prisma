@@ -216,6 +216,7 @@ model User {
   tarotReadings      TarotReading[]
   entitlements       Entitlement[]
   memories           UserMemory[]
+  sharedMatches      SharedMatch[]
 
   // Relations removed for partitioned tables (FK constraints dropped):
   // notifications, llmUsage — see 20260413_partition_tables migration
@@ -426,6 +427,33 @@ model MatchingResult {
 
   @@index([userId])
   @@map("matching_results")
+}
+
+// A public, shareable snapshot of a Kundli-matching result. Holds only the
+// *rendered* outcome (display names + scores + guna breakdown) — never the
+// partners' raw birth details — so a share link can be opened by anyone
+// without leaking date/time/place of birth. Cascade-deletes with the creator.
+model SharedMatch {
+  id             String   @id @default(uuid()) @db.Uuid
+  token          String   @unique /// URL-safe public share token
+  createdById    String?  @db.Uuid
+  personAName    String
+  personBName    String
+  totalScore     Int
+  maxScore       Int      @default(36)
+  compatibility  String
+  recommendation String
+  manglikA       Boolean  @default(false)
+  manglikB       Boolean  @default(false)
+  gunaDetails    Json /// [{ guna, maxPoints, obtainedPoints, description }]
+  locale         String?  @db.VarChar(10)
+  viewCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdById])
+  @@map("shared_matches")
 }
 
 model PalmistryReading {
