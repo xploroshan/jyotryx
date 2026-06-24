@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { WEB_TRADITIONS, resolveTraditionFromPath, type TraditionId } from "@/lib/traditions";
+import { WEB_TRADITIONS, resolveTraditionFromPath, type TraditionId, type TraditionFeature } from "@/lib/traditions";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { useTranslation } from "@/i18n";
 import { FeatureGlyph } from "@/components/icons";
@@ -14,9 +14,16 @@ import { ScrollableRow } from "@/components/ui/ScrollableRow";
  * tradition comes from the URL; on cross-cutting pages (My Day, home, …)
  * it falls back to the user's persisted `primaryTradition`, so the
  * selected tradition and its sub-features stay put until the user picks a
- * different one. Replaces the FeatureChips sticky strip. ~36px tall vs the
- * previous ~44px, with a clean underline indicator instead of an animated
- * gradient.
+ * different one.
+ *
+ * Layout: traditions with a long feature list (Vedic has 17) are split
+ * into two balanced rows on wide desktops (≥xl), each evenly distributed
+ * edge-to-edge so nothing is hidden and the spacing reads as intentional
+ * rather than a ragged wrap. Below xl — where 9 wide labels can't fit on
+ * one line without overflowing — it falls back to a single swipe-scroll
+ * row with affordances. Short feature lists (≤9) always render as one
+ * left-packed row. Each item is a pill that lights up on hover (selection
+ * affordance) and fills with the accent colour on the current page.
  */
 export default function FeatureBarV2() {
   const pathname = usePathname() ?? "/";
@@ -53,59 +60,89 @@ export default function FeatureBarV2() {
     return typeof node === "string" ? node : fallback;
   };
 
+  // Split into two balanced rows once the list is long enough that a single
+  // row would crowd (9 is the comfortable single-row ceiling on desktop).
+  // 17 → 9 + 8; a future 10-feature tradition → 5 + 5.
+  const feats = cfg.features;
+  const twoRows = feats.length > 9;
+  const mid = twoRows ? Math.ceil(feats.length / 2) : feats.length;
+  const row1 = feats.slice(0, mid);
+  const row2 = feats.slice(mid);
+
+  const renderItem = (f: TraditionFeature) => {
+    const isActive = pathname === f.href;
+    const label = readLabel(f.labelKey, f.slug);
+    const base =
+      "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12.5px] whitespace-nowrap transition-colors duration-150";
+
+    if (!f.available) {
+      return (
+        <li key={f.slug} className="shrink-0">
+          <span
+            className={`${base} opacity-40 cursor-not-allowed text-[var(--color-fg-muted)]`}
+            aria-disabled="true"
+          >
+            <FeatureGlyph slug={f.slug} size={14} />
+            <span>{label}</span>
+          </span>
+        </li>
+      );
+    }
+    return (
+      <li key={f.slug} className="shrink-0">
+        <Link
+          href={f.href}
+          aria-current={isActive ? "page" : undefined}
+          className={`${base} ${
+            isActive
+              ? "bg-[var(--color-accent-subtle)] text-[var(--color-accent)] font-semibold"
+              : "text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+          }`}
+        >
+          <FeatureGlyph slug={f.slug} size={14} />
+          <span>{label}</span>
+        </Link>
+      </li>
+    );
+  };
+
   return (
     <div
       className="sticky top-14 z-40 border-b border-[var(--color-border)]"
       style={{ background: "rgba(237, 228, 208, 0.88)", backdropFilter: "blur(16px) saturate(140%)" }}
     >
-      <ScrollableRow className="mx-auto max-w-7xl" innerClassName="px-5 sm:px-8" fadeColor="rgb(237, 228, 208)">
-        {/* On phones/tablets (touch) the row stays a single swipeable line with
-            scroll affordances. On desktop (≥lg, where horizontal scrolling is
-            unnatural) it wraps to as many rows as needed so no sub-feature is
-            ever hidden off-screen — important for traditions with ~17 features. */}
-        <ul className="flex flex-nowrap lg:flex-wrap gap-x-5 sm:gap-x-7 gap-y-3 py-2.5" role="tablist">
-          {cfg.features.map((f) => {
-            const isActive = pathname === f.href;
-            const label = readLabel(f.labelKey, f.slug);
-
-            if (!f.available) {
-              return (
-                <li key={f.slug} className="shrink-0">
-                  <span
-                    className="inline-flex items-center gap-1.5 py-1 text-[12.5px] opacity-40 cursor-not-allowed text-[var(--color-fg-muted)]"
-                    aria-disabled="true"
-                  >
-                    <FeatureGlyph slug={f.slug} size={14} />
-                    <span>{label}</span>
-                  </span>
-                </li>
-              );
-            }
-            return (
-              <li key={f.slug} className="shrink-0">
-                <Link
-                  href={f.href}
-                  className={`relative inline-flex items-center gap-1.5 py-1 text-[12.5px] transition-colors duration-150 ${
-                    isActive
-                      ? "text-[var(--color-fg)] font-semibold"
-                      : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
-                  }`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <FeatureGlyph slug={f.slug} size={14} />
-                  <span>{label}</span>
-                  {isActive && (
-                    <span
-                      aria-hidden
-                      className="absolute left-0 right-0 -bottom-[11px] h-[2px] bg-[var(--color-accent)] rounded-full"
-                    />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
+      {/* Wide desktop (≥xl): balanced rows, evenly distributed, nothing hidden. */}
+      <nav
+        aria-label={readLabel(cfg.labelKey, cfg.slug)}
+        className="hidden xl:block mx-auto max-w-7xl px-8"
+      >
+        <ul
+          className={`flex items-center pt-2 ${
+            twoRows ? "justify-between gap-x-1 pb-1" : "justify-start gap-x-6 pb-2"
+          }`}
+        >
+          {row1.map(renderItem)}
         </ul>
-      </ScrollableRow>
+        {row2.length > 0 && (
+          <ul className="flex items-center justify-between gap-x-1 pt-1 pb-2">
+            {row2.map(renderItem)}
+          </ul>
+        )}
+      </nav>
+
+      {/* Phones, tablets and narrow laptops (<xl): single swipeable row with
+          scroll affordances, since 9 wide labels can't fit edge-to-edge. */}
+      <div className="xl:hidden">
+        <ScrollableRow
+          className="mx-auto max-w-7xl"
+          innerClassName="px-5 sm:px-8"
+          fadeColor="rgb(237, 228, 208)"
+        >
+          <nav aria-label={readLabel(cfg.labelKey, cfg.slug)}>
+            <ul className="flex gap-x-4 sm:gap-x-5 py-2.5">{feats.map(renderItem)}</ul>
+          </nav>
+        </ScrollableRow>
+      </div>
     </div>
   );
 }
