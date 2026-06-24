@@ -65,11 +65,11 @@ export default function MedicalBodyZodiacPage() {
             >
               <div className="flex items-baseline justify-between">
                 <span className="font-semibold text-surface-950">{row.sign}</span>
-                <span className="text-xs text-[rgba(12,8,5,0.55)]">{row.element}</span>
+                <span className="text-xs text-[rgba(12,8,5,0.72)]">{row.element}</span>
               </div>
               <div className="mt-1 text-emphasis">{row.bodyParts.join(', ')}</div>
               {row.guidance && (
-                <div className="mt-1 text-xs text-[rgba(12,8,5,0.55)]">{row.guidance}</div>
+                <div className="mt-1 text-xs text-[rgba(12,8,5,0.72)]">{row.guidance}</div>
               )}
             </li>
           ))}

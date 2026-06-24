@@ -136,7 +136,7 @@ export default async function KundliCityPage({ params }: RouteProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li><Link href="/" className="hover:text-surface-950">Home</Link></li>
             <li>›</li>
@@ -245,17 +245,17 @@ export default async function KundliCityPage({ params }: RouteProps) {
               className="block p-3 rounded-lg bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] transition-colors"
             >
               <p className="text-sm font-medium text-surface-950">Today's Panchang for {city.name}</p>
-              <p className="text-xs text-[rgba(12,8,5,0.55)] mt-1">Tithi, nakshatra, sunrise, Rahu Kaal.</p>
+              <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">Tithi, nakshatra, sunrise, Rahu Kaal.</p>
             </Link>
             <Link
               href="/matching"
               className="block p-3 rounded-lg bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] transition-colors"
             >
               <p className="text-sm font-medium text-surface-950">Kundli Matching (Ashtakoota)</p>
-              <p className="text-xs text-[rgba(12,8,5,0.55)] mt-1">36-guna milan score and dosha check.</p>
+              <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">36-guna milan score and dosha check.</p>
             </Link>
           </div>
-          <p className="text-xs text-[rgba(12,8,5,0.46)] mt-5">
+          <p className="text-xs text-[rgba(12,8,5,0.66)] mt-5">
             Born somewhere else?{' '}
             <Link href="/kundli/cities" className="text-primary-300 hover:text-primary-300">
               Browse all {SEO_CITIES.length} cities →

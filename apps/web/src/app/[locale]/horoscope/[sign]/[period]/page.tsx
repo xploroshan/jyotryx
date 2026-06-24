@@ -88,7 +88,7 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li><Link href={`/${locale}`} className="hover:text-surface-950">myastro360</Link></li>
             <li>›</li>
@@ -139,7 +139,7 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
           {horoscope?.forecast ? (
             <p className="text-sm text-emphasis leading-relaxed">{horoscope.forecast}</p>
           ) : (
-            <p className="text-sm text-[rgba(12,8,5,0.55)]">{t.horoscope.retry}</p>
+            <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.horoscope.retry}</p>
           )}
         </section>
       </div>

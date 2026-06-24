@@ -23,14 +23,14 @@ export default function GlobalError({
           </svg>
         </div>
         <h2 className="text-lg font-semibold text-surface-950 mb-2">Something went wrong</h2>
-        <p className="text-sm text-[rgba(12,8,5,0.46)] mb-3">An unexpected error occurred. Please try again.</p>
+        <p className="text-sm text-[rgba(12,8,5,0.66)] mb-3">An unexpected error occurred. Please try again.</p>
         {error?.message && (
-          <p className="text-[11px] text-[rgba(12,8,5,0.40)] font-mono break-words mb-4 px-3 py-2 rounded bg-[rgba(255,252,245,0.78)]">
+          <p className="text-[11px] text-[rgba(12,8,5,0.66)] font-mono break-words mb-4 px-3 py-2 rounded bg-[rgba(255,252,245,0.78)]">
             {error.message}
           </p>
         )}
         {error?.digest && (
-          <p className="text-[10px] text-[rgba(12,8,5,0.32)] mb-4">Ref: {error.digest}</p>
+          <p className="text-[10px] text-[rgba(12,8,5,0.66)] mb-4">Ref: {error.digest}</p>
         )}
         <button onClick={reset} className="px-6 py-2.5 rounded-lg btn-primary text-sm">
           Try Again

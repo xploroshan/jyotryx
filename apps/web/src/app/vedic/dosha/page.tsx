@@ -104,17 +104,17 @@ export default function VedicDoshaPage() {
       />
 
       <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 fade-in-up">
-        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.46)]">
+        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.66)]">
           <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
             {traditionName}
           </Link>{' '}
-          <span className="text-[rgba(12,8,5,0.32)]">/</span>{' '}
+          <span className="text-[rgba(12,8,5,0.66)]">/</span>{' '}
           <span className="text-secondary">{featureName}</span>
         </nav>
 
       {!isAuthenticated && (
         <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center">
-          <p className="text-[rgba(12,8,5,0.55)] mb-5">{t.kundli.loginRequired}</p>
+          <p className="text-[rgba(12,8,5,0.72)] mb-5">{t.kundli.loginRequired}</p>
           <Link
             href="/auth?mode=login"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
@@ -126,7 +126,7 @@ export default function VedicDoshaPage() {
 
       {isAuthenticated && !hasBirthDetails && (
         <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center">
-          <p className="text-[rgba(12,8,5,0.55)] mb-5">{t.kundli.doshaComplete}</p>
+          <p className="text-[rgba(12,8,5,0.72)] mb-5">{t.kundli.doshaComplete}</p>
           <Link
             href="/profile"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
@@ -137,7 +137,7 @@ export default function VedicDoshaPage() {
       )}
 
       {isAuthenticated && hasBirthDetails && loading && (
-        <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center text-[rgba(12,8,5,0.46)] text-sm">
+        <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center text-[rgba(12,8,5,0.66)] text-sm">
           {t.common.loading}
         </div>
       )}
@@ -162,7 +162,7 @@ export default function VedicDoshaPage() {
                   {severityLabel(d)}
                 </span>
               </div>
-              <p className="text-sm text-[rgba(12,8,5,0.55)] leading-relaxed mb-4">
+              <p className="text-sm text-[rgba(12,8,5,0.72)] leading-relaxed mb-4">
                 {d.description}
               </p>
               {d.remedies && d.remedies.length > 0 && (

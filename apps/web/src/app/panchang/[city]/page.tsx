@@ -181,7 +181,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
         />
 
         {/* Breadcrumbs */}
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li>
               <Link href="/" className="hover:text-surface-950">Home</Link>
@@ -203,7 +203,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
           <h1 className="text-3xl font-bold text-gradient">
             Panchang for {city.name}, {city.state}
           </h1>
-          <p className="text-sm text-[rgba(12,8,5,0.55)] mt-2">{todayDisplay}</p>
+          <p className="text-sm text-[rgba(12,8,5,0.72)] mt-2">{todayDisplay}</p>
         </header>
 
         {panchang ? (
@@ -222,14 +222,14 @@ export default async function PanchangCityPage({ params }: RouteProps) {
               <Row label="Gulika Kaal"    value={panchang.gulikakaal}  tone="warning" />
               <Row label="Yamakantaka"    value={panchang.yamakantaka} tone="warning" />
             </dl>
-            <p className="text-xs text-[rgba(12,8,5,0.46)] mt-4">
+            <p className="text-xs text-[rgba(12,8,5,0.66)] mt-4">
               Computed from Swiss Ephemeris using {city.name}'s coordinates ({city.lat.toFixed(4)},{' '}
               {city.lng.toFixed(4)}). Reload this page for tomorrow's panchang — it auto-refreshes
               once per day.
             </p>
           </section>
         ) : (
-          <section className="surface-card p-6 mb-6 text-sm text-[rgba(12,8,5,0.55)]">
+          <section className="surface-card p-6 mb-6 text-sm text-[rgba(12,8,5,0.72)]">
             Panchang data is being calculated — please refresh in a moment.
           </section>
         )}
@@ -297,7 +297,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
               className="block p-3 rounded-lg bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] transition-colors"
             >
               <p className="text-sm font-medium text-surface-950">Free Kundli for {city.name}</p>
-              <p className="text-xs text-[rgba(12,8,5,0.55)] mt-1">
+              <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">
                 Full Vedic birth chart calculated from Swiss Ephemeris.
               </p>
             </Link>
@@ -306,13 +306,13 @@ export default async function PanchangCityPage({ params }: RouteProps) {
               className="block p-3 rounded-lg bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] transition-colors"
             >
               <p className="text-sm font-medium text-surface-950">Find an auspicious muhurat</p>
-              <p className="text-xs text-[rgba(12,8,5,0.55)] mt-1">
+              <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">
                 Wedding, griha-pravesh, vehicle, name-giving.
               </p>
             </Link>
           </div>
 
-          <p className="text-xs text-[rgba(12,8,5,0.46)] mt-5">
+          <p className="text-xs text-[rgba(12,8,5,0.66)] mt-5">
             Looking for another city?{' '}
             <Link href="/panchang/cities" className="text-primary-300 hover:text-primary-300">
               Browse all {SEO_CITIES.length} cities →
@@ -345,7 +345,7 @@ function Row({
   const v = value === undefined || value === '' ? '—' : String(value);
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-[rgba(12,8,5,0.06)] pb-1.5">
-      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.66)]">{label}</dt>
       <dd className={`text-sm ${tone === 'warning' ? 'text-amber-300' : 'text-surface-950'}`}>{v}</dd>
     </div>
   );

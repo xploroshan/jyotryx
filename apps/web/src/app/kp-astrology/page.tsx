@@ -38,7 +38,7 @@ export default function KPAstrologyPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-surface-950 mb-2">{t.kp.title}</h1>
-      <p className="text-[rgba(12,8,5,0.46)] mb-8">{t.kp.description}</p>
+      <p className="text-[rgba(12,8,5,0.66)] mb-8">{t.kp.description}</p>
 
       <div className="surface-card p-6 mb-6">
         <div className="mb-4">
@@ -67,7 +67,7 @@ export default function KPAstrologyPage() {
             <h3 className="text-lg font-semibold text-surface-950 mb-4">{t.kp.cuspTable}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-[rgba(12,8,5,0.46)] border-b border-[rgba(12,8,5,0.08)]">
+                <thead><tr className="text-[rgba(12,8,5,0.66)] border-b border-[rgba(12,8,5,0.08)]">
                   <th className="text-left py-2 px-2">{t.kp.cusp}</th><th className="text-left py-2 px-2">{t.kp.sign}</th><th className="text-left py-2 px-2">{t.kp.nakshatra}</th><th className="text-left py-2 px-2">{t.kp.starLord}</th><th className="text-left py-2 px-2">{t.kp.subLord}</th><th className="text-right py-2 px-2">{t.kp.longitude}</th>
                 </tr></thead>
                 <tbody>
@@ -90,7 +90,7 @@ export default function KPAstrologyPage() {
             <h3 className="text-lg font-semibold text-surface-950 mb-4">{t.kp.planetPositions}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-[rgba(12,8,5,0.46)] border-b border-[rgba(12,8,5,0.08)]">
+                <thead><tr className="text-[rgba(12,8,5,0.66)] border-b border-[rgba(12,8,5,0.08)]">
                   <th className="text-left py-2 px-2">{t.kp.planet}</th><th className="text-left py-2 px-2">{t.kp.sign}</th><th className="text-left py-2 px-2">{t.kp.nakshatra}</th><th className="text-left py-2 px-2">{t.kp.starLord}</th><th className="text-left py-2 px-2">{t.kp.subLord}</th><th className="text-right py-2 px-2">{t.kp.degree}</th>
                 </tr></thead>
                 <tbody>

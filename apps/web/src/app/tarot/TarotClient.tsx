@@ -75,7 +75,7 @@ export default function TarotPage() {
             className={`surface-card p-4 text-left transition-all ${spread === s.value ? "border-primary-500/50 bg-primary-600/10" : ""}`}
           >
             <div className="text-sm font-semibold text-surface-950">{s.label}</div>
-            <div className="text-xs text-[rgba(12,8,5,0.46)] mt-1">{s.description}</div>
+            <div className="text-xs text-[rgba(12,8,5,0.66)] mt-1">{s.description}</div>
             <div className="text-xs text-accent-400 mt-2">{s.credits} {s.credits > 1 ? t.tarot.credits : t.tarot.credit}</div>
           </button>
         ))}
@@ -110,7 +110,7 @@ export default function TarotPage() {
                 <div className={`text-sm font-semibold ${card.isReversed ? "text-red-300" : "text-surface-950"}`}>
                   {card.name}
                 </div>
-                <div className="text-xs text-[rgba(12,8,5,0.40)] mt-1">
+                <div className="text-xs text-[rgba(12,8,5,0.66)] mt-1">
                   {card.isReversed ? t.tarot.reversed : t.tarot.upright}
                 </div>
               </div>
@@ -125,13 +125,13 @@ export default function TarotPage() {
             {result.interpretation.cardInterpretations?.map((ci, i) => (
               <div key={i} className="mb-3 pl-4 border-l-2 border-primary-700/30">
                 <div className="text-sm font-medium text-accent-400">{ci.position}: {ci.card}</div>
-                <div className="text-xs text-[rgba(12,8,5,0.55)] mt-1">{ci.meaning}</div>
+                <div className="text-xs text-[rgba(12,8,5,0.72)] mt-1">{ci.meaning}</div>
               </div>
             ))}
 
             <div className="mt-4 pt-4 border-t border-[rgba(12,8,5,0.08)]">
-              <p className="text-sm text-[rgba(12,8,5,0.55)]"><span className="text-primary-400 font-medium">{t.tarot.advice}:</span> {result.interpretation.advice}</p>
-              <p className="text-sm text-[rgba(12,8,5,0.55)] mt-2"><span className="text-accent-400 font-medium">{t.tarot.spiritualGuidance}:</span> {result.interpretation.spiritualGuidance}</p>
+              <p className="text-sm text-[rgba(12,8,5,0.72)]"><span className="text-primary-400 font-medium">{t.tarot.advice}:</span> {result.interpretation.advice}</p>
+              <p className="text-sm text-[rgba(12,8,5,0.72)] mt-2"><span className="text-accent-400 font-medium">{t.tarot.spiritualGuidance}:</span> {result.interpretation.spiritualGuidance}</p>
             </div>
           </div>
         </div>

@@ -74,7 +74,7 @@ export default function WesternNatalPage() {
           {result && (
             <div className="mt-6 space-y-4">
               <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
-                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)]">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.66)]">
                   {fp.ascendant}
                 </div>
                 <div className="mt-1 text-surface-950 font-medium">
@@ -82,7 +82,7 @@ export default function WesternNatalPage() {
                 </div>
               </div>
               <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
-                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-3">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-3">
                   {fp.planets}
                 </div>
                 <ul className="space-y-2 text-sm text-emphasis">

@@ -91,7 +91,7 @@ export default function ChineseBaZiPage() {
                   const p = result.pillars[k];
                   return (
                     <div key={k} className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-3">
-                      <div className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)]">
+                      <div className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)]">
                         {pillarLabel[k]} {fp.pillarSuffix}
                       </div>
                       <div className="mt-1 text-surface-950 text-sm font-semibold">
@@ -105,7 +105,7 @@ export default function ChineseBaZiPage() {
                 })}
               </div>
               <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4">
-                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)]">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.66)]">
                   {fp.dayMaster}
                 </div>
                 <div className="mt-1 text-surface-950 font-medium">{result.dayMaster}</div>

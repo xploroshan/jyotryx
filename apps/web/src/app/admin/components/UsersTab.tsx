@@ -154,7 +154,7 @@ export function UsersTab({ token }: { token: string }) {
       {/* Search bar */}
       <div className="flex gap-4 mb-6">
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, email, or phone..."
-          className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 placeholder-ink-500/60 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20"
+          className="flex-1 max-w-md px-4 py-2.5 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 placeholder-ink-500/60 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30/50 focus:ring-1 focus:ring-primary-500/20"
           onKeyDown={(e) => { if (e.key === "Enter") { setUserPage(1); loadUsers(); } }} />
         <button onClick={() => { setUserPage(1); loadUsers(); }} className="px-5 py-2.5 rounded-xl surface-card text-sm text-primary-400 hover:bg-black/10">Search</button>
       </div>

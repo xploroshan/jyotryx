@@ -86,7 +86,7 @@ export default function WesternSynastryPage() {
         <div className="glass rounded-2xl p-5 sm:p-6 mb-4">
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
+              <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-2">
                 {fp.partner1}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -107,7 +107,7 @@ export default function WesternSynastryPage() {
               </div>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
+              <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-2">
                 {fp.partner2}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -144,12 +144,12 @@ export default function WesternSynastryPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass-strong rounded-2xl p-6 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
               {fp.compatibility}
             </p>
             <p className="text-5xl font-bold text-surface-950 mt-2">
               {result.compatibility.score}
-              <span className="text-2xl text-[rgba(12,8,5,0.55)]">%</span>
+              <span className="text-2xl text-[rgba(12,8,5,0.72)]">%</span>
             </p>
             <p className="text-sm text-emphasis mt-3">{result.compatibility.summary}</p>
             <div className="flex items-center justify-center gap-6 mt-4 text-xs">
@@ -165,7 +165,7 @@ export default function WesternSynastryPage() {
           <div className="grid grid-cols-2 gap-3">
             {([result.partner1, result.partner2] as const).map((p, i) => (
               <div key={i} className="glass rounded-2xl p-4">
-                <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
+                <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-2">
                   {fp.partnerPrefix} {i + 1}
                 </p>
                 <div className="space-y-1 text-sm">
@@ -190,7 +190,7 @@ export default function WesternSynastryPage() {
 
           {result.aspects.length > 0 && (
             <div className="glass rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-3">
                 {fp.crossAspects}
               </p>
               <ul className="divide-y divide-white/[0.06]">
@@ -201,7 +201,7 @@ export default function WesternSynastryPage() {
                   >
                     <div>
                       <span className="text-emphasis">{a.a}</span>
-                      <span className="text-[rgba(12,8,5,0.46)] mx-2">·</span>
+                      <span className="text-[rgba(12,8,5,0.66)] mx-2">·</span>
                       <span className="text-emphasis">{a.b}</span>
                     </div>
                     <span

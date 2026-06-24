@@ -298,7 +298,7 @@ export default function KundliPage() {
                     aria-describedby="kundli-pob-hint"
                     className="w-full px-4 py-3 rounded-xl surface-input"
                   />
-                  <p id="kundli-pob-hint" className="text-xs text-[rgba(12,8,5,0.55)] mt-1">{t.kundli.birthCityNote}</p>
+                  <p id="kundli-pob-hint" className="text-xs text-[rgba(12,8,5,0.72)] mt-1">{t.kundli.birthCityNote}</p>
                 </div>
                 {missingFields.length > 0 && (
                   <p id="kundli-generate-hint" className="text-[11px] text-secondary -mt-1">
@@ -327,7 +327,7 @@ export default function KundliPage() {
                     juice to the static landing pages and gives users an
                     alternate entry point if they're browsing for a
                     specific city's content rather than filling the form. */}
-                <p className="mt-3 text-xs text-[rgba(12,8,5,0.46)] text-center">
+                <p className="mt-3 text-xs text-[rgba(12,8,5,0.66)] text-center">
                   Or browse{' '}
                   <Link href="/kundli/cities" className="text-primary-300 hover:text-primary-300">
                     free Kundli pages by city
@@ -346,10 +346,10 @@ export default function KundliPage() {
             <div className="surface-card p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-surface-950">{form.name}</h2>
-                <p className="text-sm text-[rgba(12,8,5,0.46)]">
+                <p className="text-sm text-[rgba(12,8,5,0.66)]">
                   {form.dob} at {form.time} &bull; {form.place}
                 </p>
-                <p className="text-xs text-[rgba(12,8,5,0.40)] mt-1">
+                <p className="text-xs text-[rgba(12,8,5,0.66)] mt-1">
                   {t.kundli.ascendant}: <span className="text-primary-400">{kundli.ascendant}</span> &bull;
                   {t.kundli.moonSign}: <span className="text-primary-400">{kundli.moonSign}</span> &bull;
                   {t.kundli.sunSign}: <span className="text-primary-400">{kundli.sunSign}</span> &bull;
@@ -434,7 +434,7 @@ export default function KundliPage() {
                   />
                 )}
 
-                <p className="text-xs text-[rgba(12,8,5,0.40)] mt-4 text-center">
+                <p className="text-xs text-[rgba(12,8,5,0.66)] mt-4 text-center">
                   {chartStyle === "north"
                     ? t.kundli.chartNote
                     : "South Indian style birth chart — signs are fixed, the ascendant marks the 1st house."}
@@ -453,8 +453,8 @@ export default function KundliPage() {
                           <span className="font-medium text-surface-950 min-w-[5.5rem]">{p.planet}</span>
                           <span className="text-sm text-secondary flex-1">
                             {p.sign} {Math.floor(p.degree)}&deg;
-                            <span className="text-[rgba(12,8,5,0.40)]"> &bull; {t.kundli.houseLabel} {p.house}</span>
-                            {p.status ? <span className="text-[rgba(12,8,5,0.40)]"> &bull; {p.status}</span> : null}
+                            <span className="text-[rgba(12,8,5,0.66)]"> &bull; {t.kundli.houseLabel} {p.house}</span>
+                            {p.status ? <span className="text-[rgba(12,8,5,0.66)]"> &bull; {p.status}</span> : null}
                           </span>
                           {p.isRetrograde && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 whitespace-nowrap">
@@ -480,7 +480,7 @@ export default function KundliPage() {
                     chart ? (
                       <div key={key} className="surface-card p-6">
                         <h3 className="text-base font-bold text-gradient text-center">{title}</h3>
-                        <p className="text-xs text-[rgba(12,8,5,0.40)] text-center mb-4">{subtitle}</p>
+                        <p className="text-xs text-[rgba(12,8,5,0.66)] text-center mb-4">{subtitle}</p>
                         {chartStyle === "north" ? (
                           <NorthIndianChart
                             houses={chart.houses}
@@ -510,14 +510,14 @@ export default function KundliPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b divider">
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.planet}</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.sign}</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.house}</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.degree}</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.nakshatra}</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">Avastha</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">Combust</th>
-                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.46)] uppercase">{t.kundli.status}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">{t.kundli.planet}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">{t.kundli.sign}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">{t.kundli.house}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">{t.kundli.degree}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">{t.kundli.nakshatra}</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">Avastha</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">Combust</th>
+                        <th className="text-left px-6 py-4 text-xs font-medium text-[rgba(12,8,5,0.66)] uppercase">{t.kundli.status}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -526,18 +526,18 @@ export default function KundliPage() {
                           <td className="px-6 py-3 font-medium text-surface-950">{p.planet}</td>
                           <td className="px-6 py-3 text-secondary">{p.sign}</td>
                           <td className="px-6 py-3 text-secondary">{p.house}</td>
-                          <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">
+                          <td className="px-6 py-3 text-[rgba(12,8,5,0.66)]">
                             {p.degree}&deg;
                             {p.isRetrograde && (
                               <span className="ml-1.5 text-[10px] font-semibold text-red-500" title={t.kundli.retrograde}>(R)</span>
                             )}
                           </td>
-                          <td className="px-6 py-3 text-[rgba(12,8,5,0.46)]">{p.nakshatra}</td>
+                          <td className="px-6 py-3 text-[rgba(12,8,5,0.66)]">{p.nakshatra}</td>
                           <td className="px-6 py-3 text-secondary">{p.avastha || "—"}</td>
                           <td className="px-6 py-3">
                             {p.isCombust
                               ? <span className="text-xs font-medium text-red-500">Yes</span>
-                              : <span className="text-[rgba(12,8,5,0.40)]">No</span>}
+                              : <span className="text-[rgba(12,8,5,0.66)]">No</span>}
                           </td>
                           <td className="px-6 py-3 text-secondary">{p.status || "—"}</td>
                         </tr>
@@ -581,7 +581,7 @@ export default function KundliPage() {
                   <div key={di} className="mb-6">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-sm font-semibold text-surface-950">{t.kundli.mahadasha}: {d.planet}</span>
-                      <span className="text-xs text-[rgba(12,8,5,0.40)]">{d.startDate} to {d.endDate}</span>
+                      <span className="text-xs text-[rgba(12,8,5,0.66)]">{d.startDate} to {d.endDate}</span>
                     </div>
                     {d.subPeriods && d.subPeriods.length > 0 && (
                       <div className="space-y-2 ml-4">
@@ -602,11 +602,11 @@ export default function KundliPage() {
                                   : "bg-[rgba(255,252,245,0.78)]"
                               }`}
                             >
-                              <span className={`text-sm ${isActive ? "text-surface-950 font-medium" : "text-[rgba(12,8,5,0.46)]"}`}>
+                              <span className={`text-sm ${isActive ? "text-surface-950 font-medium" : "text-[rgba(12,8,5,0.66)]"}`}>
                                 {d.planet}-{s.planet}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-[rgba(12,8,5,0.40)]">{s.startDate} - {s.endDate}</span>
+                                <span className="text-xs text-[rgba(12,8,5,0.66)]">{s.startDate} - {s.endDate}</span>
                                 {isActive && (
                                   <span className="text-xs px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300">{t.kundli.current}</span>
                                 )}
@@ -640,7 +640,7 @@ export default function KundliPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="surface-card p-8 text-center text-[rgba(12,8,5,0.40)]">
+                  <div className="surface-card p-8 text-center text-[rgba(12,8,5,0.66)]">
                     {t.kundli.noYogas}
                   </div>
                 )}
@@ -674,7 +674,7 @@ export default function KundliPage() {
                       <p className="text-sm text-secondary mb-2">{d.description}</p>
                       {d.remedies && d.remedies.length > 0 && (
                         <div className="p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
-                          <p className="text-xs text-[rgba(12,8,5,0.46)]">
+                          <p className="text-xs text-[rgba(12,8,5,0.66)]">
                             <span className="text-primary-400 font-medium">{t.kundli.remedies}:</span>{" "}
                             {d.remedies.join(". ")}
                           </p>
@@ -684,8 +684,8 @@ export default function KundliPage() {
                   ))
                 ) : (
                   <div className="surface-card p-8 text-center">
-                    <p className="text-[rgba(12,8,5,0.40)]">{t.kundli.doshaNote}</p>
-                    <p className="text-xs text-[rgba(12,8,5,0.32)] mt-2">{t.kundli.doshaComplete}</p>
+                    <p className="text-[rgba(12,8,5,0.66)]">{t.kundli.doshaNote}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.66)] mt-2">{t.kundli.doshaComplete}</p>
                   </div>
                 )}
               </div>

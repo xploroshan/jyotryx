@@ -175,7 +175,7 @@ export function AnalyticsTab({ token }: { token: string }) {
             <select
               value={llmCostDays}
               onChange={(e) => setLlmCostDays(Number(e.target.value))}
-              className="px-3 py-1.5 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-xs focus:outline-none focus:border-primary-500"
+              className="px-3 py-1.5 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-xs focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30"
             >
               <option value={7}>Last 7 days</option>
               <option value={30}>Last 30 days</option>

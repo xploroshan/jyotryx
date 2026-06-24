@@ -86,13 +86,13 @@ export default function HoraryAskPage() {
           {result && (
             <div className="mt-6 space-y-3">
               <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4 text-sm text-emphasis">
-                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-1">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-1">
                   {fp.question}
                 </div>
                 <div>{result.question}</div>
               </div>
               <div className="rounded-xl border divider bg-[rgba(255,252,245,0.78)] p-4 text-sm text-emphasis">
-                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-1">
+                <div className="text-xs uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-1">
                   {fp.chart}
                 </div>
                 <div>
@@ -109,7 +109,7 @@ export default function HoraryAskPage() {
               <div className="text-right">
                 <Link
                   href="/horary/history"
-                  className="text-xs text-[rgba(12,8,5,0.55)] hover:text-surface-950 transition"
+                  className="text-xs text-[rgba(12,8,5,0.72)] hover:text-surface-950 transition"
                 >
                   {fp.viewHistory}
                 </Link>

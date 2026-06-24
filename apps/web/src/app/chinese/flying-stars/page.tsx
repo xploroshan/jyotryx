@@ -121,7 +121,7 @@ export default function ChineseFlyingStarsPage() {
                       STAR_BG[star] ?? 'from-white/10 to-white/[0.02] border-[rgba(12,8,5,0.10)]'
                     } p-3 flex flex-col items-center justify-center relative overflow-hidden`}
                   >
-                    <div className="text-[9px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">
+                    <div className="text-[9px] uppercase tracking-wide text-[rgba(12,8,5,0.66)]">
                       {palaceLabels[r][c]}
                     </div>
                     <div className="text-4xl font-bold text-surface-950 leading-none mt-1">
@@ -134,7 +134,7 @@ export default function ChineseFlyingStarsPage() {
           </div>
 
           <div className="glass-strong rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
               {fp.centerStarPrefix} {result.centerStar}
             </p>
             <p className="text-sm text-surface-950 mt-2">{result.centerMeaning}</p>
@@ -142,7 +142,7 @@ export default function ChineseFlyingStarsPage() {
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-3">
               {fp.starMeanings}
             </p>
             <ul className="space-y-1.5 text-xs">

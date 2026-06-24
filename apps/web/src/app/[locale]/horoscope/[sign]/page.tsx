@@ -104,7 +104,7 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li><Link href={`/${locale}`} className="hover:text-surface-950">myastro360</Link></li>
             <li>›</li>
@@ -138,7 +138,7 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
               </dl>
             </>
           ) : (
-            <p className="text-sm text-[rgba(12,8,5,0.55)]">{t.horoscope.retry}</p>
+            <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.horoscope.retry}</p>
           )}
         </section>
 
@@ -170,7 +170,7 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.66)]">{label}</dt>
       <dd className="text-sm text-surface-950 mt-0.5">{value}</dd>
     </div>
   );

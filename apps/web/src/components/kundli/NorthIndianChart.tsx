@@ -139,7 +139,7 @@ export function NorthIndianChart({
                   fontSize="11"
                   fontWeight="600"
                   fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-                  fill={p.retro ? "rgba(220,38,38,0.92)" : "rgba(12,8,5,0.82)"}
+                  fill={p.retro ? "var(--color-danger)" : "rgba(12,8,5,0.82)"}
                 >
                   {p.label}{p.retro ? " (R)" : ""}
                 </text>

@@ -282,7 +282,7 @@ export default function ProfilePage() {
   };
 
   const roleBadge = (role: string) =>
-    role === "ADMIN" ? "bg-red-500/20 text-red-400" : role === "PREMIUM" ? "bg-purple-500/20 text-purple-400" : "bg-[rgba(255,252,245,0.78)] text-[rgba(12,8,5,0.46)]";
+    role === "ADMIN" ? "bg-red-500/20 text-red-400" : role === "PREMIUM" ? "bg-purple-500/20 text-purple-400" : "bg-[rgba(255,252,245,0.78)] text-[rgba(12,8,5,0.66)]";
 
   const passwordStrength = (pw: string) => {
     let score = 0;
@@ -377,10 +377,10 @@ export default function ProfilePage() {
               </div>
               <div className="text-center sm:text-left flex-1">
                 <h2 className="text-xl font-bold text-surface-950">{profile.name}</h2>
-                <p className="text-sm text-[rgba(12,8,5,0.46)]">{profile.email}</p>
+                <p className="text-sm text-[rgba(12,8,5,0.66)]">{profile.email}</p>
                 <div className="flex items-center gap-2 mt-1 justify-center sm:justify-start">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleBadge(profile.role)}`}>{profile.role}</span>
-                  <span className="text-xs text-[rgba(12,8,5,0.40)]">{t.profile.memberSince} {new Date(profile.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-[rgba(12,8,5,0.66)]">{t.profile.memberSince} {new Date(profile.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
               <button onClick={handleLogout} className="focus-ring px-4 py-2 rounded-xl btn-secondary text-sm text-red-400 hover:bg-red-500/10 transition-all">
@@ -393,7 +393,7 @@ export default function ProfilePage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-bold text-surface-950 mb-1">{t.profile.language}</h3>
-                  <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.profile.languageDesc}</p>
+                  <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.profile.languageDesc}</p>
                 </div>
                 <LanguageSwitcher />
               </div>
@@ -406,7 +406,7 @@ export default function ProfilePage() {
                 { id: "security" as const, label: t.profile.tabSecurity },
               ]).map((tab) => (
                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setError(""); setSuccess(""); }}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? "btn-primary" : "text-[rgba(12,8,5,0.46)] hover:text-surface-950"}`}>
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? "btn-primary" : "text-[rgba(12,8,5,0.66)] hover:text-surface-950"}`}>
                   {tab.label}
                 </button>
               ))}
@@ -421,7 +421,7 @@ export default function ProfilePage() {
                     <label htmlFor="profile-name" className="block text-xs font-medium text-emphasis mb-2">{t.profile.name}</label>
                     <input id="profile-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
-                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.55)]">
+                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
                       {t.profile.nameHint}
                     </p>
                   </div>
@@ -429,7 +429,7 @@ export default function ProfilePage() {
                     <label htmlFor="profile-nickname" className="block text-xs font-medium text-emphasis mb-2">{t.profile.nickname}</label>
                     <input id="profile-nickname" type="text" autoComplete="nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.profile.nicknamePlaceholder}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
-                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.55)]">
+                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
                       {t.profile.nicknameHint}
                     </p>
                   </div>
@@ -459,7 +459,7 @@ export default function ProfilePage() {
                     </label>
                     <input id="profile-pob" type="text" required value={pob} onChange={(e) => setPob(e.target.value)} placeholder={t.profile.pobPlaceholderEg}
                       className="w-full px-4 py-3 rounded-xl surface-input" />
-                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.55)]">
+                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
                       City where you were born — used for precise latitude/longitude in chart calculations.
                     </p>
                   </div>
@@ -505,7 +505,7 @@ export default function ProfilePage() {
                         {t.traditions.next || "Next"}
                       </button>
                       {(!dob || !tob || !pob.trim() || !gender) && (
-                        <p id="profile-next-hint" className="mt-2 text-[11px] text-[rgba(12,8,5,0.55)]">
+                        <p id="profile-next-hint" className="mt-2 text-[11px] text-[rgba(12,8,5,0.72)]">
                           Fill in date, time and place of birth plus gender to continue.
                         </p>
                       )}
@@ -526,7 +526,7 @@ export default function ProfilePage() {
                 {(profile?.profileComplete || !completeMode) && (
                   <div className="mt-8 pt-8 border-t border-[rgba(12,8,5,0.08)]">
                     <h3 className="text-lg font-bold text-surface-950 mb-2">{t.traditions.title}</h3>
-                    <p className="text-sm text-[rgba(12,8,5,0.46)] mb-5">{t.traditions.description}</p>
+                    <p className="text-sm text-[rgba(12,8,5,0.66)] mb-5">{t.traditions.description}</p>
                     <AstrologyTraditionSelector
                       value={selectedTraditions}
                       onChange={setSelectedTraditions}
@@ -537,7 +537,7 @@ export default function ProfilePage() {
                         <h4 className="text-sm font-semibold text-surface-950 mb-1">
                           {(t as any).traditionsUi?.primaryLabel || "Primary tradition"}
                         </h4>
-                        <p className="text-xs text-[rgba(12,8,5,0.46)] mb-3">
+                        <p className="text-xs text-[rgba(12,8,5,0.66)] mb-3">
                           {(t as any).traditionsUi?.primaryHint ||
                             "Your dashboard and default views focus on this tradition."}
                         </p>
@@ -591,7 +591,7 @@ export default function ProfilePage() {
                   </button>
                   <div>
                     <h3 className="text-lg font-bold text-surface-950">{t.traditions.title}</h3>
-                    <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.traditions.description}</p>
+                    <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.traditions.description}</p>
                   </div>
                 </div>
 
@@ -631,7 +631,7 @@ export default function ProfilePage() {
                   <h3 className="text-lg font-bold text-surface-950 mb-2">
                     {hasPassword ? t.profile.changePassword : t.profile.setPassword}
                   </h3>
-                  <p className="text-sm text-[rgba(12,8,5,0.46)] mb-6">
+                  <p className="text-sm text-[rgba(12,8,5,0.66)] mb-6">
                     {hasPassword ? t.profile.changePasswordDesc : t.profile.setPasswordDesc}
                   </p>
 
@@ -666,7 +666,7 @@ export default function ProfilePage() {
                           {showNewPw ? t.profile.hide : t.profile.show}
                         </button>
                       </div>
-                      <p id="profile-new-password-rules" className="mt-1.5 text-[11px] text-[rgba(12,8,5,0.55)] leading-relaxed">
+                      <p id="profile-new-password-rules" className="mt-1.5 text-[11px] text-[rgba(12,8,5,0.72)] leading-relaxed">
                         At least 8 characters. Stronger: mix upper + lower case, a number, and a symbol.
                       </p>
                       {newPassword.length > 0 && (
@@ -709,7 +709,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
                       <div>
                         <p className="text-sm text-surface-950">{t.profile.passwordStatus}</p>
-                        <p className="text-xs text-[rgba(12,8,5,0.40)]">{t.profile.authMethod}</p>
+                        <p className="text-xs text-[rgba(12,8,5,0.66)]">{t.profile.authMethod}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${hasPassword ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
                         {hasPassword ? t.profile.passwordSet : t.profile.passwordNotSet}
@@ -718,25 +718,25 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
                       <div>
                         <p className="text-sm text-surface-950">{t.profile.emailField}</p>
-                        <p className="text-xs text-[rgba(12,8,5,0.40)]">{profile.email}</p>
+                        <p className="text-xs text-[rgba(12,8,5,0.66)]">{profile.email}</p>
                       </div>
                       <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">{t.profile.verified}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
                       <div>
                         <p className="text-sm text-surface-950">{t.profile.phoneField}</p>
-                        <p className="text-xs text-[rgba(12,8,5,0.40)]">{profile.phone || t.profile.notAdded}</p>
+                        <p className="text-xs text-[rgba(12,8,5,0.66)]">{profile.phone || t.profile.notAdded}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${profile.phone ? "bg-emerald-500/20 text-emerald-400" : "bg-[rgba(255,252,245,0.78)] text-[rgba(12,8,5,0.40)]"}`}>
+                      <span className={`text-xs px-2 py-1 rounded-full ${profile.phone ? "bg-emerald-500/20 text-emerald-400" : "bg-[rgba(255,252,245,0.78)] text-[rgba(12,8,5,0.66)]"}`}>
                         {profile.phone ? t.profile.linked : t.profile.notLinked}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
                       <div>
                         <p className="text-sm text-surface-950">{t.profile.twoFactorAuth}</p>
-                        <p className="text-xs text-[rgba(12,8,5,0.40)]">{t.profile.extraSecurityLayer}</p>
+                        <p className="text-xs text-[rgba(12,8,5,0.66)]">{t.profile.extraSecurityLayer}</p>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-[rgba(255,252,245,0.78)] text-[rgba(12,8,5,0.40)]">{t.profile.comingSoon}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-[rgba(255,252,245,0.78)] text-[rgba(12,8,5,0.66)]">{t.profile.comingSoon}</span>
                     </div>
                   </div>
                 </div>

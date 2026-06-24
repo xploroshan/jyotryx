@@ -115,7 +115,7 @@ export default function CosmicCalendarPage() {
         {/* ── Controls ── */}
         <div className="surface-card p-5 sm:p-6 mb-6 grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="cc-activity" className="block text-sm font-medium text-[rgba(12,8,5,0.55)] mb-1.5">
+            <label htmlFor="cc-activity" className="block text-sm font-medium text-[rgba(12,8,5,0.72)] mb-1.5">
               {t.cosmicCalendar.occasionLabel}
             </label>
             <select
@@ -132,7 +132,7 @@ export default function CosmicCalendarPage() {
             </select>
           </div>
           <div>
-            <label htmlFor="cc-city" className="block text-sm font-medium text-[rgba(12,8,5,0.55)] mb-1.5">
+            <label htmlFor="cc-city" className="block text-sm font-medium text-[rgba(12,8,5,0.72)] mb-1.5">
               {t.cosmicCalendar.locationLabel}
             </label>
             <select
@@ -194,7 +194,7 @@ export default function CosmicCalendarPage() {
             {/* Weekday headers */}
             <div className="grid grid-cols-7 gap-1.5 mb-1.5">
               {weekdayLabels.map((w, i) => (
-                <div key={i} className="text-center text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.45)] py-1">
+                <div key={i} className="text-center text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.66)] py-1">
                   {w}
                 </div>
               ))}
@@ -229,7 +229,7 @@ export default function CosmicCalendarPage() {
             {/* Legend */}
             <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 justify-center">
               {REC_ORDER.map((r) => (
-                <span key={r} className="inline-flex items-center gap-1.5 text-[11px] text-[rgba(12,8,5,0.55)]">
+                <span key={r} className="inline-flex items-center gap-1.5 text-[11px] text-[rgba(12,8,5,0.72)]">
                   <span className={`inline-block h-3 w-3 rounded ${REC_CELL[r].split(" ")[0]}`} aria-hidden />
                   {t.decisionRoom.recommendation[r]}
                 </span>
@@ -278,7 +278,7 @@ export default function CosmicCalendarPage() {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-[rgba(255,252,245,0.78)] px-4 py-3 border border-[rgba(12,8,5,0.06)]">
-      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-0.5">{label}</p>
+      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-0.5">{label}</p>
       <p className="text-sm font-semibold text-surface-950">{value}</p>
     </div>
   );

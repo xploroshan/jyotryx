@@ -107,23 +107,23 @@ export default function HellenisticNatalPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.66)]">
                 {fp.ascendant}
               </p>
               <p className="text-lg font-semibold text-surface-950 mt-1">{result.ascendant}</p>
             </div>
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{fp.sun}</p>
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.66)]">{fp.sun}</p>
               <p className="text-lg font-semibold text-surface-950 mt-1">{result.sunSign}</p>
             </div>
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{fp.moon}</p>
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.66)]">{fp.moon}</p>
               <p className="text-lg font-semibold text-surface-950 mt-1">{result.moonSign}</p>
             </div>
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.66)] mb-3">
               {fp.planets}
             </p>
             <ul className="divide-y divide-white/[0.06]">
@@ -150,7 +150,7 @@ export default function HellenisticNatalPage() {
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.66)] mb-3">
               {fp.houses}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -159,7 +159,7 @@ export default function HellenisticNatalPage() {
                   key={h.house}
                   className="rounded-xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)] px-3 py-2"
                 >
-                  <div className="flex items-center justify-between text-xs text-[rgba(12,8,5,0.55)]">
+                  <div className="flex items-center justify-between text-xs text-[rgba(12,8,5,0.72)]">
                     <span>{fp.housePrefix} {h.house}</span>
                     <span>{h.sign}</span>
                   </div>

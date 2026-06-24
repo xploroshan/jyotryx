@@ -39,18 +39,18 @@ export default function SharedMatchView({ data }: { data: SharedMatchPayload }) 
       <div className="surface-card p-8 text-center">
         <div className="grid sm:grid-cols-3 gap-6">
           <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
-            <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.matching.ashtakootaScore}</p>
+            <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.matching.ashtakootaScore}</p>
             <p className={`text-3xl font-bold ${scoreColor(pct)}`}>
               {data.totalScore}
-              <span className="text-lg text-[rgba(12,8,5,0.40)]">/{data.maxScore}</span>
+              <span className="text-lg text-[rgba(12,8,5,0.66)]">/{data.maxScore}</span>
             </p>
           </div>
           <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
-            <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.matching.compatibility}</p>
+            <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.matching.compatibility}</p>
             <p className={`text-3xl font-bold ${scoreColor(pct)}`}>{pct}%</p>
           </div>
           <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
-            <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.matching.verdict}</p>
+            <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.matching.verdict}</p>
             <p className="text-2xl font-bold text-emerald-400">{data.compatibility}</p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function SharedMatchView({ data }: { data: SharedMatchPayload }) 
               key={i}
               className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)] flex items-center justify-between"
             >
-              <span className="text-sm text-[rgba(12,8,5,0.46)]">
+              <span className="text-sm text-[rgba(12,8,5,0.66)]">
                 {p.name} - {t.matching.manglik}
               </span>
               <span className={`text-sm font-semibold ${p.manglik ? "text-red-400" : "text-emerald-400"}`}>
@@ -89,7 +89,7 @@ export default function SharedMatchView({ data }: { data: SharedMatchPayload }) 
                     <div>
                       <span className="font-medium text-surface-950 text-sm">{k.guna}</span>
                       {k.description && (
-                        <span className="text-xs text-[rgba(12,8,5,0.40)] ml-2">{k.description}</span>
+                        <span className="text-xs text-[rgba(12,8,5,0.66)] ml-2">{k.description}</span>
                       )}
                     </div>
                     <span className={`text-sm font-bold ${scoreColor(kpct)}`}>
@@ -123,7 +123,7 @@ export default function SharedMatchView({ data }: { data: SharedMatchPayload }) 
         </Link>
       </div>
 
-      <p className="text-center text-xs text-[rgba(12,8,5,0.40)] mt-6">{t.matchShare.computedOn}</p>
+      <p className="text-center text-xs text-[rgba(12,8,5,0.66)] mt-6">{t.matchShare.computedOn}</p>
     </div>
   );
 }

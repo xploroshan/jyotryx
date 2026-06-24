@@ -85,7 +85,7 @@ export function PlanetaryHoursSection({
                 <PlanetGlyph planet={hour.planet} size={18} className={pi.color} />
               </div>
               <span className={`text-sm font-medium w-16 ${pi.color}`}>{translatePlanet(hour.planet, t)}</span>
-              <span className="text-xs text-[rgba(12,8,5,0.58)] w-28 tabular-nums">
+              <span className="text-xs text-[rgba(12,8,5,0.72)] w-28 tabular-nums">
                 {translateTimeRange(hour.startTime, locale)} – {translateTimeRange(hour.endTime, locale)}
               </span>
               <span className="text-xs text-[rgba(12,8,5,0.62)] flex-1 hidden sm:block">

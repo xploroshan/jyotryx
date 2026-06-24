@@ -63,7 +63,7 @@ export default function DivisionalPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 fade-in-up">
       <h1 className="text-3xl font-bold text-surface-950 mb-2">{t.divisional.title}</h1>
-      <p className="text-[rgba(12,8,5,0.46)] mb-8">{t.divisional.description}</p>
+      <p className="text-[rgba(12,8,5,0.66)] mb-8">{t.divisional.description}</p>
 
       <div className="surface-card p-6 mb-6">
         {prefilled && (
@@ -81,7 +81,7 @@ export default function DivisionalPage() {
             {CHART_TYPES.map((ct) => (
               <button key={ct.value} onClick={() => setChartType(ct.value)} className={`p-3 rounded-xl text-left transition-all ${chartType === ct.value ? "bg-primary-600/15 border border-primary-500/40" : "bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)]"}`}>
                 <div className="text-sm font-semibold text-surface-950">{ct.label}</div>
-                <div className="text-xs text-[rgba(12,8,5,0.46)] mt-0.5">{ct.description}</div>
+                <div className="text-xs text-[rgba(12,8,5,0.66)] mt-0.5">{ct.description}</div>
               </button>
             ))}
           </div>
@@ -126,7 +126,7 @@ export default function DivisionalPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[rgba(12,8,5,0.46)] border-b border-[rgba(12,8,5,0.08)]">
+                <tr className="text-[rgba(12,8,5,0.66)] border-b border-[rgba(12,8,5,0.08)]">
                   <th className="text-left py-2 px-3">{t.divisional.planet}</th>
                   <th className="text-left py-2 px-3">{t.divisional.sign}</th>
                   <th className="text-right py-2 px-3">{t.divisional.degree}</th>

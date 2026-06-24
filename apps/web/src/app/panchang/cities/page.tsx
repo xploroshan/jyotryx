@@ -33,7 +33,7 @@ export default function PanchangCitiesIndex() {
   return (
     <div className="relative min-h-screen">
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-10 fade-in-up">
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li><Link href="/" className="hover:text-surface-950">Home</Link></li>
             <li>›</li>

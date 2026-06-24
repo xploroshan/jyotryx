@@ -53,7 +53,7 @@ export function ShowYourWork({ factors }: { factors: ChartFactor[] }) {
       <p className="text-sm text-secondary mb-6">{t.showYourWork.subtitle}</p>
 
       {!hasFactors ? (
-        <div className="rounded-xl bg-[rgba(255,252,245,0.78)] p-6 text-center text-sm text-[rgba(12,8,5,0.46)]">
+        <div className="rounded-xl bg-[rgba(255,252,245,0.78)] p-6 text-center text-sm text-[rgba(12,8,5,0.66)]">
           {t.showYourWork.empty}
         </div>
       ) : (
@@ -65,7 +65,7 @@ export function ShowYourWork({ factors }: { factors: ChartFactor[] }) {
               <div key={group.key}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className={`inline-block h-2 w-2 rounded-full ${group.dot}`} aria-hidden />
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                     {group.label}
                   </h4>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${group.chip}`}>{items.length}</span>
@@ -87,7 +87,7 @@ export function ShowYourWork({ factors }: { factors: ChartFactor[] }) {
         </div>
       )}
 
-      <p className="text-xs text-[rgba(12,8,5,0.40)] mt-6 border-t divider pt-4">
+      <p className="text-xs text-[rgba(12,8,5,0.66)] mt-6 border-t divider pt-4">
         {t.showYourWork.note}
       </p>
     </div>
