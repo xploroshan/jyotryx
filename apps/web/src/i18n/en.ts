@@ -371,6 +371,14 @@ export const en = {
     trustMathDesc: 'Charts come from the Swiss Ephemeris. The same birth details always return the same result — never randomised.',
     trustHumanTitle: 'No fake astrologers',
     trustHumanDesc: 'Honest guidance that shows its work — every reading explains the exact chart factors behind it.',
+    statsEyebrow: 'Built for trust',
+    heroProof: 'Swiss Ephemeris precision · 12 languages · the meter never runs',
+    traditionsEyebrow: 'Six systems, one sky',
+    traditionsTitle: 'Read your chart through',
+    traditionsHighlight: 'every tradition',
+    traditionsDesc: 'Vedic, Western, Chinese, Hellenistic, Horary, and Medical astrology — explore your stars through whichever lens speaks to you.',
+    exploreTradition: 'Explore',
+    freeBadge: '100% Free',
   },
 
   // Features
