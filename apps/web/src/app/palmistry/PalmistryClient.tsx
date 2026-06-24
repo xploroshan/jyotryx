@@ -672,7 +672,7 @@ export default function PalmistryPage() {
   ];
 
   const strengthColor = (s: "strong" | "moderate" | "weak") =>
-    s === "strong" ? "text-emerald-400" : s === "moderate" ? "text-accent-400" : "text-[rgba(12,8,5,0.46)]";
+    s === "strong" ? "text-emerald-400" : s === "moderate" ? "text-accent-400" : "text-[rgba(12,8,5,0.66)]";
 
   const strengthLabel = (s: "strong" | "moderate" | "weak") =>
     s === "strong" ? t.palmistry.strengthStrong : s === "moderate" ? t.palmistry.strengthModerate : t.palmistry.strengthWeak;
@@ -808,7 +808,7 @@ export default function PalmistryPage() {
                       <PalmDiagram analysis={null} />
                     </div>
                     <p className="text-sm text-secondary text-center mb-1">{dragDropText}</p>
-                    <p className="text-[11px] text-[rgba(12,8,5,0.40)] text-center">{t.palmistry.fileFormats}</p>
+                    <p className="text-[11px] text-[rgba(12,8,5,0.66)] text-center">{t.palmistry.fileFormats}</p>
                   </>
                 )}
               </div>
@@ -839,7 +839,7 @@ export default function PalmistryPage() {
                 </button>
               </div>
 
-              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(255,252,245,0.70)] text-[11px] text-[rgba(12,8,5,0.55)]">
+              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(255,252,245,0.70)] text-[11px] text-[rgba(12,8,5,0.72)]">
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
                 </svg>
@@ -882,7 +882,7 @@ export default function PalmistryPage() {
             {/* Tips */}
             <div className="surface-card p-6">
               <h3 className="text-sm font-semibold text-surface-950 mb-3">{t.palmistry.tipsTitle}</h3>
-              <ul className="space-y-2 text-xs text-[rgba(12,8,5,0.46)]">
+              <ul className="space-y-2 text-xs text-[rgba(12,8,5,0.66)]">
                 <li className="flex items-start gap-2">
                   <span className="text-primary-400 mt-0.5">1.</span>
                   {gender === "male" ? t.palmistry.tipRightPalm : gender === "female" ? t.palmistry.tipLeftPalm : t.palmistry.tipSelectGender}
@@ -911,13 +911,13 @@ export default function PalmistryPage() {
 
                 {analysis.atAGlance && (
                   <section className="mb-5 p-4 rounded-xl bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.08)]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[rgba(12,8,5,0.46)] text-center mb-3">{t.palmistry.atAGlance}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[rgba(12,8,5,0.66)] text-center mb-3">{t.palmistry.atAGlance}</p>
                     <div className="grid grid-cols-2 gap-3">
                       {analysis.atAGlance.strengths && (
                         <div className="flex gap-2">
                           <Sparkles aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-emerald-600" />
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceStrengths}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.atAGlanceStrengths}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.strengths}</p>
                           </div>
                         </div>
@@ -926,7 +926,7 @@ export default function PalmistryPage() {
                         <div className="flex gap-2">
                           <Compass aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-amber-600" />
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceLifePath}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.atAGlanceLifePath}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.lifePath}</p>
                           </div>
                         </div>
@@ -935,7 +935,7 @@ export default function PalmistryPage() {
                         <div className="flex gap-2">
                           <Heart aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-rose-600" />
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceLove}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.atAGlanceLove}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.love}</p>
                           </div>
                         </div>
@@ -944,7 +944,7 @@ export default function PalmistryPage() {
                         <div className="flex gap-2">
                           <Flag aria-hidden size={14} strokeWidth={1.8} className="mt-0.5 shrink-0 text-primary-700" />
                           <div>
-                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.atAGlanceBestSuitedFor}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.atAGlanceBestSuitedFor}</p>
                             <p className="text-xs text-emphasis leading-snug">{analysis.atAGlance.bestSuitedFor}</p>
                           </div>
                         </div>
@@ -959,31 +959,31 @@ export default function PalmistryPage() {
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5">
                       {analysis.handOverview.handType && (
                         <div className="border-b border-[rgba(12,8,5,0.06)] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.handOverviewType}</dt>
+                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.handOverviewType}</dt>
                           <dd className="text-xs text-emphasis leading-snug">{analysis.handOverview.handType}</dd>
                         </div>
                       )}
                       {analysis.handOverview.palmShape && (
                         <div className="border-b border-[rgba(12,8,5,0.06)] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.handOverviewShape}</dt>
+                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.handOverviewShape}</dt>
                           <dd className="text-xs text-emphasis leading-snug">{analysis.handOverview.palmShape}</dd>
                         </div>
                       )}
                       {analysis.handOverview.fingers && (
                         <div className="border-b border-[rgba(12,8,5,0.06)] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.handOverviewFingers}</dt>
+                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.handOverviewFingers}</dt>
                           <dd className="text-xs text-emphasis leading-snug">{analysis.handOverview.fingers}</dd>
                         </div>
                       )}
                       {analysis.handOverview.thumb && (
                         <div className="border-b border-[rgba(12,8,5,0.06)] pb-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.handOverviewThumb}</dt>
+                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.handOverviewThumb}</dt>
                           <dd className="text-xs text-emphasis leading-snug">{analysis.handOverview.thumb}</dd>
                         </div>
                       )}
                       {analysis.handOverview.dominantHand && (
                         <div className="border-b border-[rgba(12,8,5,0.06)] pb-2 sm:col-span-2">
-                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.46)] mb-0.5">{t.palmistry.handOverviewDominantHand}</dt>
+                          <dt className="text-[10px] uppercase tracking-wider text-[rgba(12,8,5,0.66)] mb-0.5">{t.palmistry.handOverviewDominantHand}</dt>
                           <dd className="text-xs text-emphasis leading-snug">{analysis.handOverview.dominantHand}</dd>
                         </div>
                       )}
@@ -1068,7 +1068,7 @@ export default function PalmistryPage() {
                             </ul>
                           )}
                           {line.description && (
-                            <p className="mt-2 text-xs text-[rgba(12,8,5,0.55)] leading-relaxed italic">{line.description}</p>
+                            <p className="mt-2 text-xs text-[rgba(12,8,5,0.72)] leading-relaxed italic">{line.description}</p>
                           )}
                         </div>
                       ))}
@@ -1080,11 +1080,11 @@ export default function PalmistryPage() {
                       analysis.minorLines.map((line) => (
                         <div key={line.name} className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
                           <h4 className="font-semibold text-surface-950 text-sm mb-2">{line.name}</h4>
-                          <p className="text-xs text-[rgba(12,8,5,0.46)] leading-relaxed">{line.description}</p>
+                          <p className="text-xs text-[rgba(12,8,5,0.66)] leading-relaxed">{line.description}</p>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-[rgba(12,8,5,0.40)] text-center py-4">{t.palmistry.noMinorLines}</p>
+                      <p className="text-sm text-[rgba(12,8,5,0.66)] text-center py-4">{t.palmistry.noMinorLines}</p>
                     )
                   )}
 
@@ -1107,7 +1107,7 @@ export default function PalmistryPage() {
                             {prominenceLabel(mount.prominence)}
                           </span>
                         </div>
-                        <p className="text-xs text-[rgba(12,8,5,0.46)] leading-relaxed">{mount.description}</p>
+                        <p className="text-xs text-[rgba(12,8,5,0.66)] leading-relaxed">{mount.description}</p>
                       </div>
                     ))}
 
@@ -1117,11 +1117,11 @@ export default function PalmistryPage() {
                         analysis.insights.map((insight, i) => (
                           <div key={i} className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
                             <h4 className="font-semibold text-surface-950 text-sm mb-2">{insight.label}</h4>
-                            <p className="text-xs text-[rgba(12,8,5,0.55)] leading-relaxed whitespace-pre-line">{insight.text}</p>
+                            <p className="text-xs text-[rgba(12,8,5,0.72)] leading-relaxed whitespace-pre-line">{insight.text}</p>
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-[rgba(12,8,5,0.40)] text-center py-4">{t.palmistry.noInsights}</p>
+                        <p className="text-sm text-[rgba(12,8,5,0.66)] text-center py-4">{t.palmistry.noInsights}</p>
                       )}
                       {analysis.cautions && (
                         <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/20">
@@ -1136,7 +1136,7 @@ export default function PalmistryPage() {
                             {analysis.fingerAnalysis.map((f, i) => (
                               <div key={i} className="flex items-start gap-2">
                                 <span className="text-primary-400 text-xs font-medium min-w-[80px]">{f.finger}</span>
-                                <p className="text-xs text-[rgba(12,8,5,0.46)]">{f.interpretation}</p>
+                                <p className="text-xs text-[rgba(12,8,5,0.66)]">{f.interpretation}</p>
                               </div>
                             ))}
                           </div>
@@ -1156,12 +1156,12 @@ export default function PalmistryPage() {
                                 <span className="text-[10px] uppercase tracking-wider text-primary-300/80">{ti.area}</span>
                               )}
                             </div>
-                            <p className="text-xs text-[rgba(12,8,5,0.55)] leading-relaxed">{ti.description}</p>
+                            <p className="text-xs text-[rgba(12,8,5,0.72)] leading-relaxed">{ti.description}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-[rgba(12,8,5,0.40)] text-center py-4">{t.palmistry.noTimingInsights}</p>
+                      <p className="text-sm text-[rgba(12,8,5,0.66)] text-center py-4">{t.palmistry.noTimingInsights}</p>
                     )
                   )}
 
@@ -1173,15 +1173,15 @@ export default function PalmistryPage() {
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-semibold text-surface-950 text-sm">{m.name}</h4>
                               {m.location && (
-                                <span className="text-[10px] text-[rgba(12,8,5,0.46)]">{m.location}</span>
+                                <span className="text-[10px] text-[rgba(12,8,5,0.66)]">{m.location}</span>
                               )}
                             </div>
-                            <p className="text-xs text-[rgba(12,8,5,0.55)] leading-relaxed">{m.interpretation}</p>
+                            <p className="text-xs text-[rgba(12,8,5,0.72)] leading-relaxed">{m.interpretation}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-[rgba(12,8,5,0.40)] text-center py-4">{t.palmistry.noSpecialMarkings}</p>
+                      <p className="text-sm text-[rgba(12,8,5,0.66)] text-center py-4">{t.palmistry.noSpecialMarkings}</p>
                     )
                   )}
                 </div>
@@ -1237,7 +1237,7 @@ export default function PalmistryPage() {
 
         {/* Disclaimer */}
         <div className="mt-12 text-center">
-          <p className="text-xs text-[rgba(12,8,5,0.32)]">{t.palmistry.disclaimer}</p>
+          <p className="text-xs text-[rgba(12,8,5,0.66)]">{t.palmistry.disclaimer}</p>
         </div>
       </div>
 

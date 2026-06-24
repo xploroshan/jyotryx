@@ -165,7 +165,7 @@ export default function PricingPage() {
         <h1 className="text-3xl sm:text-4xl font-bold text-surface-950 mb-4 tracking-tight">
           Everything is <span className="text-gradient">free</span> right now
         </h1>
-        <p className="text-sm text-[rgba(12,8,5,0.55)] max-w-md mx-auto mb-8">
+        <p className="text-sm text-[rgba(12,8,5,0.72)] max-w-md mx-auto mb-8">
           Explore your kundli, matching, panchang, horoscope, daily guidance and more — no
           subscription needed. Detailed reports and palm readings are available as one-time
           unlocks whenever you want them.
@@ -195,7 +195,7 @@ export default function PricingPage() {
         <h1 className="text-3xl sm:text-4xl font-bold text-surface-950 mb-3 tracking-tight">
           {t.pricing.titlePart1} <span className="text-gradient">{t.pricing.titleHighlight}</span>
         </h1>
-        <p className="text-sm text-[rgba(12,8,5,0.46)] max-w-md mx-auto">
+        <p className="text-sm text-[rgba(12,8,5,0.66)] max-w-md mx-auto">
           {t.pricing.subtitle}
         </p>
       </div>
@@ -231,7 +231,7 @@ export default function PricingPage() {
                   {plan.price > 0 ? (
                     <>
                       <span className="text-3xl font-bold text-surface-950">{fmt(plan.price)}</span>
-                      <span className="text-xs text-[rgba(12,8,5,0.40)]">{plan.period}</span>
+                      <span className="text-xs text-[rgba(12,8,5,0.66)]">{plan.period}</span>
                     </>
                   ) : (
                     <span className="text-3xl font-bold text-surface-950">{t.pricing.free}</span>
@@ -239,7 +239,7 @@ export default function PricingPage() {
                 </div>
                 <ul className="space-y-2.5 mb-6">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-[rgba(12,8,5,0.55)]">
+                    <li key={f} className="flex items-center gap-2 text-xs text-[rgba(12,8,5,0.72)]">
                       <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -261,7 +261,7 @@ export default function PricingPage() {
       {/* Credit Packs — pay-as-you-go alternative to subscriptions */}
       <div className="mt-16">
         <h2 className="text-xl font-semibold text-surface-950 text-center mb-2">{t.pricing.creditPacksTitle}</h2>
-        <p className="text-xs text-[rgba(12,8,5,0.46)] text-center mb-6">{t.pricing.creditPacksSubtitle}</p>
+        <p className="text-xs text-[rgba(12,8,5,0.66)] text-center mb-6">{t.pricing.creditPacksSubtitle}</p>
         <div className="grid sm:grid-cols-3 gap-4">
           {creditPacks === null
             ? [0, 1, 2].map((i) => (
@@ -278,7 +278,7 @@ export default function PricingPage() {
                       {t.pricing.bestValue}
                     </div>
                   )}
-                  <div className="text-xs text-[rgba(12,8,5,0.55)] mb-1">{pack.credits} {t.pricing.credits}</div>
+                  <div className="text-xs text-[rgba(12,8,5,0.72)] mb-1">{pack.credits} {t.pricing.credits}</div>
                   <div className="text-2xl font-bold text-surface-950 mb-4">{fmt(pack.price)}</div>
                   <button
                     onClick={() => router.push(`/checkout?type=credits&pack=${pack.id}`)}

@@ -99,7 +99,7 @@ export default function ReferralPage() {
     return (
       <div className="relative min-h-screen">
         <div className="relative z-10 mx-auto max-w-4xl px-4 py-12">
-          <div className="surface-card p-8 text-center text-[rgba(12,8,5,0.46)]">Loading…</div>
+          <div className="surface-card p-8 text-center text-[rgba(12,8,5,0.66)]">Loading…</div>
         </div>
       </div>
     );
@@ -166,7 +166,7 @@ export default function ReferralPage() {
         <section className="surface-card p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-1">Your code</p>
+              <p className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.66)] mb-1">Your code</p>
               <p className="text-3xl font-mono tracking-widest text-surface-950">{status.code}</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -194,7 +194,7 @@ export default function ReferralPage() {
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-[rgba(255,252,245,0.78)] text-xs text-[rgba(12,8,5,0.55)] break-all">
+          <div className="mt-4 p-3 rounded-lg bg-[rgba(255,252,245,0.78)] text-xs text-[rgba(12,8,5,0.72)] break-all">
             {status.shareUrl}
           </div>
 
@@ -228,7 +228,7 @@ export default function ReferralPage() {
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <Stat label="Activated" value={status.activatedReferrals} accent="text-emerald-300" />
           <Stat label="Pending" value={status.pendingReferrals} accent="text-amber-300" />
-          <Stat label="Rejected" value={status.rejectedReferrals} accent="text-[rgba(12,8,5,0.55)]" />
+          <Stat label="Rejected" value={status.rejectedReferrals} accent="text-[rgba(12,8,5,0.72)]" />
           <Stat
             label="Days earned"
             value={status.activatedReferrals * status.bonusDays}
@@ -240,7 +240,7 @@ export default function ReferralPage() {
         <section className="surface-card p-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-4">Recent invites</h2>
           {status.recent.length === 0 ? (
-            <p className="text-sm text-[rgba(12,8,5,0.46)]">
+            <p className="text-sm text-[rgba(12,8,5,0.66)]">
               No invites yet. Share your code to start earning Premium days.
             </p>
           ) : (
@@ -258,14 +258,14 @@ export default function ReferralPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-surface-950 truncate" title={r.refereeName}>{r.refereeName}</p>
-                    <p className="text-xs text-[rgba(12,8,5,0.46)] truncate" title={r.refereeEmail}>{r.refereeEmail}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.66)] truncate" title={r.refereeEmail}>{r.refereeEmail}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-[rgba(12,8,5,0.46)]">
+                    <p className="text-xs text-[rgba(12,8,5,0.66)]">
                       {r.status === "ACTIVATED" ? "+" : ""}
                       {r.status === "ACTIVATED" ? r.bonusDays : 0} days
                     </p>
-                    <p className="text-[11px] text-[rgba(12,8,5,0.40)]">
+                    <p className="text-[11px] text-[rgba(12,8,5,0.66)]">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -282,7 +282,7 @@ export default function ReferralPage() {
 function Stat({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
     <div className="surface-card p-4">
-      <p className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)] mb-1">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.66)] mb-1">{label}</p>
       <p className={`text-2xl font-semibold ${accent}`}>{value}</p>
     </div>
   );

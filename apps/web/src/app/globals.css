@@ -327,6 +327,12 @@
     background-color: var(--color-primary-600);
   }
 
+  .btn-primary:disabled,
+  .btn-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   /* Inverted button for dark surfaces (footer / closing CTA on dark band). */
   .btn-secondary {
     background-color: var(--color-surface-50);
@@ -513,7 +519,7 @@
   }
   .v2-btn:disabled {
     opacity: 0.5;
-    pointer-events: none;
+    cursor: not-allowed;
   }
   .v2-btn-primary {
     background-color: var(--color-accent);

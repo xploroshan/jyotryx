@@ -107,7 +107,7 @@ function Pills({ items }: { items: string[] }) {
 function Attr({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-2 border-b border-[rgba(12,8,5,0.06)] last:border-0">
-      <span className="text-[12px] text-[rgba(12,8,5,0.50)] shrink-0">{label}</span>
+      <span className="text-[12px] text-[rgba(12,8,5,0.72)] shrink-0">{label}</span>
       <span className="text-sm text-surface-950 text-right font-medium">{value}</span>
     </div>
   );
@@ -122,7 +122,7 @@ function NumberBadge({ value, planet, title, caption }: { value: number; planet:
       <div className="min-w-0">
         <div className="text-base sm:text-lg font-semibold text-surface-950">{title}</div>
         <div className="text-sm text-primary-500 font-medium">{planet}</div>
-        <p className="text-xs text-[rgba(12,8,5,0.55)] mt-1 leading-relaxed">{caption}</p>
+        <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1 leading-relaxed">{caption}</p>
       </div>
     </div>
   );
@@ -280,17 +280,17 @@ export default function VedicMulankPage() {
       />
 
       <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 fade-in-up">
-        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.46)]">
+        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.66)]">
           <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
             {traditionName}
           </Link>{' '}
-          <span className="text-[rgba(12,8,5,0.32)]">/</span>{' '}
+          <span className="text-[rgba(12,8,5,0.66)]">/</span>{' '}
           <span className="text-secondary">{featureName}</span>
         </nav>
 
         {!isAuthenticated && (
           <div className={`${CARD} p-10 text-center`}>
-            <p className="text-[rgba(12,8,5,0.55)] mb-5">{t.kundli.loginRequired}</p>
+            <p className="text-[rgba(12,8,5,0.72)] mb-5">{t.kundli.loginRequired}</p>
             <Link href="/auth?mode=login" className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm">
               {t.common.login}
             </Link>
@@ -299,7 +299,7 @@ export default function VedicMulankPage() {
 
         {showProfilePrompt && (
           <div className={`${CARD} p-10 text-center`}>
-            <p className="text-[rgba(12,8,5,0.55)] mb-5">{m.completeProfile}</p>
+            <p className="text-[rgba(12,8,5,0.72)] mb-5">{m.completeProfile}</p>
             <Link href="/profile" className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm">
               {m.profile}
             </Link>
@@ -307,7 +307,7 @@ export default function VedicMulankPage() {
         )}
 
         {isAuthenticated && hasBirthDetails && !showProfilePrompt && loading && (
-          <div className={`${CARD} p-10 text-center text-[rgba(12,8,5,0.46)] text-sm`}>{t.common.loading}</div>
+          <div className={`${CARD} p-10 text-center text-[rgba(12,8,5,0.66)] text-sm`}>{t.common.loading}</div>
         )}
 
         {error && (
@@ -337,7 +337,7 @@ export default function VedicMulankPage() {
                   { label: m.bhagyankStepLabel, step: reading.calculation.bhagyank, master: reading.bhagyankMaster },
                 ].map((c, i) => (
                   <div key={i} className={`${CARD} p-5`}>
-                    <p className="text-[12px] text-[rgba(12,8,5,0.55)] mb-2">{c.label}</p>
+                    <p className="text-[12px] text-[rgba(12,8,5,0.72)] mb-2">{c.label}</p>
                     <p className="font-mono text-sm sm:text-base text-surface-950 break-words leading-relaxed">{c.step.expression}</p>
                     {c.master ? (
                       <p className="mt-3 text-xs text-accent-700 bg-accent-500/10 border border-accent-500/25 rounded-lg px-3 py-2">
@@ -357,7 +357,7 @@ export default function VedicMulankPage() {
                   {ratingLabel(reading.innerHarmony.rating)}
                 </span>
               </div>
-              <p className="text-[12px] text-[rgba(12,8,5,0.45)] mb-3">{m.innerHarmonyHint}</p>
+              <p className="text-[12px] text-[rgba(12,8,5,0.66)] mb-3">{m.innerHarmonyHint}</p>
               <p className="text-sm text-secondary leading-relaxed">{reading.innerHarmony.note}</p>
             </section>
 
@@ -378,7 +378,7 @@ export default function VedicMulankPage() {
             {/* Compatibility */}
             <section>
               <p className={`${RULE} mb-1`}>{m.compatibility}</p>
-              <p className="text-[12px] text-[rgba(12,8,5,0.45)] mb-3">{m.compatHint}</p>
+              <p className="text-[12px] text-[rgba(12,8,5,0.66)] mb-3">{m.compatHint}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {reading.compatibility.map((c) => (
                   <div key={c.number} className={`${CARD} p-4 flex gap-4 items-start`}>
@@ -392,7 +392,7 @@ export default function VedicMulankPage() {
                           {ratingLabel(c.rating)}
                         </span>
                       </div>
-                      <p className="text-[12px] text-[rgba(12,8,5,0.58)] leading-relaxed">{c.note}</p>
+                      <p className="text-[12px] text-[rgba(12,8,5,0.72)] leading-relaxed">{c.note}</p>
                     </div>
                   </div>
                 ))}

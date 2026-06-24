@@ -146,23 +146,23 @@ export default function AstrologyTraditionSelector({
 
               {/* Coming Soon badge */}
               {!available && (
-                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-[rgba(12,8,5,0.40)] font-medium">
+                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-[rgba(12,8,5,0.66)] font-medium">
                   {t.traditions.comingSoon}
                 </div>
               )}
 
               {/* Icon */}
-              <div className={`mb-3 ${available ? tradition.color : "text-[rgba(12,8,5,0.32)]"}`}>
+              <div className={`mb-3 ${available ? tradition.color : "text-[rgba(12,8,5,0.66)]"}`}>
                 {tradition.icon}
               </div>
 
               {/* Name */}
-              <h3 className={`text-sm font-semibold mb-1 ${available ? "text-surface-950" : "text-[rgba(12,8,5,0.40)]"}`}>
+              <h3 className={`text-sm font-semibold mb-1 ${available ? "text-surface-950" : "text-[rgba(12,8,5,0.66)]"}`}>
                 {tradition.name}
               </h3>
 
               {/* Description */}
-              <p className={`text-xs leading-relaxed ${available ? "text-[rgba(12,8,5,0.55)]" : "text-[rgba(12,8,5,0.32)]"}`}>
+              <p className={`text-xs leading-relaxed ${available ? "text-[rgba(12,8,5,0.72)]" : "text-[rgba(12,8,5,0.66)]"}`}>
                 {tradition.description}
               </p>
             </button>

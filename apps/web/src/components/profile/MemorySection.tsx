@@ -90,7 +90,7 @@ export default function MemorySection({ token }: { token: string }) {
       {memories === null ? (
         <p className="text-sm text-secondary">…</p>
       ) : memories.length === 0 ? (
-        <p className="text-sm text-[rgba(12,8,5,0.46)] mb-4">{t.memory.empty}</p>
+        <p className="text-sm text-[rgba(12,8,5,0.66)] mb-4">{t.memory.empty}</p>
       ) : (
         <ul className="space-y-2 mb-4 max-w-xl">
           {memories.map((m) => (
@@ -106,7 +106,7 @@ export default function MemorySection({ token }: { token: string }) {
                 type="button"
                 onClick={() => remove(m.id)}
                 aria-label={t.memory.remove}
-                className="text-[rgba(12,8,5,0.40)] hover:text-red-500 transition-colors focus-ring rounded shrink-0"
+                className="text-[rgba(12,8,5,0.66)] hover:text-red-500 transition-colors focus-ring rounded shrink-0"
               >
                 <X size={16} aria-hidden />
               </button>

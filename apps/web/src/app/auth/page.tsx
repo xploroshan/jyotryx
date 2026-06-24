@@ -617,6 +617,7 @@ function AuthPageContent() {
 
   return (
     <div className="relative min-h-[85vh] flex items-center justify-center px-4 py-16 overflow-hidden">
+      <h1 className="sr-only">{t.auth.tabLogin}</h1>
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-90"
@@ -640,7 +641,7 @@ function AuthPageContent() {
             <LogoMark className="h-8 w-8" />
             <span className="text-lg font-semibold text-surface-950">{t.auth.brandName}</span>
           </Link>
-          <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.auth.subtitle}</p>
+          <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.auth.subtitle}</p>
         </div>
 
         <div className="surface-card p-6">
@@ -649,7 +650,7 @@ function AuthPageContent() {
             <>
               <button
                 onClick={() => { setShowForgotPassword(false); setError(""); setSuccess(""); }}
-                className="flex items-center gap-1.5 text-xs text-[rgba(12,8,5,0.46)] hover:text-secondary mb-4 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[rgba(12,8,5,0.66)] hover:text-secondary mb-4 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -658,7 +659,7 @@ function AuthPageContent() {
               </button>
 
               <h2 className="text-base font-semibold text-surface-950 mb-1">{t.auth.forgotTitle}</h2>
-              <p className="text-xs text-[rgba(12,8,5,0.46)] mb-5">
+              <p className="text-xs text-[rgba(12,8,5,0.66)] mb-5">
                 {t.auth.forgotDesc}
               </p>
 
@@ -745,7 +746,7 @@ function AuthPageContent() {
                 </div>
               )}
               {serverWaking && !error && !success && (
-                <div className="mb-4 p-2 rounded-md text-[11px] text-[rgba(12,8,5,0.46)] flex items-center gap-2">
+                <div className="mb-4 p-2 rounded-md text-[11px] text-[rgba(12,8,5,0.66)] flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                   {t.auth.wakingServer}
                 </div>
@@ -789,7 +790,7 @@ function AuthPageContent() {
 
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-1 h-px bg-[rgba(255,252,245,0.92)]" />
-                <span className="text-[11px] text-[rgba(12,8,5,0.36)] uppercase">{t.auth.or}</span>
+                <span className="text-[11px] text-[rgba(12,8,5,0.66)] uppercase">{t.auth.or}</span>
                 <div className="flex-1 h-px bg-[rgba(255,252,245,0.92)]" />
               </div>
 
@@ -828,7 +829,7 @@ function AuthPageContent() {
                     <div>
                       <label htmlFor="auth-phone" className="flex items-center justify-between text-xs text-secondary mb-1.5">
                         <span>{t.auth.phoneNumberLabel}</span>
-                        <span className="text-[10px] tabular-nums text-[rgba(12,8,5,0.46)]" aria-live="polite">{phone.length}/10</span>
+                        <span className="text-[10px] tabular-nums text-[rgba(12,8,5,0.66)]" aria-live="polite">{phone.length}/10</span>
                       </label>
                       <div className="flex gap-2">
                         <span className="flex items-center px-3 rounded-lg bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.10)] text-secondary text-sm">+91</span>
@@ -845,7 +846,7 @@ function AuthPageContent() {
                           className="flex-1 px-3 py-2.5 rounded-lg surface-input text-sm disabled:opacity-40"
                         />
                       </div>
-                      <p id="auth-phone-hint" className="text-[10px] text-[rgba(12,8,5,0.46)] mt-1">10-digit Indian mobile number.</p>
+                      <p id="auth-phone-hint" className="text-[10px] text-[rgba(12,8,5,0.66)] mt-1">10-digit Indian mobile number.</p>
                     </div>
 
                     {otpSent && (
@@ -876,7 +877,7 @@ function AuthPageContent() {
                         />
                         <div className="flex items-center justify-between mt-2">
                           <button onClick={handleSendOtp} disabled={loading} className="focus-ring rounded text-[11px] text-primary-400 hover:text-primary-300">{t.auth.resendOtp}</button>
-                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); otpAutoSubmittedRef.current = false; confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="focus-ring rounded text-[11px] text-[rgba(12,8,5,0.55)] hover:text-emphasis">{t.auth.changeNumber}</button>
+                          <button onClick={() => { setOtpSent(false); setOtp(""); setSuccess(""); otpAutoSubmittedRef.current = false; confirmationResultRef.current = null; backendOtpPhoneRef.current = ""; }} className="focus-ring rounded text-[11px] text-[rgba(12,8,5,0.72)] hover:text-emphasis">{t.auth.changeNumber}</button>
                         </div>
                       </div>
                     )}
@@ -902,12 +903,12 @@ function AuthPageContent() {
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? t.auth.hide : t.auth.show}
                           aria-pressed={showPassword}
-                          className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-[rgba(12,8,5,0.55)] hover:text-emphasis text-xs px-1">
+                          className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-[rgba(12,8,5,0.72)] hover:text-emphasis text-xs px-1">
                           {showPassword ? t.auth.hide : t.auth.show}
                         </button>
                       </div>
                       {tab === "signup" && (
-                        <p id="auth-password-rules" className="mt-1.5 text-[10px] text-[rgba(12,8,5,0.55)] leading-relaxed">
+                        <p id="auth-password-rules" className="mt-1.5 text-[10px] text-[rgba(12,8,5,0.72)] leading-relaxed">
                           At least 8 characters. Mix upper + lower case, a number, and a symbol for a strong password.
                         </p>
                       )}
@@ -957,7 +958,7 @@ function AuthPageContent() {
                 )}
               </div>
 
-              <p className="text-[11px] text-[rgba(12,8,5,0.32)] text-center mt-5">
+              <p className="text-[11px] text-[rgba(12,8,5,0.66)] text-center mt-5">
                 {t.auth.terms}
               </p>
             </>

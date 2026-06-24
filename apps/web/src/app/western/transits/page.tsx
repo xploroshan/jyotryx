@@ -102,7 +102,7 @@ export default function WesternTransitsPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-3">
               {fp.transitsForPrefix} {result.date}
             </p>
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -124,11 +124,11 @@ export default function WesternTransitsPage() {
           </div>
 
           <div className="glass rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-3">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-3">
               {fp.activeAspectsPrefix} ({result.aspects.length})
             </p>
             {result.aspects.length === 0 ? (
-              <p className="text-sm text-[rgba(12,8,5,0.55)] text-center py-4">
+              <p className="text-sm text-[rgba(12,8,5,0.72)] text-center py-4">
                 {fp.noAspects}
               </p>
             ) : (
@@ -140,7 +140,7 @@ export default function WesternTransitsPage() {
                   >
                     <span className="text-emphasis">
                       {fp.transiting} {a.transiting}
-                      <span className="text-[rgba(12,8,5,0.46)] mx-2">→</span>
+                      <span className="text-[rgba(12,8,5,0.66)] mx-2">→</span>
                       {fp.natal} {a.natal}
                     </span>
                     <span

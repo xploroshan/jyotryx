@@ -320,7 +320,7 @@ function CheckoutInner() {
   if (!hydrated || (!isAuthenticated && hydrated)) {
     return (
       <div className="mx-auto max-w-md px-4 py-24 text-center">
-        <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.common.loading}</p>
+        <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.common.loading}</p>
       </div>
     );
   }
@@ -335,7 +335,7 @@ function CheckoutInner() {
     <div className="mx-auto max-w-md px-4 py-16 fade-in-up">
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-xs text-[rgba(12,8,5,0.55)] hover:text-surface-950 mb-6"
+        className="inline-flex items-center gap-1.5 text-xs text-[rgba(12,8,5,0.72)] hover:text-surface-950 mb-6"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -359,7 +359,7 @@ function CheckoutInner() {
               ? `+${success.credits} ${t.pricing.credits}`
               : "Unlocked!"}
           </div>
-          <p className="mt-2 text-xs text-[rgba(12,8,5,0.46)]">{t.common.loading}</p>
+          <p className="mt-2 text-xs text-[rgba(12,8,5,0.66)]">{t.common.loading}</p>
         </div>
       ) : loadingPack ? (
         <div className="surface-card p-6 animate-pulse" data-testid="checkout-skeleton">
@@ -369,7 +369,7 @@ function CheckoutInner() {
         </div>
       ) : invalidPack ? (
         <div className="surface-card p-6 text-center">
-          <p className="text-sm text-[rgba(12,8,5,0.55)] mb-4">{t.common.error}</p>
+          <p className="text-sm text-[rgba(12,8,5,0.72)] mb-4">{t.common.error}</p>
           <button onClick={() => router.push(backHref)} className="btn-secondary px-4 py-2 rounded-lg text-sm">
             {t.common.back}
           </button>
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
     <Suspense
       fallback={
         <div className="mx-auto max-w-md px-4 py-24 text-center">
-          <p className="text-sm text-[rgba(12,8,5,0.46)]">{t.common.loading}</p>
+          <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.common.loading}</p>
         </div>
       }
     >

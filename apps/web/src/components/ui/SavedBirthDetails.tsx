@@ -125,7 +125,7 @@ export default function SavedBirthDetails({
         className={`flex items-center justify-between gap-3 rounded-lg border divider bg-[rgba(255,252,245,0.86)] px-3 py-2.5 ${className}`}
       >
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.46)]">
+          <p className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.66)]">
             {t.common.usingProfileDetails}
           </p>
           <p className="truncate text-sm text-surface-950">{parts.join(" · ")}</p>

@@ -81,7 +81,7 @@ export default function HellenisticZodiacalReleasingPage() {
       {result && (
         <div className="space-y-4">
           <div className="glass-strong rounded-2xl p-6 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
               {fp.age}
             </p>
             <p className="text-4xl font-bold text-surface-950 mt-1">{result.ageYears}</p>
@@ -89,7 +89,7 @@ export default function HellenisticZodiacalReleasingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                 {fp.majorPeriod}
               </p>
               <p className="text-xl font-semibold text-surface-950 mt-1">
@@ -103,7 +103,7 @@ export default function HellenisticZodiacalReleasingPage() {
               </p>
             </div>
             <div className="glass rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                 {fp.annualSubPeriod}
               </p>
               <p className="text-xl font-semibold text-surface-950 mt-1">

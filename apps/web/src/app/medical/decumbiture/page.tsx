@@ -80,7 +80,7 @@ export default function MedicalDecumbiturePage() {
           <form onSubmit={submit} className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
-                <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+                <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                   {fp.onsetDate}
                 </span>
                 <input
@@ -92,7 +92,7 @@ export default function MedicalDecumbiturePage() {
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+                <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                   {fp.onsetTime}
                 </span>
                 <input
@@ -105,7 +105,7 @@ export default function MedicalDecumbiturePage() {
               </label>
             </div>
             <label className="block">
-              <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+              <span className="text-[11px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                 {fp.symptoms}
               </span>
               <textarea
@@ -138,7 +138,7 @@ export default function MedicalDecumbiturePage() {
               'from-white/10 to-white/[0.02] border-[rgba(12,8,5,0.10)]'
             } p-6`}
           >
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
               {fp.ascendantPatient}
             </p>
             <p className="text-2xl font-bold text-surface-950 mt-1">
@@ -151,7 +151,7 @@ export default function MedicalDecumbiturePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="glass rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+              <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                 {fp.sixthHouse}
               </p>
               <p className="text-lg font-semibold text-surface-950 mt-1">
@@ -160,12 +160,12 @@ export default function MedicalDecumbiturePage() {
             </div>
             {result.moon && (
               <div className="glass rounded-2xl p-4">
-                <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)]">
+                <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)]">
                   {fp.moonProgression}
                 </p>
                 <p className="text-lg font-semibold text-surface-950 mt-1">
                   {result.moon.sign}{' '}
-                  <span className="text-xs text-[rgba(12,8,5,0.55)]">
+                  <span className="text-xs text-[rgba(12,8,5,0.72)]">
                     {result.moon.degree.toFixed(1)}°
                   </span>
                 </p>
@@ -174,7 +174,7 @@ export default function MedicalDecumbiturePage() {
           </div>
 
           <div className="glass-strong rounded-2xl p-5">
-            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.55)] mb-2">
+            <p className="text-[10px] uppercase tracking-wide text-[rgba(12,8,5,0.72)] mb-2">
               {fp.guidance}
             </p>
             <p className="text-sm text-emphasis">{result.guidance}</p>
@@ -186,7 +186,7 @@ export default function MedicalDecumbiturePage() {
 
           {result.symptoms && (
             <div className="glass rounded-2xl p-4 text-xs text-secondary">
-              <span className="text-[rgba(12,8,5,0.46)] uppercase tracking-wide">
+              <span className="text-[rgba(12,8,5,0.66)] uppercase tracking-wide">
                 {fp.reportedSymptoms}:
               </span>{' '}
               {result.symptoms}

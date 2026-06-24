@@ -121,7 +121,7 @@ export default function PanchangPage() {
           <>
             {/* Date */}
             <div className="surface-card p-6 mb-8 text-center">
-              <p className="text-sm text-[rgba(12,8,5,0.40)] mb-1">{t.panchang.date}</p>
+              <p className="text-sm text-[rgba(12,8,5,0.66)] mb-1">{t.panchang.date}</p>
               <p className="text-2xl font-bold text-surface-950">
                 {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
@@ -135,8 +135,8 @@ export default function PanchangPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <item.icon size={22} strokeWidth={1.7} className="text-primary-700" aria-hidden />
                     <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.40)]">{item.desc}</p>
-                      <p className="text-sm font-medium text-[rgba(12,8,5,0.46)]">{item.label}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)]">{item.desc}</p>
+                      <p className="text-sm font-medium text-[rgba(12,8,5,0.66)]">{item.label}</p>
                     </div>
                   </div>
                   <p className="text-xl font-bold text-surface-950">{item.value}</p>
@@ -150,7 +150,7 @@ export default function PanchangPage() {
               {timings.map((tm) => (
                 <div key={tm.label} className="surface-card p-5 text-center">
                   <tm.icon size={28} strokeWidth={1.6} className="mb-2 mx-auto text-primary-700" aria-hidden />
-                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{tm.label}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{tm.label}</p>
                   <p className="text-lg font-bold text-surface-950">{tm.value}</p>
                 </div>
               ))}
@@ -163,7 +163,7 @@ export default function PanchangPage() {
                 <div key={item.label} className="surface-card p-5 border border-red-500/10">
                   <p className="text-sm font-medium text-red-400 mb-1">{item.label}</p>
                   <p className="text-lg font-bold text-surface-950 mb-1">{item.value}</p>
-                  <p className="text-xs text-[rgba(12,8,5,0.40)]">{item.desc}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.66)]">{item.desc}</p>
                 </div>
               ))}
             </div>

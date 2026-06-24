@@ -201,7 +201,7 @@ export default function MatchingPage() {
       </h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-[rgba(12,8,5,0.46)] mb-1.5">{t.matching.fullName}</label>
+          <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.matching.fullName}</label>
           <input
             type="text"
             value={person.name}
@@ -212,7 +212,7 @@ export default function MatchingPage() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-[rgba(12,8,5,0.46)] mb-1.5">{t.form.dateOfBirth}</label>
+            <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.dateOfBirth}</label>
             <input
               type="date"
               value={person.dob}
@@ -221,7 +221,7 @@ export default function MatchingPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-[rgba(12,8,5,0.46)] mb-1.5">{t.form.timeOfBirth}</label>
+            <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.timeOfBirth}</label>
             <input
               type="time"
               value={person.time}
@@ -231,7 +231,7 @@ export default function MatchingPage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm text-[rgba(12,8,5,0.46)] mb-1.5">{t.form.placeOfBirth}</label>
+          <label className="block text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.placeOfBirth}</label>
           <input
             type="text"
             value={person.place}
@@ -320,17 +320,17 @@ export default function MatchingPage() {
               <h2 className="text-2xl font-bold text-gradient mb-6">{t.matching.results}</h2>
               <div className="grid sm:grid-cols-3 gap-6 mb-8">
                 <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
-                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.matching.ashtakootaScore}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.matching.ashtakootaScore}</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>
-                    {results.totalScore}<span className="text-lg text-[rgba(12,8,5,0.40)]">/{results.maxScore}</span>
+                    {results.totalScore}<span className="text-lg text-[rgba(12,8,5,0.66)]">/{results.maxScore}</span>
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
-                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.matching.compatibility}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.matching.compatibility}</p>
                   <p className={`text-3xl font-bold ${scoreColor(results.percentage)}`}>{results.percentage}%</p>
                 </div>
                 <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)]">
-                  <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.matching.verdict}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.matching.verdict}</p>
                   <p className="text-3xl font-bold text-emerald-400">{results.verdict}</p>
                 </div>
               </div>
@@ -338,13 +338,13 @@ export default function MatchingPage() {
               {/* Manglik Status */}
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)] flex items-center justify-between">
-                  <span className="text-sm text-[rgba(12,8,5,0.46)]">{personA.name || t.matching.personA} - {t.matching.manglik}</span>
+                  <span className="text-sm text-[rgba(12,8,5,0.66)]">{personA.name || t.matching.personA} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikA ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikA ? t.matching.yes : t.matching.no}
                   </span>
                 </div>
                 <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)] flex items-center justify-between">
-                  <span className="text-sm text-[rgba(12,8,5,0.46)]">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
+                  <span className="text-sm text-[rgba(12,8,5,0.66)]">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikB ? "text-red-400" : "text-emerald-400"}`}>
                     {results.manglikB ? t.matching.yesMild : t.matching.no}
                   </span>
@@ -363,7 +363,7 @@ export default function MatchingPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <span className="font-medium text-surface-950 text-sm">{k.name}</span>
-                          <span className="text-xs text-[rgba(12,8,5,0.40)] ml-2">{k.description}</span>
+                          <span className="text-xs text-[rgba(12,8,5,0.66)] ml-2">{k.description}</span>
                         </div>
                         <span className={`text-sm font-bold ${scoreColor(pct)}`}>
                           {k.obtained}/{k.max}
@@ -405,7 +405,7 @@ export default function MatchingPage() {
               {shareUrl && (
                 <div className="mt-4 p-4 rounded-xl bg-[rgba(255,252,245,0.78)] border divider">
                   <p className="text-sm font-semibold text-surface-950">{t.matchShare.shareTitle}</p>
-                  <p className="text-xs text-[rgba(12,8,5,0.46)] mt-0.5 mb-3">{t.matchShare.shareHint}</p>
+                  <p className="text-xs text-[rgba(12,8,5,0.66)] mt-0.5 mb-3">{t.matchShare.shareHint}</p>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       readOnly

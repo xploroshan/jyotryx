@@ -107,17 +107,17 @@ export default function VedicDashaPage() {
       />
 
       <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8 fade-in-up">
-        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.46)]">
+        <nav className="mb-5 text-sm text-[rgba(12,8,5,0.66)]">
           <Link href={`/${cfg.slug}`} className="hover:text-surface-950 transition-colors">
             {traditionName}
           </Link>{' '}
-          <span className="text-[rgba(12,8,5,0.32)]">/</span>{' '}
+          <span className="text-[rgba(12,8,5,0.66)]">/</span>{' '}
           <span className="text-secondary">{featureName}</span>
         </nav>
 
       {!isAuthenticated && (
         <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center">
-          <p className="text-[rgba(12,8,5,0.55)] mb-5">{t.kundli.loginRequired}</p>
+          <p className="text-[rgba(12,8,5,0.72)] mb-5">{t.kundli.loginRequired}</p>
           <Link
             href="/auth?mode=login"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
@@ -129,7 +129,7 @@ export default function VedicDashaPage() {
 
       {isAuthenticated && !hasBirth && (
         <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center">
-          <p className="text-[rgba(12,8,5,0.55)] mb-5">{t.kundli.doshaComplete}</p>
+          <p className="text-[rgba(12,8,5,0.72)] mb-5">{t.kundli.doshaComplete}</p>
           <Link
             href="/profile"
             className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
@@ -140,7 +140,7 @@ export default function VedicDashaPage() {
       )}
 
       {isAuthenticated && hasBirth && loading && (
-        <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center text-[rgba(12,8,5,0.46)] text-sm">
+        <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center text-[rgba(12,8,5,0.66)] text-sm">
           {t.common.loading}
         </div>
       )}
@@ -192,20 +192,20 @@ export default function VedicDashaPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-[rgba(12,8,5,0.46)] mt-1">
+                      <div className="text-xs text-[rgba(12,8,5,0.66)] mt-1">
                         {fmtDate(d.startDate)} &rarr; {fmtDate(d.endDate)}
                       </div>
                     </div>
                   </div>
                   {d.subPeriods && d.subPeriods.length > 0 && (
-                    <span className="text-[rgba(12,8,5,0.40)] text-xs shrink-0" aria-hidden>
+                    <span className="text-[rgba(12,8,5,0.66)] text-xs shrink-0" aria-hidden>
                       {isOpen ? '▲' : '▼'}
                     </span>
                   )}
                 </button>
                 {isOpen && d.subPeriods && d.subPeriods.length > 0 && (
                   <div className="border-t border-[rgba(12,8,5,0.06)] bg-[rgba(255,252,245,0.70)] px-6 py-4 space-y-2">
-                    <p className="text-[11px] uppercase tracking-widest text-[rgba(12,8,5,0.40)] mb-3 font-medium">
+                    <p className="text-[11px] uppercase tracking-widest text-[rgba(12,8,5,0.66)] mb-3 font-medium">
                       {fp.antardasha}
                     </p>
                     {d.subPeriods.map((sp, j) => (
@@ -214,10 +214,10 @@ export default function VedicDashaPage() {
                         className="flex items-center justify-between gap-2 text-sm py-1"
                       >
                         <span className="text-secondary flex items-center gap-2">
-                          <PlanetGlyph planet={sp.planet} size={16} className="text-[rgba(12,8,5,0.55)]" />
+                          <PlanetGlyph planet={sp.planet} size={16} className="text-[rgba(12,8,5,0.72)]" />
                           {sp.planet}
                         </span>
-                        <span className="text-[rgba(12,8,5,0.40)]">
+                        <span className="text-[rgba(12,8,5,0.66)]">
                           {fmtDate(sp.startDate)} &rarr; {fmtDate(sp.endDate)}
                         </span>
                       </div>

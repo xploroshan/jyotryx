@@ -139,7 +139,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li><Link href="/" className="hover:text-surface-950">Home</Link></li>
             <li>›</li>
@@ -155,7 +155,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
             <h1 className="text-3xl font-bold text-gradient">
               {sign.name} Horoscope Today
             </h1>
-            <p className="text-sm text-[rgba(12,8,5,0.55)] mt-2">
+            <p className="text-sm text-[rgba(12,8,5,0.72)] mt-2">
               {todayDisplay} · {sign.dateRange} · Ruled by {sign.rulingPlanet}
             </p>
           </div>
@@ -199,7 +199,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
               </dl>
             </>
           ) : (
-            <p className="text-sm text-[rgba(12,8,5,0.55)]">
+            <p className="text-sm text-[rgba(12,8,5,0.72)]">
               Today's forecast is being prepared — please refresh in a moment.
             </p>
           )}
@@ -270,7 +270,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.46)]">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.66)]">{label}</dt>
       <dd className="text-sm text-surface-950 mt-0.5">{value}</dd>
     </div>
   );

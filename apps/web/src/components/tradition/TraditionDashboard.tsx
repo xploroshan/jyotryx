@@ -198,7 +198,7 @@ export function MiniStat({
       : 'bg-[#fbf7ec] border-[rgba(26,20,16,0.10)] text-surface-950';
   return (
     <div className={`p-4 rounded-xl border ${palette.replace(/text-\S+/, '')}`}>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(12,8,5,0.55)] mb-1.5 font-medium">{label}</p>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-[rgba(12,8,5,0.72)] mb-1.5 font-medium">{label}</p>
       <p className={`font-display text-lg sm:text-xl leading-tight ${tone === 'warn' ? 'text-amber-800' : tone === 'good' ? 'text-emerald-800' : 'text-surface-950'}`}>{value}</p>
     </div>
   );
@@ -236,7 +236,7 @@ export function FactCard({
   return (
     <div className={`relative overflow-hidden p-6 sm:p-7 rounded-2xl bg-gradient-to-br ${accentBg[accent]} to-transparent border border-[rgba(26,20,16,0.10)] bg-[#fbf7ec]`}>
       <span className={`absolute left-0 top-6 bottom-6 w-[3px] rounded-r ${accentRule[accent]}`} aria-hidden />
-      <p className="text-[10px] uppercase tracking-[0.22em] text-[rgba(12,8,5,0.55)] font-semibold pl-3">{eyebrow}</p>
+      <p className="text-[10px] uppercase tracking-[0.22em] text-[rgba(12,8,5,0.72)] font-semibold pl-3">{eyebrow}</p>
       <p className={`mt-2 font-display text-3xl sm:text-4xl leading-none tracking-tight pl-3 ${toneText ?? 'text-surface-950'}`}>{headline}</p>
       {subline && <p className="mt-2 text-sm text-emphasis pl-3">{subline}</p>}
       {note && <p className="mt-3 text-[13px] text-secondary leading-relaxed italic font-display pl-3">{note}</p>}

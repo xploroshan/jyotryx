@@ -49,23 +49,23 @@ export function EditUserModal({
           <div>
             <label className="block text-xs text-ink-500 mb-1">Name</label>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500" />
+              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30" />
           </div>
           <div>
             <label className="block text-xs text-ink-500 mb-1">Email</label>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500" />
+              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-ink-500 mb-1">Phone</label>
               <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500" />
+                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30" />
             </div>
             <div>
               <label className="block text-xs text-ink-500 mb-1">Gender</label>
               <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700 text-sm focus:outline-none focus:border-primary-500">
+                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30">
                 <option value="">Not set</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -77,7 +77,7 @@ export function EditUserModal({
             <div>
               <label className="block text-xs text-ink-500 mb-1">Role</label>
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700 text-sm focus:outline-none focus:border-primary-500">
+                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30">
                 <option value="USER">User</option>
                 <option value="PREMIUM">Premium</option>
                 <option value="ADMIN">Admin</option>
@@ -86,13 +86,13 @@ export function EditUserModal({
             <div>
               <label className="block text-xs text-ink-500 mb-1">Credits</label>
               <input type="number" value={form.credits} onChange={(e) => setForm({ ...form, credits: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500" />
+                className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30" />
             </div>
           </div>
           <div>
             <label className="block text-xs text-ink-500 mb-1">Language</label>
             <select value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700 text-sm focus:outline-none focus:border-primary-500">
+              className="w-full px-3 py-2 rounded-lg bg-black/[0.04] border border-black/[0.10] text-ink-700 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30">
               <option value="en">English</option>
               <option value="hi">Hindi</option>
               <option value="ta">Tamil</option>

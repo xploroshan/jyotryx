@@ -172,7 +172,7 @@ export default function ReportsPage() {
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             {t.reports.titlePart1} <span className="text-gradient">{t.reports.titleHighlight}</span>
           </h1>
-          <p className="text-[rgba(12,8,5,0.46)] max-w-xl mx-auto">
+          <p className="text-[rgba(12,8,5,0.66)] max-w-xl mx-auto">
             {t.reports.subtitle}
           </p>
           {pricing.reportsDelivered !== null && (
@@ -190,7 +190,7 @@ export default function ReportsPage() {
         <div className="flex gap-2 mb-8 rounded-xl bg-[rgba(255,252,245,0.78)] p-1 w-fit">
           {(["generate", "history"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveView(tab)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-white" : "text-[rgba(12,8,5,0.46)] hover:text-surface-950"}`}>
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === tab ? "btn-primary text-white" : "text-[rgba(12,8,5,0.66)] hover:text-surface-950"}`}>
               {tab === "generate" ? t.reports.generateNew : `${t.reports.myReports} (${reports.length})`}
             </button>
           ))}
@@ -207,7 +207,7 @@ export default function ReportsPage() {
               <div key={rt.id} className="surface-card p-6">
                 <rt.icon size={30} strokeWidth={1.6} className="mb-3 text-primary-700" aria-hidden />
                 <h3 className="text-lg font-bold text-surface-950 mb-2">{rt.label}</h3>
-                <p className="text-sm text-[rgba(12,8,5,0.46)] mb-4">{rt.desc}</p>
+                <p className="text-sm text-[rgba(12,8,5,0.66)] mb-4">{rt.desc}</p>
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => handleGenerate(rt.id)}
@@ -240,7 +240,7 @@ export default function ReportsPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="surface-card p-12 text-center">
-                <p className="text-[rgba(12,8,5,0.40)] mb-4">{t.reports.noReports}</p>
+                <p className="text-[rgba(12,8,5,0.66)] mb-4">{t.reports.noReports}</p>
                 <button onClick={() => setActiveView("generate")} className="px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)]">
                   {t.reports.firstReport}
                 </button>
@@ -255,8 +255,8 @@ export default function ReportsPage() {
                         <h3 className="font-bold text-surface-950">{report.title}</h3>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadge(report.status)}`}>{report.status}</span>
                       </div>
-                      <p className="text-sm text-[rgba(12,8,5,0.46)]">{report.summary}</p>
-                      <p className="text-xs text-[rgba(12,8,5,0.32)] mt-1">
+                      <p className="text-sm text-[rgba(12,8,5,0.66)]">{report.summary}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mt-1">
                         {t.reports.generatedOn} {new Date(report.createdAt).toLocaleDateString(locale === "en" ? "en-IN" : locale)}
                       </p>
                     </div>
@@ -307,7 +307,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => setViewing(null)}
                   aria-label={t.common.close}
-                  className="rounded-lg p-1.5 text-[rgba(12,8,5,0.5)] hover:bg-[rgba(12,8,5,0.06)] hover:text-surface-950 transition-colors"
+                  className="rounded-lg p-1.5 text-[rgba(12,8,5,0.72)] hover:bg-[rgba(12,8,5,0.06)] hover:text-surface-950 transition-colors"
                 >
                   <X size={20} strokeWidth={1.8} aria-hidden />
                 </button>

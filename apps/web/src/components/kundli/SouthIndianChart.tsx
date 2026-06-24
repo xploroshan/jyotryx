@@ -83,7 +83,7 @@ export function SouthIndianChart({
               return (
                 <div
                   key={idx}
-                  className="col-span-2 row-span-2 flex items-center justify-center text-[rgba(12,8,5,0.34)] text-xs font-semibold tracking-wide"
+                  className="col-span-2 row-span-2 flex items-center justify-center text-[rgba(12,8,5,0.66)] text-xs font-semibold tracking-wide"
                 >
                   Rashi · D1
                 </div>
@@ -108,7 +108,7 @@ export function SouthIndianChart({
               }`}
             >
               {/* House number (faint) + Asc marker, top-left */}
-              <div className="absolute top-0.5 left-1 text-[9px] leading-none text-[rgba(12,8,5,0.40)]">
+              <div className="absolute top-0.5 left-1 text-[9px] leading-none text-[rgba(12,8,5,0.66)]">
                 {houseNum ?? ""}
               </div>
               {isAsc && (

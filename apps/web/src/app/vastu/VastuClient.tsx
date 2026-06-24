@@ -111,7 +111,7 @@ export default function VastuPage() {
           <div className="surface-card p-6 text-center">
             <div className={`text-4xl font-bold ${getScoreColor(result.entrance.score)}`}>{result.entrance.score}/100</div>
             <div className="text-sm text-secondary mt-1">{result.entrance.verdict}</div>
-            <div className="text-xs text-[rgba(12,8,5,0.40)] mt-2">{t.vastu.entrance}: {result.entrance.direction} | {t.vastu.deity}: {result.entrance.deity} | {t.vastu.element}: {result.entrance.element}</div>
+            <div className="text-xs text-[rgba(12,8,5,0.66)] mt-2">{t.vastu.entrance}: {result.entrance.direction} | {t.vastu.deity}: {result.entrance.deity} | {t.vastu.element}: {result.entrance.element}</div>
           </div>
 
           {/* Summary */}
@@ -125,18 +125,18 @@ export default function VastuPage() {
             <h3 className="text-lg font-semibold text-surface-950 mb-3">{t.vastu.remedies}</h3>
             <ul className="space-y-2">
               {result.insights.remedies?.map((r, i) => (
-                <li key={i} className="text-sm text-[rgba(12,8,5,0.55)] flex items-start gap-2">
+                <li key={i} className="text-sm text-[rgba(12,8,5,0.72)] flex items-start gap-2">
                   <span className="text-primary-400 mt-0.5">+</span> {r}
                 </li>
               ))}
             </ul>
             <div className="mt-4 grid grid-cols-2 gap-4">
               <div className="bg-[rgba(255,252,245,0.78)] rounded-lg p-3">
-                <div className="text-xs text-[rgba(12,8,5,0.40)]">{t.vastu.gemstone}</div>
+                <div className="text-xs text-[rgba(12,8,5,0.66)]">{t.vastu.gemstone}</div>
                 <div className="text-sm text-accent-400">{result.insights.gemstone}</div>
               </div>
               <div className="bg-[rgba(255,252,245,0.78)] rounded-lg p-3">
-                <div className="text-xs text-[rgba(12,8,5,0.40)]">{t.vastu.mantra}</div>
+                <div className="text-xs text-[rgba(12,8,5,0.66)]">{t.vastu.mantra}</div>
                 <div className="text-sm text-accent-400">{result.insights.mantra}</div>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function VastuPage() {
               {result.directions.map((d) => (
                 <div key={d.direction} className="bg-[rgba(255,252,245,0.78)] rounded-lg p-3">
                   <div className="text-sm font-medium text-surface-950">{d.direction} — {d.deity}</div>
-                  <div className="text-xs text-[rgba(12,8,5,0.40)] mt-1">{t.vastu.element}: {d.element}</div>
+                  <div className="text-xs text-[rgba(12,8,5,0.66)] mt-1">{t.vastu.element}: {d.element}</div>
                   <div className="text-xs text-emerald-400/70 mt-1">{t.vastu.bestFor}: {d.suitableRooms.join(", ")}</div>
                   <div className="text-xs text-red-400/70 mt-0.5">{t.vastu.avoid}: {d.avoid.join(", ")}</div>
                 </div>
@@ -162,7 +162,7 @@ export default function VastuPage() {
             <h3 className="text-lg font-semibold text-surface-950 mb-3">{t.vastu.propertyTips}</h3>
             <ul className="space-y-2">
               {result.propertyTips.map((tip, i) => (
-                <li key={i} className="text-sm text-[rgba(12,8,5,0.55)] flex items-start gap-2">
+                <li key={i} className="text-sm text-[rgba(12,8,5,0.72)] flex items-start gap-2">
                   <span className="text-accent-400 mt-0.5">*</span> {tip}
                 </li>
               ))}

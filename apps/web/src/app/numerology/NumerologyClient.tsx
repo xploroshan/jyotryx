@@ -108,7 +108,7 @@ export default function NumerologyPage() {
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setError(""); }}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id ? "btn-primary" : "text-[rgba(12,8,5,0.46)] hover:text-surface-950"
+                activeTab === tab.id ? "btn-primary" : "text-[rgba(12,8,5,0.66)] hover:text-surface-950"
               }`}
             >
               {tab.label}
@@ -124,7 +124,7 @@ export default function NumerologyPage() {
         {activeTab === "name" && (
           <div>
             <div className="surface-card p-6 mb-6">
-              <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.numerology.enterNameLabel}</label>
+              <label className="block text-xs text-[rgba(12,8,5,0.66)] mb-2">{t.numerology.enterNameLabel}</label>
               <div className="flex flex-wrap gap-3">
                 <input
                   type="text"
@@ -154,9 +154,9 @@ export default function NumerologyPage() {
                     { label: t.numerology.personalityNumber, num: nameResult.personalityNumber, desc: nameResult.personalityMeaning },
                   ].map((item) => (
                     <div key={item.label} className="surface-card p-5 text-center">
-                      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{item.label}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{item.label}</p>
                       <p className="text-4xl font-bold text-gradient mb-2">{item.num}</p>
-                      <p className="text-[11px] text-[rgba(12,8,5,0.46)] leading-relaxed">{item.desc.substring(0, 80)}...</p>
+                      <p className="text-[11px] text-[rgba(12,8,5,0.66)] leading-relaxed">{item.desc.substring(0, 80)}...</p>
                     </div>
                   ))}
                 </div>
@@ -165,7 +165,7 @@ export default function NumerologyPage() {
                 <div className={`p-4 rounded-xl border ${vc.bg}`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-sm font-semibold ${vc.color}`}>{vc.label}</span>
-                    <span className="text-xs text-[rgba(12,8,5,0.40)]">{t.numerology.rulingPlanet}: {nameResult.rulingPlanet}</span>
+                    <span className="text-xs text-[rgba(12,8,5,0.66)]">{t.numerology.rulingPlanet}: {nameResult.rulingPlanet}</span>
                   </div>
                   <p className="text-sm text-secondary mt-2">{nameResult.suggestion}</p>
                 </div>
@@ -198,15 +198,15 @@ export default function NumerologyPage() {
                 <div className="surface-card p-5">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.luckyColors}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.luckyColors}</p>
                       <p className="text-sm text-emphasis">{nameResult.luckyColors.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.bestDays}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.bestDays}</p>
                       <p className="text-sm text-emphasis">{nameResult.bestDaysToUse.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.compatibility}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.compatibility}</p>
                       <p className="text-sm text-emphasis">{nameResult.compatibility}</p>
                     </div>
                   </div>
@@ -220,7 +220,7 @@ export default function NumerologyPage() {
         {activeTab === "brand" && (
           <div>
             <div className="surface-card p-6 mb-6">
-              <label className="block text-xs text-[rgba(12,8,5,0.40)] mb-2">{t.numerology.enterBrandLabel}</label>
+              <label className="block text-xs text-[rgba(12,8,5,0.66)] mb-2">{t.numerology.enterBrandLabel}</label>
               <div className="flex flex-wrap gap-3">
                 <input
                   type="text"
@@ -245,19 +245,19 @@ export default function NumerologyPage() {
                 {/* Score + Number */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="surface-card p-5 text-center">
-                    <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.nameNumber}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.nameNumber}</p>
                     <p className="text-5xl font-bold text-gradient mb-2">{brandResult.nameNumber}</p>
-                    <p className="text-sm text-[rgba(12,8,5,0.55)]">{brandResult.vibration}</p>
+                    <p className="text-sm text-[rgba(12,8,5,0.72)]">{brandResult.vibration}</p>
                   </div>
                   <div className="surface-card p-5 text-center">
-                    <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.businessScore}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.businessScore}</p>
                     <p className="text-5xl font-bold mb-2">
                       <span className={brandResult.overallScore >= 7 ? "text-emerald-400" : brandResult.overallScore >= 5 ? "text-amber-400" : "text-red-400"}>
                         {brandResult.overallScore}
                       </span>
-                      <span className="text-lg text-[rgba(12,8,5,0.32)]">/10</span>
+                      <span className="text-lg text-[rgba(12,8,5,0.66)]">/10</span>
                     </p>
-                    <p className="text-sm text-[rgba(12,8,5,0.55)]">{t.numerology.ruledBy} {brandResult.planetaryRuler}</p>
+                    <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.numerology.ruledBy} {brandResult.planetaryRuler}</p>
                   </div>
                 </div>
 
@@ -290,11 +290,11 @@ export default function NumerologyPage() {
                 <div className="surface-card p-5">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.bestLaunchDays}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.bestLaunchDays}</p>
                       <p className="text-sm text-emphasis">{brandResult.bestLaunchDays.join(", ")}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{t.numerology.luckyColors}</p>
+                      <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.numerology.luckyColors}</p>
                       <p className="text-sm text-emphasis">{brandResult.luckyColors.join(", ")}</p>
                     </div>
                   </div>

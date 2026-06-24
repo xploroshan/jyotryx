@@ -10,7 +10,7 @@ export default function NotFound() {
     <div className="relative min-h-[60vh] flex flex-col items-center justify-center px-4 text-center fade-in-up">
       <p className="text-6xl font-bold text-gradient">404</p>
       <h1 className="mt-4 text-xl font-semibold text-surface-950">Page not found</h1>
-      <p className="mt-2 max-w-md text-sm text-[rgba(12,8,5,0.55)]">
+      <p className="mt-2 max-w-md text-sm text-[rgba(12,8,5,0.72)]">
         The page you&rsquo;re looking for doesn&rsquo;t exist or may have moved.
       </p>
       <Link

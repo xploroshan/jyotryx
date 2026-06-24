@@ -104,7 +104,7 @@ export default function DecisionRoomPage() {
         {/* ── Query form ── */}
         <form onSubmit={handleSubmit} className="surface-card p-6 sm:p-8 mb-8 space-y-5">
           <div>
-            <label htmlFor="dr-activity" className="block text-sm font-medium text-[rgba(12,8,5,0.55)] mb-1.5">
+            <label htmlFor="dr-activity" className="block text-sm font-medium text-[rgba(12,8,5,0.72)] mb-1.5">
               {t.decisionRoom.occasionLabel}
             </label>
             <select
@@ -123,7 +123,7 @@ export default function DecisionRoomPage() {
 
           <div className="grid sm:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="dr-date" className="block text-sm font-medium text-[rgba(12,8,5,0.55)] mb-1.5">
+              <label htmlFor="dr-date" className="block text-sm font-medium text-[rgba(12,8,5,0.72)] mb-1.5">
                 {t.decisionRoom.dateLabel}
               </label>
               <input
@@ -136,9 +136,9 @@ export default function DecisionRoomPage() {
               />
             </div>
             <div>
-              <label htmlFor="dr-time" className="block text-sm font-medium text-[rgba(12,8,5,0.55)] mb-1.5">
+              <label htmlFor="dr-time" className="block text-sm font-medium text-[rgba(12,8,5,0.72)] mb-1.5">
                 {t.decisionRoom.timeLabel}{" "}
-                <span className="text-[rgba(12,8,5,0.40)] font-normal">({t.decisionRoom.timeOptional})</span>
+                <span className="text-[rgba(12,8,5,0.66)] font-normal">({t.decisionRoom.timeOptional})</span>
               </label>
               <input
                 id="dr-time"
@@ -151,7 +151,7 @@ export default function DecisionRoomPage() {
           </div>
 
           <div>
-            <label htmlFor="dr-city" className="block text-sm font-medium text-[rgba(12,8,5,0.55)] mb-1.5">
+            <label htmlFor="dr-city" className="block text-sm font-medium text-[rgba(12,8,5,0.72)] mb-1.5">
               {t.decisionRoom.locationLabel}
             </label>
             <select
@@ -187,12 +187,12 @@ export default function DecisionRoomPage() {
         {result && rec && (
           <div className="space-y-8">
             <div className={`surface-card p-6 sm:p-8 text-center ring-1 ${rec.ring}`}>
-              <p className="text-xs uppercase tracking-[0.18em] text-[rgba(12,8,5,0.46)] mb-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-[rgba(12,8,5,0.66)] mb-3">
                 {t.decisionRoom.scoreLabel}
               </p>
               <p className={`font-display font-semibold leading-none ${rec.text}`} style={{ fontSize: "clamp(56px, 12vw, 88px)" }}>
                 {result.score}
-                <span className="text-2xl text-[rgba(12,8,5,0.40)] font-normal"> / 100</span>
+                <span className="text-2xl text-[rgba(12,8,5,0.66)] font-normal"> / 100</span>
               </p>
               <span className={`inline-block mt-4 text-sm font-semibold px-4 py-1.5 rounded-full ${rec.chip}`}>
                 {t.decisionRoom.recommendation[result.recommendation]}
@@ -219,7 +219,7 @@ export default function DecisionRoomPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {panchangItems.map((item) => (
                   <div key={item.label} className="surface-card p-4">
-                    <p className="text-xs text-[rgba(12,8,5,0.40)] mb-1">{item.label}</p>
+                    <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{item.label}</p>
                     <p className="text-sm font-semibold text-surface-950">{item.value}</p>
                   </div>
                 ))}
@@ -229,7 +229,7 @@ export default function DecisionRoomPage() {
             {/* Show Your Work — the factors behind the verdict */}
             <ShowYourWork factors={result.factors} />
 
-            <p className="text-xs text-[rgba(12,8,5,0.40)] text-center">{t.decisionRoom.disclaimer}</p>
+            <p className="text-xs text-[rgba(12,8,5,0.66)] text-center">{t.decisionRoom.disclaimer}</p>
           </div>
         )}
       </div>

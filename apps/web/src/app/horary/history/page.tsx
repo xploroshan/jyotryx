@@ -82,13 +82,13 @@ export default function HoraryHistoryPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[rgba(12,8,5,0.55)]">
+            <p className="text-xs text-[rgba(12,8,5,0.72)]">
               {records.length} {records.length === 1 ? fp.questionSingular : fp.questionPlural}
             </p>
             <button
               type="button"
               onClick={clearAll}
-              className="text-xs text-[rgba(12,8,5,0.55)] hover:text-red-300 transition"
+              className="text-xs text-[rgba(12,8,5,0.72)] hover:text-red-300 transition"
             >
               {fp.clearAll}
             </button>
@@ -110,37 +110,37 @@ export default function HoraryHistoryPage() {
                     <p className="text-sm text-surface-950 font-medium truncate">
                       {r.question}
                     </p>
-                    <p className="text-[11px] text-[rgba(12,8,5,0.50)] mt-1">
+                    <p className="text-[11px] text-[rgba(12,8,5,0.72)] mt-1">
                       {formatDate(r.askedAt)} · {fp.ascShort} {r.chart.ascendant.sign}
                     </p>
                   </div>
-                  <span className="text-xs text-[rgba(12,8,5,0.46)] shrink-0" aria-hidden>
+                  <span className="text-xs text-[rgba(12,8,5,0.66)] shrink-0" aria-hidden>
                     {isOpen ? '▲' : '▼'}
                   </span>
                 </button>
                 {isOpen && (
                   <div className="border-t border-[rgba(12,8,5,0.08)] bg-black/20 px-5 py-4 space-y-3">
                     <div className="text-xs space-y-1">
-                      <div className="text-[rgba(12,8,5,0.55)]">
+                      <div className="text-[rgba(12,8,5,0.72)]">
                         {fp.ascendant}:{' '}
                         <span className="text-emphasis">
                           {r.chart.ascendant.sign} (
                           {r.chart.ascendant.degree.toFixed(2)}°)
                         </span>
                       </div>
-                      <div className="text-[rgba(12,8,5,0.55)]">
+                      <div className="text-[rgba(12,8,5,0.72)]">
                         {fp.querent}:{' '}
                         <span className="text-emphasis">
                           {r.chart.significators.querent}
                         </span>
                       </div>
-                      <div className="text-[rgba(12,8,5,0.55)]">
+                      <div className="text-[rgba(12,8,5,0.72)]">
                         {fp.quesited}:{' '}
                         <span className="text-emphasis">
                           {r.chart.significators.quesited}
                         </span>
                       </div>
-                      <div className="text-[rgba(12,8,5,0.55)]">
+                      <div className="text-[rgba(12,8,5,0.72)]">
                         {fp.moon}:{' '}
                         <span className="text-emphasis">
                           {r.chart.significators.moon}
@@ -154,7 +154,7 @@ export default function HoraryHistoryPage() {
                       <button
                         type="button"
                         onClick={() => remove(r.id)}
-                        className="text-xs text-[rgba(12,8,5,0.46)] hover:text-red-300 transition"
+                        className="text-xs text-[rgba(12,8,5,0.66)] hover:text-red-300 transition"
                       >
                         {fp.delete}
                       </button>

@@ -81,7 +81,7 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
 
-        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.46)]">
+        <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
             <li><Link href={`/${locale}`} className="hover:text-surface-950">myastro360</Link></li>
             <li>›</li>
@@ -111,7 +111,7 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
           </section>
         ) : (
           <section className="surface-card p-6 mb-6">
-            <p className="text-sm text-[rgba(12,8,5,0.55)]">{p.retry}</p>
+            <p className="text-sm text-[rgba(12,8,5,0.72)]">{p.retry}</p>
           </section>
         )}
       </div>
@@ -122,7 +122,7 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
 function Row({ label, value, tone }: { label: string; value: string; tone?: 'warning' }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-[rgba(12,8,5,0.06)] pb-2">
-      <dt className="text-[rgba(12,8,5,0.46)]">{label}</dt>
+      <dt className="text-[rgba(12,8,5,0.66)]">{label}</dt>
       <dd className={tone === 'warning' ? 'text-amber-600 font-medium' : 'text-surface-950 font-medium'}>
         {value}
       </dd>

@@ -119,7 +119,7 @@ export default function ChatPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-surface-950 tracking-tight mb-2">
             Talk to an Astrologer
           </h1>
-          <p className="text-sm text-[rgba(12,8,5,0.5)] max-w-md mx-auto">
+          <p className="text-sm text-[rgba(12,8,5,0.72)] max-w-md mx-auto">
             Choose an astrologer to start a private consultation. Each specialises in a
             different area of your life.
           </p>
@@ -154,8 +154,8 @@ export default function ChatPage() {
                   </span>
                 </span>
                 <span className="block text-xs font-medium text-primary-700 mb-1">{a.specialty}</span>
-                <span className="block text-xs text-[rgba(12,8,5,0.5)] leading-snug mb-2">{a.tagline}</span>
-                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgba(12,8,5,0.42)]">
+                <span className="block text-xs text-[rgba(12,8,5,0.72)] leading-snug mb-2">{a.tagline}</span>
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgba(12,8,5,0.66)]">
                   <span>{a.experienceYears}+ yrs</span>
                   <span>{a.reviews.toLocaleString("en-IN")} reviews</span>
                   <span>{a.languages.join(", ")}</span>
@@ -166,7 +166,7 @@ export default function ChatPage() {
         </div>
 
         {!isAuthenticated && (
-          <p className="text-center text-xs text-[rgba(12,8,5,0.45)] mt-6">
+          <p className="text-center text-xs text-[rgba(12,8,5,0.66)] mt-6">
             You&apos;ll be asked to sign in when you send your first message.
           </p>
         )}
@@ -203,7 +203,7 @@ export default function ChatPage() {
       <aside id="chat-topic-sidebar" className={`fixed lg:relative z-20 w-56 h-full bg-[rgba(255,252,245,0.92)] border-r divider p-3 flex flex-col transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="mb-4 px-1">
           <h2 className="text-sm font-semibold text-surface-950 mb-0.5">{t.chat.vedicAstrologer}</h2>
-          <p className="text-[11px] text-[rgba(12,8,5,0.40)]">{t.chat.selectTopic}</p>
+          <p className="text-[11px] text-[rgba(12,8,5,0.66)]">{t.chat.selectTopic}</p>
         </div>
 
         <div role="tablist" aria-label={t.chat.selectTopic} className="space-y-0.5 flex-1">
@@ -232,7 +232,7 @@ export default function ChatPage() {
             <button
               onClick={leaveConsultation}
               aria-label="Back to astrologers"
-              className="focus-ring -ml-1 rounded-lg p-1 text-[rgba(12,8,5,0.5)] hover:bg-[rgba(12,8,5,0.05)] hover:text-surface-950"
+              className="focus-ring -ml-1 rounded-lg p-1 text-[rgba(12,8,5,0.72)] hover:bg-[rgba(12,8,5,0.05)] hover:text-surface-950"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -247,7 +247,7 @@ export default function ChatPage() {
               </span>
             </div>
           </div>
-          <span className="hidden sm:inline text-[11px] text-[rgba(12,8,5,0.42)] border divider px-2 py-0.5 rounded-md">{astrologer.specialty}</span>
+          <span className="hidden sm:inline text-[11px] text-[rgba(12,8,5,0.66)] border divider px-2 py-0.5 rounded-md">{astrologer.specialty}</span>
         </div>
 
         {/* Messages */}
@@ -318,7 +318,7 @@ export default function ChatPage() {
               </svg>
             </button>
           </div>
-          <p className="text-[10px] text-[rgba(12,8,5,0.46)] text-center mt-2">{t.chat.disclaimer}</p>
+          <p className="text-[10px] text-[rgba(12,8,5,0.66)] text-center mt-2">{t.chat.disclaimer}</p>
         </div>
       </div>
     </div>
