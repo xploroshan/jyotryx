@@ -90,6 +90,7 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
     features: [
       { slug: 'chat', labelKey: 'traditionsUi.vedic.features.chat', href: '/chat', available: true, icon: '💬' },
       { slug: 'kundli', labelKey: 'traditionsUi.vedic.features.kundli', href: '/kundli', available: true, icon: '🔯' },
+      { slug: 'palmistry', labelKey: 'traditionsUi.vedic.features.palmistry', href: '/palmistry', available: true, icon: '✋' },
       { slug: 'matching', labelKey: 'traditionsUi.vedic.features.matching', href: '/matching', available: true, icon: '💞' },
       { slug: 'horoscope', labelKey: 'traditionsUi.vedic.features.horoscope', href: '/horoscope', available: true, icon: '🔮' },
       { slug: 'panchang', labelKey: 'traditionsUi.vedic.features.panchang', href: '/panchang', available: true, icon: '📜' },
@@ -100,7 +101,6 @@ export const WEB_TRADITIONS: Record<TraditionId, WebTraditionConfig> = {
       { slug: 'dosha', labelKey: 'traditionsUi.vedic.features.dosha', href: '/vedic/dosha', available: true, icon: '🔥' },
       { slug: 'divisional', labelKey: 'traditionsUi.vedic.features.divisional', href: '/divisional', available: true, icon: '📊' },
       { slug: 'kp-astrology', labelKey: 'traditionsUi.vedic.features.kpAstrology', href: '/kp-astrology', available: true, icon: '✨' },
-      { slug: 'palmistry', labelKey: 'traditionsUi.vedic.features.palmistry', href: '/palmistry', available: true, icon: '✋' },
       { slug: 'numerology', labelKey: 'traditionsUi.vedic.features.numerology', href: '/numerology', available: true, icon: '🔢' },
       { slug: 'mulank', labelKey: 'traditionsUi.vedic.features.mulank', href: '/vedic/mulank', available: true, icon: '🔟' },
       { slug: 'tarot', labelKey: 'traditionsUi.vedic.features.tarot', href: '/tarot', available: true, icon: '🎴' },
