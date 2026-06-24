@@ -7,9 +7,10 @@ import { UserService } from '../src/modules/user/user.service';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { MemoryService } from '../src/modules/memory/memory.service';
 import { LlmService } from '../src/llm/llm.service';
 import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
-import { mockKnowledgeService, mockLlmService } from './helpers/mocks';
+import { mockKnowledgeService, mockLlmService, mockMemoryService } from './helpers/mocks';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -94,6 +95,7 @@ describe('ChatService', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         {
           provide: FeatureAccessService,
           useValue: {

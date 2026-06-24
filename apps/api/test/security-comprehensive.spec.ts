@@ -13,6 +13,7 @@ import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { MemoryService } from '../src/modules/memory/memory.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
@@ -30,6 +31,7 @@ import {
   mockUser,
   createMockRedis,
   mockLlmService,
+  mockMemoryService,
 } from './helpers/mocks';
 import * as crypto from 'crypto';
 
@@ -658,6 +660,7 @@ describe('Security: Credit Refund on AI Failure', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: knowledgeMock },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
       ],
     }).compile();
 
@@ -825,6 +828,7 @@ describe('Security: Data Isolation', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -963,6 +967,7 @@ describe('Security: Input Sanitization', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();

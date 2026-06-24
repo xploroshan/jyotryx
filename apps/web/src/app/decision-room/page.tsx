@@ -12,9 +12,16 @@ import {
 } from "@/i18n/panchang-terms";
 import { ShowYourWork, type ChartFactor } from "@/components/transparency/ShowYourWork";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
+import {
+  ACTIVITIES,
+  CITIES,
+  LOCALE_MAP,
+  REC_STYLES,
+  todayISO,
+  type Activity,
+  type Recommendation,
+} from "@/lib/electional";
 import { Scale } from "lucide-react";
-
-type Recommendation = "excellent" | "good" | "neutral" | "caution" | "avoid";
 
 interface TimingDecision {
   activity: string;
@@ -33,56 +40,6 @@ interface TimingDecision {
     sunrise: string;
     sunset: string;
   };
-}
-
-// Activity keys mirror the API's DecisionActivity union.
-const ACTIVITIES = [
-  "marriage",
-  "business",
-  "travel",
-  "griha_pravesh",
-  "vehicle",
-  "education",
-  "medical",
-  "general",
-] as const;
-
-// A small set of major cities with fixed coordinates keeps the verdict
-// deterministic without pulling in a geocoder. Proper nouns stay in Latin.
-const CITIES = [
-  { name: "New Delhi", lat: 28.6139, lng: 77.209 },
-  { name: "Mumbai", lat: 19.076, lng: 72.8777 },
-  { name: "Bengaluru", lat: 12.9716, lng: 77.5946 },
-  { name: "Kolkata", lat: 22.5726, lng: 88.3639 },
-  { name: "Chennai", lat: 13.0827, lng: 80.2707 },
-  { name: "Hyderabad", lat: 17.385, lng: 78.4867 },
-  { name: "Pune", lat: 18.5204, lng: 73.8567 },
-  { name: "Ahmedabad", lat: 23.0225, lng: 72.5714 },
-  { name: "Jaipur", lat: 26.9124, lng: 75.7873 },
-  { name: "Lucknow", lat: 26.8467, lng: 80.9462 },
-] as const;
-
-const LOCALE_MAP: Record<string, string> = {
-  en: "en-IN", hi: "hi-IN", ta: "ta-IN", te: "te-IN", bn: "bn-IN", mr: "mr-IN",
-  gu: "gu-IN", kn: "kn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN", as: "as-IN",
-};
-
-// Recommendation → colour language. Mirrors the warm/critical palette used by
-// the ShowYourWork groups so the verdict reads consistently across the app.
-const REC_STYLES: Record<Recommendation, { ring: string; text: string; chip: string }> = {
-  excellent: { ring: "ring-emerald-500/40", text: "text-emerald-600", chip: "bg-emerald-500/15 text-emerald-700" },
-  good: { ring: "ring-lime-500/40", text: "text-lime-600", chip: "bg-lime-500/15 text-lime-700" },
-  neutral: { ring: "ring-amber-500/40", text: "text-amber-600", chip: "bg-amber-500/15 text-amber-700" },
-  caution: { ring: "ring-orange-500/40", text: "text-orange-600", chip: "bg-orange-500/15 text-orange-700" },
-  avoid: { ring: "ring-red-500/40", text: "text-red-600", chip: "bg-red-500/15 text-red-700" },
-};
-
-function todayISO(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 export default function DecisionRoomPage() {
@@ -241,7 +198,7 @@ export default function DecisionRoomPage() {
                 {t.decisionRoom.recommendation[result.recommendation]}
               </span>
               <p className="text-sm text-secondary mt-4">
-                {t.decisionRoom.activities[result.activity as (typeof ACTIVITIES)[number]]}
+                {t.decisionRoom.activities[result.activity as Activity]}
                 {" · "}
                 {new Date(result.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", {
                   weekday: "long",

@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
 import { Toast, RequiredMark } from "@/components/ui/Toast";
 import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSection";
+import MemorySection from "@/components/profile/MemorySection";
 import TimeOfBirthInput from "@/components/ui/TimeOfBirthInput";
 
 interface UserProfile {
@@ -572,6 +573,9 @@ export default function ProfilePage() {
                     notification settings get half-flipped. */}
                 {(profile?.profileComplete || !completeMode) && (
                   <BriefingPreferenceSection token={accessToken!} />
+                )}
+                {(profile?.profileComplete || !completeMode) && (
+                  <MemorySection token={accessToken!} />
                 )}
               </div>
             )}

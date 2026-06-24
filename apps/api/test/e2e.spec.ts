@@ -13,6 +13,7 @@ import { mockFeatureAccessService } from './helpers/mocks';
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
+import { MemoryService } from '../src/modules/memory/memory.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
@@ -26,6 +27,7 @@ import {
   mockLlmService,
   mockUser,
   createMockRedis,
+  mockMemoryService,
 } from './helpers/mocks';
 import * as crypto from 'crypto';
 
@@ -59,6 +61,7 @@ describe('E2E: Auth → Chat Flow', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -201,6 +204,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -262,6 +266,7 @@ describe('E2E: Chat Session Lifecycle', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -1023,6 +1028,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -1081,6 +1087,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: LlmService, useValue: mockLlmService() },
         { provide: KnowledgeService, useValue: knowledgeMock },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
+        { provide: MemoryService, useValue: mockMemoryService() },
       ],
     }).compile();
 
