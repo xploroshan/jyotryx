@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
 import { ASTROLOGERS, getAstrologer } from "@/lib/astrologers";
 import { track, trackOnce } from "@/lib/analytics";
+import { UpgradePrompt } from "@/components/paywall/UpgradePrompt";
 
 interface Message {
   role: "user" | "assistant";
@@ -44,6 +45,9 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  // Shown when a send fails because the user ran out of chat credits — a value
+  // moment (they were mid-conversation), so we offer the upgrade, not an error.
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Begin a consultation with the chosen astrologer: reset the thread and
@@ -93,20 +97,32 @@ export default function ChatPage() {
       track("chat_message_sent", { category: selectedCategory });
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply.content }]);
     } catch (err: any) {
-      // Differentiate so users know whether to retry (network) or act
-      // (auth/rate-limit). The generic "Send failed" was unhelpful.
-      let msg = err?.message || t.chat.sendFailed;
-      if (err?.isTimeout || err?.isNetwork) {
-        msg = "Can't reach the server. Check your connection and try again.";
-      } else if (err?.status === 401) {
-        msg = "Your session expired. Please log in again.";
-      } else if (err?.status === 429) {
-        msg = "You're sending messages too quickly. Pause for a moment, then retry.";
-      } else if ((err?.status ?? 0) >= 500) {
-        msg = "Our astrologer is resting. Please try again in a few seconds.";
+      // Out of credits mid-conversation (the API throws 400 "Insufficient
+      // credits…") is a value moment, not a dead end — surface the upgrade
+      // prompt instead of an error message. track("paywall_view") fires from
+      // the prompt itself.
+      const isCreditError =
+        err?.status === 400 &&
+        typeof err?.message === "string" &&
+        err.message.toLowerCase().includes("credit");
+      if (isCreditError) {
+        setShowUpgrade(true);
+      } else {
+        // Differentiate so users know whether to retry (network) or act
+        // (auth/rate-limit). The generic "Send failed" was unhelpful.
+        let msg = err?.message || t.chat.sendFailed;
+        if (err?.isTimeout || err?.isNetwork) {
+          msg = "Can't reach the server. Check your connection and try again.";
+        } else if (err?.status === 401) {
+          msg = "Your session expired. Please log in again.";
+        } else if (err?.status === 429) {
+          msg = "You're sending messages too quickly. Pause for a moment, then retry.";
+        } else if ((err?.status ?? 0) >= 500) {
+          msg = "Our astrologer is resting. Please try again in a few seconds.";
+        }
+        setError(msg);
+        setMessages((prev) => [...prev, { role: "assistant", content: t.chat.errorMsg }]);
       }
-      setError(msg);
-      setMessages((prev) => [...prev, { role: "assistant", content: t.chat.errorMsg }]);
     } finally {
       setIsTyping(false);
     }
@@ -324,6 +340,17 @@ export default function ChatPage() {
           <p className="text-[10px] text-[rgba(12,8,5,0.66)] text-center mt-2">{t.chat.disclaimer}</p>
         </div>
       </div>
+      <UpgradePrompt
+        open={showUpgrade}
+        trigger="chat_credits"
+        title={t.pricing.planPremiumName}
+        message={t.pricing.subtitle}
+        primaryCta={t.pricing.ctaSubscribe}
+        primaryHref="/pricing"
+        secondaryCta={t.pricing.buyNow}
+        secondaryHref="/checkout?type=credits&pack=popular"
+        onClose={() => setShowUpgrade(false)}
+      />
     </div>
   );
 }
