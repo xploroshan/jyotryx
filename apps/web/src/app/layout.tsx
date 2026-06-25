@@ -27,6 +27,7 @@ import { jsonLdHtml } from "@/lib/seo/json-ld";
 import HtmlLangSync from "@/components/i18n/HtmlLangSync";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/analytics/PostHogAnalytics";
+import WebVitals from "@/components/analytics/WebVitals";
 
 // Sitewide structured data. The Organization node feeds brand knowledge
 // panels and lets answer engines (ChatGPT, Perplexity, Gemini) attribute
@@ -164,6 +165,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             host={process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com"}
           />
         ) : null}
+        {/* Core Web Vitals → analytics sinks (no-op until a sink is present). */}
+        <WebVitals />
         <HtmlLangSync />
         <script
           type="application/ld+json"
