@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as helmet from 'helmet';
+import compression from 'compression';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -81,6 +82,11 @@ async function bootstrap() {
 
   // Security headers
   app.use(helmet.default());
+
+  // Compress responses (gzip/deflate). Large JSON — reports (~50KB),
+  // cosmic-calendar (~20KB), kundli charts — ship 3–5× smaller, cutting
+  // perceived latency on mobile/slow links. Cheap; before routing.
+  app.use(compression());
 
   // Global prefix
   app.setGlobalPrefix('api');

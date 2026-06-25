@@ -5,8 +5,15 @@ import {
   Body,
   Param,
   Query,
+  Header,
   UseGuards,
 } from '@nestjs/common';
+
+// Public, non-user-specific, day-stable astrology GETs: let the browser/CDN
+// cache them so repeat hits never reach the API (it already Redis-caches these
+// server-side for 24h; this offloads the network round-trip entirely).
+const PUBLIC_ASTRO_CACHE =
+  'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import {
   AstrologyService,
@@ -63,6 +70,7 @@ export class AstrologyController {
 
   @Get('horoscope/:sign')
   @Public()
+  @Header('Cache-Control', PUBLIC_ASTRO_CACHE)
   @ApiOperation({ summary: 'Get horoscope for a zodiac sign' })
   @ApiResponse({ status: 200, description: 'Horoscope returned' })
   async getHoroscope(
@@ -76,6 +84,7 @@ export class AstrologyController {
 
   @Get('horoscope/:sign/multi')
   @Public()
+  @Header('Cache-Control', PUBLIC_ASTRO_CACHE)
   @ApiOperation({ summary: 'Get multi-tradition horoscope for a zodiac sign' })
   @ApiResponse({ status: 200, description: 'Multi-tradition horoscope returned' })
   async getMultiTraditionHoroscope(
@@ -95,6 +104,7 @@ export class AstrologyController {
 
   @Get('chinese-zodiac/:year')
   @Public()
+  @Header('Cache-Control', PUBLIC_ASTRO_CACHE)
   @ApiOperation({ summary: 'Get Chinese zodiac for a birth year' })
   @ApiResponse({ status: 200, description: 'Chinese zodiac returned' })
   getChineseZodiac(@Param('year') year: string, @Query('locale') locale?: string) {
@@ -103,6 +113,7 @@ export class AstrologyController {
 
   @Get('panchang')
   @Public()
+  @Header('Cache-Control', PUBLIC_ASTRO_CACHE)
   @ApiOperation({ summary: 'Get today\'s Panchang (Hindu calendar details)' })
   @ApiResponse({ status: 200, description: 'Panchang details returned' })
   async getPanchang(
@@ -132,6 +143,7 @@ export class AstrologyController {
 
   @Get('cosmic-calendar')
   @Public()
+  @Header('Cache-Control', PUBLIC_ASTRO_CACHE)
   @ApiOperation({ summary: 'Cosmic Calendar — per-day auspiciousness for a month' })
   @ApiResponse({ status: 200, description: 'Cosmic calendar returned' })
   async getCosmicCalendar(

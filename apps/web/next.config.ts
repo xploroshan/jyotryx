@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
+    // Rewrite named imports from these barrel packages to per-module paths so
+    // only what's actually used ships. @tabler/icons-react in particular routes
+    // named imports through its index and would otherwise pull the whole icon
+    // set; lucide-react / framer-motion / react-hot-toast benefit similarly.
+    optimizePackageImports: [
+      "lucide-react",
+      "@tabler/icons-react",
+      "framer-motion",
+      "react-hot-toast",
+    ],
   },
   // Canonical host: 301 the apex (myastro360.com) to www, which is what
   // `metadataBase`, the sitemap, robots and every canonical URL already use.
