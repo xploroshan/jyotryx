@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { auth, verifyPasswordResetCode, confirmPasswordReset } from "@/lib/firebase";
 import { useTranslation } from "@/i18n";
-import { LogoMark } from "@/components/ui/Logo";
+import { LogoMark, Wordmark } from "@/components/ui/Logo";
 
 function ResetPasswordContent() {
   const { t } = useTranslation();
@@ -104,7 +104,7 @@ function ResetPasswordContent() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-semibold text-surface-950">{t.auth.brandName}</span>
+            <Wordmark className="text-lg font-semibold text-surface-950" />
           </Link>
           <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.auth.subtitle}</p>
         </div>

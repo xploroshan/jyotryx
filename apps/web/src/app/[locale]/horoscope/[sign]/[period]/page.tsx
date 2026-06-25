@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/horoscope/${sign.slug}/${period}`,
-    title: `${signName} ${periodLabel} ${t.horoscope.titleHighlight} | myastro360`,
+    title: `${signName} ${periodLabel} ${t.horoscope.titleHighlight} | MyAstro360`,
     description: t.horoscope.description,
     hreflangLocales: LANDING_LOCALES,
   });
@@ -74,10 +74,10 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
     inLanguage: locale,
     datePublished: new Date().toISOString(),
     dateModified: new Date().toISOString(),
-    author: { '@type': 'Organization', name: 'myastro360' },
+    author: { '@type': 'Organization', name: 'MyAstro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'myastro360',
+      name: 'MyAstro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: canonical,
@@ -91,7 +91,7 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li><Link href={`/${locale}`} className="hover:text-surface-950">myastro360</Link></li>
+            <li><Link href={`/${locale}`} className="hover:text-surface-950">MyAstro360</Link></li>
             <li>›</li>
             <li><Link href={`/${locale}/horoscope/${sign.slug}`} className="hover:text-surface-950">{signName}</Link></li>
             <li>›</li>

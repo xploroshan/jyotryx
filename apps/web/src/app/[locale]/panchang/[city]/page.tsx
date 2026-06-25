@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/panchang/${city.slug}`,
-    title: `${cityName} ${t.panchang.titleHighlight} | myastro360`,
+    title: `${cityName} ${t.panchang.titleHighlight} | MyAstro360`,
     description: t.panchang.description,
     hreflangLocales: PANCHANG_LOCALES,
   });
@@ -68,10 +68,10 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
     inLanguage: locale,
     datePublished: new Date().toISOString(),
     dateModified: new Date().toISOString(),
-    author: { '@type': 'Organization', name: 'myastro360' },
+    author: { '@type': 'Organization', name: 'MyAstro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'myastro360',
+      name: 'MyAstro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: canonical,
@@ -84,7 +84,7 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li><Link href={`/${locale}`} className="hover:text-surface-950">myastro360</Link></li>
+            <li><Link href={`/${locale}`} className="hover:text-surface-950">MyAstro360</Link></li>
             <li>›</li>
             <li className="text-emphasis">{cityName} {p.titleHighlight}</li>
           </ol>

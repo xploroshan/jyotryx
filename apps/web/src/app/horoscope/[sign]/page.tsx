@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `${sign.name} Horoscope Today — ${today} | myastro360`;
+  const title = `${sign.name} Horoscope Today — ${today} | MyAstro360`;
   const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
 
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
       description,
       type: 'article',
       url: canonical,
-      siteName: 'myastro360',
+      siteName: 'MyAstro360',
       images: [{ url: '/og', width: 1200, height: 630, alt: title }],
     },
     twitter: { card: 'summary_large_image', title, description, images: ['/og'] },
@@ -82,10 +82,10 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
     headline: `${sign.name} Horoscope — ${todayDisplay}`,
     datePublished: today.toISOString(),
     dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'myastro360' },
+    author: { '@type': 'Organization', name: 'MyAstro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'myastro360',
+      name: 'MyAstro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}`,
@@ -121,7 +121,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
     },
     {
       q: `How often is the ${sign.name} horoscope updated?`,
-      a: `The ${sign.name} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside myastro360.`,
+      a: `The ${sign.name} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside MyAstro360.`,
     },
   ];
   const jsonLdFaq = {
@@ -167,7 +167,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
         <div className="mb-6">
           <ShareButton
             url={`${SITE_ORIGIN}/horoscope/${sign.slug}`}
-            text={`${sign.name} horoscope for today on myastro360`}
+            text={`${sign.name} horoscope for today on MyAstro360`}
             trigger="horoscope"
             shareLabel="Share"
             copyLabel="Copy link"

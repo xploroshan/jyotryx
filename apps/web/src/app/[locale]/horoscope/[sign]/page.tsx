@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/horoscope/${sign.slug}`,
-    title: `${signName} ${horoscopeWord} | myastro360`,
+    title: `${signName} ${horoscopeWord} | MyAstro360`,
     description: t.horoscope.description,
     hreflangLocales: LANDING_LOCALES,
   });
@@ -81,10 +81,10 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
     inLanguage: locale,
     datePublished: new Date().toISOString(),
     dateModified: new Date().toISOString(),
-    author: { '@type': 'Organization', name: 'myastro360' },
+    author: { '@type': 'Organization', name: 'MyAstro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'myastro360',
+      name: 'MyAstro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: canonical,
@@ -94,7 +94,7 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'myastro360', item: localeUrl(locale, '/') },
+      { '@type': 'ListItem', position: 1, name: 'MyAstro360', item: localeUrl(locale, '/') },
       { '@type': 'ListItem', position: 2, name: `${signName} ${horoscopeWord}`, item: canonical },
     ],
   };
@@ -107,7 +107,7 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li><Link href={`/${locale}`} className="hover:text-surface-950">myastro360</Link></li>
+            <li><Link href={`/${locale}`} className="hover:text-surface-950">MyAstro360</Link></li>
             <li>›</li>
             <li className="text-emphasis">{signName} {horoscopeWord}</li>
           </ol>

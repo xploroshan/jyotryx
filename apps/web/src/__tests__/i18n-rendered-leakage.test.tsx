@@ -181,7 +181,7 @@ const ALLOWED_CONTEXTS = [
   'test@test.com',
   'Bangalore, India',
   'Om Budhaya Namaha', // Sanskrit mantra — intentionally untranslated
-  'myastro360',
+  'MyAstro360', // brand name — Latin in every locale, intentionally verbatim
 ];
 
 function assertNoEnglishLeakage(sentinels: string[]) {

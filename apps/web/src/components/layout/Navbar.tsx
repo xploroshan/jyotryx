@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/store";
-import { LogoMark } from "@/components/ui/Logo";
+import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useTranslation } from "@/i18n";
 
@@ -48,9 +48,7 @@ export default function Navbar() {
             className="flex items-center gap-2.5 shrink-0 group transition-transform duration-200 hover:scale-[1.02] focus-ring rounded-lg"
           >
             <LogoMark className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[20deg]" />
-            <span className="font-display text-[19px] font-semibold text-surface-950 tracking-tight">
-              myastro360
-            </span>
+            <Wordmark className="font-display text-[19px] font-semibold text-surface-950 tracking-tight" />
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">

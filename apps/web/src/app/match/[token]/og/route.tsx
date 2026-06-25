@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { fetchSharedMatch } from "@/lib/seo/server-api";
+import { OG_MARK_DATA_URI, GRADIENT_360_STYLE, OG_INK_BG } from "@/lib/brand/og-mark";
 
 /**
  * Per-share Open Graph card for a Kundli-match link. Served as a plain route
@@ -55,8 +56,8 @@ async function buildFonts(locale: string | null | undefined, text: string): Prom
   const indicFamily = locale ? NOTO_INDIC[locale] : undefined;
   if (!indicFamily) return undefined; // Latin share → Satori's default is fine.
   // Latin is needed too: once we pass any custom font, Satori ignores its
-  // built-in default, so digits/"%"/"myastro360" would otherwise vanish.
-  const latin = await loadFont("Noto Sans", `${text} 0123456789%&·/ myastro360`);
+  // built-in default, so digits/"%"/"MyAstro360" would otherwise vanish.
+  const latin = await loadFont("Noto Sans", `${text} 0123456789%&·/ MyAstro360`);
   if (!latin) return undefined; // couldn't get Latin → don't risk breaking it.
   const fonts: OgFont[] = [{ name: "og", data: latin, style: "normal", weight: 400 }];
   const indic = await loadFont(indicFamily, text);
@@ -86,8 +87,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #1a1206 0%, #2e1d0a 55%, #0d0904 100%)",
-          color: "#f5ecd8",
+          background: OG_INK_BG,
+          color: "#ece9f6",
           fontFamily,
           padding: "60px",
         }}
@@ -95,7 +96,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
         <div
           style={{
             fontSize: 28,
-            color: "#d9c9a6",
+            color: "#b7b0d8",
             display: "flex",
             marginBottom: 12,
             letterSpacing: 4,
@@ -124,7 +125,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
             >
               {`${data.percentage}%`}
             </div>
-            <div style={{ fontSize: 38, color: "#f5ecd8", display: "flex", marginTop: 4 }}>
+            <div style={{ fontSize: 38, color: "#ece9f6", display: "flex", marginTop: 4 }}>
               {`${data.compatibility} · ${data.totalScore}/${data.maxScore} guna`}
             </div>
           </>
@@ -134,9 +135,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
           </div>
         )}
 
-        <div style={{ marginTop: 48, fontSize: 32, display: "flex" }}>
-          <span style={{ color: "#f5ecd8" }}>myastro</span>
-          <span style={{ color: "#ff7a1a" }}>360</span>
+        <div style={{ marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={OG_MARK_DATA_URI} width={44} height={44} alt="" />
+          <div style={{ fontSize: 32, fontWeight: 700, display: "flex" }}>
+            <span style={{ color: "#f5f3ff" }}>MyAstro</span>
+            <span style={GRADIENT_360_STYLE}>360</span>
+          </div>
         </div>
       </div>
     ),

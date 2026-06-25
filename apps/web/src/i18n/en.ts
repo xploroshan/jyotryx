@@ -340,7 +340,7 @@ export const en = {
   home: {
     badge: 'Vedic Astrology Platform',
     heroTitle: 'Your stars,',
-    heroHighlight: 'decoded by myastro360',
+    heroHighlight: 'decoded by MyAstro360',
     heroDescription: 'Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility, and spiritual guidance — available 24/7.',
     startConsultation: 'Start Consultation',
     tryPalmReading: 'Try Palm Reading',
@@ -364,7 +364,7 @@ export const en = {
     ctaLoggedOut: 'Join thousands getting daily astrology insights. Start with 3 free consultations.',
     ctaButtonLoggedIn: 'Go to My Day',
     ctaButtonLoggedOut: 'Get Started Free',
-    trustEyebrow: 'Why myastro360',
+    trustEyebrow: 'Why MyAstro360',
     trustMeterTitle: 'The meter never runs',
     trustMeterDesc: 'One flat plan. Ask as much as you like — no per-minute charges, no surprise bills.',
     trustMathTitle: 'The same math, every time',
@@ -919,10 +919,10 @@ export const en = {
     copied: 'Copied!',
     shareWhatsapp: 'Share on WhatsApp',
     shareFailed: 'Could not create a share link. Please try again.',
-    whatsappText: 'Our Kundli compatibility is {score}/{max} ({percentage}%) on myastro360. See the full breakdown:',
+    whatsappText: 'Our Kundli compatibility is {score}/{max} ({percentage}%) on MyAstro360. See the full breakdown:',
     publicEyebrow: 'Kundli Compatibility',
     publicSubtitle: 'Ashtakoota Guna Milan compatibility',
-    computedOn: 'Computed on myastro360',
+    computedOn: 'Computed on MyAstro360',
     ctaHeadline: 'Check your own compatibility',
     ctaSubtitle: 'Free Ashtakoota Guna Milan — Manglik check, koota-by-koota breakdown, and guidance.',
     ctaButton: 'Match your Kundli',
@@ -1375,7 +1375,7 @@ export const en = {
     confirmPasswordPlaceholder: 'Re-enter new password',
     errPasswordsMismatch: 'Passwords do not match.',
     updatePassword: 'Update password',
-    brandName: 'myastro360',
+    brandName: 'MyAstro360',
   },
 
   // Profile
@@ -1464,7 +1464,7 @@ export const en = {
     strengthVeryStrong: 'Very Strong',
     // Header
     welcomePrefix: 'Welcome to',
-    brandName: 'myastro360',
+    brandName: 'MyAstro360',
     myPrefix: 'My',
     profileHighlight: 'Profile',
     subtitleIncomplete: 'Complete your birth details to unlock personalized astrology',

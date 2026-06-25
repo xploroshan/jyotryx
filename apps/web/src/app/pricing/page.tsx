@@ -152,9 +152,9 @@ export default function PricingPage() {
       ? {
           "@context": "https://schema.org",
           "@type": "Service",
-          name: "myastro360 Vedic Astrology",
+          name: "MyAstro360 Vedic Astrology",
           serviceType: "Online astrology consultation",
-          provider: { "@type": "Organization", name: "myastro360" },
+          provider: { "@type": "Organization", name: "MyAstro360" },
           offers: [
             ...plans
               .filter((p) => p.price > 0)

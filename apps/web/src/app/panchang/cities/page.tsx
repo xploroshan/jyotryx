@@ -4,7 +4,7 @@ import { SEO_CITIES } from '@/lib/seo/cities';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
 
 export const metadata: Metadata = {
-  title: `Today's Panchang by City — All ${SEO_CITIES.length} Cities | myastro360`,
+  title: `Today's Panchang by City — All ${SEO_CITIES.length} Cities | MyAstro360`,
   description: `Today's Hindu calendar (tithi, nakshatra, sunrise, sunset, Rahu Kaal) for the top ${SEO_CITIES.length} Indian cities. Each panchang is calculated from the city's exact coordinates using Swiss Ephemeris.`,
   alternates: { canonical: `${SITE_ORIGIN}/panchang/cities` },
 };

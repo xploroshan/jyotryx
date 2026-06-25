@@ -24,12 +24,12 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const { token } = await params;
   const data = await getSharedMatch(token);
   if (!data) {
-    return { title: "Shared compatibility result | myastro360", robots: { index: false, follow: false } };
+    return { title: "Shared compatibility result | MyAstro360", robots: { index: false, follow: false } };
   }
 
   const pair = `${data.personAName} & ${data.personBName}`;
-  const title = `${pair} — ${data.percentage}% Kundli compatibility | myastro360`;
-  const description = `${pair} scored ${data.totalScore}/${data.maxScore} (${data.percentage}%) on Ashtakoota Guna Milan. See the full koota-by-koota breakdown on myastro360.`;
+  const title = `${pair} — ${data.percentage}% Kundli compatibility | MyAstro360`;
+  const description = `${pair} scored ${data.totalScore}/${data.maxScore} (${data.percentage}%) on Ashtakoota Guna Milan. See the full koota-by-koota breakdown on MyAstro360.`;
   const url = `${SITE_ORIGIN}/match/${token}`;
   const ogImage = `/match/${token}/og`;
 
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
       description,
       type: "article",
       url,
-      siteName: "myastro360",
+      siteName: "MyAstro360",
       images: [{ url: ogImage, width: 1200, height: 630, alt: pair }],
     },
     twitter: { card: "summary_large_image", title, description, images: [ogImage] },

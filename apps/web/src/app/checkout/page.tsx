@@ -265,7 +265,7 @@ function CheckoutInner() {
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
-        name: "myastro360",
+        name: "MyAstro360",
         description: product.title,
         prefill: {
           name: user?.name ?? undefined,

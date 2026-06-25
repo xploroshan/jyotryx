@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
 
   const meta = PERIODS[period];
   const yearSuffix = period === 'yearly' ? ` ${new Date().getFullYear()}` : '';
-  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix} | myastro360`;
+  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix} | MyAstro360`;
   const description = `${sign.name} (${sign.symbol}) ${meta.label.toLowerCase()} horoscope — love, career, money and health predictions for ${meta.adjective}. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`;
 
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     title,
     description,
     alternates: { canonical, languages },
-    openGraph: { title, description, type: 'article', url: canonical, siteName: 'myastro360', images: [{ url: '/og', width: 1200, height: 630, alt: title }] },
+    openGraph: { title, description, type: 'article', url: canonical, siteName: 'MyAstro360', images: [{ url: '/og', width: 1200, height: 630, alt: title }] },
     twitter: { card: 'summary_large_image', title, description, images: ['/og'] },
   };
 }
@@ -90,10 +90,10 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
     headline: `${sign.name} ${meta.label} Horoscope`,
     datePublished: today.toISOString(),
     dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'myastro360' },
+    author: { '@type': 'Organization', name: 'MyAstro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'myastro360',
+      name: 'MyAstro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`,
