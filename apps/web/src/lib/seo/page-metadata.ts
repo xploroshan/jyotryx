@@ -67,7 +67,7 @@ export function pageMetadata({ title, description, path, keywords, hreflang }: P
       description,
       url,
       type: "website",
-      siteName: "myastro360",
+      siteName: "MyAstro360",
       images: [{ ...OG_IMAGE, alt: title }],
     },
     twitter: { card: "summary_large_image", title, description, images: ["/og"] },
@@ -118,7 +118,7 @@ export async function localizedFeatureMetadata(locale: Locale, path: string): Pr
   const headline = section?.title
     ? `${section.title}${section.titleHighlight ? ` ${section.titleHighlight}` : ""}`
     : null;
-  const title = headline ? `${headline} | myastro360` : fallback.title;
+  const title = headline ? `${headline} | MyAstro360` : fallback.title;
   const description = section?.description ?? fallback.description;
 
   return localizedMetadata({ locale, path, title, description, keywords: fallback.keywords });
@@ -142,7 +142,7 @@ export function localizedMetadata({ locale, path, title, description, keywords, 
       description,
       url: canonical,
       type: "website",
-      siteName: "myastro360",
+      siteName: "MyAstro360",
       images: [{ ...OG_IMAGE, alt: title }],
     },
     twitter: { card: "summary_large_image", title, description, images: ["/og"] },

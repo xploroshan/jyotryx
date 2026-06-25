@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { greetingName } from "@/lib/displayName";
-import { LogoMark } from "@/components/ui/Logo";
+import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useTranslation } from "@/i18n";
 import {
@@ -137,9 +137,7 @@ export default function NavbarV2() {
             className="flex items-center gap-2 shrink-0 group focus-ring rounded-md"
           >
             <LogoMark className="h-6 w-6 transition-transform duration-300 group-hover:rotate-[12deg]" />
-            <span className="font-semibold text-[16px] tracking-tight text-[var(--color-fg)]">
-              myastro360
-            </span>
+            <Wordmark className="font-semibold text-[16px] tracking-tight text-[var(--color-fg)]" />
           </Link>
 
           {/* Desktop primary nav */}

@@ -31,7 +31,7 @@ function readLabel(t: unknown, path: string, fallback = ""): string {
 
 /**
  * Renders a highlight phrase with the .accent-underline scoped to the brand
- * name "myastro360" only. Each fragment carries its own gradient because
+ * name "MyAstro360" only. Each fragment carries its own gradient because
  * `text-gradient-sunrise` clips background to text — putting it on a parent
  * leaves the children with `color: transparent` and no gradient of their own.
  * Brand string is locale-stable; if a translation drops it the whole phrase
@@ -39,7 +39,7 @@ function readLabel(t: unknown, path: string, fallback = ""): string {
  * weight carries the emphasis in every script (no Latin-only italic relied on).
  */
 function renderHighlight(text: string) {
-  const BRAND = "myastro360";
+  const BRAND = "MyAstro360";
   if (!text.includes(BRAND)) {
     return <span className="text-gradient-sunrise">{text}</span>;
   }
@@ -385,7 +385,7 @@ function HowItWorks({
             className="font-display font-semibold text-surface-950 tracking-[-0.01em] leading-[1.0]"
             style={{ fontSize: "clamp(36px, 5vw, 72px)" }}
           >
-            <span className="text-gradient-sunrise">myastro360</span> {title}
+            <span className="text-gradient-sunrise">MyAstro360</span> {title}
           </h2>
         </div>
 

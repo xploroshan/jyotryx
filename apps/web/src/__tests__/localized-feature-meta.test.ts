@@ -16,7 +16,7 @@ import { ta } from '@/i18n/ta';
 describe('localizedFeatureMetadata', () => {
   it('composes the Hindi title from the translated dictionary, not the English fallback', async () => {
     const meta = await localizedFeatureMetadata('hi', '/numerology');
-    expect(meta.title).toBe(`${hi.numerology.title} ${hi.numerology.titleHighlight} | myastro360`);
+    expect(meta.title).toBe(`${hi.numerology.title} ${hi.numerology.titleHighlight} | MyAstro360`);
     expect(meta.description).toBe(hi.numerology.description);
     // It must NOT be the English FEATURE_PAGES title.
     expect(meta.title).not.toBe(FEATURE_PAGES['/numerology'].title);
@@ -24,8 +24,8 @@ describe('localizedFeatureMetadata', () => {
 
   it('omits the highlight segment when the section has only a title (tarot)', async () => {
     const meta = await localizedFeatureMetadata('ta', '/tarot');
-    // tarot has no `titleHighlight` — title is just `${title} | myastro360`.
-    expect(meta.title).toBe(`${ta.tarot.title} | myastro360`);
+    // tarot has no `titleHighlight` — title is just `${title} | MyAstro360`.
+    expect(meta.title).toBe(`${ta.tarot.title} | MyAstro360`);
     expect(meta.description).toBe(ta.tarot.description);
   });
 

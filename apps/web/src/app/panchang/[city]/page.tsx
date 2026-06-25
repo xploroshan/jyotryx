@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `Panchang for ${city.name}, ${city.state} — ${today} | myastro360`;
+  const title = `Panchang for ${city.name}, ${city.state} — ${today} | MyAstro360`;
   const description = `Today's Hindu calendar (Panchang) for ${city.name}: tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal, Gulika Kaal and Yamakantaka — calculated from Swiss Ephemeris for ${city.name}'s exact latitude and longitude.`;
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
       description,
       type: 'article',
       url: canonical,
-      siteName: 'myastro360',
+      siteName: 'MyAstro360',
       images: [{ url: '/og', width: 1200, height: 630, alt: title }],
     },
     twitter: { card: 'summary_large_image', title, description, images: ['/og'] },
@@ -102,10 +102,10 @@ export default async function PanchangCityPage({ params }: RouteProps) {
     headline: `Panchang for ${city.name} — ${todayDisplay}`,
     datePublished: today.toISOString(),
     dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'myastro360' },
+    author: { '@type': 'Organization', name: 'MyAstro360' },
     publisher: {
       '@type': 'Organization',
-      name: 'myastro360',
+      name: 'MyAstro360',
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
     },
     mainEntityOfPage: `${SITE_ORIGIN}/panchang/${city.slug}`,
@@ -147,7 +147,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
       a: `They are short daily windows traditionally avoided for starting something new — signing a contract, beginning a journey, or starting a ceremony. Routine activities already in progress are unaffected; the convention is simply to time first acts outside these windows.`,
     },
     {
-      q: `Which ayanamsa and engine does myastro360 use?`,
+      q: `Which ayanamsa and engine does MyAstro360 use?`,
       a: `Sidereal values use the canonical Lahiri ayanamsa, and all positions are computed from Swiss Ephemeris — the same astronomical engine used by professional astrologers and standard panchangs. Re-running with the same date returns identical results.`,
     },
     {
@@ -269,7 +269,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
             How {city.name}'s panchang is computed
           </h3>
           <p className="text-sm text-emphasis leading-relaxed">
-            myastro360 uses <strong>Swiss Ephemeris</strong> (the same astronomical engine used by
+            MyAstro360 uses <strong>Swiss Ephemeris</strong> (the same astronomical engine used by
             professional astrologers and academic researchers) and the canonical{' '}
             <strong>Lahiri ayanamsa</strong> for sidereal calculations. Sunrise and sunset are
             geocoded for {city.name}'s coordinates rather than the Indian Standard Time meridian,

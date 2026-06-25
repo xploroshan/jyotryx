@@ -70,6 +70,8 @@ vi.mock('@/lib/api', () => ({
 // ─── Mock Logo ──────────────────────────────────────────────────────────────
 vi.mock('@/components/ui/Logo', () => ({
   LogoMark: ({ className }: any) => <div data-testid="logo-mark" className={className} />,
+  Wordmark: ({ className }: any) => <span className={className}>MyAstro360</span>,
+  Logo: ({ className }: any) => <span className={className}>MyAstro360</span>,
 }));
 
 // ─── Mock Firebase ──────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { OG_MARK_DATA_URI, GRADIENT_360_STYLE, OG_INK_BG } from "@/lib/brand/og-mark";
 
 /**
  * Brand Open Graph / social card, served as a normal route at `/og`.
@@ -27,19 +28,23 @@ export function GET() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #1a1206 0%, #2e1d0a 55%, #0d0904 100%)",
-          color: "#f5ecd8",
+          background: OG_INK_BG,
+          color: "#ece9f6",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ fontSize: 84, fontWeight: 800, letterSpacing: -2, display: "flex" }}>
-          <span style={{ color: "#f5ecd8" }}>myastro</span>
-          <span style={{ color: "#ff7a1a" }}>360</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={OG_MARK_DATA_URI} width={132} height={132} alt="" />
+          <div style={{ fontSize: 84, fontWeight: 800, letterSpacing: -2, display: "flex" }}>
+            <span style={{ color: "#f5f3ff" }}>MyAstro</span>
+            <span style={GRADIENT_360_STYLE}>360</span>
+          </div>
         </div>
-        <div style={{ marginTop: 24, fontSize: 36, color: "#d9c9a6", display: "flex" }}>
+        <div style={{ marginTop: 28, fontSize: 36, color: "#c3bce0", display: "flex" }}>
           Vedic Astrology · Kundli · Horoscope · Palmistry
         </div>
-        <div style={{ marginTop: 40, fontSize: 24, color: "#9a8a6a", display: "flex" }}>
+        <div style={{ marginTop: 36, fontSize: 24, color: "#8a83b0", display: "flex" }}>
           Personalized guidance, available 24/7
         </div>
       </div>

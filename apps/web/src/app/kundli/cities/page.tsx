@@ -4,7 +4,7 @@ import { SEO_CITIES } from '@/lib/seo/cities';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
 
 export const metadata: Metadata = {
-  title: `Free Kundli by City — All ${SEO_CITIES.length} Indian Cities | myastro360`,
+  title: `Free Kundli by City — All ${SEO_CITIES.length} Indian Cities | MyAstro360`,
   description: `Free, accurate Vedic kundli (janma kundali) for the top ${SEO_CITIES.length} Indian cities. Each chart is computed using the city's exact coordinates with Swiss Ephemeris and Lahiri ayanamsa.`,
   alternates: { canonical: `${SITE_ORIGIN}/kundli/cities` },
 };

@@ -37,17 +37,17 @@ import WebVitals from "@/components/analytics/WebVitals";
 const ORGANIZATION_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "myastro360",
+  name: "MyAstro360",
   url: SITE_ORIGIN,
   logo: `${SITE_ORIGIN}/logo.svg`,
   description:
-    "myastro360 is a Vedic astrology platform offering instant, personalized Kundli, horoscopes, palmistry, compatibility matching, panchang, and muhurat guidance.",
+    "MyAstro360 is a Vedic astrology platform offering instant, personalized Kundli, horoscopes, palmistry, compatibility matching, panchang, and muhurat guidance.",
 };
 
 const WEBSITE_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "myastro360",
+  name: "MyAstro360",
   url: SITE_ORIGIN,
 };
 
@@ -93,16 +93,20 @@ const notoVars = [
 ].map((f) => f.variable).join(" ");
 
 export const metadata: Metadata = {
-  title: "myastro360 — Vedic Astrology Platform",
+  title: "MyAstro360 — Vedic Astrology Platform",
   description:
     "Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
   keywords: [
     "astrology", "vedic astrology", "kundli", "horoscope",
-    "palmistry", "kundli matching", "panchang", "muhurat", "myastro360",
+    "palmistry", "kundli matching", "panchang", "muhurat", "MyAstro360",
   ],
   metadataBase: new URL("https://www.myastro360.com"),
   // Google Search Console site verification. Set NEXT_PUBLIC_GSC_VERIFICATION
@@ -118,16 +122,16 @@ export const metadata: Metadata = {
   // which canonicalises all feature pages to "/". Each page sets its own
   // self-canonical via `pageMetadata()`; pages without one self-canonicalise.
   openGraph: {
-    title: "myastro360 — Vedic Astrology Platform",
+    title: "MyAstro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
     type: "website",
     url: "https://www.myastro360.com",
-    siteName: "myastro360",
-    images: [{ url: "/og", width: 1200, height: 630, alt: "myastro360" }],
+    siteName: "MyAstro360",
+    images: [{ url: "/og", width: 1200, height: 630, alt: "MyAstro360" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "myastro360 — Vedic Astrology Platform",
+    title: "MyAstro360 — Vedic Astrology Platform",
     description: "Instant astrology consultations, palmistry, Kundli, and more.",
     images: ["/og"],
   },

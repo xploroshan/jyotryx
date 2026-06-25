@@ -38,7 +38,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About numerology',
     intro: [
       'Numerology reads the numbers behind your name and date of birth to describe your strengths, life direction and the patterns that recur in your decisions. In the Vedic tradition each number is tied to a planet — for example 1 to the Sun and 3 to Jupiter — so a numerology profile is really a compact planetary signature.',
-      "myastro360's calculator derives your core numbers — life path, destiny (expression), soul (heart's desire) and personality — and explains each in plain language, with the lucky colours, days and compatible numbers that follow from them. It also scores a brand or business name so you can choose one that's vibrationally aligned.",
+      "MyAstro360's calculator derives your core numbers — life path, destiny (expression), soul (heart's desire) and personality — and explains each in plain language, with the lucky colours, days and compatible numbers that follow from them. It also scores a brand or business name so you can choose one that's vibrationally aligned.",
     ],
     howItWorks: {
       heading: 'How the numerology calculator works',
@@ -63,7 +63,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About tarot reading',
     intro: [
       'A tarot reading uses the 78-card deck — 22 Major Arcana that mark life’s big themes and 56 Minor Arcana that cover everyday matters — to reflect a situation back to you and surface the choice in front of you. It is a tool for clarity and perspective, not fixed prophecy.',
-      'myastro360 draws your cards and explains each one in context: its upright or reversed meaning, how it speaks to love, career or a specific question, and what the spread suggests as a next step.',
+      'MyAstro360 draws your cards and explains each one in context: its upright or reversed meaning, how it speaks to love, career or a specific question, and what the spread suggests as a next step.',
     ],
     howItWorks: {
       heading: 'How an online tarot reading works',
@@ -88,7 +88,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About Vastu Shastra',
     intro: [
       'Vastu Shastra is the traditional Indian science of architecture and placement. It aligns the design of a home or workplace with the five elements (earth, water, fire, air, space) and the cardinal directions so that light, air and energy flow in a way that supports health, focus and prosperity.',
-      'myastro360 turns Vastu into practical, room-by-room guidance — where to place the kitchen, the bed, the cash box or a study — and the simple remedies that correct a less-than-ideal layout without rebuilding.',
+      'MyAstro360 turns Vastu into practical, room-by-room guidance — where to place the kitchen, the bed, the cash box or a study — and the simple remedies that correct a less-than-ideal layout without rebuilding.',
     ],
     howItWorks: {
       heading: 'How Vastu guidance works',
@@ -113,7 +113,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About shubh muhurat',
     intro: [
       'A muhurat is an auspicious window of time chosen so that an important event begins under supportive planetary conditions. Indian tradition uses the panchang — tithi, nakshatra, yoga, karana and weekday — together with the placement of the Moon and benefic planets to find when to start a marriage, a house-warming (griha pravesh), a new business, or travel.',
-      'myastro360 finds favourable muhurat windows for your event and location, and flags the inauspicious periods (rahu kaal, yamaganda, gulika) to avoid.',
+      'MyAstro360 finds favourable muhurat windows for your event and location, and flags the inauspicious periods (rahu kaal, yamaganda, gulika) to avoid.',
     ],
     howItWorks: {
       heading: 'How muhurat selection works',
@@ -138,7 +138,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About palmistry',
     intro: [
       'Palmistry (hast rekha) reads the lines, mounts and shape of the hand to describe temperament, strengths and the broad arc of life. The four major lines — heart, head, life and fate — and the mounts named for the planets each carry meaning that, read together, form a personality portrait.',
-      'myastro360 analyses a photo of your palm and explains what each line and mount suggests, in clear language, with no jargon and nothing left vague.',
+      'MyAstro360 analyses a photo of your palm and explains what each line and mount suggests, in clear language, with no jargon and nothing left vague.',
     ],
     howItWorks: {
       heading: 'How AI palm reading works',
@@ -163,7 +163,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About kundli matching',
     intro: [
       'Kundli matching (Guna Milan) is the Vedic method of checking marriage compatibility by comparing the birth charts of two people. The Ashtakoota system scores eight factors — from Varna and Vashya to Nadi — out of 36 points, and also checks for Mangal (Manglik) dosha, to gauge mental, physical and spiritual compatibility.',
-      'myastro360 computes the full 36-guna score, explains what each koota means for the couple, runs the Manglik check, and gives a clear, balanced read rather than a simple pass/fail.',
+      'MyAstro360 computes the full 36-guna score, explains what each koota means for the couple, runs the Manglik check, and gives a clear, balanced read rather than a simple pass/fail.',
     ],
     howItWorks: {
       heading: 'How kundli matching works',
@@ -188,7 +188,7 @@ export const FEATURE_CONTENT: Record<string, FeatureContent> = {
     heading: 'About your kundli (birth chart)',
     intro: [
       'A kundli (janam kundali) is your Vedic birth chart — a snapshot of the sky at the exact moment and place you were born. It maps the planets across twelve houses and the sidereal zodiac, and from it flow your dashas (planetary periods), yogas, doshas and the timing of life events.',
-      'myastro360 generates a complete kundli from Swiss Ephemeris with Lahiri ayanamsa — the rasi and navamsa charts, Vimshottari dasha, planetary positions and dosha checks — and explains it in language you can actually use.',
+      'MyAstro360 generates a complete kundli from Swiss Ephemeris with Lahiri ayanamsa — the rasi and navamsa charts, Vimshottari dasha, planetary positions and dosha checks — and explains it in language you can actually use.',
     ],
     howItWorks: {
       heading: 'How the kundli generator works',
@@ -221,7 +221,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'अंक ज्योतिष के बारे में',
       intro: [
         'अंक ज्योतिष आपके नाम और जन्म तारीख में छिपे अंकों का विश्लेषण करके आपकी शक्तियों, जीवन दिशा और आवर्ती पैटर्न को समझता है। वैदिक परंपरा में प्रत्येक अंक एक ग्रह से जुड़ा है — जैसे 1 सूर्य से और 3 गुरु से — इसलिए अंक ज्योतिष की रूपरेखा एक संक्षिप्त ग्रह-हस्ताक्षर होती है।',
-        'myastro360 का कैलकुलेटर आपके मूल अंक निकालता है — जीवन पथ, भाग्यांक, आत्मांक और व्यक्तित्व अंक — और प्रत्येक को सरल भाषा में समझाता है, साथ ही शुभ रंग, दिन और अनुकूल अंक भी बताता है। यह किसी ब्रांड या व्यवसाय के नाम की कंपन-अनुकूलता भी जाँचता है।',
+        'MyAstro360 का कैलकुलेटर आपके मूल अंक निकालता है — जीवन पथ, भाग्यांक, आत्मांक और व्यक्तित्व अंक — और प्रत्येक को सरल भाषा में समझाता है, साथ ही शुभ रंग, दिन और अनुकूल अंक भी बताता है। यह किसी ब्रांड या व्यवसाय के नाम की कंपन-अनुकूलता भी जाँचता है।',
       ],
       howItWorks: {
         heading: 'अंक ज्योतिष कैलकुलेटर कैसे काम करता है',
@@ -246,7 +246,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'टैरो रीडिंग के बारे में',
       intro: [
         'टैरो रीडिंग 78 पत्तों के डेक का उपयोग करती है — 22 मेजर आर्काना जो जीवन के बड़े विषयों को दर्शाते हैं और 56 माइनर आर्काना जो रोज़मर्रा के मामलों को कवर करते हैं — आपकी स्थिति को प्रतिबिंबित करने और आपके सामने के चुनाव को उजागर करने के लिए। यह स्पष्टता और दृष्टिकोण का एक उपकरण है, निश्चित भविष्यवाणी नहीं।',
-        'myastro360 आपके पत्ते निकालता है और प्रत्येक को संदर्भ में समझाता है — सीधा या उलटा अर्थ, प्रेम, करियर या किसी विशेष प्रश्न के लिए इसका क्या संदेश है, और अगला सुझाया गया कदम क्या है।',
+        'MyAstro360 आपके पत्ते निकालता है और प्रत्येक को संदर्भ में समझाता है — सीधा या उलटा अर्थ, प्रेम, करियर या किसी विशेष प्रश्न के लिए इसका क्या संदेश है, और अगला सुझाया गया कदम क्या है।',
       ],
       howItWorks: {
         heading: 'ऑनलाइन टैरो रीडिंग कैसे काम करती है',
@@ -271,7 +271,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'वास्तु शास्त्र के बारे में',
       intro: [
         'वास्तु शास्त्र भवन निर्माण और स्थान-व्यवस्था की पारंपरिक भारतीय विज्ञान है। यह घर या कार्यस्थल के डिज़ाइन को पाँच तत्वों (पृथ्वी, जल, अग्नि, वायु, आकाश) और कार्डिनल दिशाओं के साथ संरेखित करता है ताकि प्रकाश, वायु और ऊर्जा का प्रवाह स्वास्थ्य, एकाग्रता और समृद्धि को समर्थन दे।',
-        'myastro360 वास्तु को व्यावहारिक, कमरे-दर-कमरे मार्गदर्शन में बदलता है — रसोई, बिस्तर, तिजोरी या पढ़ाई की जगह कहाँ रखें — और वे सरल उपाय जो बिना पुनर्निर्माण के कम अनुकूल लेआउट को भी ठीक करते हैं।',
+        'MyAstro360 वास्तु को व्यावहारिक, कमरे-दर-कमरे मार्गदर्शन में बदलता है — रसोई, बिस्तर, तिजोरी या पढ़ाई की जगह कहाँ रखें — और वे सरल उपाय जो बिना पुनर्निर्माण के कम अनुकूल लेआउट को भी ठीक करते हैं।',
       ],
       howItWorks: {
         heading: 'वास्तु मार्गदर्शन कैसे काम करता है',
@@ -296,7 +296,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'शुभ मुहूर्त के बारे में',
       intro: [
         'मुहूर्त एक शुभ समय-खिड़की है जो किसी महत्वपूर्ण कार्य को अनुकूल ग्रह स्थितियों के अंतर्गत प्रारंभ करने के लिए चुनी जाती है। भारतीय परंपरा में पंचांग — तिथि, नक्षत्र, योग, करण और वार — के साथ-साथ चंद्रमा और शुभ ग्रहों की स्थिति का उपयोग करके विवाह, गृह प्रवेश, नया व्यवसाय या यात्रा के लिए मुहूर्त निकाला जाता है।',
-        'myastro360 आपके कार्यक्रम और स्थान के लिए अनुकूल मुहूर्त खिड़कियाँ खोजता है और अशुभ काल (राहु काल, यमगंड, गुलिका) को स्पष्ट रूप से चिह्नित करता है।',
+        'MyAstro360 आपके कार्यक्रम और स्थान के लिए अनुकूल मुहूर्त खिड़कियाँ खोजता है और अशुभ काल (राहु काल, यमगंड, गुलिका) को स्पष्ट रूप से चिह्नित करता है।',
       ],
       howItWorks: {
         heading: 'मुहूर्त चयन कैसे काम करता है',
@@ -321,7 +321,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'हस्त रेखा के बारे में',
       intro: [
         'हस्त रेखा विज्ञान हाथ की रेखाओं, पर्वतों और आकृति को पढ़कर स्वभाव, शक्तियों और जीवन की व्यापक रूपरेखा का वर्णन करता है। चार प्रमुख रेखाएँ — हृदय, मस्तिष्क, जीवन और भाग्य — और ग्रहों के नाम से पुकारे जाने वाले पर्वत मिलकर एक व्यक्तित्व चित्र बनाते हैं।',
-        'myastro360 आपकी हथेली की फ़ोटो का विश्लेषण करता है और प्रत्येक रेखा और पर्वत का अर्थ सरल भाषा में बताता है — बिना किसी जटिल शब्दावली के और बिना कुछ अस्पष्ट छोड़े।',
+        'MyAstro360 आपकी हथेली की फ़ोटो का विश्लेषण करता है और प्रत्येक रेखा और पर्वत का अर्थ सरल भाषा में बताता है — बिना किसी जटिल शब्दावली के और बिना कुछ अस्पष्ट छोड़े।',
       ],
       howItWorks: {
         heading: 'AI हस्त रेखा विश्लेषण कैसे काम करता है',
@@ -346,7 +346,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'कुंडली मिलान के बारे में',
       intro: [
         'कुंडली मिलान (गुण मिलान) दो लोगों की जन्म पत्रिकाओं की तुलना करके विवाह अनुकूलता जाँचने की वैदिक विधि है। अष्टकूट प्रणाली वर्ण और वश्य से नाड़ी तक आठ कारकों को 36 अंकों से मापती है, और मंगल (मांगलिक) दोष की जाँच भी करती है।',
-        'myastro360 पूर्ण 36-गुण स्कोर की गणना करता है, प्रत्येक कूट का दंपती के लिए क्या अर्थ है यह बताता है, मांगलिक जाँच करता है, और एक स्पष्ट, संतुलित विश्लेषण देता है — न कि केवल उत्तीर्ण/अनुत्तीर्ण।',
+        'MyAstro360 पूर्ण 36-गुण स्कोर की गणना करता है, प्रत्येक कूट का दंपती के लिए क्या अर्थ है यह बताता है, मांगलिक जाँच करता है, और एक स्पष्ट, संतुलित विश्लेषण देता है — न कि केवल उत्तीर्ण/अनुत्तीर्ण।',
       ],
       howItWorks: {
         heading: 'कुंडली मिलान कैसे काम करता है',
@@ -371,7 +371,7 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
       heading: 'आपकी कुंडली (जन्म पत्रिका) के बारे में',
       intro: [
         'कुंडली (जन्म कुंडली) आपकी वैदिक जन्म पत्रिका है — आपके जन्म के सटीक क्षण और स्थान पर आकाश का एक चित्र। यह बारह भावों और सिद्धांत राशि चक्र में ग्रहों को मानचित्रित करती है, और इससे आपकी दशाएँ (ग्रह काल), योग, दोष और जीवन की घटनाओं का समय प्रवाहित होता है।',
-        'myastro360 स्विस एफेमेरिस और लहरी अयनांश के साथ एक पूर्ण कुंडली तैयार करता है — राशि और नवमांश चार्ट, विंशोत्तरी दशा, ग्रह स्थिति और दोष जाँच — और इसे उस भाषा में समझाता है जिसे आप वास्तव में उपयोग कर सकते हैं।',
+        'MyAstro360 स्विस एफेमेरिस और लहरी अयनांश के साथ एक पूर्ण कुंडली तैयार करता है — राशि और नवमांश चार्ट, विंशोत्तरी दशा, ग्रह स्थिति और दोष जाँच — और इसे उस भाषा में समझाता है जिसे आप वास्तव में उपयोग कर सकते हैं।',
       ],
       howItWorks: {
         heading: 'कुंडली जेनरेटर कैसे काम करता है',

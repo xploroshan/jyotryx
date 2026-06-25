@@ -1,5 +1,5 @@
 /**
- * Offline Computation Engine for myastro360
+ * Offline Computation Engine for MyAstro360
  *
  * Provides fully local computations for features that don't need AI:
  * - Numerology (Chaldean & Pythagorean)

@@ -10,7 +10,7 @@ import { identify, trackOnce } from "@/lib/analytics";
 import { Toast } from "@/components/ui/Toast";
 import { Gift } from "lucide-react";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
-import { LogoMark } from "@/components/ui/Logo";
+import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
   auth,
@@ -656,7 +656,7 @@ function AuthPageContent() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <LogoMark className="h-8 w-8" />
-            <span className="text-lg font-semibold text-surface-950">{t.auth.brandName}</span>
+            <Wordmark className="text-lg font-semibold text-surface-950" />
           </Link>
           <p className="text-sm text-[rgba(12,8,5,0.66)]">{t.auth.subtitle}</p>
         </div>
@@ -784,7 +784,7 @@ function AuthPageContent() {
                   <Gift size={16} strokeWidth={1.8} aria-hidden className="mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <strong className="font-semibold">{referralPreview.referrerName}</strong>{" "}
-                    invited you to myastro360 — you'll both get{" "}
+                    invited you to MyAstro360 — you'll both get{" "}
                     <strong className="font-semibold">
                       {referralPreview.bonusDays} days
                     </strong>{" "}
