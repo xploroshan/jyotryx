@@ -278,9 +278,19 @@ export class LlmService implements OnModuleInit {
     return null;
   }
 
+  /** Max wait for the next stream chunk before failing over / aborting. */
+  private static readonly STREAM_IDLE_TIMEOUT_MS = 30_000;
+
   /**
-   * Streaming chat completion with failover.
-   * Returns an async iterable of string chunks, or null if no provider is available.
+   * Streaming chat completion with REAL failover + usage recording.
+   *
+   * Provider `chatCompletionStream` methods are async generators that do no
+   * work until the first pull, so the previous `try { return provider.stream }`
+   * could never catch a connection error — failover was dead code and streamed
+   * chat was completely uncosted. We now prime each candidate (await the first
+   * chunk); only a provider that actually connects is returned, wrapped so the
+   * rest of the stream runs under an idle timeout and one llm_usage row is
+   * written when it ends. Returns null only when every provider fails to start.
    */
   async chatCompletionStream(options: LlmChatOptions): Promise<AsyncIterable<string> | null> {
     await this.reloadConfig(false).catch(() => {});
@@ -288,31 +298,98 @@ export class LlmService implements OnModuleInit {
     const model = options.model || this.currentConfig.defaultModel;
     const enrichedOptions = { ...options, model };
 
+    const candidates: Array<[string, LlmProvider]> = [];
     if (this.isProviderEnabled('openai') && this.openaiProvider.isAvailable()) {
-      try {
-        return this.openaiProvider.chatCompletionStream(enrichedOptions);
-      } catch (err) {
-        this.logger.warn(`OpenAI stream failed: ${(err as Error).message}`);
-      }
+      candidates.push(['openai', this.openaiProvider]);
     }
-
     if (this.isProviderEnabled('gemini') && this.failoverEnabled && this.geminiProvider.isAvailable()) {
-      try {
-        return this.geminiProvider.chatCompletionStream(enrichedOptions);
-      } catch (err) {
-        this.logger.warn(`Gemini stream also failed: ${(err as Error).message}`);
-      }
+      candidates.push(['gemini', this.geminiProvider]);
+    }
+    if (this.isProviderEnabled('anthropic') && this.failoverEnabled && this.anthropicProvider.isAvailable()) {
+      candidates.push(['anthropic', this.anthropicProvider]);
     }
 
-    if (this.isProviderEnabled('anthropic') && this.failoverEnabled && this.anthropicProvider.isAvailable()) {
+    for (const [name, provider] of candidates) {
       try {
-        return this.anthropicProvider.chatCompletionStream(enrichedOptions);
+        const iterator = provider.chatCompletionStream(enrichedOptions)[Symbol.asyncIterator]();
+        // Prime: forces the underlying network call so connect/auth failures
+        // surface here and fall through to the next provider.
+        const first = await this.withIdleTimeout(
+          iterator.next(),
+          LlmService.STREAM_IDLE_TIMEOUT_MS,
+          name,
+        );
+        return this.wrapStream(name, model, enrichedOptions, iterator, first);
       } catch (err) {
-        this.logger.error(`Anthropic stream also failed: ${(err as Error).message}`);
+        this.logger.warn(`${name} stream failed to start: ${(err as Error).message}`);
       }
     }
 
     return null;
+  }
+
+  /** Reject if `p` doesn't settle within `ms` (ms <= 0 disables the timeout). */
+  private withIdleTimeout<T>(p: Promise<T>, ms: number, providerName: string): Promise<T> {
+    if (!ms || ms <= 0) return p;
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error(`${providerName} stream timed out after ${ms}ms of inactivity`)),
+        ms,
+      );
+      p.then(
+        (v) => { clearTimeout(timer); resolve(v); },
+        (e) => { clearTimeout(timer); reject(e); },
+      );
+    });
+  }
+
+  /**
+   * Re-emit the primed first chunk, drain the rest under a per-chunk idle
+   * timeout, and record one llm_usage row (estimated tokens — streaming
+   * providers don't return exact counts) when the stream ends or errors.
+   */
+  private async *wrapStream(
+    providerName: string,
+    model: string,
+    options: LlmChatOptions,
+    iterator: AsyncIterator<string>,
+    first: IteratorResult<string>,
+  ): AsyncGenerator<string> {
+    const start = performance.now();
+    let output = '';
+    let errorCode: string | null = null;
+    try {
+      let current = first;
+      while (!current.done) {
+        output += current.value;
+        yield current.value;
+        current = await this.withIdleTimeout(
+          iterator.next(),
+          LlmService.STREAM_IDLE_TIMEOUT_MS,
+          providerName,
+        );
+      }
+    } catch (err) {
+      errorCode = this.classifyError(err);
+      throw err;
+    } finally {
+      const promptChars = (options.messages ?? []).reduce(
+        (n, m) => n + (typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length),
+        0,
+      );
+      this.recordUsage({
+        userId: options.userId,
+        feature: options.feature ?? 'chat:stream',
+        provider: providerName,
+        model,
+        usage: {
+          prompt_tokens: Math.ceil(promptChars / 4),
+          completion_tokens: Math.ceil(output.length / 4),
+        },
+        durationMs: Math.round(performance.now() - start),
+        errorCode,
+      }).catch(() => {});
+    }
   }
 
   /**

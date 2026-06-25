@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { ChatService, ChatSession, ChatMessage } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -22,6 +23,10 @@ import { CurrentUser, JwtPayload } from '../../common/decorators/current-user.de
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
+  // Tighter than the global 60/min cap: chat drives the most expensive
+  // (LLM-token-billed) work, so bound the rate on the two model-calling
+  // endpoints specifically to limit fan-out abuse.
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('message')
   @ApiOperation({ summary: 'Send a message to the AI astrologer' })
   @ApiResponse({ status: 201, description: 'Message sent and AI reply received' })
