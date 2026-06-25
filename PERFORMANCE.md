@@ -37,7 +37,27 @@ vendor chunk) and the always-bundled English i18n dict (`en.ts`, 77KB)** — add
 - `compression` gzips (standalone proof, 19×); web + API typecheck clean; web Vitest **540/540**;
   API Jest **89/89 suites** — no regressions.
 
-## Phase 2 — deep set (planned, in progress)
-SSR-ify the client-heavy pages (`my-day`, `vedic`, `horoscope`, `panchang`) to cut hydration JS; split/
-trim `en.ts` so the base bundle drops; lazy-load Sentry replay. These target the actual vendor-chunk
-weight above. Re-measure + tighten `budget.json` / `.lighthouserc.js` after.
+## Phase 2 — deep set: investigated, mostly NOT warranted
+
+The Phase 2 hypotheses (Sentry ~100KB, heavy barrels) did **not** survive contact with the built bundle:
+- **Sentry replay is already tree-shaken out** — 0 chunks contain `rrweb`; total client Sentry footprint
+  is ~12KB, not ~100KB. No lazy-load win available. (`replaysOnErrorSampleRate` in
+  `sentry.client.config.ts` is inert without an added `replayIntegration()`, so replay never ships.)
+- **Barrels weren't heavy** — Phase 1 `optimizePackageImports` was a measured no-op.
+- The one real lever left is **`en.ts` (77KB source, ~15–20KB gzipped, always in the i18n base chunk)**.
+  It's statically imported as the synchronous fallback for a heavily client-rendered, English-first app;
+  splitting it risks text-flash + the i18n-parity system for ~15KB/page gzipped. **Deferred** — poor
+  risk/reward on an already-lean bundle.
+- **SSR-ifying `my-day`/`vedic`** (auth-gated, client-store + localStorage-cache pages) is a real per-page
+  rewrite. **Deferred** — let the new Web Vitals capture show whether a specific route is actually slow in
+  the field before rewriting it.
+
+**Regression lock:** tightened `apps/web/budget.json` chunk budget 300KB → 260KB (current largest 221KB)
+so future bloat fails CI.
+
+## Conclusion
+The frontend was already light — disciplined third-party loading, tree-shaken deps, optimized fonts, no
+heavy raster images. The highest-impact "quick to load" change was **server-side gzip compression**
+(Phase 1) on the data-heavy responses, plus **CDN cache headers** on public GETs and **Web Vitals field
+monitoring**. Further frontend rewrites aren't justified by the measurements; revisit per-route only if
+field Web Vitals flag a specific slow page.
