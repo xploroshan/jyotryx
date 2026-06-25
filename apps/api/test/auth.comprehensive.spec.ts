@@ -1350,7 +1350,7 @@ describe('Auth: Controller', () => {
       const result = await controller.verifyOtp({
         phone: '+919876543210',
         otp: '123456',
-      });
+      }, { headers: {} } as any);
 
       expect(result).toEqual(expected);
     });
@@ -1361,7 +1361,7 @@ describe('Auth: Controller', () => {
       const expected = { user: { id: 'u1' }, tokens: { accessToken: 'tok' } };
       authService.firebaseAuth.mockResolvedValue(expected);
 
-      const result = await controller.firebaseAuth({ idToken: 'firebase-id-token' });
+      const result = await controller.firebaseAuth({ idToken: 'firebase-id-token' }, { headers: {} } as any);
 
       expect(result).toEqual(expected);
     });
@@ -1372,7 +1372,7 @@ describe('Auth: Controller', () => {
       const expected = { user: { id: 'u1' }, tokens: { accessToken: 'tok' } };
       authService.googleAuth.mockResolvedValue(expected);
 
-      const result = await controller.googleAuth({ idToken: 'google-id-token' });
+      const result = await controller.googleAuth({ idToken: 'google-id-token' }, { headers: {} } as any);
 
       expect(result).toEqual(expected);
     });

@@ -73,6 +73,11 @@ jobs:
         run: npx prisma migrate deploy
       - name: Lint API
         run: cd apps/api && npx nest build
+      - name: Typecheck API (incl. tests)
+        # nest build typechecks src; jest runs ts-jest transpile-only, so test
+        # files are NOT typechecked by it. tsconfig.spec.json covers src + tests
+        # so type regressions in specs can't merge silently.
+        run: cd apps/api && npx tsc --noEmit -p tsconfig.spec.json
       - name: Test API
         run: cd apps/api && npm test
       - name: Install integration-test daemons
@@ -130,6 +135,11 @@ jobs:
       - run: npm ci
       - name: Lint Web
         run: cd apps/web && npm run lint
+      - name: Typecheck Web (incl. tests)
+        # next build typechecks app/pages source but not the e2e/__tests__
+        # suites; an explicit tsc --noEmit covers them so type regressions in
+        # tests fail CI instead of merging.
+        run: cd apps/web && npx tsc --noEmit
       - name: Build Web
         run: cd apps/web && npx next build
         env:

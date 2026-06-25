@@ -3,6 +3,11 @@ import { withSentryConfig } from "@sentry/nextjs";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
+  // Emit a self-contained server bundle (.next/standalone/server.js) so the
+  // Docker/k8s web image can actually boot — the Dockerfile copies
+  // `.next/standalone` and runs `node server.js`, which only exists with this.
+  // Vercel ignores `output` and builds normally, so this is a no-op there.
+  output: "standalone",
   images: {
     remotePatterns: [
       {

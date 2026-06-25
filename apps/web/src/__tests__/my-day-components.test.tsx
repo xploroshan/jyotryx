@@ -3,7 +3,7 @@
  *
  * Validates the code-split PlanetaryHoursSection and translation helpers.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { en } from '@/i18n/en';
 
 // ─── Translation Helpers ───────────────────────────────────────────────
