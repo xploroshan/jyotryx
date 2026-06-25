@@ -20,7 +20,7 @@ MyAstro360 is the rare bootstrapped consumer app whose product *is* a marketing 
 2. **Own "the meter never runs" + "shows its work."** A messaging wedge that peels the large pool of people who distrust or can't afford Astrotalk's per-minute meter and dislike Astrosage's black-box AI. This is positioning, not a price change — pricing stays ₹499/mo, ₹4,999/yr.
 3. **Make WhatsApp + the daily briefing + memory the retention and distribution loop.** Native to India, no-install friction, and a continuity moat (the AI remembers your context) that no human marketplace can match.
 
-**90-day priorities (founder's call — acquisition first):** (1) Stand up the **programmatic-SEO engine** and make the free tools indexable/shareable — the compounding top-of-funnel that's free to us. (2) **Launch Android** with a tuned Play Store listing + ASO. (3) **Light-touch instrumentation in parallel** (GA4 + PostHog) — a day-one task, not a phase — so you can see which acquisition actually works. (4) Tighten the **activation** path ("first meaningful reading") so the traffic you earn converts instead of leaking.
+**90-day priorities (founder's call — acquisition first):** (1) **Extend** the **programmatic-SEO engine** (already built — ~500 URLs) into the high-demand clusters it doesn't yet cover (sign×sign compatibility, numerology/mulank, vs-competitor pages, a blog) and deepen AI-SEO — the compounding top-of-funnel that's free to us. (2) **Launch Android** with a tuned Play Store listing + ASO. (3) **Light-touch instrumentation in parallel** (GA4 + PostHog) — a day-one task, not a phase — so you can see which acquisition actually works. (4) Tighten the **activation** path ("first meaningful reading") so the traffic you earn converts instead of leaking.
 
 **12-month outcome:** a *proven, low-CAC* acquisition → activation → retention loop — programmatic SEO indexing and compounding, a first few hundred paying subscribers, a daily-active retention spine (briefing + WhatsApp), and a referral loop (Synastry sharing) — that earns the right to either a small paid-acquisition test or a raise. We are not promising a hockey stick; we are building the first S-curve so the second one has something to stand on.
 
@@ -63,8 +63,8 @@ Scored against the 17-section rubric. Strengths cluster in the **"what we say"**
 | 1 | Positioning | 4 | "Meter never runs" is distinctive; needs rollout to Play Store + social. |
 | 2 | Customer research | 1 | Founder intuition only; no voice-of-customer capture. **Top gap.** |
 | 3 | Homepage | 4 | Redesigned, on-brand, multilingual. |
-| 4 | Sales / product pages | 2 | Feature pages exist but aren't SEO-structured or conversion-tuned. |
-| 5 | Conversion pages | 2 | Pricing clear; no free-tool funnels / dedicated landers. |
+| 4 | Sales / product pages | 3 | Feature pages carry explainer + FAQ-schema SEO sections; still not fully conversion-tuned. |
+| 5 | Conversion pages | 3 | Pricing clear; free-tool feature pages exist with explainer/FAQ; no dedicated comparison landers yet. |
 | 6 | Competitor comparison | 1 | No "vs Astrotalk / vs Astrosage" pages. |
 | 7 | Resources / content | 1 | No blog / content hub. |
 | 8 | Onboarding | 2 | Exists; activation unproven and unmeasured. |
@@ -72,13 +72,13 @@ Scored against the 17-section rubric. Strengths cluster in the **"what we say"**
 | 10 | Sales material | N/A | Self-serve. |
 | 11 | Messaging | 4 | Strong, voice-disciplined. |
 | 12 | Pricing | 4 | Clear flat pricing; annual default not yet enforced. |
-| 13 | CRO | 2 | Redesigned but no funnel data. |
+| 13 | CRO | 3 | Redesigned; funnel now instrumented (GA4 + PostHog, 5-event funnel shipped) — data starting to accrue. |
 | 14 | GTM launches | 2 | Android launch upcoming; no launch muscle yet. |
 | 15 | Ads (paid) | 0 | None — correct for bootstrapped. |
-| 16 | SEO | 2 | **Huge** latent programmatic potential, unrealized. |
+| 16 | SEO | 4 | **Engine already built** — ~500 programmatic URLs (per-sign horoscope, per-city panchang/kundli), llms.txt, AI-crawler allowlist, JSON-LD, hreflang. Gap is now *coverage depth* (sign×sign, numerology clusters, comparison pages, blog), not foundation. |
 | 17 | Internationalization | 5 | 12 languages with enforced parity — exceptional, a moat. |
 
-**Total ≈ 37 / 80** (excl. N/A). **Shape:** you have built a beautiful, well-positioned, multilingual product and you have *no instrumented funnel and no acquisition channel*. That is exactly the right problem to have at pre-launch — the expensive part (product + positioning + i18n) is done. The cheap-but-disciplined part (measure, publish, distribute) is the next 12 months.
+**Total ≈ 42 / 80** (excl. N/A; revised up from 37 after a 2026-06-25 codebase audit — see changelog). **Shape:** you have built a beautiful, well-positioned, multilingual product *and* a real programmatic-SEO engine and a now-instrumented funnel. The remaining gaps are not foundational — they are **coverage depth** (more SEO clusters, comparison pages, a blog), the **conversion layer** (annual default, value-moment paywall), the **share/referral loop**, and **community + lifecycle**. The expensive part (product + positioning + i18n + SEO engine) is done; the next 12 months is *extend, measure, convert, distribute*.
 
 ---
 
@@ -361,4 +361,12 @@ This is filtered for a bootstrapped, solo, pre-launch app — the value is as mu
 
 ---
 
-*Prepared 2026-06-24 · v1 · MyAstro360 · bootstrapped / pre-launch / solo-founder / Android-imminent.*
+### Changelog
+- **2026-06-25 (v1.1):** Codebase audit recalibrated §3. The programmatic-SEO engine and GA4 wiring were
+  assumed near-empty in v1; they are substantially built. Re-scored SEO 2→4, Sales/product 2→3,
+  Conversion 2→3, CRO 2→3 (total 37→42). Reframed the acquisition spine from "build the engine" to
+  "extend coverage + measure + convert." Shipped the activation funnel instrumentation (GA4 + PostHog).
+
+---
+
+*Prepared 2026-06-24 · v1.1 (2026-06-25) · MyAstro360 · bootstrapped / pre-launch / solo-founder / Android-imminent.*

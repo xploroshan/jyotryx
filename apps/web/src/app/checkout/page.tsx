@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
+import { track } from "@/lib/analytics";
 
 /**
  * One-time Razorpay checkout for credit packs AND pay-to-unlock products
@@ -258,6 +259,7 @@ function CheckoutInner() {
         { token: accessToken! },
       );
 
+      track("checkout_started", { product: product.productId, kind: product.kind, amount: price });
       const rzp = new window.Razorpay({
         key: keyId,
         amount: order.amount,
@@ -283,6 +285,7 @@ function CheckoutInner() {
               { token: accessToken! },
             );
             if (result.verified) {
+              track("purchase", { product: product.productId, kind: product.kind, amount: price });
               if (product.kind === "credits") {
                 const added = result.creditsAdded ?? credits ?? 0;
                 if (user) updateCredits(user.credits + added);

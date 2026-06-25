@@ -25,6 +25,7 @@ import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
 import HtmlLangSync from "@/components/i18n/HtmlLangSync";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { PostHogAnalytics } from "@/components/analytics/PostHogAnalytics";
 
 // Sitewide structured data. The Organization node feeds brand knowledge
 // panels and lets answer engines (ChatGPT, Perplexity, Gemini) attribute
@@ -155,6 +156,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col">
         {process.env.NEXT_PUBLIC_GA_ID ? (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        ) : null}
+        {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
+          <PostHogAnalytics
+            apiKey={process.env.NEXT_PUBLIC_POSTHOG_KEY}
+            host={process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com"}
+          />
         ) : null}
         <HtmlLangSync />
         <script

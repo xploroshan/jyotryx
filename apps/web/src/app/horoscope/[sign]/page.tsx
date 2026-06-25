@@ -6,6 +6,7 @@ import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
+import { ShareButton } from '@/components/share/ShareButton';
 
 /**
  * Server-rendered SEO landing page for "<sign> daily horoscope today".
@@ -160,6 +161,18 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
             </p>
           </div>
         </header>
+
+        {/* Share — public, OG-rich page; drives the referral loop on WhatsApp. */}
+        <div className="mb-6">
+          <ShareButton
+            url={`${SITE_ORIGIN}/horoscope/${sign.slug}`}
+            text={`${sign.name} horoscope for today on myastro360`}
+            trigger="horoscope"
+            shareLabel="Share"
+            copyLabel="Copy link"
+            copiedLabel="Copied!"
+          />
+        </div>
 
         {/* Period switcher — internal links to the weekly/monthly/yearly variants */}
         <nav aria-label="Horoscope period" className="mb-6 flex flex-wrap gap-2">

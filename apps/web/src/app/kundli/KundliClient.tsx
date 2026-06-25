@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/Toast";
 import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
+import { track, trackOnce } from "@/lib/analytics";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
@@ -193,6 +194,8 @@ export default function KundliPage() {
         // successful generation is safe and gives us a "user did pay"
         // signal even when the credit balance was already > 0.
         void recordPaywallConversion("first_paid_kundli");
+        trackOnce("first_reading", "first_reading", { surface: "kundli" });
+        track("kundli_generated", { tradition: activeTradition });
       } else {
         setError(t.kundli.loginRequired);
       }

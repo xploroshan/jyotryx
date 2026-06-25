@@ -26,6 +26,7 @@ import {
   writeBriefingCache,
 } from "./lib/briefingCache";
 import type { DailyBriefing } from "./lib/types";
+import { trackOnce } from "@/lib/analytics";
 import {
   translateTithi,
   translateNakshatra,
@@ -151,6 +152,7 @@ export default function MyDayPage() {
         { token: accessToken! },
       );
       setBriefing(data);
+      trackOnce("first_reading", "first_reading", { surface: "daily_briefing" });
       if (user?.id) writeBriefingCache(user.id, locale, data);
     } catch (err: any) {
       // If we already rendered cached data, keep it on screen rather than

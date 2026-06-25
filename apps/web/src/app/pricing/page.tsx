@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import { Stagger } from "@/components/ui/PageTransition";
+import { track } from "@/lib/analytics";
 
 type Plan = {
   id: string;
@@ -15,6 +16,11 @@ type Plan = {
   features: string[];
   cta: string;
   popular: boolean;
+  /** Annual only: the monthly-equivalent price, shown as the value anchor
+   *  ("≈ ₹417/mo") — the meter-never-runs pillar made concrete. */
+  monthlyEquiv?: number;
+  /** Annual only: % saved vs paying monthly for 12 months. */
+  savingsPct?: number;
 };
 
 type CreditPack = {
@@ -37,6 +43,15 @@ export default function PricingPage() {
   const buildPlans = (settings: Record<string, string>): Plan[] => {
     const monthlyPrice = parseInt(settings["pricing.monthly.price"] || "499", 10);
     const annualPrice = parseInt(settings["pricing.annual.price"] || "4999", 10);
+    // Which paid plan is presented as the default/recommended option. Annual
+    // is the default: it brings cash forward and lifts LTV — the single
+    // biggest lever for a bootstrapped runway. Operator-overridable for A/B via
+    // the `pricing.recommended` SiteSetting (values "annual" | "monthly"), no
+    // redeploy. Annual is also placed in the centre column where the eye lands.
+    const recommended = (settings["pricing.recommended"] || "annual").toLowerCase();
+    const monthlyEquiv = Math.round(annualPrice / 12);
+    const savingsPct =
+      monthlyPrice > 0 ? Math.max(0, Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100)) : 0;
     return [
       {
         id: "free", name: t.pricing.planFreeName, price: 0, period: "",
@@ -44,14 +59,15 @@ export default function PricingPage() {
         cta: t.pricing.ctaGetStarted, popular: false,
       },
       {
-        id: "monthly", name: t.pricing.planPremiumName, price: monthlyPrice, period: t.pricing.perMonth,
-        features: [t.pricing.featPremiumChat, t.pricing.featPremiumKundli, t.pricing.featPremiumMatching, t.pricing.featPremiumPalm, t.pricing.featPremiumHoroscope, t.pricing.featPremiumMuhurat, t.pricing.featPremiumReports, t.pricing.featPremiumSupport],
-        cta: t.pricing.ctaSubscribe, popular: true,
-      },
-      {
         id: "annual", name: t.pricing.planAnnualName, price: annualPrice, period: t.pricing.perYear,
         features: [t.pricing.featAnnualAll, t.pricing.featAnnualSave, t.pricing.featAnnualReports, t.pricing.featAnnualEarly, t.pricing.featAnnualDedicated],
-        cta: t.pricing.ctaBestValue, popular: false,
+        cta: t.pricing.ctaBestValue, popular: recommended === "annual",
+        monthlyEquiv, savingsPct,
+      },
+      {
+        id: "monthly", name: t.pricing.planPremiumName, price: monthlyPrice, period: t.pricing.perMonth,
+        features: [t.pricing.featPremiumChat, t.pricing.featPremiumKundli, t.pricing.featPremiumMatching, t.pricing.featPremiumPalm, t.pricing.featPremiumHoroscope, t.pricing.featPremiumMuhurat, t.pricing.featPremiumReports, t.pricing.featPremiumSupport],
+        cta: t.pricing.ctaSubscribe, popular: recommended === "monthly",
       },
     ];
   };
@@ -81,6 +97,11 @@ export default function PricingPage() {
   // has disabled the pricing page (Mode A "Free launch") we render a simple
   // "everything is free" panel instead of plans + credit packs.
   const [pricingEnabled, setPricingEnabled] = useState<boolean | null>(null);
+
+  // Fire once: the user reached the pricing page (top of the revenue funnel).
+  useEffect(() => {
+    track("pricing_viewed");
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +133,7 @@ export default function PricingPage() {
     if (!isAuthenticated) { router.push("/auth?mode=signup"); return; }
     if (planId === "free") { router.push("/chat"); return; }
     setLoading(planId); setError("");
+    track("plan_selected", { plan: planId });
     try {
       const res = await api.post<{ subscriptionId: string; shortUrl?: string }>("/payments/subscribe", { plan: planId === "monthly" ? "MONTHLY" : "ANNUAL" }, { token: accessToken! });
       if (res.shortUrl) window.location.href = res.shortUrl;
@@ -237,6 +259,16 @@ export default function PricingPage() {
                     <span className="text-3xl font-bold text-surface-950">{t.pricing.free}</span>
                   )}
                 </div>
+                {/* Value anchor for the annual plan: the per-month equivalent +
+                    savings vs paying monthly — "the meter never runs" in numbers. */}
+                {plan.monthlyEquiv ? (
+                  <p className="-mt-3.5 mb-5 text-xs text-[rgba(12,8,5,0.66)]">
+                    ≈ {fmt(plan.monthlyEquiv)} {t.pricing.perMonth}
+                    {plan.savingsPct ? (
+                      <span className="ml-1.5 font-medium text-emerald-600">· −{plan.savingsPct}%</span>
+                    ) : null}
+                  </p>
+                ) : null}
                 <ul className="space-y-2.5 mb-6">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-xs text-[rgba(12,8,5,0.72)]">

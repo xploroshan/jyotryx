@@ -11,6 +11,7 @@ import { Toast, RequiredMark } from "@/components/ui/Toast";
 import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSection";
 import MemorySection from "@/components/profile/MemorySection";
 import TimeOfBirthInput from "@/components/ui/TimeOfBirthInput";
+import { track } from "@/lib/analytics";
 
 interface UserProfile {
   id: string;
@@ -220,6 +221,7 @@ export default function ProfilePage() {
 
       // First-time completion → unlock the rest of the app.
       if (wasIncomplete && updated.profileComplete) {
+        track("profile_completed");
         setSuccess(t.profile.profileCompleteRedirecting);
         setTimeout(() => router.push("/my-day"), 1200);
         return;
