@@ -8,10 +8,10 @@
 const MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
     <linearGradient id="r" gradientUnits="userSpaceOnUse" x1="14" y1="14" x2="86" y2="86">
-      <stop offset="0" stop-color="#a5b4fc"/><stop offset="0.5" stop-color="#818cf8"/><stop offset="1" stop-color="#a78bfa"/>
+      <stop offset="0" stop-color="#ffd089"/><stop offset="0.5" stop-color="#ffb627"/><stop offset="1" stop-color="#ff7a40"/>
     </linearGradient>
     <linearGradient id="s" gradientUnits="userSpaceOnUse" x1="30" y1="30" x2="70" y2="70">
-      <stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#a78bfa"/>
+      <stop offset="0" stop-color="#ffc56b"/><stop offset="1" stop-color="#ff7a40"/>
     </linearGradient>
   </defs>
   <circle cx="50" cy="50" r="40" fill="none" stroke="url(#r)" stroke-width="2.4" opacity="0.9"/>
@@ -30,13 +30,13 @@ const MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" 
 
 export const OG_MARK_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(MARK_SVG).toString("base64")}`;
 
-/** The gradient "360" treatment — text-clipped indigo→violet→fuchsia. */
+/** The gradient "360" treatment — text-clipped warm sunrise (amber→orange). */
 export const GRADIENT_360_STYLE = {
-  backgroundImage: "linear-gradient(90deg, #818cf8, #a78bfa, #d946ef)",
+  backgroundImage: "linear-gradient(90deg, #ffb627, #ff7a40, #ff4d00)",
   backgroundClip: "text",
   WebkitBackgroundClip: "text",
   color: "transparent",
 } as const;
 
-/** Brand ink card background — the cool counterpart of the warm legacy card. */
-export const OG_INK_BG = "linear-gradient(135deg, #0c0c1a 0%, #15102e 55%, #08080c 100%)";
+/** Brand card background — warm espresso, matching the cream + orange identity. */
+export const OG_INK_BG = "linear-gradient(135deg, #1a1206 0%, #2e1d0a 55%, #0d0904 100%)";

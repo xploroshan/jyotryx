@@ -19,16 +19,17 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
-const INK = '#0b0b18';
+const INK = '#14100c';
 
-// Mark drawn in the native 0..100 space, brightened for legibility on ink.
+// Mark drawn in the native 0..100 space, in the warm sunrise palette,
+// brightened for legibility on the dark plate.
 const DEFS = `
   <defs>
     <linearGradient id="g-ring" gradientUnits="userSpaceOnUse" x1="14" y1="14" x2="86" y2="86">
-      <stop offset="0" stop-color="#a5b4fc"/><stop offset="0.5" stop-color="#818cf8"/><stop offset="1" stop-color="#a78bfa"/>
+      <stop offset="0" stop-color="#ffd089"/><stop offset="0.5" stop-color="#ffb627"/><stop offset="1" stop-color="#ff7a40"/>
     </linearGradient>
     <linearGradient id="g-star" gradientUnits="userSpaceOnUse" x1="30" y1="30" x2="70" y2="70">
-      <stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#a78bfa"/>
+      <stop offset="0" stop-color="#ffc56b"/><stop offset="1" stop-color="#ff7a40"/>
     </linearGradient>
   </defs>`;
 

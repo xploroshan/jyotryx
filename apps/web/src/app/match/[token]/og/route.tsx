@@ -88,7 +88,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
           alignItems: "center",
           justifyContent: "center",
           background: OG_INK_BG,
-          color: "#ece9f6",
+          color: "#f5ecd8",
           fontFamily,
           padding: "60px",
         }}
@@ -96,7 +96,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
         <div
           style={{
             fontSize: 28,
-            color: "#b7b0d8",
+            color: "#d9c9a6",
             display: "flex",
             marginBottom: 12,
             letterSpacing: 4,
@@ -125,7 +125,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
             >
               {`${data.percentage}%`}
             </div>
-            <div style={{ fontSize: 38, color: "#ece9f6", display: "flex", marginTop: 4 }}>
+            <div style={{ fontSize: 38, color: "#f5ecd8", display: "flex", marginTop: 4 }}>
               {`${data.compatibility} · ${data.totalScore}/${data.maxScore} guna`}
             </div>
           </>
@@ -139,7 +139,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={OG_MARK_DATA_URI} width={44} height={44} alt="" />
           <div style={{ fontSize: 32, fontWeight: 700, display: "flex" }}>
-            <span style={{ color: "#f5f3ff" }}>MyAstro</span>
+            <span style={{ color: "#f5ecd8" }}>MyAstro</span>
             <span style={GRADIENT_360_STYLE}>360</span>
           </div>
         </div>
