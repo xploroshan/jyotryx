@@ -43,6 +43,7 @@ describe('PaymentService', () => {
         create: jest.fn(),
         update: jest.fn(),
         findFirst: jest.fn(),
+        count: jest.fn().mockResolvedValue(0),
       },
       user: {
         findUnique: jest.fn().mockResolvedValue(mockUser),
@@ -461,12 +462,20 @@ describe('PaymentService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should accept a valid signature and grant credits once via updateMany', async () => {
+    it('should accept a valid signature and grant credits once inside the tx', async () => {
       const orderId = 'order_ok';
       const paymentId = 'pay_ok';
       const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
-      prisma.payment.updateMany = jest.fn().mockResolvedValue({ count: 1 });
-      prisma.payment.findFirstOrThrow = jest.fn().mockResolvedValue({ amount: 499 });
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'p1', amount: 499 }),
+          findFirst: jest.fn(),
+        },
+        user: { update: jest.fn() },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
       const result = await service.verifyPayment('test-uuid', {
         razorpayOrderId: orderId,
@@ -476,8 +485,10 @@ describe('PaymentService', () => {
 
       expect(result.verified).toBe(true);
       expect(result.creditsAdded).toBeGreaterThan(0);
-      expect(userService.addCredits).toHaveBeenCalledTimes(1);
-      expect(prisma.payment.updateMany).toHaveBeenCalledWith(
+      // Grant happens via the tx (atomic with the claim), not a separate call.
+      expect(txStub.user.update).toHaveBeenCalledTimes(1);
+      expect(txStub.creditTransaction.create).toHaveBeenCalledTimes(1);
+      expect(txStub.payment.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ status: { not: 'SUCCESS' } }) }),
       );
     });
@@ -486,8 +497,16 @@ describe('PaymentService', () => {
       const orderId = 'order_race';
       const paymentId = 'pay_race';
       const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
-      prisma.payment.updateMany = jest.fn().mockResolvedValue({ count: 0 });
-      prisma.payment.findFirst = jest.fn().mockResolvedValue({ id: 'pay-race-1' });
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          findFirst: jest.fn().mockResolvedValue({ id: 'pay-race-1' }),
+          findFirstOrThrow: jest.fn(),
+        },
+        user: { update: jest.fn() },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
       const result = await service.verifyPayment('test-uuid', {
         razorpayOrderId: orderId,
@@ -497,7 +516,8 @@ describe('PaymentService', () => {
 
       expect(result.verified).toBe(true);
       expect(result.creditsAdded).toBe(0);
-      expect(userService.addCredits).not.toHaveBeenCalled();
+      expect(txStub.user.update).not.toHaveBeenCalled();
+      expect(txStub.creditTransaction.create).not.toHaveBeenCalled();
     });
 
     it('should fail closed when no Razorpay secret is configured', async () => {
@@ -520,11 +540,19 @@ describe('PaymentService', () => {
       const orderId = 'order_pack';
       const paymentId = 'pay_pack';
       const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
-      prisma.payment.updateMany = jest.fn().mockResolvedValue({ count: 1 });
-      // ₹99 would heuristically map to 10 credits, but the pack stored 25.
-      prisma.payment.findFirstOrThrow = jest
-        .fn()
-        .mockResolvedValue({ amount: 99, metadata: { credits: 25, productId: 'credits_starter' } });
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          // ₹99 would heuristically map to 10 credits, but the pack stored 25.
+          findFirstOrThrow: jest
+            .fn()
+            .mockResolvedValue({ id: 'p1', amount: 99, metadata: { credits: 25, productId: 'credits_starter' } }),
+          findFirst: jest.fn(),
+        },
+        user: { update: jest.fn() },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
       const result = await service.verifyPayment('test-uuid', {
         razorpayOrderId: orderId,
@@ -533,7 +561,12 @@ describe('PaymentService', () => {
       });
 
       expect(result.creditsAdded).toBe(25);
-      expect(userService.addCredits).toHaveBeenCalledWith('test-uuid', 25, 'PURCHASE', expect.any(String));
+      expect(txStub.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { increment: 25 } } }),
+      );
+      expect(txStub.creditTransaction.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ amount: 25, type: 'PURCHASE' }) }),
+      );
     });
   });
 
@@ -593,6 +626,14 @@ describe('PaymentService', () => {
       await expect(
         service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any),
       ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('refuses to mint a second subscription when one is already active (idempotency)', async () => {
+      (prisma.subscription.count as jest.Mock).mockResolvedValueOnce(1);
+      (service as any).razorpayInstance = null;
+      await expect(
+        service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

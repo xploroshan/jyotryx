@@ -52,6 +52,9 @@ enum PlanType {
 }
 
 enum SubscriptionStatus {
+  // PENDING: a live (Razorpay-hosted) subscription created but not yet charged.
+  // Non-entitling — the subscription.activated/charged webhook flips it to ACTIVE.
+  PENDING
   ACTIVE
   CANCELLED
   EXPIRED

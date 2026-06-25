@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -123,16 +123,34 @@ export class ReportService {
         await this.featureAccess.consumeEntitlement(userId, entType, report.id);
       }
 
-      await this.reportQueue!.add('generate', {
-        reportId: report.id,
-        userId,
-        type: dto.type,
-        creditCost: 0,
-        birthDetails,
-        name: user?.name || 'User',
-        gender: user?.gender,
-        locale: dto.locale,
-      } satisfies ReportJobData);
+      try {
+        await this.reportQueue!.add('generate', {
+          reportId: report.id,
+          userId,
+          type: dto.type,
+          creditCost: 0,
+          birthDetails,
+          name: user?.name || 'User',
+          gender: user?.gender,
+          locale: dto.locale,
+        } satisfies ReportJobData);
+      } catch (err) {
+        // The unlock was already spent above; if enqueue fails (e.g. Redis
+        // unavailable) the user would be charged for a report that never
+        // generates. Refund the entitlement and fail the row so nothing is
+        // stranded in GENERATING.
+        this.logger.error('Failed to enqueue report job; refunding entitlement', err as Error);
+        if (mode === 'entitlement') {
+          await this.featureAccess.refundEntitlementByRef(report.id);
+        }
+        await this.prisma.report.update({
+          where: { id: report.id },
+          data: { status: 'FAILED' },
+        });
+        throw new InternalServerErrorException(
+          'Could not start report generation. Please try again.',
+        );
+      }
 
       return {
         id: report.id,
