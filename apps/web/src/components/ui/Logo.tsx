@@ -1,10 +1,12 @@
 /**
  * MyAstro360 brand mark — the "Shatkona-dial": two interlocking triangles (the
- * six-pointed shatkona) inside a 360° tick-dial, in the indigo→violet brand
- * gradient. Pure vector, font-independent. Rendered transparent so it sits on
- * any surface (cream navbar/footer, dark auth) and inherits sizing via
- * `className`. Gradient ids are prefixed to this component; every instance is
- * identical, so duplicate ids across marks on one page resolve correctly.
+ * six-pointed shatkona) inside a 360° tick-dial, in the warm sunrise brand
+ * gradient (amber→orange, matching `.text-gradient-sunrise`). Pure vector,
+ * font-independent. Rendered transparent so it sits on any surface (cream
+ * navbar/footer, dark auth) and inherits sizing via `className`. Gradient ids
+ * are prefixed to this component; every instance is identical, so duplicate
+ * ids across marks on one page resolve correctly. Stroke weights are tuned to
+ * stay crisp at the 24px navbar size.
  */
 export function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
   return (
@@ -17,19 +19,19 @@ export function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
     >
       <defs>
         <linearGradient id="logomark-ring" gradientUnits="userSpaceOnUse" x1="12" y1="12" x2="88" y2="88">
-          <stop offset="0" stopColor="#818cf8" />
-          <stop offset="0.5" stopColor="#6366f1" />
-          <stop offset="1" stopColor="#7c3aed" />
+          <stop offset="0" stopColor="#ffb627" />
+          <stop offset="0.5" stopColor="#ff7a40" />
+          <stop offset="1" stopColor="#ff4d00" />
         </linearGradient>
         <linearGradient id="logomark-star" gradientUnits="userSpaceOnUse" x1="28" y1="28" x2="72" y2="72">
-          <stop offset="0" stopColor="#a78bfa" />
-          <stop offset="1" stopColor="#6366f1" />
+          <stop offset="0" stopColor="#ff7a40" />
+          <stop offset="1" stopColor="#ff4d00" />
         </linearGradient>
       </defs>
       {/* 360° dial ring */}
-      <circle cx="50" cy="50" r="40" fill="none" stroke="url(#logomark-ring)" strokeWidth="1.3" opacity="0.85" />
+      <circle cx="50" cy="50" r="40" fill="none" stroke="url(#logomark-ring)" strokeWidth="2" opacity="0.85" />
       {/* 12 dial ticks */}
-      <g stroke="url(#logomark-ring)" strokeWidth="1.7" strokeLinecap="round" opacity="0.65">
+      <g stroke="url(#logomark-ring)" strokeWidth="2.4" strokeLinecap="round" opacity="0.7">
         <line x1="84" y1="50" x2="90" y2="50" />
         <line x1="79.4" y1="67" x2="84.6" y2="70" />
         <line x1="67" y1="79.4" x2="70" y2="84.6" />
@@ -44,25 +46,24 @@ export function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
         <line x1="79.4" y1="33" x2="84.6" y2="30" />
       </g>
       {/* Shatkona — two interlocking triangles */}
-      <path d="M50 24 L73 64 L27 64 Z" fill="none" stroke="url(#logomark-star)" strokeWidth="2.4" strokeLinejoin="round" />
-      <path d="M50 76 L27 36 L73 36 Z" fill="none" stroke="url(#logomark-star)" strokeWidth="2.4" strokeLinejoin="round" />
-      <circle cx="50" cy="50" r="3" fill="url(#logomark-star)" />
+      <path d="M50 24 L73 64 L27 64 Z" fill="none" stroke="url(#logomark-star)" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M50 76 L27 36 L73 36 Z" fill="none" stroke="url(#logomark-star)" strokeWidth="3" strokeLinejoin="round" />
+      <circle cx="50" cy="50" r="3.6" fill="url(#logomark-star)" />
     </svg>
   );
 }
 
 /**
  * Brand wordmark — "MyAstro" inherits the surrounding text color (so it reads
- * on both the cream chrome and the dark footer), while "360" carries the
- * indigo→violet→fuchsia brand gradient. Pass typography/color via `className`.
+ * on both the cream chrome and the dark footer), while "360" carries the warm
+ * sunrise gradient (`.text-gradient-sunrise`, the site's signature accent).
+ * Pass typography/color via `className`.
  */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={className}>
       MyAstro
-      <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-500 bg-clip-text text-transparent">
-        360
-      </span>
+      <span className="text-gradient-sunrise">360</span>
     </span>
   );
 }

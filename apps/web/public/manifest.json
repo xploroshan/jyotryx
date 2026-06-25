@@ -4,8 +4,8 @@
   "description": "AI-powered Vedic astrology, numerology, palmistry, and daily guidance",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#08080c",
-  "theme_color": "#6366f1",
+  "background_color": "#14100c",
+  "theme_color": "#ff4d00",
   "orientation": "portrait-primary",
   "icons": [
     {
