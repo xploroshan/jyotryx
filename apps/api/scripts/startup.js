@@ -31,10 +31,17 @@ if (fs.existsSync(initSqlPath)) {
 // Run any remaining pending migrations
 run('npx prisma migrate deploy', 'Prisma migrate deploy', 60000);
 
-// 2. Seed admin/demo users via SQL (reliable, no compiled seed dependency)
-const seedSqlPath = path.resolve(__dirname, '../prisma/seed-users.sql');
-if (fs.existsSync(seedSqlPath)) {
-  run(`npx prisma db execute --file ${seedSqlPath}`, 'Seed admin and demo users', 15000);
+// 2. Seed admin/demo users via SQL — NON-PRODUCTION ONLY. seed-users.sql ships
+// hardcoded bcrypt hashes for admin@/demo@, so seeding it in production would
+// plant a predictable admin credential from a public hash. In production rely
+// on the env-driven admin bootstrap (ADMIN_EMAIL/ADMIN_PASSWORD) instead.
+if (process.env.NODE_ENV !== 'production') {
+  const seedSqlPath = path.resolve(__dirname, '../prisma/seed-users.sql');
+  if (fs.existsSync(seedSqlPath)) {
+    run(`npx prisma db execute --file ${seedSqlPath}`, 'Seed admin and demo users (non-prod)', 15000);
+  }
+} else {
+  console.log('[startup] Skipping SQL user seed in production (use ADMIN_EMAIL/ADMIN_PASSWORD bootstrap).');
 }
 
 // Also try compiled seed for knowledge base data (non-critical)

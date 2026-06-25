@@ -1,4 +1,5 @@
 import type { FeatureContent } from "@/lib/seo/feature-content";
+import { jsonLdHtml } from "@/lib/seo/json-ld";
 
 /**
  * Server-rendered SEO content block for the Tier-A feature pages
@@ -28,7 +29,7 @@ export function FeatureSeoSection({ content }: { content: FeatureContent | null 
     <section className="relative z-10 mx-auto max-w-3xl px-4 pb-16 pt-4" aria-label={content.heading}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(faqJsonLd) }}
       />
 
       <div className="surface-card p-6 mb-6">

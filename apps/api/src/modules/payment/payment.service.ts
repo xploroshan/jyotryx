@@ -314,67 +314,73 @@ export class PaymentService {
       throw new BadRequestException('Payment verification failed: invalid signature');
     }
 
-    // Claim the payment atomically: updateMany with `status != SUCCESS`
-    // guard in the WHERE clause. Returns count=1 only for the caller that
-    // actually transitioned the row; concurrent duplicates (client retry
-    // OR client-verify + server-webhook racing) see count=0 and skip the
-    // credit grant. Prevents double-credit bugs.
-    const { count } = await this.prisma.payment.updateMany({
-      where: {
-        razorpayOrderId: dto.razorpayOrderId,
-        userId,
-        status: { not: 'SUCCESS' },
-      },
-      data: {
-        status: 'SUCCESS',
-        razorpayPaymentId: dto.razorpayPaymentId,
-      },
-    });
-
-    if (count === 0) {
-      // Either the order doesn't exist for this user, or another call
-      // already claimed it (idempotent success from the user's POV).
-      const existing = await this.prisma.payment.findFirst({
-        where: { razorpayOrderId: dto.razorpayOrderId, userId },
-        select: { id: true },
+    // Claim + grant in ONE interactive transaction so a crash between the
+    // status flip and the grant cannot leave the row SUCCESS with nothing
+    // credited (the status guard would then block every retry, and the
+    // customer would have paid for nothing). Mirrors the payment.captured
+    // webhook. The `status != SUCCESS` guard in WHERE keeps the claim
+    // idempotent against client-retry / client-verify-vs-webhook races:
+    // only the caller that actually transitions the row grants.
+    const grant = await this.prisma.$transaction(async (tx: any) => {
+      const { count } = await tx.payment.updateMany({
+        where: {
+          razorpayOrderId: dto.razorpayOrderId,
+          userId,
+          status: { not: 'SUCCESS' },
+        },
+        data: {
+          status: 'SUCCESS',
+          razorpayPaymentId: dto.razorpayPaymentId,
+        },
       });
-      if (!existing) {
-        throw new BadRequestException('Payment record not found for this order');
+
+      if (count === 0) {
+        // Either the order doesn't exist for this user, or another call
+        // already claimed it (idempotent success from the user's POV).
+        const existing = await tx.payment.findFirst({
+          where: { razorpayOrderId: dto.razorpayOrderId, userId },
+          select: { id: true },
+        });
+        if (!existing) {
+          throw new BadRequestException('Payment record not found for this order');
+        }
+        return { creditsAdded: 0 as number, entitlementGranted: false };
       }
-      return {
-        verified: true,
-        paymentId: dto.razorpayPaymentId,
-        orderId: dto.razorpayOrderId,
-        creditsAdded: 0,
-      };
-    }
 
-    // We won the update — safe to grant exactly once.
-    const payment = await this.prisma.payment.findFirstOrThrow({
-      where: { razorpayOrderId: dto.razorpayOrderId, userId },
-      select: { id: true, amount: true, metadata: true },
+      // We won the update — safe to grant exactly once.
+      const payment = await tx.payment.findFirstOrThrow({
+        where: { razorpayOrderId: dto.razorpayOrderId, userId },
+        select: { id: true, amount: true, metadata: true },
+      });
+      const entType = this.entitlementTypeFromMetadata(payment.metadata);
+      if (entType) {
+        // One-time pay-to-unlock: grant an entitlement instead of credits.
+        await this.featureAccess.grantEntitlement(userId, payment.id, entType, tx);
+        return { creditsAdded: 0 as number, entitlementGranted: true };
+      }
+
+      const creditsToAdd = this.creditsForPayment(payment);
+      await tx.user.update({
+        where: { id: userId },
+        data: { credits: { increment: creditsToAdd } },
+      });
+      await tx.creditTransaction.create({
+        data: {
+          userId,
+          amount: creditsToAdd,
+          type: 'PURCHASE',
+          description: `Purchased ${creditsToAdd} credits`,
+        },
+      });
+      return { creditsAdded: creditsToAdd, entitlementGranted: false };
     });
-    const entType = this.entitlementTypeFromMetadata(payment.metadata);
-    if (entType) {
-      // One-time pay-to-unlock: grant an entitlement instead of credits.
-      await this.featureAccess.grantEntitlement(userId, payment.id, entType);
-      return {
-        verified: true,
-        paymentId: dto.razorpayPaymentId,
-        orderId: dto.razorpayOrderId,
-        creditsAdded: 0,
-        entitlementGranted: true,
-      };
-    }
-
-    const creditsToAdd = this.creditsForPayment(payment);
-    await this.userService.addCredits(userId, creditsToAdd, 'PURCHASE', `Purchased ${creditsToAdd} credits`);
 
     return {
       verified: true,
       paymentId: dto.razorpayPaymentId,
       orderId: dto.razorpayOrderId,
-      creditsAdded: creditsToAdd,
+      creditsAdded: grant.creditsAdded,
+      ...(grant.entitlementGranted ? { entitlementGranted: true } : {}),
     };
   }
 
@@ -388,6 +394,20 @@ export class PaymentService {
   async createSubscription(userId: string, dto: CreateSubscriptionDto): Promise<SubscriptionResult> {
     const isAnnual = dto.plan.toUpperCase() === 'ANNUAL';
     this.logger.log(`Creating subscription for user: ${userId}, plan: ${dto.plan}`);
+
+    // Idempotency: refuse to mint a second subscription for a user who already
+    // holds a live one, so an abandoned-then-retried checkout can't accumulate
+    // multiple ACTIVE rows (which would block correct downgrade on cancel).
+    const existingActive = await this.prisma.subscription.count({
+      where: {
+        userId,
+        status: 'ACTIVE',
+        OR: [{ endDate: null }, { endDate: { gt: new Date() } }],
+      },
+    });
+    if (existingActive > 0) {
+      throw new BadRequestException('You already have an active subscription.');
+    }
 
     // Map the logical tier to a real Razorpay plan_id configured out of
     // band (dashboard → env). The client never supplies a raw plan_id, so
@@ -436,7 +456,9 @@ export class PaymentService {
         data: {
           userId,
           plan: isAnnual ? 'ANNUAL' : 'MONTHLY',
-          status: 'ACTIVE',
+          // Live subscriptions stay PENDING (non-entitling) until the first
+          // charge webhook flips them to ACTIVE; mock mode grants immediately.
+          status: grantImmediately ? 'ACTIVE' : 'PENDING',
           razorpaySubscriptionId: subscriptionId,
           endDate,
         },

@@ -97,7 +97,7 @@ describe('ExperimentService helpers', () => {
 });
 
 describe('ExperimentService.assignPaywall', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); });
 
   it('returns control without persisting when the experiment is disabled', async () => {
     const prisma = makePrismaMock();

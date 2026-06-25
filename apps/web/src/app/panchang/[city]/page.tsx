@@ -7,6 +7,7 @@ import {
   listCitySlugs,
 } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
+import { jsonLdHtml } from '@/lib/seo/json-ld';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { PANCHANG_LOCALES } from '@/i18n/locales';
 
@@ -169,15 +170,15 @@ export default async function PanchangCityPage({ params }: RouteProps) {
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdArticle) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdFaq) }}
         />
 
         {/* Breadcrumbs */}

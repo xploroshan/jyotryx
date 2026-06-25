@@ -7,6 +7,7 @@ import {
   listCitySlugs,
 } from '@/lib/seo/cities';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
+import { jsonLdHtml } from '@/lib/seo/json-ld';
 
 /**
  * "Free Kundli for <city>" SEO landing page.
@@ -129,11 +130,11 @@ export default async function KundliCityPage({ params }: RouteProps) {
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdFaq) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }}
         />
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">

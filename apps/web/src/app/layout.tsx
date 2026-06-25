@@ -23,6 +23,7 @@ import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShe
 import NavbarV2 from "@/components/layout/v2/NavbarV2";
 import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
+import { jsonLdHtml } from "@/lib/seo/json-ld";
 import HtmlLangSync from "@/components/i18n/HtmlLangSync";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/analytics/PostHogAnalytics";
@@ -166,11 +167,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <HtmlLangSync />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(ORGANIZATION_JSON_LD) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSON_LD) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(WEBSITE_JSON_LD) }}
         />
         {/* Warm paper grain overlay — sits below interactive content but
             above the body bg, so the entire surface gains a soft analog

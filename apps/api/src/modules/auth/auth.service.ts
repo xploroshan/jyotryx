@@ -419,19 +419,50 @@ export class AuthService {
     };
   }
 
+  /**
+   * Constant-time string comparison so response timing can't reveal how many
+   * leading characters of a secret (e.g. an OTP) matched.
+   */
+  private constantTimeEquals(a: string, b: string): boolean {
+    const bufA = Buffer.from(a, 'utf8');
+    const bufB = Buffer.from(b, 'utf8');
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  }
+
   async verifyOtp(dto: VerifyOtpDto, signupContext?: SignupContext): Promise<AuthResponse> {
     const phone = this.normalizePhone(dto.phone);
-    const stored = await this.redis.get(`otp:${phone}`);
+    const otpKey = `otp:${phone}`;
+    const failKey = `otp:fail:${phone}`;
+    const maxAttempts = this.configService.get<number>('otp.maxVerifyAttempts', 5);
+    const ttlSeconds = this.configService.get<number>('otp.expiresInMinutes', 5) * 60;
+
+    // Per-phone brute-force cap: a 6-digit OTP must not be guessable by
+    // hammering verify (the IP throttle alone is bypassable via rotating IPs).
+    const priorFails = Number((await this.redis.get(failKey)) ?? 0);
+    if (priorFails >= maxAttempts) {
+      await this.redis.del(otpKey);
+      throw new BadRequestException('Too many incorrect attempts. Please request a new OTP.');
+    }
+
+    const stored = await this.redis.get(otpKey);
 
     if (!stored) {
       throw new BadRequestException('No OTP found for this phone number. Please request a new one.');
     }
 
-    if (stored !== dto.otp) {
+    if (!this.constantTimeEquals(stored, dto.otp)) {
+      const attempts = await this.redis.incr(failKey);
+      await this.redis.expire(failKey, ttlSeconds);
+      if (attempts >= maxAttempts) {
+        // Burn the OTP so a locked-out secret can never be completed.
+        await this.redis.del(otpKey);
+      }
       throw new BadRequestException('Invalid OTP. Please check and try again.');
     }
 
-    await this.redis.del(`otp:${phone}`);
+    await this.redis.del(otpKey);
+    await this.redis.del(failKey);
 
     // Find or create user by phone. Match every equivalent format (and prefer
     // the oldest row) so a returning user whose number was stored unnormalized
@@ -735,11 +766,14 @@ export class AuthService {
 
     const { jti, familyId, sub, email, name } = payload;
 
-    // Legacy tokens (pre-rotation) have no jti — issue rotated tokens going forward
+    // Pre-rotation (jti-less) refresh tokens bypass reuse-detection and
+    // force-logout entirely, so a stolen one was replayable for its full
+    // 30-day life and immune to revocation. Rotation has shipped and every
+    // new token carries a jti, so any jti-less token is stale by definition —
+    // reject it and make the holder re-authenticate once to get a rotated,
+    // revocable token.
     if (!jti || !familyId) {
-      const user = await this.prisma.user.findUnique({ where: { id: sub } });
-      if (!user) throw new UnauthorizedException('Invalid or expired refresh token');
-      return this.generateTokens(sub, email, name);
+      throw new UnauthorizedException('Please sign in again to continue.');
     }
 
     // Check token in Redis

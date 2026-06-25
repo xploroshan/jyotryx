@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Page, Route } from '@playwright/test';
 import { gotoAndHydrate, installApiMocks, json } from './helpers/mock-api';
 
 /**
@@ -413,16 +413,16 @@ const costForecast = {
  */
 async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
   await installApiMocks(page, {
-    'GET /admin/dashboard': async (route) => {
+    'GET /admin/dashboard': async (route: Route) => {
       await route.fulfill(json(dashboardStats));
     },
-    'GET /admin/users': async (route) => {
+    'GET /admin/users': async (route: Route) => {
       await route.fulfill(json(usersPage1));
     },
-    'GET /admin/users/11111111-1111-1111-1111-111111111111': async (route) => {
+    'GET /admin/users/11111111-1111-1111-1111-111111111111': async (route: Route) => {
       await route.fulfill(json(userDetailAlice));
     },
-    'PUT /admin/users/11111111-1111-1111-1111-111111111111': async (route) => {
+    'PUT /admin/users/11111111-1111-1111-1111-111111111111': async (route: Route) => {
       const body = JSON.parse(route.request().postData() || '{}');
       await route.fulfill(
         json({
@@ -431,10 +431,10 @@ async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
         }),
       );
     },
-    'DELETE /admin/users/11111111-1111-1111-1111-111111111111': async (route) => {
+    'DELETE /admin/users/11111111-1111-1111-1111-111111111111': async (route: Route) => {
       await route.fulfill(json({ deleted: true }));
     },
-    'GET /admin/payments': async (route) => {
+    'GET /admin/payments': async (route: Route) => {
       await route.fulfill(
         json([
           {
@@ -449,7 +449,7 @@ async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
         ]),
       );
     },
-    'GET /admin/chats': async (route) => {
+    'GET /admin/chats': async (route: Route) => {
       await route.fulfill(
         json([
           {
@@ -464,82 +464,82 @@ async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
         ]),
       );
     },
-    'GET /admin/activity': async (route) => {
+    'GET /admin/activity': async (route: Route) => {
       await route.fulfill(json(activityLogs));
     },
-    'GET /admin/analytics': async (route) => {
+    'GET /admin/analytics': async (route: Route) => {
       await route.fulfill(json(platformAnalytics));
     },
-    'GET /admin/analytics/llm-costs': async (route) => {
+    'GET /admin/analytics/llm-costs': async (route: Route) => {
       await route.fulfill(json(llmCosts));
     },
-    'GET /admin/content/stats': async (route) => {
+    'GET /admin/content/stats': async (route: Route) => {
       await route.fulfill(json(contentStats));
     },
-    'GET /admin/settings': async (route) => {
+    'GET /admin/settings': async (route: Route) => {
       const url = new URL(route.request().url());
       const prefix = url.searchParams.get('prefix') || '';
       await route.fulfill(json(settingsResponses[prefix] || {}));
     },
-    'PUT /admin/settings': async (route) => {
+    'PUT /admin/settings': async (route: Route) => {
       const body = JSON.parse(route.request().postData() || '{}');
       await route.fulfill(json(body));
     },
     // Phase 2 — Dashboard growth tiles + Funnel tab
-    'GET /admin/onboarding/stuck': async (route) => {
+    'GET /admin/onboarding/stuck': async (route: Route) => {
       await route.fulfill(json(stuckUsers));
     },
-    'GET /admin/mrr': async (route) => {
+    'GET /admin/mrr': async (route: Route) => {
       await route.fulfill(json(mrrSnapshot));
     },
-    'GET /admin/funnel': async (route) => {
+    'GET /admin/funnel': async (route: Route) => {
       await route.fulfill(json(funnelCounts));
     },
-    'GET /admin/cohorts': async (route) => {
+    'GET /admin/cohorts': async (route: Route) => {
       await route.fulfill(json(cohortRows));
     },
-    'GET /admin/payment-failures': async (route) => {
+    'GET /admin/payment-failures': async (route: Route) => {
       await route.fulfill(json(paymentFailures));
     },
-    'GET /admin/churn-risk': async (route) => {
+    'GET /admin/churn-risk': async (route: Route) => {
       await route.fulfill(json([]));
     },
     // Phase 3 — Ops tab + LLM today usage
-    'GET /admin/ops/llm-health': async (route) => {
+    'GET /admin/ops/llm-health': async (route: Route) => {
       await route.fulfill(json(opsLlmHealth));
     },
-    'GET /admin/ops/queues': async (route) => {
+    'GET /admin/ops/queues': async (route: Route) => {
       await route.fulfill(json(opsQueues));
     },
-    'GET /admin/ops/health': async (route) => {
+    'GET /admin/ops/health': async (route: Route) => {
       await route.fulfill(json(opsServiceHealth));
     },
-    'GET /admin/forecast/capacity': async (route) => {
+    'GET /admin/forecast/capacity': async (route: Route) => {
       await route.fulfill(json(capacityForecast));
     },
-    'GET /admin/llm/usage/today': async (route) => {
+    'GET /admin/llm/usage/today': async (route: Route) => {
       await route.fulfill(json(todayUsageByFeature));
     },
     // Phase 4 — Safety, GDPR, Cost
-    'GET /admin/safety/flagged': async (route) => {
+    'GET /admin/safety/flagged': async (route: Route) => {
       await route.fulfill(json(flaggedRows));
     },
-    'GET /admin/gdpr/requests': async (route) => {
+    'GET /admin/gdpr/requests': async (route: Route) => {
       await route.fulfill(json(gdprRows));
     },
-    'GET /admin/cost/summary': async (route) => {
+    'GET /admin/cost/summary': async (route: Route) => {
       await route.fulfill(json(costSummary));
     },
-    'GET /admin/cost/by-feature': async (route) => {
+    'GET /admin/cost/by-feature': async (route: Route) => {
       await route.fulfill(json(costByFeature));
     },
-    'GET /admin/cost/by-provider': async (route) => {
+    'GET /admin/cost/by-provider': async (route: Route) => {
       await route.fulfill(json(costByProvider));
     },
-    'GET /admin/cost/daily': async (route) => {
+    'GET /admin/cost/daily': async (route: Route) => {
       await route.fulfill(json(costDaily));
     },
-    'GET /admin/forecast/cost': async (route) => {
+    'GET /admin/forecast/cost': async (route: Route) => {
       await route.fulfill(json(costForecast));
     },
     ...extras,
@@ -720,7 +720,7 @@ test.describe('Admin dashboard — Users drilldown', () => {
   test('Edit modal saves credits via PUT /admin/users/:id', async ({ page }) => {
     let putBody: any = null;
     await installAdminMocks(page, {
-      'PUT /admin/users/11111111-1111-1111-1111-111111111111': async (route) => {
+      'PUT /admin/users/11111111-1111-1111-1111-111111111111': async (route: Route) => {
         putBody = JSON.parse(route.request().postData() || '{}');
         await route.fulfill(json({ ...usersPage1.users[0], credits: putBody.credits }));
       },
@@ -744,7 +744,7 @@ test.describe('Admin dashboard — Users drilldown', () => {
   test('quick role change posts PUT /admin/users/:id with new role', async ({ page }) => {
     let putBody: any = null;
     await installAdminMocks(page, {
-      'PUT /admin/users/11111111-1111-1111-1111-111111111111': async (route) => {
+      'PUT /admin/users/11111111-1111-1111-1111-111111111111': async (route: Route) => {
         putBody = JSON.parse(route.request().postData() || '{}');
         await route.fulfill(json({ ...usersPage1.users[0], role: putBody.role }));
       },
@@ -767,7 +767,7 @@ test.describe('Admin dashboard — Pricing save', () => {
   test('PUT /admin/settings is called with merged pricing payload', async ({ page }) => {
     let putBody: Record<string, string> | null = null;
     await installAdminMocks(page, {
-      'PUT /admin/settings': async (route) => {
+      'PUT /admin/settings': async (route: Route) => {
         putBody = JSON.parse(route.request().postData() || '{}');
         await route.fulfill(json(putBody));
       },
@@ -823,7 +823,7 @@ test.describe('Admin dashboard — error resilience', () => {
   test('dashboard endpoint failure renders a visible error with retry', async ({ page }) => {
     let calls = 0;
     await installAdminMocks(page, {
-      'GET /admin/dashboard': async (route) => {
+      'GET /admin/dashboard': async (route: Route) => {
         calls += 1;
         if (calls === 1) {
           await route.fulfill(json({ message: 'dashboard offline' }, 500));
@@ -917,7 +917,7 @@ test.describe('Admin dashboard — Funnel tab', () => {
 
   test('funnel endpoint failure shows visible error', async ({ page }) => {
     await installAdminMocks(page, {
-      'GET /admin/funnel': async (route) =>
+      'GET /admin/funnel': async (route: Route) =>
         route.fulfill(json({ message: 'funnel offline' }, 500)),
     });
     await gotoAdmin(page);
@@ -950,7 +950,7 @@ test.describe('Admin dashboard — Ops tab', () => {
   test('disable/enable provider posts to /admin/llm/provider/:name/:action', async ({ page }) => {
     let calledPath = '';
     await installAdminMocks(page, {
-      'POST /admin/llm/provider/openai/disable': async (route) => {
+      'POST /admin/llm/provider/openai/disable': async (route: Route) => {
         calledPath = new URL(route.request().url()).pathname;
         await route.fulfill(json({ ok: true }));
       },
@@ -964,7 +964,7 @@ test.describe('Admin dashboard — Ops tab', () => {
 
   test('ops/health endpoint failure shows visible error', async ({ page }) => {
     await installAdminMocks(page, {
-      'GET /admin/ops/health': async (route) =>
+      'GET /admin/ops/health': async (route: Route) =>
         route.fulfill(json({ message: 'ops health offline' }, 500)),
     });
     await gotoAdmin(page);
@@ -996,7 +996,7 @@ test.describe('Admin dashboard — Safety tab', () => {
   test('approving a flagged row posts the resolve action', async ({ page }) => {
     let postedAction = '';
     await installAdminMocks(page, {
-      'POST /admin/safety/flagged/flag-1/resolve': async (route) => {
+      'POST /admin/safety/flagged/flag-1/resolve': async (route: Route) => {
         const body = JSON.parse(route.request().postData() || '{}');
         postedAction = body.action;
         await route.fulfill(json({ ok: true }));
@@ -1011,7 +1011,7 @@ test.describe('Admin dashboard — Safety tab', () => {
 
   test('safety endpoint failure shows visible error', async ({ page }) => {
     await installAdminMocks(page, {
-      'GET /admin/safety/flagged': async (route) =>
+      'GET /admin/safety/flagged': async (route: Route) =>
         route.fulfill(json({ message: 'safety queue offline' }, 500)),
     });
     await gotoAdmin(page);
@@ -1039,7 +1039,7 @@ test.describe('Admin dashboard — GDPR tab', () => {
 
   test('gdpr endpoint failure shows visible error', async ({ page }) => {
     await installAdminMocks(page, {
-      'GET /admin/gdpr/requests': async (route) =>
+      'GET /admin/gdpr/requests': async (route: Route) =>
         route.fulfill(json({ message: 'gdpr offline' }, 500)),
     });
     await gotoAdmin(page);
@@ -1071,7 +1071,7 @@ test.describe('Admin dashboard — Cost tab', () => {
   test('saving thresholds PUTs notification.cost.* settings', async ({ page }) => {
     let putBody: Record<string, string> | null = null;
     await installAdminMocks(page, {
-      'PUT /admin/settings': async (route) => {
+      'PUT /admin/settings': async (route: Route) => {
         putBody = JSON.parse(route.request().postData() || '{}');
         await route.fulfill(json(putBody));
       },
@@ -1088,7 +1088,7 @@ test.describe('Admin dashboard — Cost tab', () => {
 
   test('cost-summary failure surfaces an inline error', async ({ page }) => {
     await installAdminMocks(page, {
-      'GET /admin/cost/summary': async (route) =>
+      'GET /admin/cost/summary': async (route: Route) =>
         route.fulfill(json({ message: 'cost summary offline' }, 500)),
     });
     await gotoAdmin(page);
@@ -1118,7 +1118,7 @@ test.describe('Admin dashboard — Phase 2 widgets on Dashboard tab', () => {
 
   test('hides growth tiles when /admin/mrr fails (graceful degrade)', async ({ page }) => {
     await installAdminMocks(page, {
-      'GET /admin/mrr': async (route) =>
+      'GET /admin/mrr': async (route: Route) =>
         route.fulfill(json({ message: 'mrr offline' }, 500)),
     });
     await gotoAdmin(page);
@@ -1157,7 +1157,7 @@ test.describe('Admin dashboard — defensive against malformed responses', () =>
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     await installAdminMocks(page, {
-      'GET /admin/onboarding/stuck': async (route) =>
+      'GET /admin/onboarding/stuck': async (route: Route) =>
         // Backend bug: returns a single object instead of the array
         // declared by the type. Frontend is supposed to treat this as
         // "no data" and skip the section, NOT throw `stuck.map is not a function`.
@@ -1173,7 +1173,7 @@ test.describe('Admin dashboard — defensive against malformed responses', () =>
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     await installAdminMocks(page, {
-      'GET /admin/llm/usage/today': async (route) => route.fulfill(json({})),
+      'GET /admin/llm/usage/today': async (route: Route) => route.fulfill(json({})),
     });
     await gotoAdmin(page);
     await page.getByRole('button', { name: /Cost/ }).click();
@@ -1189,7 +1189,7 @@ test.describe('Admin dashboard — defensive against malformed responses', () =>
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     await installAdminMocks(page, {
-      'GET /admin/ops/queues': async (route) => route.fulfill(json([])),
+      'GET /admin/ops/queues': async (route: Route) => route.fulfill(json([])),
     });
     await gotoAdmin(page);
     await page.getByRole('button', { name: /Ops/ }).click();
@@ -1202,7 +1202,7 @@ test.describe('Admin dashboard — defensive against malformed responses', () =>
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     await installAdminMocks(page, {
-      'GET /admin/safety/flagged': async (route) => route.fulfill(json(null)),
+      'GET /admin/safety/flagged': async (route: Route) => route.fulfill(json(null)),
     });
     await gotoAdmin(page);
     await page.getByRole('button', { name: /Safety/ }).click();

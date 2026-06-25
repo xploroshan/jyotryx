@@ -141,6 +141,39 @@ describe('LlmService (Item 4 — Circuit Breaker + Failover)', () => {
 
       expect(stream).toBeNull();
     });
+
+    it('fails over to Anthropic when the OpenAI stream errors on the first chunk', async () => {
+      // A bare async* never throws synchronously, so the only realistic OpenAI
+      // failure is the generator rejecting on first pull. Priming makes this
+      // reachable; previously failover here was dead code.
+      openaiProvider.chatCompletionStream.mockReturnValue(
+        (async function* () {
+          throw new Error('connection reset');
+          // eslint-disable-next-line no-unreachable
+          yield '';
+        })(),
+      );
+
+      const stream = await service.chatCompletionStream({
+        messages: [{ role: 'user', content: 'Hello' }],
+      });
+
+      expect(stream).toBeTruthy();
+      const chunks: string[] = [];
+      for await (const chunk of stream!) chunks.push(chunk);
+      expect(chunks).toEqual(['a-chunk1', 'a-chunk2']);
+    });
+
+    it('records one llm_usage row after a streamed completion', async () => {
+      const stream = await service.chatCompletionStream({
+        messages: [{ role: 'user', content: 'Hello' }],
+        userId: 'u1',
+        feature: 'chat:stream',
+      });
+      // Drain — usage is recorded in the generator's finally block.
+      for await (const _chunk of stream!) { /* consume */ }
+      expect(prisma.llmUsage.create).toHaveBeenCalled();
+    });
   });
 
   describe('getModel', () => {

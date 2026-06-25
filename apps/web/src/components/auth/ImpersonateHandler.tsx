@@ -42,7 +42,7 @@ export default function ImpersonateHandler() {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setImpersonation = useAuthStore((s) => s.setImpersonation);
 
   useEffect(() => {
     const token = search?.get("__imp");
@@ -54,10 +54,11 @@ export default function ImpersonateHandler() {
       return;
     }
 
-    // Replace the current session with the impersonation session. We
-    // treat the target as a non-admin USER in the client store (the
-    // backend enforces the real role anyway).
-    setAuth(
+    // Replace the current session with the impersonation session. We treat the
+    // target as a non-admin USER in the client store (the backend enforces the
+    // real role anyway). setImpersonation keeps this session in-memory only —
+    // the 1-hour token is never written to localStorage and dies on reload.
+    setImpersonation(
       {
         id: claims.sub,
         name: claims.name ?? claims.email,
@@ -69,15 +70,13 @@ export default function ImpersonateHandler() {
         profileComplete: true,
       } as any,
       token,
-      // No refresh token — impersonation cannot self-renew.
-      "",
     );
 
     // Strip the sensitive param from the URL before the user (or any
     // observer) sees it in history/analytics.
     const nextUrl = pathname || "/my-day";
     router.replace(nextUrl);
-  }, [pathname, router, search, setAuth]);
+  }, [pathname, router, search, setImpersonation]);
 
   return null;
 }

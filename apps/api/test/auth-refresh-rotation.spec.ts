@@ -113,15 +113,15 @@ describe('JWT Refresh Token Rotation', () => {
         .rejects.toThrow(/reuse detected/i);
     });
 
-    it('should handle legacy tokens without jti/familyId gracefully', async () => {
-      // Legacy payload has no jti or familyId
+    it('rejects legacy tokens without jti/familyId, forcing re-login', async () => {
+      // Pre-rotation payloads have no jti/familyId. They bypass reuse-detection
+      // and force-logout, so they are now rejected — the holder re-authenticates
+      // once to receive a rotated, revocable token.
       jwtService.verify.mockReturnValue({ sub: 'test-uuid', email: 'test@example.com', name: 'Test User' });
-      prisma.user.findUnique.mockResolvedValue(mockUser);
 
-      const result = await service.refreshToken({ refreshToken: 'legacy-token' });
-
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
+      await expect(
+        service.refreshToken({ refreshToken: 'legacy-token' }),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw 401 when JWT signature is invalid', async () => {

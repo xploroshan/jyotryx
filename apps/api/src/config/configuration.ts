@@ -49,7 +49,11 @@ export default () => ({
 
   jwt: {
     secret: requireInProduction('JWT_SECRET', 'myastro360-dev-secret-change-in-production'),
-    expiresIn: process.env.JWT_EXPIRES_IN || '1d',
+    // Short access-token TTL: access JWTs are stateless and can't be revoked,
+    // so a force-logout (which revokes the refresh family) only fully bites
+    // once the access token expires. 15m bounds that window; the web client
+    // auto-refreshes on 401 so sessions stay seamless.
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
     refreshSecret: requireInProduction('JWT_REFRESH_SECRET', 'myastro360-refresh-secret-change-in-production'),
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
@@ -90,6 +94,8 @@ export default () => ({
   otp: {
     expiresInMinutes: parseIntEnv('OTP_EXPIRES_IN_MINUTES', 5),
     length: parseIntEnv('OTP_LENGTH', 6),
+    // Per-phone wrong-guess cap before the current OTP is burned (brute-force guard).
+    maxVerifyAttempts: parseIntEnv('OTP_MAX_VERIFY_ATTEMPTS', 5),
     // When true, the /auth/otp/send response includes the OTP (dev/staging only).
     // Automatically enabled outside production unless explicitly disabled.
     exposeOtpInResponse:

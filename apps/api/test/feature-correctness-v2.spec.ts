@@ -20,7 +20,7 @@ import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
 import { getLocaleInstruction, isValidLocale } from '../src/common/locale';
 import {
   mockOpenAIService, mockKnowledgeService,
-        ModerationService, mockUserService,
+        mockModerationService, mockUserService,
   mockConfigService, mockUser, createMockRedis,
 } from './helpers/mocks';
 import { REDIS_CLIENT } from '../src/redis/redis.module';

@@ -127,7 +127,7 @@ describe('BriefingMailerService.getSettings', () => {
 });
 
 describe('BriefingMailerService.sendForUser', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => { jest.clearAllMocks(); });
 
   it("returns 'skipped' for a user who hasn't opted in", async () => {
     const prisma = makePrismaMock();

@@ -344,6 +344,24 @@ describe('AstrologyService', () => {
         service.generateKundli('test-uuid', mockBirthDetails),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('produces real dasha boundary dates, not all rounded to Jan 1 (M5)', async () => {
+      prisma.kundliChart.create.mockResolvedValue({ id: 'kundli-1', createdAt: new Date('2026-01-01') });
+
+      const result = await service.generateKundli('test-uuid', mockBirthDetails);
+
+      expect(Array.isArray(result.dashas)).toBe(true);
+      expect(result.dashas.length).toBeGreaterThan(0);
+      for (const d of result.dashas) {
+        expect(d.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(d.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      }
+      // The old bug snapped every boundary to YYYY-01-01.
+      const allJan1 = result.dashas.every(
+        (d: any) => d.startDate.endsWith('-01-01') && d.endDate.endsWith('-01-01'),
+      );
+      expect(allJan1).toBe(false);
+    });
   });
 
   // ─── Matching Tests ───────────────────────────────────────────────────────

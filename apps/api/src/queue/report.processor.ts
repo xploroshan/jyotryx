@@ -127,45 +127,16 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
       { role: 'user', content: prompt },
     ];
 
-    // Try OpenAI Batch API first (50% cost discount) for non-urgent reports
-    const batchId = await this.llmService.batchCompletion({
-      messages,
-      maxTokens: 2000,
-      temperature: 0.7,
-      jsonMode: true,
-      model: this.llmService.getModelForFeature('precision'),
-      userId,
-      feature: `report:${type.toLowerCase()}`,
-      customId: `report-${type.toLowerCase()}-${Date.now()}`,
-    });
+    // NOTE: the OpenAI Batch API (24h SLA) was previously submitted here and
+    // polled in-process for up to 10 minutes. That pinned a BullMQ worker slot
+    // for the whole window (starving the report queue under load), almost
+    // always timed out into the sync path anyway, and — because the job retries
+    // — re-submitted a brand-new batch each attempt (double cost). Reports now
+    // go straight to synchronous completion. A real async batch pipeline, if
+    // ever wanted, must persist the batchId on the Report row and be collected
+    // by a separate scheduled reaper rather than polled inline.
 
-    if (batchId) {
-      // Poll for batch result (check every 30s, up to 10 minutes for BullMQ job window)
-      for (let i = 0; i < 20; i++) {
-        await new Promise((r) => setTimeout(r, 30_000));
-        const batchResult = await this.llmService.getBatchResult(batchId);
-        if (batchResult?.status === 'completed' && batchResult.result?.[0]) {
-          const body = batchResult.result[0].response?.body;
-          const content = body?.choices?.[0]?.message?.content;
-          if (content) {
-            try {
-              const parsed = JSON.parse(content);
-              if (parsed?.sections && Array.isArray(parsed.sections)) {
-                this.logger.log(`Report generated via Batch API (50% discount): ${batchId}`);
-                return parsed.sections;
-              }
-            } catch { /* fall through to sync */ }
-          }
-        }
-        if (batchResult?.status === 'failed' || batchResult?.status === 'expired' || batchResult?.status === 'cancelled') {
-          this.logger.warn(`Batch ${batchId} ${batchResult.status}, falling back to sync`);
-          break;
-        }
-      }
-      this.logger.warn(`Batch ${batchId} timed out in job window, falling back to sync`);
-    }
-
-    // Fallback: synchronous completion via LlmService (with full failover chain)
+    // Synchronous completion via LlmService (with full failover chain)
     const result = await this.openaiService.chatCompletion({
       messages,
       maxTokens: 2000,
