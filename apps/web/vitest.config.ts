@@ -33,7 +33,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: [],
-    exclude: ['e2e/**', 'node_modules/**'],
+    // e2e and e2e-realapi are Playwright suites (run via `npm run test:e2e*`),
+    // not vitest — they error if vitest tries to collect them.
+    exclude: ['e2e/**', 'e2e-realapi/**', 'node_modules/**'],
   },
   resolve: {
     alias: {

@@ -114,7 +114,9 @@ describe('Performance: API Response Benchmarks', () => {
 
   it('refreshToken should complete under 50ms with mocked deps', async () => {
     const jwtService = { signAsync: jest.fn().mockResolvedValue('token'), verify: jest.fn() };
-    jwtService.verify.mockReturnValue({ sub: 'u1', email: 'e', name: 'n' }); // legacy token
+    const JTI = 'perf-jti';
+    jwtService.verify.mockReturnValue({ sub: 'u1', email: 'e', name: 'n', jti: JTI, familyId: 'perf-fam' });
+    await redis.set(`rt:${JTI}`, JSON.stringify({ used: false }), 'EX', 1000);
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'e', name: 'n' });
 
     const module = await Test.createTestingModule({
@@ -129,7 +131,7 @@ describe('Performance: API Response Benchmarks', () => {
     const svc = module.get<AuthService>(AuthService);
 
     const start = performance.now();
-    await svc.refreshToken({ refreshToken: 'legacy' });
+    await svc.refreshToken({ refreshToken: 'valid' });
     const elapsed = performance.now() - start;
     expect(elapsed).toBeLessThan(50);
   });

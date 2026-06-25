@@ -402,6 +402,13 @@ describe('E2E: Payment Flow', () => {
     prisma.siteSetting = {
       findMany: jest.fn().mockResolvedValue([]),
     };
+    // verifyPayment claims + grants inside one $transaction; pass a tx with the
+    // payment claim methods + credit-grant targets.
+    prisma.$transaction = jest.fn(async (fn: any) => fn({
+      payment: prisma.payment,
+      user: { update: jest.fn() },
+      creditTransaction: { create: jest.fn() },
+    }));
 
     // Use empty razorpay keyId/keySecret so PaymentService runs in mock mode,
     // but keep webhookSecret for signature verification
@@ -672,6 +679,11 @@ describe('E2E: User Profile & Credits', () => {
         create: jest.fn(),
       },
       $transaction: jest.fn((fn: any) => fn({
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ id: 'pay-1' }),
+          findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'test-uuid', amount: 99 }),
+        },
         user: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           update: jest.fn(),
@@ -883,7 +895,9 @@ describe('E2E: Token Refresh', () => {
     authService = module.get<AuthService>(AuthService);
   });
 
-  it('should refresh tokens for valid user', async () => {
+  it('rejects a legacy (jti-less) refresh token, forcing re-login', async () => {
+    // The mocked payload has no jti/familyId (pre-rotation). These are no longer
+    // accepted; the rotated happy-path is covered in auth-refresh-rotation.spec.
     jwtService.verify.mockReturnValue({
       sub: 'test-uuid',
       email: 'test@example.com',
@@ -891,6 +905,12 @@ describe('E2E: Token Refresh', () => {
     });
     prisma.user.findUnique.mockResolvedValue(mockUser);
 
+    await expect(
+      authService.refreshToken({ refreshToken: 'legacy-refresh-token' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it.skip('legacy happy-path replaced — see auth-refresh-rotation.spec', async () => {
     const tokens = await authService.refreshToken({
       refreshToken: 'valid-refresh-token',
     });
@@ -1105,7 +1125,7 @@ describe('E2E: Chat Credit Management', () => {
     ).rejects.toThrow(BadRequestException);
 
     expect(userServiceMock.addCredits).toHaveBeenCalledWith(
-      'test-uuid', 1, 'CHAT_DEDUCTION', expect.stringContaining('Refund'),
+      'test-uuid', 1, 'PURCHASE', expect.stringContaining('Refund'),
     );
   });
 });

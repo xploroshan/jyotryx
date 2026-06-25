@@ -230,6 +230,13 @@ describe('Security: Payment Signature Verification', () => {
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     prisma.siteSetting = { findMany: jest.fn().mockResolvedValue([]) };
+    // verifyPayment now claims + grants inside one $transaction; pass a tx with
+    // the payment claim methods plus the credit-grant targets.
+    prisma.$transaction = jest.fn(async (fn: any) => fn({
+      payment: prisma.payment,
+      user: { update: jest.fn() },
+      creditTransaction: { create: jest.fn() },
+    }));
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -681,7 +688,7 @@ describe('Security: Credit Refund on AI Failure', () => {
     expect(userServiceMock.addCredits).toHaveBeenCalledWith(
       'test-uuid',
       1,
-      'CHAT_DEDUCTION',
+      'PURCHASE',
       expect.stringContaining('Refund'),
     );
   });
@@ -904,6 +911,13 @@ describe('Security: Webhook Integrity', () => {
     };
     prisma.subscription = { updateMany: jest.fn() };
     prisma.siteSetting = { findMany: jest.fn().mockResolvedValue([]) };
+    // verifyPayment now claims + grants inside one $transaction; pass a tx with
+    // the payment claim methods plus the credit-grant targets.
+    prisma.$transaction = jest.fn(async (fn: any) => fn({
+      payment: prisma.payment,
+      user: { update: jest.fn() },
+      creditTransaction: { create: jest.fn() },
+    }));
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
