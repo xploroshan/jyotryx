@@ -61,6 +61,36 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
         }}
       />
 
+      {/* Brand watermark — the Shatkona-dial mark embedded in the sun body as a
+          faint warm-white emblem. The dial ring/ticks stay very low so they read
+          as texture (and don't compete with the two orbit rings below), while the
+          six-pointed star sits a touch stronger so the logo is recognisable.
+          Geometry mirrors LogoMark in components/ui/Logo.tsx. */}
+      <svg viewBox="0 0 100 100" fill="none" className="absolute inset-[24%]">
+        <g stroke="#fff7ec" opacity="0.14">
+          <circle cx="50" cy="50" r="40" strokeWidth="1.6" />
+          <g strokeWidth="2" strokeLinecap="round">
+            <line x1="84" y1="50" x2="90" y2="50" />
+            <line x1="79.4" y1="67" x2="84.6" y2="70" />
+            <line x1="67" y1="79.4" x2="70" y2="84.6" />
+            <line x1="50" y1="84" x2="50" y2="90" />
+            <line x1="33" y1="79.4" x2="30" y2="84.6" />
+            <line x1="20.6" y1="67" x2="15.4" y2="70" />
+            <line x1="16" y1="50" x2="10" y2="50" />
+            <line x1="20.6" y1="33" x2="15.4" y2="30" />
+            <line x1="33" y1="20.6" x2="30" y2="15.4" />
+            <line x1="50" y1="16" x2="50" y2="10" />
+            <line x1="67" y1="20.6" x2="70" y2="15.4" />
+            <line x1="79.4" y1="33" x2="84.6" y2="30" />
+          </g>
+        </g>
+        <g stroke="#fff7ec" opacity="0.26">
+          <path d="M50 24 L73 64 L27 64 Z" strokeWidth="2.6" strokeLinejoin="round" />
+          <path d="M50 76 L27 36 L73 36 Z" strokeWidth="2.6" strokeLinejoin="round" />
+          <circle cx="50" cy="50" r="3" fill="#fff7ec" stroke="none" />
+        </g>
+      </svg>
+
       {/* Slow ring — soft saffron at higher opacity so it stays visible
           over the lit canvas. */}
       <div className="absolute inset-[4%] rounded-full border border-[#FFCB52]/70 [animation:astro-spin_80s_linear_infinite]" />
