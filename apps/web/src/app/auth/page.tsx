@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { api, wakeUpBackend, ApiError } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { linkAnonymousAssignment, recordPaywallConversion } from "@/lib/experiment";
+import { identify, trackOnce } from "@/lib/analytics";
 import { Toast } from "@/components/ui/Toast";
 import { Gift } from "lucide-react";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
@@ -300,6 +301,10 @@ function AuthPageContent() {
     // "is this signup or login?" branching mess.
     void linkAnonymousAssignment();
     void recordPaywallConversion("signup");
+    if (res.user?.id) {
+      identify(res.user.id);
+      trackOnce(`signup:${res.user.id}`, "sign_up", { method: "firebase" });
+    }
     applyUserLanguage(res.user?.preferredLanguage);
     // The bonus has been claimed (or rejected) server-side. Either way,
     // don't carry the code into a subsequent session.
@@ -454,6 +459,10 @@ function AuthPageContent() {
     // "is this signup or login?" branching mess.
     void linkAnonymousAssignment();
     void recordPaywallConversion("signup");
+        if (res.user?.id) {
+          identify(res.user.id);
+          trackOnce(`signup:${res.user.id}`, "sign_up", { method: "otp" });
+        }
         applyUserLanguage(res.user?.preferredLanguage);
         if (tab === "signup" && referralCode) clearStoredReferral();
         router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
@@ -533,6 +542,10 @@ function AuthPageContent() {
     // "is this signup or login?" branching mess.
     void linkAnonymousAssignment();
     void recordPaywallConversion("signup");
+      if (res.user?.id) {
+        identify(res.user.id);
+        trackOnce(`signup:${res.user.id}`, "sign_up", { method: "password" });
+      }
       applyUserLanguage(res.user?.preferredLanguage);
       if (tab === "signup" && referralCode) clearStoredReferral();
       router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");

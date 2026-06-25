@@ -7,6 +7,7 @@ import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
 import { ASTROLOGERS, getAstrologer } from "@/lib/astrologers";
+import { track, trackOnce } from "@/lib/analytics";
 
 interface Message {
   role: "user" | "assistant";
@@ -88,6 +89,8 @@ export default function ChatPage() {
         ...(astrologerId ? { astrologerId } : {}),
       }, { token: accessToken! });
       setSessionId(res.session.id);
+      trackOnce("first_reading", "first_reading", { surface: "chat" });
+      track("chat_message_sent", { category: selectedCategory });
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply.content }]);
     } catch (err: any) {
       // Differentiate so users know whether to retry (network) or act
