@@ -71,6 +71,7 @@ function setupApiMocks() {
     if (url === '/users/me') return Promise.resolve(mockProfile);
     if (url === '/users/me/credits') return Promise.resolve(mockCredits);
     if (url === '/auth/status') return Promise.resolve(mockAuthStatus);
+    if (url === '/memory') return Promise.resolve([]);
     return Promise.resolve({});
   });
 }

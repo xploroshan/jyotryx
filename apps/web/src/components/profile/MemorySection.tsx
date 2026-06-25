@@ -42,7 +42,10 @@ export default function MemorySection({ token }: { token: string }) {
     api
       .get<Memory[]>("/memory", { token })
       .then((res) => {
-        if (!cancelled) setMemories(res);
+        // Defensive: a malformed / non-array /memory response must not crash
+        // the whole profile page (memories.map would throw). Treat anything
+        // that isn't an array as "no memories".
+        if (!cancelled) setMemories(Array.isArray(res) ? res : []);
       })
       .catch(() => {
         if (!cancelled) {
