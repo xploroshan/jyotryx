@@ -1165,23 +1165,18 @@ describe('Auth: Refresh Token', () => {
     service = await buildAuthService(prisma, jwtService);
   });
 
-  it('should issue new tokens with valid refresh token', async () => {
+  it('rejects a legacy (jti-less) refresh token, forcing re-login', async () => {
+    // A pre-rotation token verifies but carries no jti/familyId and is no longer
+    // accepted (the rotated happy-path is covered in auth-refresh-rotation.spec).
     jwtService.verify.mockReturnValue({
       sub: 'user-1',
       email: 'test@example.com',
       name: 'Test',
     });
-    prisma.user.findUnique.mockResolvedValue({
-      id: 'user-1',
-      email: 'test@example.com',
-      name: 'Test',
-    });
 
-    const result = await service.refreshToken({ refreshToken: 'valid-refresh-token' });
-
-    expect(result.accessToken).toBeDefined();
-    expect(result.refreshToken).toBeDefined();
-    expect(result.expiresIn).toBeDefined();
+    await expect(
+      service.refreshToken({ refreshToken: 'legacy-refresh-token' }),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('should reject expired refresh token', async () => {

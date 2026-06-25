@@ -123,6 +123,14 @@ describe('AuthService', () => {
         service.refreshToken({ refreshToken: 'invalid-token' }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('rejects legacy (jti-less) refresh tokens, forcing re-login (M10)', async () => {
+      // A pre-rotation token verifies fine but carries no jti/familyId.
+      jwtService.verify.mockReturnValue({ sub: 'u1', email: 'a@b.com', name: 'A' });
+      await expect(
+        service.refreshToken({ refreshToken: 'legacy-token' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
   });
 
   describe('verifyOtp brute-force protection (H3)', () => {

@@ -36,6 +36,11 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  /** True while an admin is impersonating a user. Impersonation sessions are
+   *  kept in-memory only (see persist `partialize`) so the 1-hour token never
+   *  touches localStorage and the session dies on tab reload. */
+  isImpersonating: boolean;
+  setImpersonation: (user: User, accessToken: string) => void;
   updateCredits: (credits: number) => void;
   setProfileComplete: (complete: boolean) => void;
   updateBirthDetails: (details: BirthDetails & { name?: string; nickname?: string | null }) => void;
@@ -59,10 +64,15 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      isImpersonating: false,
       activeTradition: null,
       setActiveTradition: (tradition) => set({ activeTradition: tradition }),
       setAuth: (user, accessToken, refreshToken) =>
-        set({ user, accessToken, refreshToken, isAuthenticated: true }),
+        set({ user, accessToken, refreshToken, isAuthenticated: true, isImpersonating: false }),
+      setImpersonation: (user, accessToken) =>
+        // No refresh token (impersonation can't self-renew) and isImpersonating
+        // = true so the persist partialize keeps this session OUT of localStorage.
+        set({ user, accessToken, refreshToken: null, isAuthenticated: true, isImpersonating: true }),
       updateCredits: (credits) =>
         set((state) => ({
           user: state.user ? { ...state.user, credits } : null,
@@ -110,11 +120,25 @@ export const useAuthStore = create<AuthState>()(
             window.localStorage.removeItem('myastro360-my-day-briefing');
           }
         } catch { /* quota / private mode */ }
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, activeTradition: null });
+        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, isImpersonating: false, activeTradition: null });
       },
     }),
     {
       name: 'myastro360-auth',
+      // Never persist an impersonation session: an admin browsing as a user must
+      // not leave that 1-hour token in localStorage (it would survive reload and
+      // be readable by any script). Impersonation is in-memory only and dies on
+      // reload; normal sessions persist exactly as before.
+      partialize: (state) =>
+        state.isImpersonating
+          ? { activeTradition: state.activeTradition }
+          : {
+              user: state.user,
+              accessToken: state.accessToken,
+              refreshToken: state.refreshToken,
+              isAuthenticated: state.isAuthenticated,
+              activeTradition: state.activeTradition,
+            },
     },
   ),
 );

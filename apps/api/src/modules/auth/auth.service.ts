@@ -766,11 +766,14 @@ export class AuthService {
 
     const { jti, familyId, sub, email, name } = payload;
 
-    // Legacy tokens (pre-rotation) have no jti — issue rotated tokens going forward
+    // Pre-rotation (jti-less) refresh tokens bypass reuse-detection and
+    // force-logout entirely, so a stolen one was replayable for its full
+    // 30-day life and immune to revocation. Rotation has shipped and every
+    // new token carries a jti, so any jti-less token is stale by definition —
+    // reject it and make the holder re-authenticate once to get a rotated,
+    // revocable token.
     if (!jti || !familyId) {
-      const user = await this.prisma.user.findUnique({ where: { id: sub } });
-      if (!user) throw new UnauthorizedException('Invalid or expired refresh token');
-      return this.generateTokens(sub, email, name);
+      throw new UnauthorizedException('Please sign in again to continue.');
     }
 
     // Check token in Redis
