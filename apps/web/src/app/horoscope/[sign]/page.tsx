@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
+import { jsonLdHtml } from '@/lib/seo/json-ld';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
@@ -136,9 +137,9 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
   return (
     <div className="relative min-h-screen">
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdArticle) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdFaq) }} />
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">

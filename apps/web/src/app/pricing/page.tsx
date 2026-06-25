@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import { Stagger } from "@/components/ui/PageTransition";
 import { track } from "@/lib/analytics";
+import { jsonLdHtml } from "@/lib/seo/json-ld";
 
 type Plan = {
   id: string;
@@ -209,7 +210,7 @@ export default function PricingPage() {
       {offerJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(offerJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(offerJsonLd) }}
         />
       )}
       {/* Header */}

@@ -80,8 +80,11 @@ export class ChatService {
       if (dbSession) {
         existingMessages = await this.prisma.chatMessage.findMany({
           where: { sessionId: dbSession.id },
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
         });
+        // Only the recent tail feeds the LLM context; avoid loading full history.
+        existingMessages.reverse();
       }
     }
 
@@ -145,7 +148,7 @@ export class ChatService {
     } catch (error) {
       this.logger.error('AI response generation failed, refunding credit', error);
       if (charged) {
-        await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: AI response failed');
+        await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: AI response failed');
       }
       throw new BadRequestException('Unable to generate a response. Your credit has been refunded. Please try again.');
     }
@@ -255,8 +258,11 @@ export class ChatService {
       if (dbSession) {
         existingMessages = await this.prisma.chatMessage.findMany({
           where: { sessionId: dbSession.id },
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
         });
+        // Only the recent tail feeds the LLM context; avoid loading full history.
+        existingMessages.reverse();
       }
     }
     if (!dbSession) {
@@ -345,7 +351,7 @@ export class ChatService {
     } catch (error) {
       this.logger.error('Stream generation failed, refunding credit', error);
       if (charged) {
-        await this.userService.addCredits(userId, creditCost, 'CHAT_DEDUCTION', 'Refund: Stream failed');
+        await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: Stream failed');
       }
       subscriber.next({ data: JSON.stringify({ message: (error as Error).message, refunded: charged }) } as MessageEvent);
       subscriber.complete();
@@ -356,6 +362,7 @@ export class ChatService {
     const sessions = await this.prisma.chatSession.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
+      take: 100,
     });
 
     return sessions.map((s: any) => ({

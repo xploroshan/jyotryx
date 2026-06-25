@@ -90,6 +90,8 @@ export default () => ({
   otp: {
     expiresInMinutes: parseIntEnv('OTP_EXPIRES_IN_MINUTES', 5),
     length: parseIntEnv('OTP_LENGTH', 6),
+    // Per-phone wrong-guess cap before the current OTP is burned (brute-force guard).
+    maxVerifyAttempts: parseIntEnv('OTP_MAX_VERIFY_ATTEMPTS', 5),
     // When true, the /auth/otp/send response includes the OTP (dev/staging only).
     // Automatically enabled outside production unless explicitly disabled.
     exposeOtpInResponse:

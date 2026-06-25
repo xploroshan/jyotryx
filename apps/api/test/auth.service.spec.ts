@@ -11,6 +11,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let prisma: any;
   let jwtService: any;
+  let redis: any;
 
   beforeEach(async () => {
     prisma = {
@@ -26,12 +27,14 @@ describe('AuthService', () => {
       verify: jest.fn(),
     };
 
+    redis = createMockRedis();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
-        { provide: REDIS_CLIENT, useValue: createMockRedis() },
+        { provide: REDIS_CLIENT, useValue: redis },
         {
           provide: ConfigService,
           useValue: {
@@ -119,6 +122,38 @@ describe('AuthService', () => {
       await expect(
         service.refreshToken({ refreshToken: 'invalid-token' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('verifyOtp brute-force protection (H3)', () => {
+    const phone = '+919876543210';
+
+    it('locks the phone and burns the OTP after 5 wrong attempts', async () => {
+      const key = `otp:${(service as any).normalizePhone(phone)}`;
+      await redis.set(key, '123456');
+
+      for (let i = 0; i < 5; i++) {
+        await expect(
+          service.verifyOtp({ phone, otp: '000000' } as any),
+        ).rejects.toThrow('Invalid OTP');
+      }
+
+      // 5th failure burns the stored OTP...
+      expect(await redis.get(key)).toBeNull();
+
+      // ...and further attempts are locked out even with the correct code.
+      await redis.set(key, '123456');
+      await expect(
+        service.verifyOtp({ phone, otp: '123456' } as any),
+      ).rejects.toThrow('Too many incorrect attempts');
+    });
+
+    it('rejects a wrong-length OTP without crashing (constant-time compare guard)', async () => {
+      const key = `otp:${(service as any).normalizePhone(phone)}`;
+      await redis.set(key, '123456');
+      await expect(
+        service.verifyOtp({ phone, otp: '1' } as any),
+      ).rejects.toThrow('Invalid OTP');
     });
   });
 });

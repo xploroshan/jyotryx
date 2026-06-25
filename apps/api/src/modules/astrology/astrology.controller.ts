@@ -15,13 +15,13 @@ import {
   MatchingResult,
   HoroscopeResult,
   PanchangResult,
-  MuhuratRequest,
   MuhuratResult,
   DoshaResult,
   TimingDecisionRequest,
   TimingDecisionResult,
   CosmicCalendarResult,
 } from './astrology.service';
+import { MuhuratRequestDto } from './dto/muhurat-request.dto';
 import { DecisionActivity } from './decision-rules';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
@@ -118,7 +118,7 @@ export class AstrologyController {
   @Post('muhurat')
   @ApiOperation({ summary: 'Find auspicious muhurat times' })
   @ApiResponse({ status: 201, description: 'Muhurat times returned' })
-  async getMuhurat(@Body() dto: MuhuratRequest): Promise<MuhuratResult> {
+  async getMuhurat(@Body() dto: MuhuratRequestDto): Promise<MuhuratResult> {
     return this.astrologyService.getMuhurat(dto);
   }
 
