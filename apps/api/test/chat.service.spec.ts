@@ -101,6 +101,7 @@ describe('ChatService', () => {
           useValue: {
             isActiveSubscriber: jest.fn().mockResolvedValue(false),
             paidFeaturesFree: jest.fn().mockResolvedValue(false),
+            getCreditCost: jest.fn(async (_name: string, fb: number) => fb),
           },
         },
       ],

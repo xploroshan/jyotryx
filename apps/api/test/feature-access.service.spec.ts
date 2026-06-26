@@ -51,6 +51,33 @@ describe('FeatureAccessService', () => {
     });
   });
 
+  describe('getCreditCost', () => {
+    it('returns the SiteSetting override when present and valid', async () => {
+      prisma.siteSetting.findUnique.mockResolvedValue({ value: '7' });
+      expect(await service.getCreditCost('deep_dive', 3)).toBe(7);
+      expect(prisma.siteSetting.findUnique).toHaveBeenCalledWith({
+        where: { key: 'pricing.credits.deep_dive_cost' },
+      });
+    });
+
+    it('falls back to the default when unset', async () => {
+      prisma.siteSetting.findUnique.mockResolvedValue(null);
+      expect(await service.getCreditCost('chat', 1)).toBe(1);
+    });
+
+    it('falls back when the stored value is non-numeric or negative', async () => {
+      prisma.siteSetting.findUnique.mockResolvedValue({ value: 'abc' });
+      expect(await service.getCreditCost('chat', 1)).toBe(1);
+      prisma.siteSetting.findUnique.mockResolvedValue({ value: '-2' });
+      expect(await service.getCreditCost('chat', 1)).toBe(1);
+    });
+
+    it('allows an explicit zero (free)', async () => {
+      prisma.siteSetting.findUnique.mockResolvedValue({ value: '0' });
+      expect(await service.getCreditCost('chat', 1)).toBe(0);
+    });
+  });
+
   describe('resolveUnlock', () => {
     it('returns "subscriber" for an active subscriber', async () => {
       prisma.siteSetting.findUnique.mockResolvedValue({ value: 'true' });

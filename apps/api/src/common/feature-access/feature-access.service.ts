@@ -36,6 +36,21 @@ export class FeatureAccessService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Resolve a per-feature credit cost. Admin-editable at runtime via the
+   * SiteSetting `pricing.credits.<name>_cost` (Pricing tab → "Credit costs"),
+   * falling back to the env-configured default when unset or invalid. Lets the
+   * operator retune monetization without a redeploy. `name` is a stable slug
+   * (e.g. 'chat', 'deep_dive').
+   */
+  async getCreditCost(name: string, fallback: number): Promise<number> {
+    const row = await this.prisma.siteSetting.findUnique({
+      where: { key: `pricing.credits.${name}_cost` },
+    });
+    const n = row ? Number.parseInt(row.value, 10) : NaN;
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+  }
+
   /** Mode B is on only when the operator has flipped the flag. Default false. */
   async subscriptionsEnabled(): Promise<boolean> {
     const row = await this.prisma.siteSetting.findUnique({

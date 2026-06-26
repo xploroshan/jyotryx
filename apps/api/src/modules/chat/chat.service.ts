@@ -52,7 +52,10 @@ export class ChatService {
     userId: string,
     dto: SendMessageDto,
   ): Promise<{ session: ChatSession; reply: ChatMessage }> {
-    const creditCost = this.configService.get<number>('credits.chatCost', 1);
+    const creditCost = await this.featureAccess.getCreditCost(
+      'chat',
+      this.configService.get<number>('credits.chatCost', 1),
+    );
 
     // Chat is free when the master free switch is on or the user is an
     // active subscriber (Mode B); everyone else spends a credit per message.
@@ -231,7 +234,10 @@ export class ChatService {
     dto: SendMessageDto,
     subscriber: Subscriber<MessageEvent>,
   ): Promise<void> {
-    const creditCost = this.configService.get<number>('credits.chatCost', 1);
+    const creditCost = await this.featureAccess.getCreditCost(
+      'chat',
+      this.configService.get<number>('credits.chatCost', 1),
+    );
 
     // Free when the master free switch is on or the user is a subscriber
     // (Mode B); everyone else spends a credit.
