@@ -1,6 +1,7 @@
 'use client';
 
-import { useScrollProgress } from '@/lib/motion';
+import { useCallback, type MutableRefObject } from 'react';
+import { useScrollProgress, useInViewPause } from '@/lib/motion';
 
 interface HeroSunProps {
   className?: string;
@@ -11,22 +12,38 @@ interface HeroSunProps {
  *
  * Built from four stacked radial gradients (corona, core, specular, ring)
  * so we never need a raster or canvas. Drives a subtle scroll-parallax
- * (-80px over the section's viewport range) plus a 6s breathing corona.
+ * (-80px over the section's viewport range) plus a breathing corona.
  *
  * The parallax uses the framer-motion-free `useScrollProgress` hook (a CSS
  * variable + transform), and the corona/ring loops are CSS animations disabled
  * under prefers-reduced-motion by the global rule in globals.css — so the orb
  * pulls no animation library into the home page's bundle.
  *
+ * GPU hygiene: the corona breathes via OPACITY only (animating scale on a
+ * blurred layer re-rasterizes the blur every frame), and `useInViewPause`
+ * sets `animation-play-state: paused` on all three loops whenever the orb is
+ * scrolled out of view or the tab is hidden — so the page stops driving the
+ * compositor at 60fps when nobody's looking.
+ *
  * This is the only place in the app where yellow appears as a material
  * surface — everywhere else, sun-* tokens stay in micro-accents.
  */
 export default function HeroSun({ className = '' }: HeroSunProps) {
-  const ref = useScrollProgress<HTMLDivElement>();
+  const scrollRef = useScrollProgress<HTMLDivElement>();
+  const { ref: pauseRef, paused } = useInViewPause<HTMLDivElement>();
+  // Both hooks need the same root element; merge their refs onto it.
+  const setRoot = useCallback(
+    (node: HTMLDivElement | null) => {
+      (scrollRef as MutableRefObject<HTMLDivElement | null>).current = node;
+      (pauseRef as MutableRefObject<HTMLDivElement | null>).current = node;
+    },
+    [scrollRef, pauseRef],
+  );
+  const playState = paused ? 'paused' : 'running';
 
   return (
     <div
-      ref={ref}
+      ref={setRoot}
       aria-hidden
       style={{ transform: 'translateY(calc(var(--scroll-progress, 0) * -80px))' }}
       className={`relative aspect-square w-full mx-auto select-none ${className}`}
@@ -35,10 +52,11 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
           push the corona warmer and slightly stronger so the orb still
           reads as a luminous mass against a light page. */}
       <div
-        className="absolute inset-[-16%] rounded-full blur-[64px] animate-[corona-pulse_6s_ease-in-out_infinite]"
+        className="absolute inset-[-16%] rounded-full blur-[48px] animate-[corona-pulse_6s_ease-in-out_infinite]"
         style={{
           background:
             'radial-gradient(circle, rgba(255,182,39,0.70) 0%, rgba(255,122,64,0.42) 42%, rgba(255,77,0,0.18) 65%, transparent 80%)',
+          animationPlayState: playState,
         }}
       />
 
@@ -93,10 +111,16 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
 
       {/* Slow ring — soft saffron at higher opacity so it stays visible
           over the lit canvas. */}
-      <div className="absolute inset-[4%] rounded-full border border-[#FFCB52]/70 [animation:astro-spin_80s_linear_infinite]" />
+      <div
+        className="absolute inset-[4%] rounded-full border border-[#FFCB52]/70 [animation:astro-spin_80s_linear_infinite]"
+        style={{ animationPlayState: playState }}
+      />
       {/* Outer thin orbit — adds a second concentric ring so the orb
           reads as a small celestial system, not a single disc. */}
-      <div className="absolute inset-[-4%] rounded-full border border-[#FF7A40]/35 [animation:astro-spin-rev_120s_linear_infinite]" />
+      <div
+        className="absolute inset-[-4%] rounded-full border border-[#FF7A40]/35 [animation:astro-spin-rev_120s_linear_infinite]"
+        style={{ animationPlayState: playState }}
+      />
     </div>
   );
 }

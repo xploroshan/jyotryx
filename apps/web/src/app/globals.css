@@ -653,10 +653,14 @@
   50% { opacity: 1; }
 }
 
-/* HeroSun corona — slow breathing pulse. */
+/* HeroSun corona — slow breathing pulse. Opacity ONLY (no transform): the
+   corona carries a large blur, and animating scale forces the GPU to
+   re-rasterize that blur every frame (sustained GPU load / heat while idle).
+   Opacity on a blur-rasterized, layer-promoted element is composite-only —
+   the breathing glow stays, the per-frame re-raster goes away. */
 @keyframes corona-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.06); opacity: 1; }
+  0%, 100% { opacity: 0.82; }
+  50% { opacity: 1; }
 }
 
 /* TraditionMarquee — two stacked infinite tracks. Translates by exactly
@@ -731,10 +735,13 @@
   animation: hero-scale-in 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
-/* Hero background wash drift (was an inline framer-gated animation; as a class
-   it's disabled by the [class*="mesh-drift"] reduced-motion rule above). */
+/* Hero background wash. Now STATIC: the drift animated `transform`+`scale` on two
+   large gradient layers, keeping the compositor busy at 60fps forever for a motion
+   nobody notices. The warm wash stays; the perpetual animation is gone. The
+   `mesh-drift` keyframe is retained above only so the reduced-motion selector and
+   any other references stay valid. */
 .mesh-drift-bg {
-  animation: mesh-drift 22s ease-in-out infinite;
+  /* intentionally no animation */
 }
 @media (prefers-reduced-motion: reduce) {
   .stagger-item,
