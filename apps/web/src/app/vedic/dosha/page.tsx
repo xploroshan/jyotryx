@@ -8,13 +8,17 @@ import { api } from '@/lib/api';
 import { WEB_TRADITIONS } from '@/lib/traditions';
 import EditorialHero from '@/components/editorial/EditorialHero';
 import { TraditionGlyph } from '@/components/icons';
+import Interpretation from '@/components/interpretation/Interpretation';
+import Remedies, { type RemedyTempleSet } from '@/components/remedies/Remedies';
 
 interface DoshaEntry {
+  key?: string;
   name: string;
   present: boolean;
   severity: 'none' | 'mild' | 'moderate' | 'severe' | string;
   description: string;
   remedies: string[];
+  remedyTemples?: RemedyTempleSet;
 }
 
 interface DoshaData {
@@ -165,21 +169,28 @@ export default function VedicDoshaPage() {
               <p className="text-sm text-[rgba(12,8,5,0.72)] leading-relaxed mb-4">
                 {d.description}
               </p>
-              {d.remedies && d.remedies.length > 0 && (
+              {d.present && (d.remedies?.length > 0 || d.remedyTemples) && (
                 <div className="rounded-xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)] p-4 sm:p-5">
-                  <p className="text-[11px] uppercase tracking-widest text-primary-400 font-medium mb-2">
-                    {t.kundli.remedies}
-                  </p>
-                  <ul className="text-sm text-secondary list-disc pl-5 space-y-1.5">
-                    {d.remedies.map((r, j) => (
-                      <li key={j}>{r}</li>
-                    ))}
-                  </ul>
+                  <Remedies dosha={d} />
                 </div>
               )}
             </div>
           ))}
         </div>
+      )}
+
+      {data?.doshas && data.doshas.length > 0 && (
+        <Interpretation
+          domain="dosha"
+          className="mt-4"
+          input={{
+            doshas: data.doshas.map((d) => ({
+              name: d.name,
+              present: d.present,
+              severity: d.severity,
+            })),
+          }}
+        />
       )}
       </div>
     </div>

@@ -13,6 +13,7 @@ import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEM
 import { resolveUtHour } from '../../common/timezone.util';
 import { buildKundliFactors, buildDoshaFactors, ChartFactor } from './factors.util';
 import { computeBhakootScore } from './guna.util';
+import { REMEDY_TEMPLES, RemedyTempleSet } from './remedy-temples';
 import { computeSadeSati } from '../daily-briefing/gochar.util';
 import {
   scoreTiming,
@@ -260,11 +261,14 @@ export interface MuhuratResult {
 export interface DoshaResult {
   userId: string;
   doshas: {
+    key: DoshaKey;
     name: string;
     present: boolean;
     severity: 'none' | 'mild' | 'moderate' | 'severe';
     description: string;
     remedies: string[];
+    /** Curated authoritative temples + "find near me" search — present doshas only. */
+    remedyTemples?: RemedyTempleSet;
   }[];
   /** "Show Your Work" — factors for each dosha present in the chart. */
   factors?: ChartFactor[];
@@ -2680,11 +2684,15 @@ Date range: ${dto.fromDate} to ${dto.toDate}`,
         description += suffix;
       }
       return {
+        key: d.key,
         name,
         present: d.present,
         severity: d.severity,
         description,
         remedies,
+        // Surface authoritative remedy temples only when the dosha is actually
+        // present — there's nothing to mitigate otherwise.
+        remedyTemples: d.present ? REMEDY_TEMPLES[d.key] : undefined,
       };
     }));
   }

@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/store";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { RequiredMark } from "@/components/ui/Toast";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface PersonForm {
   name: string;
@@ -451,6 +452,19 @@ export default function MatchingPage() {
                 })}
               </div>
             </div>
+
+            <Interpretation
+              domain="matching"
+              input={{
+                totalScore: results.totalScore,
+                maxScore: results.maxScore,
+                percentage: results.percentage,
+                verdict: results.verdict,
+                manglikA: results.manglikA,
+                manglikB: results.manglikB,
+                kootas: results.koota.map((k) => ({ name: k.name, obtained: k.obtained, max: k.max })),
+              }}
+            />
 
             {/* Summary */}
             <div className="surface-card p-6">

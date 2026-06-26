@@ -16,6 +16,24 @@ const FEATURE_TTL: Record<string, number> = {
   'chat': 0,                // no cache — conversational
   'kundli': 259_200,        // 3 days — same birth details = same chart
   'vastu': 604_800,         // 7 days — deterministic inputs
+  // "What this means for you" interpretation layer. Inputs are deterministic
+  // (same chart/numbers/lines => same explanation), so cache hard. Transient
+  // domains (panchang/transits/horoscope) get short TTLs; chart-based ones long.
+  'interpretation:kundli': 604_800,
+  'interpretation:dosha': 604_800,
+  'interpretation:matching': 604_800,
+  'interpretation:numerology': 604_800,
+  'interpretation:palmistry': 604_800,
+  'interpretation:divisional': 604_800,
+  'interpretation:kp': 604_800,
+  'interpretation:western-natal': 604_800,
+  'interpretation:bazi': 604_800,
+  'interpretation:dasha': 259_200,
+  'interpretation:vastu': 604_800,
+  'interpretation:horoscope': 86_400,
+  'interpretation:transits': 86_400,
+  'interpretation:panchang': 86_400,
+  'interpretation:general': 86_400,
 };
 
 @Injectable()

@@ -27,6 +27,21 @@ export const en = {
     usingProfileDetails: 'Using your profile details',
   },
 
+  // Cross-feature "what this means for you" interpretation + remedies labels.
+  // The body text (summary/points/guidance) comes back already localized from
+  // the API; only these static labels live here.
+  interpret: {
+    heading: 'What this means for you',
+    loading: 'Reading your result…',
+    guidance: 'What you can do',
+    disclaimer: 'Supportive guidance to help you reflect — not a substitute for professional advice.',
+    remedies: 'Remedies & mitigation',
+    temples: 'Recommended temples',
+    findNearby: 'Find temples near me',
+    locating: 'Finding your location…',
+    locationNote: 'Used only to open a maps search — nothing is saved.',
+  },
+
   // Navigation
   nav: {
     myDay: 'My Day',
