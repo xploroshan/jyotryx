@@ -890,13 +890,11 @@ export class AstrologyService {
     const posInNak = moon.longitude % nakshatraSpan;
     const fractionElapsed = posInNak / nakshatraSpan;
     const startIdx = moonNakIdx % 9;
-    const firstDashaBalance = DASHA_YEARS[startIdx] * (1 - fractionElapsed);
 
     const dashas: DashaPeriod[] = [];
     // Convert a fractional calendar year (e.g. 1987.375) to a real YYYY-MM-DD
     // by interpolating within that year, instead of rounding every boundary to
-    // Jan 1 (which lost up to ~6 months and made "current Mahadasha" wrong near
-    // a boundary). Deterministic — same inputs always yield the same dates.
+    // Jan 1. Deterministic — same inputs always yield the same dates.
     const decimalYearToDate = (decYear: number): string => {
       const y = Math.floor(decYear);
       const frac = decYear - y;
@@ -906,52 +904,63 @@ export class AstrologyService {
         .toISOString()
         .split('T')[0];
     };
-    // Start at the birth moment: the first row is the running Mahadasha shown
-    // for its remaining `firstDashaBalance` (the loop uses that for i === 0).
-    let dashaStartYear = birthDecimalYear;
+
+    // Build the dasha tree from the running Mahadasha's TRUE start (the birth
+    // moment minus the portion already elapsed at birth) at full length, then
+    // CLIP every period to the birth moment. This keeps all three levels
+    // mutually consistent — Antardashas sum exactly to their Mahadasha and
+    // Pratyantardashas to their Antardasha — and shows each running period from
+    // birth with its correct balance. (The previous code scaled only the first
+    // sub-period, so the first Mahadasha's Antardashas overflowed its end date.)
+    const YEARS = DASHA_YEARS;
+    const TOTAL = 120;
+    const clip = (start: number): number => Math.max(start, birthDecimalYear);
+    let mahaStart = birthDecimalYear - YEARS[startIdx] * fractionElapsed;
     for (let i = 0; i < 9; i++) {
       const idx = (startIdx + i) % 9;
-      const years = i === 0 ? firstDashaBalance : DASHA_YEARS[idx];
-      const mahaStart = dashaStartYear;
-      const startDate = decimalYearToDate(mahaStart);
-      dashaStartYear += years;
-      const endDate = decimalYearToDate(dashaStartYear);
+      const mahaEnd = mahaStart + YEARS[idx];
 
-      // Sub-periods (Antardashas) with Pratyantardashas
       const subPeriods: DashaPeriod[] = [];
-      // Anchor sub-periods on the fractional maha start (previously re-parsed
-      // the integer year from startDate, compounding the rounding drift).
       let subStart = mahaStart;
       for (let j = 0; j < 9; j++) {
         const subIdx = (idx + j) % 9;
-        const subYears = (DASHA_YEARS[idx] * DASHA_YEARS[subIdx]) / 120;
-        const actualSubYears = i === 0 && j === 0 ? subYears * (1 - fractionElapsed) : subYears;
+        const subEnd = subStart + (YEARS[idx] * YEARS[subIdx]) / TOTAL;
 
-        // Pratyantardashas (3rd level)
         const pratyPeriods: DashaPeriod[] = [];
         let pratyStart = subStart;
         for (let k = 0; k < 9; k++) {
           const pratyIdx = (subIdx + k) % 9;
-          const pratyYears = (DASHA_YEARS[idx] * DASHA_YEARS[subIdx] * DASHA_YEARS[pratyIdx]) / (120 * 120);
-          const actualPratyYears = i === 0 && j === 0 && k === 0 ? pratyYears * (1 - fractionElapsed) : pratyYears;
-          pratyPeriods.push({
-            planet: DASHA_LORDS[pratyIdx],
-            startDate: decimalYearToDate(pratyStart),
-            endDate: decimalYearToDate(pratyStart + actualPratyYears),
-          });
-          pratyStart += actualPratyYears;
+          const pratyEnd = pratyStart + (YEARS[idx] * YEARS[subIdx] * YEARS[pratyIdx]) / (TOTAL * TOTAL);
+          if (pratyEnd > birthDecimalYear) {
+            pratyPeriods.push({
+              planet: DASHA_LORDS[pratyIdx],
+              startDate: decimalYearToDate(clip(pratyStart)),
+              endDate: decimalYearToDate(pratyEnd),
+            });
+          }
+          pratyStart = pratyEnd;
         }
 
-        subPeriods.push({
-          planet: DASHA_LORDS[subIdx],
-          startDate: decimalYearToDate(subStart),
-          endDate: decimalYearToDate(subStart + actualSubYears),
-          subPeriods: pratyPeriods,
-        });
-        subStart += actualSubYears;
+        if (subEnd > birthDecimalYear) {
+          subPeriods.push({
+            planet: DASHA_LORDS[subIdx],
+            startDate: decimalYearToDate(clip(subStart)),
+            endDate: decimalYearToDate(subEnd),
+            subPeriods: pratyPeriods,
+          });
+        }
+        subStart = subEnd;
       }
 
-      dashas.push({ planet: DASHA_LORDS[idx], startDate, endDate, subPeriods });
+      if (mahaEnd > birthDecimalYear) {
+        dashas.push({
+          planet: DASHA_LORDS[idx],
+          startDate: decimalYearToDate(clip(mahaStart)),
+          endDate: decimalYearToDate(mahaEnd),
+          subPeriods,
+        });
+      }
+      mahaStart = mahaEnd;
     }
 
     // 7. Deterministic yoga detection
@@ -1431,15 +1440,20 @@ export class AstrologyService {
     userId: string,
     dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; locale?: string },
   ) {
-    const date = new Date(`${dto.dateOfBirth}T${dto.timeOfBirth || '00:00'}:00`);
-    if (isNaN(date.getTime())) throw new BadRequestException('Invalid birth date/time');
+    // BaZi uses the LOCAL civil birth time (no UT conversion). Parse the parts
+    // TZ-independently: the old `new Date("YYYY-MM-DDTHH:MM:SS")` was interpreted
+    // in the SERVER zone and then read back via getUTC*, so the day and hour
+    // pillars shifted on any non-UTC runtime. The day pillar is anchored to a
+    // UTC instant of the birth calendar day so its 60-day count is stable.
+    const { year, month, day, hour } = birthMoment(dto.dateOfBirth, dto.timeOfBirth);
+    const dayDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 
-    const yearPillar = this.baziPillarFromYear(date.getUTCFullYear());
+    const yearPillar = this.baziPillarFromYear(year);
     // Approximate month pillar from month-of-year. A full BaZi calendar
     // requires solar-term boundaries; we'll refine in the follow-up.
-    const monthPillar = this.baziPillarFromMonth(date.getUTCFullYear(), date.getUTCMonth() + 1);
-    const dayPillar = this.baziPillarFromDay(date);
-    const hourPillar = this.baziPillarFromHour(date.getUTCHours(), dayPillar.heavenlyStem);
+    const monthPillar = this.baziPillarFromMonth(year, month);
+    const dayPillar = this.baziPillarFromDay(dayDate);
+    const hourPillar = this.baziPillarFromHour(hour, dayPillar.heavenlyStem);
 
     const elementBalance: Record<string, number> = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
     for (const p of [yearPillar, monthPillar, dayPillar, hourPillar]) {
@@ -1475,10 +1489,30 @@ export class AstrologyService {
     userId: string,
     dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; latitude?: number; longitude?: number; locale?: string },
   ) {
-    const date = new Date(`${dto.dateOfBirth}T${dto.timeOfBirth || '00:00'}:00`);
-    if (isNaN(date.getTime())) throw new BadRequestException('Invalid birth date/time');
-    // Tropical uses ayanamsha 0; mirror julian day + compute sun/moon.
-    const jd = this.julianDay(date);
+    assertValidBirthDetails({
+      dateOfBirth: dto.dateOfBirth,
+      timeOfBirth: dto.timeOfBirth,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+    });
+    const { year, month, day, hour, minute } = birthMoment(dto.dateOfBirth, dto.timeOfBirth);
+    // Birth coordinates (from the dto, else the user's stored location) — needed
+    // BOTH for the timezone conversion below and the real ascendant further down.
+    const coords =
+      typeof dto.latitude === 'number' && typeof dto.longitude === 'number'
+        ? { lat: dto.latitude, lng: dto.longitude }
+        : await this.resolveUserBirthCoords(userId);
+    // Convert the civil birth clock time to UT via the birthplace's real IANA
+    // timezone (incl. historical DST). The old code treated the clock time as if
+    // it were already UTC — an up-to-±14h error that put the tropical ascendant
+    // multiple signs off and poisoned synastry/horary/decumbiture (which reuse
+    // this chart). Falls back to IST when coordinates are unknown.
+    const utHour = resolveUtHour({
+      year, month, day, hour, minute,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
+    });
+    const jd = swisseph.swe_julday(year, month, day, utHour, swisseph.SE_GREG_CAL);
     const sunLon = this.tropicalLongitude(jd, swisseph.SE_SUN);
     const moonLon = this.tropicalLongitude(jd, swisseph.SE_MOON);
     const mercuryLon = this.tropicalLongitude(jd, swisseph.SE_MERCURY);
@@ -1490,10 +1524,6 @@ export class AstrologyService {
     // known (from the dto, else the user's stored location); otherwise fall back
     // to the labeled Sun-sign placeholder. A wrong ascendant previously poisoned
     // horary querent-lord, decumbiture and synastry house logic.
-    const coords =
-      typeof dto.latitude === 'number' && typeof dto.longitude === 'number'
-        ? { lat: dto.latitude, lng: dto.longitude }
-        : await this.resolveUserBirthCoords(userId);
     const hasRealAsc = !!coords;
     let ascSignIndex: number;
     let ascDegree: number;
