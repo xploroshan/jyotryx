@@ -674,6 +674,7 @@ export const en = {
     loginRequired: 'Please log in to generate your Kundli.',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

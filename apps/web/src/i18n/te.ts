@@ -656,6 +656,7 @@ export const te: TranslationKeys = {
     loginRequired: 'మీ కుండలిని రూపొందించడానికి దయచేసి లాగిన్ చేయండి.',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

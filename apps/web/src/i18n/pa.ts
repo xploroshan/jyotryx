@@ -656,6 +656,7 @@ export const pa: TranslationKeys = {
     loginRequired: 'ਆਪਣੀ ਕੁੰਡਲੀ ਬਣਾਉਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਲੌਗ ਇਨ ਕਰੋ।',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

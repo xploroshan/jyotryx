@@ -656,6 +656,7 @@ export const or_: TranslationKeys = {
     loginRequired: 'ଆପଣଙ୍କ କୁଣ୍ଡଳୀ ତିଆରି କରିବାକୁ ଦୟାକରି ଲଗ ଇନ କରନ୍ତୁ।',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

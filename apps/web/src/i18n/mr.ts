@@ -656,6 +656,7 @@ export const mr: TranslationKeys = {
     loginRequired: 'तुमची कुंडली तयार करण्यासाठी कृपया लॉग इन करा.',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

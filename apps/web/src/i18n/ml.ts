@@ -656,6 +656,7 @@ export const ml: TranslationKeys = {
     loginRequired: 'നിങ്ങളുടെ കുണ്ഡലി നിര്‍മ്മിക്കാന്‍ ദയവായി ലോഗ് ഇന്‍ ചെയ്യുക.',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

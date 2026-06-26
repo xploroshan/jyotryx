@@ -656,6 +656,7 @@ export const kn: TranslationKeys = {
     loginRequired: 'ನಿಮ್ಮ ಕುಂಡಲಿ ರಚಿಸಲು ದಯವಿಟ್ಟು ಲಾಗ್ ಇನ್ ಮಾಡಿ.',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',
