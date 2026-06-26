@@ -133,16 +133,21 @@ rows into flowing prose (or skip it entirely on a free tier). This converts
 kundli, dasha, divisional, KP, and matching from *LLM-required* to
 *LLM-optional*, which is the bulk of `interpretation:*` traffic.
 
-### Quick wins — content-only, no new schema, ship first
+### Quick wins
 
-1. **Complete the `KbDosha` payload** → retire the hardcoded English
-   `DOSHA_EN_REMEDIES` and remedy descriptions. (Temple data already lives in
-   `apps/api/src/modules/astrology/remedy-temples.ts`.)
-2. **Enrich `KbTithi` / `KbYoga` / `KbKarana`** with guidance text → **drop the
-   LLM panchang enrichment call** entirely.
-3. **`KbTransitAlert`** → move gochar's hardcoded English into KB i18n.
-4. **`KbKootaMeaning` + muhurat-purpose rows** → matching & muhurat become
-   KB-assembled.
+1. ✅ **Panchang is now fully deterministic** (`609e275`) — removed the LLM
+   "Panchang calculator" call; the Swiss Ephemeris derivation that already
+   existed is the only path, still KB-localized. Zero LLM cost, more accurate.
+2. ✅ **Muhurat is now fully deterministic** (`609e275`) — replaced the LLM
+   "specialist" call with the Decision Room electional engine (`scoreTiming`),
+   ranking days and anchoring each to its Abhijit Muhurat. Reuses the existing
+   12-locale `muhurat.reason.abhijit` KB key — no new translation surface.
+3. ✅ **`KbDosha` is already the source of truth** — the `DOSHA_EN_REMEDIES` /
+   `DOSHA_EN_DESCRIPTIONS` constants are deliberate cold-cache fallbacks (used
+   only when the KB cache is cold / DB unavailable), so no change is needed.
+4. ⏳ **`KbTransitAlert`** → move gochar's hardcoded English into KB i18n
+   (offline backfill needed for the 11 non-English locales).
+5. ⏳ **`KbKootaMeaning`** → make matching KB-assembled (placement-library work).
 
 ### Two hygiene fixes
 
