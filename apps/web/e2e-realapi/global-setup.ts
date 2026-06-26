@@ -85,6 +85,36 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
       { cwd: API_DIR, env: { ...process.env, DATABASE_URL: postgres.url }, encoding: 'utf8', stdio: 'pipe' });
   }
 
+  // --- Enable the master "free mode" switch ---
+  // The paid features (Reports, Palmistry, Chat) are pay-to-unlock by default,
+  // so a fresh phone user calling /reports/generate gets a 402. The reports
+  // spec deliberately drives the *free* KB/template generation path (see its
+  // header), so flip `feature.free_mode` on here — the operator-facing switch
+  // FeatureAccessService.paidFeaturesFree() reads — to make report generation
+  // free for everyone in the E2E run. Applied with psql straight against the
+  // ephemeral cluster (the Prisma CLI resolves its datasource from
+  // prisma.config.ts, not the --schema/DATABASE_URL we pass, so it can't be
+  // pointed at this throwaway DB). Idempotent.
+  const freeMode = spawnSync(
+    'psql',
+    [
+      '-h', '127.0.0.1',
+      '-p', String(postgres.port),
+      '-U', postgres.user,
+      '-d', postgres.database,
+      '-v', 'ON_ERROR_STOP=1',
+      '-c',
+      `INSERT INTO site_settings (key, value, "updatedAt") ` +
+        `VALUES ('feature.free_mode', 'true', NOW()) ` +
+        `ON CONFLICT (key) DO UPDATE SET value = 'true', "updatedAt" = NOW();`,
+    ],
+    { env: { ...process.env, PGPASSWORD: postgres.password }, encoding: 'utf8', stdio: 'pipe' },
+  );
+  if (freeMode.status !== 0) {
+    // eslint-disable-next-line no-console
+    console.warn(`[e2e-realapi] free_mode seed failed:\n${freeMode.stderr || freeMode.stdout}`);
+  }
+
   // --- Build the API (compile dist/main) unless already built ---
   // Skipped when dist/main.js exists (CI/dev pre-builds it) so the
   // webServer's startup window isn't consumed by a cold build. We compile

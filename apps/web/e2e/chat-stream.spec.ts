@@ -33,8 +33,13 @@ test.describe('Chat Streaming (Item 3 — SSE)', () => {
 
     await gotoAndHydrate(page, '/chat');
 
-    // Should have a message input area
-    const messageInput = page.locator('textarea, input[type="text"], [contenteditable]').first();
+    // The chat opens on the astrologer roster; the message input only mounts
+    // once a consultation is started. Pick the first astrologer card, then
+    // assert the composer input appears.
+    await page.locator('button.surface-card').first().click();
+
+    // Should have a message input area (the composer uses id="chat-input").
+    const messageInput = page.locator('#chat-input, textarea, input[type="text"], [contenteditable]').first();
     await expect(messageInput).toBeVisible({ timeout: 15_000 });
   });
 
