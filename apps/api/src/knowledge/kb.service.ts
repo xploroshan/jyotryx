@@ -101,6 +101,15 @@ export interface KbMatchingTierPayload {
   guidance: string;
 }
 
+export interface KbSignTraitPayload {
+  summary: string;
+  guidance: string;
+}
+
+export interface KbPlanetInHousePayload {
+  text: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -144,6 +153,8 @@ export class KbService {
   private hellenisticPlanetCache = new Map<string, KbRow<KbHellenisticPlanetPayload>>();
   private dashaImpactCache = new Map<string, KbRow<KbDashaImpactPayload>>();
   private matchingTierCache = new Map<string, KbRow<KbMatchingTierPayload>>();
+  private signTraitCache = new Map<string, KbRow<KbSignTraitPayload>>();
+  private planetInHouseCache = new Map<string, KbRow<KbPlanetInHousePayload>>();
 
   private loaded = {
     planet: false,
@@ -166,6 +177,8 @@ export class KbService {
     hellenisticPlanet: false,
     dashaImpact: false,
     matchingTier: false,
+    signTrait: false,
+    planetInHouse: false,
   };
 
   // Coalesces concurrent loads of the same table onto a single promise so
@@ -326,6 +339,26 @@ export class KbService {
     return this.lookup(this.matchingTierCache, key, null);
   }
 
+  /**
+   * Ascendant (lagna) personality. Key is the rising sign ("Aries".."Pisces").
+   * Payload { summary, guidance } — the kundli reading's headline + closing
+   * guidance. Placement library (3/N).
+   */
+  async getSignTrait(key: string): Promise<KbRow<KbSignTraitPayload> | null> {
+    await this.ensureLoaded('signTrait');
+    return this.lookup(this.signTraitCache, key, null);
+  }
+
+  /**
+   * Planet-in-house interpretation. Key is "{Planet}:{house}", e.g. "Saturn:7"
+   * (9 grahas x 12 houses). Payload { text } — one concise per-placement insight
+   * that becomes a bullet in the kundli reading. Placement library (3/N).
+   */
+  async getPlanetInHouse(key: string): Promise<KbRow<KbPlanetInHousePayload> | null> {
+    await this.ensureLoaded('planetInHouse');
+    return this.lookup(this.planetInHouseCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -375,6 +408,8 @@ export class KbService {
           case 'hellenisticPlanet': await this.loadHellenisticPlanets(); break;
           case 'dashaImpact':       await this.loadDashaImpacts();        break;
           case 'matchingTier':      await this.loadMatchingTiers();       break;
+          case 'signTrait':         await this.loadSignTraits();          break;
+          case 'planetInHouse':     await this.loadPlanetInHouse();       break;
         }
         this.loaded[table] = true;
       } catch (err) {
@@ -423,6 +458,8 @@ export class KbService {
   private loadHellenisticPlanets() { return this.loadInto(this.prisma.kbHellenisticPlanet, this.hellenisticPlanetCache); }
   private loadDashaImpacts()       { return this.loadInto(this.prisma.kbDashaImpact,       this.dashaImpactCache); }
   private loadMatchingTiers()      { return this.loadInto(this.prisma.kbMatchingTier,      this.matchingTierCache); }
+  private loadSignTraits()         { return this.loadInto(this.prisma.kbSignTrait,         this.signTraitCache); }
+  private loadPlanetInHouse()      { return this.loadInto(this.prisma.kbPlanetInHouse,      this.planetInHouseCache); }
 }
 
 function cacheKey(key: string, tradition: string | null | undefined): string {

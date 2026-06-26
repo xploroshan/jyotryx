@@ -130,6 +130,9 @@ export class InterpretationService {
         const tier = pct >= 70 ? 'excellent' : pct >= 55 ? 'good' : pct >= 40 ? 'average' : 'low';
         return this.assemble(this.kb.renderStatus(await this.kb.getMatchingTier(tier), locale));
       }
+      if (domain === 'kundli') {
+        return this.assembleKundli(payload, locale);
+      }
     } catch (e) {
       // Never let a KB hiccup break interpretation — fall through to the LLM.
       this.logger.warn(`interpret(${domain}) KB path failed: ${(e as Error).message}`);
@@ -158,6 +161,55 @@ export class InterpretationService {
       guidance: typeof p.guidance === 'string' ? p.guidance : '',
       disclaimer: DISCLAIMER,
     };
+  }
+
+  /**
+   * Assemble a kundli reading from the KB: an ascendant headline (KbSignTrait)
+   * plus one concise insight per planet placement (KbPlanetInHouse), enriched
+   * with the current mahadasha. Gated on the ascendant trait matching the
+   * requested locale — if it doesn't (locale not yet backfilled), returns null
+   * so the localized LLM path runs. Each placement/dasha point is added only
+   * when its own row matches, so no English leaks into a translated reading.
+   */
+  private async assembleKundli(
+    payload: Record<string, unknown>,
+    locale?: string,
+  ): Promise<InterpretationResult | null> {
+    const asc = this.str(payload.ascendant);
+    if (!asc) return null;
+    const signSt = this.kb.renderStatus(await this.kb.getSignTrait(asc), locale);
+    if (!signSt?.matched) return null;
+    const trait = signSt.value as { summary?: unknown; guidance?: unknown };
+    const summary = this.str(trait.summary);
+    if (!summary) return null;
+
+    const points: string[] = [];
+    const planets = Array.isArray(payload.planets) ? payload.planets : [];
+    for (const raw of planets) {
+      if (points.length >= 6) break;
+      const p = (raw ?? {}) as { planet?: unknown; house?: unknown };
+      const planet = this.str(p.planet);
+      const house = typeof p.house === 'number' ? p.house : null;
+      if (!planet || house == null || house < 1 || house > 12) continue;
+      const st = this.kb.renderStatus(await this.kb.getPlanetInHouse(`${planet}:${house}`), locale);
+      if (st?.matched) {
+        const text = this.str((st.value as { text?: unknown }).text);
+        if (text) points.push(text);
+      }
+    }
+
+    // Enrich with the current mahadasha as a "current period" note, if present.
+    const lord = this.str(payload.currentMahadasha);
+    if (lord && points.length < 7) {
+      const ds = this.kb.renderStatus(await this.kb.getDashaImpact(lord), locale);
+      if (ds?.matched) {
+        const dsum = this.str((ds.value as { summary?: unknown }).summary);
+        if (dsum) points.push(dsum);
+      }
+    }
+
+    if (points.length === 0) return null;
+    return { summary, points, guidance: this.str(trait.guidance) ?? '', disclaimer: DISCLAIMER };
   }
 
   /** Compatibility percentage from the matching payload (0–100), or null. */

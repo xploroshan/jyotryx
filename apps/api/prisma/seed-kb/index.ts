@@ -34,6 +34,8 @@ import * as doshasData from './data/doshas.json';
 import * as hellenisticPlanetsData from './data/hellenistic-planets.json';
 import * as dashaImpactsData from './data/dasha-impacts.json';
 import * as matchingTiersData from './data/matching-tiers.json';
+import * as signTraitsData from './data/sign-traits.json';
+import * as planetInHouseData from './data/planet-in-house.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -65,7 +67,9 @@ export interface SeedTable {
     | 'kbDosha'
     | 'kbHellenisticPlanet'
     | 'kbDashaImpact'
-    | 'kbMatchingTier';
+    | 'kbMatchingTier'
+    | 'kbSignTrait'
+    | 'kbPlanetInHouse';
   /** Compound-unique index key for upsert `where`. */
   uniqueKey:
     | 'kb_planets_key_tradition_key'
@@ -87,7 +91,9 @@ export interface SeedTable {
     | 'kb_doshas_key_tradition_key'
     | 'kb_hellenistic_planets_key_tradition_key'
     | 'kb_dasha_impacts_key_tradition_key'
-    | 'kb_matching_tiers_key_tradition_key';
+    | 'kb_matching_tiers_key_tradition_key'
+    | 'kb_sign_traits_key_tradition_key'
+    | 'kb_planet_in_house_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -219,5 +225,17 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_matching_tiers_key_tradition_key',
     dataFile: 'data/matching-tiers.json',
     rows: rowsOf(matchingTiersData),
+  },
+  {
+    modelName: 'kbSignTrait',
+    uniqueKey: 'kb_sign_traits_key_tradition_key',
+    dataFile: 'data/sign-traits.json',
+    rows: rowsOf(signTraitsData),
+  },
+  {
+    modelName: 'kbPlanetInHouse',
+    uniqueKey: 'kb_planet_in_house_key_tradition_key',
+    dataFile: 'data/planet-in-house.json',
+    rows: rowsOf(planetInHouseData),
   },
 ];
