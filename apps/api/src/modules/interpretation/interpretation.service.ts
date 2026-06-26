@@ -1,8 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { createHash } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 import { LlmCacheService } from '../../llm/llm-cache.service';
 import { KbService } from '../../knowledge/kb.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { UserService } from '../user/user.service';
+import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { getLocaleInstruction } from '../../common/locale';
-import { InterpretationDomain } from './dto/interpret.dto';
+import { InterpretationDomain, InterpretationDepth } from './dto/interpret.dto';
+
+export interface InterpretationSection {
+  title: string;
+  body: string;
+}
 
 export interface InterpretationResult {
   /** One or two warm sentences: the headline takeaway in plain words. */
@@ -13,6 +24,10 @@ export interface InterpretationResult {
   guidance: string;
   /** Fixed advisory note. */
   disclaimer: string;
+  /** Long-form, life-area sections — present only for the paid deep dive. */
+  sections?: InterpretationSection[];
+  /** Which tier produced this result. */
+  depth?: InterpretationDepth;
 }
 
 const DISCLAIMER =
@@ -40,6 +55,9 @@ const DOMAIN_LABEL: Record<InterpretationDomain, string> = {
   'chinese-zodiac': 'Chinese zodiac result',
   medical: 'medical astrology (body-zodiac) result',
   synastry: 'relationship synastry (compatibility) result',
+  tarot: 'tarot card reading',
+  hellenistic: 'Hellenistic (traditional Western) astrology result',
+  horary: 'horary (prashna) chart answering a question',
   general: 'astrology result',
 };
 
@@ -53,6 +71,10 @@ export class InterpretationService {
   constructor(
     private readonly llmCache: LlmCacheService,
     private readonly kb: KbService,
+    private readonly prisma: PrismaService,
+    private readonly users: UserService,
+    private readonly featureAccess: FeatureAccessService,
+    private readonly config: ConfigService,
   ) {}
 
   async interpret(params: {
@@ -60,8 +82,17 @@ export class InterpretationService {
     payload: Record<string, unknown>;
     locale?: string;
     userId?: string | null;
+    depth?: InterpretationDepth;
   }): Promise<InterpretationResult> {
     const { domain, payload, locale, userId } = params;
+    const depth: InterpretationDepth = params.depth === 'deep' ? 'deep' : 'teaser';
+
+    // Paid long-form path: skip the (short) KB teaser and generate a rich,
+    // sectioned reading. Caching is keyed separately so it never collides with
+    // the free teaser.
+    if (depth === 'deep') {
+      return this.interpretDeep(domain, payload, locale, userId);
+    }
 
     // KB-first: domains the placement library covers are assembled straight from
     // the Knowledge Base — deterministic, instant, zero LLM cost. The KB path
@@ -253,6 +284,141 @@ export class InterpretationService {
 
   private str(v: unknown): string | null {
     return typeof v === 'string' && v.trim().length > 0 ? v.trim() : null;
+  }
+
+  /**
+   * Paid deep-dive entry point. Generates the rich, sectioned reading and
+   * charges once per unique (user, domain, result): the first unlock costs
+   * credits (free for active subscribers / global free-mode), and re-opening
+   * the SAME result is free forever. Throws 402 when the user can't pay.
+   *
+   * Charging only happens when a *real* sectioned reading was produced — if the
+   * LLM fell back, the user keeps their credits.
+   */
+  async generateDeepDive(params: {
+    userId: string;
+    domain: InterpretationDomain;
+    payload: Record<string, unknown>;
+    locale?: string;
+  }): Promise<InterpretationResult> {
+    const { userId, domain, payload, locale } = params;
+    const inputHash = this.hashInput(domain, payload);
+    const existing = await this.prisma.deepDiveUnlock
+      .findUnique({ where: { userId_domain_inputHash: { userId, domain, inputHash } } })
+      .catch(() => null);
+
+    const result = await this.interpret({ domain, payload, locale, userId, depth: 'deep' });
+    const isReal = !!(result.sections && result.sections.length > 0);
+
+    if (!existing && isReal) {
+      const free =
+        (await this.featureAccess.paidFeaturesFree()) ||
+        (await this.featureAccess.isActiveSubscriber(userId));
+      if (!free) {
+        const cost = this.config.get<number>('credits.deepDiveCost', 3);
+        const ok = await this.users.deductCredits(
+          userId,
+          cost,
+          `Deep-dive interpretation (${domain})`,
+        );
+        if (!ok) {
+          throw new PaymentRequiredException(
+            'Not enough credits for a deep dive. Top up to unlock the full reading.',
+          );
+        }
+      }
+      // Record the unlock so re-views are free. Idempotent — a concurrent
+      // request may win the unique race; ignore that.
+      await this.prisma.deepDiveUnlock
+        .create({ data: { userId, domain, inputHash } })
+        .catch(() => undefined);
+    }
+    return result;
+  }
+
+  /** Stable hash of (domain, payload) so the same result re-unlocks for free. */
+  private hashInput(domain: string, payload: Record<string, unknown>): string {
+    let body: string;
+    try {
+      body = JSON.stringify(payload, (_k, v) =>
+        v && typeof v === 'object' && !Array.isArray(v)
+          ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)))
+          : v,
+      );
+    } catch {
+      body = String(payload);
+    }
+    return createHash('sha256').update(`${domain}|${body}`).digest('hex');
+  }
+
+  /** Generate the long-form, sectioned deep reading (LLM, separately cached). */
+  private async interpretDeep(
+    domain: InterpretationDomain,
+    payload: Record<string, unknown>,
+    locale?: string,
+    userId?: string | null,
+  ): Promise<InterpretationResult> {
+    const system = this.buildDeepSystemPrompt(domain, locale);
+    const user =
+      `Here is the ${DOMAIN_LABEL[domain] ?? 'astrology'} result as JSON. ` +
+      `Write a rich, in-depth, encouraging reading for this person in plain language:\n\n` +
+      this.compactPayload(payload);
+    try {
+      const res = await this.llmCache.cachedChatCompletion({
+        feature: `interpretation:deep:${domain}`,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+        temperature: 0.7,
+        maxTokens: 1800,
+        jsonMode: true,
+        userId: userId ?? null,
+      });
+      const parsed = this.coerceDeep(res);
+      if (parsed) return parsed;
+      this.logger.warn(`interpretDeep(${domain}): empty/unusable LLM output, using fallback`);
+    } catch (e) {
+      this.logger.warn(`interpretDeep(${domain}) failed: ${(e as Error).message}`);
+    }
+    return { ...this.fallback(domain), depth: 'deep' };
+  }
+
+  private buildDeepSystemPrompt(domain: InterpretationDomain, locale?: string): string {
+    return (
+      `You are a warm, masterful Vedic astrology guide writing a PREMIUM, in-depth reading for a complete beginner.` +
+      ` They do NOT know astrology jargon. Read the ${DOMAIN_LABEL[domain] ?? 'result'} below and explain, richly and vividly, what it means FOR THEM.\n\n` +
+      `RULES:\n` +
+      `- Speak directly ("you"), like a wise, caring mentor. Be encouraging and practical — never fear-mongering or fatalistic.\n` +
+      `- Translate every technical term into lived, everyday meaning with relatable detail and an example where it helps.\n` +
+      `- Be specific to THIS chart's facts — do not give generic horoscope filler.\n` +
+      `- Frame challenges as tendencies to work with and grow through, always paired with a constructive step.\n` +
+      `- Do NOT make definitive medical, legal, or financial predictions or guarantees.\n\n` +
+      `Respond ONLY with JSON of this exact shape:\n` +
+      `{"summary": "2-3 sentence headline takeaway", "sections": [{"title": "<life area / theme>", "body": "<3-5 rich, specific sentences>"}], "guidance": "2-3 sentences of warm, practical next steps"}\n` +
+      `Write 5 to 7 sections covering the most relevant life areas for this result (for a birth chart: personality & strengths, career & purpose, relationships & family, money & resources, health & energy, mind & growth, timing & the road ahead). Tailor the section set to the feature.` +
+      getLocaleInstruction(locale)
+    );
+  }
+
+  /** Shape-guard the deep model output (summary + sections). */
+  private coerceDeep(obj: unknown): InterpretationResult | null {
+    if (!obj || typeof obj !== 'object') return null;
+    const o = obj as Record<string, unknown>;
+    const summary = typeof o.summary === 'string' ? o.summary.trim() : '';
+    const guidance = typeof o.guidance === 'string' ? o.guidance.trim() : '';
+    const sections: InterpretationSection[] = Array.isArray(o.sections)
+      ? o.sections
+          .map((s) => {
+            const sec = (s ?? {}) as Record<string, unknown>;
+            const title = typeof sec.title === 'string' ? sec.title.trim() : '';
+            const body = typeof sec.body === 'string' ? sec.body.trim() : '';
+            return title && body ? { title, body } : null;
+          })
+          .filter((x): x is InterpretationSection => x !== null)
+      : [];
+    if (!summary && sections.length === 0) return null;
+    return { summary, points: [], guidance, sections, disclaimer: DISCLAIMER, depth: 'deep' };
   }
 
   private buildSystemPrompt(domain: InterpretationDomain, locale?: string): string {

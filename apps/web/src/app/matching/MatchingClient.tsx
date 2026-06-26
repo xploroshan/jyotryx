@@ -7,6 +7,7 @@ import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { RequiredMark } from "@/components/ui/Toast";
 import Interpretation from "@/components/interpretation/Interpretation";
+import Mitigation from "@/components/mitigation/Mitigation";
 
 interface PersonForm {
   name: string;
@@ -465,6 +466,20 @@ export default function MatchingPage() {
                 kootas: results.koota.map((k) => ({ name: k.name, obtained: k.obtained, max: k.max })),
               }}
             />
+
+            {/* How to mitigate the most pressing compatibility concern. */}
+            {(() => {
+              const nadiKoota = results.koota.find((k) => k.max === 8);
+              const issue =
+                results.manglikA || results.manglikB
+                  ? "mangal"
+                  : nadiKoota && nadiKoota.obtained === 0
+                    ? "nadi"
+                    : results.percentage < 50
+                      ? "low_guna"
+                      : null;
+              return issue ? <Mitigation issue={issue} className="mt-4" /> : null;
+            })()}
 
             {/* Summary */}
             <div className="surface-card p-6">

@@ -1,5 +1,9 @@
 import { IsString, IsIn, IsOptional, IsObject } from 'class-validator';
 
+/** Interpretation depth: a free concise teaser, or the paid long-form deep dive. */
+export const INTERPRETATION_DEPTHS = ['teaser', 'deep'] as const;
+export type InterpretationDepth = (typeof INTERPRETATION_DEPTHS)[number];
+
 /**
  * Whitelisted interpretation domains. Each maps to a tone/context in the
  * service prompt and a `interpretation:<domain>` cache feature key. Add new
@@ -26,6 +30,9 @@ export const INTERPRETATION_DOMAINS = [
   'chinese-zodiac',
   'medical',
   'synastry',
+  'tarot',
+  'hellenistic',
+  'horary',
   'general',
 ] as const;
 
@@ -43,4 +50,10 @@ export class InterpretDto {
   @IsOptional()
   @IsString()
   locale?: string;
+
+  /** 'teaser' (default, free) or 'deep' (paid long-form). The deep endpoint
+   *  ignores this and always generates deep; it's accepted here for symmetry. */
+  @IsOptional()
+  @IsIn(INTERPRETATION_DEPTHS as unknown as string[])
+  depth?: InterpretationDepth;
 }

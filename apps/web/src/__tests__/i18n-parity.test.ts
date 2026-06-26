@@ -116,25 +116,26 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
  * are genuinely translated. Remaining gaps are mostly in profile, auth,
  * pricing, horoscope (date ranges), and other secondary screens.
  */
+// NOTE: each locale rose by +26 with the app-wide interpretation/mitigation
+// layer (the new `mitigate.*` namespace + `interpret.deep*` keys). These are
+// static CHROME labels staged in English pending a translation backfill — the
+// interpretation/mitigation BODY a user reads is already localized per-locale
+// by the API (LLM/KB), so the gap is cosmetic. Drive these back down as the
+// chrome is translated.
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // hi: 67 + 2 placeholder-only dashboards templates = 69.
-  hi: 69,
-  // ta: 106 + 2 placeholder-only dashboards templates = 108.
-  ta: 108,
-  // Realigned to actual: the ratchet had drifted 3 below reality (467→470,
-  // mr 462→465) from earlier copy needing translation; surfaced when adding
-  // the fully-translated showYourWork namespace (which itself contributes 0
-  // untranslated values in every locale, including hi/ta which sit exactly
-  // on baseline). These numbers reflect the true current gap.
-  te: 470,
-  bn: 470,
-  mr: 465,
-  gu: 470,
-  kn: 470,
-  ml: 470,
-  pa: 470,
-  or: 470,
-  as: 470,
+  // hi: 69 + 26 interpretation/mitigation chrome = 95.
+  hi: 95,
+  // ta: 108 + 26 = 134.
+  ta: 134,
+  te: 496,
+  bn: 496,
+  mr: 491,
+  gu: 496,
+  kn: 496,
+  ml: 496,
+  pa: 496,
+  or: 496,
+  as: 496,
 };
 
 const locales: Array<[string, Dict]> = [

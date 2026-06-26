@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface ZRResponse {
   ageYears: number;
@@ -121,6 +122,16 @@ export default function HellenisticZodiacalReleasingPage() {
           <div className="glass rounded-2xl p-5 text-sm text-emphasis leading-relaxed">
             {result.interpretation}
           </div>
+
+          <Interpretation
+            domain="hellenistic"
+            input={{
+              level: 'L1/L2',
+              majorPeriod: { sign: result.majorPeriod.sign, lord: result.majorPeriod.lord },
+              minorPeriod: { sign: result.minorPeriod.sign, lord: result.minorPeriod.lord },
+            }}
+            className="mt-6 sm:mt-8"
+          />
         </div>
       )}
     </FeaturePageShell>

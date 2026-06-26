@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface BodyZodiacRow {
   sign: string;
@@ -57,6 +58,7 @@ export default function MedicalBodyZodiacPage() {
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
 
       {result && (
+        <>
         <ul className="mt-6 space-y-2">
           {result.mapping.map((row) => (
             <li
@@ -74,6 +76,19 @@ export default function MedicalBodyZodiacPage() {
             </li>
           ))}
         </ul>
+
+        <Interpretation
+          domain="medical"
+          input={{
+            mapping: result.mapping.map((row) => ({
+              sign: row.sign,
+              element: row.element,
+              bodyParts: row.bodyParts,
+            })),
+          }}
+          className="mt-6 sm:mt-8"
+        />
+        </>
       )}
     </TraditionFeatureStub>
   );

@@ -7,6 +7,7 @@ import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { ZodiacGlyph } from "@/components/icons/astro";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface HoroscopeData {
   overview: string;
@@ -443,6 +444,20 @@ export default function HoroscopePage() {
               </div>
               <p className="text-sm text-secondary leading-relaxed">{horoscope.health}</p>
             </div>
+
+            <Interpretation
+              domain="horoscope"
+              className="mt-6 sm:mt-8 lg:col-span-3"
+              input={{
+                sign: currentSign.name,
+                tradition: activeTradition,
+                period: selectedPeriod,
+                overview: horoscope.overview,
+                love: horoscope.love,
+                career: horoscope.career,
+                health: horoscope.health,
+              }}
+            />
           </div>
         )}
 

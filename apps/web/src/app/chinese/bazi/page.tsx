@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
 import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface BaZiResponse {
   pillars: {
@@ -117,6 +118,21 @@ export default function ChineseBaZiPage() {
                   </p>
                 </div>
               )}
+
+              <Interpretation
+                domain="bazi"
+                input={{
+                  dayMaster: result.dayMaster,
+                  pillars: {
+                    year: { stem: result.pillars.year.heavenlyStem, branch: result.pillars.year.earthlyBranch },
+                    month: { stem: result.pillars.month.heavenlyStem, branch: result.pillars.month.earthlyBranch },
+                    day: { stem: result.pillars.day.heavenlyStem, branch: result.pillars.day.earthlyBranch },
+                    hour: { stem: result.pillars.hour.heavenlyStem, branch: result.pillars.hour.earthlyBranch },
+                  },
+                  elementBalance: result.elementBalance,
+                }}
+                className="mt-6 sm:mt-8"
+              />
             </div>
           )}
         </>

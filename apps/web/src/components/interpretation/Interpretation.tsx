@@ -1,40 +1,59 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import Link from "next/link";
+import { api, ApiError } from "@/lib/api";
+import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+
+export interface InterpretationSection {
+  title: string;
+  body: string;
+}
 
 export interface InterpretationData {
   summary: string;
   points: string[];
   guidance: string;
   disclaimer?: string;
+  sections?: InterpretationSection[];
+  depth?: "teaser" | "deep";
 }
 
 /**
  * Reusable "What this means for you" block. Posts the already-computed result
  * (`input`) for a feature `domain` to /interpretation, which returns a short,
  * locale-aware, plain-language read (cached server-side per identical input).
- * Renders into the app's standard `surface-card` section. Fails quietly — the
+ *
+ * Below the free teaser it offers a paid "deep dive": a richer, section-by-
+ * section reading. The deep dive requires sign-in and is charged once per
+ * result (free to re-open); a 402 means "top up credits". Fails quietly — the
  * raw result is still on the page — so it never blocks a feature.
  *
- * Pass a COMPACT `input` (the key facts), not a giant raw payload; the server
- * also caps payload size.
+ * Pass a COMPACT `input` (the key facts), not a giant raw payload.
  */
 export default function Interpretation({
   domain,
   input,
+  deepDive = true,
   className = "",
 }: {
   domain: string;
   input: unknown;
+  /** Set false to hide the paid deep-dive upsell (e.g. transient daily results). */
+  deepDive?: boolean;
   className?: string;
 }) {
   const { t, locale } = useTranslation();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [data, setData] = useState<InterpretationData | null>(null);
   const [loading, setLoading] = useState(true);
-  // Stable dependency for the fetch effect — input objects are recreated each
-  // render, so key off their serialized content.
+
+  // Deep-dive state.
+  const [deep, setDeep] = useState<InterpretationData | null>(null);
+  const [deepLoading, setDeepLoading] = useState(false);
+  const [deepError, setDeepError] = useState<"insufficient" | "generic" | null>(null);
+
   const inputKey = useMemo(() => {
     try {
       return JSON.stringify(input);
@@ -50,11 +69,9 @@ export default function Interpretation({
     }
     let cancelled = false;
     setLoading(true);
-    // Wrap in Promise.resolve so the component tolerates any api stub/return
-    // shape (and never throws synchronously in an effect).
-    Promise.resolve(
-      api.post<InterpretationData>("/interpretation", { domain, payload: input, locale }),
-    )
+    setDeep(null);
+    setDeepError(null);
+    Promise.resolve(api.post<InterpretationData>("/interpretation", { domain, payload: input, locale }))
       .then((res) => {
         if (!cancelled) {
           setData(res);
@@ -72,6 +89,25 @@ export default function Interpretation({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domain, locale, inputKey]);
+
+  const unlockDeep = async () => {
+    if (deepLoading || input == null) return;
+    setDeepLoading(true);
+    setDeepError(null);
+    try {
+      const res = await api.post<InterpretationData>("/interpretation/deep-dive", {
+        domain,
+        payload: input,
+        locale,
+      });
+      setDeep(res);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 402) setDeepError("insufficient");
+      else setDeepError("generic");
+    } finally {
+      setDeepLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -91,13 +127,13 @@ export default function Interpretation({
     return null;
   }
 
+  const showDeep = deep && (deep.sections?.length || deep.summary);
+
   return (
     <section className={`surface-card p-6 ${className}`}>
       <h2 className="text-lg font-semibold text-surface-950 mb-3">{t.interpret.heading}</h2>
 
-      {data.summary && (
-        <p className="text-sm text-emphasis leading-relaxed mb-4">{data.summary}</p>
-      )}
+      {data.summary && <p className="text-sm text-emphasis leading-relaxed mb-4">{data.summary}</p>}
 
       {data.points && data.points.length > 0 && (
         <ul className="space-y-2 mb-4">
@@ -117,6 +153,70 @@ export default function Interpretation({
           </h3>
           <p className="text-sm text-emphasis leading-relaxed">{data.guidance}</p>
         </div>
+      )}
+
+      {/* Deep dive */}
+      {showDeep ? (
+        <div className="mt-5 border-t border-[rgba(12,8,5,0.08)] pt-5">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="rounded-full bg-primary-500/[0.12] px-2.5 py-0.5 text-xs font-semibold text-primary-700">
+              {t.interpret.deepBadge}
+            </span>
+          </div>
+          {deep!.summary && <p className="text-sm text-emphasis leading-relaxed mb-4">{deep!.summary}</p>}
+          {deep!.sections && deep!.sections.length > 0 && (
+            <div className="space-y-4">
+              {deep!.sections.map((s, i) => (
+                <div key={i}>
+                  <h3 className="text-sm font-semibold text-surface-950 mb-1">{s.title}</h3>
+                  <p className="text-sm text-emphasis leading-relaxed">{s.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {deep!.guidance && (
+            <div className="mt-4 rounded-lg bg-primary-500/[0.06] p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-primary-700 mb-1.5">
+                {t.interpret.guidance}
+              </h3>
+              <p className="text-sm text-emphasis leading-relaxed">{deep!.guidance}</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        deepDive && (
+          <div className="mt-5 rounded-lg border border-dashed border-[rgba(12,8,5,0.14)] p-4">
+            <p className="text-sm font-medium text-surface-950">{t.interpret.deepCta}</p>
+            <p className="mt-1 text-xs text-[rgba(12,8,5,0.6)]">{t.interpret.deepNote}</p>
+            {isAuthenticated ? (
+              <>
+                <button
+                  type="button"
+                  onClick={unlockDeep}
+                  disabled={deepLoading}
+                  className="btn-primary mt-3 text-sm disabled:opacity-60"
+                >
+                  {deepLoading ? t.interpret.deepLoading : t.interpret.deepButton}
+                </button>
+                {deepError === "insufficient" && (
+                  <p className="mt-2 text-xs text-red-600">
+                    {t.interpret.deepInsufficient}{" "}
+                    <Link href="/pricing" className="underline">
+                      {t.interpret.deepTopUp}
+                    </Link>
+                  </p>
+                )}
+                {deepError === "generic" && (
+                  <p className="mt-2 text-xs text-red-600">{t.interpret.deepError}</p>
+                )}
+              </>
+            ) : (
+              <Link href="/auth" className="btn-primary mt-3 inline-block text-sm">
+                {t.interpret.deepSignIn}
+              </Link>
+            )}
+          </div>
+        )
       )}
 
       <p className="mt-4 text-xs text-[rgba(12,8,5,0.5)]">{t.interpret.disclaimer}</p>

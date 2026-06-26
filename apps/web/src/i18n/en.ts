@@ -30,7 +30,38 @@ export const en = {
   // Cross-feature "what this means for you" interpretation + remedies labels.
   // The body text (summary/points/guidance) comes back already localized from
   // the API; only these static labels live here.
+  mitigate: {
+    heading: 'How to mitigate',
+    quickRemedies: 'Quick remedies',
+    nearestSuffix: 'nearest to you',
+    nearbyButton: 'Find places near me',
+    locating: 'Finding your location…',
+    away: 'km away',
+    caution: 'Caution',
+    locationNote: 'Used only to sort places near you — nothing is saved.',
+    disclaimer:
+      'Traditional supportive practices — not a substitute for professional advice. Consult a qualified astrologer before wearing any gemstone.',
+    modality: {
+      temple: 'Temples & religious places',
+      food: 'Food & diet',
+      activity: 'Activities & lifestyle',
+      charity: 'Charity & donation',
+      fasting: 'Fasting (vrat)',
+      gemstone: 'Gemstones',
+      mantra: 'Mantras',
+      rudraksha: 'Rudraksha',
+    },
+  },
   interpret: {
+    deepBadge: 'Deep dive',
+    deepCta: 'Want the full picture?',
+    deepNote: 'Unlock a rich, section-by-section reading personalised to you.',
+    deepButton: 'Unlock the deep dive',
+    deepLoading: 'Preparing your deep dive…',
+    deepSignIn: 'Sign in to unlock the deep dive',
+    deepInsufficient: 'Not enough credits to unlock.',
+    deepTopUp: 'Top up',
+    deepError: 'Could not load the deep dive. Please try again.',
     heading: 'What this means for you',
     loading: 'Reading your result…',
     guidance: 'What you can do',

@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface TarotCard {
   name: string;
@@ -134,6 +135,20 @@ export default function TarotPage() {
               <p className="text-sm text-[rgba(12,8,5,0.72)] mt-2"><span className="text-accent-400 font-medium">{t.tarot.spiritualGuidance}:</span> {result.interpretation.spiritualGuidance}</p>
             </div>
           </div>
+
+          <Interpretation
+            domain="tarot"
+            className="mt-6 sm:mt-8"
+            input={{
+              spread,
+              question: question || undefined,
+              cards: result.cards.map((c) => ({
+                name: c.name,
+                position: c.position,
+                orientation: c.isReversed ? "reversed" : "upright",
+              })),
+            }}
+          />
         </div>
       )}
       </div>

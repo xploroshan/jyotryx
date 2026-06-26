@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { InterpretationService } from '../src/modules/interpretation/interpretation.service';
 import { LlmCacheService } from '../src/llm/llm-cache.service';
 import { KbService } from '../src/knowledge/kb.service';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { UserService } from '../src/modules/user/user.service';
+import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 
 describe('InterpretationService', () => {
   let service: InterpretationService;
@@ -14,6 +18,9 @@ describe('InterpretationService', () => {
     getNumberMeaning: jest.Mock;
     renderStatus: jest.Mock;
   };
+  let prisma: { deepDiveUnlock: { findUnique: jest.Mock; create: jest.Mock } };
+  let users: { deductCredits: jest.Mock };
+  let featureAccess: { paidFeaturesFree: jest.Mock; isActiveSubscriber: jest.Mock };
 
   const sysOf = () => {
     const arg = cache.cachedChatCompletion.mock.calls[0][0];
@@ -36,11 +43,27 @@ describe('InterpretationService', () => {
       getNumberMeaning: jest.fn().mockResolvedValue(null),
       renderStatus: jest.fn().mockReturnValue(null),
     };
+    prisma = {
+      deepDiveUnlock: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: 'u1' }),
+      },
+    };
+    users = { deductCredits: jest.fn().mockResolvedValue(true) };
+    featureAccess = {
+      paidFeaturesFree: jest.fn().mockResolvedValue(false),
+      isActiveSubscriber: jest.fn().mockResolvedValue(false),
+    };
+    const config = { get: jest.fn().mockReturnValue(3) };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InterpretationService,
         { provide: LlmCacheService, useValue: cache },
         { provide: KbService, useValue: kb },
+        { provide: PrismaService, useValue: prisma },
+        { provide: UserService, useValue: users },
+        { provide: FeatureAccessService, useValue: featureAccess },
+        { provide: ConfigService, useValue: config },
       ],
     }).compile();
     service = module.get<InterpretationService>(InterpretationService);
@@ -215,6 +238,67 @@ describe('InterpretationService', () => {
     cache.cachedChatCompletion.mockRejectedValue(new Error('llm down'));
     const res = await service.interpret({ domain: 'palmistry', payload: {} });
     expect(res.summary).toBeTruthy();
+  });
+
+  // ─── Deep dive (paid, sectioned) ───────────────────────────────────────────
+  const deepLlm = () =>
+    cache.cachedChatCompletion.mockResolvedValue({
+      summary: 'A rich, in-depth look at your chart.',
+      sections: [
+        { title: 'Personality & strengths', body: 'You lead with quiet steadiness and earn trust over time.' },
+        { title: 'Career & purpose', body: 'Your path rewards patience and craft over flash.' },
+      ],
+      guidance: 'Lean into your steadiness and make room for rest.',
+    });
+
+  it('deep interpret produces sectioned output under the deep cache key', async () => {
+    deepLlm();
+    const res = await service.interpret({ domain: 'kundli', payload: { ascendant: 'Capricorn' }, depth: 'deep' });
+    expect(res.depth).toBe('deep');
+    expect(res.sections && res.sections.length).toBeGreaterThan(0);
+    const feature = cache.cachedChatCompletion.mock.calls[0][0].feature;
+    expect(feature).toBe('interpretation:deep:kundli');
+  });
+
+  it('deep dive charges credits once and records an unlock', async () => {
+    deepLlm();
+    const res = await service.generateDeepDive({ userId: 'user-1', domain: 'kundli', payload: { ascendant: 'Leo' } });
+    expect(res.sections!.length).toBeGreaterThan(0);
+    expect(users.deductCredits).toHaveBeenCalledTimes(1);
+    expect(prisma.deepDiveUnlock.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('deep dive is free (no charge) when the result is already unlocked', async () => {
+    deepLlm();
+    prisma.deepDiveUnlock.findUnique.mockResolvedValue({ id: 'existing' });
+    await service.generateDeepDive({ userId: 'user-1', domain: 'kundli', payload: { ascendant: 'Leo' } });
+    expect(users.deductCredits).not.toHaveBeenCalled();
+    expect(prisma.deepDiveUnlock.create).not.toHaveBeenCalled();
+  });
+
+  it('deep dive is free for active subscribers but still records the unlock', async () => {
+    deepLlm();
+    featureAccess.isActiveSubscriber.mockResolvedValue(true);
+    await service.generateDeepDive({ userId: 'user-1', domain: 'kundli', payload: { ascendant: 'Leo' } });
+    expect(users.deductCredits).not.toHaveBeenCalled();
+    expect(prisma.deepDiveUnlock.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('deep dive throws 402 when the user cannot pay', async () => {
+    deepLlm();
+    users.deductCredits.mockResolvedValue(false);
+    await expect(
+      service.generateDeepDive({ userId: 'user-1', domain: 'kundli', payload: { ascendant: 'Leo' } }),
+    ).rejects.toMatchObject({ status: 402 });
+    expect(prisma.deepDiveUnlock.create).not.toHaveBeenCalled();
+  });
+
+  it('deep dive does not charge when the LLM falls back (no real sections)', async () => {
+    cache.cachedChatCompletion.mockResolvedValue({ nope: true });
+    const res = await service.generateDeepDive({ userId: 'user-1', domain: 'kundli', payload: { ascendant: 'Leo' } });
+    expect(res.summary).toBeTruthy(); // fallback content
+    expect(users.deductCredits).not.toHaveBeenCalled();
+    expect(prisma.deepDiveUnlock.create).not.toHaveBeenCalled();
   });
 
   it('caps the serialized payload to bound prompt size', async () => {

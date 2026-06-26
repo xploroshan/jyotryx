@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
 import { PlanetGlyph } from '@/components/icons/astro';
 import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface HouseRow {
   house: number;
@@ -178,6 +179,21 @@ export default function HellenisticNatalPage() {
               {result.interpretation}
             </div>
           )}
+
+          <Interpretation
+            domain="hellenistic"
+            input={{
+              ascendant: result.ascendant,
+              sunSign: result.sunSign,
+              moonSign: result.moonSign,
+              planets: result.planetaryPositions.map((p) => ({
+                planet: p.planet,
+                sign: p.sign,
+                house: p.house,
+              })),
+            }}
+            className="mt-6 sm:mt-8"
+          />
         </div>
       )}
     </FeaturePageShell>

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+import Interpretation from '@/components/interpretation/Interpretation';
 import { PlanetGlyph } from '@/components/icons/astro';
 
 interface TransitPlanet {
@@ -159,6 +160,19 @@ export default function WesternTransitsPage() {
           <div className="glass rounded-2xl p-5 text-sm text-emphasis leading-relaxed">
             {result.interpretation}
           </div>
+
+          <Interpretation
+            domain="transits"
+            input={{
+              date: result.date,
+              notableTransits: result.aspects.slice(0, 5).map((a) => ({
+                transiting: a.transiting,
+                natal: a.natal,
+                aspect: a.aspect,
+              })),
+            }}
+            className="mt-6 sm:mt-8"
+          />
         </div>
       )}
     </FeaturePageShell>
