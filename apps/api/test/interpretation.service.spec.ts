@@ -26,13 +26,14 @@ describe('InterpretationService', () => {
     service = module.get<InterpretationService>(InterpretationService);
   });
 
-  it('parses valid LLM JSON into an interpretation block', async () => {
+  // NOTE: with jsonMode the LLM layer (LlmService.processResult) returns the
+  // ALREADY-PARSED object, or null — NOT a { content } wrapper. The mocks below
+  // mirror that real contract.
+  it('returns the parsed LLM object as an interpretation block', async () => {
     cache.cachedChatCompletion.mockResolvedValue({
-      content: JSON.stringify({
-        summary: 'You are steady and patient.',
-        points: ['Patience is a strength', 'Lean into routine'],
-        guidance: 'Take one small step today.',
-      }),
+      summary: 'You are steady and patient.',
+      points: ['Patience is a strength', 'Lean into routine'],
+      guidance: 'Take one small step today.',
     });
     const res = await service.interpret({ domain: 'kundli', payload: { asc: 'Leo' } });
     expect(res.summary).toBe('You are steady and patient.');
@@ -42,9 +43,7 @@ describe('InterpretationService', () => {
   });
 
   it('uses the interpretation:<domain> cache feature key and JSON mode', async () => {
-    cache.cachedChatCompletion.mockResolvedValue({
-      content: JSON.stringify({ summary: 'x', points: ['a'], guidance: 'g' }),
-    });
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'x', points: ['a'], guidance: 'g' });
     await service.interpret({ domain: 'numerology', payload: {} });
     expect(cache.cachedChatCompletion).toHaveBeenCalledWith(
       expect.objectContaining({ feature: 'interpretation:numerology', jsonMode: true }),
@@ -52,17 +51,13 @@ describe('InterpretationService', () => {
   });
 
   it('applies the locale instruction for a non-English locale', async () => {
-    cache.cachedChatCompletion.mockResolvedValue({
-      content: JSON.stringify({ summary: 'x', points: ['a'], guidance: 'g' }),
-    });
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'x', points: ['a'], guidance: 'g' });
     await service.interpret({ domain: 'kundli', payload: {}, locale: 'hi' });
     expect(sysOf()).toContain('Hindi');
   });
 
   it('omits the locale instruction for English', async () => {
-    cache.cachedChatCompletion.mockResolvedValue({
-      content: JSON.stringify({ summary: 'x', points: ['a'], guidance: 'g' }),
-    });
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'x', points: ['a'], guidance: 'g' });
     await service.interpret({ domain: 'kundli', payload: {}, locale: 'en' });
     expect(sysOf()).not.toContain('You MUST respond entirely in');
   });
@@ -75,8 +70,8 @@ describe('InterpretationService', () => {
     expect(res.disclaimer).toBeTruthy();
   });
 
-  it('falls back when the LLM output is not valid JSON', async () => {
-    cache.cachedChatCompletion.mockResolvedValue({ content: 'sorry, not json' });
+  it('falls back when the LLM object is missing the expected fields', async () => {
+    cache.cachedChatCompletion.mockResolvedValue({ foo: 'bar' });
     const res = await service.interpret({ domain: 'matching', payload: {} });
     expect(res.points.length).toBeGreaterThan(0);
   });
@@ -88,9 +83,7 @@ describe('InterpretationService', () => {
   });
 
   it('caps the serialized payload to bound prompt size', async () => {
-    cache.cachedChatCompletion.mockResolvedValue({
-      content: JSON.stringify({ summary: 's', points: ['p'], guidance: 'g' }),
-    });
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 's', points: ['p'], guidance: 'g' });
     await service.interpret({ domain: 'kundli', payload: { blob: 'x'.repeat(20000) } });
     const user = userOf();
     expect(user).toContain('truncated');
