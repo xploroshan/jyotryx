@@ -33,6 +33,12 @@ const FEATURE_TTL: Record<string, number> = {
   'interpretation:horoscope': 86_400,
   'interpretation:transits': 86_400,
   'interpretation:panchang': 86_400,
+  'interpretation:muhurat': 86_400,
+  'interpretation:decision': 86_400,
+  'interpretation:cosmic-calendar': 86_400,
+  'interpretation:chinese-zodiac': 604_800,
+  'interpretation:medical': 604_800,
+  'interpretation:synastry': 604_800,
   'interpretation:general': 86_400,
 };
 

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
 import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface NatalPlanet {
   planet: string;
@@ -104,6 +105,14 @@ export default function WesternNatalPage() {
                   </p>
                 </div>
               )}
+
+              <Interpretation
+                domain="western-natal"
+                input={{
+                  ascendant: result.ascendant,
+                  planets: result.planets.map((p) => ({ planet: p.planet, sign: p.sign, house: p.house })),
+                }}
+              />
             </div>
           )}
         </>

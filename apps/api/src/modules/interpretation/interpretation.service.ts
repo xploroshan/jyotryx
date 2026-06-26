@@ -33,6 +33,12 @@ const DOMAIN_LABEL: Record<InterpretationDomain, string> = {
   transits: 'current planetary transits',
   bazi: 'BaZi (Four Pillars) chart',
   vastu: 'Vastu assessment',
+  muhurat: 'muhurat (auspicious timing) result',
+  decision: 'activity timing decision',
+  'cosmic-calendar': 'cosmic calendar day-quality result',
+  'chinese-zodiac': 'Chinese zodiac result',
+  medical: 'medical astrology (body-zodiac) result',
+  synastry: 'relationship synastry (compatibility) result',
   general: 'astrology result',
 };
 

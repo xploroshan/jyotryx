@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import Interpretation from "@/components/interpretation/Interpretation";
 import { Heart, Building2, Plane, Home, Car, GraduationCap, Flame, DoorOpen } from "lucide-react";
 
 const LOCALE_MAP: Record<string, string> = {
@@ -196,6 +197,21 @@ export default function MuhuratPage() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {result.auspiciousTimes.length > 0 && (
+              <Interpretation
+                domain="muhurat"
+                className="mt-6"
+                input={{
+                  purpose: result.purpose,
+                  times: result.auspiciousTimes.map((tm) => ({
+                    date: tm.date,
+                    quality: tm.quality,
+                    reason: tm.reason,
+                  })),
+                }}
+              />
             )}
           </div>
         )}

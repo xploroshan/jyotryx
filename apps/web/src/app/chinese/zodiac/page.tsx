@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface ChineseZodiacResponse {
   animal: string;
@@ -92,6 +93,20 @@ export default function ChineseZodiacPage() {
             </p>
           )}
         </div>
+      )}
+
+      {result && (
+        <Interpretation
+          domain="chinese-zodiac"
+          className="mt-4"
+          input={{
+            animal: result.animal,
+            element: result.element,
+            yinYang: result.yinYang,
+            traits: result.traits,
+            year: result.year,
+          }}
+        />
       )}
     </TraditionFeatureStub>
   );

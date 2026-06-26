@@ -20,6 +20,12 @@ export const INTERPRETATION_DOMAINS = [
   'transits',
   'bazi',
   'vastu',
+  'muhurat',
+  'decision',
+  'cosmic-calendar',
+  'chinese-zodiac',
+  'medical',
+  'synastry',
   'general',
 ] as const;
 
