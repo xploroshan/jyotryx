@@ -151,20 +151,19 @@
   /* ── Text gradients — orange brand sweep ── */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #f8943f 0%, #ef6c1a 52%, #cf5d16 100%);
+    background-image: linear-gradient(135deg, #ff7a40 0%, #ff4d00 50%, #c43200 100%);
   }
 
   .text-gradient-warm {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #ffbf99 0%, #f8943f 42%, #ef6c1a 100%);
+    background-image: linear-gradient(135deg, #ffa07a 0%, #ff7a40 40%, #ff4d00 100%);
   }
 
-  /* Sunrise gradient — soft gold → warm orange. Signature editorial accent:
-     hero italic word, oversized numerals, accent underline. Tuned warm but
-     calm — yellow easing into orange, not a hot red-orange. */
+  /* Sunrise gradient — yellow → amber → deep orange. Signature editorial
+     accent: hero italic word, oversized numerals, accent underline. */
   .text-gradient-sunrise {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #f7b733 0%, #f8943f 48%, #ef6c1a 100%);
+    background-image: linear-gradient(135deg, #ffb627 0%, #ff7a40 45%, #ff4d00 100%);
   }
 
   /* ── Editorial display helpers ── */
@@ -199,7 +198,7 @@
     bottom: 0.02em;
     height: 0.075em;
     border-radius: 999px;
-    background-image: linear-gradient(90deg, #ef6c1a 0%, #f7b733 100%);
+    background-image: linear-gradient(90deg, #ff4d00 0%, #ffb627 100%);
   }
 
   /* ── Warm tinted shadows — orange-biased so cards on cream lift with a
@@ -323,20 +322,22 @@
   }
 
   /* ── Buttons ── */
+  /* Calmer warm-orange CTA — softened off the hot #ff4d00 to sit with the
+     gold→orange brand sweep (still clearly the primary action). */
   .btn-primary {
-    background-color: var(--color-primary-500);
+    background-color: #ef6c1a;
     color: #ffffff;
     font-weight: 600;
     transition: all 150ms ease-out;
   }
   .btn-primary:hover {
-    background-color: var(--color-primary-400);
+    background-color: #f8943f;
     box-shadow:
-      0 14px 36px -12px rgba(255, 77, 0, 0.55),
+      0 14px 36px -12px rgba(239, 108, 26, 0.45),
       0 4px 10px -2px rgba(122, 32, 0, 0.15);
   }
   .btn-primary:active {
-    background-color: var(--color-primary-600);
+    background-color: #d65f14;
   }
 
   .btn-primary:disabled,

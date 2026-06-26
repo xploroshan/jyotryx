@@ -19,13 +19,13 @@ export function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
     >
       <defs>
         <linearGradient id="logomark-ring" gradientUnits="userSpaceOnUse" x1="12" y1="12" x2="88" y2="88">
-          <stop offset="0" stopColor="#f7b733" />
-          <stop offset="0.5" stopColor="#f8943f" />
-          <stop offset="1" stopColor="#ef6c1a" />
+          <stop offset="0" stopColor="#ffb627" />
+          <stop offset="0.5" stopColor="#ff7a40" />
+          <stop offset="1" stopColor="#ff4d00" />
         </linearGradient>
         <linearGradient id="logomark-star" gradientUnits="userSpaceOnUse" x1="28" y1="28" x2="72" y2="72">
-          <stop offset="0" stopColor="#f8943f" />
-          <stop offset="1" stopColor="#ef6c1a" />
+          <stop offset="0" stopColor="#ff7a40" />
+          <stop offset="1" stopColor="#ff4d00" />
         </linearGradient>
       </defs>
       {/* 360° dial ring */}
