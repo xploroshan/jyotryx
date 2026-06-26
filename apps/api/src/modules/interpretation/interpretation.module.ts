@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { InterpretationController } from './interpretation.controller';
 import { InterpretationService } from './interpretation.service';
+import { KnowledgeModule } from '../../knowledge/knowledge.module';
 
 /**
- * Cross-feature "what this means for you" interpretation layer. Depends only on
- * the global LlmModule (LlmCacheService), so no imports are needed here.
+ * Cross-feature "what this means for you" interpretation layer. Uses the global
+ * LlmModule (LlmCacheService) for prose generation, plus KnowledgeModule
+ * (KbService) for the KB-first path that skips the LLM entirely on domains the
+ * placement library covers (e.g. dasha).
  */
 @Module({
+  imports: [KnowledgeModule],
   controllers: [InterpretationController],
   providers: [InterpretationService],
   exports: [InterpretationService],

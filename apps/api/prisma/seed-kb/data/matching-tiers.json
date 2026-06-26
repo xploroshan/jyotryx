@@ -1,0 +1,70 @@
+{
+  "_source": "Placement library (2/N). Kundli-matching compatibility tier, keyed by band: excellent (>=70%) | good (>=55%) | average (>=40%) | low (<40%). Consumed by InterpretationService for the `matching` domain so it returns a KB-assembled reading instead of calling the LLM. Payload mirrors InterpretationResult. English-authored; run `npm run kb:backfill -- --tables=matching-tiers` to fill the other 11 locales (until then non-English requests fall through to the localized LLM path via renderStatus().matched).",
+  "_shape": "{ summary: string, points: string[], guidance: string }",
+  "rows": [
+    {
+      "key": "excellent",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "This is a strong, well-aligned match — the two charts support each other across most of the key areas of life.",
+          "points": [
+            "Core temperaments and values line up well, which makes everyday harmony come more naturally.",
+            "Emotional and mental compatibility is solid — a good base for trust and easy communication.",
+            "Most kootas score well, so the traditional indicators are largely in your favour.",
+            "No match is effortless — keep nurturing the bond rather than taking it for granted."
+          ],
+          "guidance": "Build on this strong foundation with open communication and shared goals. Where any single area scored lower, treat it as something to stay mindful of, not a dealbreaker."
+        }
+      }
+    },
+    {
+      "key": "good",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "This is a good, workable match — there's real compatibility here, with a few areas that will benefit from understanding and effort.",
+          "points": [
+            "Many of the key indicators align, giving you a solid foundation to build on.",
+            "A few kootas scored lower — these point to areas where your styles differ and patience helps.",
+            "Differences like these are normal and manageable with communication and mutual respect.",
+            "Traditional remedies exist for specific low areas (such as Manglik or Nadi) if you wish to address them."
+          ],
+          "guidance": "Lean on the areas that scored well as your strengths, and approach the weaker ones with empathy. A frank conversation about expectations goes a long way."
+        }
+      }
+    },
+    {
+      "key": "average",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "This is a moderate match — there's a foundation to work with, alongside some meaningful differences worth understanding before you commit.",
+          "points": [
+            "Some important areas align while others don't, so the relationship will ask for conscious effort.",
+            "Lower-scoring kootas highlight where temperaments, emotions, or values may clash.",
+            "Manglik or Nadi considerations, if present, are worth reviewing with an experienced astrologer.",
+            "Compatibility is also built, not just inherited — shared intent matters as much as the score."
+          ],
+          "guidance": "Look closely at which specific areas scored low and talk through them honestly. Traditional remedies and, above all, mutual understanding can bridge many of these gaps."
+        }
+      }
+    },
+    {
+      "key": "low",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "The traditional indicators for this match are on the lower side — it doesn't mean the relationship can't work, but it does ask for awareness and effort.",
+          "points": [
+            "Several key kootas scored low, pointing to notable differences in temperament or values.",
+            "Specific factors such as Nadi or Manglik dosha may need attention if they are present.",
+            "A low score reflects classical compatibility metrics, not the love, effort, and growth two people bring.",
+            "Many strong relationships thrive despite a modest score — read this as a caution, not a verdict."
+          ],
+          "guidance": "If you're serious about each other, consider reviewing the specific low areas with an astrologer and exploring traditional remedies. Honest communication and shared commitment matter most."
+        }
+      }
+    }
+  ]
+}

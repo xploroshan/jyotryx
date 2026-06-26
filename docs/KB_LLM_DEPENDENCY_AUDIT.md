@@ -115,17 +115,38 @@ avoidable LLM dependency in the app.
 
 ### Core unlock — a "placement interpretation library" (highest leverage)
 
-Five new tables, **tradition-scoped** (the `(key, tradition)` compound-unique
-pattern) so the same schema serves Vedic, Western, and Hellenistic from
-tradition-tagged rows.
+The interpretation endpoint now has a **KB-first path** (`InterpretationService.tryKb`):
+for domains the KB covers it assembles the reading from KB rows and skips the LLM
+entirely. It is gated on `renderStatus().matched`, so English serves from the KB
+while any locale not yet translated transparently keeps the localized LLM path —
+no regression, and each locale flips to KB automatically once `kb:backfill` fills
+it. New tables follow the `(key, tradition)` compound-unique pattern.
+
+**Shipped:**
+
+| New table | Rows | Domain | Status |
+|---|---|---|---|
+| `KbDashaImpact` | 9 (per mahadasha lord) | dasha | ✅ KB-driven (en), backfill-pending |
+| `KbMatchingTier` | 4 (compatibility band) | matching | ✅ KB-driven (en), backfill-pending |
+
+These two were clean because each maps to a single complete reading (one lord →
+one row; one score-band → one row).
+
+**Still LLM (deliberately) — needs the heavy placement tables:**
 
 | New table | Approx. rows | Unlocks |
 |---|---|---|
-| `KbPlanetInHouse` | ~84 (7–9 planets × 12 houses) | Kundli, KP, divisional, Western natal |
-| `KbPlanetInSign` | ~84 | same |
+| `KbPlanetInHouse` | ~108 (9 planets × 12 houses) | Kundli, KP, divisional, Western natal |
+| `KbPlanetInSign` | ~108 | same |
 | `KbHouseMeaning` | 12 | every chart |
 | `KbYogaMeaning` | ~20 | yoga callouts |
-| `KbDashaImpact` | ~9 | Vimshottari dasha |
+
+Kundli is intentionally **left on the LLM** for now: its richness comes from
+per-placement insight (e.g. "Saturn in your 7th house"), so a lightweight KB
+reading (ascendant + dasha only) would be *thinner* than today's full-chart LLM
+output — and the `matched` gate would route English kundli to that thinner path,
+a regression. Kundli should move to KB only once `KbPlanetInHouse`/`KbPlanetInSign`
+exist (~220 English rows, then `kb:backfill` for locales).
 
 **Effect:** the interpretation endpoint can **assemble** a reading from KB rows —
 deterministic, free, instantly multilingual — and call the LLM only to weave the

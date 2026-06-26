@@ -89,6 +89,18 @@ export interface KbHellenisticPlanetPayload {
   description: string;
 }
 
+export interface KbDashaImpactPayload {
+  summary: string;
+  points: string[];
+  guidance: string;
+}
+
+export interface KbMatchingTierPayload {
+  summary: string;
+  points: string[];
+  guidance: string;
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -130,6 +142,8 @@ export class KbService {
   private karanaCache = new Map<string, KbRow<KbNamedPayload>>();
   private doshaCache = new Map<string, KbRow<KbDoshaPayload>>();
   private hellenisticPlanetCache = new Map<string, KbRow<KbHellenisticPlanetPayload>>();
+  private dashaImpactCache = new Map<string, KbRow<KbDashaImpactPayload>>();
+  private matchingTierCache = new Map<string, KbRow<KbMatchingTierPayload>>();
 
   private loaded = {
     planet: false,
@@ -150,6 +164,8 @@ export class KbService {
     karana: false,
     dosha: false,
     hellenisticPlanet: false,
+    dashaImpact: false,
+    matchingTier: false,
   };
 
   // Coalesces concurrent loads of the same table onto a single promise so
@@ -288,6 +304,28 @@ export class KbService {
     return this.lookup(this.hellenisticPlanetCache, key, null);
   }
 
+  /**
+   * Vimshottari mahadasha impact. Key is the ruling planet ("Sun".."Saturn",
+   * "Rahu", "Ketu"). Payload IS the InterpretationResult body the dasha
+   * interpretation domain returns directly (summary, points, guidance) — the
+   * first of the placement-library tables that let interpretation skip the LLM.
+   */
+  async getDashaImpact(key: string): Promise<KbRow<KbDashaImpactPayload> | null> {
+    await this.ensureLoaded('dashaImpact');
+    return this.lookup(this.dashaImpactCache, key, null);
+  }
+
+  /**
+   * Kundli-matching compatibility tier. Key is the band the ashtakoota score
+   * falls into ("excellent" | "good" | "average" | "low"). Payload IS the
+   * InterpretationResult body the matching domain returns directly — placement
+   * library (2/N).
+   */
+  async getMatchingTier(key: string): Promise<KbRow<KbMatchingTierPayload> | null> {
+    await this.ensureLoaded('matchingTier');
+    return this.lookup(this.matchingTierCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
@@ -335,6 +373,8 @@ export class KbService {
           case 'karana':            await this.loadKaranas();            break;
           case 'dosha':             await this.loadDoshas();             break;
           case 'hellenisticPlanet': await this.loadHellenisticPlanets(); break;
+          case 'dashaImpact':       await this.loadDashaImpacts();        break;
+          case 'matchingTier':      await this.loadMatchingTiers();       break;
         }
         this.loaded[table] = true;
       } catch (err) {
@@ -381,6 +421,8 @@ export class KbService {
   private loadKaranas()            { return this.loadInto(this.prisma.kbKarana,            this.karanaCache); }
   private loadDoshas()             { return this.loadInto(this.prisma.kbDosha,             this.doshaCache); }
   private loadHellenisticPlanets() { return this.loadInto(this.prisma.kbHellenisticPlanet, this.hellenisticPlanetCache); }
+  private loadDashaImpacts()       { return this.loadInto(this.prisma.kbDashaImpact,       this.dashaImpactCache); }
+  private loadMatchingTiers()      { return this.loadInto(this.prisma.kbMatchingTier,      this.matchingTierCache); }
 }
 
 function cacheKey(key: string, tradition: string | null | undefined): string {

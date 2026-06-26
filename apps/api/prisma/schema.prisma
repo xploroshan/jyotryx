@@ -899,6 +899,30 @@ model KbHellenisticPlanet {
   @@map("kb_hellenistic_planets")
 }
 
+model KbDashaImpact {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Mahadasha lord (canonical English): "Sun".."Saturn", "Rahu", "Ketu"
+  tradition String?
+  i18n      Json /// { en: { summary, points: string[], guidance }, hi: {...}, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_dasha_impacts_key_tradition_key", map: "kb_dasha_impacts_key_tradition_key")
+  @@map("kb_dasha_impacts")
+}
+
+model KbMatchingTier {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Compatibility band: "excellent" | "good" | "average" | "low"
+  tradition String?
+  i18n      Json /// { en: { summary, points: string[], guidance }, hi: {...}, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_matching_tiers_key_tradition_key", map: "kb_matching_tiers_key_tradition_key")
+  @@map("kb_matching_tiers")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {
