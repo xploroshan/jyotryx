@@ -363,6 +363,31 @@ describe('AstrologyService', () => {
       );
       expect(allJan1).toBe(false);
     });
+
+    it('anchors the dasha timeline to the birth date, not Jan 1 of the birth year', async () => {
+      prisma.kundliChart.create.mockResolvedValue({ id: 'kundli-1', createdAt: new Date('2026-01-01') });
+
+      const result = await service.generateKundli('test-uuid', mockBirthDetails);
+
+      // The running (first) Mahadasha is shown from the birth moment, so its
+      // start date is exactly the birth date — previously it was anchored to
+      // Jan 1 of the birth year (off by the day-of-year, up to ~a year).
+      expect(result.dashas[0].startDate).toBe(mockBirthDetails.dateOfBirth);
+
+      // Boundaries are contiguous and strictly increasing across the cycle.
+      for (let i = 1; i < result.dashas.length; i++) {
+        expect(result.dashas[i].startDate).toBe(result.dashas[i - 1].endDate);
+        expect(result.dashas[i].startDate > result.dashas[i - 1].startDate).toBe(true);
+      }
+
+      // The full Vimshottari cycle from birth spans ~120 years minus the elapsed
+      // portion of the first Mahadasha — i.e. it ends within (120y, birth+120y].
+      const firstStart = new Date(result.dashas[0].startDate).getTime();
+      const lastEnd = new Date(result.dashas[result.dashas.length - 1].endDate).getTime();
+      const spanYears = (lastEnd - firstStart) / (365.2425 * 86400000);
+      expect(spanYears).toBeGreaterThan(100);
+      expect(spanYears).toBeLessThanOrEqual(120.001);
+    });
   });
 
   // ─── Matching Tests ───────────────────────────────────────────────────────

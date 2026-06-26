@@ -74,6 +74,50 @@ export function resolveUtHour(params: {
   return hour + minute / 60 - offset;
 }
 
+/**
+ * Parse a stored birth date + clock time into civil calendar/clock parts,
+ * independent of the server's timezone.
+ *
+ * `dateOfBirth` is the user's LOCAL calendar date at the birthplace. Reading it
+ * back via `new Date(dateOfBirth).getFullYear()` interprets it in the SERVER's
+ * zone, which shifts the date by a day on any non-UTC runtime (and for ISO
+ * datetimes that crossed midnight in UTC). We take Y-M-D straight from the
+ * string — the only place the local date is unambiguous — falling back to UTC
+ * parts for non-`YYYY-MM-DD` inputs. `timeOfBirth` is 24h "HH:MM"; a missing or
+ * malformed time defaults to 06:00 (the long-standing app default).
+ */
+export function birthMoment(
+  dateOfBirth: string,
+  timeOfBirth?: string | null,
+): { year: number; month: number; day: number; hour: number; minute: number } {
+  let year: number;
+  let month: number;
+  let day: number;
+  const dm = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(dateOfBirth ?? '');
+  if (dm) {
+    year = Number(dm[1]);
+    month = Number(dm[2]);
+    day = Number(dm[3]);
+  } else {
+    const d = new Date(dateOfBirth);
+    year = d.getUTCFullYear();
+    month = d.getUTCMonth() + 1;
+    day = d.getUTCDate();
+  }
+  let hour = 6;
+  let minute = 0;
+  const tm = /^(\d{1,2}):(\d{2})/.exec(timeOfBirth ?? '');
+  if (tm) {
+    const h = Number(tm[1]);
+    const mn = Number(tm[2]);
+    if (h >= 0 && h <= 23 && mn >= 0 && mn <= 59) {
+      hour = h;
+      minute = mn;
+    }
+  }
+  return { year, month, day, hour, minute };
+}
+
 /** App is India-first; the safest default when a zone can't be resolved. */
 export const DEFAULT_TZ = 'Asia/Kolkata';
 

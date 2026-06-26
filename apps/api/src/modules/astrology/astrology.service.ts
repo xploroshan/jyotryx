@@ -10,7 +10,7 @@ import { KbService } from '../../knowledge/kb.service';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
-import { resolveUtHour } from '../../common/timezone.util';
+import { resolveUtHour, birthMoment } from '../../common/timezone.util';
 import { buildKundliFactors, buildDoshaFactors, ChartFactor } from './factors.util';
 import { computeBhakootScore } from './guna.util';
 import { REMEDY_TEMPLES, RemedyTempleSet } from './remedy-temples';
@@ -424,28 +424,19 @@ export class AstrologyService {
 
   // ─── Swiss Ephemeris Helper: compute Julian Day from birth details ────────
   private computeJulianDay(bd: BirthDetails): number {
-    const date = new Date(bd.dateOfBirth);
-    const timeParts = bd.timeOfBirth?.split(':') || ['6', '0'];
-    const hour = parseInt(timeParts[0], 10);
-    const minute = parseInt(timeParts[1], 10) || 0;
-    // Convert the recorded CIVIL (clock) birth time to UT using the actual
-    // IANA timezone of the birthplace — including historical DST — rather
-    // than the old longitude/15 (local mean solar time) approximation, which
-    // was off by ~27 min for Indian longitudes and could shift the ascendant
-    // across a whole sign. Falls back to IST when coordinates are absent.
+    // Parse the civil birth moment TZ-independently (server zone must not shift
+    // the date), then convert to UT using the birthplace's real IANA timezone —
+    // including historical DST — rather than the old longitude/15 (local mean
+    // solar time) approximation, which was off by ~27 min for Indian longitudes
+    // and could shift the ascendant across a whole sign. Falls back to IST when
+    // coordinates are absent.
+    const { year, month, day, hour, minute } = birthMoment(bd.dateOfBirth, bd.timeOfBirth);
     const utHour = resolveUtHour({
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
-      day: date.getDate(),
-      hour,
-      minute,
+      year, month, day, hour, minute,
       latitude: bd.latitude,
       longitude: bd.longitude,
     });
-    return swisseph.swe_julday(
-      date.getFullYear(), date.getMonth() + 1, date.getDate(),
-      utHour, swisseph.SE_GREG_CAL,
-    );
+    return swisseph.swe_julday(year, month, day, utHour, swisseph.SE_GREG_CAL);
   }
 
   // ─── Swiss Ephemeris: precise planetary positions ───────────────────────────
@@ -817,18 +808,22 @@ export class AstrologyService {
 
   // ─── Primary Kundli generation using Swiss Ephemeris (deterministic) ────────
   private async generateSwissEphKundliAsync(birthDetails: BirthDetails): Promise<any> {
-    const lat = birthDetails.latitude || 28.6139;
-    const lng = birthDetails.longitude || 77.2090;
-    const birthDate = new Date(birthDetails.dateOfBirth);
-    const timeParts = birthDetails.timeOfBirth?.split(':') || ['6', '0'];
+    // Parse the civil birth moment TZ-independently (the server zone must never
+    // shift the date); reuse the parts for both the chart and the dasha anchor.
+    const { year, month, day, hour, minute } = birthMoment(birthDetails.dateOfBirth, birthDetails.timeOfBirth);
+    // `?? ` not `||`: a latitude/longitude of exactly 0 (equator / prime
+    // meridian) is a valid coordinate, not a missing one — only fall back to
+    // Delhi when truly absent.
+    const lat = birthDetails.latitude ?? 28.6139;
+    const lng = birthDetails.longitude ?? 77.2090;
 
     // Offload chart computation to worker pool (non-blocking)
     const chart = await this.ephemerisService.computeChart({
-      year: birthDate.getFullYear(),
-      month: birthDate.getMonth() + 1,
-      day: birthDate.getDate(),
-      hour: parseInt(timeParts[0], 10),
-      minute: parseInt(timeParts[1], 10) || 0,
+      year,
+      month,
+      day,
+      hour,
+      minute,
       lat,
       lng,
     });
@@ -882,9 +877,15 @@ export class AstrologyService {
     const sun = rawPositions.find(p => p.name === 'Sun')!;
     const sunSign = ALL_SIGNS[Math.floor(sun.longitude / 30) % 12];
 
-    // 6. Vimshottari Dasha calculation
-    const date = new Date(birthDetails.dateOfBirth);
-    const year = date.getFullYear();
+    // 6. Vimshottari Dasha calculation.
+    // Anchor the timeline to the ACTUAL birth date as a decimal year — not Jan 1
+    // of the birth year, which shifted every Mahadasha/Antardasha boundary by up
+    // to ~a year (and made "current Mahadasha" wrong). The first (running)
+    // Mahadasha is shown from birth with its remaining balance.
+    const startOfBirthYear = Date.UTC(year, 0, 1);
+    const birthYearLen = Date.UTC(year + 1, 0, 1) - startOfBirthYear;
+    const birthDecimalYear =
+      year + (Date.UTC(year, month - 1, day, hour, minute) - startOfBirthYear) / birthYearLen;
     const nakshatraSpan = 360 / 27; // 13.333°
     const posInNak = moon.longitude % nakshatraSpan;
     const fractionElapsed = posInNak / nakshatraSpan;
@@ -905,7 +906,9 @@ export class AstrologyService {
         .toISOString()
         .split('T')[0];
     };
-    let dashaStartYear = year - (DASHA_YEARS[startIdx] - firstDashaBalance);
+    // Start at the birth moment: the first row is the running Mahadasha shown
+    // for its remaining `firstDashaBalance` (the loop uses that for i === 0).
+    let dashaStartYear = birthDecimalYear;
     for (let i = 0; i < 9; i++) {
       const idx = (startIdx + i) % 9;
       const years = i === 0 ? firstDashaBalance : DASHA_YEARS[idx];
@@ -985,7 +988,9 @@ export class AstrologyService {
     // computation changes (e.g. the sidereal-ascendant / mean-node fixes, the
     // outer planets, and the D9/D10 vargas) the version MUST be bumped —
     // otherwise stale pre-fix charts keep being served until the TTL expires.
-    const cacheKey = `kundli:chart:v2:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
+    // v3: TZ-independent birth-date parsing + birth-date-anchored dasha timeline
+    // (previously anchored to Jan 1 of the birth year) + 0° coordinate fix.
+    const cacheKey = `kundli:chart:v3:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
     const cached = await this.cacheService.get<any>(cacheKey);
     if (cached) return cached;
     const chartData = await this.generateSwissEphKundliAsync(birthDetails);
@@ -2912,8 +2917,9 @@ export class AstrologyService {
     if (cached) return { ...cached, birthDetails };
 
     const jd = this.computeJulianDay(birthDetails);
-    const lat = birthDetails.latitude || 28.6139;
-    const lng = birthDetails.longitude || 77.2090;
+    // `?? ` not `||`: 0° (equator / prime meridian) is a valid coordinate.
+    const lat = birthDetails.latitude ?? 28.6139;
+    const lng = birthDetails.longitude ?? 77.2090;
 
     // Placidus house cusps for KP system
     const houseResult = swisseph.swe_houses(jd, lat, lng, 'P');
