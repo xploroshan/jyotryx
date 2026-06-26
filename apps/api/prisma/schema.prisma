@@ -911,6 +911,18 @@ model KbDashaImpact {
   @@map("kb_dasha_impacts")
 }
 
+model KbMatchingTier {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Compatibility band: "excellent" | "good" | "average" | "low"
+  tradition String?
+  i18n      Json /// { en: { summary, points: string[], guidance }, hi: {...}, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_matching_tiers_key_tradition_key", map: "kb_matching_tiers_key_tradition_key")
+  @@map("kb_matching_tiers")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

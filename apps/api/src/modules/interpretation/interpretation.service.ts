@@ -121,22 +121,53 @@ export class InterpretationService {
         // A mahadasha maps to exactly one ruling planet → one KbDashaImpact row.
         const lord = this.str(payload.currentMahadasha);
         if (!lord) return null;
-        const status = this.kb.renderStatus(await this.kb.getDashaImpact(lord), locale);
-        if (status?.matched) {
-          const p = status.value;
-          if (this.str(p.summary) && Array.isArray(p.points) && p.points.length > 0) {
-            return {
-              summary: p.summary,
-              points: p.points,
-              guidance: typeof p.guidance === 'string' ? p.guidance : '',
-              disclaimer: DISCLAIMER,
-            };
-          }
-        }
+        return this.assemble(this.kb.renderStatus(await this.kb.getDashaImpact(lord), locale));
+      }
+      if (domain === 'matching') {
+        // Compatibility is tier-driven: map the ashtakoota percentage to a band.
+        const pct = this.matchPercentage(payload);
+        if (pct == null) return null;
+        const tier = pct >= 70 ? 'excellent' : pct >= 55 ? 'good' : pct >= 40 ? 'average' : 'low';
+        return this.assemble(this.kb.renderStatus(await this.kb.getMatchingTier(tier), locale));
       }
     } catch (e) {
       // Never let a KB hiccup break interpretation — fall through to the LLM.
       this.logger.warn(`interpret(${domain}) KB path failed: ${(e as Error).message}`);
+    }
+    return null;
+  }
+
+  /**
+   * Turn a locale-rendered KB row whose payload IS an interpretation body
+   * ({summary, points, guidance}) into a result. Returns null — so the caller
+   * falls through to the LLM — when the locale wasn't an exact match or the row
+   * is unusable. `renderStatus(...).matched` is the no-regression gate: an
+   * untranslated locale yields matched=false and keeps the localized LLM path.
+   */
+  private assemble(status: { value: unknown; matched: boolean } | null): InterpretationResult | null {
+    if (!status?.matched) return null;
+    const p = (status.value ?? {}) as { summary?: unknown; points?: unknown; guidance?: unknown };
+    const summary = this.str(p.summary);
+    const points = Array.isArray(p.points)
+      ? p.points.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+      : [];
+    if (!summary || points.length === 0) return null;
+    return {
+      summary,
+      points,
+      guidance: typeof p.guidance === 'string' ? p.guidance : '',
+      disclaimer: DISCLAIMER,
+    };
+  }
+
+  /** Compatibility percentage from the matching payload (0–100), or null. */
+  private matchPercentage(payload: Record<string, unknown>): number | null {
+    const pct = payload.percentage;
+    if (typeof pct === 'number' && Number.isFinite(pct)) return pct;
+    const total = payload.totalScore;
+    const max = payload.maxScore;
+    if (typeof total === 'number' && typeof max === 'number' && max > 0) {
+      return (total / max) * 100;
     }
     return null;
   }

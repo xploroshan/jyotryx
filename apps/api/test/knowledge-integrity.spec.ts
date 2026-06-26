@@ -22,7 +22,7 @@ import { KB_SEEDS, KbSeedRow } from '../src/knowledge/kb-seeds';
 // locales that match exactly (renderStatus().matched) and falls back to the
 // localized LLM for any locale not yet present — so no English leaks into a
 // non-English UI. Remove an entry the moment its backfill lands.
-const BACKFILL_PENDING = new Set<string>(['kbDashaImpact']);
+const BACKFILL_PENDING = new Set<string>(['kbDashaImpact', 'kbMatchingTier']);
 
 describe('KB integrity', () => {
   const tableNames = Object.keys(KB_SEEDS);

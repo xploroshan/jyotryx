@@ -6,7 +6,7 @@ import { KbService } from '../src/knowledge/kb.service';
 describe('InterpretationService', () => {
   let service: InterpretationService;
   let cache: { cachedChatCompletion: jest.Mock };
-  let kb: { getDashaImpact: jest.Mock; renderStatus: jest.Mock };
+  let kb: { getDashaImpact: jest.Mock; getMatchingTier: jest.Mock; renderStatus: jest.Mock };
 
   const sysOf = () => {
     const arg = cache.cachedChatCompletion.mock.calls[0][0];
@@ -21,7 +21,11 @@ describe('InterpretationService', () => {
     cache = { cachedChatCompletion: jest.fn() };
     // Default: KB has no row → every domain falls through to the LLM path, so
     // the existing LLM-path expectations below are unaffected.
-    kb = { getDashaImpact: jest.fn().mockResolvedValue(null), renderStatus: jest.fn().mockReturnValue(null) };
+    kb = {
+      getDashaImpact: jest.fn().mockResolvedValue(null),
+      getMatchingTier: jest.fn().mockResolvedValue(null),
+      renderStatus: jest.fn().mockReturnValue(null),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InterpretationService,
@@ -66,6 +70,33 @@ describe('InterpretationService', () => {
     cache.cachedChatCompletion.mockResolvedValue({ summary: 'llm', points: ['a'], guidance: 'g' });
     const res = await service.interpret({ domain: 'dasha', payload: {} });
     expect(kb.getDashaImpact).not.toHaveBeenCalled();
+    expect(cache.cachedChatCompletion).toHaveBeenCalled();
+    expect(res.summary).toBe('llm');
+  });
+
+  it('assembles a matching interpretation from the KB tier without calling the LLM', async () => {
+    kb.getMatchingTier.mockResolvedValue({ key: 'good', tradition: null, i18n: {} });
+    kb.renderStatus.mockReturnValue({
+      matched: true,
+      value: { summary: 'A good, workable match.', points: ['Many indicators align'], guidance: 'Communicate openly.' },
+    });
+    const res = await service.interpret({ domain: 'matching', payload: { percentage: 60 }, locale: 'en' });
+    expect(kb.getMatchingTier).toHaveBeenCalledWith('good'); // 60% → "good" band
+    expect(res.summary).toContain('workable');
+    expect(cache.cachedChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('maps matching score to the right tier and derives percentage from totalScore/maxScore', async () => {
+    kb.getMatchingTier.mockResolvedValue({ key: 'excellent', tradition: null, i18n: {} });
+    kb.renderStatus.mockReturnValue({ matched: true, value: { summary: 'Strong match.', points: ['Aligned'], guidance: 'Nurture it.' } });
+    await service.interpret({ domain: 'matching', payload: { totalScore: 30, maxScore: 36 }, locale: 'en' });
+    expect(kb.getMatchingTier).toHaveBeenCalledWith('excellent'); // 30/36 ≈ 83% → "excellent"
+  });
+
+  it('falls through to the LLM for matching when no score is supplied', async () => {
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'llm', points: ['a'], guidance: 'g' });
+    const res = await service.interpret({ domain: 'matching', payload: {} });
+    expect(kb.getMatchingTier).not.toHaveBeenCalled();
     expect(cache.cachedChatCompletion).toHaveBeenCalled();
     expect(res.summary).toBe('llm');
   });
