@@ -293,10 +293,11 @@ describe('AstrologyService', () => {
       expect(result).toEqual(cached);
     });
 
-    it('should return fallback panchang when OpenAI fails', async () => {
-      openaiService.chat.mockResolvedValue(null);
-
+    it('should compute panchang deterministically (no LLM)', async () => {
       const result = await service.getPanchang();
+
+      // Panchang is computed from Swiss Ephemeris, never the LLM.
+      expect(openaiService.chatCompletion).not.toHaveBeenCalled();
 
       expect(result.date).toBeDefined();
       expect(result.tithi).toBeDefined();
