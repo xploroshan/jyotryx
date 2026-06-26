@@ -656,6 +656,7 @@ export const gu: TranslationKeys = {
     loginRequired: 'તમારી કુંડળી બનાવવા કૃપા કરીને લોગ ઇન કરો.',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

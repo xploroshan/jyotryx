@@ -175,6 +175,10 @@ export interface PlanetPosition {
   avastha?: string;
   /** True when the planet is combust (too close to the Sun). */
   isCombust?: boolean;
+  /** Bhava Chalit (Sripati) house, 1–12. Can differ from the whole-sign
+   *  `house` when a planet sits near a sign edge relative to the ascendant
+   *  degree. Undefined if the Porphyry cusps could not be computed. */
+  bhava?: number;
 }
 
 export interface DashaPeriod {
@@ -843,6 +847,35 @@ export class AstrologyService {
     // Sun longitude is needed up-front to flag combustion for the other planets.
     const sunLongitude = rawPositions.find(p => p.name === 'Sun')!.longitude;
 
+    // Bhava Chalit (Sripati): the Porphyry house cusps are the bhava centres
+    // (bhava-madhya); a planet's bhava is the centre-arc it falls in, with the
+    // boundaries at the circular midpoints between consecutive centres. This is
+    // the "chalit" house and can differ from the whole-sign `house` below when a
+    // planet sits near a sign edge relative to the ascendant degree. Computed
+    // additively — whole-sign (Rasi) remains the primary house scheme.
+    const bhavaOf = ((): ((lon: number) => number | undefined) => {
+      try {
+        const por = swisseph.swe_houses_ex(chart.julianDay, swisseph.SEFLG_SIDEREAL, lat, lng, 'O');
+        // The binding's `house` is a 0-indexed array of 12 cusps: house[0] is the
+        // 1st house (= ascendant), house[11] the 12th.
+        const centres: number[] = [];
+        for (let i = 0; i < 12; i++) centres.push(((por.house[i] % 360) + 360) % 360);
+        if (centres.some((c) => !Number.isFinite(c))) return () => undefined;
+        const mid = (a: number, b: number) => (a + ((b - a + 360) % 360) / 2) % 360;
+        return (lon: number): number => {
+          const L = ((lon % 360) + 360) % 360;
+          for (let k = 0; k < 12; k++) {
+            const start = mid(centres[(k + 11) % 12], centres[k]);
+            const end = mid(centres[k], centres[(k + 1) % 12]);
+            if (((L - start + 360) % 360) < ((end - start + 360) % 360)) return k + 1;
+          }
+          return 1;
+        };
+      } catch {
+        return () => undefined;
+      }
+    })();
+
     // 4. Map planets to positions
     const planetaryPositions: PlanetPosition[] = rawPositions.map(p => {
       const signIdx = Math.floor(p.longitude / 30) % 12;
@@ -859,6 +892,7 @@ export class AstrologyService {
         planet: p.name,
         sign: ALL_SIGNS[signIdx],
         house: houseNum,
+        bhava: bhavaOf(p.longitude),
         degree: parseFloat(degInSign.toFixed(2)),
         isRetrograde,
         nakshatra: NAKSHATRA_NAMES[nakIdx],
@@ -997,9 +1031,9 @@ export class AstrologyService {
     // computation changes (e.g. the sidereal-ascendant / mean-node fixes, the
     // outer planets, and the D9/D10 vargas) the version MUST be bumped —
     // otherwise stale pre-fix charts keep being served until the TTL expires.
-    // v3: TZ-independent birth-date parsing + birth-date-anchored dasha timeline
-    // (previously anchored to Jan 1 of the birth year) + 0° coordinate fix.
-    const cacheKey = `kundli:chart:v3:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
+    // v4: TZ-independent birth-date parsing + birth-date-anchored dasha timeline
+    // + 0° coordinate fix + per-planet Bhava Chalit (Sripati) house.
+    const cacheKey = `kundli:chart:v4:${birthDetails.dateOfBirth}:${birthDetails.timeOfBirth}:${birthDetails.placeOfBirth}:${birthDetails.latitude ?? ''}:${birthDetails.longitude ?? ''}`;
     const cached = await this.cacheService.get<any>(cacheKey);
     if (cached) return cached;
     const chartData = await this.generateSwissEphKundliAsync(birthDetails);

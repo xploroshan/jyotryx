@@ -656,6 +656,7 @@ export const ta: TranslationKeys = {
     loginRequired: 'உங்கள் குண்டலியை உருவாக்க உள்நுழையவும்.',
     asc: 'லக்னம்',
     houseLabel: 'பாவம்',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'வது',
     ordNd: 'வது',
     ordRd: 'வது',

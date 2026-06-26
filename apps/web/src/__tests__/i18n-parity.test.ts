@@ -77,6 +77,9 @@ const UNTRANSLATED_ALLOWLIST = new Set<string>([
   'language.pa',
   'language.or',
   'language.as',
+  // "Bhava Chalit" is the proper name of the Sripati house chart, kept
+  // romanized across all locales (like Nakshatra / Dasha / Vimshottari).
+  'kundli.bhavaLabel',
 ]);
 
 /**

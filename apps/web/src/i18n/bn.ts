@@ -656,6 +656,7 @@ export const bn: TranslationKeys = {
     loginRequired: 'আপনার কুণ্ডলী তৈরি করতে অনুগ্রহ করে লগ ইন করুন।',
     asc: 'Asc',
     houseLabel: 'House',
+    bhavaLabel: 'Bhava Chalit',
     ordSt: 'st',
     ordNd: 'nd',
     ordRd: 'rd',

@@ -413,6 +413,18 @@ describe('AstrologyService', () => {
         }
       }
     });
+
+    it('assigns every planet a Bhava Chalit (Sripati) house in 1..12', async () => {
+      prisma.kundliChart.create.mockResolvedValue({ id: 'kundli-1', createdAt: new Date('2026-01-01') });
+
+      const result = await service.generateKundli('test-uuid', mockBirthDetails);
+
+      for (const p of result.planetaryPositions) {
+        expect(p.bhava).toBeGreaterThanOrEqual(1);
+        expect(p.bhava).toBeLessThanOrEqual(12);
+        expect(Number.isInteger(p.bhava)).toBe(true);
+      }
+    });
   });
 
   // ─── BaZi Tests (solar-term year + month) ──────────────────────────────────

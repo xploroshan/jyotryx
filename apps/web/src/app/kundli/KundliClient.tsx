@@ -40,6 +40,8 @@ interface KundliData {
     avastha?: string;
     /** True when the planet is combust (too close to the Sun). */
     isCombust?: boolean;
+    /** Bhava Chalit (Sripati) house, 1–12. May differ from the whole-sign house. */
+    bhava?: number;
   }[];
   dashas: {
     planet: string;
@@ -461,6 +463,9 @@ export default function KundliPage() {
                           <span className="text-sm text-secondary flex-1">
                             {p.sign} {Math.floor(p.degree)}&deg;
                             <span className="text-[rgba(12,8,5,0.66)]"> &bull; {t.kundli.houseLabel} {p.house}</span>
+                            {typeof p.bhava === 'number' && p.bhava !== p.house ? (
+                              <span className="text-[rgba(12,8,5,0.66)]"> &bull; {t.kundli.bhavaLabel} {p.bhava}</span>
+                            ) : null}
                             {p.status ? <span className="text-[rgba(12,8,5,0.66)]"> &bull; {p.status}</span> : null}
                           </span>
                           {p.isRetrograde && (
