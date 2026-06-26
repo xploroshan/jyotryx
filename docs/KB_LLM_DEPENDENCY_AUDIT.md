@@ -122,31 +122,28 @@ while any locale not yet translated transparently keeps the localized LLM path �
 no regression, and each locale flips to KB automatically once `kb:backfill` fills
 it. New tables follow the `(key, tradition)` compound-unique pattern.
 
-**Shipped:**
+**Shipped (all KB-driven for English; non-English auto-flips per locale as `kb:backfill` runs):**
 
 | New table | Rows | Domain | Status |
 |---|---|---|---|
 | `KbDashaImpact` | 9 (per mahadasha lord) | dasha | ✅ KB-driven (en), backfill-pending |
 | `KbMatchingTier` | 4 (compatibility band) | matching | ✅ KB-driven (en), backfill-pending |
+| `KbSignTrait` | 12 (rising sign) | kundli (headline) | ✅ KB-driven (en), backfill-pending |
+| `KbPlanetInHouse` | 108 (9 grahas × 12 houses) | kundli (placements) | ✅ KB-driven (en), backfill-pending |
 
-These two were clean because each maps to a single complete reading (one lord →
-one row; one score-band → one row).
+Kundli is assembled as an ascendant headline (`KbSignTrait`) + one concise
+insight per planet placement (`KbPlanetInHouse`) + the current mahadasha
+(`KbDashaImpact`) — competitive with the LLM's concise block, not thinner.
 
-**Still LLM (deliberately) — needs the heavy placement tables:**
+**Optional future enrichment (kundli still works well without these):**
 
-| New table | Approx. rows | Unlocks |
+| New table | Approx. rows | Adds |
 |---|---|---|
-| `KbPlanetInHouse` | ~108 (9 planets × 12 houses) | Kundli, KP, divisional, Western natal |
-| `KbPlanetInSign` | ~108 | same |
-| `KbHouseMeaning` | 12 | every chart |
-| `KbYogaMeaning` | ~20 | yoga callouts |
+| `KbPlanetInSign` | 108 | nuance on *how* each planet expresses (sign), on top of *where* it acts (house) |
+| `KbYogaMeaning` | ~20 | named-yoga callouts |
+| `KbHouseMeaning` | 12 | standalone house-theme reference |
 
-Kundli is intentionally **left on the LLM** for now: its richness comes from
-per-placement insight (e.g. "Saturn in your 7th house"), so a lightweight KB
-reading (ascendant + dasha only) would be *thinner* than today's full-chart LLM
-output — and the `matched` gate would route English kundli to that thinner path,
-a regression. Kundli should move to KB only once `KbPlanetInHouse`/`KbPlanetInSign`
-exist (~220 English rows, then `kb:backfill` for locales).
+These extend KP / divisional / Western natal to KB as well, via tradition-scoped rows.
 
 **Effect:** the interpretation endpoint can **assemble** a reading from KB rows —
 deterministic, free, instantly multilingual — and call the LLM only to weave the

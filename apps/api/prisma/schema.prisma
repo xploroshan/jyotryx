@@ -923,6 +923,30 @@ model KbMatchingTier {
   @@map("kb_matching_tiers")
 }
 
+model KbSignTrait {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Rising sign (canonical English): "Aries".."Pisces"
+  tradition String?
+  i18n      Json /// { en: { summary, guidance }, hi: {...}, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_sign_traits_key_tradition_key", map: "kb_sign_traits_key_tradition_key")
+  @@map("kb_sign_traits")
+}
+
+model KbPlanetInHouse {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{house}", e.g. "Saturn:7" (9 grahas x 12 houses)
+  tradition String?
+  i18n      Json /// { en: { text }, hi: {...}, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_planet_in_house_key_tradition_key", map: "kb_planet_in_house_key_tradition_key")
+  @@map("kb_planet_in_house")
+}
+
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────
 
 model StatDaily {

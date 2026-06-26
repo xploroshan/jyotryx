@@ -1,0 +1,126 @@
+{
+  "_source": "Placement library (3/N). Ascendant (lagna) personality, keyed by rising sign. Used by InterpretationService for the kundli summary/guidance. Payload { summary, guidance }. English-authored; run `npm run kb:backfill -- --tables=sign-traits` to fill the other 11 locales (until then non-English kundli requests use the localized LLM path via renderStatus().matched).",
+  "_shape": "{ summary: string, guidance: string }",
+  "rows": [
+    {
+      "key": "Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Aries rising, you meet life head-on — bold, energetic, and pioneering, happiest when you're starting something and leading the way.",
+          "guidance": "Lean into your initiative and courage, but build patience and follow-through so your fast starts become lasting wins."
+        }
+      }
+    },
+    {
+      "key": "Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Taurus rising, you're steady, grounded, and patient, with a love of comfort, beauty, and security built to last.",
+          "guidance": "Trust your persistence and calm, while staying open to change so your love of stability never hardens into resistance."
+        }
+      }
+    },
+    {
+      "key": "Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Gemini rising, you're curious, quick, and communicative — a versatile mind that thrives on learning, variety, and connection.",
+          "guidance": "Channel your many interests by finishing what you start; depth will make your natural cleverness truly powerful."
+        }
+      }
+    },
+    {
+      "key": "Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Cancer rising, you're sensitive, caring, and intuitive, deeply tied to home, family, and emotional security.",
+          "guidance": "Honor your nurturing nature, and protect your energy with healthy boundaries so caring for others never drains you."
+        }
+      }
+    },
+    {
+      "key": "Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Leo rising, you're warm, confident, and naturally expressive — a born leader who shines when appreciated and creative.",
+          "guidance": "Lead with generosity and heart, and let humility temper pride so your light draws people in rather than overshadowing them."
+        }
+      }
+    },
+    {
+      "key": "Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Virgo rising, you're practical, analytical, and helpful, with a sharp eye for detail and a drive to improve things.",
+          "guidance": "Use your precision to serve and refine, but ease the self-criticism — progress matters more than perfection."
+        }
+      }
+    },
+    {
+      "key": "Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Libra rising, you're gracious, fair-minded, and relationship-oriented, with a natural gift for harmony and diplomacy.",
+          "guidance": "Cultivate balance in your bonds, and practice deciding for yourself so harmony never comes at the cost of your own needs."
+        }
+      }
+    },
+    {
+      "key": "Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Scorpio rising, you're intense, perceptive, and resilient, drawn to depth, truth, and transformation.",
+          "guidance": "Trust your powerful intuition and focus, and release control where you can — vulnerability deepens your strength."
+        }
+      }
+    },
+    {
+      "key": "Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Sagittarius rising, you're optimistic, adventurous, and truth-seeking, energized by freedom, learning, and big horizons.",
+          "guidance": "Follow your love of growth and exploration, while grounding your vision in commitment so your goals become real."
+        }
+      }
+    },
+    {
+      "key": "Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Capricorn rising, you're disciplined, ambitious, and responsible — a patient builder who earns lasting success.",
+          "guidance": "Keep climbing with your characteristic steadiness, and make room for rest and warmth so achievement doesn't crowd out joy."
+        }
+      }
+    },
+    {
+      "key": "Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Aquarius rising, you're original, independent, and forward-thinking, with a humanitarian heart and your own way of seeing.",
+          "guidance": "Honor your individuality and ideals, and stay emotionally connected so your big-picture vision includes the people close to you."
+        }
+      }
+    },
+    {
+      "key": "Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "With Pisces rising, you're compassionate, imaginative, and intuitive, attuned to feelings and the unseen currents of life.",
+          "guidance": "Trust your empathy and creativity, and keep gentle boundaries so your sensitivity becomes a gift rather than a burden."
+        }
+      }
+    }
+  ]
+}

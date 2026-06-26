@@ -1,0 +1,978 @@
+{
+  "_source": "Placement library (3/N). Planet-in-house interpretation, keyed \"{Planet}:{house}\" (9 grahas x 12 houses = 108). Used by InterpretationService to assemble the kundli reading's per-placement points without the LLM. Payload { text }. English-authored; run `npm run kb:backfill -- --tables=planet-in-house` to fill the other 11 locales.",
+  "_shape": "{ text: string }",
+  "rows": [
+    {
+      "key": "Sun:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Strong sense of self and natural authority — you're here to lead and be seen; just keep pride in check."
+        }
+      }
+    },
+    {
+      "key": "Sun:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Identity is tied to wealth, family standing, and speaking with authority; earnings often come through your own initiative."
+        }
+      }
+    },
+    {
+      "key": "Sun:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A courageous, self-driven communicator; you grow through bold effort and hold your own among siblings and peers."
+        }
+      }
+    },
+    {
+      "key": "Sun:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Inner pride and a strong bond with home and a parent figure; emotional security feeds your sense of self."
+        }
+      }
+    },
+    {
+      "key": "Sun:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Creative, confident, and proud of your intelligence and children; a natural flair for leadership in learning and romance."
+        }
+      }
+    },
+    {
+      "key": "Sun:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You overcome rivals and health setbacks through willpower; disciplined service builds your reputation."
+        }
+      }
+    },
+    {
+      "key": "Sun:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You shine through partnerships but must share the spotlight; seek a confident, respected partner."
+        }
+      }
+    },
+    {
+      "key": "Sun:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Drawn to life's depths and transformation; great resilience and research ability, though your ego meets testing change."
+        }
+      }
+    },
+    {
+      "key": "Sun:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Principled and fortunate, with strong ethics, faith, and a guiding mentor or father; a natural teacher."
+        }
+      }
+    },
+    {
+      "key": "Sun:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Career and public status sit at the center of your identity — strong leadership, authority, and recognition at work."
+        }
+      }
+    },
+    {
+      "key": "Sun:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You achieve your ambitions and gain through influential networks; respected among friends and elders."
+        }
+      }
+    },
+    {
+      "key": "Sun:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A private, reflective relationship with power; growth comes through humility, spirituality, or work behind the scenes."
+        }
+      }
+    },
+    {
+      "key": "Moon:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Sensitive, intuitive, and emotionally expressive; your moods color how you meet the world, and people feel your warmth."
+        }
+      }
+    },
+    {
+      "key": "Moon:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Emotional security comes through family, savings, and comforting routines; a gentle, caring way with words."
+        }
+      }
+    },
+    {
+      "key": "Moon:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A caring, curious communicator; emotionally close to siblings, and you adapt easily to new situations."
+        }
+      }
+    },
+    {
+      "key": "Moon:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Deeply nurturing and home-loving, with a strong bond to your mother; inner peace anchors everything for you."
+        }
+      }
+    },
+    {
+      "key": "Moon:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Warm, romantic, and imaginative; emotionally invested in children, creativity, and matters of the heart."
+        }
+      }
+    },
+    {
+      "key": "Moon:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You process stress through service and routine; tend to your emotional and digestive health, and worry less."
+        }
+      }
+    },
+    {
+      "key": "Moon:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You seek emotional connection in partnership — a caring, popular presence who needs a nurturing relationship."
+        }
+      }
+    },
+    {
+      "key": "Moon:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Emotionally intense and intuitive, with deep feelings and a pull toward life's mysteries; honor your need for security through change."
+        }
+      }
+    },
+    {
+      "key": "Moon:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A hopeful, open-hearted seeker; comforted by beliefs, travel, and learning, often guided by a nurturing mentor."
+        }
+      }
+    },
+    {
+      "key": "Moon:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your feelings and the public are tied to your career; you rise through work that serves or cares for people."
+        }
+      }
+    },
+    {
+      "key": "Moon:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Emotionally fulfilled through friendships and community; your warmth attracts a supportive social circle."
+        }
+      }
+    },
+    {
+      "key": "Moon:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A rich inner and dream life; you find peace in solitude, spirituality, or foreign places — protect your rest."
+        }
+      }
+    },
+    {
+      "key": "Mars:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Bold, energetic, and competitive — a natural go-getter; channel the drive so it builds rather than burns."
+        }
+      }
+    },
+    {
+      "key": "Mars:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You earn through effort and initiative; speak directly, and guard family finances against impulsive spending."
+        }
+      }
+    },
+    {
+      "key": "Mars:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Courageous and determined, excellent with hands-on skills and standing up for yourself; dynamic with siblings."
+        }
+      }
+    },
+    {
+      "key": "Mars:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Plenty of drive around home and property; protect your peace and watch for tension in domestic life."
+        }
+      }
+    },
+    {
+      "key": "Mars:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Passionate and competitive in romance, sport, and creativity; bold with children and risk-taking — pace yourself."
+        }
+      }
+    },
+    {
+      "key": "Mars:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A formidable fighter of obstacles, rivals, and illness; your energy excels at disciplined daily work."
+        }
+      }
+    },
+    {
+      "key": "Mars:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Passionate, assertive partnerships; choose patience over heat, and a partner who matches your energy."
+        }
+      }
+    },
+    {
+      "key": "Mars:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Intense drive for transformation and research, with strong resilience; channel anger and take care with risk."
+        }
+      }
+    },
+    {
+      "key": "Mars:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "An energetic believer and adventurer; you fight for your principles and benefit from bold journeys and learning."
+        }
+      }
+    },
+    {
+      "key": "Mars:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Ambitious and hardworking in career; you push hard for status and excel in action-oriented or leadership roles."
+        }
+      }
+    },
+    {
+      "key": "Mars:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You reach goals through bold effort and gain through dynamic networks; energetic among friends."
+        }
+      }
+    },
+    {
+      "key": "Mars:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Energy works best behind the scenes or abroad; aim your drive at private or spiritual goals and avoid hidden conflicts."
+        }
+      }
+    },
+    {
+      "key": "Mercury:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Quick-witted, communicative, and youthful; you think and talk your way through life and love to learn."
+        }
+      }
+    },
+    {
+      "key": "Mercury:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A clever earner with a way with words; skilled in business, trade, and managing money intelligently."
+        }
+      }
+    },
+    {
+      "key": "Mercury:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "An excellent communicator and writer, with sharp skills, curiosity, and easy rapport with siblings and peers."
+        }
+      }
+    },
+    {
+      "key": "Mercury:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A thoughtful, studious mind centered on home; you may work from home or deal in property and education."
+        }
+      }
+    },
+    {
+      "key": "Mercury:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A bright, creative intellect — quick learning, playful expression, and a clever way with romance and children."
+        }
+      }
+    },
+    {
+      "key": "Mercury:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A problem-solver who excels at detailed daily work, analysis, and service; ease the overthinking."
+        }
+      }
+    },
+    {
+      "key": "Mercury:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You connect through ideas and conversation; great for business partnerships — choose a sharp, communicative partner."
+        }
+      }
+    },
+    {
+      "key": "Mercury:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A research-minded, investigative intellect drawn to secrets and depth; gifted at uncovering what's hidden."
+        }
+      }
+    },
+    {
+      "key": "Mercury:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A philosophical, curious mind; you love higher learning, teaching, and exploring ideas and distant places."
+        }
+      }
+    },
+    {
+      "key": "Mercury:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You build your career through communication, intellect, and versatility — strong in writing, commerce, or analysis."
+        }
+      }
+    },
+    {
+      "key": "Mercury:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You gain through ideas, networks, and clever collaboration; your friendships keep you intellectually alive."
+        }
+      }
+    },
+    {
+      "key": "Mercury:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "An imaginative, reflective mind; your thinking shines in private, research, spirituality, or work abroad."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Optimistic, wise, and generous; you grow throughout life, and people trust your guidance and good nature."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Fortune and growth in wealth and family; you value knowledge, speak with wisdom, and tend to be well provided for."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your efforts and communication are lifted by optimism; supportive siblings and growth through courage."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Deep inner contentment, a happy home, and property gains, on a nurturing and principled emotional foundation."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Blessed with creativity, wisdom, and good fortune through children, learning, and romance — a natural teacher."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You grow by overcoming obstacles ethically; good for healing, service, and turning hard work into wisdom."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A fortunate, growth-bringing partnership; you attract a wise, principled partner and benefit from collaboration."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Protective grace through life's transformations, with interest in deeper knowledge and support via shared resources."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Highly fortunate — strong faith, ethics, higher learning, and a guiding mentor; travel and wisdom expand you."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Career growth, respect, and ethical leadership; you're trusted, and advisory or teaching roles suit you well."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Abundant gains and fulfilled wishes through good friends and networks; your generosity returns to you."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Spiritual wealth and growth through letting go; charity, foreign ties, and inner life are deeply rewarding."
+        }
+      }
+    },
+    {
+      "key": "Venus:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Charming, graceful, and well-liked; you value beauty, harmony, and pleasant relationships, and it shows."
+        }
+      }
+    },
+    {
+      "key": "Venus:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You attract wealth and enjoy comforts and good food, with a sweet way with words and a love of beautiful things."
+        }
+      }
+    },
+    {
+      "key": "Venus:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Artistic, sociable communication; harmonious bonds with siblings and a flair for creative self-expression."
+        }
+      }
+    },
+    {
+      "key": "Venus:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A beautiful, harmonious home brings you joy; you're emotionally nourished by comfort, art, and loving surroundings."
+        }
+      }
+    },
+    {
+      "key": "Venus:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Romantic, creative, and playful; love, art, and children bring delight — a naturally charming heart."
+        }
+      }
+    },
+    {
+      "key": "Venus:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You bring grace to daily work and service; tend to your relationships and balance pleasure with healthy routines."
+        }
+      }
+    },
+    {
+      "key": "Venus:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Love and partnership are central and favored; you attract an affectionate partner and thrive in harmony."
+        }
+      }
+    },
+    {
+      "key": "Venus:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Deep, intense bonds and interest in life's mysteries; passion runs strong — value trust through change."
+        }
+      }
+    },
+    {
+      "key": "Venus:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "You love wisdom, beauty, and travel; relationships and good fortune often arrive through learning or distant places."
+        }
+      }
+    },
+    {
+      "key": "Venus:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Charm and artistry advance your career; you do well in beauty, the arts, diplomacy, or people-centered work."
+        }
+      }
+    },
+    {
+      "key": "Venus:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Gains and joy through friendships and social networks; you're well-loved, with rewarding connections."
+        }
+      }
+    },
+    {
+      "key": "Venus:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A tender, private love nature; you find beauty in solitude, spirituality, or abroad — guard against escapism."
+        }
+      }
+    },
+    {
+      "key": "Saturn:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Serious, disciplined, and self-reliant; success comes later but lasts — patience and maturity are your strengths."
+        }
+      }
+    },
+    {
+      "key": "Saturn:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Wealth builds slowly through steady effort; careful with money and measured in speech, you earn what endures."
+        }
+      }
+    },
+    {
+      "key": "Saturn:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Disciplined effort and perseverance build real skill; bonds with siblings may ask for patience and responsibility."
+        }
+      }
+    },
+    {
+      "key": "Saturn:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Emotional and domestic life mature through responsibility; lasting security arrives once early effort settles."
+        }
+      }
+    },
+    {
+      "key": "Saturn:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A serious approach to creativity, romance, and children; rewards in these areas come with patience and care."
+        }
+      }
+    },
+    {
+      "key": "Saturn:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Outstanding at disciplined work and overcoming obstacles; you outlast rivals and excel through steady service."
+        }
+      }
+    },
+    {
+      "key": "Saturn:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Partnerships are serious and committed; love may mature later into a steady, responsible, lasting bond."
+        }
+      }
+    },
+    {
+      "key": "Saturn:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Resilient through life's deepest changes; longevity and strength grow as you meet hardship with patience."
+        }
+      }
+    },
+    {
+      "key": "Saturn:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Principled and disciplined in belief; wisdom and fortune are earned gradually through experience and ethics."
+        }
+      }
+    },
+    {
+      "key": "Saturn:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A powerful career placement — sustained effort brings lasting authority, status, and respect over time."
+        }
+      }
+    },
+    {
+      "key": "Saturn:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Steady, durable gains through persistent effort and reliable, often older friends and networks."
+        }
+      }
+    },
+    {
+      "key": "Saturn:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Growth through solitude, discipline, and letting go; spiritual depth and peace come from facing your inner world."
+        }
+      }
+    },
+    {
+      "key": "Rahu:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A magnetic, ambitious presence on an unconventional path; channel the hunger for more into something real."
+        }
+      }
+    },
+    {
+      "key": "Rahu:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A strong drive for wealth and status; gains can come through unconventional means — keep speech and spending honest."
+        }
+      }
+    },
+    {
+      "key": "Rahu:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Bold, ambitious communication and fearless effort; courage and skill can carry you far in new fields."
+        }
+      }
+    },
+    {
+      "key": "Rahu:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Restlessness around home and roots, often a pull toward foreign places; seek inner peace amid the striving."
+        }
+      }
+    },
+    {
+      "key": "Rahu:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Intense ambition in creativity, romance, or speculation — brilliant but risky, so balance bold ideas with grounding."
+        }
+      }
+    },
+    {
+      "key": "Rahu:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Excellent at defeating rivals and obstacles; ambition thrives in competitive or unconventional work."
+        }
+      }
+    },
+    {
+      "key": "Rahu:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Unconventional, intense partnerships, often with foreign or very different people; choose clarity over illusion."
+        }
+      }
+    },
+    {
+      "key": "Rahu:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Drawn to mysteries, the occult, and sudden change, with powerful research instincts — handle risk and obsession with care."
+        }
+      }
+    },
+    {
+      "key": "Rahu:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "An unconventional seeker who questions tradition; foreign beliefs, travel, and bold learning expand your world."
+        }
+      }
+    },
+    {
+      "key": "Rahu:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Strong worldly ambition and rise in career, often through innovative, foreign, or unconventional paths."
+        }
+      }
+    },
+    {
+      "key": "Rahu:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Big gains and fulfilled desires through wide, modern, or international networks; ambition pays among friends."
+        }
+      }
+    },
+    {
+      "key": "Rahu:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A pull toward foreign lands, the hidden, and the spiritual; turn restlessness into growth, not escape."
+        }
+      }
+    },
+    {
+      "key": "Ketu:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A spiritual, self-questioning nature; you seek meaning beyond image — your real strength is inner, not outer."
+        }
+      }
+    },
+    {
+      "key": "Ketu:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A detached relationship with money and family ties; fulfillment comes from values deeper than possessions."
+        }
+      }
+    },
+    {
+      "key": "Ketu:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Intuitive, self-effacing courage; you act from instinct and may feel a quiet distance from siblings."
+        }
+      }
+    },
+    {
+      "key": "Ketu:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "An inward emotional life and a seeker's heart at home; peace comes through spirituality more than possessions."
+        }
+      }
+    },
+    {
+      "key": "Ketu:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A mystical, intuitive mind; some detachment around romance or children turns your creativity toward the profound."
+        }
+      }
+    },
+    {
+      "key": "Ketu:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A natural healer who dissolves obstacles and illness; service and selflessness come instinctively to you."
+        }
+      }
+    },
+    {
+      "key": "Ketu:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A karmic, sometimes detached approach to partnership; relationships teach you to seek connection beyond the surface."
+        }
+      }
+    },
+    {
+      "key": "Ketu:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Deeply intuitive about life's mysteries, with a strong pull toward the occult, research, and inner transformation."
+        }
+      }
+    },
+    {
+      "key": "Ketu:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "An instinctive, unconventional spirituality; you seek truth directly rather than through inherited dogma."
+        }
+      }
+    },
+    {
+      "key": "Ketu:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Detachment from status steers you toward meaningful work; purpose matters more than recognition in your career."
+        }
+      }
+    },
+    {
+      "key": "Ketu:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Gains come and go without much attachment; your fulfillment is inward more than through networks or desires."
+        }
+      }
+    },
+    {
+      "key": "Ketu:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "A strongly spiritual placement; liberation, meditation, and letting go come naturally — a soul drawn inward."
+        }
+      }
+    }
+  ]
+}

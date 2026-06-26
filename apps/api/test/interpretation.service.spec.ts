@@ -6,7 +6,13 @@ import { KbService } from '../src/knowledge/kb.service';
 describe('InterpretationService', () => {
   let service: InterpretationService;
   let cache: { cachedChatCompletion: jest.Mock };
-  let kb: { getDashaImpact: jest.Mock; getMatchingTier: jest.Mock; renderStatus: jest.Mock };
+  let kb: {
+    getDashaImpact: jest.Mock;
+    getMatchingTier: jest.Mock;
+    getSignTrait: jest.Mock;
+    getPlanetInHouse: jest.Mock;
+    renderStatus: jest.Mock;
+  };
 
   const sysOf = () => {
     const arg = cache.cachedChatCompletion.mock.calls[0][0];
@@ -24,6 +30,8 @@ describe('InterpretationService', () => {
     kb = {
       getDashaImpact: jest.fn().mockResolvedValue(null),
       getMatchingTier: jest.fn().mockResolvedValue(null),
+      getSignTrait: jest.fn().mockResolvedValue(null),
+      getPlanetInHouse: jest.fn().mockResolvedValue(null),
       renderStatus: jest.fn().mockReturnValue(null),
     };
     const module: TestingModule = await Test.createTestingModule({
@@ -97,6 +105,42 @@ describe('InterpretationService', () => {
     cache.cachedChatCompletion.mockResolvedValue({ summary: 'llm', points: ['a'], guidance: 'g' });
     const res = await service.interpret({ domain: 'matching', payload: {} });
     expect(kb.getMatchingTier).not.toHaveBeenCalled();
+    expect(cache.cachedChatCompletion).toHaveBeenCalled();
+    expect(res.summary).toBe('llm');
+  });
+
+  it('assembles a kundli reading from the KB (ascendant + placements) without the LLM', async () => {
+    kb.getSignTrait.mockResolvedValue({
+      key: 'Leo',
+      i18n: { en: { summary: 'With Leo rising, you are warm and confident.', guidance: 'Lead with heart.' } },
+    });
+    kb.getPlanetInHouse.mockImplementation((k: string) =>
+      Promise.resolve({ key: k, i18n: { en: { text: `Insight for ${k}.` } } }),
+    );
+    // Echo each row's English payload as an exact-locale match.
+    kb.renderStatus.mockImplementation((row: any) => (row ? { matched: true, value: row.i18n.en } : null));
+    const res = await service.interpret({
+      domain: 'kundli',
+      locale: 'en',
+      payload: { ascendant: 'Leo', planets: [{ planet: 'Sun', house: 1 }, { planet: 'Saturn', house: 7 }] },
+    });
+    expect(kb.getSignTrait).toHaveBeenCalledWith('Leo');
+    expect(res.summary).toContain('Leo rising');
+    expect(res.points.length).toBeGreaterThanOrEqual(2);
+    expect(res.points.some((p) => p.includes('Sun:1'))).toBe(true);
+    expect(res.guidance).toContain('heart');
+    expect(cache.cachedChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('falls through to the LLM for kundli when the ascendant trait is not translated', async () => {
+    kb.getSignTrait.mockResolvedValue({ key: 'Leo', i18n: { en: { summary: 's', guidance: 'g' } } });
+    kb.renderStatus.mockReturnValue({ matched: false, value: { summary: 's', guidance: 'g' } });
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'llm', points: ['a'], guidance: 'g' });
+    const res = await service.interpret({
+      domain: 'kundli',
+      locale: 'ta',
+      payload: { ascendant: 'Leo', planets: [{ planet: 'Sun', house: 1 }] },
+    });
     expect(cache.cachedChatCompletion).toHaveBeenCalled();
     expect(res.summary).toBe('llm');
   });
