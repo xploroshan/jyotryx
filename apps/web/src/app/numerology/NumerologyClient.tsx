@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface NameResult {
   name: string;
@@ -211,6 +212,18 @@ export default function NumerologyPage() {
                     </div>
                   </div>
                 </div>
+
+                <Interpretation
+                  domain="numerology"
+                  input={{
+                    name: nameResult.name,
+                    destinyNumber: nameResult.destinyNumber,
+                    soulNumber: nameResult.soulNumber,
+                    personalityNumber: nameResult.personalityNumber,
+                    overallVerdict: nameResult.overallVerdict,
+                    rulingPlanet: nameResult.rulingPlanet,
+                  }}
+                />
               </div>
             )}
           </div>

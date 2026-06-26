@@ -12,6 +12,7 @@ import {
 } from "@/i18n/panchang-terms";
 import { ShowYourWork, type ChartFactor } from "@/components/transparency/ShowYourWork";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
+import Interpretation from "@/components/interpretation/Interpretation";
 import {
   ACTIVITIES,
   CITIES,
@@ -228,6 +229,16 @@ export default function DecisionRoomPage() {
 
             {/* Show Your Work — the factors behind the verdict */}
             <ShowYourWork factors={result.factors} />
+
+            <Interpretation
+              domain="decision"
+              input={{
+                activity,
+                date,
+                score: result.score,
+                recommendation: result.recommendation,
+              }}
+            />
 
             <p className="text-xs text-[rgba(12,8,5,0.66)] text-center">{t.decisionRoom.disclaimer}</p>
           </div>

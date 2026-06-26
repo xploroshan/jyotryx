@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface DivisionalResult {
   type: string;
@@ -144,6 +145,14 @@ export default function DivisionalPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {result && (
+        <Interpretation
+          domain="divisional"
+          className="mt-6"
+          input={{ type: result.type, positions: result.positions }}
+        />
       )}
     </div>
   );

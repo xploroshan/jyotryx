@@ -17,6 +17,8 @@ import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
 import { SouthIndianChart } from "@/components/kundli/SouthIndianChart";
 import { orderPlanets } from "@/components/kundli/chart-common";
 import { ShowYourWork, type ChartFactor } from "@/components/transparency/ShowYourWork";
+import Interpretation from "@/components/interpretation/Interpretation";
+import Remedies, { type RemedyTempleSet } from "@/components/remedies/Remedies";
 
 interface KundliData {
   id: string;
@@ -67,11 +69,13 @@ interface DivisionalChart {
 
 interface DoshaData {
   doshas: {
+    key?: string;
     name: string;
     present: boolean;
     severity: string;
     description: string;
     remedies: string[];
+    remedyTemples?: RemedyTempleSet;
   }[];
   factors?: ChartFactor[];
 }
@@ -674,13 +678,10 @@ export default function KundliPage() {
                                   : t.kundli.severityNone}
                         </span>
                       </div>
-                      <p className="text-sm text-secondary mb-2">{d.description}</p>
-                      {d.remedies && d.remedies.length > 0 && (
+                      <p className="text-sm text-secondary mb-3">{d.description}</p>
+                      {d.present && (
                         <div className="p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
-                          <p className="text-xs text-[rgba(12,8,5,0.66)]">
-                            <span className="text-primary-400 font-medium">{t.kundli.remedies}:</span>{" "}
-                            {d.remedies.join(". ")}
-                          </p>
+                          <Remedies dosha={d} />
                         </div>
                       )}
                     </div>
@@ -695,6 +696,25 @@ export default function KundliPage() {
             )}
 
             {activeTab === "transparency" && <ShowYourWork factors={factors} />}
+
+            <Interpretation
+              domain="kundli"
+              className="mt-6"
+              input={{
+                ascendant: kundli.ascendant,
+                moonSign: kundli.moonSign,
+                sunSign: kundli.sunSign,
+                nakshatra: kundli.nakshatra,
+                planets: kundli.planetaryPositions?.slice(0, 9).map((p) => ({
+                  planet: p.planet,
+                  sign: p.sign,
+                  house: p.house,
+                  status: p.status,
+                })),
+                yogas: kundli.yogas?.map((y) => y.name),
+                currentMahadasha: kundli.dashas?.[0]?.planet,
+              }}
+            />
           </div>
         )}
       </div>

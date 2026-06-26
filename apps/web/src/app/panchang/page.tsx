@@ -12,6 +12,7 @@ import {
 } from "@/i18n/panchang-terms";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import Interpretation from "@/components/interpretation/Interpretation";
 import { Moon, Star, Link as LinkIcon, Zap, CalendarDays, Sunrise, Sunset, MoonStar } from "lucide-react";
 
 interface PanchangData {
@@ -167,6 +168,19 @@ export default function PanchangPage() {
                 </div>
               ))}
             </div>
+
+            <Interpretation
+              domain="panchang"
+              className="mt-8"
+              input={{
+                vara: panchang.vara,
+                tithi: panchang.tithi,
+                nakshatra: panchang.nakshatra,
+                yoga: panchang.yoga,
+                karana: panchang.karana,
+                rahukaal: panchang.rahukaal,
+              }}
+            />
 
             {/* SEO city directory link — surfaces the static landing pages
                 so authenticated users can hop to a specific-city panchang

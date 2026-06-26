@@ -9,6 +9,7 @@ import { WEB_TRADITIONS } from '@/lib/traditions';
 import EditorialHero from '@/components/editorial/EditorialHero';
 import { TraditionGlyph } from '@/components/icons';
 import { PlanetGlyph } from '@/components/icons/astro';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface DashaPeriod {
   planet: string;
@@ -228,6 +229,22 @@ export default function VedicDashaPage() {
             );
           })}
         </div>
+      )}
+
+      {data?.dashas && data.dashas.length > 0 && (
+        <Interpretation
+          domain="dasha"
+          className="mt-4"
+          input={{
+            currentMahadasha:
+              currentDashaIdx >= 0 ? data.dashas[currentDashaIdx]?.planet : undefined,
+            periods: data.dashas.map((d) => ({
+              planet: d.planet,
+              start: d.startDate,
+              end: d.endDate,
+            })),
+          }}
+        />
       )}
       </div>
     </div>

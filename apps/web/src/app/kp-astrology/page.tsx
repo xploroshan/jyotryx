@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import SavedBirthDetails, { type BirthDetailsValue } from "@/components/ui/SavedBirthDetails";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface KPResult {
   system: string;
@@ -121,6 +122,21 @@ export default function KPAstrologyPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {result && (
+        <Interpretation
+          domain="kp"
+          className="mt-6"
+          input={{
+            cusps: result.cusps?.slice(0, 12).map((c) => ({
+              cusp: c.cusp,
+              sign: c.sign,
+              starLord: c.starLord,
+              subLord: c.subLord,
+            })),
+          }}
+        />
       )}
     </div>
   );
