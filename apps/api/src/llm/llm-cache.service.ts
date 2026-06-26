@@ -39,6 +39,9 @@ const FEATURE_TTL: Record<string, number> = {
   'interpretation:chinese-zodiac': 604_800,
   'interpretation:medical': 604_800,
   'interpretation:synastry': 604_800,
+  'interpretation:tarot': 86_400,
+  'interpretation:hellenistic': 604_800,
+  'interpretation:horary': 86_400,
   'interpretation:general': 86_400,
 };
 
@@ -59,7 +62,11 @@ export class LlmCacheService {
     options: LlmChatOptions & { jsonMode?: boolean },
   ): Promise<any | null> {
     const feature = options.feature || 'chat';
-    const ttl = FEATURE_TTL[feature] ?? 0;
+    // Paid deep-dive readings (interpretation:deep:<domain>) are deterministic
+    // per result and re-viewed for free, so cache them hard even though each
+    // exact key isn't enumerated above.
+    const ttl =
+      FEATURE_TTL[feature] ?? (feature.startsWith('interpretation:deep:') ? 604_800 : 0);
 
     // Skip cache for non-cacheable features or if Redis is unavailable
     if (ttl === 0 || !this.redis) {

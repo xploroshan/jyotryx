@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/i18n';
 import { api } from '@/lib/api';
 import FeaturePageShell from '@/components/tradition/FeaturePageShell';
+import Interpretation from '@/components/interpretation/Interpretation';
 import { Check, Zap } from 'lucide-react';
 
 interface Partner {
@@ -218,6 +219,23 @@ export default function WesternSynastryPage() {
               </ul>
             </div>
           )}
+
+          <Interpretation
+            domain="synastry"
+            input={{
+              score: result.compatibility.score,
+              harmonious: result.compatibility.harmonious,
+              challenging: result.compatibility.challenging,
+              summary: result.compatibility.summary,
+              crossAspects: result.aspects.slice(0, 5).map((a) => ({
+                a: a.a,
+                b: a.b,
+                aspect: a.aspect,
+                quality: a.quality,
+              })),
+            }}
+            className="mt-6 sm:mt-8"
+          />
         </div>
       )}
     </FeaturePageShell>

@@ -9,7 +9,8 @@ import { WEB_TRADITIONS } from '@/lib/traditions';
 import EditorialHero from '@/components/editorial/EditorialHero';
 import { TraditionGlyph } from '@/components/icons';
 import Interpretation from '@/components/interpretation/Interpretation';
-import Remedies, { type RemedyTempleSet } from '@/components/remedies/Remedies';
+import { type RemedyTempleSet } from '@/components/remedies/Remedies';
+import Mitigation, { type MitigationPlan } from '@/components/mitigation/Mitigation';
 
 interface DoshaEntry {
   key?: string;
@@ -19,6 +20,7 @@ interface DoshaEntry {
   description: string;
   remedies: string[];
   remedyTemples?: RemedyTempleSet;
+  mitigation?: MitigationPlan;
 }
 
 interface DoshaData {
@@ -169,9 +171,9 @@ export default function VedicDoshaPage() {
               <p className="text-sm text-[rgba(12,8,5,0.72)] leading-relaxed mb-4">
                 {d.description}
               </p>
-              {d.present && (d.remedies?.length > 0 || d.remedyTemples) && (
+              {d.present && (d.remedies?.length > 0 || d.mitigation || d.remedyTemples) && (
                 <div className="rounded-xl bg-[rgba(255,252,245,0.78)] border border-[rgba(12,8,5,0.08)] p-4 sm:p-5">
-                  <Remedies dosha={d} />
+                  <Mitigation plan={d.mitigation} remedies={d.remedies} bare />
                 </div>
               )}
             </div>

@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
+import Interpretation from '@/components/interpretation/Interpretation';
 import { saveHoraryRecord } from '../_history';
 
 interface HoraryResponse {
@@ -114,6 +115,19 @@ export default function HoraryAskPage() {
                   {fp.viewHistory}
                 </Link>
               </div>
+
+              <Interpretation
+                domain="horary"
+                input={{
+                  question: result.question,
+                  ascendant: result.chart.ascendant.sign,
+                  querentLord: result.chart.significators.querent,
+                  quesitedLord: result.chart.significators.quesited,
+                  moon: result.chart.significators.moon,
+                  judgment: result.judgment,
+                }}
+                className="mt-6 sm:mt-8"
+              />
             </div>
           )}
         </>

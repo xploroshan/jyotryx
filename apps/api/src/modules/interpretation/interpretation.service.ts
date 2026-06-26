@@ -55,6 +55,9 @@ const DOMAIN_LABEL: Record<InterpretationDomain, string> = {
   'chinese-zodiac': 'Chinese zodiac result',
   medical: 'medical astrology (body-zodiac) result',
   synastry: 'relationship synastry (compatibility) result',
+  tarot: 'tarot card reading',
+  hellenistic: 'Hellenistic (traditional Western) astrology result',
+  horary: 'horary (prashna) chart answering a question',
   general: 'astrology result',
 };
 

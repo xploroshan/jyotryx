@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface VastuResult {
   propertyType: string;
@@ -168,6 +169,22 @@ export default function VastuPage() {
               ))}
             </ul>
           </div>
+
+          <Interpretation
+            domain="vastu"
+            input={{
+              propertyType: result.propertyType,
+              entrance: {
+                direction: result.entrance.direction,
+                score: result.entrance.score,
+                verdict: result.entrance.verdict,
+                element: result.entrance.element,
+              },
+              remedies: result.insights.remedies,
+              propertyTips: result.propertyTips,
+            }}
+            className="mt-6 sm:mt-8"
+          />
         </div>
       )}
       </div>

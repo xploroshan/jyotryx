@@ -21,6 +21,7 @@ import {
   type Recommendation,
 } from "@/lib/electional";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
+import Interpretation from "@/components/interpretation/Interpretation";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CosmicDay {
@@ -267,6 +268,25 @@ export default function CosmicCalendarPage() {
                   {t.cosmicCalendar.openDecisionRoom} →
                 </Link>
               </div>
+            )}
+
+            {selected && (
+              <Interpretation
+                domain="cosmic-calendar"
+                className="mt-6 sm:mt-8"
+                input={{
+                  date: selected.date,
+                  activity: data.activity,
+                  location: data.location,
+                  recommendation: selected.recommendation,
+                  score: selected.score,
+                  tithi: selected.tithi,
+                  nakshatra: selected.nakshatra,
+                  yoga: selected.yoga,
+                  vara: selected.vara,
+                  rahuKaal: selected.rahuKaal,
+                }}
+              />
             )}
           </>
         )}

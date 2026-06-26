@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import TraditionFeatureStub from '@/components/tradition/TraditionFeatureStub';
 import SavedBirthDetails, { type BirthDetailsValue } from '@/components/ui/SavedBirthDetails';
+import Interpretation from '@/components/interpretation/Interpretation';
 
 interface ProfectionsResponse {
   ageYears: number;
@@ -81,6 +82,19 @@ export default function HellenisticProfectionsPage() {
                 <p className="whitespace-pre-wrap mt-2">{result.interpretation}</p>
               )}
             </div>
+          )}
+
+          {result && (
+            <Interpretation
+              domain="hellenistic"
+              input={{
+                age: result.ageYears,
+                profectedHouse: result.profectedHouse,
+                profectedSign: result.profectedSign,
+                yearLord: result.lordOfYear,
+              }}
+              className="mt-6 sm:mt-8"
+            />
           )}
         </>
       )}

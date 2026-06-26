@@ -18,7 +18,8 @@ import { SouthIndianChart } from "@/components/kundli/SouthIndianChart";
 import { orderPlanets } from "@/components/kundli/chart-common";
 import { ShowYourWork, type ChartFactor } from "@/components/transparency/ShowYourWork";
 import Interpretation from "@/components/interpretation/Interpretation";
-import Remedies, { type RemedyTempleSet } from "@/components/remedies/Remedies";
+import { type RemedyTempleSet } from "@/components/remedies/Remedies";
+import Mitigation, { type MitigationPlan } from "@/components/mitigation/Mitigation";
 
 interface KundliData {
   id: string;
@@ -78,6 +79,7 @@ interface DoshaData {
     description: string;
     remedies: string[];
     remedyTemples?: RemedyTempleSet;
+    mitigation?: MitigationPlan;
   }[];
   factors?: ChartFactor[];
 }
@@ -686,7 +688,7 @@ export default function KundliPage() {
                       <p className="text-sm text-secondary mb-3">{d.description}</p>
                       {d.present && (
                         <div className="p-3 rounded-lg bg-[rgba(255,252,245,0.78)]">
-                          <Remedies dosha={d} />
+                          <Mitigation plan={d.mitigation} remedies={d.remedies} bare />
                         </div>
                       )}
                     </div>

@@ -30,6 +30,9 @@ export const INTERPRETATION_DOMAINS = [
   'chinese-zodiac',
   'medical',
   'synastry',
+  'tarot',
+  'hellenistic',
+  'horary',
   'general',
 ] as const;
 

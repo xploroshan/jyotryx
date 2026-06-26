@@ -9,6 +9,7 @@ import { usePricingConfig } from "@/lib/usePricingConfig";
 import { Toast } from "@/components/ui/Toast";
 import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { Sparkles, Compass, Heart, Flag } from "lucide-react";
+import Interpretation from "@/components/interpretation/Interpretation";
 
 interface SpecialMarking {
   name: string;
@@ -1220,6 +1221,17 @@ export default function PalmistryPage() {
                     {t.palmistry.startOver}
                   </button>
                 </div>
+
+                <Interpretation
+                  domain="palmistry"
+                  input={{
+                    handType: analysis.handOverview?.handType || analysis.handShape?.type || undefined,
+                    palmShape: analysis.handOverview?.palmShape || undefined,
+                    majorLines: analysis.majorLines.map((l) => ({ name: l.name, strength: l.strength })),
+                    mounts: analysis.mounts.map((m) => ({ name: m.name, prominence: m.prominence })),
+                  }}
+                  className="mt-6 sm:mt-8"
+                />
               </div>
             ) : (
               <div className="surface-card p-12 flex flex-col items-center justify-center min-h-[400px] text-center">

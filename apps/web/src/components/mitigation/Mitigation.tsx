@@ -63,11 +63,14 @@ export default function Mitigation({
   plan: initialPlan,
   issue,
   remedies,
+  bare = false,
   className = "",
 }: {
   plan?: MitigationPlan;
   issue?: string;
   remedies?: string[];
+  /** Render without the outer surface-card / big heading, for embedding inside another card. */
+  bare?: boolean;
   className?: string;
 }) {
   const { t } = useTranslation();
@@ -129,15 +132,18 @@ export default function Mitigation({
 
   const hasRemedies = !!remedies && remedies.length > 0;
 
+  const Wrapper = bare ? "div" : "section";
+  const wrapperClass = bare ? className : `surface-card p-6 ${className}`;
+
   if (loading) {
     return (
-      <section className={`surface-card p-6 ${className}`} aria-busy="true">
-        <h2 className="text-lg font-semibold text-surface-950 mb-3">{m.heading}</h2>
+      <Wrapper className={wrapperClass} aria-busy="true">
+        {!bare && <h2 className="text-lg font-semibold text-surface-950 mb-3">{m.heading}</h2>}
         <div className="space-y-2.5 animate-pulse" aria-hidden="true">
           <div className="h-3.5 w-3/4 rounded bg-[rgba(12,8,5,0.08)]" />
           <div className="h-3.5 w-full rounded bg-[rgba(12,8,5,0.08)]" />
         </div>
-      </section>
+      </Wrapper>
     );
   }
 
@@ -151,9 +157,11 @@ export default function Mitigation({
     : [];
 
   return (
-    <section className={`surface-card p-6 ${className}`}>
-      <h2 className="text-lg font-semibold text-surface-950 mb-1">{m.heading}</h2>
-      {plan?.label && <p className="text-xs font-medium uppercase tracking-wide text-primary-700 mb-3">{plan.label}</p>}
+    <Wrapper className={wrapperClass}>
+      {!bare && <h2 className="text-lg font-semibold text-surface-950 mb-1">{m.heading}</h2>}
+      {!bare && plan?.label && (
+        <p className="text-xs font-medium uppercase tracking-wide text-primary-700 mb-3">{plan.label}</p>
+      )}
 
       {plan?.overview && <p className="text-sm text-emphasis leading-relaxed mb-5">{plan.overview}</p>}
 
@@ -232,6 +240,6 @@ export default function Mitigation({
       )}
 
       <p className="mt-5 text-xs text-[rgba(12,8,5,0.5)]">{plan?.disclaimer ?? m.disclaimer}</p>
-    </section>
+    </Wrapper>
   );
 }
