@@ -55,7 +55,7 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
         className="absolute inset-[-16%] rounded-full blur-[48px] animate-[corona-pulse_6s_ease-in-out_infinite]"
         style={{
           background:
-            'radial-gradient(circle, rgba(255,182,39,0.70) 0%, rgba(255,122,64,0.42) 42%, rgba(255,77,0,0.18) 65%, transparent 80%)',
+            'radial-gradient(circle, rgba(247,183,51,0.58) 0%, rgba(248,148,63,0.34) 44%, rgba(239,108,26,0.14) 66%, transparent 80%)',
           animationPlayState: playState,
         }}
       />
@@ -66,9 +66,9 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
         className="absolute inset-[10%] rounded-full"
         style={{
           background:
-            'radial-gradient(circle at 36% 28%, #fff1c0 0%, #ffb627 18%, #ff7a40 48%, #ff4d00 78%, #a02900 100%)',
+            'radial-gradient(circle at 36% 28%, #fff3cf 0%, #f7c63f 20%, #f8943f 52%, #ef6c1a 80%, #b4500f 100%)',
           boxShadow:
-            'inset 0 0 70px rgba(122, 32, 0, 0.40), inset 0 -50px 90px rgba(255, 182, 39, 0.45), 0 30px 80px -20px rgba(255, 77, 0, 0.55)',
+            'inset 0 0 70px rgba(122, 32, 0, 0.34), inset 0 -50px 90px rgba(247, 183, 51, 0.42), 0 30px 80px -20px rgba(239, 108, 26, 0.42)',
         }}
       />
       <div
@@ -118,7 +118,7 @@ export default function HeroSun({ className = '' }: HeroSunProps) {
       {/* Outer thin orbit — adds a second concentric ring so the orb
           reads as a small celestial system, not a single disc. */}
       <div
-        className="absolute inset-[-4%] rounded-full border border-[#FF7A40]/35 [animation:astro-spin-rev_120s_linear_infinite]"
+        className="absolute inset-[-4%] rounded-full border border-[#f8943f]/35 [animation:astro-spin-rev_120s_linear_infinite]"
         style={{ animationPlayState: playState }}
       />
     </div>
