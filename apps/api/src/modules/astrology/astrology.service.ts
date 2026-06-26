@@ -14,6 +14,7 @@ import { resolveUtHour, birthMoment } from '../../common/timezone.util';
 import { buildKundliFactors, buildDoshaFactors, ChartFactor } from './factors.util';
 import { computeBhakootScore } from './guna.util';
 import { REMEDY_TEMPLES, RemedyTempleSet } from './remedy-temples';
+import { buildMitigationPlan, MitigationPlan } from './mitigation';
 import { computeSadeSati } from '../daily-briefing/gochar.util';
 import {
   scoreTiming,
@@ -273,6 +274,8 @@ export interface DoshaResult {
     remedies: string[];
     /** Curated authoritative temples + "find near me" search — present doshas only. */
     remedyTemples?: RemedyTempleSet;
+    /** Full multi-modal mitigation plan (temples + food + activity + gem/mantra) — present doshas only. */
+    mitigation?: MitigationPlan;
   }[];
   /** "Show Your Work" — factors for each dosha present in the chart. */
   factors?: ChartFactor[];
@@ -2783,10 +2786,31 @@ export class AstrologyService {
         description,
         remedies,
         // Surface authoritative remedy temples only when the dosha is actually
-        // present — there's nothing to mitigate otherwise.
+        // present — there's nothing to mitigate otherwise. `remedyTemples` is
+        // kept for back-compat; `mitigation` is the richer multi-modal plan.
         remedyTemples: d.present ? REMEDY_TEMPLES[d.key] : undefined,
+        mitigation: d.present ? (buildMitigationPlan(d.key) ?? undefined) : undefined,
       };
     }));
+  }
+
+  /**
+   * Multi-modal mitigation plan for any adverse condition (dosha, Sade Sati,
+   * low compatibility, a weak planet, …). Public + non-user-specific — the
+   * remedies are general astrological convention, not chart data — so the
+   * controller can expose it without auth. When the caller passes their browser
+   * coordinates, temples are ranked nearest-first.
+   */
+  getMitigation(
+    issue: string,
+    lat?: number,
+    lng?: number,
+  ): MitigationPlan | null {
+    const coords =
+      typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng)
+        ? { lat, lng }
+        : null;
+    return buildMitigationPlan(issue, coords);
   }
 
   // ─── Sade Sati Detection ─────────────────────────────────────────────────────

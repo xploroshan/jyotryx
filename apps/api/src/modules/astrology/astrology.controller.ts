@@ -7,6 +7,7 @@ import {
   Query,
   Header,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 
 // Public, non-user-specific, day-stable astrology GETs: let the browser/CDN
@@ -187,6 +188,27 @@ export class AstrologyController {
     @Query('locale') locale?: string,
   ) {
     return this.astrologyService.getSadeSati(user.sub, locale);
+  }
+
+  @Get('mitigation/:issue')
+  @Public()
+  @Header('Cache-Control', PUBLIC_ASTRO_CACHE)
+  @ApiOperation({ summary: 'Multi-modal mitigation plan for an issue (temples, food, activity, gem/mantra)' })
+  @ApiResponse({ status: 200, description: 'Mitigation plan returned (404 if the issue is unknown)' })
+  getMitigation(
+    @Param('issue') issue: string,
+    @Query('lat') lat?: string,
+    @Query('lng') lng?: string,
+  ) {
+    const plan = this.astrologyService.getMitigation(
+      issue,
+      lat ? parseFloat(lat) : undefined,
+      lng ? parseFloat(lng) : undefined,
+    );
+    if (!plan) {
+      throw new NotFoundException(`No mitigation plan for issue "${issue}"`);
+    }
+    return plan;
   }
 
   @Post('divisional/:type')
