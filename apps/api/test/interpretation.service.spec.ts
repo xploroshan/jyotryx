@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InterpretationService } from '../src/modules/interpretation/interpretation.service';
 import { LlmCacheService } from '../src/llm/llm-cache.service';
+import { KbService } from '../src/knowledge/kb.service';
 
 describe('InterpretationService', () => {
   let service: InterpretationService;
   let cache: { cachedChatCompletion: jest.Mock };
+  let kb: { getDashaImpact: jest.Mock; renderStatus: jest.Mock };
 
   const sysOf = () => {
     const arg = cache.cachedChatCompletion.mock.calls[0][0];
@@ -17,13 +19,55 @@ describe('InterpretationService', () => {
 
   beforeEach(async () => {
     cache = { cachedChatCompletion: jest.fn() };
+    // Default: KB has no row → every domain falls through to the LLM path, so
+    // the existing LLM-path expectations below are unaffected.
+    kb = { getDashaImpact: jest.fn().mockResolvedValue(null), renderStatus: jest.fn().mockReturnValue(null) };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InterpretationService,
         { provide: LlmCacheService, useValue: cache },
+        { provide: KbService, useValue: kb },
       ],
     }).compile();
     service = module.get<InterpretationService>(InterpretationService);
+  });
+
+  // ─── KB-first placement library (no LLM, locale-gated) ─────────────────────
+  it('assembles a dasha interpretation from the KB without calling the LLM', async () => {
+    kb.getDashaImpact.mockResolvedValue({ key: 'Jupiter', tradition: null, i18n: {} });
+    kb.renderStatus.mockReturnValue({
+      matched: true,
+      value: {
+        summary: 'Your Jupiter period favours growth and good fortune.',
+        points: ['Doors open in finances and learning', 'Wisdom and mentorship deepen'],
+        guidance: 'Say yes to growth.',
+      },
+    });
+    const res = await service.interpret({ domain: 'dasha', payload: { currentMahadasha: 'Jupiter' }, locale: 'en' });
+    expect(kb.getDashaImpact).toHaveBeenCalledWith('Jupiter');
+    expect(res.summary).toContain('growth');
+    expect(res.points).toHaveLength(2);
+    expect(res.disclaimer).toBeTruthy();
+    expect(cache.cachedChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('falls through to the LLM for a locale the KB has not been translated to yet', async () => {
+    // renderStatus reports matched=false when the locale falls back to English,
+    // so the localized LLM path runs instead of leaking English.
+    kb.getDashaImpact.mockResolvedValue({ key: 'Jupiter', tradition: null, i18n: {} });
+    kb.renderStatus.mockReturnValue({ matched: false, value: { summary: 's', points: ['p'], guidance: 'g' } });
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'llm', points: ['a'], guidance: 'g' });
+    const res = await service.interpret({ domain: 'dasha', payload: { currentMahadasha: 'Jupiter' }, locale: 'ta' });
+    expect(cache.cachedChatCompletion).toHaveBeenCalled();
+    expect(res.summary).toBe('llm');
+  });
+
+  it('falls through to the LLM for dasha when no current mahadasha is supplied', async () => {
+    cache.cachedChatCompletion.mockResolvedValue({ summary: 'llm', points: ['a'], guidance: 'g' });
+    const res = await service.interpret({ domain: 'dasha', payload: {} });
+    expect(kb.getDashaImpact).not.toHaveBeenCalled();
+    expect(cache.cachedChatCompletion).toHaveBeenCalled();
+    expect(res.summary).toBe('llm');
   });
 
   // NOTE: with jsonMode the LLM layer (LlmService.processResult) returns the

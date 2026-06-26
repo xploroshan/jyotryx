@@ -1,0 +1,150 @@
+{
+  "_source": "Placement library (1/N). Vimshottari mahadasha impact, keyed by the ruling planet (DASHA_LORDS in astrology.service.ts). Consumed by InterpretationService for the `dasha` domain so it returns a KB-assembled reading instead of calling the LLM. Payload mirrors InterpretationResult. English-authored; run `npm run kb:backfill -- --tables=dasha-impacts` to fill the other 11 locales (until then non-English requests fall through to the localized LLM path via renderStatus().matched).",
+  "_shape": "{ summary: string, points: string[], guidance: string }",
+  "rows": [
+    {
+      "key": "Sun",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Sun period — a chapter that pushes you toward visibility, confidence, and standing on your own. It's a time to step into leadership and let your real self be seen.",
+          "points": [
+            "Recognition and authority tend to grow now — good for career moves, leadership roles, and being noticed for your work.",
+            "Your confidence and willpower are stronger, so decisions and bold action come more easily.",
+            "Themes around father figures, mentors, and official or government matters often come into focus.",
+            "Watch a tendency toward ego or stubbornness — your strength lands better when it stays humble."
+          ],
+          "guidance": "Take the lead on something that matters to you and let your work speak for itself. Honest self-respect, good routines, and a little daily sunlight all support this period."
+        }
+      }
+    },
+    {
+      "key": "Moon",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Moon period — an emotionally rich chapter centred on home, feelings, and your inner world. Life moves with your moods, and caring connections matter most.",
+          "points": [
+            "Emotional sensitivity and intuition run high — trust your gut and protect your peace of mind.",
+            "Home, family, and nurturing figures (especially your mother) often take centre stage.",
+            "Your public image and likeability can rise; people warm to you more easily.",
+            "Moods may swing — gentle, regular routines steady you when things feel changeable."
+          ],
+          "guidance": "Tend to your home and emotional health as the foundation of everything else right now. Rest, calm surroundings, and time with people who comfort you go a long way."
+        }
+      }
+    },
+    {
+      "key": "Mars",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Mars period — a high-energy chapter of drive, courage, and getting things done. It's a time to act on your ambitions and build something through your own effort.",
+          "points": [
+            "Energy, courage, and determination are strong — great for starting projects, sport, and bold moves.",
+            "Property, land, and matters involving siblings often come up.",
+            "You can finally push through obstacles that stalled you before.",
+            "Channel the heat: impatience or conflict can flare, so aim the drive at goals rather than people."
+          ],
+          "guidance": "Pick a meaningful challenge and pour your energy into it. Regular exercise and a clear plan keep Mars's fire productive instead of restless."
+        }
+      }
+    },
+    {
+      "key": "Mercury",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Mercury period — a sharp, communicative chapter that favours learning, business, and connection. Your mind is quick and curious now.",
+          "points": [
+            "Communication, writing, and negotiation flow well — strong for business, study, and networking.",
+            "Picking up new skills and adapting to change comes more easily.",
+            "Commerce, trade, and analytical work are well supported.",
+            "So many ideas can scatter your focus — finishing what you start is the real win."
+          ],
+          "guidance": "Put your words and ideas to work: write, pitch, learn, connect. A simple system to capture and complete tasks turns Mercury's speed into results."
+        }
+      }
+    },
+    {
+      "key": "Jupiter",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Jupiter period — one of the most fortunate chapters, bringing growth, wisdom, and expansion. Doors tend to open and life feels more abundant.",
+          "points": [
+            "Growth and good fortune are favoured — in finances, knowledge, and opportunities.",
+            "Wisdom, teaching, mentorship, and spiritual interests deepen.",
+            "Themes of children, family expansion, and higher learning often arise.",
+            "Abundance can tip into over-optimism or overindulgence — stay grounded as you grow."
+          ],
+          "guidance": "Say yes to growth: learn, teach, invest in yourself, and be generous. Keep your commitments realistic so the expansion stays healthy."
+        }
+      }
+    },
+    {
+      "key": "Venus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Venus period — the longest and most pleasurable chapter, centred on love, beauty, comfort, and relationships. Life leans toward harmony and enjoyment.",
+          "points": [
+            "Love, marriage, and partnerships are strongly favoured.",
+            "Comfort, beauty, the arts, and material ease tend to increase.",
+            "Creativity and a taste for the finer things flourish.",
+            "Too much comfort can soften your edge — balance pleasure with purpose."
+          ],
+          "guidance": "Invest in your relationships and in the beauty around you, while keeping one foot in your goals. Creative pursuits and genuine connection are deeply nourishing now."
+        }
+      }
+    },
+    {
+      "key": "Saturn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Saturn period — a serious, maturing chapter that rewards patience and honest effort. It can feel demanding, but it builds lasting foundations.",
+          "points": [
+            "Discipline, responsibility, and steady work are the themes — slow progress beats shortcuts.",
+            "Early delays or tests often give way to durable rewards if you persevere.",
+            "Career and long-term structures get built or rebuilt now.",
+            "Don't read difficulty as failure — Saturn is teaching, not punishing."
+          ],
+          "guidance": "Commit to the long game: show up consistently, honour your duties, and let results compound. Rest, simplicity, and patience are your allies through this period."
+        }
+      }
+    },
+    {
+      "key": "Rahu",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Rahu period — an intense, ambitious chapter of big desires, sudden changes, and unconventional paths. Life can move fast and in surprising directions.",
+          "points": [
+            "Worldly ambition runs high — strong for unconventional careers, technology, and foreign connections.",
+            "Sudden opportunities and rapid changes are common; staying adaptable helps.",
+            "You may be drawn to the new, the bold, or the unfamiliar.",
+            "Watch for restlessness, obsession, or chasing illusions — keep your feet on the ground."
+          ],
+          "guidance": "Aim your ambition at something real and let it stretch you, but verify before you leap. Grounding habits and honest advisors keep Rahu's energy from running away with you."
+        }
+      }
+    },
+    {
+      "key": "Ketu",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "summary": "You're in your Ketu period — an inward, spiritual chapter about letting go, introspection, and finding meaning beyond the material. It can feel quieter and more reflective.",
+          "points": [
+            "Detachment grows — interests turn toward spirituality, research, and the inner life.",
+            "You may feel pulled to release things, people, or patterns you've outgrown.",
+            "Intuition and depth increase; surface ambitions matter less.",
+            "Sudden shifts or a sense of confusion can arise — anchor yourself in practice and patience."
+          ],
+          "guidance": "Make space for stillness: meditation, study, or solitude pay off now. Trust that what falls away is making room for something more essential."
+        }
+      }
+    }
+  ]
+}

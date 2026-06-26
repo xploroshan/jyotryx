@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LlmCacheService } from '../../llm/llm-cache.service';
+import { KbService } from '../../knowledge/kb.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { InterpretationDomain } from './dto/interpret.dto';
 
@@ -49,7 +50,10 @@ export class InterpretationService {
   // much the caller sends.
   private static readonly MAX_PAYLOAD_CHARS = 6000;
 
-  constructor(private readonly llmCache: LlmCacheService) {}
+  constructor(
+    private readonly llmCache: LlmCacheService,
+    private readonly kb: KbService,
+  ) {}
 
   async interpret(params: {
     domain: InterpretationDomain;
@@ -58,6 +62,15 @@ export class InterpretationService {
     userId?: string | null;
   }): Promise<InterpretationResult> {
     const { domain, payload, locale, userId } = params;
+
+    // KB-first: domains the placement library covers are assembled straight from
+    // the Knowledge Base — deterministic, instant, zero LLM cost. The KB path
+    // only fires when the requested locale is an EXACT KB match (see tryKb), so
+    // a locale without a translation yet keeps the localized LLM path below —
+    // no regression, and each locale flips to KB automatically once backfilled.
+    const fromKb = await this.tryKb(domain, payload, locale);
+    if (fromKb) return fromKb;
+
     const system = this.buildSystemPrompt(domain, locale);
     const user =
       `Here is the ${DOMAIN_LABEL[domain] ?? 'astrology'} result as JSON. ` +
@@ -86,6 +99,50 @@ export class InterpretationService {
       this.logger.warn(`interpret(${domain}) failed: ${(e as Error).message}`);
     }
     return this.fallback(domain);
+  }
+
+  /**
+   * KB-assembled interpretation — the "placement library" path. Returns a fully
+   * formed result for domains the KB covers, or null to fall through to the LLM.
+   *
+   * Uses renderStatus().matched: the KB result is only used when the requested
+   * locale is an exact KB hit (English is always authored; other locales arrive
+   * via kb:backfill). For a locale not yet translated, matched is false and we
+   * return null so the localized LLM path runs — no English leaking into a
+   * non-English UI. Extend with one `case` per placement table.
+   */
+  private async tryKb(
+    domain: InterpretationDomain,
+    payload: Record<string, unknown>,
+    locale?: string,
+  ): Promise<InterpretationResult | null> {
+    try {
+      if (domain === 'dasha') {
+        // A mahadasha maps to exactly one ruling planet → one KbDashaImpact row.
+        const lord = this.str(payload.currentMahadasha);
+        if (!lord) return null;
+        const status = this.kb.renderStatus(await this.kb.getDashaImpact(lord), locale);
+        if (status?.matched) {
+          const p = status.value;
+          if (this.str(p.summary) && Array.isArray(p.points) && p.points.length > 0) {
+            return {
+              summary: p.summary,
+              points: p.points,
+              guidance: typeof p.guidance === 'string' ? p.guidance : '',
+              disclaimer: DISCLAIMER,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      // Never let a KB hiccup break interpretation — fall through to the LLM.
+      this.logger.warn(`interpret(${domain}) KB path failed: ${(e as Error).message}`);
+    }
+    return null;
+  }
+
+  private str(v: unknown): string | null {
+    return typeof v === 'string' && v.trim().length > 0 ? v.trim() : null;
   }
 
   private buildSystemPrompt(domain: InterpretationDomain, locale?: string): string {
