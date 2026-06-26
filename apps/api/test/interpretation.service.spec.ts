@@ -11,6 +11,7 @@ describe('InterpretationService', () => {
     getMatchingTier: jest.Mock;
     getSignTrait: jest.Mock;
     getPlanetInHouse: jest.Mock;
+    getNumberMeaning: jest.Mock;
     renderStatus: jest.Mock;
   };
 
@@ -32,6 +33,7 @@ describe('InterpretationService', () => {
       getMatchingTier: jest.fn().mockResolvedValue(null),
       getSignTrait: jest.fn().mockResolvedValue(null),
       getPlanetInHouse: jest.fn().mockResolvedValue(null),
+      getNumberMeaning: jest.fn().mockResolvedValue(null),
       renderStatus: jest.fn().mockReturnValue(null),
     };
     const module: TestingModule = await Test.createTestingModule({
@@ -129,6 +131,20 @@ describe('InterpretationService', () => {
     expect(res.points.length).toBeGreaterThanOrEqual(2);
     expect(res.points.some((p) => p.includes('Sun:1'))).toBe(true);
     expect(res.guidance).toContain('heart');
+    expect(cache.cachedChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('assembles a numerology interpretation from the KB without calling the LLM', async () => {
+    kb.getNumberMeaning.mockResolvedValue({ key: '5', tradition: null, i18n: {} });
+    kb.renderStatus.mockReturnValue({
+      matched: true,
+      value: { meaning: 'Number 5 is adventurous and versatile.', strengths: ['Adaptable', 'Quick-witted'], cautions: ['Avoid restlessness'] },
+    });
+    const res = await service.interpret({ domain: 'numerology', payload: { destinyNumber: 5 }, locale: 'en' });
+    expect(kb.getNumberMeaning).toHaveBeenCalledWith('5');
+    expect(res.summary).toContain('adventurous');
+    expect(res.points).toContain('Adaptable');
+    expect(res.guidance).toContain('restlessness');
     expect(cache.cachedChatCompletion).not.toHaveBeenCalled();
   });
 

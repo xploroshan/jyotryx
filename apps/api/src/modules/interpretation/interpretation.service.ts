@@ -133,6 +133,9 @@ export class InterpretationService {
       if (domain === 'kundli') {
         return this.assembleKundli(payload, locale);
       }
+      if (domain === 'numerology') {
+        return this.assembleNumerology(payload, locale);
+      }
     } catch (e) {
       // Never let a KB hiccup break interpretation — fall through to the LLM.
       this.logger.warn(`interpret(${domain}) KB path failed: ${(e as Error).message}`);
@@ -161,6 +164,30 @@ export class InterpretationService {
       guidance: typeof p.guidance === 'string' ? p.guidance : '',
       disclaimer: DISCLAIMER,
     };
+  }
+
+  /**
+   * Numerology interpretation assembled from KbNumberMeaning (already 12-locale):
+   * the destiny/mulank number's meaning → summary, strengths → points, cautions
+   * → guidance. Fully KB-driven in every locale (the table is backfilled), so
+   * this domain no longer calls the LLM. renderStatus().matched still gates it.
+   */
+  private async assembleNumerology(
+    payload: Record<string, unknown>,
+    locale?: string,
+  ): Promise<InterpretationResult | null> {
+    const raw = payload.destinyNumber ?? payload.mulank ?? payload.number;
+    const key = typeof raw === 'number' && Number.isFinite(raw) ? String(raw) : this.str(raw);
+    if (!key) return null;
+    const status = this.kb.renderStatus(await this.kb.getNumberMeaning(key), locale);
+    if (!status?.matched) return null;
+    const p = (status.value ?? {}) as { meaning?: unknown; strengths?: unknown; cautions?: unknown };
+    const summary = this.str(p.meaning);
+    const strs = (v: unknown): string[] =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x.trim().length > 0) : [];
+    const points = strs(p.strengths);
+    if (!summary || points.length === 0) return null;
+    return { summary, points, guidance: strs(p.cautions).join(' '), disclaimer: DISCLAIMER };
   }
 
   /**
