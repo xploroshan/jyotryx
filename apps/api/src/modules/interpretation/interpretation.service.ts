@@ -65,6 +65,9 @@ export class InterpretationService {
       this.compactPayload(payload);
 
     try {
+      // With jsonMode the LLM layer returns the ALREADY-PARSED object
+      // ({summary, points, guidance}) — or null if the model output wasn't
+      // valid JSON / all providers failed. (Not a {content} wrapper.)
       const res = await this.llmCache.cachedChatCompletion({
         feature: `interpretation:${domain}`,
         messages: [
@@ -76,9 +79,9 @@ export class InterpretationService {
         jsonMode: true,
         userId: userId ?? null,
       });
-      const parsed = this.parse(res?.content);
+      const parsed = this.coerce(res);
       if (parsed) return parsed;
-      this.logger.warn(`interpret(${domain}): unparseable LLM output, using fallback`);
+      this.logger.warn(`interpret(${domain}): empty/unusable LLM output, using fallback`);
     } catch (e) {
       this.logger.warn(`interpret(${domain}) failed: ${(e as Error).message}`);
     }
@@ -114,15 +117,8 @@ export class InterpretationService {
     return json;
   }
 
-  /** Parse + shape-guard the model's JSON; return null if it doesn't fit. */
-  private parse(content: string | undefined): InterpretationResult | null {
-    if (!content) return null;
-    let obj: unknown;
-    try {
-      obj = JSON.parse(content);
-    } catch {
-      return null;
-    }
+  /** Shape-guard the model's parsed JSON object; return null if it doesn't fit. */
+  private coerce(obj: unknown): InterpretationResult | null {
     if (!obj || typeof obj !== 'object') return null;
     const o = obj as Record<string, unknown>;
     const summary = typeof o.summary === 'string' ? o.summary.trim() : '';
