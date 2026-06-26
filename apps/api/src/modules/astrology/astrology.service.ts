@@ -1445,13 +1445,33 @@ export class AstrologyService {
     // in the SERVER zone and then read back via getUTC*, so the day and hour
     // pillars shifted on any non-UTC runtime. The day pillar is anchored to a
     // UTC instant of the birth calendar day so its 60-day count is stable.
-    const { year, month, day, hour } = birthMoment(dto.dateOfBirth, dto.timeOfBirth);
+    const { year, month, day, hour, minute } = birthMoment(dto.dateOfBirth, dto.timeOfBirth);
     const dayDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 
-    const yearPillar = this.baziPillarFromYear(year);
-    // Approximate month pillar from month-of-year. A full BaZi calendar
-    // requires solar-term boundaries; we'll refine in the follow-up.
-    const monthPillar = this.baziPillarFromMonth(year, month);
+    // BaZi year and month roll on the SOLAR terms, not the civil calendar: the
+    // year begins at Lichun (Sun at 315° tropical, ~Feb 4) and each month at the
+    // next 30° "jie". Derive the Sun's longitude at the birth moment (converted
+    // to UT via the birthplace zone when known) to place both correctly — the
+    // old code used the calendar year/month, so the year pillar was wrong for
+    // anyone born Jan 1–early Feb and the month pillar drifted near boundaries.
+    const coords = await this.resolveUserBirthCoords(userId);
+    const utHour = resolveUtHour({
+      year, month, day, hour, minute,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
+    });
+    const sunLon = this.tropicalLongitude(
+      swisseph.swe_julday(year, month, day, utHour, swisseph.SE_GREG_CAL),
+      swisseph.SE_SUN,
+    );
+    // Solar month: 0 = Yin (Sun 315–345°) … 11 = Chou (285–315°).
+    const solarMonth = Math.floor(((((sunLon - 315) % 360) + 360) % 360) / 30);
+    // Year rolls at Lichun: before it (January, or early February with the Sun
+    // still short of 315°) the BaZi year is the previous calendar year.
+    const baziYear = month === 1 || (month === 2 && sunLon < 315) ? year - 1 : year;
+
+    const yearPillar = this.baziPillarFromYear(baziYear);
+    const monthPillar = this.baziPillarFromMonth(baziYear, solarMonth + 1);
     const dayPillar = this.baziPillarFromDay(dayDate);
     const hourPillar = this.baziPillarFromHour(hour, dayPillar.heavenlyStem);
 
@@ -2099,7 +2119,9 @@ export class AstrologyService {
     const earthlyBranches = ['Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai', 'Zi', 'Chou'];
     const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
     const yearStemIdx = ((year - 4) % 10 + 10) % 10;
-    const base = (yearStemIdx % 5) * 2;
+    // Five Tigers rule (五虎遁): the Yin (first) month's stem is Bing for a Jia/Ji
+    // year, then +2 per year-stem pair — i.e. base = (yearStem % 5) * 2 + 2.
+    const base = ((yearStemIdx % 5) * 2 + 2) % 10;
     const stemIdx = (base + (month - 1)) % 10;
     const branchIdx = (month - 1) % 12;
     return {

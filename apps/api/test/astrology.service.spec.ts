@@ -415,6 +415,29 @@ describe('AstrologyService', () => {
     });
   });
 
+  // ─── BaZi Tests (solar-term year + month) ──────────────────────────────────
+
+  describe('getBazi', () => {
+    it('places the year and month pillars by solar term (15 May 1990 → Metal Horse, Si month)', async () => {
+      const res = await service.getBazi('test-uuid', { dateOfBirth: '1990-05-15', timeOfBirth: '14:30' });
+      // 1990 is the year of the Metal (Geng) Horse (Wu).
+      expect(res.pillars.year.heavenlyStem).toBe('Geng');
+      expect(res.pillars.year.earthlyBranch).toBe('Wu');
+      expect(res.pillars.year.element).toBe('Metal');
+      // Mid-May falls in the Si (Snake) solar month; Five Tigers → Xin stem.
+      expect(res.pillars.month.earthlyBranch).toBe('Si');
+      expect(res.pillars.month.heavenlyStem).toBe('Xin');
+    });
+
+    it('rolls the BaZi year at Lichun, not Jan 1 (20 Jan 1990 is still the 1989 Earth Snake year)', async () => {
+      const res = await service.getBazi('test-uuid', { dateOfBirth: '1990-01-20', timeOfBirth: '06:00' });
+      // Before Lichun (~Feb 4), so the BaZi year is 1989 = Ji (Earth) Si (Snake).
+      expect(res.pillars.year.heavenlyStem).toBe('Ji');
+      expect(res.pillars.year.earthlyBranch).toBe('Si');
+      expect(res.pillars.year.element).toBe('Earth');
+    });
+  });
+
   // ─── Matching Tests ───────────────────────────────────────────────────────
 
   describe('getMatching', () => {
