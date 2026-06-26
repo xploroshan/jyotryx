@@ -3,8 +3,35 @@ import {
   zonedNow,
   isValidTimeZone,
   resolveTimezoneFromCoords,
+  birthMoment,
   DEFAULT_TZ,
 } from '../src/common/timezone.util';
+
+describe('birthMoment', () => {
+  it('parses the calendar date straight from the string (server-zone independent)', () => {
+    expect(birthMoment('1990-05-15', '14:30')).toEqual({
+      year: 1990, month: 5, day: 15, hour: 14, minute: 30,
+    });
+  });
+
+  it('takes the date portion of an ISO datetime (never the UTC-shifted day)', () => {
+    // A datetime whose UTC instant is on the 14th must still read as the 15th.
+    expect(birthMoment('1990-05-15T02:00:00.000+05:30', '06:00')).toMatchObject({
+      year: 1990, month: 5, day: 15,
+    });
+  });
+
+  it('defaults a missing or malformed time to 06:00', () => {
+    expect(birthMoment('2000-01-01')).toMatchObject({ hour: 6, minute: 0 });
+    expect(birthMoment('2000-01-01', 'oops')).toMatchObject({ hour: 6, minute: 0 });
+    expect(birthMoment('2000-01-01', '25:99')).toMatchObject({ hour: 6, minute: 0 });
+  });
+
+  it('keeps midnight and noon distinct', () => {
+    expect(birthMoment('2000-01-01', '00:00')).toMatchObject({ hour: 0, minute: 0 });
+    expect(birthMoment('2000-01-01', '12:00')).toMatchObject({ hour: 12, minute: 0 });
+  });
+});
 
 /**
  * Guards the birth-time → UT conversion. The previous longitude/15 (local
