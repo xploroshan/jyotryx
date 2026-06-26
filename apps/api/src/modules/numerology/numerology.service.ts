@@ -271,8 +271,10 @@ export class NumerologyService {
   async getPersonalYear(dateOfBirth: string, locale?: string): Promise<PersonalYearResult> {
     const dob = new Date(dateOfBirth);
     const currentYear = new Date().getFullYear();
+    // UTC components so the same birth date yields the same Personal Year
+    // regardless of server timezone (matches buildMulankReading).
     const personalYear = this.reduceToSingle(
-      dob.getDate() + (dob.getMonth() + 1) + this.reduceToSingle(currentYear),
+      dob.getUTCDate() + (dob.getUTCMonth() + 1) + this.reduceToSingle(currentYear),
     );
 
     const data = await this.loadPersonalYearTheme(personalYear, locale);
