@@ -220,6 +220,7 @@ model User {
   entitlements       Entitlement[]
   memories           UserMemory[]
   sharedMatches      SharedMatch[]
+  deepDiveUnlocks    DeepDiveUnlock[]
 
   // Relations removed for partitioned tables (FK constraints dropped):
   // notifications, llmUsage — see 20260413_partition_tables migration
@@ -231,6 +232,25 @@ model User {
   @@index([createdAt, locale])
   @@index([referredById])
   @@map("users")
+}
+
+/// One row per (user, feature-result) the user has unlocked a paid "deep dive"
+/// interpretation for. `inputHash` is a stable hash of the domain + the result
+/// payload, so the SAME chart re-opens the deep dive for free (no re-charge),
+/// while a different result is a fresh unlock. The deep prose itself is served
+/// from the LLM cache, not stored here.
+model DeepDiveUnlock {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  domain    String
+  inputHash String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, domain, inputHash])
+  @@index([userId])
+  @@map("deep_dive_unlocks")
 }
 
 /// Persistent personalization for the AI astrologer: durable facts, stated

@@ -149,5 +149,6 @@ export default () => ({
     kundliCost: parseIntEnv('KUNDLI_CREDIT_COST', 2),
     reportCost: parseIntEnv('REPORT_CREDIT_COST', 5),
     palmistryCost: parseIntEnv('PALMISTRY_CREDIT_COST', 3),
+    deepDiveCost: parseIntEnv('DEEP_DIVE_CREDIT_COST', 3),
   },
 });
