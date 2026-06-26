@@ -388,6 +388,31 @@ describe('AstrologyService', () => {
       expect(spanYears).toBeGreaterThan(100);
       expect(spanYears).toBeLessThanOrEqual(120.001);
     });
+
+    it('keeps Antardashas/Pratyantardashas within their parent window (no overflow)', async () => {
+      prisma.kundliChart.create.mockResolvedValue({ id: 'kundli-1', createdAt: new Date('2026-01-01') });
+
+      const result = await service.generateKundli('test-uuid', mockBirthDetails);
+
+      for (const maha of result.dashas) {
+        const subs = maha.subPeriods ?? [];
+        expect(subs.length).toBeGreaterThan(0);
+        // Antardashas tile the Mahadasha exactly: first starts at the Maha start,
+        // last ends at the Maha end, and each is contiguous with the previous.
+        expect(subs[0].startDate).toBe(maha.startDate);
+        expect(subs[subs.length - 1].endDate).toBe(maha.endDate);
+        for (let i = 1; i < subs.length; i++) {
+          expect(subs[i].startDate).toBe(subs[i - 1].endDate);
+        }
+        // Pratyantardashas tile each Antardasha exactly.
+        for (const sub of subs) {
+          const pratys = sub.subPeriods ?? [];
+          expect(pratys.length).toBeGreaterThan(0);
+          expect(pratys[0].startDate).toBe(sub.startDate);
+          expect(pratys[pratys.length - 1].endDate).toBe(sub.endDate);
+        }
+      }
+    });
   });
 
   // ─── Matching Tests ───────────────────────────────────────────────────────
