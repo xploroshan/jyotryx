@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
@@ -19,6 +20,9 @@ export interface InterpretationData {
   sections?: InterpretationSection[];
   depth?: "teaser" | "deep";
 }
+
+// Calm sunrise gradient (gold → warm orange) — matches the brand .text-gradient-sunrise.
+const SUNRISE = "linear-gradient(135deg, #f7b733 0%, #f8943f 48%, #ef6c1a 100%)";
 
 /**
  * Reusable "What this means for you" block. Posts the already-computed result
@@ -185,36 +189,62 @@ export default function Interpretation({
         </div>
       ) : (
         deepDive && (
-          <div className="mt-5 rounded-lg border border-dashed border-[rgba(12,8,5,0.14)] p-4">
-            <p className="text-sm font-medium text-surface-950">{t.interpret.deepCta}</p>
-            <p className="mt-1 text-xs text-[rgba(12,8,5,0.6)]">{t.interpret.deepNote}</p>
-            {isAuthenticated ? (
-              <>
-                <button
-                  type="button"
-                  onClick={unlockDeep}
-                  disabled={deepLoading}
-                  className="btn-primary mt-3 text-sm disabled:opacity-60"
-                >
-                  {deepLoading ? t.interpret.deepLoading : t.interpret.deepButton}
-                </button>
-                {deepError === "insufficient" && (
-                  <p className="mt-2 text-xs text-red-600">
-                    {t.interpret.deepInsufficient}{" "}
-                    <Link href="/pricing" className="underline">
-                      {t.interpret.deepTopUp}
-                    </Link>
-                  </p>
+          <div className="mt-5 overflow-hidden rounded-2xl border border-[#f8943f]/25 bg-gradient-to-br from-[#fff7e9] via-[#fff1df] to-[#ffe9d6] p-5 shadow-warm-sm">
+            <div className="flex items-start gap-3.5">
+              <span
+                className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-warm-sm"
+                style={{ backgroundImage: SUNRISE }}
+              >
+                <Sparkles className="h-5 w-5" strokeWidth={2} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-surface-950">{t.interpret.deepCta}</p>
+                <p className="mt-1 text-xs leading-relaxed text-[rgba(12,8,5,0.62)]">{t.interpret.deepNote}</p>
+                {isAuthenticated ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={unlockDeep}
+                      disabled={deepLoading}
+                      className="mt-3.5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-warm-sm transition-all hover:shadow-warm-md hover:brightness-[1.03] active:scale-[0.98] disabled:cursor-default disabled:opacity-70"
+                      style={{ backgroundImage: SUNRISE }}
+                    >
+                      {deepLoading ? (
+                        <>
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                          {t.interpret.deepLoading}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" strokeWidth={2.2} />
+                          {t.interpret.deepButton}
+                        </>
+                      )}
+                    </button>
+                    {deepError === "insufficient" && (
+                      <p className="mt-2.5 text-xs text-red-600">
+                        {t.interpret.deepInsufficient}{" "}
+                        <Link href="/pricing" className="font-medium underline">
+                          {t.interpret.deepTopUp}
+                        </Link>
+                      </p>
+                    )}
+                    {deepError === "generic" && (
+                      <p className="mt-2.5 text-xs text-red-600">{t.interpret.deepError}</p>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href="/auth"
+                    className="mt-3.5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-warm-sm transition-all hover:shadow-warm-md hover:brightness-[1.03]"
+                    style={{ backgroundImage: SUNRISE }}
+                  >
+                    <Sparkles className="h-4 w-4" strokeWidth={2.2} />
+                    {t.interpret.deepSignIn}
+                  </Link>
                 )}
-                {deepError === "generic" && (
-                  <p className="mt-2 text-xs text-red-600">{t.interpret.deepError}</p>
-                )}
-              </>
-            ) : (
-              <Link href="/auth" className="btn-primary mt-3 inline-block text-sm">
-                {t.interpret.deepSignIn}
-              </Link>
-            )}
+              </div>
+            </div>
           </div>
         )
       )}
