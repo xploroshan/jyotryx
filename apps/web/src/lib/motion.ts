@@ -12,7 +12,7 @@
  * `prefers-reduced-motion: reduce` enabled — respected at the per-use
  * level via the `useReducedMotion` hook from framer-motion.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Transition, Variants } from 'framer-motion';
 
 export const timing = {
@@ -94,4 +94,44 @@ export function useScrollProgress<T extends HTMLElement = HTMLDivElement>() {
     };
   }, []);
   return ref;
+}
+
+/**
+ * Returns `{ ref, paused }` where `paused` is true whenever the referenced
+ * element is scrolled out of the viewport OR the tab is backgrounded. Callers
+ * apply it to perpetual CSS animations as
+ * `style={{ animationPlayState: paused ? 'paused' : 'running' }}` so the
+ * compositor/GPU goes quiet when the animation isn't visible — the homepage
+ * hero otherwise keeps re-compositing at 60fps forever (heat/battery) even when
+ * the user has scrolled past it. An IntersectionObserver + visibilitychange
+ * listener, both cleaned up on unmount; no rAF, no per-frame work.
+ */
+export function useInViewPause<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T>(null);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let inView = true;
+    let hidden = document.hidden;
+    const apply = () => setPaused(!inView || hidden);
+    const io = new IntersectionObserver(
+      (entries) => {
+        inView = entries[0]?.isIntersecting ?? true;
+        apply();
+      },
+      { threshold: 0 },
+    );
+    io.observe(el);
+    const onVis = () => {
+      hidden = document.hidden;
+      apply();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+  return { ref, paused };
 }
