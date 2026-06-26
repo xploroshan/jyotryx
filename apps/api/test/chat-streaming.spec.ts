@@ -17,6 +17,7 @@ import { firstValueFrom, toArray } from 'rxjs';
 const mockFeatureAccess = () => ({
   isActiveSubscriber: jest.fn().mockResolvedValue(false),
   paidFeaturesFree: jest.fn().mockResolvedValue(false),
+  getCreditCost: jest.fn(async (_name: string, fallback: number) => fallback),
   resolveUnlock: jest.fn(),
   consumeEntitlement: jest.fn(),
 });

@@ -50,6 +50,9 @@ export default function AdminPage() {
   // Pricing state
   const [pricingMonthly, setPricingMonthly] = useState("499");
   const [pricingAnnual, setPricingAnnual] = useState("4999");
+  // Per-feature credit costs (runtime-overridable; fall back to env defaults).
+  const [chatCost, setChatCost] = useState("1");
+  const [deepDiveCost, setDeepDiveCost] = useState("3");
   const [creditStarterCredits, setCreditStarterCredits] = useState("25");
   const [creditStarterPrice, setCreditStarterPrice] = useState("99");
   const [creditPopularCredits, setCreditPopularCredits] = useState("75");
@@ -93,6 +96,8 @@ export default function AdminPage() {
         const settings = await api.get<Record<string, string>>("/admin/settings?prefix=pricing.", { token: accessToken });
         if (settings["pricing.monthly.price"]) setPricingMonthly(settings["pricing.monthly.price"]);
         if (settings["pricing.annual.price"]) setPricingAnnual(settings["pricing.annual.price"]);
+        if (settings["pricing.credits.chat_cost"]) setChatCost(settings["pricing.credits.chat_cost"]);
+        if (settings["pricing.credits.deep_dive_cost"]) setDeepDiveCost(settings["pricing.credits.deep_dive_cost"]);
         if (settings["pricing.credits.starter.credits"]) setCreditStarterCredits(settings["pricing.credits.starter.credits"]);
         if (settings["pricing.credits.starter.price"]) setCreditStarterPrice(settings["pricing.credits.starter.price"]);
         if (settings["pricing.credits.popular.credits"]) setCreditPopularCredits(settings["pricing.credits.popular.credits"]);
@@ -441,6 +446,23 @@ export default function AdminPage() {
               </div>
             </div>
 
+            <h3 className="text-lg font-bold text-ink-900 mb-1">Credit Costs</h3>
+            <p className="text-xs text-ink-500 mb-4">Credits charged per use. Applies live (free for subscribers / free mode). Deep dive is the paid long-form interpretation.</p>
+            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+              <div className="surface-card p-6">
+                <h4 className="font-bold text-ink-900 mb-4">Chat message</h4>
+                <label className="block text-xs text-ink-500 mb-2">Credits per message</label>
+                <input type="number" min="0" value={chatCost} onChange={(e) => setChatCost(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
+              </div>
+              <div className="surface-card p-6">
+                <h4 className="font-bold text-ink-900 mb-4">Deep dive interpretation</h4>
+                <label className="block text-xs text-ink-500 mb-2">Credits per unlock</label>
+                <input type="number" min="0" value={deepDiveCost} onChange={(e) => setDeepDiveCost(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-black/[0.04] border border-black/[0.10] text-ink-900 text-sm" />
+              </div>
+            </div>
+
             <button
               disabled={pricingSaving}
               onClick={async () => {
@@ -456,6 +478,8 @@ export default function AdminPage() {
                     "pricing.credits.popular.price": creditPopularPrice,
                     "pricing.credits.pro.credits": creditProCredits,
                     "pricing.credits.pro.price": creditProPrice,
+                    "pricing.credits.chat_cost": chatCost,
+                    "pricing.credits.deep_dive_cost": deepDiveCost,
                     "pricing.report.price": reportPrice,
                     "pricing.palmistry.price": palmistryPrice,
                     "feature.subscriptions_enabled": subscriptionsEnabled ? "true" : "false",

@@ -315,7 +315,10 @@ export class InterpretationService {
         (await this.featureAccess.paidFeaturesFree()) ||
         (await this.featureAccess.isActiveSubscriber(userId));
       if (!free) {
-        const cost = this.config.get<number>('credits.deepDiveCost', 3);
+        const cost = await this.featureAccess.getCreditCost(
+          'deep_dive',
+          this.config.get<number>('credits.deepDiveCost', 3),
+        );
         const ok = await this.users.deductCredits(
           userId,
           cost,

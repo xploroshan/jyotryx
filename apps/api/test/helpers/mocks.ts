@@ -375,6 +375,7 @@ export const mockFeatureAccessService = () => ({
   subscriptionsEnabled: jest.fn().mockResolvedValue(false),
   paidFeaturesFree: jest.fn().mockResolvedValue(false),
   isActiveSubscriber: jest.fn().mockResolvedValue(false),
+  getCreditCost: jest.fn(async (_name: string, fallback: number) => fallback),
   resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
   consumeEntitlement: jest.fn().mockResolvedValue(undefined),
   refundEntitlementByRef: jest.fn().mockResolvedValue(0),
