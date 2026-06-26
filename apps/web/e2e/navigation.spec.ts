@@ -28,13 +28,13 @@ test.describe('Navigation smoke', () => {
     // is the stable assertion.
     await expect(page.getByText('Vedic Astrology Platform').first()).toBeVisible();
 
-    // Hero headline — "Your stars," + "decoded by myastro360". The visible
-    // text is split into per-character animation spans (and "myastro360" onto
+    // Hero headline — "Your stars," + "decoded by MyAstro360". The visible
+    // text is split into per-character animation spans (and "MyAstro360" onto
     // its own line), so it has no space before the brand; assert against the
     // h1's aria-label, which carries the full, clean phrase.
     await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute(
       'aria-label',
-      /Your stars.*decoded by myastro360/,
+      /Your stars.*decoded by MyAstro360/,
     );
 
     // Primary CTAs

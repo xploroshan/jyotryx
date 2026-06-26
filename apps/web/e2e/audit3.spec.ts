@@ -101,8 +101,8 @@ test('language switcher opens, swaps locale, and persists', async ({ page }) => 
   // heroHighlight, so we normalize whitespace before asserting.
   const heroAfterHi = (await page.locator('h1').first().textContent() || '').replace(/\s+/g, ' ');
   expect(heroAfterHi).toContain('आपके सितारे');
-  // Brand must remain Latin "myastro360", not a transliteration
-  expect(heroAfterHi).toContain('myastro360');
+  // Brand must remain Latin "MyAstro360", not a transliteration
+  expect(heroAfterHi).toContain('MyAstro360');
 
   // Switch back to English
   await page.locator('button').filter({ hasText: /^\s*हि\s*$/ }).first().click();

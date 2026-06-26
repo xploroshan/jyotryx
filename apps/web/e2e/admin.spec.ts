@@ -668,8 +668,13 @@ test.describe('Admin dashboard — tabs', () => {
     await page.getByRole('button', { name: /Pricing/ }).click();
 
     await expect(page.getByRole('heading', { name: 'Pricing Management' })).toBeVisible();
-    // Monthly price prefilled from settings ('599').
-    await expect(page.locator('input[type="number"]').first()).toHaveValue('599');
+    // Monthly price prefilled from settings ('599'). The Pricing tab now leads
+    // with report/palmistry/social fields, so anchor to the "Premium Monthly"
+    // card rather than the first number input on the page.
+    const monthlyInput = page
+      .locator('div:has(> h4:has-text("Premium Monthly")) input[type="number"]')
+      .first();
+    await expect(monthlyInput).toHaveValue('599');
   });
 
   test('AI Agents tab loads /admin/settings?prefix=llm. and shows providers', async ({ page }) => {
@@ -776,8 +781,12 @@ test.describe('Admin dashboard — Pricing save', () => {
     await gotoAdmin(page);
     await page.getByRole('button', { name: /Pricing/ }).click();
 
-    // Bump the monthly price input.
-    const monthlyInput = page.locator('input[type="number"]').first();
+    // Bump the monthly price input. Anchor to the "Premium Monthly" card —
+    // the Pricing tab now leads with report/palmistry/social fields, so the
+    // first number input on the page is no longer the monthly price.
+    const monthlyInput = page
+      .locator('div:has(> h4:has-text("Premium Monthly")) input[type="number"]')
+      .first();
     await monthlyInput.fill('799');
 
     await page.getByRole('button', { name: /Save Pricing/ }).click();

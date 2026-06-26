@@ -9,10 +9,16 @@
  * bug.
  */
 import { test, expect } from '@playwright/test';
-import { installApiMocks } from './helpers/mock-api';
+import { installApiMocks, json } from './helpers/mock-api';
 
 test('focus lands on <main> after clicking an in-app link', async ({ page }) => {
-  await installApiMocks(page);
+  // The nav only renders the /pricing link when the pricing page is enabled,
+  // which the navbar reads from GET /payments/pricing. Enable it so the link
+  // (the keyboard target below) is present.
+  await installApiMocks(page, {
+    'GET /payments/pricing': (route: any) =>
+      route.fulfill(json({ 'feature.pricing_page_enabled': 'true' })),
+  });
   await page.goto('/');
   await page.waitForLoadState('networkidle');
 
