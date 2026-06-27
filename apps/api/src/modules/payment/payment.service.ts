@@ -303,8 +303,16 @@ export class PaymentService {
         this.logger.error('Cashfree order creation failed', error as Error);
         throw new InternalServerErrorException('Failed to create payment order');
       }
+    } else if ((process.env.NODE_ENV ?? '') === 'production') {
+      // Fail-CLOSED: in production a missing Cashfree config must surface a
+      // clear error, not a fake `session_mock_…` that the browser SDK then
+      // rejects with a cryptic "payment_session_id is invalid". This is the
+      // signal that CASHFREE_CLIENT_ID / CASHFREE_CLIENT_SECRET aren't set (or
+      // the API wasn't redeployed after setting them).
+      this.logger.error('createOrder: Cashfree not configured — refusing to create order');
+      throw new InternalServerErrorException('Payments are not configured');
     } else {
-      // Mock mode (local dev): deterministic ids, no network call.
+      // Mock mode (local dev only): deterministic ids, no network call.
       paymentSessionId = `session_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
