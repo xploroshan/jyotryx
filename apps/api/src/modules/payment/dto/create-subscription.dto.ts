@@ -6,7 +6,7 @@ export class CreateSubscriptionDto {
     example: 'MONTHLY',
     enum: ['MONTHLY', 'ANNUAL'],
     description:
-      'Logical plan tier. The server maps this to the configured Razorpay plan_id (RAZORPAY_PLAN_MONTHLY / RAZORPAY_PLAN_ANNUAL).',
+      'Logical plan tier. The server maps this to the configured Cashfree plan_id (CASHFREE_PLAN_MONTHLY / CASHFREE_PLAN_ANNUAL).',
   })
   @IsString()
   @IsNotEmpty()

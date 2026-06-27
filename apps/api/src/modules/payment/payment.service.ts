@@ -13,6 +13,11 @@ import {
   EntitlementTypeName,
 } from '../../common/feature-access/feature-access.service';
 import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto } from './dto';
+import {
+  CashfreeClient,
+  CashfreeConfig,
+  verifyCashfreeSignature,
+} from './cashfree.client';
 
 /** Default INR prices for one-time entitlement products (admin-overridable). */
 const DEFAULT_REPORT_PRICE_INR = 199;
@@ -45,25 +50,15 @@ function entitlementTypeForProduct(productId: string): EntitlementTypeName | nul
   }
 }
 
-/**
- * Constant-time HMAC-signature comparison. Razorpay signatures are hex
- * strings of fixed length (64 chars for SHA-256), but we defensively
- * bail on length mismatch before calling `timingSafeEqual` (which itself
- * throws on unequal-length buffers).
- */
-function safeSignatureEqual(expected: string, actual: string | undefined): boolean {
-  if (!actual || expected.length !== actual.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(actual, 'hex'));
-}
-
-export interface RazorpayOrder {
-  id: string;
-  entity: string;
+export interface CashfreeOrder {
+  /** Our order id (`cf_<uuid>`), used as the gateway order id. */
+  orderId: string;
+  /** Token the web SDK passes to `cashfree.checkout({ paymentSessionId })`. */
+  paymentSessionId: string | null;
+  /** Amount in INR rupees. */
   amount: number;
   currency: string;
   status: string;
-  receipt: string;
-  createdAt: string;
 }
 
 export interface PaymentVerificationResult {
@@ -83,9 +78,12 @@ export interface SubscriptionResult {
   status: string;
   currentStart: string;
   currentEnd: string;
-  /** Razorpay-hosted checkout URL the client redirects to in order to
-   *  authorise the first charge. Undefined in mock mode (no credentials). */
-  shortUrl?: string;
+  /** Session id the web SDK passes to `cashfree.subscriptionsCheckout` so the
+   *  customer authorises the mandate (UPI AutoPay / eNACH / card). Undefined
+   *  in mock mode (no credentials). */
+  authSessionId?: string;
+  /** Fallback hosted authorization link, when Cashfree returns one. */
+  authLink?: string;
 }
 
 export interface PaymentHistoryItem {
@@ -101,7 +99,8 @@ export interface PaymentHistoryItem {
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
-  private razorpayInstance: any = null;
+  /** Null when no credentials are configured → "mock mode" for local dev. */
+  private cashfree: CashfreeClient | null = null;
 
   constructor(
     private prisma: PrismaService,
@@ -109,34 +108,45 @@ export class PaymentService {
     private userService: UserService,
     private featureAccess: FeatureAccessService,
   ) {
-    this.initRazorpay();
+    this.initCashfree();
   }
 
-  private initRazorpay(): void {
-    const keyId = this.configService.get<string>('razorpay.keyId');
-    const keySecret = this.configService.get<string>('razorpay.keySecret');
+  private initCashfree(): void {
+    const clientId = this.configService.get<string>('cashfree.clientId');
+    const clientSecret = this.configService.get<string>('cashfree.clientSecret');
 
-    if (keyId && keySecret) {
-      try {
-        const Razorpay = require('razorpay');
-        this.razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-        this.logger.log('Razorpay initialized successfully');
-      } catch {
-        this.logger.warn('Razorpay initialization failed, using mock mode');
-      }
+    if (clientId && clientSecret) {
+      const cfg: CashfreeConfig = {
+        clientId,
+        clientSecret,
+        mode: this.configService.get<string>('cashfree.mode') || 'sandbox',
+        apiVersion: this.configService.get<string>('cashfree.apiVersion') || '2025-01-01',
+      };
+      this.cashfree = new CashfreeClient(cfg);
+      this.logger.log(`Cashfree initialized (mode=${cfg.mode})`);
     } else {
-      this.logger.warn('Razorpay credentials not configured, using mock mode');
+      this.cashfree = null;
+      this.logger.warn('Cashfree credentials not configured, using mock mode');
     }
   }
 
+  /** Secret used to verify webhook signatures: the dedicated webhook secret if
+   *  set, otherwise the client secret (Cashfree's default signing key). */
+  private webhookSecret(): string | undefined {
+    return (
+      this.configService.get<string>('cashfree.webhookSecret') ||
+      this.configService.get<string>('cashfree.clientSecret') ||
+      undefined
+    );
+  }
+
   /**
-   * Authoritative price (in paise) the client must pay for a productId.
-   * One-time entitlement products (reports / palmistry) read their INR
-   * price from the admin-editable `site_settings` (`pricing.report.price`,
-   * `pricing.palmistry.price`) so the operator can re-price without a
-   * redeploy — the SAME source the web pricing surface reads. Legacy
-   * credit-pack productIds keep their static fallbacks. Returns null for
-   * unknown products.
+   * Authoritative price (in INR rupees) the client must pay for a productId.
+   * One-time entitlement products (reports / palmistry) read their INR price
+   * from the admin-editable `site_settings` (`pricing.report.price`,
+   * `pricing.palmistry.price`) so the operator can re-price without a redeploy
+   * — the SAME source the web pricing surface reads. Legacy credit-pack
+   * productIds keep their static fallbacks. Returns null for unknown products.
    */
   private async getExpectedPrice(productId: string): Promise<number | null> {
     const entType = entitlementTypeForProduct(productId);
@@ -146,30 +156,23 @@ export class PaymentService {
       const fallback = isPalmistry ? DEFAULT_PALMISTRY_PRICE_INR : DEFAULT_REPORT_PRICE_INR;
       const row = await this.prisma.siteSetting.findUnique({ where: { key } });
       const inr = parseInt(row?.value ?? '', 10);
-      const priceINR = Number.isFinite(inr) && inr > 0 ? inr : fallback;
-      return priceINR * 100;
+      return Number.isFinite(inr) && inr > 0 ? inr : fallback;
     }
 
     const prices: Record<string, number> = {
-      'credits_10': 9900, // 99 INR in paise
-      'credits_50': 39900, // 399 INR
-      'credits_100': 69900, // 699 INR
+      credits_10: 99,
+      credits_50: 399,
+      credits_100: 699,
     };
     return prices[productId] ?? null;
   }
 
   /**
-   * Resolve a credit pack (starter / popular / pro …) from the
-   * admin-editable SiteSettings — the SAME source the web /pricing page
-   * reads. This is the single source of truth for both the price the
-   * client must pay and the number of credits we grant, so the two can
-   * never drift: a pack advertised as "25 credits for ₹99" charges ₹99
-   * and grants exactly 25.
-   *
-   * `productId` arrives as `credits_<packId>` (e.g. `credits_starter`);
-   * the leading `credits_`/`credits.` is stripped before lookup. Returns
-   * null for unknown packs or malformed/missing settings so the caller
-   * can fall back to legacy product handling.
+   * Resolve a credit pack (starter / popular / pro …) from the admin-editable
+   * SiteSettings — the SAME source the web /pricing page reads. This is the
+   * single source of truth for both the price the client must pay (INR rupees)
+   * and the number of credits we grant, so the two can never drift. Returns
+   * null for unknown packs or malformed/missing settings.
    */
   private async resolveCreditPack(
     productId: string,
@@ -198,11 +201,11 @@ export class PaymentService {
     return { packId, priceINR, credits };
   }
 
-  async createOrder(userId: string, dto: CreateOrderDto): Promise<RazorpayOrder> {
+  async createOrder(userId: string, dto: CreateOrderDto): Promise<CashfreeOrder> {
     this.logger.log(`Creating order for user: ${userId}, amount: ${dto.amount}`);
 
-    // Resolve how many credits this purchase grants, and validate the
-    // amount, against the authoritative price. Credit packs are looked up
+    // Resolve how many credits this purchase grants, and validate the amount,
+    // against the authoritative price (INR rupees). Credit packs are looked up
     // in SiteSettings; everything else falls back to the static price map.
     let grantedCredits: number | undefined;
     let entitlementType: EntitlementTypeName | null = null;
@@ -210,17 +213,18 @@ export class PaymentService {
     if (dto.productId) {
       const pack = await this.resolveCreditPack(dto.productId);
       if (pack) {
-        const expectedPaise = pack.priceINR * 100;
-        if (dto.amount !== expectedPaise) {
+        if (dto.amount !== pack.priceINR) {
           throw new BadRequestException(
-            `Invalid amount for ${dto.productId}. Expected ${expectedPaise}, got ${dto.amount}`,
+            `Invalid amount for ${dto.productId}. Expected ${pack.priceINR}, got ${dto.amount}`,
           );
         }
         grantedCredits = pack.credits;
       } else {
         const expectedPrice = await this.getExpectedPrice(dto.productId);
         if (expectedPrice !== null && dto.amount !== expectedPrice) {
-          throw new BadRequestException(`Invalid amount for product ${dto.productId}. Expected ${expectedPrice}, got ${dto.amount}`);
+          throw new BadRequestException(
+            `Invalid amount for product ${dto.productId}. Expected ${expectedPrice}, got ${dto.amount}`,
+          );
         }
         // One-time pay-to-unlock products (reports/palmistry) grant an
         // Entitlement on success instead of credits.
@@ -229,43 +233,65 @@ export class PaymentService {
       }
     }
 
-    let orderId: string;
-    let orderAmount = dto.amount;
-    let orderCurrency = dto.currency || 'INR';
+    const orderId = `cf_${crypto.randomUUID()}`;
+    const currency = dto.currency || 'INR';
+    let orderAmount = dto.amount; // rupees
+    let paymentSessionId: string | null = null;
+    let status = 'ACTIVE';
 
-    if (this.razorpayInstance) {
+    if (this.cashfree) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true, phone: true },
+      });
+      const frontendUrl = this.configService.get<string>('frontendUrl') || '';
+      const apiUrl = this.configService.get<string>('apiUrl') || '';
       try {
-        const order = await this.razorpayInstance.orders.create({
-          amount: dto.amount,
-          currency: dto.currency || 'INR',
-          receipt: `rcpt_${crypto.randomUUID().substring(0, 8)}`,
-          notes: { userId, productId: dto.productId, description: dto.description || '' },
+        const order = await this.cashfree.createOrder({
+          orderId,
+          orderAmount,
+          orderCurrency: currency,
+          customer: {
+            id: userId,
+            name: user?.name,
+            email: user?.email,
+            phone: user?.phone,
+          },
+          // Cashfree substitutes `{order_id}` into the return_url on redirect.
+          // `pid` lets the fallback return page route to the right success
+          // destination after a UPI app-switch full-page redirect.
+          returnUrl: frontendUrl
+            ? `${frontendUrl}/checkout/return?orderId={order_id}&pid=${encodeURIComponent(dto.productId)}`
+            : undefined,
+          notifyUrl: apiUrl
+            ? `${apiUrl.replace(/\/$/, '')}/payments/webhook`
+            : undefined,
         });
-        orderId = order.id;
-        orderAmount = order.amount;
-        orderCurrency = order.currency;
+        orderAmount = Number(order.order_amount ?? orderAmount);
+        paymentSessionId = order.payment_session_id ?? null;
+        status = order.order_status ?? status;
       } catch (error) {
-        this.logger.error('Razorpay order creation failed', error);
+        this.logger.error('Cashfree order creation failed', error as Error);
         throw new InternalServerErrorException('Failed to create payment order');
       }
     } else {
-      orderId = `order_mock_${crypto.randomUUID().substring(0, 14)}`;
+      // Mock mode (local dev): deterministic ids, no network call.
+      paymentSessionId = `session_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
-    // Persist to DB
     await this.prisma.payment.create({
       data: {
         userId,
-        amount: orderAmount / 100, // Convert paise to rupees
-        currency: orderCurrency,
+        amount: orderAmount, // Cashfree amounts are already in rupees
+        currency,
         status: 'PENDING',
-        razorpayOrderId: orderId,
+        gatewayOrderId: orderId,
+        provider: 'cashfree',
         type: paymentType,
-        // `credits` is captured at order-creation time from the
-        // authoritative pack definition, so the grant on verify/webhook
-        // is deterministic and never re-derived from the amount.
-        // `entitlementType` marks one-time pay-to-unlock purchases so the
-        // verify/webhook handler grants an Entitlement instead of credits.
+        // `credits` is captured at order-creation time from the authoritative
+        // pack definition, so the grant on verify/webhook is deterministic and
+        // never re-derived from the amount. `entitlementType` marks one-time
+        // pay-to-unlock purchases so the handler grants an Entitlement instead.
         metadata: {
           productId: dto.productId,
           description: dto.description,
@@ -277,84 +303,99 @@ export class PaymentService {
     });
 
     return {
-      id: orderId,
-      entity: 'order',
+      orderId,
+      paymentSessionId,
       amount: orderAmount,
-      currency: orderCurrency,
-      status: 'created',
-      receipt: `rcpt_${crypto.randomUUID().substring(0, 8)}`,
-      createdAt: new Date().toISOString(),
+      currency,
+      status,
     };
   }
 
-  async verifyPayment(userId: string, dto: VerifyPaymentDto): Promise<PaymentVerificationResult> {
-    this.logger.log(`Verifying payment for user: ${userId}, order: ${dto.razorpayOrderId}`);
+  async verifyPayment(
+    userId: string,
+    dto: VerifyPaymentDto,
+  ): Promise<PaymentVerificationResult> {
+    this.logger.log(`Verifying payment for user: ${userId}, order: ${dto.orderId}`);
 
-    // Signature verification — fail-CLOSED when no secret is configured.
-    // Previous behaviour fell through if both `razorpay.webhookSecret` and
-    // `razorpay.keySecret` were missing; that turned the verification
-    // endpoint into a free credit faucet on a misconfigured deploy.
-    const webhookSecret = this.configService.get<string>('razorpay.webhookSecret')
-                       || this.configService.get<string>('razorpay.keySecret');
-    if (!webhookSecret) {
-      this.logger.error('verifyPayment: no Razorpay secret configured — refusing to verify');
+    // The payment row we created at order time (scoped to this user). Its
+    // amount is the authoritative figure we re-check against Cashfree.
+    const existing = await this.prisma.payment.findFirst({
+      where: { gatewayOrderId: dto.orderId, userId },
+      select: { id: true, amount: true },
+    });
+    if (!existing) {
+      throw new BadRequestException('Payment record not found for this order');
+    }
+
+    // ── Authenticity gate ──────────────────────────────────────────────────
+    // Cashfree verification is server-authoritative: we fetch the order from
+    // Cashfree and require order_status === 'PAID'. We also re-validate the
+    // amount Cashfree settled against what we persisted at order creation, so
+    // a tampered/short payment can never grant the full product.
+    let paid = false;
+    let gatewayPaymentId: string | null = null;
+    if (this.cashfree) {
+      let order: any;
+      try {
+        order = await this.cashfree.getOrder(dto.orderId);
+      } catch (error) {
+        this.logger.error(`verifyPayment: getOrder failed for ${dto.orderId}`, error as Error);
+        throw new InternalServerErrorException('Unable to verify payment');
+      }
+      paid = String(order?.order_status ?? '').toUpperCase() === 'PAID';
+      if (paid) {
+        const apiAmount = Number(order?.order_amount);
+        const expected = Number(existing.amount);
+        if (!Number.isFinite(apiAmount) || Math.abs(apiAmount - expected) > 0.001) {
+          this.logger.error(
+            `verifyPayment amount mismatch order=${dto.orderId} cashfree=${apiAmount} expected=${expected}`,
+          );
+          throw new BadRequestException('Payment verification failed: amount mismatch');
+        }
+        gatewayPaymentId = order?.cf_order_id ? `cf_${order.cf_order_id}` : null;
+      }
+    } else if ((process.env.NODE_ENV ?? '') !== 'production') {
+      // Local/dev mock mode (no Cashfree creds): treat as paid so the flow is
+      // testable without the gateway. NEVER reachable in production.
+      paid = true;
+    } else {
+      // Fail-CLOSED: a misconfigured production deploy must not become a free
+      // credit faucet.
+      this.logger.error('verifyPayment: Cashfree not configured — refusing to verify');
       throw new InternalServerErrorException('Payment verification is not configured');
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(`${dto.razorpayOrderId}|${dto.razorpayPaymentId}`)
-      .digest('hex');
-
-    // Constant-time comparison. Plain `!==` short-circuits on the first
-    // differing byte which leaks a timing side channel — a classic HMAC
-    // verification bug. timingSafeEqual requires equal-length buffers;
-    // the length check is still branchy but gives no useful signal.
-    if (!safeSignatureEqual(expectedSignature, dto.razorpaySignature)) {
-      throw new BadRequestException('Payment verification failed: invalid signature');
+    if (!paid) {
+      // Order exists but isn't settled (ACTIVE/EXPIRED/FAILED). Grant nothing;
+      // the webhook remains the authoritative async path if it settles later.
+      return { verified: false, paymentId: '', orderId: dto.orderId };
     }
 
     // Claim + grant in ONE interactive transaction so a crash between the
     // status flip and the grant cannot leave the row SUCCESS with nothing
-    // credited (the status guard would then block every retry, and the
-    // customer would have paid for nothing). Mirrors the payment.captured
-    // webhook. The `status != SUCCESS` guard in WHERE keeps the claim
-    // idempotent against client-retry / client-verify-vs-webhook races:
-    // only the caller that actually transitions the row grants.
+    // credited. The `status != SUCCESS` guard keeps the claim idempotent
+    // against client-retry / verify-vs-webhook races: only the caller that
+    // actually transitions the row grants.
     const grant = await this.prisma.$transaction(async (tx: any) => {
       const { count } = await tx.payment.updateMany({
-        where: {
-          razorpayOrderId: dto.razorpayOrderId,
-          userId,
-          status: { not: 'SUCCESS' },
-        },
+        where: { gatewayOrderId: dto.orderId, userId, status: { not: 'SUCCESS' } },
         data: {
           status: 'SUCCESS',
-          razorpayPaymentId: dto.razorpayPaymentId,
+          ...(gatewayPaymentId ? { gatewayPaymentId } : {}),
         },
       });
 
       if (count === 0) {
-        // Either the order doesn't exist for this user, or another call
-        // already claimed it (idempotent success from the user's POV).
-        const existing = await tx.payment.findFirst({
-          where: { razorpayOrderId: dto.razorpayOrderId, userId },
-          select: { id: true },
-        });
-        if (!existing) {
-          throw new BadRequestException('Payment record not found for this order');
-        }
+        // Already claimed by a concurrent verify/webhook — idempotent success.
         return { creditsAdded: 0 as number, entitlementGranted: false };
       }
 
-      // We won the update — safe to grant exactly once.
       const payment = await tx.payment.findFirstOrThrow({
-        where: { razorpayOrderId: dto.razorpayOrderId, userId },
+        where: { gatewayOrderId: dto.orderId, userId },
         select: { id: true, amount: true, metadata: true },
       });
       const entType = this.entitlementTypeFromMetadata(payment.metadata);
       if (entType) {
-        // One-time pay-to-unlock: grant an entitlement instead of credits.
         await this.featureAccess.grantEntitlement(userId, payment.id, entType, tx);
         return { creditsAdded: 0 as number, entitlementGranted: true };
       }
@@ -377,8 +418,8 @@ export class PaymentService {
 
     return {
       verified: true,
-      paymentId: dto.razorpayPaymentId,
-      orderId: dto.razorpayOrderId,
+      paymentId: gatewayPaymentId ?? dto.orderId,
+      orderId: dto.orderId,
       creditsAdded: grant.creditsAdded,
       ...(grant.entitlementGranted ? { entitlementGranted: true } : {}),
     };
@@ -391,7 +432,10 @@ export class PaymentService {
     return typeof v === 'string' ? (v as EntitlementTypeName) : null;
   }
 
-  async createSubscription(userId: string, dto: CreateSubscriptionDto): Promise<SubscriptionResult> {
+  async createSubscription(
+    userId: string,
+    dto: CreateSubscriptionDto,
+  ): Promise<SubscriptionResult> {
     const isAnnual = dto.plan.toUpperCase() === 'ANNUAL';
     this.logger.log(`Creating subscription for user: ${userId}, plan: ${dto.plan}`);
 
@@ -409,111 +453,142 @@ export class PaymentService {
       throw new BadRequestException('You already have an active subscription.');
     }
 
-    // Map the logical tier to a real Razorpay plan_id configured out of
-    // band (dashboard → env). The client never supplies a raw plan_id, so
-    // it can't subscribe itself to an arbitrary/cheaper plan.
-    const razorpayPlanId = isAnnual
-      ? this.configService.get<string>('razorpay.planAnnual')
-      : this.configService.get<string>('razorpay.planMonthly');
+    // Map the logical tier to a real Cashfree plan_id configured out of band
+    // (dashboard → env). The client never supplies a raw plan_id, so it can't
+    // subscribe itself to an arbitrary/cheaper plan.
+    const planId = isAnnual
+      ? this.configService.get<string>('cashfree.planAnnual')
+      : this.configService.get<string>('cashfree.planMonthly');
 
-    let subscriptionId: string;
-    let shortUrl: string | undefined;
+    const subscriptionId = `sub_${crypto.randomUUID().replace(/-/g, '').substring(0, 24)}`;
+    const endDate = new Date(Date.now() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
+    let authSessionId: string | undefined;
+    let authLink: string | undefined;
+    let status = 'active';
 
-    if (this.razorpayInstance) {
-      if (!razorpayPlanId) {
-        this.logger.error(`No Razorpay plan_id configured for ${isAnnual ? 'ANNUAL' : 'MONTHLY'}`);
+    if (this.cashfree) {
+      if (!planId) {
+        this.logger.error(`No Cashfree plan_id configured for ${isAnnual ? 'ANNUAL' : 'MONTHLY'}`);
         throw new InternalServerErrorException('Subscription plan is not configured');
       }
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true, phone: true },
+      });
+      const frontendUrl = this.configService.get<string>('frontendUrl') || '';
+      const apiUrl = this.configService.get<string>('apiUrl') || '';
       try {
-        const subscription = await this.razorpayInstance.subscriptions.create({
-          plan_id: razorpayPlanId,
-          total_count: dto.totalCount ? parseInt(dto.totalCount) : isAnnual ? 5 : 12,
-          notes: { userId },
+        const res = await this.cashfree.createSubscription({
+          subscription_id: subscriptionId,
+          plan_details: { plan_id: planId },
+          customer_details: {
+            customer_id: userId.replace(/-/g, ''),
+            customer_name: user?.name ?? undefined,
+            customer_email: user?.email ?? undefined,
+            customer_phone: (user?.phone ?? '').replace(/\D/g, '').slice(-10) || '9999999999',
+          },
+          subscription_meta: {
+            return_url: frontendUrl
+              ? `${frontendUrl}/checkout/return?subscriptionId=${subscriptionId}`
+              : undefined,
+            notify_url: apiUrl
+              ? `${apiUrl.replace(/\/$/, '')}/payments/webhook`
+              : undefined,
+          },
         });
-        subscriptionId = subscription.id;
-        shortUrl = subscription.short_url;
+        // Field names vary by Cashfree API surface/version — accept the known
+        // shapes for the authorization session/link the web SDK consumes.
+        authSessionId =
+          res?.subscription_session_id ??
+          res?.subscription_session ??
+          res?.authorization_details?.subscription_session_id ??
+          undefined;
+        authLink =
+          res?.authorization_details?.authorization_link ??
+          res?.auth_link ??
+          res?.subscription_url ??
+          undefined;
+        status = res?.subscription_status ?? status;
       } catch (error) {
-        this.logger.error('Razorpay subscription creation failed', error);
+        this.logger.error('Cashfree subscription creation failed', error as Error);
         throw new InternalServerErrorException('Failed to create subscription');
       }
-    } else {
-      subscriptionId = `sub_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
-    // Persist the subscription. We do NOT grant the PREMIUM role here in
-    // live mode: the Razorpay-hosted checkout (short_url) hasn't charged
-    // the customer yet, so granting Premium on creation would hand free
-    // access to anyone who opens — then abandons — the checkout. The role
-    // is granted from the subscription.activated / subscription.charged
-    // webhook once the first payment is captured.
-    //
-    // In mock mode (no Razorpay credentials) there is no webhook to fire,
-    // so we grant immediately to keep local development usable.
-    const endDate = new Date(Date.now() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
-    const grantImmediately = !this.razorpayInstance;
+    // We do NOT grant PREMIUM here in live mode: the mandate isn't authorised
+    // and no charge has settled yet, so granting on creation would hand free
+    // access to anyone who opens — then abandons — the authorization. Premium
+    // is granted from the SUBSCRIPTION_STATUS_CHANGE (ACTIVE) / charge webhook.
+    // Mock mode (no credentials) grants immediately to keep local dev usable.
+    const grantImmediately = !this.cashfree;
     await this.prisma.$transaction(async (tx: any) => {
       await tx.subscription.create({
         data: {
           userId,
           plan: isAnnual ? 'ANNUAL' : 'MONTHLY',
-          // Live subscriptions stay PENDING (non-entitling) until the first
-          // charge webhook flips them to ACTIVE; mock mode grants immediately.
           status: grantImmediately ? 'ACTIVE' : 'PENDING',
-          razorpaySubscriptionId: subscriptionId,
+          gatewaySubscriptionId: subscriptionId,
+          provider: 'cashfree',
           endDate,
         },
       });
-
       if (grantImmediately) {
-        await tx.user.update({
-          where: { id: userId },
-          data: { role: 'PREMIUM' },
-        });
+        await tx.user.update({ where: { id: userId }, data: { role: 'PREMIUM' } });
       }
     });
 
     return {
       id: subscriptionId,
-      planId: razorpayPlanId || (isAnnual ? 'ANNUAL' : 'MONTHLY'),
-      status: 'active',
+      planId: planId || (isAnnual ? 'ANNUAL' : 'MONTHLY'),
+      status,
       currentStart: new Date().toISOString(),
       currentEnd: endDate.toISOString(),
-      shortUrl,
+      authSessionId,
+      authLink,
     };
   }
 
   async handleWebhook(
     payload: Record<string, any>,
     signatureHeader?: string,
+    timestampHeader?: string,
     rawBody?: Buffer,
   ): Promise<{ received: boolean }> {
-    // Signature verification — fail-CLOSED when the secret is missing. A
-    // webhook endpoint with no signature check is a public credit-grant API;
-    // refuse to run without configuration.
-    //
-    // Razorpay webhooks are signed with the *webhook* secret (configured on
-    // the dashboard webhook), which is a DIFFERENT value from the API
-    // key-secret used for the client-side `verifyPayment` checkout
-    // signature. We do NOT fall back to `keySecret` here: that fallback
-    // silently breaks every webhook on a deploy that only set
-    // RAZORPAY_KEY_SECRET, and conflates two unrelated secrets.
-    const webhookSecret = this.configService.get<string>('razorpay.webhookSecret');
-    if (!webhookSecret) {
-      this.logger.error('handleWebhook: RAZORPAY_WEBHOOK_SECRET not configured — refusing to process');
+    // Fail-CLOSED when the secret is missing. A webhook endpoint with no
+    // signature check is a public credit-grant API; refuse to run unconfigured.
+    const secret = this.webhookSecret();
+    if (!secret) {
+      this.logger.error('handleWebhook: Cashfree secret not configured — refusing to process');
       throw new InternalServerErrorException('Webhook processing is not configured');
     }
     if (!signatureHeader) {
       this.logger.warn('Webhook received without signature header - rejecting');
       throw new BadRequestException('Missing webhook signature');
     }
+    if (!timestampHeader) {
+      this.logger.warn('Webhook received without timestamp header - rejecting');
+      throw new BadRequestException('Missing webhook timestamp');
+    }
 
-    // The signature must be computed over the EXACT bytes Razorpay sent.
-    // `req.rawBody` (enabled via `rawBody: true` in main.ts) preserves them;
-    // JSON.stringify(parsedBody) does NOT reproduce key order/whitespace and
-    // would fail verification for every legitimate webhook. In production we
-    // therefore REQUIRE the raw buffer; outside production we fall back to a
-    // canonical re-serialization so unit tests (which pass a parsed payload)
-    // keep working.
+    // Replay guard: the timestamp is part of the signed data, so a captured
+    // delivery replayed later is rejected once it falls outside the window.
+    const tolerance =
+      this.configService.get<number>('cashfree.webhookToleranceSeconds') ?? 300;
+    const ts = Number(timestampHeader);
+    if (!Number.isFinite(ts)) {
+      throw new BadRequestException('Invalid webhook timestamp');
+    }
+    const skew = Math.abs(Math.floor(Date.now() / 1000) - ts);
+    if (skew > tolerance) {
+      this.logger.warn(`Webhook timestamp outside tolerance (skew=${skew}s) - rejecting`);
+      throw new BadRequestException('Webhook timestamp outside allowed window');
+    }
+
+    // The signature must be computed over the EXACT bytes Cashfree sent.
+    // `req.rawBody` (enabled via `rawBody: true` in main.ts) preserves them; a
+    // re-serialization of the parsed JSON does not. In production we REQUIRE
+    // the raw buffer; outside production we fall back to a canonical
+    // re-serialization so unit tests (which pass a parsed payload) keep working.
     let bodyBuf: Buffer;
     if (rawBody && rawBody.length > 0) {
       bodyBuf = rawBody;
@@ -524,206 +599,242 @@ export class PaymentService {
       bodyBuf = Buffer.from(JSON.stringify(payload));
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(bodyBuf)
-      .digest('hex');
-
-    if (!safeSignatureEqual(expectedSignature, signatureHeader)) {
+    if (!verifyCashfreeSignature(secret, timestampHeader, bodyBuf, signatureHeader)) {
       this.logger.warn('Webhook signature verification failed');
       throw new BadRequestException('Invalid webhook signature');
     }
 
-    this.logger.log(`Webhook received: ${payload?.event || 'unknown event'}`);
-
-    const event = payload?.event;
-    const paymentEntity = payload?.payload?.payment?.entity;
+    const event = String(payload?.type ?? 'unknown');
+    this.logger.log(`Webhook received: ${event}`);
+    const data = payload?.data ?? {};
 
     try {
       switch (event) {
-        case 'payment.captured':
-          if (paymentEntity?.order_id) {
-            await this.prisma.$transaction(async (tx: any) => {
-              // Claim the payment atomically: updateMany with the
-              // status guard in WHERE. Without this, a concurrent
-              // client-side verify + webhook can both pass the
-              // status check and double-grant credits (same race as
-              // verifyPayment before the fix).
-              const { count } = await tx.payment.updateMany({
-                where: {
-                  razorpayOrderId: paymentEntity.order_id,
-                  status: { not: 'SUCCESS' },
-                },
-                data: { status: 'SUCCESS', razorpayPaymentId: paymentEntity.id },
-              });
-              if (count === 0) return; // lost the race or not our order
-              const payment = await tx.payment.findFirstOrThrow({
-                where: { razorpayOrderId: paymentEntity.order_id },
-                select: { id: true, userId: true, amount: true, metadata: true },
-              });
-              const entType = this.entitlementTypeFromMetadata(payment.metadata);
-              if (entType) {
-                // One-time pay-to-unlock: grant an entitlement (idempotent
-                // on the unique paymentId) instead of crediting the wallet.
-                await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
-                return;
-              }
-              const creditsToAdd = this.creditsForPayment(payment);
-              await tx.user.update({
-                where: { id: payment.userId },
-                data: { credits: { increment: creditsToAdd } },
-              });
-              await tx.creditTransaction.create({
-                data: {
-                  userId: payment.userId,
-                  amount: creditsToAdd,
-                  type: 'PURCHASE',
-                  description: `Webhook: purchased ${creditsToAdd} credits`,
-                },
-              });
-            });
+        case 'PAYMENT_SUCCESS_WEBHOOK':
+          await this.handlePaymentSuccess(data);
+          break;
+        case 'PAYMENT_FAILED_WEBHOOK':
+        case 'PAYMENT_USER_DROPPED_WEBHOOK':
+          await this.handlePaymentFailed(data);
+          break;
+        case 'REFUND_STATUS_WEBHOOK':
+          await this.handleRefund(data);
+          break;
+        case 'SUBSCRIPTION_STATUS_CHANGE':
+          await this.handleSubscriptionStatusChange(data);
+          break;
+        default:
+          // Subscription auth/charge events grant Premium on a successful
+          // payment regardless of the exact event-type string Cashfree uses
+          // (the names differ across API surfaces). Anything else is a no-op.
+          if (event.startsWith('SUBSCRIPTION')) {
+            await this.handleSubscriptionCharge(data);
           }
           break;
-        case 'payment.failed':
-          if (paymentEntity?.order_id) {
-            // Guard against out-of-order / duplicate delivery flipping an
-            // already-settled payment to FAILED (which would corrupt the
-            // ledger and orphan a granted entitlement). Only still-pending
-            // rows may transition to FAILED.
-            await this.prisma.payment.updateMany({
-              where: {
-                razorpayOrderId: paymentEntity.order_id,
-                status: { notIn: ['SUCCESS', 'REFUNDED'] },
-              },
-              data: { status: 'FAILED' },
-            });
-          }
-          break;
-        case 'subscription.activated':
-        case 'subscription.charged': {
-          // First (and recurring) successful charge. THIS is where Premium
-          // is granted — not at subscription creation — so an authorised
-          // payment is what unlocks access. Idempotent: re-grants the role
-          // on every renewal charge, which is a no-op if already PREMIUM,
-          // and rolls the local endDate forward to the new period end.
-          const subEntity = payload?.payload?.subscription?.entity;
-          if (subEntity?.id) {
-            const currentEnd =
-              typeof subEntity.current_end === 'number'
-                ? new Date(subEntity.current_end * 1000)
-                : null;
-            await this.prisma.$transaction(async (tx: any) => {
-              const { count } = await tx.subscription.updateMany({
-                where: { razorpaySubscriptionId: subEntity.id },
-                data: { status: 'ACTIVE', ...(currentEnd ? { endDate: currentEnd } : {}) },
-              });
-              if (count === 0) return; // not one of our subscriptions
-              const sub = await tx.subscription.findFirst({
-                where: { razorpaySubscriptionId: subEntity.id },
-                select: { userId: true },
-              });
-              if (sub) {
-                await tx.user.update({
-                  where: { id: sub.userId },
-                  data: { role: 'PREMIUM' },
-                });
-              }
-            });
-          }
-          break;
-        }
-        case 'subscription.cancelled':
-        case 'subscription.halted':
-        case 'subscription.completed': {
-          // Terminal states: cancelled by the user, halted after repeated
-          // failed renewal charges, or completed (total_count reached). In
-          // every case the subscription no longer entitles the user to
-          // Premium, so we mark it terminal AND revoke the role — previously
-          // only the status was updated, which left lapsed/cancelled
-          // subscribers with Premium access indefinitely.
-          const subEntity = payload?.payload?.subscription?.entity;
-          if (subEntity?.id) {
-            const newStatus = event === 'subscription.cancelled' ? 'CANCELLED' : 'EXPIRED';
-            await this.prisma.$transaction(async (tx: any) => {
-              const { count } = await tx.subscription.updateMany({
-                where: { razorpaySubscriptionId: subEntity.id },
-                data: { status: newStatus },
-              });
-              if (count === 0) return; // not one of our subscriptions
-              const sub = await tx.subscription.findFirst({
-                where: { razorpaySubscriptionId: subEntity.id },
-                select: { userId: true },
-              });
-              if (sub) await this.revokePremiumIfNoActiveSub(tx, sub.userId);
-            });
-          }
-          break;
-        }
-        case 'refund.created':
-        case 'refund.processed': {
-          // Razorpay refunded a captured payment (full or partial). Mark the
-          // payment REFUNDED and, for credit purchases, claw back the granted
-          // credits so a refunded user can't keep spending what they were
-          // reimbursed for. We clamp the deduction at the current balance so
-          // the wallet never goes negative (the user may have already spent
-          // some), and log a negative-amount PURCHASE transaction for the
-          // audit trail — CreditTransactionType has no dedicated REFUND value,
-          // so a signed PURCHASE keeps the ledger balanced without a schema
-          // migration. Idempotent: the status guard means a redelivered
-          // refund webhook claims nothing and reverses no further credits.
-          const refund = payload?.payload?.refund?.entity;
-          if (refund?.payment_id) {
-            await this.prisma.$transaction(async (tx: any) => {
-              const { count } = await tx.payment.updateMany({
-                where: { razorpayPaymentId: refund.payment_id, status: 'SUCCESS' },
-                data: { status: 'REFUNDED' },
-              });
-              if (count === 0) return; // already refunded, or not our payment
-              const payment = await tx.payment.findFirst({
-                where: { razorpayPaymentId: refund.payment_id },
-                select: { id: true, userId: true, amount: true, metadata: true, type: true },
-              });
-              if (!payment) return;
-              // One-time pay-to-unlock (report/palmistry) refunds: void the
-              // granted entitlement so the refunded user can't still redeem
-              // the unlock. (Previously only CREDITS refunds were reversed,
-              // leaving a buy→refund→keep-the-report revenue leak.)
-              if (payment.type !== 'CREDITS') {
-                await this.featureAccess.voidEntitlementByPayment(payment.id, tx);
-                return;
-              }
-              const granted = this.creditsForPayment(payment);
-              if (granted <= 0) return;
-              const user = await tx.user.findUnique({
-                where: { id: payment.userId },
-                select: { credits: true },
-              });
-              const deduct = Math.min(granted, user?.credits ?? 0);
-              if (deduct > 0) {
-                await tx.user.update({
-                  where: { id: payment.userId },
-                  data: { credits: { decrement: deduct } },
-                });
-              }
-              await tx.creditTransaction.create({
-                data: {
-                  userId: payment.userId,
-                  amount: -deduct,
-                  type: 'PURCHASE',
-                  description: `Refund: reversed ${deduct} credits (payment ${refund.payment_id})`,
-                },
-              });
-            });
-          }
-          break;
-        }
       }
     } catch (error) {
-      this.logger.error(`Webhook processing failed for event ${event}`, error);
+      this.logger.error(`Webhook processing failed for event ${event}`, error as Error);
       throw new InternalServerErrorException('Webhook processing failed');
     }
 
     return { received: true };
+  }
+
+  // ── Webhook handlers ──────────────────────────────────────────────────────
+
+  private async handlePaymentSuccess(data: any): Promise<void> {
+    const orderId = data?.order?.order_id;
+    if (!orderId) return;
+    const cfPaymentId = data?.payment?.cf_payment_id;
+    const gatewayPaymentId = cfPaymentId != null ? `cf_${cfPaymentId}` : undefined;
+
+    await this.prisma.$transaction(async (tx: any) => {
+      // Claim atomically: updateMany with the status guard. Without this, a
+      // concurrent client-side verify + webhook can both pass and double-grant.
+      const { count } = await tx.payment.updateMany({
+        where: { gatewayOrderId: orderId, status: { not: 'SUCCESS' } },
+        data: { status: 'SUCCESS', ...(gatewayPaymentId ? { gatewayPaymentId } : {}) },
+      });
+      if (count === 0) return; // lost the race or not our order
+      const payment = await tx.payment.findFirstOrThrow({
+        where: { gatewayOrderId: orderId },
+        select: { id: true, userId: true, amount: true, metadata: true },
+      });
+      const entType = this.entitlementTypeFromMetadata(payment.metadata);
+      if (entType) {
+        await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
+        return;
+      }
+      const creditsToAdd = this.creditsForPayment(payment);
+      await tx.user.update({
+        where: { id: payment.userId },
+        data: { credits: { increment: creditsToAdd } },
+      });
+      await tx.creditTransaction.create({
+        data: {
+          userId: payment.userId,
+          amount: creditsToAdd,
+          type: 'PURCHASE',
+          description: `Webhook: purchased ${creditsToAdd} credits`,
+        },
+      });
+    });
+  }
+
+  private async handlePaymentFailed(data: any): Promise<void> {
+    const orderId = data?.order?.order_id;
+    if (!orderId) return;
+    // Only still-pending rows may transition to FAILED, so a duplicate/out-of-
+    // order delivery can't flip an already-settled payment (which would corrupt
+    // the ledger and orphan a granted entitlement).
+    await this.prisma.payment.updateMany({
+      where: { gatewayOrderId: orderId, status: { notIn: ['SUCCESS', 'REFUNDED'] } },
+      data: { status: 'FAILED' },
+    });
+  }
+
+  private async handleRefund(data: any): Promise<void> {
+    const refund = data?.refund ?? {};
+    if (String(refund.refund_status ?? '').toUpperCase() !== 'SUCCESS') return;
+    // Key on the order id (always present), not the payment id, so the
+    // clawback works even when only the webhook (not client verify) recorded
+    // the cf_payment_id.
+    const orderId = refund.order_id;
+    if (!orderId) return;
+
+    await this.prisma.$transaction(async (tx: any) => {
+      const { count } = await tx.payment.updateMany({
+        where: { gatewayOrderId: orderId, status: 'SUCCESS' },
+        data: { status: 'REFUNDED' },
+      });
+      if (count === 0) return; // already refunded, or not our payment
+      const payment = await tx.payment.findFirst({
+        where: { gatewayOrderId: orderId },
+        select: { id: true, userId: true, amount: true, metadata: true, type: true },
+      });
+      if (!payment) return;
+      // One-time pay-to-unlock refunds: void the entitlement so the refunded
+      // user can't still redeem the unlock.
+      if (payment.type !== 'CREDITS') {
+        await this.featureAccess.voidEntitlementByPayment(payment.id, tx);
+        return;
+      }
+      const granted = this.creditsForPayment(payment);
+      if (granted <= 0) return;
+      const user = await tx.user.findUnique({
+        where: { id: payment.userId },
+        select: { credits: true },
+      });
+      // Clamp at the current balance so the wallet never goes negative (the
+      // user may have already spent some of the refunded credits).
+      const deduct = Math.min(granted, user?.credits ?? 0);
+      if (deduct > 0) {
+        await tx.user.update({
+          where: { id: payment.userId },
+          data: { credits: { decrement: deduct } },
+        });
+      }
+      await tx.creditTransaction.create({
+        data: {
+          userId: payment.userId,
+          amount: -deduct,
+          type: 'PURCHASE',
+          description: `Refund: reversed ${deduct} credits (order ${orderId})`,
+        },
+      });
+    });
+  }
+
+  private async handleSubscriptionStatusChange(data: any): Promise<void> {
+    const subId = this.extractSubscriptionId(data);
+    if (!subId) return;
+    const status = String(
+      data?.subscription_status ?? data?.subscription?.subscription_status ?? '',
+    ).toUpperCase();
+
+    if (status === 'ACTIVE') {
+      const expiry = data?.subscription_expiry_time ?? data?.subscription?.subscription_expiry_time;
+      await this.activateSubscription(subId, parseDateOrNull(expiry));
+      return;
+    }
+
+    // Terminal / access-ending states: the subscription no longer entitles the
+    // user to Premium. CANCELLED is recorded as such; everything else maps to
+    // EXPIRED. We err toward NOT leaving lapsed/paused subscribers with access.
+    const terminal = ['CANCELLED', 'CUSTOMER CANCELLED', 'COMPLETED', 'EXPIRED', 'ON HOLD', 'PAUSED', 'CUSTOMER PAUSED'];
+    if (terminal.includes(status)) {
+      const newStatus = status.includes('CANCEL') ? 'CANCELLED' : 'EXPIRED';
+      await this.terminateSubscription(subId, newStatus);
+    }
+  }
+
+  private async handleSubscriptionCharge(data: any): Promise<void> {
+    const subId = this.extractSubscriptionId(data);
+    if (!subId) return;
+    const paymentStatus = String(
+      data?.payment_status ??
+        data?.cf_payment_status ??
+        data?.payment?.payment_status ??
+        '',
+    ).toUpperCase();
+    // A successful authorization or recurring charge confirms an authorised
+    // mandate — THIS is what unlocks Premium (idempotent on every renewal).
+    if (paymentStatus === 'SUCCESS') {
+      await this.activateSubscription(subId, null);
+    }
+  }
+
+  private extractSubscriptionId(data: any): string | null {
+    return (
+      data?.subscription_id ??
+      data?.subscription?.subscription_id ??
+      data?.subscription_details?.subscription_id ??
+      null
+    );
+  }
+
+  /** Mark a subscription ACTIVE, grant PREMIUM, and roll the local endDate
+   *  forward. Idempotent — re-granting the role on each renewal is a no-op if
+   *  already PREMIUM. Keyed on our merchant subscription_id. */
+  private async activateSubscription(subId: string, endDate: Date | null): Promise<void> {
+    await this.prisma.$transaction(async (tx: any) => {
+      const { count } = await tx.subscription.updateMany({
+        where: { gatewaySubscriptionId: subId },
+        data: { status: 'ACTIVE', ...(endDate ? { endDate } : {}) },
+      });
+      if (count === 0) return; // not one of our subscriptions
+      const sub = await tx.subscription.findFirst({
+        where: { gatewaySubscriptionId: subId },
+        select: { userId: true, plan: true, endDate: true },
+      });
+      if (!sub) return;
+      // If Cashfree didn't give us an expiry, roll the period forward from now.
+      if (!endDate) {
+        const days = sub.plan === 'ANNUAL' ? 365 : 30;
+        await tx.subscription.updateMany({
+          where: { gatewaySubscriptionId: subId },
+          data: { endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000) },
+        });
+      }
+      await tx.user.update({ where: { id: sub.userId }, data: { role: 'PREMIUM' } });
+    });
+  }
+
+  /** Mark a subscription terminal and revoke PREMIUM unless the user holds
+   *  another active subscription. */
+  private async terminateSubscription(subId: string, newStatus: string): Promise<void> {
+    await this.prisma.$transaction(async (tx: any) => {
+      const { count } = await tx.subscription.updateMany({
+        where: { gatewaySubscriptionId: subId },
+        data: { status: newStatus },
+      });
+      if (count === 0) return;
+      const sub = await tx.subscription.findFirst({
+        where: { gatewaySubscriptionId: subId },
+        select: { userId: true },
+      });
+      if (sub) await this.revokePremiumIfNoActiveSub(tx, sub.userId);
+    });
   }
 
   async getPaymentHistory(userId: string): Promise<PaymentHistoryItem[]> {
@@ -735,7 +846,7 @@ export class PaymentService {
 
     return payments.map((p: any) => ({
       id: p.id,
-      orderId: p.razorpayOrderId,
+      orderId: p.gatewayOrderId,
       amount: Number(p.amount),
       currency: p.currency,
       status: p.status,
@@ -746,10 +857,14 @@ export class PaymentService {
 
   async getPricingConfig(): Promise<Record<string, string>> {
     // Pull every pricing.* key plus the monetization feature flags and the
-    // social-proof seed in one round trip, so the public web surface can
-    // read prices, mode flags, and the report counter from this single
-    // endpoint without auth.
-    const featureKeys = ['feature.subscriptions_enabled', 'feature.pricing_page_enabled', 'feature.free_mode'];
+    // social-proof seed in one round trip, so the public web surface can read
+    // prices, mode flags, and the report counter from this single endpoint
+    // without auth.
+    const featureKeys = [
+      'feature.subscriptions_enabled',
+      'feature.pricing_page_enabled',
+      'feature.free_mode',
+    ];
     const socialKeys = ['social.report_count_base'];
     const rows = await this.prisma.siteSetting.findMany({
       where: {
@@ -764,16 +879,13 @@ export class PaymentService {
       result[row.key] = row.value;
     }
 
-    // Sensible defaults so the client always has values even before an
-    // operator has saved anything in the admin pricing tab.
     if (result['feature.subscriptions_enabled'] === undefined) result['feature.subscriptions_enabled'] = 'false';
     if (result['feature.pricing_page_enabled'] === undefined) result['feature.pricing_page_enabled'] = 'false';
     if (result['feature.free_mode'] === undefined) result['feature.free_mode'] = 'false';
     if (result['pricing.report.price'] === undefined) result['pricing.report.price'] = String(DEFAULT_REPORT_PRICE_INR);
     if (result['pricing.palmistry.price'] === undefined) result['pricing.palmistry.price'] = String(DEFAULT_PALMISTRY_PRICE_INR);
 
-    // Social proof: seed base + real successful report purchases. Rises by
-    // one on every paid report so the number is "fake but moving".
+    // Social proof: seed base + real successful report purchases.
     const base = parseInt(result['social.report_count_base'] ?? '', 10);
     const seed = Number.isFinite(base) && base > 0 ? base : 41345;
     const sold = await this.prisma.payment.count({
@@ -786,9 +898,8 @@ export class PaymentService {
 
   /**
    * Credits to grant for a completed payment. Prefers the `credits` value
-   * captured in the payment metadata at order-creation time (the
-   * authoritative pack definition), so the user receives exactly what was
-   * advertised. Falls back to the amount-based heuristic for legacy
+   * captured in the payment metadata at order-creation time (the authoritative
+   * pack definition). Falls back to the amount-based heuristic for legacy
    * payments created before packs stored their credit count.
    */
   private creditsForPayment(payment: { amount: unknown; metadata?: unknown }): number {
@@ -801,17 +912,16 @@ export class PaymentService {
   }
 
   /**
-   * Revoke Premium when a subscription ends, but only if the user has no
-   * OTHER still-active subscription, and only for a currently-PREMIUM user
-   * (the `role: 'PREMIUM'` guard in updateMany leaves ADMIN accounts and
-   * already-downgraded users untouched). Runs inside the caller's
-   * transaction so the status change and the downgrade commit atomically.
+   * Revoke Premium when a subscription ends, but only if the user has no OTHER
+   * still-active subscription, and only for a currently-PREMIUM user (the
+   * `role: 'PREMIUM'` guard leaves ADMIN accounts and already-downgraded users
+   * untouched). Runs inside the caller's transaction.
    */
   private async revokePremiumIfNoActiveSub(tx: any, userId: string): Promise<void> {
     const activeCount = await tx.subscription.count({
       where: { userId, status: 'ACTIVE' },
     });
-    if (activeCount > 0) return; // another active subscription still entitles them
+    if (activeCount > 0) return;
     await tx.user.updateMany({
       where: { id: userId, role: 'PREMIUM' },
       data: { role: 'USER' },
@@ -824,4 +934,11 @@ export class PaymentService {
     if (amountINR >= 99) return 10;
     return Math.max(1, Math.floor(amountINR / 10));
   }
+}
+
+/** Parse a Cashfree date/expiry value into a Date, or null if absent/invalid. */
+function parseDateOrNull(value: unknown): Date | null {
+  if (!value) return null;
+  const d = new Date(value as string);
+  return Number.isNaN(d.getTime()) ? null : d;
 }

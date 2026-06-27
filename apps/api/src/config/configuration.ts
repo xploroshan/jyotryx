@@ -41,6 +41,11 @@ function parseIntEnv(key: string, fallback: number): number {
 export default () => ({
   port: parseIntEnv('PORT', 4000),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  // Public, internet-reachable base URL of THIS API (including the `/api`
+  // prefix), used to build the Cashfree `notify_url` webhook target. Must be
+  // HTTPS in production. When unset we omit the per-order notify_url and rely
+  // on the webhook configured globally in the Cashfree dashboard.
+  apiUrl: process.env.API_PUBLIC_URL || process.env.PUBLIC_API_URL || '',
 
   database: {
     url: requireInProduction('DATABASE_URL', 'postgresql://localhost:5432/myastro360'),
@@ -58,15 +63,27 @@ export default () => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
 
-  razorpay: {
-    keyId: process.env.RAZORPAY_KEY_ID || '',
-    keySecret: process.env.RAZORPAY_KEY_SECRET || '',
-    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
-    // Razorpay subscription plan IDs (created once in the Razorpay
-    // dashboard). The web /pricing page sends a logical plan
-    // (MONTHLY | ANNUAL); the service maps it to the real plan_id here.
-    planMonthly: process.env.RAZORPAY_PLAN_MONTHLY || '',
-    planAnnual: process.env.RAZORPAY_PLAN_ANNUAL || '',
+  cashfree: {
+    clientId: process.env.CASHFREE_CLIENT_ID || '',
+    clientSecret: process.env.CASHFREE_CLIENT_SECRET || '',
+    // Cashfree signs webhooks with the client secret by default. A separate
+    // dashboard-configured webhook secret can be supplied here; the service
+    // falls back to `clientSecret` when this is empty.
+    webhookSecret: process.env.CASHFREE_WEBHOOK_SECRET || '',
+    // 'sandbox' (default) or 'production'. Drives the API base URL and is the
+    // only Cashfree value the web client is told (NEXT_PUBLIC_CASHFREE_MODE).
+    mode: process.env.CASHFREE_ENV || 'sandbox',
+    // Pin the API contract version explicitly — Cashfree changes payload
+    // shapes across versions, so we never want the "latest" implicit default.
+    apiVersion: process.env.CASHFREE_API_VERSION || '2025-01-01',
+    // Cashfree subscription plan IDs (created once in the Cashfree dashboard).
+    // The web /pricing page sends a logical plan (MONTHLY | ANNUAL); the
+    // service maps it to the real plan_id here.
+    planMonthly: process.env.CASHFREE_PLAN_MONTHLY || '',
+    planAnnual: process.env.CASHFREE_PLAN_ANNUAL || '',
+    // Max allowed clock skew (seconds) between the signed webhook timestamp
+    // and now, before the delivery is rejected as a possible replay.
+    webhookToleranceSeconds: parseIntEnv('CASHFREE_WEBHOOK_TOLERANCE_SECONDS', 300),
   },
 
   openai: {

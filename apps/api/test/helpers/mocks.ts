@@ -398,9 +398,12 @@ export const mockConfigService = (overrides: Record<string, any> = {}) => ({
       'jwt.refreshExpiresIn': '30d',
       'otp.length': 6,
       'otp.expiresInMinutes': 5,
-      'razorpay.keyId': 'test-key',
-      'razorpay.keySecret': 'test-secret',
-      'razorpay.webhookSecret': 'test-webhook-secret',
+      'cashfree.clientId': 'test-client',
+      'cashfree.clientSecret': 'test-cashfree-secret',
+      'cashfree.webhookSecret': 'test-cashfree-secret',
+      'cashfree.mode': 'sandbox',
+      'cashfree.apiVersion': '2025-01-01',
+      'cashfree.webhookToleranceSeconds': 300,
       ...overrides,
     };
     return config[key] ?? defaultValue;

@@ -8,6 +8,7 @@ import { useTranslation } from "@/i18n";
 import { Stagger } from "@/components/ui/PageTransition";
 import { track } from "@/lib/analytics";
 import { jsonLdHtml } from "@/lib/seo/json-ld";
+import { loadCashfree } from "@/lib/cashfree";
 
 type Plan = {
   id: string;
@@ -136,8 +137,29 @@ export default function PricingPage() {
     setLoading(planId); setError("");
     track("plan_selected", { plan: planId });
     try {
-      const res = await api.post<{ subscriptionId: string; shortUrl?: string }>("/payments/subscribe", { plan: planId === "monthly" ? "MONTHLY" : "ANNUAL" }, { token: accessToken! });
-      if (res.shortUrl) window.location.href = res.shortUrl;
+      const res = await api.post<{ id: string; authSessionId?: string; authLink?: string }>(
+        "/payments/subscribe",
+        { plan: planId === "monthly" ? "MONTHLY" : "ANNUAL" },
+        { token: accessToken! },
+      );
+      // Open the Cashfree mandate authorization (UPI AutoPay / eNACH / card).
+      // Premium is granted by the subscription webhook once the mandate is
+      // authorised and the first charge settles — not here.
+      if (res.authSessionId) {
+        const cashfree = await loadCashfree();
+        if (cashfree?.subscriptionsCheckout) {
+          await cashfree.subscriptionsCheckout({
+            subscriptionSessionId: res.authSessionId,
+            redirectTarget: "_self",
+          });
+          return;
+        }
+      }
+      if (res.authLink) {
+        window.location.href = res.authLink;
+        return;
+      }
+      setError(t.pricing.subscribeFailed);
     } catch (err: any) { setError(err.message || t.pricing.subscribeFailed); }
     finally { setLoading(null); }
   };

@@ -384,15 +384,12 @@ describe('E2E: Payment Flow', () => {
   beforeEach(async () => {
     prisma = mockPrismaService();
     prisma.payment = {
-      create: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'u-1', amount: 100, type: 'CREDITS', status: 'SUCCESS', metadata: {} }),
+      create: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'u-1', amount: 99, type: 'CREDITS', status: 'PENDING', metadata: {} }),
       findFirst: jest.fn().mockResolvedValue(null),
-      findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'u-1', amount: 100, type: 'CREDITS', status: 'SUCCESS', metadata: {}, razorpayOrderId: 'order-1' }),
+      findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'pay-1', userId: 'u-1', amount: 99, type: 'CREDITS', status: 'SUCCESS', metadata: { credits: 10 }, gatewayOrderId: 'cf_order_1' }),
       findUnique: jest.fn().mockResolvedValue(null),
       findMany: jest.fn().mockResolvedValue([]),
       update: jest.fn().mockResolvedValue({ id: 'pay-1' }),
-      // Phase 1 atomic-claim updateMany must return { count } — bare
-      // jest.fn() resolves to undefined which blows up destructuring
-      // in payment.service.verifyPayment.
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     prisma.subscription = {
@@ -402,21 +399,18 @@ describe('E2E: Payment Flow', () => {
     prisma.siteSetting = {
       findMany: jest.fn().mockResolvedValue([]),
     };
-    // verifyPayment claims + grants inside one $transaction; pass a tx with the
-    // payment claim methods + credit-grant targets.
     prisma.$transaction = jest.fn(async (fn: any) => fn({
       payment: prisma.payment,
       user: { update: jest.fn() },
       creditTransaction: { create: jest.fn() },
     }));
 
-    // Use empty razorpay keyId/keySecret so PaymentService runs in mock mode,
-    // but keep webhookSecret for signature verification
+    // Empty Cashfree creds → PaymentService runs in mock mode (no network).
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: prisma },
-        { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
+        { provide: ConfigService, useValue: mockConfigService({ 'cashfree.clientId': '', 'cashfree.clientSecret': '' }) },
         { provide: UserService, useValue: mockUserService() },
         { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
@@ -426,39 +420,24 @@ describe('E2E: Payment Flow', () => {
   });
 
   it('should create order and verify payment end-to-end', async () => {
-    // Step 1: Create order (mock mode — no Razorpay instance)
+    // Step 1: Create order (mock mode — no Cashfree client). Amounts in rupees.
     const order = await paymentService.createOrder('test-uuid', {
-      amount: 9900,
+      amount: 99,
       productId: 'credits_10',
       currency: 'INR',
     });
 
-    expect(order.id).toMatch(/^order_mock_/);
-    expect(order.amount).toBe(9900);
+    expect(order.orderId).toMatch(/^cf_/);
+    expect(order.amount).toBe(99);
     expect(order.currency).toBe('INR');
     expect(prisma.payment.create).toHaveBeenCalled();
 
-    // Step 2: Verify payment
-    const webhookSecret = 'test-webhook-secret';
-    const orderId = order.id;
-    const paymentId = 'pay_test_123';
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(`${orderId}|${paymentId}`)
-      .digest('hex');
-
-    prisma.payment.findFirst.mockResolvedValue({
-      id: 'pay-1',
-      userId: 'test-uuid',
-      amount: 99,
-      status: 'PENDING',
-      razorpayOrderId: orderId,
-    });
+    // Step 2: Verify payment. In mock mode (non-production) the order is
+    // treated as PAID; the persisted payment is found for this user.
+    prisma.payment.findFirst.mockResolvedValue({ id: 'pay-1', amount: 99 });
 
     const verifyResult = await paymentService.verifyPayment('test-uuid', {
-      razorpayOrderId: orderId,
-      razorpayPaymentId: paymentId,
-      razorpaySignature: signature,
+      orderId: order.orderId,
     });
 
     expect(verifyResult.verified).toBe(true);
@@ -468,27 +447,17 @@ describe('E2E: Payment Flow', () => {
   it('should reject order with tampered amount', async () => {
     await expect(
       paymentService.createOrder('test-uuid', {
-        amount: 100, // should be 9900 for credits_10
+        amount: 1, // should be 99 (rupees) for credits_10
         productId: 'credits_10',
         currency: 'INR',
       }),
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should reject payment with invalid signature', async () => {
-    prisma.payment.findFirst.mockResolvedValue({
-      id: 'pay-1',
-      userId: 'test-uuid',
-      amount: 99,
-      status: 'PENDING',
-    });
-
+  it('should reject verification for an order not owned by the user', async () => {
+    prisma.payment.findFirst.mockResolvedValue(null);
     await expect(
-      paymentService.verifyPayment('test-uuid', {
-        razorpayOrderId: 'order_123',
-        razorpayPaymentId: 'pay_123',
-        razorpaySignature: 'invalid-signature',
-      }),
+      paymentService.verifyPayment('test-uuid', { orderId: 'cf_not_mine' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -496,7 +465,7 @@ describe('E2E: Payment Flow', () => {
     prisma.payment.findMany.mockResolvedValue([
       {
         id: 'pay-1',
-        razorpayOrderId: 'order_1',
+        gatewayOrderId: 'cf_order_1',
         amount: 99,
         currency: 'INR',
         status: 'SUCCESS',
@@ -508,6 +477,7 @@ describe('E2E: Payment Flow', () => {
     const history = await paymentService.getPaymentHistory('test-uuid');
     expect(history.length).toBe(1);
     expect(history[0].status).toBe('SUCCESS');
+    expect(history[0].orderId).toBe('cf_order_1');
   });
 });
 
@@ -783,42 +753,33 @@ describe('E2E: Webhook Processing', () => {
     paymentService = module.get<PaymentService>(PaymentService);
   });
 
-  it('should handle payment.captured webhook', async () => {
-    const webhookSecret = 'test-webhook-secret';
+  // Cashfree signs base64(HMAC-SHA256(secret, timestamp + rawBody)).
+  const CF_SECRET = 'test-cashfree-secret';
+  const cfSig = (ts: string, payload: unknown) =>
+    crypto.createHmac('sha256', CF_SECRET).update(ts).update(Buffer.from(JSON.stringify(payload))).digest('base64');
+  const freshTs = () => String(Math.floor(Date.now() / 1000));
+
+  it('should handle PAYMENT_SUCCESS_WEBHOOK', async () => {
     const payload = {
-      event: 'payment.captured',
-      payload: {
-        payment: {
-          entity: {
-            id: 'pay_webhook_1',
-            order_id: 'order_webhook_1',
-            amount: 9900,
-          },
-        },
+      type: 'PAYMENT_SUCCESS_WEBHOOK',
+      data: {
+        order: { order_id: 'cf_order_webhook_1' },
+        payment: { cf_payment_id: 77001, payment_status: 'SUCCESS' },
       },
     };
+    const ts = freshTs();
+    const signature = cfSig(ts, payload);
 
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
-
-    // Mock the transaction. payment.service.handleWebhook claims the
-    // payment via updateMany + findFirstOrThrow inside a $transaction
-    // (Phase 1 atomic-claim path), so both have to exist on the txPayment
-    // mock or the `{ count }` destructure blows up.
+    // handleWebhook claims the payment via updateMany + findFirstOrThrow
+    // inside a $transaction, so both must exist on the txPayment mock.
     prisma.$transaction.mockImplementation(async (fn: any) => {
       const txPayment = {
-        findFirst: jest.fn().mockResolvedValue({
+        findFirst: jest.fn(),
+        findFirstOrThrow: jest.fn().mockResolvedValue({
           id: 'db-pay-1',
           userId: 'test-uuid',
           amount: 99,
-          status: 'PENDING',
-          razorpayOrderId: 'order_webhook_1',
-        }),
-        findFirstOrThrow: jest.fn().mockResolvedValue({
-          userId: 'test-uuid',
-          amount: 99,
+          metadata: { credits: 10 },
         }),
         update: jest.fn(),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
@@ -830,27 +791,19 @@ describe('E2E: Webhook Processing', () => {
       });
     });
 
-    const result = await paymentService.handleWebhook(payload, signature);
+    const result = await paymentService.handleWebhook(payload, signature, ts);
     expect(result.received).toBe(true);
   });
 
-  it('should handle payment.failed webhook', async () => {
-    const webhookSecret = 'test-webhook-secret';
+  it('should handle PAYMENT_FAILED_WEBHOOK', async () => {
     const payload = {
-      event: 'payment.failed',
-      payload: {
-        payment: {
-          entity: { id: 'pay_fail_1', order_id: 'order_fail_1' },
-        },
-      },
+      type: 'PAYMENT_FAILED_WEBHOOK',
+      data: { order: { order_id: 'cf_order_fail_1' } },
     };
+    const ts = freshTs();
+    const signature = cfSig(ts, payload);
 
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
-
-    const result = await paymentService.handleWebhook(payload, signature);
+    const result = await paymentService.handleWebhook(payload, signature, ts);
     expect(result.received).toBe(true);
     expect(prisma.payment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -860,10 +813,9 @@ describe('E2E: Webhook Processing', () => {
   });
 
   it('should reject webhook with invalid signature', async () => {
-    const payload = { event: 'payment.captured', payload: {} };
-
+    const payload = { type: 'PAYMENT_SUCCESS_WEBHOOK', data: {} };
     await expect(
-      paymentService.handleWebhook(payload, 'bad-signature'),
+      paymentService.handleWebhook(payload, 'bad-signature', freshTs()),
     ).rejects.toThrow(BadRequestException);
   });
 });

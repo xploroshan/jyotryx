@@ -129,7 +129,8 @@ describe('Security: Payment Amount Validation', () => {
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: prisma },
-        { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
+        // Empty Cashfree creds → mock mode (no network call from createOrder).
+        { provide: ConfigService, useValue: mockConfigService({ 'cashfree.clientId': '', 'cashfree.clientSecret': '' }) },
         { provide: UserService, useValue: mockUserService() },
         { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
@@ -138,28 +139,29 @@ describe('Security: Payment Amount Validation', () => {
     paymentService = module.get<PaymentService>(PaymentService);
   });
 
+  // Cashfree amounts are in INR rupees (not paise): credits_10 = ₹99, etc.
   it('should accept correct price for credits_10', async () => {
     const order = await paymentService.createOrder('test-uuid', {
-      amount: 9900,
+      amount: 99,
       productId: 'credits_10',
     });
-    expect(order.amount).toBe(9900);
+    expect(order.amount).toBe(99);
   });
 
   it('should accept correct price for credits_50', async () => {
     const order = await paymentService.createOrder('test-uuid', {
-      amount: 39900,
+      amount: 399,
       productId: 'credits_50',
     });
-    expect(order.amount).toBe(39900);
+    expect(order.amount).toBe(399);
   });
 
   it('should accept correct price for credits_100', async () => {
     const order = await paymentService.createOrder('test-uuid', {
-      amount: 69900,
+      amount: 699,
       productId: 'credits_100',
     });
-    expect(order.amount).toBe(69900);
+    expect(order.amount).toBe(699);
   });
 
   it('should reject amount=1 for credits_10 (price manipulation)', async () => {
@@ -180,10 +182,10 @@ describe('Security: Payment Amount Validation', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should reject slightly off amount (99 instead of 9900 paise)', async () => {
+  it('should reject a paise-denominated amount (9900 instead of ₹99)', async () => {
     await expect(
       paymentService.createOrder('test-uuid', {
-        amount: 99,
+        amount: 9900,
         productId: 'credits_10',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -207,9 +209,9 @@ describe('Security: Payment Amount Validation', () => {
   });
 });
 
-// ─── Security: Payment Signature Verification ──────────────────────────────
+// ─── Security: Payment Verification (server-authoritative) ─────────────────
 
-describe('Security: Payment Signature Verification', () => {
+describe('Security: Payment Verification', () => {
   let paymentService: PaymentService;
   let prisma: any;
 
@@ -217,21 +219,13 @@ describe('Security: Payment Signature Verification', () => {
     prisma = mockPrismaService();
     prisma.payment = {
       create: jest.fn(),
-      findFirst: jest.fn().mockResolvedValue({
-        id: 'pay-1', userId: 'test-uuid', amount: 99, status: 'PENDING',
-      }),
-      findFirstOrThrow: jest.fn().mockResolvedValue({
-        userId: 'test-uuid', amount: 99,
-      }),
+      // The order belongs to this user and was created for ₹99.
+      findFirst: jest.fn().mockResolvedValue({ id: 'pay-1', amount: 99 }),
+      findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'pay-1', amount: 99, metadata: { credits: 10 } }),
       update: jest.fn(),
-      // Phase 1 atomic-claim path: verifyPayment does
-      // `const { count } = await prisma.payment.updateMany(...)` so
-      // the mock has to return the row-count shape.
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     };
     prisma.siteSetting = { findMany: jest.fn().mockResolvedValue([]) };
-    // verifyPayment now claims + grants inside one $transaction; pass a tx with
-    // the payment claim methods plus the credit-grant targets.
     prisma.$transaction = jest.fn(async (fn: any) => fn({
       payment: prisma.payment,
       user: { update: jest.fn() },
@@ -242,7 +236,7 @@ describe('Security: Payment Signature Verification', () => {
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: prisma },
-        { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
+        { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
@@ -251,70 +245,35 @@ describe('Security: Payment Signature Verification', () => {
     paymentService = module.get<PaymentService>(PaymentService);
   });
 
-  it('should verify with correct webhook secret', async () => {
-    const orderId = 'order_test_1';
-    const paymentId = 'pay_test_1';
-    const webhookSecret = 'test-webhook-secret';
-
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(`${orderId}|${paymentId}`)
-      .digest('hex');
-
-    const result = await paymentService.verifyPayment('test-uuid', {
-      razorpayOrderId: orderId,
-      razorpayPaymentId: paymentId,
-      razorpaySignature: signature,
-    });
-
+  it('verifies a PAID order whose settled amount matches', async () => {
+    (paymentService as any).cashfree = {
+      getOrder: jest.fn().mockResolvedValue({ order_status: 'PAID', order_amount: 99 }),
+    };
+    const result = await paymentService.verifyPayment('test-uuid', { orderId: 'cf_ok' });
     expect(result.verified).toBe(true);
   });
 
-  it('should reject signature made with wrong secret', async () => {
-    const orderId = 'order_test_2';
-    const paymentId = 'pay_test_2';
-
-    const wrongSignature = crypto
-      .createHmac('sha256', 'wrong-secret')
-      .update(`${orderId}|${paymentId}`)
-      .digest('hex');
-
+  it('rejects when Cashfree settled a different amount than persisted (tamper)', async () => {
+    (paymentService as any).cashfree = {
+      getOrder: jest.fn().mockResolvedValue({ order_status: 'PAID', order_amount: 1 }),
+    };
     await expect(
-      paymentService.verifyPayment('test-uuid', {
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        razorpaySignature: wrongSignature,
-      }),
+      paymentService.verifyPayment('test-uuid', { orderId: 'cf_tamper' }),
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should reject tampered order ID in signature', async () => {
-    const realOrderId = 'order_real';
-    const tamperedOrderId = 'order_tampered';
-    const paymentId = 'pay_test_3';
-    const webhookSecret = 'test-webhook-secret';
-
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(`${realOrderId}|${paymentId}`)
-      .digest('hex');
-
-    await expect(
-      paymentService.verifyPayment('test-uuid', {
-        razorpayOrderId: tamperedOrderId,
-        razorpayPaymentId: paymentId,
-        razorpaySignature: signature,
-      }),
-    ).rejects.toThrow(BadRequestException);
+  it('does not verify an order that is not PAID', async () => {
+    (paymentService as any).cashfree = {
+      getOrder: jest.fn().mockResolvedValue({ order_status: 'ACTIVE', order_amount: 99 }),
+    };
+    const result = await paymentService.verifyPayment('test-uuid', { orderId: 'cf_unpaid' });
+    expect(result.verified).toBe(false);
   });
 
-  it('should reject empty signature', async () => {
+  it('rejects an order that does not belong to the user', async () => {
+    prisma.payment.findFirst.mockResolvedValue(null);
     await expect(
-      paymentService.verifyPayment('test-uuid', {
-        razorpayOrderId: 'order_1',
-        razorpayPaymentId: 'pay_1',
-        razorpaySignature: '',
-      }),
+      paymentService.verifyPayment('test-uuid', { orderId: 'cf_not_mine' }),
     ).rejects.toThrow(BadRequestException);
   });
 });
@@ -442,7 +401,7 @@ describe('Security: Admin Settings Key Whitelist', () => {
       'admin.superUser',
       'database.connectionString',
       'jwt.secret',
-      'razorpay.keySecret',
+      'cashfree.clientSecret',
       'system.debug',
       'auth.disableAll',
       '__proto__.polluted',
@@ -923,7 +882,7 @@ describe('Security: Webhook Integrity', () => {
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: prisma },
-        { provide: ConfigService, useValue: mockConfigService({ 'razorpay.keyId': '', 'razorpay.keySecret': '' }) },
+        { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: mockUserService() },
         { provide: FeatureAccessService, useValue: mockFeatureAccessService() },
       ],
@@ -932,31 +891,38 @@ describe('Security: Webhook Integrity', () => {
     paymentService = module.get<PaymentService>(PaymentService);
   });
 
-  it('should reject webhook with tampered payload', async () => {
-    const webhookSecret = 'test-webhook-secret';
-    const originalPayload = { event: 'payment.captured', payload: { amount: 9900 } };
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(originalPayload))
-      .digest('hex');
+  // Cashfree signs base64(HMAC-SHA256(secret, timestamp + rawBody)).
+  const CF_SECRET = 'test-cashfree-secret';
+  const cfSig = (ts: string, payload: unknown) =>
+    crypto.createHmac('sha256', CF_SECRET).update(ts).update(Buffer.from(JSON.stringify(payload))).digest('base64');
+  const freshTs = () => String(Math.floor(Date.now() / 1000));
 
-    // Send tampered payload with original signature
-    const tamperedPayload = { event: 'payment.captured', payload: { amount: 100 } };
+  it('should reject a webhook whose signature is for a different (tampered) payload', async () => {
+    const ts = freshTs();
+    const original = { type: 'PAYMENT_SUCCESS_WEBHOOK', data: { order: { order_id: 'cf_a' } } };
+    const signature = cfSig(ts, original);
+    // Same signature, tampered body.
+    const tampered = { type: 'PAYMENT_SUCCESS_WEBHOOK', data: { order: { order_id: 'cf_ATTACKER' } } };
 
     await expect(
-      paymentService.handleWebhook(tamperedPayload, signature),
+      paymentService.handleWebhook(tampered, signature, ts),
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should accept webhook with valid signature', async () => {
-    const webhookSecret = 'test-webhook-secret';
-    const payload = { event: 'unknown_event', payload: {} };
-    const signature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
+  it('should reject a replayed webhook with a stale timestamp', async () => {
+    const staleTs = String(Math.floor(Date.now() / 1000) - 600);
+    const payload = { type: 'PAYMENT_SUCCESS_WEBHOOK', data: {} };
+    const signature = cfSig(staleTs, payload);
+    await expect(
+      paymentService.handleWebhook(payload, signature, staleTs),
+    ).rejects.toThrow(BadRequestException);
+  });
 
-    const result = await paymentService.handleWebhook(payload, signature);
+  it('should accept a webhook with a valid signature and fresh timestamp', async () => {
+    const ts = freshTs();
+    const payload = { type: 'UNKNOWN_EVENT', data: {} };
+    const signature = cfSig(ts, payload);
+    const result = await paymentService.handleWebhook(payload, signature, ts);
     expect(result.received).toBe(true);
   });
 });
