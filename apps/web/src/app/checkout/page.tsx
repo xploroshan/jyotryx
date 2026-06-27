@@ -7,31 +7,30 @@ import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import { track } from "@/lib/analytics";
+import { loadCashfree } from "@/lib/cashfree";
 
 /**
- * One-time Razorpay checkout for credit packs AND pay-to-unlock products
+ * One-time Cashfree checkout for credit packs AND pay-to-unlock products
  * (reports, palmistry).
  *
- * Flow (Razorpay "Orders" + client Checkout):
+ * Flow (Cashfree "Orders" + JS SDK v3):
  *   1. Read `?type=<credits|report|palmistry>&pack=<id>`.
  *        • credits   → pack = credit pack id (starter/popular/pro)
  *        • report    → pack = report type (LIFE/CAREER/MARRIAGE/…)
  *        • palmistry → pack ignored
- *   2. Fetch the authoritative price from /payments/pricing (the same
- *      SiteSettings the pricing page renders).
- *   3. POST /payments/create-order → Razorpay order_id.
- *   4. Open the Razorpay Checkout modal with that order.
- *   5. On success, POST /payments/verify (server checks the HMAC signature
- *      and grants credits OR a one-time entitlement exactly once).
+ *   2. Fetch the authoritative price from /payments/pricing (INR rupees).
+ *   3. POST /payments/create-order → { orderId, paymentSessionId }.
+ *   4. Open the Cashfree checkout with that payment_session_id.
+ *   5. On completion, POST /payments/verify { orderId } — the SERVER confirms
+ *      the order is PAID with Cashfree and grants credits OR a one-time
+ *      entitlement exactly once. No client-side signature is trusted.
  *   6. credits → reflect new balance and go to /chat. report/palmistry →
- *      bounce back to the feature page with `?unlocked=…` so it generates
- *      immediately.
+ *      bounce back to the feature page with `?unlocked=…`.
  *
- * Subscriptions are NOT handled here — those use Razorpay's hosted page
- * via a server-returned shortUrl from /pricing.
+ * Amounts are sent in INR rupees (Cashfree uses rupees, not paise).
+ * Subscriptions are NOT handled here — those use the Cashfree subscription
+ * authorization flow from /pricing.
  */
-
-const RAZORPAY_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
 const REPORT_TITLES: Record<string, string> = {
   LIFE: "Detailed Life Report",
@@ -42,62 +41,9 @@ const REPORT_TITLES: Record<string, string> = {
   PALM: "Palmistry Report",
 };
 
-interface RazorpayHandlerResponse {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}
-
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  order_id: string;
-  name: string;
-  description?: string;
-  image?: string;
-  prefill?: { name?: string; email?: string; contact?: string };
-  notes?: Record<string, string>;
-  theme?: { color?: string };
-  handler?: (response: RazorpayHandlerResponse) => void;
-  modal?: { ondismiss?: () => void };
-}
-
-interface RazorpayInstance {
-  open: () => void;
-  on: (event: string, cb: (response: unknown) => void) => void;
-}
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
-  }
-}
-
-/** Inject the Razorpay Checkout script once; resolve when it's ready. */
-function loadRazorpayScript(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined") return resolve(false);
-    if (window.Razorpay) return resolve(true);
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${RAZORPAY_SCRIPT_SRC}"]`,
-    );
-    if (existing) {
-      existing.addEventListener("load", () => resolve(true), { once: true });
-      existing.addEventListener("error", () => resolve(false), { once: true });
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = RAZORPAY_SCRIPT_SRC;
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
-
-interface RazorpayOrder {
-  id: string;
+interface CreateOrderResponse {
+  orderId: string;
+  paymentSessionId: string | null;
   amount: number;
   currency: string;
 }
@@ -171,8 +117,6 @@ function CheckoutInner() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ credits: number | null } | null>(null);
 
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-
   const fmt = useMemo(
     () =>
       (n: number) =>
@@ -234,24 +178,19 @@ function CheckoutInner() {
     if (product.kind === "credits" && credits === null) return;
     setError("");
 
-    if (!keyId) {
-      setError(t.common.error);
-      return;
-    }
-
     setProcessing(true);
     try {
-      const ready = await loadRazorpayScript();
-      if (!ready || !window.Razorpay) {
+      const cashfree = await loadCashfree();
+      if (!cashfree) {
         setError(t.common.error);
         setProcessing(false);
         return;
       }
 
-      const order = await api.post<RazorpayOrder>(
+      const order = await api.post<CreateOrderResponse>(
         "/payments/create-order",
         {
-          amount: price * 100, // paise
+          amount: price, // INR rupees (Cashfree uses rupees, not paise)
           currency: "INR",
           productId: product.productId,
           description: product.title,
@@ -259,59 +198,56 @@ function CheckoutInner() {
         { token: accessToken! },
       );
 
-      track("checkout_started", { product: product.productId, kind: product.kind, amount: price });
-      const rzp = new window.Razorpay({
-        key: keyId,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.id,
-        name: "MyAstro360",
-        description: product.title,
-        prefill: {
-          name: user?.name ?? undefined,
-          email: user?.email ?? undefined,
-          contact: user?.phone ?? undefined,
-        },
-        theme: { color: "#b45309" },
-        handler: async (response: RazorpayHandlerResponse) => {
-          try {
-            const result = await api.post<VerifyResult>(
-              "/payments/verify",
-              {
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-              },
-              { token: accessToken! },
-            );
-            if (result.verified) {
-              track("purchase", { product: product.productId, kind: product.kind, amount: price });
-              if (product.kind === "credits") {
-                const added = result.creditsAdded ?? credits ?? 0;
-                if (user) updateCredits(user.credits + added);
-                setSuccess({ credits: added });
-              } else {
-                setSuccess({ credits: null });
-              }
-              setTimeout(() => router.push(product.successRedirect), 1600);
-            } else {
-              setError(t.common.error);
-            }
-          } catch {
-            // Payment may still have succeeded server-side via webhook;
-            // surface a soft error and let the user check their balance.
-            setError(t.common.error);
-          } finally {
-            setProcessing(false);
-          }
-        },
-        modal: { ondismiss: () => setProcessing(false) },
-      });
-      rzp.on("payment.failed", () => {
+      if (!order.paymentSessionId) {
         setError(t.common.error);
         setProcessing(false);
+        return;
+      }
+
+      track("checkout_started", { product: product.productId, kind: product.kind, amount: price });
+
+      const result = await cashfree.checkout({
+        paymentSessionId: order.paymentSessionId,
+        redirectTarget: "_modal",
       });
-      rzp.open();
+
+      // User dismissed the modal or a client-side error occurred — surface it
+      // and let them retry. (A genuine payment is confirmed server-side below.)
+      if (result?.error) {
+        setError(t.common.error);
+        setProcessing(false);
+        return;
+      }
+
+      // Server-authoritative confirmation: the backend re-checks the order
+      // status with Cashfree and grants exactly once.
+      try {
+        const verify = await api.post<VerifyResult>(
+          "/payments/verify",
+          { orderId: order.orderId },
+          { token: accessToken! },
+        );
+        if (verify.verified) {
+          track("purchase", { product: product.productId, kind: product.kind, amount: price });
+          if (product.kind === "credits") {
+            const added = verify.creditsAdded ?? credits ?? 0;
+            if (user) updateCredits(user.credits + added);
+            setSuccess({ credits: added });
+          } else {
+            setSuccess({ credits: null });
+          }
+          setTimeout(() => router.push(product.successRedirect), 1600);
+        } else {
+          // Not settled yet (or pending) — the webhook may still grant it.
+          setError(t.common.error);
+        }
+      } catch {
+        // Payment may still have succeeded server-side via webhook; surface a
+        // soft error and let the user check their balance.
+        setError(t.common.error);
+      } finally {
+        setProcessing(false);
+      }
     } catch {
       setError(t.common.error);
       setProcessing(false);

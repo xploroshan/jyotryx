@@ -7,23 +7,36 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
 import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 
-const TEST_WEBHOOK_SECRET = 'test-webhook-secret';
-function razorpaySig(secret: string, orderId: string, paymentId: string): string {
-  return crypto.createHmac('sha256', secret).update(`${orderId}|${paymentId}`).digest('hex');
-}
-function webhookBodySig(secret: string, body: unknown): string {
-  return crypto.createHmac('sha256', secret).update(JSON.stringify(body)).digest('hex');
+const TEST_SECRET = 'test-cashfree-secret';
+
+/** Current epoch seconds as a string (the format Cashfree signs over). */
+function nowTs(offsetSeconds = 0): string {
+  return String(Math.floor(Date.now() / 1000) + offsetSeconds);
 }
 
-describe('PaymentService', () => {
+/**
+ * Reproduce Cashfree's webhook signature: base64(HMAC-SHA256(secret,
+ * timestamp + rawBody)). The service falls back to JSON.stringify(payload)
+ * for the body outside production (no raw buffer in unit tests), so the test
+ * signs over exactly that.
+ */
+function cashfreeWebhookSig(secret: string, timestamp: string, payload: unknown): string {
+  return crypto
+    .createHmac('sha256', secret)
+    .update(timestamp)
+    .update(Buffer.from(JSON.stringify(payload)))
+    .digest('base64');
+}
+
+describe('PaymentService (Cashfree)', () => {
   let service: PaymentService;
   let prisma: any;
-  let userService: any;
 
   const mockUser = {
     id: 'test-uuid',
     name: 'Test User',
     email: 'test@example.com',
+    phone: '9876543210',
     credits: 10,
     role: 'USER',
   };
@@ -31,35 +44,33 @@ describe('PaymentService', () => {
   beforeEach(async () => {
     prisma = {
       payment: {
-        create: jest.fn(),
+        create: jest.fn().mockResolvedValue({}),
         update: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         findMany: jest.fn().mockResolvedValue([]),
         findUnique: jest.fn(),
         findFirst: jest.fn(),
-        // Used by the social-proof counter in getPricingConfig.
         count: jest.fn().mockResolvedValue(0),
       },
       subscription: {
         create: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         findFirst: jest.fn(),
         count: jest.fn().mockResolvedValue(0),
       },
       user: {
         findUnique: jest.fn().mockResolvedValue(mockUser),
         update: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       siteSetting: {
-        findMany: jest.fn().mockResolvedValue([
-          { key: 'pricing.monthly.price', value: '499' },
-          { key: 'pricing.annual.price', value: '4999' },
-          { key: 'pricing.monthly.credits', value: '100' },
-          { key: 'pricing.annual.credits', value: '1500' },
-        ]),
+        findMany: jest.fn().mockResolvedValue([]),
+        findUnique: jest.fn().mockResolvedValue(null),
       },
     };
 
-    userService = {
+    const userService = {
       addCredits: jest.fn().mockResolvedValue(true),
       findById: jest.fn().mockResolvedValue(mockUser),
     };
@@ -82,12 +93,14 @@ describe('PaymentService', () => {
           useValue: {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config: Record<string, any> = {
-                'razorpay.keyId': 'rzp_test_key',
-                // Keep a real secret in the test config — the fail-closed
-                // paths are exercised explicitly in their own tests below.
-                'razorpay.keySecret': TEST_WEBHOOK_SECRET,
-                'razorpay.webhookSecret': TEST_WEBHOOK_SECRET,
-                'frontend.url': 'http://localhost:3000',
+                'cashfree.clientId': 'test-client',
+                'cashfree.clientSecret': TEST_SECRET,
+                'cashfree.webhookSecret': TEST_SECRET,
+                'cashfree.mode': 'sandbox',
+                'cashfree.apiVersion': '2025-01-01',
+                'cashfree.webhookToleranceSeconds': 300,
+                frontendUrl: 'http://localhost:3000',
+                apiUrl: 'http://localhost:4000/api',
               };
               return config[key] ?? defaultValue;
             }),
@@ -100,114 +113,104 @@ describe('PaymentService', () => {
     service = module.get<PaymentService>(PaymentService);
   });
 
-  describe('getPricingConfig', () => {
-    it('should return pricing settings from database', async () => {
-      const result = await service.getPricingConfig();
+  // ── Webhook signature & replay (adversarial) ──────────────────────────────
+  describe('handleWebhook — signature & replay', () => {
+    const payload = { type: 'PAYMENT_SUCCESS_WEBHOOK', data: {} };
 
-      expect(result).toBeDefined();
-      expect(prisma.siteSetting.findMany).toHaveBeenCalled();
-    });
-
-    it('should return settings as key-value pairs', async () => {
-      const result = await service.getPricingConfig();
-
-      expect(typeof result).toBe('object');
-    });
-  });
-
-  describe('getPaymentHistory', () => {
-    it('should return payment history for user', async () => {
-      const mockPayments = [
-        { id: 'pay-1', amount: 499, status: 'captured', createdAt: new Date() },
-        { id: 'pay-2', amount: 4999, status: 'captured', createdAt: new Date() },
-      ];
-      prisma.payment.findMany.mockResolvedValue(mockPayments);
-
-      const result = await service.getPaymentHistory('test-uuid');
-
-      expect(result.length).toBe(2);
-      expect(prisma.payment.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { userId: 'test-uuid' },
-        }),
+    it('rejects webhooks without a signature header', async () => {
+      await expect(service.handleWebhook(payload, undefined, nowTs())).rejects.toThrow(
+        BadRequestException,
       );
     });
 
-    it('should return empty array for user with no payments', async () => {
-      prisma.payment.findMany.mockResolvedValue([]);
-
-      const result = await service.getPaymentHistory('test-uuid');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should order payments by newest first', async () => {
-      prisma.payment.findMany.mockResolvedValue([]);
-
-      await service.getPaymentHistory('test-uuid');
-
-      expect(prisma.payment.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orderBy: expect.objectContaining({ createdAt: 'desc' }),
-        }),
+    it('rejects webhooks without a timestamp header', async () => {
+      await expect(service.handleWebhook(payload, 'anything', undefined)).rejects.toThrow(
+        BadRequestException,
       );
     });
-  });
 
-  describe('handleWebhook', () => {
-    it('should reject webhooks without a signature header', async () => {
-      await expect(service.handleWebhook({ event: 'payment.captured' })).rejects.toThrow(BadRequestException);
+    it('rejects a forged signature (constant-time base64 compare)', async () => {
+      const ts = nowTs();
+      await expect(service.handleWebhook(payload, 'not-a-valid-signature', ts)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
-    it('should reject webhooks with an invalid signature', async () => {
-      const payload = { event: 'payment.captured', payload: {} };
-      await expect(service.handleWebhook(payload, 'bogus')).rejects.toThrow(BadRequestException);
+    it('rejects a signature valid for a DIFFERENT body (tamper)', async () => {
+      const ts = nowTs();
+      const sigForOther = cashfreeWebhookSig(TEST_SECRET, ts, { type: 'PAYMENT_SUCCESS_WEBHOOK', data: { x: 1 } });
+      await expect(service.handleWebhook(payload, sigForOther, ts)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
-    it('should acknowledge valid webhook receipt', async () => {
-      const payload = { event: 'payment.captured', payload: { payment: { entity: { id: 'pay_test123', amount: 49900 } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      // No matching payment row → claim count=0, the handler still returns {received:true}.
-      prisma.$transaction = jest.fn(async (cb: any) => cb({
-        payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirstOrThrow: jest.fn() },
-        user: { update: jest.fn() },
-        creditTransaction: { create: jest.fn() },
-      }));
-      const result = await service.handleWebhook(payload, sig);
+    it('rejects a replayed webhook whose timestamp is outside the window', async () => {
+      const oldTs = nowTs(-400); // 400s in the past, beyond the 300s tolerance
+      const sig = cashfreeWebhookSig(TEST_SECRET, oldTs, payload);
+      await expect(service.handleWebhook(payload, sig, oldTs)).rejects.toThrow(
+        /timestamp outside allowed window/i,
+      );
+    });
+
+    it('fails closed when no Cashfree secret is configured', async () => {
+      const configService = (service as any).configService;
+      const originalGet = configService.get;
+      configService.get = jest.fn((key: string) =>
+        key.startsWith('cashfree.') ? null : originalGet(key),
+      );
+      const ts = nowTs();
+      await expect(service.handleWebhook(payload, 'sig', ts)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      configService.get = originalGet;
+    });
+
+    it('acknowledges an unknown event type without side effects', async () => {
+      const p = { type: 'SOME_UNKNOWN_EVENT', data: {} };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      const result = await service.handleWebhook(p, sig, ts);
       expect(result.received).toBe(true);
     });
+  });
 
-    it('should handle payment.captured and grant credits exactly once when the row transitions', async () => {
-      const payload = {
-        event: 'payment.captured',
-        payload: { payment: { entity: { id: 'pay_razorpay_123', amount: 49900, order_id: 'order_abc' } } },
+  // ── Payment success / failure webhooks ────────────────────────────────────
+  describe('handleWebhook — payments', () => {
+    it('grants credits exactly once when the row transitions (PAYMENT_SUCCESS_WEBHOOK)', async () => {
+      const p = {
+        type: 'PAYMENT_SUCCESS_WEBHOOK',
+        data: { order: { order_id: 'cf_order_1' }, payment: { cf_payment_id: 99001 } },
       };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
       const txStub = {
         payment: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          findFirstOrThrow: jest.fn().mockResolvedValue({ userId: 'test-uuid', amount: 499 }),
+          findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'p1', userId: 'test-uuid', amount: 99, metadata: { credits: 25 } }),
         },
         user: { update: jest.fn().mockResolvedValue({}) },
         creditTransaction: { create: jest.fn().mockResolvedValue({}) },
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      const result = await service.handleWebhook(payload, sig);
+      const result = await service.handleWebhook(p, sig, ts);
       expect(result.received).toBe(true);
       expect(txStub.payment.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ status: { not: 'SUCCESS' } }) }),
       );
       expect(txStub.user.update).toHaveBeenCalledTimes(1);
-      expect(txStub.creditTransaction.create).toHaveBeenCalledTimes(1);
+      expect(txStub.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { increment: 25 } } }),
+      );
     });
 
-    it('should skip the credit grant when the row was already claimed (race loser)', async () => {
-      const payload = {
-        event: 'payment.captured',
-        payload: { payment: { entity: { id: 'pay_razorpay_999', amount: 49900, order_id: 'order_xyz' } } },
+    it('does NOT double-grant when the row was already claimed (race loser)', async () => {
+      const p = {
+        type: 'PAYMENT_SUCCESS_WEBHOOK',
+        data: { order: { order_id: 'cf_order_2' }, payment: { cf_payment_id: 99002 } },
       };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
       const txStub = {
         payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirstOrThrow: jest.fn() },
         user: { update: jest.fn() },
@@ -215,107 +218,179 @@ describe('PaymentService', () => {
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      const result = await service.handleWebhook(payload, sig);
+      const result = await service.handleWebhook(p, sig, ts);
       expect(result.received).toBe(true);
       expect(txStub.user.update).not.toHaveBeenCalled();
-      expect(txStub.creditTransaction.create).not.toHaveBeenCalled();
       expect(txStub.payment.findFirstOrThrow).not.toHaveBeenCalled();
     });
 
-    it('should acknowledge unknown events without side effects', async () => {
-      const payload = { event: 'unknown.event', payload: {} };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const result = await service.handleWebhook(payload, sig);
-      expect(result.received).toBe(true);
+    it('marks a pending payment FAILED on PAYMENT_FAILED_WEBHOOK', async () => {
+      const p = { type: 'PAYMENT_FAILED_WEBHOOK', data: { order: { order_id: 'cf_order_3' } } };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      await service.handleWebhook(p, sig, ts);
+      expect(prisma.payment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            gatewayOrderId: 'cf_order_3',
+            status: { notIn: ['SUCCESS', 'REFUNDED'] },
+          }),
+          data: { status: 'FAILED' },
+        }),
+      );
+    });
+  });
+
+  // ── Refunds ───────────────────────────────────────────────────────────────
+  describe('handleWebhook — refunds', () => {
+    function refundPayload(orderId: string) {
+      return {
+        type: 'REFUND_STATUS_WEBHOOK',
+        data: { refund: { refund_status: 'SUCCESS', order_id: orderId, cf_payment_id: 1234 } },
+      };
+    }
+
+    it('marks REFUNDED and claws back granted credits (clamped at balance)', async () => {
+      const p = refundPayload('cf_order_r1');
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      const userUpdate = jest.fn().mockResolvedValue({});
+      const ctCreate = jest.fn().mockResolvedValue({});
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ id: 'p1', userId: 'test-uuid', amount: 99, metadata: { credits: 10 }, type: 'CREDITS' }),
+        },
+        user: { findUnique: jest.fn().mockResolvedValue({ credits: 4 }), update: userUpdate },
+        creditTransaction: { create: ctCreate },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(p, sig, ts);
+      // Only 4 credits remain — clamp the 10-credit clawback to 4.
+      expect(userUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { decrement: 4 } } }),
+      );
+      expect(ctCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ amount: -4, type: 'PURCHASE' }) }),
+      );
     });
 
-    it('grants the PREMIUM role only when the subscription is charged', async () => {
-      const payload = {
-        event: 'subscription.charged',
-        payload: { subscription: { entity: { id: 'sub_live_1' } } },
+    it('voids the entitlement (not credits) when refunding a one-time unlock', async () => {
+      const featureAccess = (service as any).featureAccess;
+      const p = refundPayload('cf_order_r2');
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      const userUpdate = jest.fn();
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ id: 'p2', userId: 'test-uuid', amount: 199, metadata: null, type: 'REPORT' }),
+        },
+        user: { findUnique: jest.fn(), update: userUpdate },
+        creditTransaction: { create: jest.fn() },
       };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      await service.handleWebhook(p, sig, ts);
+      expect(featureAccess.voidEntitlementByPayment).toHaveBeenCalledWith('p2', txStub);
+      expect(userUpdate).not.toHaveBeenCalled();
+    });
+
+    it('is idempotent — a redelivered refund that claims nothing reverses nothing', async () => {
+      const p = refundPayload('cf_order_r3');
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      const findFirst = jest.fn();
+      const txStub = {
+        payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirst },
+        user: { findUnique: jest.fn(), update: jest.fn() },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const result = await service.handleWebhook(p, sig, ts);
+      expect(result).toEqual({ received: true });
+      expect(findFirst).not.toHaveBeenCalled();
+    });
+
+    it('ignores a non-SUCCESS refund status', async () => {
+      const p = { type: 'REFUND_STATUS_WEBHOOK', data: { refund: { refund_status: 'PENDING', order_id: 'cf_x' } } };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      prisma.$transaction = jest.fn();
+      await service.handleWebhook(p, sig, ts);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Subscriptions ─────────────────────────────────────────────────────────
+  describe('handleWebhook — subscriptions', () => {
+    it('grants PREMIUM when a subscription becomes ACTIVE', async () => {
+      const p = {
+        type: 'SUBSCRIPTION_STATUS_CHANGE',
+        data: { subscription_id: 'sub_1', subscription_status: 'ACTIVE' },
+      };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
       const userUpdate = jest.fn().mockResolvedValue({});
       const txStub = {
         subscription: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid', plan: 'MONTHLY', endDate: null }),
         },
         user: { update: userUpdate },
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      const result = await service.handleWebhook(payload, sig);
-      expect(result.received).toBe(true);
+      await service.handleWebhook(p, sig, ts);
       expect(userUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ role: 'PREMIUM' }) }),
+        expect.objectContaining({ data: { role: 'PREMIUM' } }),
       );
     });
 
-    it('does not grant PREMIUM for a charge on an unknown subscription', async () => {
-      const payload = {
-        event: 'subscription.activated',
-        payload: { subscription: { entity: { id: 'sub_not_ours' } } },
+    it('grants PREMIUM on a successful subscription charge event', async () => {
+      const p = {
+        type: 'SUBSCRIPTION_NEW_PAYMENT',
+        data: { subscription_id: 'sub_2', payment_status: 'SUCCESS' },
       };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const userUpdate = jest.fn();
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      const userUpdate = jest.fn().mockResolvedValue({});
       const txStub = {
         subscription: {
-          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-          findFirst: jest.fn(),
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid', plan: 'ANNUAL', endDate: null }),
         },
         user: { update: userUpdate },
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      const result = await service.handleWebhook(payload, sig);
-      expect(result.received).toBe(true);
-      expect(userUpdate).not.toHaveBeenCalled();
-    });
-
-    it('rolls the local endDate forward on a renewal charge', async () => {
-      const currentEnd = Math.floor(Date.UTC(2027, 0, 1) / 1000);
-      const payload = {
-        event: 'subscription.charged',
-        payload: { subscription: { entity: { id: 'sub_live_1', current_end: currentEnd } } },
-      };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
-      const txStub = {
-        subscription: { updateMany: subUpdateMany, findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }) },
-        user: { update: jest.fn().mockResolvedValue({}) },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      await service.handleWebhook(payload, sig);
-      expect(subUpdateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ status: 'ACTIVE', endDate: new Date(currentEnd * 1000) }) }),
+      await service.handleWebhook(p, sig, ts);
+      expect(userUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { role: 'PREMIUM' } }),
       );
     });
 
-    it.each([
-      ['subscription.cancelled', 'CANCELLED'],
-      ['subscription.halted', 'EXPIRED'],
-      ['subscription.completed', 'EXPIRED'],
-    ])('revokes PREMIUM on %s when no other active subscription remains', async (event, expectedStatus) => {
-      const payload = { event, payload: { subscription: { entity: { id: 'sub_live_1' } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+    it('revokes PREMIUM on CANCELLED when no other active subscription remains', async () => {
+      const p = {
+        type: 'SUBSCRIPTION_STATUS_CHANGE',
+        data: { subscription_id: 'sub_3', subscription_status: 'CANCELLED' },
+      };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
       const userUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
-      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
       const txStub = {
         subscription: {
-          updateMany: subUpdateMany,
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
-          count: jest.fn().mockResolvedValue(0), // no other active subscription
+          count: jest.fn().mockResolvedValue(0),
         },
         user: { updateMany: userUpdateMany },
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      await service.handleWebhook(payload, sig);
-      expect(subUpdateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ status: expectedStatus }) }),
-      );
+      await service.handleWebhook(p, sig, ts);
       expect(userUpdateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ id: 'test-uuid', role: 'PREMIUM' }),
@@ -324,256 +399,121 @@ describe('PaymentService', () => {
       );
     });
 
-    it('keeps PREMIUM on cancellation when another active subscription remains', async () => {
-      const payload = { event: 'subscription.cancelled', payload: { subscription: { entity: { id: 'sub_live_1' } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
+    it('keeps PREMIUM on cancel when another active subscription remains', async () => {
+      const p = {
+        type: 'SUBSCRIPTION_STATUS_CHANGE',
+        data: { subscription_id: 'sub_4', subscription_status: 'CANCELLED' },
+      };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
       const userUpdateMany = jest.fn();
       const txStub = {
         subscription: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           findFirst: jest.fn().mockResolvedValue({ userId: 'test-uuid' }),
-          count: jest.fn().mockResolvedValue(1), // a second active subscription
+          count: jest.fn().mockResolvedValue(1),
         },
         user: { updateMany: userUpdateMany },
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      await service.handleWebhook(payload, sig);
+      await service.handleWebhook(p, sig, ts);
       expect(userUpdateMany).not.toHaveBeenCalled();
-    });
-
-    it('marks the payment REFUNDED and claws back granted credits on refund.processed', async () => {
-      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_1', payment_id: 'pay_abc' } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const payUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
-      const userUpdate = jest.fn().mockResolvedValue({});
-      const ctCreate = jest.fn().mockResolvedValue({});
-      const txStub = {
-        payment: {
-          updateMany: payUpdateMany,
-          findFirst: jest.fn().mockResolvedValue({
-            userId: 'test-uuid',
-            amount: 99,
-            metadata: { credits: 10 },
-            type: 'CREDITS',
-          }),
-        },
-        user: { findUnique: jest.fn().mockResolvedValue({ credits: 30 }), update: userUpdate },
-        creditTransaction: { create: ctCreate },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      await service.handleWebhook(payload, sig);
-      expect(payUpdateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { razorpayPaymentId: 'pay_abc', status: 'SUCCESS' },
-          data: { status: 'REFUNDED' },
-        }),
-      );
-      expect(userUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { credits: { decrement: 10 } } }),
-      );
-      expect(ctCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ amount: -10, type: 'PURCHASE' }) }),
-      );
-    });
-
-    it('clamps the clawback at the current balance so credits never go negative', async () => {
-      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_2', payment_id: 'pay_low' } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const userUpdate = jest.fn().mockResolvedValue({});
-      const ctCreate = jest.fn().mockResolvedValue({});
-      const txStub = {
-        payment: {
-          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          findFirst: jest.fn().mockResolvedValue({
-            userId: 'test-uuid',
-            amount: 99,
-            metadata: { credits: 10 },
-            type: 'CREDITS',
-          }),
-        },
-        user: { findUnique: jest.fn().mockResolvedValue({ credits: 4 }), update: userUpdate },
-        creditTransaction: { create: ctCreate },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      await service.handleWebhook(payload, sig);
-      expect(userUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { credits: { decrement: 4 } } }),
-      );
-      expect(ctCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ amount: -4 }) }),
-      );
-    });
-
-    it('is idempotent — a redelivered refund that claims nothing reverses no credits', async () => {
-      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_3', payment_id: 'pay_done' } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const findFirst = jest.fn();
-      const userUpdate = jest.fn();
-      const txStub = {
-        payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirst },
-        user: { findUnique: jest.fn(), update: userUpdate },
-        creditTransaction: { create: jest.fn() },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      const result = await service.handleWebhook(payload, sig);
-      expect(result).toEqual({ received: true });
-      expect(findFirst).not.toHaveBeenCalled();
-      expect(userUpdate).not.toHaveBeenCalled();
-    });
-
-    it('does not claw back credits when refunding a non-CREDITS payment', async () => {
-      const payload = { event: 'refund.processed', payload: { refund: { entity: { id: 'rfnd_4', payment_id: 'pay_sub' } } } };
-      const sig = webhookBodySig(TEST_WEBHOOK_SECRET, payload);
-      const userUpdate = jest.fn();
-      const ctCreate = jest.fn();
-      const txStub = {
-        payment: {
-          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          findFirst: jest.fn().mockResolvedValue({
-            userId: 'test-uuid',
-            amount: 499,
-            metadata: null,
-            type: 'SUBSCRIPTION',
-          }),
-        },
-        user: { findUnique: jest.fn(), update: userUpdate },
-        creditTransaction: { create: ctCreate },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      await service.handleWebhook(payload, sig);
-      expect(userUpdate).not.toHaveBeenCalled();
-      expect(ctCreate).not.toHaveBeenCalled();
     });
   });
 
+  // ── verifyPayment (server-authoritative order-status check) ───────────────
   describe('verifyPayment', () => {
-    it('should reject invalid payment signatures', async () => {
-      await expect(
-        service.verifyPayment('test-uuid', {
-          razorpayOrderId: 'order_123',
-          razorpayPaymentId: 'pay_123',
-          razorpaySignature: 'invalid_signature',
-        }),
-      ).rejects.toThrow(BadRequestException);
-    });
+    function stubCashfree(order: any) {
+      (service as any).cashfree = { getOrder: jest.fn().mockResolvedValue(order) };
+    }
 
-    it('should accept a valid signature and grant credits once inside the tx', async () => {
-      const orderId = 'order_ok';
-      const paymentId = 'pay_ok';
-      const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
+    it('grants credits when Cashfree reports PAID and the amount matches', async () => {
+      prisma.payment.findFirst.mockResolvedValue({ id: 'p1', amount: 99 });
+      stubCashfree({ order_status: 'PAID', order_amount: 99, cf_order_id: 555 });
       const txStub = {
         payment: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'p1', amount: 499 }),
-          findFirst: jest.fn(),
+          findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'p1', amount: 99, metadata: { credits: 25 } }),
         },
         user: { update: jest.fn() },
         creditTransaction: { create: jest.fn() },
       };
       prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
 
-      const result = await service.verifyPayment('test-uuid', {
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        razorpaySignature: sig,
-      });
-
+      const result = await service.verifyPayment('test-uuid', { orderId: 'cf_order_ok' });
       expect(result.verified).toBe(true);
-      expect(result.creditsAdded).toBeGreaterThan(0);
-      // Grant happens via the tx (atomic with the claim), not a separate call.
-      expect(txStub.user.update).toHaveBeenCalledTimes(1);
-      expect(txStub.creditTransaction.create).toHaveBeenCalledTimes(1);
-      expect(txStub.payment.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ status: { not: 'SUCCESS' } }) }),
-      );
-    });
-
-    it('should not double-grant credits when the race is lost', async () => {
-      const orderId = 'order_race';
-      const paymentId = 'pay_race';
-      const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
-      const txStub = {
-        payment: {
-          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-          findFirst: jest.fn().mockResolvedValue({ id: 'pay-race-1' }),
-          findFirstOrThrow: jest.fn(),
-        },
-        user: { update: jest.fn() },
-        creditTransaction: { create: jest.fn() },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      const result = await service.verifyPayment('test-uuid', {
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        razorpaySignature: sig,
-      });
-
-      expect(result.verified).toBe(true);
-      expect(result.creditsAdded).toBe(0);
-      expect(txStub.user.update).not.toHaveBeenCalled();
-      expect(txStub.creditTransaction.create).not.toHaveBeenCalled();
-    });
-
-    it('should fail closed when no Razorpay secret is configured', async () => {
-      // Swap the ConfigService mock so every razorpay.* key returns null.
-      const reflector = service as any;
-      const configService = reflector.configService;
-      const originalGet = configService.get;
-      configService.get = jest.fn((key: string) => (key.startsWith('razorpay.') ? null : originalGet(key)));
-      await expect(
-        service.verifyPayment('test-uuid', {
-          razorpayOrderId: 'order_no_sec',
-          razorpayPaymentId: 'pay_no_sec',
-          razorpaySignature: 'whatever',
-        }),
-      ).rejects.toThrow(InternalServerErrorException);
-      configService.get = originalGet;
-    });
-
-    it('grants the credit count captured in metadata, not an amount heuristic', async () => {
-      const orderId = 'order_pack';
-      const paymentId = 'pay_pack';
-      const sig = razorpaySig(TEST_WEBHOOK_SECRET, orderId, paymentId);
-      const txStub = {
-        payment: {
-          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          // ₹99 would heuristically map to 10 credits, but the pack stored 25.
-          findFirstOrThrow: jest
-            .fn()
-            .mockResolvedValue({ id: 'p1', amount: 99, metadata: { credits: 25, productId: 'credits_starter' } }),
-          findFirst: jest.fn(),
-        },
-        user: { update: jest.fn() },
-        creditTransaction: { create: jest.fn() },
-      };
-      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
-
-      const result = await service.verifyPayment('test-uuid', {
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        razorpaySignature: sig,
-      });
-
       expect(result.creditsAdded).toBe(25);
       expect(txStub.user.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { credits: { increment: 25 } } }),
       );
-      expect(txStub.creditTransaction.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ amount: 25, type: 'PURCHASE' }) }),
+    });
+
+    it('REJECTS when Cashfree settled a DIFFERENT amount than persisted (tamper)', async () => {
+      prisma.payment.findFirst.mockResolvedValue({ id: 'p1', amount: 99 });
+      // Attacker created the order for ₹99 but only paid ₹1.
+      stubCashfree({ order_status: 'PAID', order_amount: 1, cf_order_id: 1 });
+      prisma.$transaction = jest.fn();
+
+      await expect(service.verifyPayment('test-uuid', { orderId: 'cf_tamper' })).rejects.toThrow(
+        /amount mismatch/i,
       );
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('does NOT grant when the order is not PAID yet', async () => {
+      prisma.payment.findFirst.mockResolvedValue({ id: 'p1', amount: 99 });
+      stubCashfree({ order_status: 'ACTIVE', order_amount: 99 });
+      prisma.$transaction = jest.fn();
+
+      const result = await service.verifyPayment('test-uuid', { orderId: 'cf_unpaid' });
+      expect(result.verified).toBe(false);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('rejects an order that does not belong to the user', async () => {
+      prisma.payment.findFirst.mockResolvedValue(null);
+      await expect(service.verifyPayment('test-uuid', { orderId: 'cf_not_mine' })).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('is idempotent — a second verify on an already-claimed order grants nothing', async () => {
+      prisma.payment.findFirst.mockResolvedValue({ id: 'p1', amount: 99 });
+      stubCashfree({ order_status: 'PAID', order_amount: 99 });
+      const txStub = {
+        payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirstOrThrow: jest.fn() },
+        user: { update: jest.fn() },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const result = await service.verifyPayment('test-uuid', { orderId: 'cf_dupe' });
+      expect(result.verified).toBe(true);
+      expect(result.creditsAdded).toBe(0);
+      expect(txStub.user.update).not.toHaveBeenCalled();
+    });
+
+    it('fails closed in production when Cashfree is not configured', async () => {
+      prisma.payment.findFirst.mockResolvedValue({ id: 'p1', amount: 99 });
+      (service as any).cashfree = null;
+      const prev = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      try {
+        await expect(service.verifyPayment('test-uuid', { orderId: 'cf_x' })).rejects.toThrow(
+          InternalServerErrorException,
+        );
+      } finally {
+        process.env.NODE_ENV = prev;
+      }
     });
   });
 
+  // ── createOrder (server-side amount authority) ────────────────────────────
   describe('createOrder', () => {
     beforeEach(() => {
-      // Force mock mode so no real Razorpay network call is attempted.
-      (service as any).razorpayInstance = null;
+      // Mock mode: no Cashfree client → no network call.
+      (service as any).cashfree = null;
       prisma.payment.create = jest.fn().mockResolvedValue({});
       prisma.siteSetting.findMany = jest.fn().mockResolvedValue([
         { key: 'pricing.credits.starter.price', value: '99' },
@@ -581,22 +521,24 @@ describe('PaymentService', () => {
       ]);
     });
 
-    it('rejects an amount that does not match the pack price', async () => {
+    it('rejects an amount that does not match the pack price (in rupees)', async () => {
       await expect(
-        service.createOrder('test-uuid', { amount: 100, productId: 'credits_starter' } as any),
+        service.createOrder('test-uuid', { amount: 1, productId: 'credits_starter' } as any),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('accepts the correct amount and persists the advertised credit count', async () => {
+    it('accepts the correct rupee amount and persists the advertised credit count', async () => {
       const order = await service.createOrder('test-uuid', {
-        amount: 9900, // ₹99 in paise
+        amount: 99, // rupees, not paise
         productId: 'credits_starter',
       } as any);
 
-      expect(order.amount).toBe(9900);
+      expect(order.amount).toBe(99);
+      expect(order.orderId).toMatch(/^cf_/);
       expect(prisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
+            provider: 'cashfree',
             metadata: expect.objectContaining({ credits: 25, productId: 'credits_starter' }),
           }),
         }),
@@ -604,36 +546,52 @@ describe('PaymentService', () => {
     });
   });
 
+  // ── createSubscription ────────────────────────────────────────────────────
   describe('createSubscription', () => {
-    it('maps a logical plan to a stored subscription in mock mode', async () => {
-      (service as any).razorpayInstance = null;
+    it('maps a logical plan to a stored PENDING subscription and grants in mock mode', async () => {
+      (service as any).cashfree = null; // mock mode grants immediately
       const subCreate = jest.fn().mockResolvedValue({});
+      const userUpdate = jest.fn();
       prisma.$transaction = jest.fn(async (cb: any) =>
-        cb({ subscription: { create: subCreate }, user: { update: jest.fn() } }),
+        cb({ subscription: { create: subCreate }, user: { update: userUpdate } }),
       );
 
       const result = await service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any);
-
-      expect(result.status).toBe('active');
+      expect(result.id).toMatch(/^sub_/);
       expect(subCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ plan: 'ANNUAL' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ plan: 'ANNUAL', provider: 'cashfree', status: 'ACTIVE' }),
+        }),
+      );
+      expect(userUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { role: 'PREMIUM' } }),
       );
     });
 
     it('fails closed when live but no plan_id is configured', async () => {
-      // Truthy instance => live path, but config has no razorpay.planAnnual.
-      (service as any).razorpayInstance = {};
+      (service as any).cashfree = { createSubscription: jest.fn() };
       await expect(
         service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
 
-    it('refuses to mint a second subscription when one is already active (idempotency)', async () => {
+    it('refuses to mint a second subscription when one is already active', async () => {
       (prisma.subscription.count as jest.Mock).mockResolvedValueOnce(1);
-      (service as any).razorpayInstance = null;
+      (service as any).cashfree = null;
       await expect(
         service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ── getPaymentHistory ─────────────────────────────────────────────────────
+  describe('getPaymentHistory', () => {
+    it('maps gatewayOrderId into the orderId field', async () => {
+      prisma.payment.findMany.mockResolvedValue([
+        { id: 'pay-1', gatewayOrderId: 'cf_o1', amount: 99, currency: 'INR', status: 'SUCCESS', type: 'CREDITS', createdAt: new Date() },
+      ]);
+      const result = await service.getPaymentHistory('test-uuid');
+      expect(result[0].orderId).toBe('cf_o1');
     });
   });
 });

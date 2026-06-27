@@ -2,13 +2,21 @@
  * Checkout Page Tests
  *
  * Validates the one-time credit-pack checkout: order-summary rendering
- * from the pricing config, the auth guard (redirect to sign-up), and the
- * invalid-pack fallback. The Razorpay Checkout modal itself is not opened
- * here — that requires the external checkout.js script.
+ * from the pricing config, the auth guard (redirect to sign-up), the
+ * invalid-pack fallback, and — security-critical — that the amount is sent
+ * in INR rupees (not paise) and that verification sends ONLY the orderId
+ * (no client-trusted signature), so the client can't influence the grant.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
+
+// ─── Mock the Cashfree SDK loader ───────────────────────────────────────────
+const mockCheckout = vi.fn(async () => ({}));
+vi.mock('@/lib/cashfree', () => ({
+  CASHFREE_MODE: 'sandbox',
+  loadCashfree: vi.fn(async () => ({ checkout: mockCheckout })),
+}));
 
 // ─── Mock next/navigation ───────────────────────────────────────────────────
 const mockPush = vi.fn();
@@ -86,5 +94,46 @@ describe('Checkout Page', () => {
     render(<CheckoutPage />);
     // Falls through to the invalid-pack card with a Back control.
     expect(await screen.findByText('Back')).toBeDefined();
+  });
+
+  it('sends the amount in RUPEES and verifies with only the orderId', async () => {
+    mockApiPost.mockImplementation((path: string) => {
+      if (path === '/payments/create-order') {
+        return Promise.resolve({ orderId: 'cf_o1', paymentSessionId: 'sess_1', amount: 99, currency: 'INR' });
+      }
+      if (path === '/payments/verify') {
+        return Promise.resolve({ verified: true, creditsAdded: 25 });
+      }
+      return Promise.reject(new Error(`unexpected POST ${path}`));
+    });
+
+    render(<CheckoutPage />);
+    // Wait for the pack price to load, then click the (single) buy button.
+    await screen.findByText(/25/);
+    const buyBtn = await screen.findByRole('button');
+    fireEvent.click(buyBtn);
+
+    // create-order must carry the price in rupees (99), NOT paise (9900).
+    await waitFor(() =>
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/payments/create-order',
+        expect.objectContaining({ amount: 99, productId: 'credits_starter', currency: 'INR' }),
+        expect.anything(),
+      ),
+    );
+    // The Cashfree checkout is opened with the server-issued session id.
+    await waitFor(() =>
+      expect(mockCheckout).toHaveBeenCalledWith(
+        expect.objectContaining({ paymentSessionId: 'sess_1' }),
+      ),
+    );
+    // verify carries ONLY the orderId — no client signature the server would trust.
+    await waitFor(() =>
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/payments/verify',
+        { orderId: 'cf_o1' },
+        expect.anything(),
+      ),
+    );
   });
 });

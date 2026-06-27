@@ -273,25 +273,28 @@ model UserMemory {
 }
 
 model Subscription {
-  id                     String             @id @default(uuid()) @db.Uuid
-  userId                 String             @db.Uuid
-  plan                   PlanType           @default(FREE)
-  status                 SubscriptionStatus @default(ACTIVE)
-  razorpaySubscriptionId String?            @unique
-  startDate              DateTime           @default(now())
-  endDate                DateTime?
+  id                    String             @id @default(uuid()) @db.Uuid
+  userId                String             @db.Uuid
+  plan                  PlanType           @default(FREE)
+  status                SubscriptionStatus @default(ACTIVE)
+  /// Gateway subscription/mandate id (Cashfree `sub_…`; legacy Razorpay `sub_…`).
+  gatewaySubscriptionId String?            @unique
+  /// Which gateway owns this subscription: 'cashfree' or 'razorpay' (legacy). Null for non-gateway grants.
+  provider              String?
+  startDate             DateTime           @default(now())
+  endDate               DateTime?
   // Provenance tag — populated when the subscription was granted by
-  // something other than a Razorpay charge (currently 'REFERRAL').
+  // something other than a gateway charge (currently 'REFERRAL').
   // Funnel/Cost tabs can group by this to separate paid revenue from
   // bonus-driven Premium without changing the existing PlanType enum.
-  source                 String?
-  createdAt              DateTime           @default(now())
+  source                String?
+  createdAt             DateTime           @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
-  @@index([razorpaySubscriptionId])
+  @@index([gatewaySubscriptionId])
   @@index([source])
   @@map("subscriptions")
 }
@@ -494,24 +497,29 @@ model PalmistryReading {
 }
 
 model Payment {
-  id                String        @id @default(uuid()) @db.Uuid
-  userId            String        @db.Uuid
-  amount            Decimal       @db.Decimal(10, 2)
-  currency          String        @default("INR")
-  status            PaymentStatus @default(PENDING)
-  razorpayOrderId   String?       @unique
-  razorpayPaymentId String?       @unique
-  type              PaymentType
-  metadata          Json?
-  createdAt         DateTime      @default(now())
+  id               String        @id @default(uuid()) @db.Uuid
+  userId           String        @db.Uuid
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("INR")
+  status           PaymentStatus @default(PENDING)
+  /// Payment-gateway order id (Cashfree `cf_<uuid>`; legacy Razorpay `order_…`).
+  gatewayOrderId   String?       @unique
+  /// Payment-gateway payment id (Cashfree `cf_payment_id`; legacy Razorpay `pay_…`).
+  gatewayPaymentId String?       @unique
+  /// Which gateway issued this payment: 'cashfree' (default) or 'razorpay' (legacy).
+  provider         String        @default("cashfree")
+  type             PaymentType
+  metadata         Json?
+  createdAt        DateTime      @default(now())
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   entitlement Entitlement?
 
   @@index([userId])
   @@index([status])
-  @@index([razorpayOrderId])
-  @@index([razorpayPaymentId])
+  @@index([gatewayOrderId])
+  @@index([gatewayPaymentId])
+  @@index([provider])
   @@map("payments")
 }
 

@@ -72,9 +72,9 @@ if (process.env.SENTRY_DSN) {
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   // `rawBody: true` preserves the unparsed request buffer on `req.rawBody`,
-  // which the Razorpay webhook needs to verify the HMAC signature over the
-  // exact bytes Razorpay signed (re-serializing the parsed JSON does not
-  // reproduce them).
+  // which the Cashfree webhook needs to verify the signature over the exact
+  // bytes Cashfree signed — base64(HMAC-SHA256(timestamp + rawBody)) — since
+  // re-serializing the parsed JSON does not reproduce them.
   const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
 
   // Use pino as the underlying logger

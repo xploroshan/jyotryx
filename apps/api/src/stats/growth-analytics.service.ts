@@ -496,7 +496,7 @@ export class GrowthAnalyticsService {
   /**
    * Payments in FAILED / REFUNDED status within the last `days` window.
    * Trimmed shape — enough to render a table row without leaking
-   * Razorpay internals into the admin UI.
+   * payment-gateway internals into the admin UI.
    */
   async getPaymentFailures(opts: { days: number }): Promise<PaymentFailureRow[]> {
     const days = clampDays(opts.days);

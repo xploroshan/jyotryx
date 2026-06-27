@@ -2,9 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateOrderDto {
-  @ApiProperty({ example: 499, description: 'Amount in INR (smallest currency unit - paise)' })
+  @ApiProperty({
+    example: 99,
+    description:
+      'Amount in INR rupees (Cashfree uses rupees, not paise). Validated server-side against the authoritative product price.',
+  })
   @IsNumber()
-  @Min(100)
+  @Min(1)
   amount!: number;
 
   @ApiProperty({ example: 'INR', required: false })
@@ -12,7 +16,7 @@ export class CreateOrderDto {
   @IsString()
   currency?: string;
 
-  @ApiProperty({ example: 'credit_pack_50', description: 'Product/plan identifier' })
+  @ApiProperty({ example: 'credits_starter', description: 'Product/plan identifier' })
   @IsString()
   @IsNotEmpty()
   productId!: string;
