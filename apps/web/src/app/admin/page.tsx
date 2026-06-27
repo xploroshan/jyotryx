@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuthStore, useAuthHydrated } from "@/lib/store";
 import { api } from "@/lib/api";
-import { Badge, statusBadge, formatCurrency, formatDate } from "./components/helpers";
+import { Badge, formatDate } from "./components/helpers";
 import { Toast } from "@/components/ui/Toast";
 
 // ─── Lazy-loaded tab components ──────────────────────────────────────────────
@@ -23,6 +23,7 @@ const SafetyTab = dynamic(() => import("./components/SafetyTab").then(m => ({ de
 const GdprTab = dynamic(() => import("./components/GdprTab").then(m => ({ default: m.GdprTab })), { ssr: false });
 const ReferralTab = dynamic(() => import("./components/ReferralTab").then(m => ({ default: m.ReferralTab })), { ssr: false });
 const MonetizationTab = dynamic(() => import("./components/MonetizationTab").then(m => ({ default: m.MonetizationTab })), { ssr: false });
+const PaymentsTab = dynamic(() => import("./components/PaymentsTab").then(m => ({ default: m.PaymentsTab })), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────��──
 
@@ -40,8 +41,7 @@ export default function AdminPage() {
   const isHydrated = useAuthHydrated();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
-  // Inline tabs state (payments, chats, pricing — small enough to stay inline)
-  const [payments, setPayments] = useState<any[]>([]);
+  // Inline tabs state (chats, pricing — small enough to stay inline)
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -81,15 +81,12 @@ export default function AdminPage() {
 
   const loadInlineData = async () => {
     if (!accessToken) return;
-    if (!["payments", "chats", "pricing"].includes(activeTab)) return;
+    if (!["chats", "pricing"].includes(activeTab)) return;
 
     setLoading(true);
     setError("");
     try {
-      if (activeTab === "payments") {
-        const paymentsRes = await api.get<any[]>("/admin/payments", { token: accessToken });
-        setPayments(paymentsRes);
-      } else if (activeTab === "chats") {
+      if (activeTab === "chats") {
         const chatsRes = await api.get<any[]>("/admin/chats", { token: accessToken });
         setChats(chatsRes);
       } else if (activeTab === "pricing") {
@@ -235,45 +232,17 @@ export default function AdminPage() {
           <MonetizationTab token={accessToken} />
         )}
 
+        {activeTab === "payments" && accessToken && (
+          <PaymentsTab token={accessToken} />
+        )}
+
         {/* Inline tabs — small enough to stay in the main bundle */}
-        {loading && ["payments", "chats", "pricing"].includes(activeTab) && (
+        {loading && ["chats", "pricing"].includes(activeTab) && (
           <div className="flex items-center justify-center py-20">
             <svg className="w-8 h-8 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-          </div>
-        )}
-
-        {!loading && activeTab === "payments" && (
-          <div className="surface-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-black/[0.10]">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">User</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Amount</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-ink-500">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((p: any) => (
-                    <tr key={p.id} className="border-b border-black/5 hover:bg-black/[0.04]">
-                      <td className="px-4 py-3 text-ink-900">{p.userName}<br /><span className="text-xs text-ink-500">{p.userEmail}</span></td>
-                      <td className="px-4 py-3 text-ink-700">{formatCurrency(p.amount)}</td>
-                      <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                      <td className="px-4 py-3 text-ink-500">{p.type}</td>
-                      <td className="px-4 py-3 text-ink-500 text-xs">{formatDate(p.createdAt)}</td>
-                    </tr>
-                  ))}
-                  {payments.length === 0 && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-500">No payments yet</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
           </div>
         )}
 

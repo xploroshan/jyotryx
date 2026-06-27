@@ -94,6 +94,33 @@ export interface PaymentFailureRow {
   createdAt: string;
 }
 
+export interface PaymentMetrics {
+  /** Gross successful revenue (INR) over windows. */
+  revenue: { today: number; last7: number; last30: number; gross: number };
+  /** Successful revenue + count split by product type (CREDITS/SUBSCRIPTION/REPORT). */
+  byType: Array<{ type: string; count: number; amount: number }>;
+  /** SUCCESS / (SUCCESS+FAILED+REFUNDED) over the window, 0..1. */
+  successRate: number;
+  /** REFUNDED / SUCCESS over the window, 0..1. */
+  refundRate: number;
+  /** Payments stuck in PENDING longer than the reconcile grace window. */
+  pendingStuck: number;
+  /** Daily successful revenue series over the window. */
+  dailyRevenue: Array<{ date: string; amount: number }>;
+  windowDays: number;
+}
+
+export interface PaymentsHealth {
+  /** PENDING payments older than 15 min — the reconcile cron's targets. */
+  pendingStuck: number;
+  succeeded24h: number;
+  failed24h: number;
+  refunded24h: number;
+  /** SUCCESS / (SUCCESS+FAILED+REFUNDED) in the last 24h, 0..1 (1 if no attempts). */
+  successRate24h: number;
+  lastPaymentAt: string | null;
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────
 
 @Injectable()
@@ -533,6 +560,124 @@ export class GrowthAnalyticsService {
       type: p.type,
       createdAt: p.createdAt.toISOString(),
     }));
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Payment KPIs (Payments dashboard)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Payment KPIs for the admin Payments dashboard: gross/windowed revenue,
+   * revenue split by product type, success & refund rates, the stuck-PENDING
+   * count, and a daily successful-revenue series. All derived live from the
+   * `payments` table (no rollup needed) and cheap thanks to the status/type
+   * indexes.
+   */
+  async getPaymentMetrics(daysInput = 30): Promise<PaymentMetrics> {
+    const days = clampDays(daysInput);
+    const now = Date.now();
+    const since = new Date(now - days * 86400_000);
+    const start7 = new Date(now - 7 * 86400_000);
+    const start30 = new Date(now - 30 * 86400_000);
+    const startToday = new Date();
+    startToday.setUTCHours(0, 0, 0, 0);
+    const stuckCutoff = new Date(now - 15 * 60_000);
+
+    const [gross, today, last7, last30, byTypeGroups, statusGroups, pendingStuck, dailyRows] =
+      await Promise.all([
+        this.readPrisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS' } }),
+        this.readPrisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: startToday } } }),
+        this.readPrisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: start7 } } }),
+        this.readPrisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: start30 } } }),
+        this.readPrisma.payment.groupBy({
+          by: ['type'],
+          where: { status: 'SUCCESS', createdAt: { gte: since } },
+          _sum: { amount: true },
+          _count: { _all: true },
+        } as any),
+        this.readPrisma.payment.groupBy({
+          by: ['status'],
+          where: { createdAt: { gte: since } },
+          _count: { _all: true },
+        } as any),
+        this.readPrisma.payment.count({ where: { status: 'PENDING', createdAt: { lt: stuckCutoff } } }),
+        this.readPrisma.$queryRawUnsafe<Array<{ day: Date | string; amount: number }>>(
+          `SELECT DATE_TRUNC('day', "createdAt" AT TIME ZONE 'UTC')::date AS day,
+                  SUM(amount)::float AS amount
+           FROM "payments"
+           WHERE status = 'SUCCESS' AND "createdAt" >= $1::timestamptz
+           GROUP BY day ORDER BY day ASC`,
+          since,
+        ),
+      ]);
+
+    const statusCount: Record<string, number> = {};
+    for (const g of statusGroups as any[]) statusCount[g.status] = g._count?._all ?? 0;
+    const success = statusCount['SUCCESS'] ?? 0;
+    const failed = statusCount['FAILED'] ?? 0;
+    const refunded = statusCount['REFUNDED'] ?? 0;
+    const attempts = success + failed + refunded; // PENDING excluded from rate denominator
+
+    return {
+      revenue: {
+        today: Number(today._sum.amount ?? 0),
+        last7: Number(last7._sum.amount ?? 0),
+        last30: Number(last30._sum.amount ?? 0),
+        gross: Number(gross._sum.amount ?? 0),
+      },
+      byType: (byTypeGroups as any[]).map((g) => ({
+        type: g.type,
+        count: g._count?._all ?? 0,
+        amount: Number(g._sum?.amount ?? 0),
+      })),
+      successRate: attempts > 0 ? roundFrac(success / attempts) : 0,
+      refundRate: success > 0 ? roundFrac(refunded / success) : 0,
+      pendingStuck,
+      dailyRevenue: (dailyRows as any[]).map((r) => ({
+        date: toIsoDate(r.day),
+        amount: Number(r.amount),
+      })),
+      windowDays: days,
+    };
+  }
+
+  /**
+   * Lightweight payments-health snapshot for the admin dashboard widget:
+   * stuck-PENDING count (the reconcile cron's targets), 24h success/fail/refund
+   * counts + success rate, and the last successful payment time.
+   */
+  async getPaymentsHealth(): Promise<PaymentsHealth> {
+    const dayAgo = new Date(Date.now() - 86400_000);
+    const stuckCutoff = new Date(Date.now() - 15 * 60_000);
+    const [pendingStuck, statusGroups, last] = await Promise.all([
+      this.readPrisma.payment.count({ where: { status: 'PENDING', createdAt: { lt: stuckCutoff } } }),
+      this.readPrisma.payment.groupBy({
+        by: ['status'],
+        where: { createdAt: { gte: dayAgo } },
+        _count: { _all: true },
+      } as any),
+      this.readPrisma.payment.findFirst({
+        where: { status: 'SUCCESS' },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    const c: Record<string, number> = {};
+    for (const g of statusGroups as any[]) c[g.status] = g._count?._all ?? 0;
+    const success = c['SUCCESS'] ?? 0;
+    const failed = c['FAILED'] ?? 0;
+    const refunded = c['REFUNDED'] ?? 0;
+    const attempts = success + failed + refunded;
+
+    return {
+      pendingStuck,
+      succeeded24h: success,
+      failed24h: failed,
+      refunded24h: refunded,
+      successRate24h: attempts > 0 ? roundFrac(success / attempts) : 1,
+      lastPaymentAt: last?.createdAt ? (last.createdAt as Date).toISOString() : null,
+    };
   }
 }
 

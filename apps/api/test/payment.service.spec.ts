@@ -648,6 +648,55 @@ describe('PaymentService (Cashfree)', () => {
     });
   });
 
+  // ── refundPayment (admin-initiated) ───────────────────────────────────────
+  describe('refundPayment', () => {
+    it('initiates a Cashfree refund for a successful payment', async () => {
+      const createRefund = jest.fn().mockResolvedValue({ cf_refund_id: 1 });
+      (service as any).cashfree = { createRefund };
+      prisma.payment.findUnique.mockResolvedValue({
+        id: 'p1', gatewayOrderId: 'cf_o1', amount: 99, status: 'SUCCESS', provider: 'cashfree',
+      });
+
+      const res = await service.refundPayment('p1');
+      expect(res.status).toBe('INITIATED');
+      expect(res.amount).toBe(99);
+      expect(createRefund).toHaveBeenCalledWith(
+        'cf_o1',
+        expect.objectContaining({ refundAmount: 99 }),
+      );
+    });
+
+    it('rejects refunding a non-SUCCESS payment', async () => {
+      (service as any).cashfree = { createRefund: jest.fn() };
+      prisma.payment.findUnique.mockResolvedValue({
+        id: 'p1', gatewayOrderId: 'cf_o1', amount: 99, status: 'PENDING', provider: 'cashfree',
+      });
+      await expect(service.refundPayment('p1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects a refund amount greater than the payment', async () => {
+      (service as any).cashfree = { createRefund: jest.fn() };
+      prisma.payment.findUnique.mockResolvedValue({
+        id: 'p1', gatewayOrderId: 'cf_o1', amount: 99, status: 'SUCCESS', provider: 'cashfree',
+      });
+      await expect(service.refundPayment('p1', { amount: 1000 })).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects refunding a non-Cashfree (legacy) payment', async () => {
+      (service as any).cashfree = { createRefund: jest.fn() };
+      prisma.payment.findUnique.mockResolvedValue({
+        id: 'p1', gatewayOrderId: 'order_x', amount: 99, status: 'SUCCESS', provider: 'razorpay',
+      });
+      await expect(service.refundPayment('p1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects when the payment does not exist', async () => {
+      (service as any).cashfree = { createRefund: jest.fn() };
+      prisma.payment.findUnique.mockResolvedValue(null);
+      await expect(service.refundPayment('nope')).rejects.toThrow(BadRequestException);
+    });
+  });
+
   // ── getPaymentHistory ─────────────────────────────────────────────────────
   describe('getPaymentHistory', () => {
     it('maps gatewayOrderId into the orderId field', async () => {

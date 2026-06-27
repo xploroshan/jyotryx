@@ -516,6 +516,53 @@ export class PaymentService {
     return { checked: stale.length, settled };
   }
 
+  /**
+   * Initiate a refund for a successful Cashfree payment. We only ask Cashfree
+   * to refund — the actual ledger reversal (mark REFUNDED + claw back credits /
+   * void entitlement) happens idempotently when the `REFUND_STATUS_WEBHOOK`
+   * arrives, exactly like a dashboard-initiated refund. Admin-only caller.
+   */
+  async refundPayment(
+    paymentId: string,
+    opts: { amount?: number; note?: string } = {},
+  ): Promise<{ refundId: string; status: string; amount: number }> {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      select: { id: true, gatewayOrderId: true, amount: true, status: true, provider: true },
+    });
+    if (!payment) throw new BadRequestException('Payment not found');
+    if (payment.status !== 'SUCCESS') {
+      throw new BadRequestException('Only successful payments can be refunded');
+    }
+    if (payment.provider !== 'cashfree') {
+      throw new BadRequestException('Refunds are only supported for Cashfree payments');
+    }
+    if (!payment.gatewayOrderId) {
+      throw new BadRequestException('Payment has no gateway order id to refund');
+    }
+    const full = Number(payment.amount);
+    const amount = opts.amount != null ? Number(opts.amount) : full;
+    if (!(amount > 0) || amount > full + 0.001) {
+      throw new BadRequestException(`Refund amount must be between 0 and ${full}`);
+    }
+    if (!this.cashfree) {
+      throw new InternalServerErrorException('Cashfree is not configured');
+    }
+    const refundId = `rf_${crypto.randomUUID().replace(/-/g, '').substring(0, 20)}`;
+    try {
+      await this.cashfree.createRefund(payment.gatewayOrderId, {
+        refundId,
+        refundAmount: amount,
+        refundNote: opts.note,
+      });
+    } catch (error) {
+      this.logger.error(`refundPayment: Cashfree refund failed for ${paymentId}`, error as Error);
+      throw new InternalServerErrorException('Failed to initiate refund with Cashfree');
+    }
+    this.logger.log(`Refund initiated for payment ${paymentId}: ₹${amount} (refundId=${refundId})`);
+    return { refundId, status: 'INITIATED', amount };
+  }
+
   /** Extract the EntitlementType captured in a payment's metadata, if any. */
   private entitlementTypeFromMetadata(metadata: unknown): EntitlementTypeName | null {
     const meta = (metadata ?? null) as { entitlementType?: unknown } | null;

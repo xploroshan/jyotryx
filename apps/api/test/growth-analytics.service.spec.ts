@@ -285,4 +285,60 @@ describe('GrowthAnalyticsService', () => {
       expect(rows[0].reason).toBe('inactive');
     });
   });
+
+  // ──────────────────────────────────────────────────────────────────
+  // Payment KPIs
+  // ──────────────────────────────────────────────────────────────────
+  describe('getPaymentMetrics', () => {
+    it('computes revenue, by-type, success/refund rates, and stuck count', async () => {
+      prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: 500 } } as any);
+      prisma.payment.groupBy.mockImplementation((args: any) => {
+        if (args.by[0] === 'type') {
+          return Promise.resolve([
+            { type: 'CREDITS', _sum: { amount: 300 }, _count: { _all: 3 } },
+            { type: 'REPORT', _sum: { amount: 200 }, _count: { _all: 2 } },
+          ]) as any;
+        }
+        // status grouping
+        return Promise.resolve([
+          { status: 'SUCCESS', _count: { _all: 8 } },
+          { status: 'FAILED', _count: { _all: 2 } },
+          { status: 'REFUNDED', _count: { _all: 1 } },
+        ]) as any;
+      });
+      prisma.payment.count.mockResolvedValue(4); // stuck pending
+      prisma.$queryRawUnsafe.mockResolvedValue([
+        { day: '2026-06-01', amount: 250 },
+        { day: '2026-06-02', amount: 250 },
+      ]);
+
+      const m = await service.getPaymentMetrics(30);
+      expect(m.revenue.gross).toBe(500);
+      expect(m.byType).toEqual(
+        expect.arrayContaining([expect.objectContaining({ type: 'CREDITS', amount: 300, count: 3 })]),
+      );
+      expect(m.successRate).toBeCloseTo(8 / 11, 2);
+      expect(m.refundRate).toBeCloseTo(1 / 8, 2);
+      expect(m.pendingStuck).toBe(4);
+      expect(m.dailyRevenue).toHaveLength(2);
+    });
+  });
+
+  describe('getPaymentsHealth', () => {
+    it('reports stuck count, 24h status counts, and last payment time', async () => {
+      prisma.payment.count.mockResolvedValue(2); // stuck pending
+      prisma.payment.groupBy.mockResolvedValue([
+        { status: 'SUCCESS', _count: { _all: 9 } },
+        { status: 'FAILED', _count: { _all: 1 } },
+      ] as any);
+      prisma.payment.findFirst.mockResolvedValue({ createdAt: new Date('2026-06-27T00:00:00.000Z') } as any);
+
+      const h = await service.getPaymentsHealth();
+      expect(h.pendingStuck).toBe(2);
+      expect(h.succeeded24h).toBe(9);
+      expect(h.failed24h).toBe(1);
+      expect(h.successRate24h).toBeCloseTo(9 / 10, 2);
+      expect(h.lastPaymentAt).toContain('2026-06-27');
+    });
+  });
 });

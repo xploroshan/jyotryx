@@ -145,10 +145,60 @@ export class AdminController {
   }
 
   @Get('payments')
-  @ApiOperation({ summary: 'Get recent payments' })
+  @ApiOperation({ summary: 'List payments (filterable/paginated) or recent payments' })
   @ApiResponse({ status: 200, description: 'Payment list returned' })
-  async getPayments(@Query('limit') limit?: string) {
+  async getPayments(
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('type') type?: string,
+    @Query('search') search?: string,
+    @Query('days') days?: string,
+    @Query('page') page?: string,
+  ) {
+    // Any filter/pagination param → the rich `{ payments, total }` shape used
+    // by the Payments dashboard; otherwise the legacy recent-payments array.
+    if (status || type || search || days || page) {
+      return this.adminService.listPayments({
+        status,
+        type,
+        search,
+        days: days ? parseInt(days, 10) : undefined,
+        page: parseInt(page || '1', 10),
+        limit: parseInt(limit || '25', 10),
+      });
+    }
     return this.adminService.getRecentPayments(parseInt(limit || '20', 10));
+  }
+
+  @Get('payments/metrics')
+  @ApiOperation({ summary: 'Payment KPIs: revenue, by-type, success/refund rate, stuck count, daily trend' })
+  @ApiResponse({ status: 200, description: 'Payment metrics returned' })
+  async getPaymentMetrics(@Query('days') days?: string) {
+    return this.growth.getPaymentMetrics(parseInt(days || '30', 10));
+  }
+
+  @Get('payments/health')
+  @ApiOperation({ summary: 'Payments health: stuck/pending, 24h success/fail/refund, last payment' })
+  @ApiResponse({ status: 200, description: 'Payments health returned' })
+  async getPaymentsHealth() {
+    return this.growth.getPaymentsHealth();
+  }
+
+  @Post('payments/:id/refund')
+  @ApiOperation({ summary: 'Refund a successful payment via Cashfree (full or partial)' })
+  @ApiResponse({ status: 200, description: 'Refund initiated' })
+  async refundPayment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { amount?: number; note?: string },
+    @Request() req: any,
+  ): Promise<{ refundId: string; status: string; amount: number }> {
+    return this.adminService.refundPayment(
+      id,
+      dto?.amount != null ? Number(dto.amount) : undefined,
+      dto?.note,
+      req.user.sub,
+      req.user.email,
+    );
   }
 
   @Get('chats')
@@ -204,6 +254,34 @@ export class AdminController {
     if (invalidKeys.length > 0) {
       throw new BadRequestException(`Invalid setting keys: ${invalidKeys.join(', ')}. Allowed prefixes: ${ALLOWED_PREFIXES.join(', ')}`);
     }
+
+    // Value guardrails: a fat-fingered price / FX rate / weight silently
+    // corrupts revenue math downstream, so reject obviously-bad values up front.
+    // Numeric keys must parse to a finite number >= 0; feature.* flags must be
+    // exactly "true"/"false".
+    const isNumericKey = (k: string): boolean =>
+      /\.(price|credits|weight)$/.test(k) ||
+      /_cost$/.test(k) ||
+      k.includes('.fx.') ||
+      k.includes('cost.daily_usd') ||
+      k.includes('cost.monthly_usd') ||
+      k.endsWith('report_count_base') ||
+      k.endsWith('send_hour_utc') ||
+      k.endsWith('bonus_days') ||
+      k.endsWith('max_per_referrer');
+    const badNumeric = Object.entries(dto)
+      .filter(([k, v]) => isNumericKey(k) && !(Number.isFinite(Number(v)) && Number(v) >= 0))
+      .map(([k]) => k);
+    const badBool = Object.entries(dto)
+      .filter(([k, v]) => k.startsWith('feature.') && v !== 'true' && v !== 'false')
+      .map(([k]) => k);
+    if (badNumeric.length > 0 || badBool.length > 0) {
+      const parts: string[] = [];
+      if (badNumeric.length) parts.push(`numeric (>=0) required: ${badNumeric.join(', ')}`);
+      if (badBool.length) parts.push(`"true"/"false" required: ${badBool.join(', ')}`);
+      throw new BadRequestException(`Invalid setting values — ${parts.join('; ')}`);
+    }
+
     return this.adminService.updateSettings(dto, req.user.sub, req.user.email);
   }
 
