@@ -1,13 +1,16 @@
 import {
   Injectable,
+  Optional,
   BadRequestException,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import * as Sentry from '@sentry/node';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
+import { MetricsService } from '../../metrics/metrics.service';
 import {
   FeatureAccessService,
   EntitlementTypeName,
@@ -101,14 +104,40 @@ export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
   /** Null when no credentials are configured → "mock mode" for local dev. */
   private cashfree: CashfreeClient | null = null;
+  /** Throttle for Sentry webhook-failure alerts, keyed by outcome (epoch ms). */
+  private readonly lastWebhookAlertAt: Record<string, number> = {};
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
     private userService: UserService,
     private featureAccess: FeatureAccessService,
+    // Global @Global() MetricsModule provides this in the running app; it is
+    // optional so unit tests can construct the service without wiring metrics.
+    @Optional() private readonly metrics?: MetricsService,
   ) {
     this.initCashfree();
+  }
+
+  /**
+   * Record a webhook outcome to Prometheus and, for failure outcomes, raise a
+   * rate-limited Sentry alert. Signature/timestamp rejections are 4xx and so
+   * never reach the 5xx-only HttpExceptionFilter — without this they would be
+   * invisible, hiding both misconfiguration and forging attempts.
+   */
+  private recordWebhookOutcome(outcome: string): void {
+    try {
+      this.metrics?.cashfreeWebhookTotal.inc({ outcome });
+    } catch {
+      // never let metrics break webhook handling
+    }
+    if (outcome === 'ok') return;
+    const now = Date.now();
+    const last = this.lastWebhookAlertAt[outcome] ?? 0;
+    if (now - last > 60_000) {
+      this.lastWebhookAlertAt[outcome] = now;
+      Sentry.captureMessage(`Cashfree webhook rejected: ${outcome}`, 'warning');
+    }
   }
 
   private initCashfree(): void {
@@ -371,49 +400,11 @@ export class PaymentService {
       return { verified: false, paymentId: '', orderId: dto.orderId };
     }
 
-    // Claim + grant in ONE interactive transaction so a crash between the
-    // status flip and the grant cannot leave the row SUCCESS with nothing
-    // credited. The `status != SUCCESS` guard keeps the claim idempotent
-    // against client-retry / verify-vs-webhook races: only the caller that
-    // actually transitions the row grants.
-    const grant = await this.prisma.$transaction(async (tx: any) => {
-      const { count } = await tx.payment.updateMany({
-        where: { gatewayOrderId: dto.orderId, userId, status: { not: 'SUCCESS' } },
-        data: {
-          status: 'SUCCESS',
-          ...(gatewayPaymentId ? { gatewayPaymentId } : {}),
-        },
-      });
-
-      if (count === 0) {
-        // Already claimed by a concurrent verify/webhook — idempotent success.
-        return { creditsAdded: 0 as number, entitlementGranted: false };
-      }
-
-      const payment = await tx.payment.findFirstOrThrow({
-        where: { gatewayOrderId: dto.orderId, userId },
-        select: { id: true, amount: true, metadata: true },
-      });
-      const entType = this.entitlementTypeFromMetadata(payment.metadata);
-      if (entType) {
-        await this.featureAccess.grantEntitlement(userId, payment.id, entType, tx);
-        return { creditsAdded: 0 as number, entitlementGranted: true };
-      }
-
-      const creditsToAdd = this.creditsForPayment(payment);
-      await tx.user.update({
-        where: { id: userId },
-        data: { credits: { increment: creditsToAdd } },
-      });
-      await tx.creditTransaction.create({
-        data: {
-          userId,
-          amount: creditsToAdd,
-          type: 'PURCHASE',
-          description: `Purchased ${creditsToAdd} credits`,
-        },
-      });
-      return { creditsAdded: creditsToAdd, entitlementGranted: false };
+    // Claim + grant atomically and exactly once (idempotent against the
+    // verify-vs-webhook race and client retries). Scoped to this user.
+    const grant = await this.settlePaidOrder(dto.orderId, {
+      userId,
+      gatewayPaymentId: gatewayPaymentId ?? undefined,
     });
 
     return {
@@ -423,6 +414,106 @@ export class PaymentService {
       creditsAdded: grant.creditsAdded,
       ...(grant.entitlementGranted ? { entitlementGranted: true } : {}),
     };
+  }
+
+  /**
+   * Atomically claim a PAID Cashfree order as SUCCESS and grant its credits or
+   * one-time entitlement EXACTLY ONCE. Shared by `verifyPayment`, the
+   * `PAYMENT_SUCCESS_WEBHOOK` handler, and the reconcile job — the status-guarded
+   * `updateMany` makes it idempotent across all three paths and across
+   * retries/replays. When `userId` is supplied the claim is additionally scoped
+   * to that user (the verify path). Authenticity/amount must already be
+   * established by the caller before calling this.
+   */
+  private async settlePaidOrder(
+    orderId: string,
+    opts: { userId?: string; gatewayPaymentId?: string } = {},
+  ): Promise<{ claimed: boolean; creditsAdded: number; entitlementGranted: boolean }> {
+    const { userId, gatewayPaymentId } = opts;
+    return this.prisma.$transaction(async (tx: any) => {
+      const { count } = await tx.payment.updateMany({
+        where: {
+          gatewayOrderId: orderId,
+          status: { not: 'SUCCESS' },
+          ...(userId ? { userId } : {}),
+        },
+        data: { status: 'SUCCESS', ...(gatewayPaymentId ? { gatewayPaymentId } : {}) },
+      });
+      if (count === 0) {
+        // Lost the race / already settled — idempotent no-op.
+        return { claimed: false, creditsAdded: 0, entitlementGranted: false };
+      }
+      const payment = await tx.payment.findFirstOrThrow({
+        where: { gatewayOrderId: orderId, ...(userId ? { userId } : {}) },
+        select: { id: true, userId: true, amount: true, metadata: true },
+      });
+      const entType = this.entitlementTypeFromMetadata(payment.metadata);
+      if (entType) {
+        await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
+        return { claimed: true, creditsAdded: 0, entitlementGranted: true };
+      }
+      const creditsToAdd = this.creditsForPayment(payment);
+      await tx.user.update({
+        where: { id: payment.userId },
+        data: { credits: { increment: creditsToAdd } },
+      });
+      await tx.creditTransaction.create({
+        data: {
+          userId: payment.userId,
+          amount: creditsToAdd,
+          type: 'PURCHASE',
+          description: `Purchased ${creditsToAdd} credits`,
+        },
+      });
+      return { claimed: true, creditsAdded: creditsToAdd, entitlementGranted: false };
+    });
+  }
+
+  /**
+   * Safety net for missed/dropped webhooks: find Cashfree payments still PENDING
+   * after a grace period, re-fetch their status, and settle (grant) any that
+   * Cashfree reports PAID — or mark terminal ones FAILED. Idempotent via
+   * `settlePaidOrder`. Invoked on a schedule by PaymentReconcileService.
+   */
+  async reconcilePendingPayments(graceMinutes = 15, batch = 100): Promise<{ checked: number; settled: number }> {
+    if (!this.cashfree) return { checked: 0, settled: 0 };
+    const cutoff = new Date(Date.now() - graceMinutes * 60 * 1000);
+    const stale = await this.prisma.payment.findMany({
+      where: { status: 'PENDING', provider: 'cashfree', createdAt: { lt: cutoff } },
+      select: { gatewayOrderId: true, amount: true },
+      take: batch,
+    });
+
+    let settled = 0;
+    for (const p of stale) {
+      if (!p.gatewayOrderId) continue;
+      try {
+        const order: any = await this.cashfree.getOrder(p.gatewayOrderId);
+        const status = String(order?.order_status ?? '').toUpperCase();
+        if (status === 'PAID') {
+          const apiAmount = Number(order?.order_amount);
+          const expected = Number(p.amount);
+          if (!Number.isFinite(apiAmount) || Math.abs(apiAmount - expected) > 0.001) {
+            this.logger.error(
+              `reconcile: amount mismatch order=${p.gatewayOrderId} cashfree=${apiAmount} expected=${expected}`,
+            );
+            continue;
+          }
+          const cfPaymentId = order?.cf_order_id ? `cf_${order.cf_order_id}` : undefined;
+          const r = await this.settlePaidOrder(p.gatewayOrderId, { gatewayPaymentId: cfPaymentId });
+          if (r.claimed) settled++;
+        } else if (['EXPIRED', 'TERMINATED', 'FAILED'].includes(status)) {
+          await this.prisma.payment.updateMany({
+            where: { gatewayOrderId: p.gatewayOrderId, status: { notIn: ['SUCCESS', 'REFUNDED'] } },
+            data: { status: 'FAILED' },
+          });
+        }
+      } catch (error) {
+        this.logger.warn(`reconcile: failed to settle ${p.gatewayOrderId}: ${(error as Error).message}`);
+      }
+    }
+    if (settled > 0) this.logger.log(`reconcile: settled ${settled}/${stale.length} stale payment(s)`);
+    return { checked: stale.length, settled };
   }
 
   /** Extract the EntitlementType captured in a payment's metadata, if any. */
@@ -559,14 +650,17 @@ export class PaymentService {
     const secret = this.webhookSecret();
     if (!secret) {
       this.logger.error('handleWebhook: Cashfree secret not configured — refusing to process');
+      this.recordWebhookOutcome('not_configured');
       throw new InternalServerErrorException('Webhook processing is not configured');
     }
     if (!signatureHeader) {
       this.logger.warn('Webhook received without signature header - rejecting');
+      this.recordWebhookOutcome('missing_signature');
       throw new BadRequestException('Missing webhook signature');
     }
     if (!timestampHeader) {
       this.logger.warn('Webhook received without timestamp header - rejecting');
+      this.recordWebhookOutcome('missing_timestamp');
       throw new BadRequestException('Missing webhook timestamp');
     }
 
@@ -576,11 +670,13 @@ export class PaymentService {
       this.configService.get<number>('cashfree.webhookToleranceSeconds') ?? 300;
     const ts = Number(timestampHeader);
     if (!Number.isFinite(ts)) {
+      this.recordWebhookOutcome('invalid_timestamp');
       throw new BadRequestException('Invalid webhook timestamp');
     }
     const skew = Math.abs(Math.floor(Date.now() / 1000) - ts);
     if (skew > tolerance) {
       this.logger.warn(`Webhook timestamp outside tolerance (skew=${skew}s) - rejecting`);
+      this.recordWebhookOutcome('stale_timestamp');
       throw new BadRequestException('Webhook timestamp outside allowed window');
     }
 
@@ -594,6 +690,7 @@ export class PaymentService {
       bodyBuf = rawBody;
     } else if ((process.env.NODE_ENV ?? '') === 'production') {
       this.logger.error('handleWebhook: raw request body unavailable — cannot verify signature');
+      this.recordWebhookOutcome('body_unavailable');
       throw new BadRequestException('Webhook body unavailable');
     } else {
       bodyBuf = Buffer.from(JSON.stringify(payload));
@@ -601,6 +698,7 @@ export class PaymentService {
 
     if (!verifyCashfreeSignature(secret, timestampHeader, bodyBuf, signatureHeader)) {
       this.logger.warn('Webhook signature verification failed');
+      this.recordWebhookOutcome('bad_signature');
       throw new BadRequestException('Invalid webhook signature');
     }
 
@@ -634,9 +732,11 @@ export class PaymentService {
       }
     } catch (error) {
       this.logger.error(`Webhook processing failed for event ${event}`, error as Error);
+      this.recordWebhookOutcome('processing_error');
       throw new InternalServerErrorException('Webhook processing failed');
     }
 
+    this.recordWebhookOutcome('ok');
     return { received: true };
   }
 
@@ -647,38 +747,10 @@ export class PaymentService {
     if (!orderId) return;
     const cfPaymentId = data?.payment?.cf_payment_id;
     const gatewayPaymentId = cfPaymentId != null ? `cf_${cfPaymentId}` : undefined;
-
-    await this.prisma.$transaction(async (tx: any) => {
-      // Claim atomically: updateMany with the status guard. Without this, a
-      // concurrent client-side verify + webhook can both pass and double-grant.
-      const { count } = await tx.payment.updateMany({
-        where: { gatewayOrderId: orderId, status: { not: 'SUCCESS' } },
-        data: { status: 'SUCCESS', ...(gatewayPaymentId ? { gatewayPaymentId } : {}) },
-      });
-      if (count === 0) return; // lost the race or not our order
-      const payment = await tx.payment.findFirstOrThrow({
-        where: { gatewayOrderId: orderId },
-        select: { id: true, userId: true, amount: true, metadata: true },
-      });
-      const entType = this.entitlementTypeFromMetadata(payment.metadata);
-      if (entType) {
-        await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
-        return;
-      }
-      const creditsToAdd = this.creditsForPayment(payment);
-      await tx.user.update({
-        where: { id: payment.userId },
-        data: { credits: { increment: creditsToAdd } },
-      });
-      await tx.creditTransaction.create({
-        data: {
-          userId: payment.userId,
-          amount: creditsToAdd,
-          type: 'PURCHASE',
-          description: `Webhook: purchased ${creditsToAdd} credits`,
-        },
-      });
-    });
+    // Same idempotent, status-guarded grant as verify/reconcile — a concurrent
+    // client verify + this webhook can both pass the gate, but only one claims
+    // the row and grants.
+    await this.settlePaidOrder(orderId, { gatewayPaymentId });
   }
 
   private async handlePaymentFailed(data: any): Promise<void> {

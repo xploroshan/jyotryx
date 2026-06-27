@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import { PaymentService } from '../src/modules/payment/payment.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
+import { MetricsService } from '../src/metrics/metrics.service';
 import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
 
 const TEST_SECRET = 'test-cashfree-secret';
@@ -31,6 +32,7 @@ function cashfreeWebhookSig(secret: string, timestamp: string, payload: unknown)
 describe('PaymentService (Cashfree)', () => {
   let service: PaymentService;
   let prisma: any;
+  let metrics: any;
 
   const mockUser = {
     id: 'test-uuid',
@@ -83,10 +85,13 @@ describe('PaymentService (Cashfree)', () => {
       isActiveSubscriber: jest.fn().mockResolvedValue(false),
     };
 
+    metrics = { cashfreeWebhookTotal: { inc: jest.fn() } };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: prisma },
+        { provide: MetricsService, useValue: metrics },
         { provide: FeatureAccessService, useValue: featureAccess },
         {
           provide: ConfigService,
@@ -129,11 +134,12 @@ describe('PaymentService (Cashfree)', () => {
       );
     });
 
-    it('rejects a forged signature (constant-time base64 compare)', async () => {
+    it('rejects a forged signature (constant-time base64 compare) and records the outcome', async () => {
       const ts = nowTs();
       await expect(service.handleWebhook(payload, 'not-a-valid-signature', ts)).rejects.toThrow(
         BadRequestException,
       );
+      expect(metrics.cashfreeWebhookTotal.inc).toHaveBeenCalledWith({ outcome: 'bad_signature' });
     });
 
     it('rejects a signature valid for a DIFFERENT body (tamper)', async () => {
@@ -171,6 +177,7 @@ describe('PaymentService (Cashfree)', () => {
       const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
       const result = await service.handleWebhook(p, sig, ts);
       expect(result.received).toBe(true);
+      expect(metrics.cashfreeWebhookTotal.inc).toHaveBeenCalledWith({ outcome: 'ok' });
     });
   });
 
@@ -581,6 +588,63 @@ describe('PaymentService (Cashfree)', () => {
       await expect(
         service.createSubscription('test-uuid', { plan: 'ANNUAL' } as any),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ── reconcilePendingPayments (missed-webhook safety net) ──────────────────
+  describe('reconcilePendingPayments', () => {
+    it('settles a missed-webhook PENDING order exactly once', async () => {
+      (service as any).cashfree = {
+        getOrder: jest.fn().mockResolvedValue({ order_status: 'PAID', order_amount: 99, cf_order_id: 7 }),
+      };
+      prisma.payment.findMany.mockResolvedValue([{ gatewayOrderId: 'cf_stale_1', amount: 99 }]);
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirstOrThrow: jest.fn().mockResolvedValue({ id: 'p1', userId: 'test-uuid', amount: 99, metadata: { credits: 25 } }),
+        },
+        user: { update: jest.fn() },
+        creditTransaction: { create: jest.fn() },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const res = await service.reconcilePendingPayments();
+      expect(res.settled).toBe(1);
+      expect(txStub.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { increment: 25 } } }),
+      );
+    });
+
+    it('does NOT settle when Cashfree reports a different amount (tamper)', async () => {
+      (service as any).cashfree = {
+        getOrder: jest.fn().mockResolvedValue({ order_status: 'PAID', order_amount: 1 }),
+      };
+      prisma.payment.findMany.mockResolvedValue([{ gatewayOrderId: 'cf_stale_bad', amount: 99 }]);
+      prisma.$transaction = jest.fn();
+
+      const res = await service.reconcilePendingPayments();
+      expect(res.settled).toBe(0);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('marks an expired stale order FAILED', async () => {
+      (service as any).cashfree = {
+        getOrder: jest.fn().mockResolvedValue({ order_status: 'EXPIRED' }),
+      };
+      prisma.payment.findMany.mockResolvedValue([{ gatewayOrderId: 'cf_stale_2', amount: 99 }]);
+      prisma.payment.updateMany = jest.fn().mockResolvedValue({ count: 1 });
+
+      const res = await service.reconcilePendingPayments();
+      expect(res.settled).toBe(0);
+      expect(prisma.payment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { status: 'FAILED' } }),
+      );
+    });
+
+    it('no-ops in mock mode (no Cashfree client)', async () => {
+      (service as any).cashfree = null;
+      const res = await service.reconcilePendingPayments();
+      expect(res).toEqual({ checked: 0, settled: 0 });
     });
   });
 
