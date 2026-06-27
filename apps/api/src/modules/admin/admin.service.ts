@@ -34,6 +34,7 @@ import {
   UserDataExport,
 } from '../../gdpr/gdpr-request.service';
 import { NotificationService } from '../notification/notification.service';
+import { PaymentService } from '../payment/payment.service';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -192,6 +193,7 @@ export class AdminService {
     private safetyService: SafetyService,
     private gdprRequestService: GdprRequestService,
     private notificationService: NotificationService,
+    private paymentService: PaymentService,
   ) {
     // Analytics / read-only queries go through the replica
     this.readPrisma = readReplicaPrisma as unknown as PrismaService;
@@ -816,6 +818,104 @@ export class AdminService {
     }));
   }
 
+  /**
+   * Filterable, paginated payments list for the admin Payments dashboard.
+   * Filters: status, type, user search (name/email), and a created-after
+   * window. Returns the rows + total count for pagination.
+   */
+  async listPayments(opts: {
+    status?: string;
+    type?: string;
+    search?: string;
+    days?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<{ payments: any[]; total: number }> {
+    const page = Math.max(1, opts.page ?? 1);
+    const limit = Math.min(100, Math.max(1, opts.limit ?? 25));
+    const where: any = {};
+    if (opts.status) where.status = opts.status;
+    if (opts.type) where.type = opts.type;
+    if (opts.days && opts.days > 0) {
+      where.createdAt = { gte: new Date(Date.now() - opts.days * 86400_000) };
+    }
+    if (opts.search && opts.search.trim()) {
+      const q = opts.search.trim();
+      where.user = {
+        OR: [
+          { email: { contains: q, mode: 'insensitive' } },
+          { name: { contains: q, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const [rows, total] = await Promise.all([
+      this.readPrisma.payment.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { user: { select: { name: true, email: true } } },
+      }),
+      this.readPrisma.payment.count({ where }),
+    ]);
+
+    return {
+      total,
+      payments: rows.map((p: any) => ({
+        id: p.id,
+        userName: p.user.name,
+        userEmail: p.user.email,
+        amount: Number(p.amount),
+        currency: p.currency,
+        status: p.status,
+        type: p.type,
+        provider: p.provider,
+        gatewayOrderId: p.gatewayOrderId,
+        createdAt: p.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /**
+   * Admin-initiated refund. Delegates the Cashfree call to PaymentService
+   * (the REFUND_STATUS_WEBHOOK then reverses the ledger idempotently) and
+   * writes an audit row.
+   */
+  async refundPayment(
+    paymentId: string,
+    amount: number | undefined,
+    note: string | undefined,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<{ refundId: string; status: string; amount: number }> {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { user: { select: { email: true } } },
+    });
+    if (!payment) throw new NotFoundException('Payment not found');
+
+    const result = await this.paymentService.refundPayment(paymentId, { amount, note });
+
+    await this.prisma.activityLog.create({
+      data: {
+        adminId,
+        adminEmail,
+        action: 'PAYMENT_REFUND',
+        entityType: 'Payment',
+        entityId: paymentId,
+        entityLabel: payment.user.email,
+        previousData: { status: payment.status, amount: Number(payment.amount) },
+        newData: { refundId: result.refundId, refundAmount: result.amount, note: note ?? null },
+      },
+    });
+
+    this.logger.log(
+      `Admin ${adminEmail} initiated refund on payment ${paymentId} (₹${result.amount}, ${result.refundId})`,
+    );
+    return result;
+  }
+
   async getRecentChats(limit: number = 20) {
     const sessions = await this.readPrisma.chatSession.findMany({
       orderBy: { updatedAt: 'desc' },
@@ -888,6 +988,9 @@ export class AdminService {
     if (log.undone) throw new BadRequestException('This action has already been undone');
     if (log.action === 'USER_DELETE') {
       throw new BadRequestException('User deletion cannot be undone. The user data has been permanently removed.');
+    }
+    if (log.action === 'PAYMENT_REFUND') {
+      throw new BadRequestException('A refund cannot be undone. Reverse it from the Cashfree dashboard if needed.');
     }
 
     const previousData = log.previousData as Record<string, any> | null;

@@ -13,6 +13,7 @@ import { BroadcastService } from '../src/ops/broadcast.service';
 import { SafetyService } from '../src/safety/safety.service';
 import { GdprRequestService } from '../src/gdpr/gdpr-request.service';
 import { NotificationService } from '../src/modules/notification/notification.service';
+import { PaymentService } from '../src/modules/payment/payment.service';
 import { mockOpenAIService } from './helpers/mocks';
 
 describe('AdminService', () => {
@@ -169,6 +170,7 @@ describe('AdminService', () => {
         { provide: SafetyService, useValue: mockSafetyService },
         { provide: GdprRequestService, useValue: mockGdprRequestService },
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: PaymentService, useValue: { refundPayment: jest.fn().mockResolvedValue({ refundId: 'rf_test', status: 'INITIATED', amount: 99 }) } },
       ],
     }).compile();
 

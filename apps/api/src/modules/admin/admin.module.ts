@@ -25,6 +25,8 @@ import { ReferralModule } from '../referral/referral.module';
 import { DailyBriefingModule } from '../daily-briefing/daily-briefing.module';
 // Phase 1 monetization — paywall A/B stats panel.
 import { ExperimentModule } from '../experiment/experiment.module';
+// Payments — the admin refund action calls PaymentService (Cashfree refund API).
+import { PaymentModule } from '../payment/payment.module';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { ExperimentModule } from '../experiment/experiment.module';
     ReferralModule,
     DailyBriefingModule,
     ExperimentModule,
+    PaymentModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
