@@ -30,6 +30,18 @@ export class MetricsService implements OnModuleInit {
     labelNames: ['provider', 'model'] as const,
   });
 
+  /**
+   * Cashfree webhook outcomes. `outcome` is one of: ok, bad_signature,
+   * missing_signature, missing_timestamp, invalid_timestamp, stale_timestamp,
+   * not_configured, processing_error. A rising rate of anything but `ok` is the
+   * signal to alert on (misconfiguration or a forging attempt).
+   */
+  readonly cashfreeWebhookTotal = new client.Counter({
+    name: 'cashfree_webhook_total',
+    help: 'Cashfree webhook deliveries by outcome',
+    labelNames: ['outcome'] as const,
+  });
+
   onModuleInit() {
     client.collectDefaultMetrics({ register: this.register });
   }

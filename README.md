@@ -51,7 +51,7 @@ The repo is intentionally **apps-only** — no mobile app, no `packages/shared`.
 | Vision (palmistry) | OpenAI Vision API (no on-prem CV libs) |
 | Object storage | Cloudflare R2 |
 | Astronomy engine | Swiss Ephemeris (`swisseph` C++ binding) |
-| Payments | Razorpay (UPI / cards / subscriptions) |
+| Payments | Cashfree (UPI / cards / netbanking / subscriptions) |
 | Auth | Email+password, SMS OTP, Google, Apple, Firebase |
 | Observability | Prometheus (`/api/metrics`), OpenTelemetry, Sentry |
 | Web hosting | Vercel |
@@ -347,7 +347,7 @@ REDIS_URL / REDIS_HOST / REDIS_PORT
 JWT_SECRET / JWT_REFRESH_SECRET
 OPENAI_API_KEY · GEMINI_API_KEY · ANTHROPIC_API_KEY
 LLM_FAILOVER_ENABLED=true
-RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET / RAZORPAY_WEBHOOK_SECRET
+CASHFREE_CLIENT_ID / CASHFREE_CLIENT_SECRET / CASHFREE_WEBHOOK_SECRET / CASHFREE_ENV / API_PUBLIC_URL
 R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET_NAME / R2_PUBLIC_URL
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 FIREBASE_PROJECT_ID / FIREBASE_SERVICE_ACCOUNT_JSON
