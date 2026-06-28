@@ -20,7 +20,7 @@ describe('InterpretationService', () => {
   };
   let prisma: { deepDiveUnlock: { findUnique: jest.Mock; create: jest.Mock } };
   let users: { deductCredits: jest.Mock };
-  let featureAccess: { paidFeaturesFree: jest.Mock; isActiveSubscriber: jest.Mock; getCreditCost: jest.Mock };
+  let featureAccess: { paidFeaturesFree: jest.Mock; isActiveSubscriber: jest.Mock; creditsEnabled: jest.Mock; getCreditCost: jest.Mock };
 
   const sysOf = () => {
     const arg = cache.cachedChatCompletion.mock.calls[0][0];
@@ -53,6 +53,7 @@ describe('InterpretationService', () => {
     featureAccess = {
       paidFeaturesFree: jest.fn().mockResolvedValue(false),
       isActiveSubscriber: jest.fn().mockResolvedValue(false),
+      creditsEnabled: jest.fn().mockResolvedValue(true),
       getCreditCost: jest.fn(async (_name: string, fb: number) => fb),
     };
     const config = { get: jest.fn().mockReturnValue(3) };

@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
 import { normalizePhone } from '../../common/phone.util';
 
 export interface UserProfile {
@@ -89,10 +88,25 @@ export interface UserCredits {
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private featureAccess: FeatureAccessService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
+
+  /**
+   * Whether the credit currency is on. Read directly (not via
+   * FeatureAccessService) to avoid coupling UserService — a widely-injected
+   * provider — to the monetization module. Defaults to true (legacy/charge) if
+   * the setting is unset or the lookup fails, so the credit path is never
+   * silently disabled by an error.
+   */
+  private async creditsEnabled(): Promise<boolean> {
+    try {
+      const row = await this.prisma.siteSetting.findUnique({
+        where: { key: 'feature.credits_enabled' },
+      });
+      return row?.value !== 'false';
+    } catch {
+      return true;
+    }
+  }
 
   async getProfile(userId: string): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -356,7 +370,7 @@ export class UserService {
     // Short-circuit here so every `deductWithRefund` caller (kundli, matching,
     // divisional/KP charts, tarot, vastu) is freed in one place — no per-call
     // changes, and the refund dance is skipped entirely.
-    if (!(await this.featureAccess.creditsEnabled())) {
+    if (!(await this.creditsEnabled())) {
       return work();
     }
     const deducted = await this.deductCredits(userId, cost, description);
