@@ -62,13 +62,29 @@ export function MonetizationTab({ token }: { token: string }) {
   const [savingPaywall, setSavingPaywall] = useState(false);
   const [paywallMsg, setPaywallMsg] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
+  // Credits & limits (subscription model). Read from the public pricing config
+  // (which already surfaces feature.credits_enabled + limits.* + overage packs)
+  // and written back through the generic /admin/settings endpoint.
+  const [creditsOn, setCreditsOn] = useState(true);
+  const [chatFree, setChatFree] = useState(50);
+  const [chatSub, setChatSub] = useState(1000);
+  const [palmFree, setPalmFree] = useState(2);
+  const [palmSub, setPalmSub] = useState(4);
+  const [chatOveragePrice, setChatOveragePrice] = useState(100);
+  const [chatOverageCount, setChatOverageCount] = useState(350);
+  const [palmOveragePrice, setPalmOveragePrice] = useState(100);
+  const [palmOverageCount, setPalmOverageCount] = useState(2);
+  const [savingCredits, setSavingCredits] = useState(false);
+  const [creditsMsg, setCreditsMsg] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const [b, p] = await Promise.all([
+      const [b, p, cfg] = await Promise.all([
         api.get<BriefingStats>("/admin/briefing/stats", { token }),
         api.get<PaywallStats>("/admin/experiments/paywall/stats", { token }),
+        api.get<Record<string, string>>("/payments/pricing", { token }),
       ]);
       setBriefing(b);
       setEnabled(b.settings.enabled);
@@ -82,6 +98,20 @@ export function MonetizationTab({ token }: { token: string }) {
       const f = p.variants.find((v) => v.variant === "first_free");
       if (c) setControlWeight(c.weight);
       if (f) setFirstFreeWeight(f.weight);
+
+      const numv = (k: string, d: number) => {
+        const n = parseInt(cfg[k] ?? "", 10);
+        return Number.isFinite(n) && n >= 0 ? n : d;
+      };
+      setCreditsOn(cfg["feature.credits_enabled"] !== "false");
+      setChatFree(numv("limits.chat.free", 50));
+      setChatSub(numv("limits.chat.subscriber", 1000));
+      setPalmFree(numv("limits.palmistry.free", 2));
+      setPalmSub(numv("limits.palmistry.subscriber", 4));
+      setChatOveragePrice(numv("pricing.credits.overage_chat.price", 100));
+      setChatOverageCount(numv("pricing.credits.overage_chat.credits", 350));
+      setPalmOveragePrice(numv("pricing.credits.overage_palmistry.price", 100));
+      setPalmOverageCount(numv("pricing.credits.overage_palmistry.credits", 2));
     } catch (err) {
       setLoadError(errorMessage(err));
     } finally {
@@ -185,6 +215,35 @@ export function MonetizationTab({ token }: { token: string }) {
     }
   };
 
+  const saveCreditsSettings = async () => {
+    setSavingCredits(true);
+    setCreditsMsg(null);
+    try {
+      await api.put<Record<string, string>>(
+        "/admin/settings",
+        {
+          "feature.credits_enabled": creditsOn ? "true" : "false",
+          "limits.chat.free": String(chatFree),
+          "limits.chat.subscriber": String(chatSub),
+          "limits.palmistry.free": String(palmFree),
+          "limits.palmistry.subscriber": String(palmSub),
+          "pricing.credits.overage_chat.price": String(chatOveragePrice),
+          "pricing.credits.overage_chat.credits": String(chatOverageCount),
+          "pricing.credits.overage_palmistry.price": String(palmOveragePrice),
+          "pricing.credits.overage_palmistry.credits": String(palmOverageCount),
+        },
+        { token },
+      );
+      setCreditsMsg({ tone: "success", text: "Credits & limits saved." });
+      await load();
+    } catch (err) {
+      setCreditsMsg({ tone: "error", text: errorMessage(err) });
+    } finally {
+      setSavingCredits(false);
+      setTimeout(() => setCreditsMsg(null), 4000);
+    }
+  };
+
   if (loading) {
     return <div className="surface-card p-6 text-center text-ink-500">Loading…</div>;
   }
@@ -195,6 +254,79 @@ export function MonetizationTab({ token }: { token: string }) {
 
   return (
     <div className="space-y-8">
+      {/* ─── Credits & limits (subscription model) ──────────────────── */}
+      <section>
+        <header className="mb-3">
+          <h2 className="text-lg font-semibold text-ink-900">Credits &amp; limits</h2>
+          <p className="text-xs text-ink-500 mt-1">
+            Turn the credit currency off to run the subscription model: deterministic
+            features become free, interpretation is subscriber-gated, and chat/palmistry
+            are governed by the per-feature allowances below. Going live also needs{" "}
+            <code>Subscriptions enabled</code>.
+          </p>
+        </header>
+        <div className="surface-card p-6 space-y-5">
+          {creditsMsg && (
+            <div
+              className={`p-3 rounded-lg text-xs border ${
+                creditsMsg.tone === "success"
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                  : "bg-red-500/10 border-red-500/30 text-red-300"
+              }`}
+            >
+              {creditsMsg.text}
+            </div>
+          )}
+          <Toggle
+            label="Credits system enabled (off = subscription model)"
+            value={creditsOn}
+            onChange={setCreditsOn}
+          />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Chat — free (lifetime)">
+              <input type="number" min="0" value={chatFree}
+                onChange={(e) => setChatFree(clamp(parseInt(e.target.value, 10), 0, 1000000, 50))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+            </Field>
+            <Field label="Chat — subscriber (per month)">
+              <input type="number" min="0" value={chatSub}
+                onChange={(e) => setChatSub(clamp(parseInt(e.target.value, 10), 0, 1000000, 1000))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+            </Field>
+            <Field label="Palmistry — free (lifetime)">
+              <input type="number" min="0" value={palmFree}
+                onChange={(e) => setPalmFree(clamp(parseInt(e.target.value, 10), 0, 100000, 2))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+            </Field>
+            <Field label="Palmistry — subscriber (per month)">
+              <input type="number" min="0" value={palmSub}
+                onChange={(e) => setPalmSub(clamp(parseInt(e.target.value, 10), 0, 100000, 4))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+            </Field>
+            <Field label="Chat top-up — ₹ price / messages">
+              <input type="number" min="0" value={chatOveragePrice}
+                onChange={(e) => setChatOveragePrice(clamp(parseInt(e.target.value, 10), 0, 100000, 100))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+              <input type="number" min="0" value={chatOverageCount}
+                onChange={(e) => setChatOverageCount(clamp(parseInt(e.target.value, 10), 0, 1000000, 350))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+            </Field>
+            <Field label="Palmistry top-up — ₹ price / readings">
+              <input type="number" min="0" value={palmOveragePrice}
+                onChange={(e) => setPalmOveragePrice(clamp(parseInt(e.target.value, 10), 0, 100000, 100))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+              <input type="number" min="0" value={palmOverageCount}
+                onChange={(e) => setPalmOverageCount(clamp(parseInt(e.target.value, 10), 0, 100000, 2))}
+                className="w-24 px-3 py-2 rounded-lg surface-input text-sm" />
+            </Field>
+          </div>
+          <button onClick={saveCreditsSettings} disabled={savingCredits}
+            className="px-5 py-2.5 rounded-lg btn-primary text-white text-sm font-medium disabled:opacity-50">
+            {savingCredits ? "Saving…" : "Save credits & limits"}
+          </button>
+        </div>
+      </section>
+
       {/* ─── Briefings ──────────────────────────────────────────────── */}
       <section>
         <header className="mb-3">

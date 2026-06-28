@@ -32,6 +32,22 @@ const DEFAULT_PALMISTRY_PRICE_INR = 250;
  * variants unlock that specific report type; `palm_reading` is the
  * canonical palmistry product (legacy `report_palm` maps to REPORT_PALM).
  */
+/**
+ * Map an overage-pack productId to the usage feature it tops up, or null if the
+ * product is not an overage pack. Overage packs are sold through the same
+ * one-time-order rails as credit packs (productId `credits_overage_<feature>`,
+ * priced/sized by `pricing.credits.overage_<feature>.{price,credits}`), but at
+ * settlement they raise the feature's usage allowance rather than granting
+ * generic credits.
+ */
+function overageFeatureForProduct(productId?: string): 'palmistry' | 'chat' | null {
+  if (!productId) return null;
+  const packId = productId.replace(/^credits[_.]/i, '');
+  if (packId === 'overage_palmistry') return 'palmistry';
+  if (packId === 'overage_chat') return 'chat';
+  return null;
+}
+
 function entitlementTypeForProduct(productId: string): EntitlementTypeName | null {
   switch (productId) {
     case 'report_life':
@@ -451,6 +467,17 @@ export class PaymentService {
       if (entType) {
         await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
         return { claimed: true, creditsAdded: 0, entitlementGranted: true };
+      }
+      // Overage pack (subscription model): top up the feature's usage allowance
+      // instead of granting generic credits. The pack's unit count is the
+      // `credits` captured in metadata (e.g. +2 palmistry, +350 chat messages).
+      const overageFeature = overageFeatureForProduct(
+        (payment.metadata as { productId?: string } | null)?.productId,
+      );
+      if (overageFeature) {
+        const units = this.creditsForPayment(payment);
+        await this.featureAccess.addUsageBonus(payment.userId, overageFeature, units, tx);
+        return { claimed: true, creditsAdded: 0, entitlementGranted: false };
       }
       const creditsToAdd = this.creditsForPayment(payment);
       await tx.user.update({
@@ -983,12 +1010,15 @@ export class PaymentService {
       'feature.subscriptions_enabled',
       'feature.pricing_page_enabled',
       'feature.free_mode',
+      'feature.credits_enabled',
+      'feature.overage_for_free_enabled',
     ];
     const socialKeys = ['social.report_count_base'];
     const rows = await this.prisma.siteSetting.findMany({
       where: {
         OR: [
           { key: { startsWith: 'pricing.' } },
+          { key: { startsWith: 'limits.' } },
           { key: { in: [...featureKeys, ...socialKeys] } },
         ],
       },
@@ -1001,6 +1031,9 @@ export class PaymentService {
     if (result['feature.subscriptions_enabled'] === undefined) result['feature.subscriptions_enabled'] = 'false';
     if (result['feature.pricing_page_enabled'] === undefined) result['feature.pricing_page_enabled'] = 'false';
     if (result['feature.free_mode'] === undefined) result['feature.free_mode'] = 'false';
+    // Credits default ON (legacy-safe) when unset — mirrors FeatureAccessService.
+    if (result['feature.credits_enabled'] === undefined) result['feature.credits_enabled'] = 'true';
+    if (result['feature.overage_for_free_enabled'] === undefined) result['feature.overage_for_free_enabled'] = 'false';
     if (result['pricing.report.price'] === undefined) result['pricing.report.price'] = String(DEFAULT_REPORT_PRICE_INR);
     if (result['pricing.palmistry.price'] === undefined) result['pricing.palmistry.price'] = String(DEFAULT_PALMISTRY_PRICE_INR);
 

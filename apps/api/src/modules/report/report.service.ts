@@ -9,6 +9,7 @@ import {
   EntitlementTypeName,
   UnlockMode,
 } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
@@ -74,8 +75,32 @@ export class ReportService {
     // inside runReportGeneration, only after the Report row exists, so a
     // failed generation never silently burns the unlock.
     const entType = `REPORT_${dto.type}` as EntitlementTypeName;
-    const mode = await this.featureAccess.resolveUnlock(userId, entType);
-    return this.runReportGeneration(userId, dto, entType, mode);
+
+    // Legacy (credits on): pay-to-unlock per report type via one-time
+    // entitlement / subscription (unchanged).
+    if (await this.featureAccess.creditsEnabled()) {
+      const mode = await this.featureAccess.resolveUnlock(userId, entType);
+      return this.runReportGeneration(userId, dto, entType, mode);
+    }
+
+    // Subscription model: one report per period — free users once for life,
+    // subscribers once per billing month — then it's View-only until the next
+    // cycle. The master free switch bypasses the cap.
+    if (await this.featureAccess.paidFeaturesFree()) {
+      return this.runReportGeneration(userId, dto, entType, 'subscriber');
+    }
+    const usage = await this.featureAccess.checkUsage(userId, 'report_bundle');
+    if (!usage.allowed) {
+      throw new PaymentRequiredException(
+        usage.isSubscriber
+          ? "You've already generated your report this cycle — your next one unlocks next month."
+          : 'Subscribe to generate your personalized report.',
+        { subscribe: !usage.isSubscriber, feature: 'report_bundle' },
+      );
+    }
+    const result = await this.runReportGeneration(userId, dto, entType, 'subscriber');
+    await this.featureAccess.incrementUsage(userId, 'report_bundle', usage.periodKey);
+    return result;
   }
 
   private async runReportGeneration(

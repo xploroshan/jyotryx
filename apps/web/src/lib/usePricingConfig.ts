@@ -22,8 +22,24 @@ export interface PricingConfig {
   pricingEnabled: boolean;
   /** Master switch: when true the three paid features are free for everyone. */
   freeMode: boolean;
+  /**
+   * Credit currency switch. When false (subscription model) the app hides all
+   * credit UI: credit packs, ₹-per-use price labels, and the profile balance.
+   * Defaults to true (legacy-safe) so an un-configured backend keeps its UI.
+   */
+  creditsEnabled: boolean;
+  /** Whether free users can buy ₹100 overage packs (else they see Subscribe). */
+  overageForFreeEnabled: boolean;
   reportPrice: number;
   palmistryPrice: number;
+  /** Subscription prices (subscription model). */
+  monthlyPrice: number;
+  annualPrice: number;
+  /** Overage pack price/size (₹100 → +2 palmistry, ₹100 → +350 chat). */
+  palmistryOveragePrice: number;
+  palmistryOverageCount: number;
+  chatOveragePrice: number;
+  chatOverageCount: number;
   reportsDelivered: number | null;
   loading: boolean;
 }
@@ -32,8 +48,16 @@ const DEFAULTS: Omit<PricingConfig, "raw" | "loading"> = {
   subscriptionsEnabled: false,
   pricingEnabled: false,
   freeMode: false,
+  creditsEnabled: true,
+  overageForFreeEnabled: false,
   reportPrice: 199,
   palmistryPrice: 250,
+  monthlyPrice: 99,
+  annualPrice: 2999,
+  palmistryOveragePrice: 100,
+  palmistryOverageCount: 2,
+  chatOveragePrice: 100,
+  chatOverageCount: 350,
   reportsDelivered: null,
 };
 
@@ -47,8 +71,17 @@ function parseConfig(raw: Record<string, string>): Omit<PricingConfig, "raw" | "
     subscriptionsEnabled: raw["feature.subscriptions_enabled"] === "true",
     pricingEnabled: raw["feature.pricing_page_enabled"] === "true",
     freeMode: raw["feature.free_mode"] === "true",
+    // Absent → true, mirroring the backend's legacy-safe default.
+    creditsEnabled: raw["feature.credits_enabled"] !== "false",
+    overageForFreeEnabled: raw["feature.overage_for_free_enabled"] === "true",
     reportPrice: num("pricing.report.price", DEFAULTS.reportPrice),
     palmistryPrice: num("pricing.palmistry.price", DEFAULTS.palmistryPrice),
+    monthlyPrice: num("pricing.monthly.price", DEFAULTS.monthlyPrice),
+    annualPrice: num("pricing.annual.price", DEFAULTS.annualPrice),
+    palmistryOveragePrice: num("pricing.credits.overage_palmistry.price", DEFAULTS.palmistryOveragePrice),
+    palmistryOverageCount: num("pricing.credits.overage_palmistry.credits", DEFAULTS.palmistryOverageCount),
+    chatOveragePrice: num("pricing.credits.overage_chat.price", DEFAULTS.chatOveragePrice),
+    chatOverageCount: num("pricing.credits.overage_chat.credits", DEFAULTS.chatOverageCount),
     reportsDelivered: Number.isFinite(delivered) ? delivered : null,
   };
 }
