@@ -51,9 +51,13 @@ export class FeatureAccessService {
     return Number.isFinite(n) && n >= 0 ? n : fallback;
   }
 
-  /** Mode B is on only when the operator has flipped the flag. Default false. */
-  async subscriptionsEnabled(): Promise<boolean> {
-    const row = await this.prisma.siteSetting.findUnique({
+  /**
+   * Mode B is on only when the operator has flipped the flag. Default false.
+   * Accepts an optional transaction client so callers running inside a
+   * `$transaction` (e.g. payment settlement) read a consistent snapshot.
+   */
+  async subscriptionsEnabled(client: any = this.prisma): Promise<boolean> {
+    const row = await client.siteSetting.findUnique({
       where: { key: 'feature.subscriptions_enabled' },
     });
     return row?.value === 'true';
@@ -75,6 +79,18 @@ export class FeatureAccessService {
   }
 
   /**
+   * Whether FREE users may buy one-time overage packs (Decision 2: "subscribe
+   * first"). Default false — only active subscribers can top up; everyone else
+   * is steered to subscribe. Enforced in payment `createOrder`.
+   */
+  async overageForFreeEnabled(): Promise<boolean> {
+    const row = await this.prisma.siteSetting.findUnique({
+      where: { key: 'feature.overage_for_free_enabled' },
+    });
+    return row?.value === 'true';
+  }
+
+  /**
    * Master "make the app completely free" switch. When on, the three
    * normally-paid features (Reports, Palmistry, Chat) are free for everyone
    * — no entitlement required and no credits deducted. Default false.
@@ -91,10 +107,10 @@ export class FeatureAccessService {
    * subscription. Mirrors the active-subscription definition used by the
    * payment webhook (status ACTIVE and endDate null or in the future).
    */
-  async isActiveSubscriber(userId: string): Promise<boolean> {
-    if (!(await this.subscriptionsEnabled())) return false;
+  async isActiveSubscriber(userId: string, client: any = this.prisma): Promise<boolean> {
+    if (!(await this.subscriptionsEnabled(client))) return false;
     const now = new Date();
-    const count = await this.prisma.subscription.count({
+    const count = await client.subscription.count({
       where: {
         userId,
         status: 'ACTIVE',
@@ -246,7 +262,10 @@ export class FeatureAccessService {
   private static readonly DEFAULT_LIMITS: Record<string, { free: number; subscriber: number }> = {
     chat: { free: 50, subscriber: 1000 },
     palmistry: { free: 2, subscriber: 4 },
-    report_bundle: { free: 1, subscriber: 1 },
+    // Reports are metered per type (counter feature `report_<type>`) against a
+    // shared limit key `report`, so a subscriber gets one of EACH type per
+    // period — i.e. a full "set", not one report total.
+    report: { free: 1, subscriber: 1 },
   };
 
   /** UTC calendar-month key, e.g. "2026-06". A new month rolls the counter. */
@@ -283,6 +302,13 @@ export class FeatureAccessService {
   async checkUsage(
     userId: string,
     feature: string,
+    /**
+     * Key the allowance is read under, when it differs from the counter
+     * `feature`. Reports meter per type (`report_life`, `report_career`, …) but
+     * share one limit (`report`), so callers pass `limitFeature='report'`.
+     * Defaults to `feature`.
+     */
+    limitFeature: string = feature,
   ): Promise<{
     allowed: boolean;
     used: number;
@@ -294,7 +320,7 @@ export class FeatureAccessService {
   }> {
     const isSubscriber = await this.isActiveSubscriber(userId);
     const periodKey = this.periodKeyFor(isSubscriber);
-    const limit = await this.getUsageLimit(feature, isSubscriber);
+    const limit = await this.getUsageLimit(limitFeature, isSubscriber);
     const counter = await this.prisma.usageCounter.findUnique({
       where: { userId_feature_periodKey: { userId, feature, periodKey } },
     });
@@ -320,15 +346,30 @@ export class FeatureAccessService {
   }
 
   /**
+   * Give back one metered unit, e.g. when an async (queued) palmistry/report
+   * generation ultimately fails after the unit was counted at enqueue — the
+   * mirror of refundEntitlementByRef for the subscription model. Floors at 0
+   * via the `used > 0` guard, and is a safe no-op when no counter row exists.
+   */
+  async decrementUsage(userId: string, feature: string, periodKey: string): Promise<void> {
+    await this.prisma.usageCounter.updateMany({
+      where: { userId, feature, periodKey, used: { gt: 0 } },
+      data: { used: { decrement: 1 } },
+    });
+  }
+
+  /**
    * Top up the current period's allowance by `count` units (a purchased
    * overage pack). Bonus lives on the same row as `used`, so it is consumed
    * within the current month for subscribers and expires when the period rolls.
    * Returns the period key the bonus was applied to.
    */
   async addUsageBonus(userId: string, feature: string, count: number, tx?: any): Promise<string> {
-    const isSubscriber = await this.isActiveSubscriber(userId);
-    const periodKey = this.periodKeyFor(isSubscriber);
     const client = tx ?? this.prisma;
+    // Read subscriber status on the SAME client so a settlement transaction
+    // picks the period key from a consistent snapshot.
+    const isSubscriber = await this.isActiveSubscriber(userId, client);
+    const periodKey = this.periodKeyFor(isSubscriber);
     await client.usageCounter.upsert({
       where: { userId_feature_periodKey: { userId, feature, periodKey } },
       create: { userId, feature, periodKey, bonus: count },

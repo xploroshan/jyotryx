@@ -15,6 +15,7 @@ import {
   FeatureAccessService,
   EntitlementTypeName,
 } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto } from './dto';
 import {
   CashfreeClient,
@@ -256,6 +257,20 @@ export class PaymentService {
     let entitlementType: EntitlementTypeName | null = null;
     let paymentType: 'CREDITS' | 'REPORT' = 'CREDITS';
     if (dto.productId) {
+      // Subscribe-first: only active subscribers may buy overage top-ups,
+      // unless the operator has opened them to free users. Blocks a free user
+      // from hitting the checkout URL directly to bypass subscribing.
+      if (overageFeatureForProduct(dto.productId)) {
+        const allowed =
+          (await this.featureAccess.overageForFreeEnabled()) ||
+          (await this.featureAccess.isActiveSubscriber(userId));
+        if (!allowed) {
+          throw new PaymentRequiredException(
+            'Subscribe to unlock top-ups for this feature.',
+            { subscribe: true },
+          );
+        }
+      }
       const pack = await this.resolveCreditPack(dto.productId);
       if (pack) {
         if (dto.amount !== pack.priceINR) {

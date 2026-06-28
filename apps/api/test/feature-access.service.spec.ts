@@ -12,7 +12,7 @@ describe('FeatureAccessService', () => {
       siteSetting: { findUnique: jest.fn() },
       subscription: { count: jest.fn() },
       entitlement: { count: jest.fn(), create: jest.fn(), updateMany: jest.fn() },
-      usageCounter: { findUnique: jest.fn(), upsert: jest.fn() },
+      usageCounter: { findUnique: jest.fn(), upsert: jest.fn(), updateMany: jest.fn() },
       $queryRawUnsafe: jest.fn(),
     };
 
@@ -237,6 +237,51 @@ describe('FeatureAccessService', () => {
           update: { bonus: { increment: 350 } },
         }),
       );
+    });
+  });
+
+  describe('decrementUsage', () => {
+    it('decrements only when used > 0 (floors at zero)', async () => {
+      prisma.usageCounter.updateMany.mockResolvedValue({ count: 1 });
+      await service.decrementUsage('u1', 'palmistry', '2026-06');
+      expect(prisma.usageCounter.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'u1', feature: 'palmistry', periodKey: '2026-06', used: { gt: 0 } },
+        data: { used: { decrement: 1 } },
+      });
+    });
+  });
+
+  describe('overageForFreeEnabled', () => {
+    it('defaults to false and is true only for "true"', async () => {
+      prisma.siteSetting.findUnique.mockResolvedValue(null);
+      expect(await service.overageForFreeEnabled()).toBe(false);
+      prisma.siteSetting.findUnique.mockResolvedValue({ value: 'true' });
+      expect(await service.overageForFreeEnabled()).toBe(true);
+    });
+  });
+
+  describe('checkUsage with a shared limit key (per-type reports)', () => {
+    it('reads the counter under `feature` but the limit under `limitFeature`', async () => {
+      prisma.siteSetting.findUnique.mockImplementation(({ where }: any) =>
+        Promise.resolve(
+          where.key === 'feature.subscriptions_enabled'
+            ? { value: 'true' }
+            : where.key === 'limits.report.subscriber'
+              ? { value: '1' }
+              : null,
+        ),
+      );
+      prisma.subscription.count.mockResolvedValue(1);
+      prisma.usageCounter.findUnique.mockResolvedValue({ used: 0, bonus: 0 });
+      const r = await service.checkUsage('u1', 'report_life', 'report');
+      expect(r.limit).toBe(1);
+      expect(r.allowed).toBe(true);
+      // limit fetched under the shared key…
+      expect(prisma.siteSetting.findUnique).toHaveBeenCalledWith({ where: { key: 'limits.report.subscriber' } });
+      // …counter row keyed by the per-type feature.
+      expect(prisma.usageCounter.findUnique).toHaveBeenCalledWith({
+        where: { userId_feature_periodKey: { userId: 'u1', feature: 'report_life', periodKey: r.periodKey } },
+      });
     });
   });
 });

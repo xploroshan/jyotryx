@@ -224,6 +224,7 @@ export const api = {
       const error = await response.json().catch(() => ({ message: "Upload failed" }));
       throw new ApiError(error.message || `API Error: ${response.status}`, {
         status: response.status,
+        body: error,
       });
     }
 

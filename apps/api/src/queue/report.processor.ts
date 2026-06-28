@@ -21,6 +21,9 @@ export interface ReportJobData {
   gender?: string | null;
   batchId?: string;
   locale?: string;
+  /** Subscription-model meter to give back if the job fails after counting. */
+  meteredFeature?: string;
+  meteredPeriodKey?: string;
 }
 
 @Processor(REPORT_QUEUE)
@@ -40,7 +43,7 @@ export class ReportProcessor extends WorkerHost {
   }
 
   async process(job: Job<ReportJobData>): Promise<void> {
-    const { reportId, userId, type, creditCost, birthDetails, name, gender, locale } = job.data;
+    const { reportId, userId, type, creditCost, birthDetails, name, gender, locale, meteredFeature, meteredPeriodKey } = job.data;
     this.logger.log(`Processing report job ${job.id} — reportId=${reportId} type=${type}`);
 
     try {
@@ -70,6 +73,10 @@ export class ReportProcessor extends WorkerHost {
       // (creditCost > 0) still get a credit refund.
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
         await this.featureAccess.refundEntitlementByRef(reportId);
+        // Subscription model: give back the metered report counted at enqueue.
+        if (meteredFeature && meteredPeriodKey) {
+          await this.featureAccess.decrementUsage(userId, meteredFeature, meteredPeriodKey);
+        }
         if (creditCost > 0) {
           this.logger.log(`Refunding ${creditCost} credits for failed report ${reportId}`);
           await this.userService.addCredits(userId, creditCost, 'PURCHASE', `Refund: ${type} report generation failed`);
