@@ -99,6 +99,9 @@ export default function PricingPage() {
   // has disabled the pricing page (Mode A "Free launch") we render a simple
   // "everything is free" panel instead of plans + credit packs.
   const [pricingEnabled, setPricingEnabled] = useState<boolean | null>(null);
+  // When the credit currency is off (subscription model) we hide the
+  // pay-as-you-go credit packs entirely. Defaults true (legacy-safe).
+  const [creditsEnabled, setCreditsEnabled] = useState<boolean>(true);
 
   // Fire once: the user reached the pricing page (top of the revenue funnel).
   useEffect(() => {
@@ -115,6 +118,7 @@ export default function PricingPage() {
       .then((settings) => {
         if (cancelled) return;
         setPricingEnabled(settings["feature.pricing_page_enabled"] === "true");
+        setCreditsEnabled(settings["feature.credits_enabled"] !== "false");
         setPlans(buildPlans(settings));
         setCreditPacks(buildCreditPacks(settings));
       })
@@ -313,7 +317,9 @@ export default function PricingPage() {
             ))}
       </Stagger.Container>
 
-      {/* Credit Packs — pay-as-you-go alternative to subscriptions */}
+      {/* Credit Packs — pay-as-you-go alternative to subscriptions.
+          Hidden in the subscription model (credits off). */}
+      {creditsEnabled && (
       <div className="mt-16">
         <h2 className="text-xl font-semibold text-surface-950 text-center mb-2">{t.pricing.creditPacksTitle}</h2>
         <p className="text-xs text-[rgba(12,8,5,0.66)] text-center mb-6">{t.pricing.creditPacksSubtitle}</p>
@@ -345,6 +351,7 @@ export default function PricingPage() {
               ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

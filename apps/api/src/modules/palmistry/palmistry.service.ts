@@ -6,8 +6,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import {
   FeatureAccessService,
-  UnlockMode,
 } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { OpenAIService } from '../../openai/openai.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
@@ -91,6 +91,12 @@ export interface HandShape {
   description: string;
 }
 
+/** How a palmistry reading is paid for under the active monetization mode. */
+type PalmAccess =
+  | { kind: 'subscriber' } // free for this generation — nothing to record
+  | { kind: 'entitlement' } // legacy: consume one one-time PALMISTRY unlock
+  | { kind: 'metered'; periodKey: string }; // subscription model: count it
+
 @Injectable()
 export class PalmistryService {
   private readonly logger = new Logger(PalmistryService.name);
@@ -119,12 +125,35 @@ export class PalmistryService {
   ): Promise<PalmistryAnalysis> {
     this.logger.log(`Analyzing palm for user: ${userId}`);
 
-    // Palmistry is pay-to-unlock: subscribers (Mode B) get it free, else
-    // the user must hold an unused one-time PALMISTRY entitlement.
-    // resolveUnlock throws 402 when neither path applies; the unlock is
-    // consumed inside runPalmistryAnalysis once the reading row exists.
-    const mode = await this.featureAccess.resolveUnlock(userId, 'PALMISTRY');
-    return this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, mode);
+    const access = await this.resolvePalmAccess(userId);
+    return this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, access);
+  }
+
+  /**
+   * Decide how a palmistry reading is paid for. Legacy (credits on): the
+   * existing pay-to-unlock model — subscriber (free), else an unused one-time
+   * PALMISTRY entitlement (resolveUnlock throws 402 when neither applies). New
+   * model (credits off): metered by reading count (free 2 lifetime / subscriber
+   * 4 per month, + purchased overage), checked BEFORE the (costly) Vision call
+   * — closing the previously-unbounded palmistry cost leak.
+   */
+  private async resolvePalmAccess(userId: string): Promise<PalmAccess> {
+    if (await this.featureAccess.creditsEnabled()) {
+      const mode = await this.featureAccess.resolveUnlock(userId, 'PALMISTRY');
+      return { kind: mode };
+    }
+    if (await this.featureAccess.paidFeaturesFree()) return { kind: 'subscriber' };
+
+    const usage = await this.featureAccess.checkUsage(userId, 'palmistry');
+    if (!usage.allowed) {
+      throw new PaymentRequiredException(
+        usage.isSubscriber
+          ? "You've used all your palmistry readings this month. Buy +2 readings to continue."
+          : "You've used your free palmistry readings. Subscribe for more.",
+        { subscribe: !usage.isSubscriber, feature: 'palmistry' },
+      );
+    }
+    return { kind: 'metered', periodKey: usage.periodKey };
   }
 
   private async runPalmistryAnalysis(
@@ -133,7 +162,7 @@ export class PalmistryService {
     imageMimeType: string | undefined,
     locale: string | undefined,
     gender: string | undefined,
-    mode: UnlockMode,
+    access: PalmAccess,
   ): Promise<PalmistryAnalysis> {
     // Upload image to R2 first (needed by both sync and async paths)
     let imageKey: string | null = null;
@@ -186,12 +215,11 @@ export class PalmistryService {
       }
 
       if (reading) {
-        // Enqueue succeeded — spend the one-time unlock exactly once now that
-        // the reading row exists (no-op for subscribers). The processor
-        // restores it if analysis ultimately fails.
-        if (mode === 'entitlement') {
-          await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', reading.id);
-        }
+        // Enqueue succeeded — record consumption exactly once now that the
+        // reading row exists (no-op for subscribers; consumes a one-time
+        // entitlement in legacy mode, or counts a metered reading in the
+        // subscription model). The processor restores it if analysis fails.
+        await this.recordPalmConsumption(userId, access, reading.id);
 
         return {
           id: reading.id,
@@ -295,9 +323,7 @@ export class PalmistryService {
       });
       readingId = reading.id;
       createdAt = reading.createdAt.toISOString();
-      if (mode === 'entitlement') {
-        await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', reading.id);
-      }
+      await this.recordPalmConsumption(userId, access, reading.id);
     } catch (err) {
       this.logger.error(
         `Palmistry DB write failed, returning analysis without persistence: ${(err as Error)?.message}`,
@@ -311,6 +337,19 @@ export class PalmistryService {
       ...analysisData,
       createdAt,
     };
+  }
+
+  /**
+   * Record that one palmistry reading was consumed, bound to the generated
+   * `ref` row. No-op for subscribers; consumes a one-time entitlement in
+   * legacy mode; counts a metered reading in the subscription model.
+   */
+  private async recordPalmConsumption(userId: string, access: PalmAccess, ref: string): Promise<void> {
+    if (access.kind === 'entitlement') {
+      await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', ref);
+    } else if (access.kind === 'metered') {
+      await this.featureAccess.incrementUsage(userId, 'palmistry', access.periodKey);
+    }
   }
 
   async getReadingStatus(

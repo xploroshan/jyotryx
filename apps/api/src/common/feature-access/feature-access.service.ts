@@ -60,6 +60,21 @@ export class FeatureAccessService {
   }
 
   /**
+   * Master credit-currency switch. When ON (default — legacy behaviour) the
+   * paid features deduct/charge credits as before. When OFF the app runs the
+   * subscription model: deterministic features are free, the LLM deep-dive is
+   * subscriber-gated, and chat/palmistry/reports are governed by per-feature
+   * usage counters instead of a credit wall. Defaults to true when the setting
+   * is absent so an un-migrated/un-configured deployment keeps working.
+   */
+  async creditsEnabled(): Promise<boolean> {
+    const row = await this.prisma.siteSetting.findUnique({
+      where: { key: 'feature.credits_enabled' },
+    });
+    return row?.value !== 'false';
+  }
+
+  /**
    * Master "make the app completely free" switch. When on, the three
    * normally-paid features (Reports, Palmistry, Chat) are free for everyone
    * — no entitlement required and no credits deducted. Default false.
@@ -220,5 +235,105 @@ export class FeatureAccessService {
       }
       throw err;
     }
+  }
+
+  // ─── Usage metering (subscription model) ───────────────────────────────────
+  // Per-feature counters used when credits are off. Free-tier allowances are
+  // LIFETIME (a fixed period key, never reset); subscriber allowances are keyed
+  // by calendar month so a new month is a fresh row — no reset cron required.
+
+  /** Built-in fallbacks when a `limits.<feature>.<tier>` setting is absent. */
+  private static readonly DEFAULT_LIMITS: Record<string, { free: number; subscriber: number }> = {
+    chat: { free: 50, subscriber: 1000 },
+    palmistry: { free: 2, subscriber: 4 },
+    report_bundle: { free: 1, subscriber: 1 },
+  };
+
+  /** UTC calendar-month key, e.g. "2026-06". A new month rolls the counter. */
+  private monthKey(d = new Date()): string {
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+  }
+
+  /** Counter period key: subscribers meter per month, free users for life. */
+  private periodKeyFor(isSubscriber: boolean): string {
+    return isSubscriber ? this.monthKey() : 'LIFETIME';
+  }
+
+  /**
+   * Resolve the admin-tunable allowance for a feature/tier from
+   * `limits.<feature>.<free|subscriber>`, falling back to the built-in default
+   * when the setting is unset or malformed.
+   */
+  async getUsageLimit(feature: string, isSubscriber: boolean): Promise<number> {
+    const tier = isSubscriber ? 'subscriber' : 'free';
+    const row = await this.prisma.siteSetting.findUnique({
+      where: { key: `limits.${feature}.${tier}` },
+    });
+    const n = row ? Number.parseInt(row.value, 10) : NaN;
+    if (Number.isFinite(n) && n >= 0) return n;
+    return FeatureAccessService.DEFAULT_LIMITS[feature]?.[tier] ?? 0;
+  }
+
+  /**
+   * Decide whether `userId` may use one more unit of `feature` under the
+   * subscription model. Returns the current usage snapshot so callers can
+   * surface "X left" and pick the right paywall copy. Does NOT mutate — the
+   * caller increments only after the unit is actually delivered.
+   */
+  async checkUsage(
+    userId: string,
+    feature: string,
+  ): Promise<{
+    allowed: boolean;
+    used: number;
+    bonus: number;
+    limit: number;
+    remaining: number;
+    isSubscriber: boolean;
+    periodKey: string;
+  }> {
+    const isSubscriber = await this.isActiveSubscriber(userId);
+    const periodKey = this.periodKeyFor(isSubscriber);
+    const limit = await this.getUsageLimit(feature, isSubscriber);
+    const counter = await this.prisma.usageCounter.findUnique({
+      where: { userId_feature_periodKey: { userId, feature, periodKey } },
+    });
+    const used = counter?.used ?? 0;
+    const bonus = counter?.bonus ?? 0;
+    const ceiling = limit + bonus;
+    const remaining = Math.max(0, ceiling - used);
+    return { allowed: used < ceiling, used, bonus, limit, remaining, isSubscriber, periodKey };
+  }
+
+  /**
+   * Record one consumed unit. Upsert keeps the row creation race-safe; the
+   * unique (userId, feature, periodKey) constraint collapses concurrent first
+   * uses to a single row. Pass the `periodKey` from the matching `checkUsage`
+   * so a month boundary crossed mid-request can't split the count.
+   */
+  async incrementUsage(userId: string, feature: string, periodKey: string): Promise<void> {
+    await this.prisma.usageCounter.upsert({
+      where: { userId_feature_periodKey: { userId, feature, periodKey } },
+      create: { userId, feature, periodKey, used: 1 },
+      update: { used: { increment: 1 } },
+    });
+  }
+
+  /**
+   * Top up the current period's allowance by `count` units (a purchased
+   * overage pack). Bonus lives on the same row as `used`, so it is consumed
+   * within the current month for subscribers and expires when the period rolls.
+   * Returns the period key the bonus was applied to.
+   */
+  async addUsageBonus(userId: string, feature: string, count: number, tx?: any): Promise<string> {
+    const isSubscriber = await this.isActiveSubscriber(userId);
+    const periodKey = this.periodKeyFor(isSubscriber);
+    const client = tx ?? this.prisma;
+    await client.usageCounter.upsert({
+      where: { userId_feature_periodKey: { userId, feature, periodKey } },
+      create: { userId, feature, periodKey, bonus: count },
+      update: { bonus: { increment: count } },
+    });
+    return periodKey;
   }
 }

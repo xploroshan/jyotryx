@@ -563,8 +563,11 @@ export default function PalmistryPage() {
         setError(t.palmistry.noResultsError);
       }
     } catch (err: any) {
-      // 402 → palm reading not paid for. Stash the chosen image so we can
-      // resume after checkout, then redirect to the one-time purchase.
+      // 402 → reading not unlocked. Stash the chosen image so we can resume
+      // after checkout, then route by the server's hint:
+      //  - subscribe === true  → free user out of free readings → Subscribe
+      //  - subscribe === false → subscriber over monthly cap → ₹100 +2 top-up
+      //  - no hint (legacy)    → the one-time palmistry purchase
       if (err?.status === 402) {
         try {
           if (image) sessionStorage.setItem(PALM_PENDING_IMAGE, image);
@@ -572,7 +575,10 @@ export default function PalmistryPage() {
         } catch {
           /* sessionStorage may be unavailable; checkout still works, user re-uploads */
         }
-        router.push("/checkout?type=palmistry");
+        const sub = err?.body?.subscribe;
+        if (sub === true) router.push("/pricing");
+        else if (sub === false) router.push("/checkout?type=credits&pack=overage_palmistry");
+        else router.push("/checkout?type=palmistry");
         return;
       }
       setError(err.message || t.palmistry.analysisFailed);
@@ -872,7 +878,9 @@ export default function PalmistryPage() {
                     </svg>
                     {progressMessage || t.palmistry.analyzing}
                   </span>
-                ) : pricing.subscriptionsEnabled || pricing.freeMode ? (
+                ) : pricing.subscriptionsEnabled || pricing.freeMode || !pricing.creditsEnabled ? (
+                  // Subscription model / free mode: no per-use price label —
+                  // palmistry is included up to the plan's reading allowance.
                   t.palmistry.analyzePalm
                 ) : (
                   `${t.palmistry.analyzePalm} · ₹${pricing.palmistryPrice}`

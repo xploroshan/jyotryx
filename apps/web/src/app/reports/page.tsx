@@ -85,11 +85,20 @@ export default function ReportsPage() {
       setReports((prev) => [res, ...prev]);
       setActiveView("history");
     } catch (err: any) {
-      // 402 → the user hasn't paid for this report yet. Send them to
-      // checkout; on success they return with ?unlocked=<type> and we
-      // auto-generate.
+      // 402 → report locked. Route by the server's hint:
+      //  - subscribe === true  → free user → Subscribe
+      //  - subscribe === false → subscriber already used this cycle's report
+      //                          (no purchase — just surface the message)
+      //  - no hint (legacy)    → one-time report purchase, auto-generate on return
       if (err?.status === 402) {
-        router.push(`/checkout?type=report&pack=${type}`);
+        const sub = err?.body?.subscribe;
+        if (sub === true) {
+          router.push("/pricing");
+        } else if (sub === false) {
+          setError(err.message || t.reports.reportFailed);
+        } else {
+          router.push(`/checkout?type=report&pack=${type}`);
+        }
         return;
       }
       setError(err.message || t.reports.reportFailed);
@@ -216,7 +225,7 @@ export default function ReportsPage() {
                   >
                     {generating === rt.id
                       ? t.reports.generating
-                      : pricing.subscriptionsEnabled || pricing.freeMode
+                      : pricing.subscriptionsEnabled || pricing.freeMode || !pricing.creditsEnabled
                         ? t.reports.generate
                         : `${t.reports.generate} · ₹${pricing.reportPrice}`}
                   </button>

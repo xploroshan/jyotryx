@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
 import { normalizePhone } from '../../common/phone.util';
 
 export interface UserProfile {
@@ -88,7 +89,10 @@ export interface UserCredits {
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private featureAccess: FeatureAccessService,
+  ) {}
 
   async getProfile(userId: string): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -347,6 +351,14 @@ export class UserService {
     description: string,
     work: () => Promise<T>,
   ): Promise<T> {
+    // New subscription model: when the credit currency is switched off, the
+    // deterministic features that fund themselves through credits become free.
+    // Short-circuit here so every `deductWithRefund` caller (kundli, matching,
+    // divisional/KP charts, tarot, vastu) is freed in one place — no per-call
+    // changes, and the refund dance is skipped entirely.
+    if (!(await this.featureAccess.creditsEnabled())) {
+      return work();
+    }
     const deducted = await this.deductCredits(userId, cost, description);
     if (!deducted) {
       throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');

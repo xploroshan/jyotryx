@@ -247,7 +247,7 @@ export class AdminController {
     @Body() dto: Record<string, string>,
     @Request() req: any,
   ): Promise<Record<string, string>> {
-    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.', 'paywall.', 'social.'];
+    const ALLOWED_PREFIXES = ['pricing.', 'feature.', 'display.', 'notification.', 'llm.', 'referral.', 'paywall.', 'social.', 'limits.'];
     const invalidKeys = Object.keys(dto).filter(
       (key) => !ALLOWED_PREFIXES.some((prefix) => key.startsWith(prefix)),
     );
@@ -262,6 +262,7 @@ export class AdminController {
     const isNumericKey = (k: string): boolean =>
       /\.(price|credits|weight)$/.test(k) ||
       /_cost$/.test(k) ||
+      k.startsWith('limits.') ||
       k.includes('.fx.') ||
       k.includes('cost.daily_usd') ||
       k.includes('cost.monthly_usd') ||

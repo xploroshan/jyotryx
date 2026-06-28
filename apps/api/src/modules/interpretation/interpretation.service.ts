@@ -307,14 +307,30 @@ export class InterpretationService {
       .findUnique({ where: { userId_domain_inputHash: { userId, domain, inputHash } } })
       .catch(() => null);
 
+    // Resolve access BEFORE generating. An already-unlocked (user, result) is
+    // always free to re-view. Otherwise: the master free switch or an active
+    // subscription unlocks it. In the subscription model (credits off) a
+    // non-subscriber is blocked — 402 here, before any LLM cost is spent. In
+    // legacy mode (credits on) we keep the generate-then-charge flow so the
+    // user only pays when a real sectioned reading was actually produced.
+    const creditsOn = await this.featureAccess.creditsEnabled();
+    const free =
+      !!existing ||
+      (await this.featureAccess.paidFeaturesFree()) ||
+      (await this.featureAccess.isActiveSubscriber(userId));
+    if (!free && !creditsOn) {
+      throw new PaymentRequiredException(
+        'Subscribe to unlock the full in-depth reading.',
+        { subscribe: true, feature: 'deep_dive' },
+      );
+    }
+
     const result = await this.interpret({ domain, payload, locale, userId, depth: 'deep' });
     const isReal = !!(result.sections && result.sections.length > 0);
 
     if (!existing && isReal) {
-      const free =
-        (await this.featureAccess.paidFeaturesFree()) ||
-        (await this.featureAccess.isActiveSubscriber(userId));
       if (!free) {
+        // Credits on (otherwise we would already have 402'd): charge once.
         const cost = await this.featureAccess.getCreditCost(
           'deep_dive',
           this.config.get<number>('credits.deepDiveCost', 3),
