@@ -75,6 +75,11 @@ describe('ReportService', () => {
       resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
       consumeEntitlement: jest.fn().mockResolvedValue(undefined),
       isActiveSubscriber: jest.fn().mockResolvedValue(false),
+      // Credits on → the legacy entitlement path these specs assert.
+      creditsEnabled: jest.fn().mockResolvedValue(true),
+      paidFeaturesFree: jest.fn().mockResolvedValue(false),
+      checkUsage: jest.fn().mockResolvedValue({ allowed: true, periodKey: 'LIFETIME', isSubscriber: false }),
+      incrementUsage: jest.fn().mockResolvedValue(undefined),
     };
 
     openaiService = {

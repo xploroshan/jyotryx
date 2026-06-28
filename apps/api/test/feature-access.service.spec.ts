@@ -173,7 +173,7 @@ describe('FeatureAccessService', () => {
       expect(await service.getUsageLimit('palmistry', false)).toBe(2);
       expect(await service.getUsageLimit('palmistry', true)).toBe(4);
       prisma.siteSetting.findUnique.mockResolvedValue({ value: 'abc' });
-      expect(await service.getUsageLimit('report_bundle', true)).toBe(1);
+      expect(await service.getUsageLimit('report', true)).toBe(1);
     });
   });
 

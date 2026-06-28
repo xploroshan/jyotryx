@@ -17,6 +17,12 @@ const mockFeatureAccess = () => ({
   resolveUnlock: jest.fn().mockResolvedValue('entitlement'),
   consumeEntitlement: jest.fn().mockResolvedValue(undefined),
   isActiveSubscriber: jest.fn().mockResolvedValue(false),
+  creditsEnabled: jest.fn().mockResolvedValue(true),
+  paidFeaturesFree: jest.fn().mockResolvedValue(false),
+  checkUsage: jest.fn().mockResolvedValue({ allowed: true, periodKey: 'LIFETIME', isSubscriber: false }),
+  incrementUsage: jest.fn().mockResolvedValue(undefined),
+  decrementUsage: jest.fn().mockResolvedValue(undefined),
+  refundEntitlementByRef: jest.fn().mockResolvedValue(0),
 });
 
 describe('ReportService — Async Queue Path (Item 2)', () => {
