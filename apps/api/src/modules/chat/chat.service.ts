@@ -411,7 +411,13 @@ export class ChatService {
    */
   private async resolveChatAccess(userId: string): Promise<ChatAccess> {
     if (await this.featureAccess.paidFeaturesFree()) return { mode: 'free' };
-    if (await this.featureAccess.creditsEnabled()) return { mode: 'legacy' };
+    if (await this.featureAccess.creditsEnabled()) {
+      // Legacy (credits on): an active subscriber (Mode B) chats free — mirrors
+      // the original `free = paidFeaturesFree() || isActiveSubscriber()` gate.
+      // Only non-subscribers spend a credit per message.
+      if (await this.featureAccess.isActiveSubscriber(userId)) return { mode: 'free' };
+      return { mode: 'legacy' };
+    }
 
     const usage = await this.featureAccess.checkUsage(userId, 'chat');
     if (!usage.allowed) {

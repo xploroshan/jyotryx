@@ -191,7 +191,7 @@ export default function PricingPage() {
                 priceCurrency: "INR",
                 category: "Subscription",
               })),
-            ...creditPacks.map((c) => ({
+            ...(creditsEnabled ? creditPacks : []).map((c) => ({
               "@type": "Offer",
               name: `${c.credits} credits`,
               price: c.price,

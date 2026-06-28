@@ -206,6 +206,10 @@ export class PalmistryService {
           imageMimeType,
           locale,
           gender,
+          // Metered model: pass the counter so a failed job gives the reading
+          // back (the unit is counted now, in recordPalmConsumption below).
+          meteredFeature: access.kind === 'metered' ? 'palmistry' : undefined,
+          meteredPeriodKey: access.kind === 'metered' ? access.periodKey : undefined,
         } satisfies PalmistryJobData);
       } catch (err) {
         this.logger.error(

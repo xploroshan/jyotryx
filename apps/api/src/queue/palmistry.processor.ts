@@ -22,6 +22,9 @@ export interface PalmistryJobData {
   imageMimeType?: string;
   locale?: string;
   gender?: string;
+  /** Subscription-model meter to give back if the job fails after counting. */
+  meteredFeature?: string;
+  meteredPeriodKey?: string;
 }
 
 @Processor(PALMISTRY_QUEUE)
@@ -40,7 +43,7 @@ export class PalmistryProcessor extends WorkerHost {
   }
 
   async process(job: Job<PalmistryJobData>): Promise<void> {
-    const { readingId, userId, creditCost, imageKey, imageMimeType: _imageMimeType, locale, gender } = job.data;
+    const { readingId, userId, creditCost, imageKey, imageMimeType: _imageMimeType, locale, gender, meteredFeature, meteredPeriodKey } = job.data;
     this.logger.log(`Processing palmistry job ${job.id} — readingId=${readingId}`);
 
     try {
@@ -111,6 +114,10 @@ export class PalmistryProcessor extends WorkerHost {
       // free readings). Legacy credit-charged jobs still get credits back.
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
         await this.featureAccess.refundEntitlementByRef(readingId);
+        // Subscription model: give back the metered reading counted at enqueue.
+        if (meteredFeature && meteredPeriodKey) {
+          await this.featureAccess.decrementUsage(userId, meteredFeature, meteredPeriodKey);
+        }
         if (creditCost > 0) {
           this.logger.log(`Refunding ${creditCost} credits for failed palmistry ${readingId}`);
           await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: Palmistry analysis failed');
