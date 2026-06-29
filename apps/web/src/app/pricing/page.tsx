@@ -54,6 +54,20 @@ export default function PricingPage() {
     const monthlyEquiv = Math.round(annualPrice / 12);
     const savingsPct =
       monthlyPrice > 0 ? Math.max(0, Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100)) : 0;
+    // The paid plans (monthly & annual) deliver the SAME Premium benefits —
+    // they differ only in billing period and price. So both cards show one
+    // honest, identical feature list that mirrors what the gate actually
+    // enforces (unlimited deep-dive, 1,000 chat/mo, 4 palmistry/mo, monthly
+    // report, personalised My Day). Annual differentiates via the price
+    // anchor (≈/mo + −%) and the recommended badge, not invented extras.
+    const premiumFeatures = [
+      t.pricing.featPremiumKundli,
+      t.pricing.featPremiumChat,
+      t.pricing.featPremiumPalm,
+      t.pricing.featPremiumReports,
+      t.pricing.featPremiumHoroscope,
+      t.pricing.featPremiumSupport,
+    ];
     return [
       {
         id: "free", name: t.pricing.planFreeName, price: 0, period: "",
@@ -62,13 +76,13 @@ export default function PricingPage() {
       },
       {
         id: "annual", name: t.pricing.planAnnualName, price: annualPrice, period: t.pricing.perYear,
-        features: [t.pricing.featAnnualAll, t.pricing.featAnnualSave, t.pricing.featAnnualReports, t.pricing.featAnnualEarly, t.pricing.featAnnualDedicated],
-        cta: t.pricing.ctaBestValue, popular: recommended === "annual",
+        features: premiumFeatures,
+        cta: t.pricing.ctaSubscribe, popular: recommended === "annual",
         monthlyEquiv, savingsPct,
       },
       {
         id: "monthly", name: t.pricing.planPremiumName, price: monthlyPrice, period: t.pricing.perMonth,
-        features: [t.pricing.featPremiumChat, t.pricing.featPremiumKundli, t.pricing.featPremiumMatching, t.pricing.featPremiumPalm, t.pricing.featPremiumHoroscope, t.pricing.featPremiumMuhurat, t.pricing.featPremiumReports, t.pricing.featPremiumSupport],
+        features: premiumFeatures,
         cta: t.pricing.ctaSubscribe, popular: recommended === "monthly",
       },
     ];
@@ -269,7 +283,7 @@ export default function PricingPage() {
               </div>
             ))
           : plans.map((plan) => (
-              <Stagger.Item key={plan.id} className={`surface-card p-6 relative transition-all duration-300 hover:-translate-y-0.5 ${plan.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
+              <Stagger.Item key={plan.id} className={`surface-card p-6 relative flex flex-col transition-all duration-300 hover:-translate-y-0.5 ${plan.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
                 {plan.popular && (
                   <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary-600 text-[11px] font-medium text-white">
                     {t.pricing.mostPopular}
@@ -309,7 +323,7 @@ export default function PricingPage() {
                 <button
                   onClick={() => handleSubscribe(plan.id)}
                   disabled={loading === plan.id}
-                  className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${plan.popular ? "btn-primary" : "btn-secondary"}`}
+                  className={`w-full mt-auto py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${plan.popular ? "btn-primary" : "btn-secondary"}`}
                 >
                   {loading === plan.id ? t.pricing.processing : plan.cta}
                 </button>
