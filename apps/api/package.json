@@ -67,7 +67,7 @@
     "bullmq": "^5.76.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "cockatiel": "^3.2.1",
+    "cockatiel": "^4.0.0",
     "compression": "^1.8.1",
     "firebase-admin": "^14.1.0",
     "helmet": "^8.1.0",
