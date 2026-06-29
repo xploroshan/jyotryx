@@ -79,26 +79,29 @@ describe('Pricing Page', () => {
 
   it('renders Free plan features', async () => {
     render(<PricingPage />);
-    expect(await screen.findByText('Limited consultations')).toBeDefined();
-    expect(await screen.findByText('Astrologer Chat')).toBeDefined();
-    expect(await screen.findByText('Daily Horoscope')).toBeDefined();
-    expect(await screen.findByText('Panchang Access')).toBeDefined();
+    expect(await screen.findByText('Kundli, matching & panchang — free')).toBeDefined();
+    expect(await screen.findByText('50 chat messages')).toBeDefined();
+    expect(await screen.findByText('1 detailed report + 2 palm readings')).toBeDefined();
+    expect(await screen.findByText('Daily almanac email')).toBeDefined();
   });
 
-  it('renders Premium plan features', async () => {
+  it('renders Premium plan features (shown on both paid cards)', async () => {
     render(<PricingPage />);
-    expect(await screen.findByText('Unlimited Chat')).toBeDefined();
-    expect(await screen.findByText('Kundli Generation')).toBeDefined();
-    expect(await screen.findByText('Kundli Matching')).toBeDefined();
-    expect(await screen.findByText('Palmistry Analysis')).toBeDefined();
-    expect(await screen.findByText('Priority Support')).toBeDefined();
+    // The monthly and annual cards share one Premium feature list, so each
+    // benefit appears twice. Assert presence via getAllByText (>= 1).
+    expect((await screen.findAllByText('Unlimited deep-dive interpretations')).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('1,000 chat messages / month').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('4 palmistry readings / month').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Monthly personalised report').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Priority support').length).toBeGreaterThanOrEqual(1);
   });
 
   it('redirects to /auth when unauthenticated user clicks subscribe', async () => {
     mockStoreState.isAuthenticated = false;
     render(<PricingPage />);
-    const subscribeBtn = await screen.findByText('Subscribe');
-    fireEvent.click(subscribeBtn);
+    // Both paid plans now use the "Subscribe" CTA; click the first.
+    const subscribeBtns = await screen.findAllByText('Subscribe');
+    fireEvent.click(subscribeBtns[0]);
     expect(mockPush).toHaveBeenCalledWith('/auth?mode=signup');
   });
 
