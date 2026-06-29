@@ -170,9 +170,37 @@ export class PaymentService {
       };
       this.cashfree = new CashfreeClient(cfg);
       this.logger.log(`Cashfree initialized (mode=${cfg.mode})`);
+      this.warnOnIncompleteConfig();
     } else {
       this.cashfree = null;
       this.logger.warn('Cashfree credentials not configured, using mock mode');
+    }
+  }
+
+  /**
+   * Surface common misconfigurations at boot rather than at the first failing
+   * request. With credentials set but these missing, the failures are otherwise
+   * cryptic and late: a missing plan id throws "Subscription plan is not
+   * configured" only when a user tries to subscribe, and a missing API_PUBLIC_URL
+   * silently omits the webhook notify_url so subscriptions never activate.
+   */
+  private warnOnIncompleteConfig(): void {
+    const planMonthly = this.configService.get<string>('cashfree.planMonthly');
+    const planAnnual = this.configService.get<string>('cashfree.planAnnual');
+    if (!planMonthly || !planAnnual) {
+      this.logger.warn(
+        'Cashfree subscription plan IDs incomplete — set CASHFREE_PLAN_MONTHLY and ' +
+          'CASHFREE_PLAN_ANNUAL to the plan IDs from the Cashfree dashboard. ' +
+          'Subscribe requests will fail until both are set (one-time orders still work).',
+      );
+    }
+    if (!this.configService.get<string>('apiUrl')) {
+      this.logger.warn(
+        'API_PUBLIC_URL is not set — Cashfree webhooks have no per-order notify_url. ' +
+          'Set it to the public HTTPS API base (…/api), or configure the webhook globally ' +
+          'in the Cashfree dashboard. Without webhook delivery, subscription activation ' +
+          'will not happen (one-time orders still settle via the synchronous verify path).',
+      );
     }
   }
 
