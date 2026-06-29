@@ -116,6 +116,20 @@ export interface PaymentHistoryItem {
   createdAt: string;
 }
 
+/** The current user's subscription summary for the profile billing card. */
+export interface MySubscription {
+  id: string;
+  plan: string;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  provider: string | null;
+  /** True when the subscription currently entitles the user (ACTIVE + not expired). */
+  active: boolean;
+  /** Whether a cancel action applies (an active subscription exists). */
+  cancellable: boolean;
+}
+
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
@@ -1024,6 +1038,81 @@ export class PaymentService {
       });
       if (sub) await this.revokePremiumIfNoActiveSub(tx, sub.userId);
     });
+  }
+
+  /**
+   * The current user's subscription for the profile billing card: the active
+   * one if present, else the most recent. Null when the user never subscribed.
+   */
+  async getMySubscription(userId: string): Promise<MySubscription | null> {
+    const now = new Date();
+    const active = await this.prisma.subscription.findFirst({
+      where: { userId, status: 'ACTIVE', OR: [{ endDate: null }, { endDate: { gt: now } }] },
+      orderBy: { startDate: 'desc' },
+    });
+    const sub =
+      active ??
+      (await this.prisma.subscription.findFirst({
+        where: { userId },
+        orderBy: { startDate: 'desc' },
+      }));
+    if (!sub) return null;
+    return {
+      id: sub.id,
+      plan: sub.plan,
+      status: sub.status,
+      startDate: sub.startDate.toISOString(),
+      endDate: sub.endDate ? sub.endDate.toISOString() : null,
+      provider: sub.provider ?? null,
+      active: !!active,
+      cancellable: !!active,
+    };
+  }
+
+  /**
+   * User-initiated cancel of their own subscription(s). Cancels the mandate at
+   * the gateway first (so no further charges), then marks the row CANCELLED and
+   * revokes PREMIUM if no other subscription is still active. Immediate (mirrors
+   * the admin cancel). Idempotent with the SUBSCRIPTION_STATUS_CHANGE webhook
+   * Cashfree sends afterwards. Throws 400 when there's nothing to cancel.
+   */
+  async cancelSubscriptionForUser(userId: string): Promise<{ cancelled: boolean }> {
+    const now = new Date();
+    const subs = await this.prisma.subscription.findMany({
+      where: { userId, status: 'ACTIVE', OR: [{ endDate: null }, { endDate: { gt: now } }] },
+    });
+    if (subs.length === 0) {
+      throw new BadRequestException('You have no active subscription to cancel.');
+    }
+
+    // Cancel at the gateway FIRST for gateway-backed subs. If that fails we abort
+    // without touching local state — never report "cancelled" while Cashfree
+    // could still charge. Local-only grants (e.g. referral bonuses) skip this.
+    for (const sub of subs) {
+      if (this.cashfree && sub.provider === 'cashfree' && sub.gatewaySubscriptionId) {
+        try {
+          await this.cashfree.manageSubscription(sub.gatewaySubscriptionId, { action: 'CANCEL' });
+        } catch (err) {
+          this.logger.error(
+            `Cashfree cancel failed for subscription ${sub.gatewaySubscriptionId}`,
+            err as Error,
+          );
+          throw new InternalServerErrorException(
+            'Could not cancel your subscription with the payment provider. Please try again.',
+          );
+        }
+      }
+    }
+
+    await this.prisma.$transaction(async (tx: any) => {
+      await tx.subscription.updateMany({
+        where: { id: { in: subs.map((s) => s.id) } },
+        data: { status: 'CANCELLED', endDate: now },
+      });
+      await this.revokePremiumIfNoActiveSub(tx, userId);
+    });
+    this.logger.log(`User ${userId} cancelled ${subs.length} subscription(s)`);
+    return { cancelled: true };
   }
 
   async getPaymentHistory(userId: string): Promise<PaymentHistoryItem[]> {
