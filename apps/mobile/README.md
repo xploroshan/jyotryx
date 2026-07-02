@@ -54,18 +54,29 @@ the root lockfile stays lean. Mobile installs separately with
 are pinned via `apps/mobile`'s own `overrides` (single `react-native@0.76.5`);
 reconcile native versions with `npx expo install --fix` after checkout.
 
-## Feature framework (P2)
+## Feature framework (P2 + P3)
 
-Vedic features are spec-driven (`src/features/`): a per-feature `FeatureSpec`
-(input fields + gate + a **pure request builder** matching the web payload + a
-result renderer) runs through one `FeatureRunner` (profile guard → form → gating
-pre-check → request → result + interpretation panel). 15 Vedic features are
-wired (kundli, dasha, dosha, divisional, kp, matching, horoscope, panchang,
-muhurat, cosmic-calendar, decision-room, numerology×3-modes, mulank, tarot,
-vastu). Request builders and the registry are unit-tested; feature journeys have
-Detox specs. Other traditions fall back to the endpoint-contract view until P3.
+Features are spec-driven (`src/features/`): a per-feature `FeatureSpec` (input
+fields + gate + a **pure request builder** matching the web payload + a result
+renderer) runs through one `FeatureRunner` (profile guard → form → gating
+pre-check → request → result + interpretation panel). `getFeature(tradition,
+slug)` resolves the spec across all traditions.
+
+**28 features across all 6 traditions are live:**
+- **Vedic (15):** kundli, dasha, dosha, divisional, kp, matching, horoscope,
+  panchang, muhurat, cosmic-calendar, decision-room, numerology×3-modes, mulank,
+  tarot, vastu.
+- **Western (3):** natal, transits, synastry · **Chinese (3):** bazi, zodiac,
+  flying-stars · **Hellenistic (3):** natal (reuses kundli), profections,
+  zodiacal-releasing · **Horary (2):** ask + client-side history (MMKV, no API,
+  saved via `onSuccess`) · **Medical (2):** decumbiture, body-zodiac.
+
+Request builders and both registries are unit-tested (43 tests); feature
+journeys + tradition switching + horary persistence have Detox specs. chat +
+palmistry (the last 2 Vedic) are P4.
 
 ## Roadmap
 
-~~P2 Vedic features~~ ✓ · P3 other 4 traditions · P4 chat/reports/palmistry/match-share ·
-P5 payments dual-rail · P6 notifications + perf · P7 full Detox suite + Play release.
+~~P2 Vedic features~~ ✓ · ~~P3 Western/Chinese/Hellenistic/Horary/Medical~~ ✓ ·
+P4 chat/reports/palmistry/match-share · P5 payments dual-rail ·
+P6 notifications + perf · P7 full Detox suite + Play release.

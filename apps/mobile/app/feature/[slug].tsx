@@ -1,7 +1,7 @@
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { TRADITIONS, type TraditionId } from '@myastro360/shared';
 import { FeatureRunner } from '@/features/FeatureRunner';
-import { getVedicFeature } from '@/features/registry';
+import { getFeature } from '@/features';
 
 /**
  * Feature route. Renders the full spec-driven runner (input → request → result
@@ -12,7 +12,7 @@ export default function FeatureScreen() {
   const params = useLocalSearchParams<{ slug: string; tradition?: string }>();
   const slug = params.slug ?? '';
   const tradition = (params.tradition as TraditionId) ?? 'VEDIC';
-  const feature = tradition === 'VEDIC' ? getVedicFeature(slug) : null;
+  const feature = getFeature(tradition, slug);
   const icon = TRADITIONS[tradition]?.features.find((f) => f.slug === slug)?.icon;
   const title = feature?.title ?? slug.replace(/-/g, ' ');
 

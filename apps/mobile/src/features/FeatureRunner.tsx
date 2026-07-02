@@ -8,7 +8,8 @@ import { useAuthStore } from '@/store/auth';
 import { useI18nStore } from '@/store/i18n';
 import { Screen, Heading, Muted, Card, Button } from '@/components/ui';
 import type { FeatureRequest, RequestCtx } from './types';
-import { getVedicFeature } from './registry';
+import { getFeature } from './index';
+import type { FeatureSpec } from './spec';
 import { FieldForm, useFeatureValues, missingRequired } from './inputs';
 import { evaluateGate, PaywallCard } from './gating';
 import { InterpretationPanel } from './InterpretationPanel';
@@ -21,13 +22,16 @@ import { FeatureContract } from './FeatureContract';
  * contract card.
  */
 export function FeatureRunner({ slug, tradition }: { slug: string; tradition: TraditionId }) {
-  const spec = tradition === 'VEDIC' ? getVedicFeature(slug) : null;
+  const spec = getFeature(tradition, slug);
   if (!spec) return <FeatureContract slug={slug} tradition={tradition} />;
-
-  return <RunnerInner key={slug} spec={spec} />;
+  if (spec.custom) {
+    const Custom = spec.custom;
+    return <Custom />;
+  }
+  return <RunnerInner key={`${tradition}:${slug}`} spec={spec} />;
 }
 
-function RunnerInner({ spec }: { spec: NonNullable<ReturnType<typeof getVedicFeature>> }) {
+function RunnerInner({ spec }: { spec: FeatureSpec }) {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const locale = useI18nStore((s) => s.locale);
@@ -44,6 +48,9 @@ function RunnerInner({ spec }: { spec: NonNullable<ReturnType<typeof getVedicFea
   const run = useMutation({
     mutationFn: (req: FeatureRequest) =>
       req.method === 'GET' ? api.get<unknown>(req.path) : api.post<unknown>(req.path, req.body ?? {}),
+    onSuccess: (data) => {
+      spec.onSuccess?.(data, user ?? null);
+    },
     onError: (e) => {
       if (e instanceof ApiError && (e.status === 402 || e.status === 403)) {
         setPaywall({ reason: e.status === 403 ? 'needPremium' : 'needCredits' });

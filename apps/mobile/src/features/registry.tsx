@@ -1,6 +1,5 @@
-import type { ComponentType } from 'react';
-import type { FeatureGate } from '@myastro360/shared';
-import type { BuildRequest, FieldSpec } from './types';
+import type { FieldSpec } from './types';
+import { FeatureSpec, asResult, dobField as dob, tobField as tob, pobField as pob, latField as latOpt, lngField as lngOpt } from './spec';
 import { VEDIC_REQUESTS } from './requests';
 import {
   ZODIAC_SIGNS,
@@ -18,30 +17,8 @@ import { KundliResult, DashaResult, DoshaResult, DivisionalResult, KpResult, Mat
 import { HoroscopeResult, PanchangResult, MuhuratResult, CosmicResult, DecisionResult } from './results/timeCalendar';
 import { NumerologyResult, MulankResult, TarotResult, VastuResult } from './results/misc';
 
-export interface VedicFeature {
-  slug: string;
-  title: string;
-  subtitle?: string;
-  gate: FeatureGate;
-  featureKey: string;
-  autoRun?: boolean;
-  requiresBirthProfile?: boolean;
-  submitLabel?: string;
-  fields: FieldSpec[];
-  build: BuildRequest;
-  Result: ComponentType<{ data: unknown }>;
-  domain?: string;
-  interpretationPayload?: (data: never) => Record<string, unknown>;
-}
+export type { FeatureSpec } from './spec';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asResult = (C: ComponentType<{ data: any }>) => C as ComponentType<{ data: unknown }>;
-
-const dob: FieldSpec = { key: 'dob', label: 'Date of birth', type: 'date', required: true, prefillFromProfile: 'dateOfBirth' };
-const tob: FieldSpec = { key: 'tob', label: 'Time of birth', type: 'time', required: true, prefillFromProfile: 'timeOfBirth' };
-const pob: FieldSpec = { key: 'pob', label: 'Place of birth', type: 'place', required: true, prefillFromProfile: 'placeOfBirth' };
-const latOpt: FieldSpec = { key: 'lat', label: 'Latitude', type: 'number', optional: true };
-const lngOpt: FieldSpec = { key: 'lng', label: 'Longitude', type: 'number', optional: true };
 const activity: FieldSpec = { key: 'activity', label: 'Activity', type: 'select', options: ELECTIONAL_ACTIVITIES, default: 'general' };
 const cityField: FieldSpec = { key: 'city', label: 'City', type: 'select', options: CITY_OPTIONS, default: '0' };
 
@@ -58,7 +35,7 @@ const MONTHS: FieldSpec = {
   })),
 };
 
-export const VEDIC_FEATURES: Record<string, VedicFeature> = {
+export const VEDIC_FEATURES: Record<string, FeatureSpec> = {
   kundli: {
     slug: 'kundli',
     title: 'Kundli',
@@ -289,6 +266,6 @@ export const VEDIC_FEATURES: Record<string, VedicFeature> = {
   },
 };
 
-export function getVedicFeature(slug: string): VedicFeature | null {
+export function getVedicFeature(slug: string): FeatureSpec | null {
   return VEDIC_FEATURES[slug] ?? null;
 }
