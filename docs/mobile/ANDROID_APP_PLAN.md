@@ -133,19 +133,70 @@ E=entitlement/one-time-unlock, P=premium.
 
 **Cross-tradition / global**
 
-| Feature | Route | API endpoint | Gate |
+| Feature | Route | API endpoint(s) | Gate |
 |---|---|---|---|
 | My Day / daily briefing | `/my-day` | `/astrology/daily`, `/users/me` | F |
-| Tradition dashboards | `/vedic` `/western` `/chinese` `/hellenistic` `/horary` `/medical` | registry (client) | F |
-| Reports (Life/Career/Marriage/Wealth/Annual/Palm) | `/reports`, `/reports/[type]` | `/reports/generate`, `/reports/:id` | E |
-| Pricing / buy credits & Premium | `/pricing`, `/checkout` | `/payments/pricing`, `/payments/create-order`, `/payments/verify`, `/payments/subscribe` | — |
-| Profile / credits / settings / **tradition select** / language | `/profile`, `/settings` | `/users/me`, `/auth/change-password`, `/payments/history` | — |
-| Notifications center | `/notifications` | `/notifications` | — |
-| Referral | `/referral` | `/referral/*` | — |
+| Tradition dashboards (×6) | `/vedic` `/western` `/chinese` `/hellenistic` `/horary` `/medical` | registry (client) | F |
+| Reports (Life/Career/Marriage/Wealth/Annual/Palm) | `/reports` | `/reports/generate`, `/reports/:id` (report.controller) | E |
+| **Deep-dive interpretation** (chart/report interpretation) | (invoked in-feature) | interpretation.controller | C |
+| **Match share** (share a compatibility result) | `/match/[token]` | match-share.controller | F |
+| Chat memory / personalization | (implicit in chat) | memory.controller | — |
+| Pricing / buy credits & Premium | `/pricing`, `/checkout`, `/checkout/return` | payment.controller (`/payments/*`) | — |
+| Profile / credits / **tradition select** / language | `/profile` | user.controller (`/users/*`), `/auth/change-password` | — |
+| **Daily-briefing preferences** | (in Profile) | briefing-preferences.controller | — |
+| Referral program | `/referral` | referral.controller (`/referral/*`) | — |
+| Notifications center | (in-app panel) | user/notification endpoints | — |
+| Auth / sign-in | `/auth` | auth.controller (`/auth/*`) | — |
+| Password reset landing | `/reset-password` | Firebase (deep-link handler) | — |
+| Paywall A/B experiment | (client) | experiment.controller | — |
 
-> Exact endpoint paths (a few marked approximate) are confirmed against the live controllers
-> (`apps/api/src/modules/astrology/*`) and the web page usages during implementation. Total surface:
-> **~30 feature screens + 6 tradition dashboards + the global set.**
+### 4.1 Complete website route inventory (authoritative) & mobile treatment
+
+Enumerated from **every** `apps/web/src/app/**/page.tsx` (67 routes) so nothing is implicit. Mobile
+treatment: **Screen** = a dedicated app screen; **In-feature** = a selector/tab inside a parent
+screen; **Deep link** = handled via `myastro360://` / universal link, not a distinct screen;
+**Excluded (v1)** = intentionally not in the mobile app.
+
+| Web route(s) | Feature | Mobile treatment |
+|---|---|---|
+| `/` | Home / launcher | Screen (Explore/Home) |
+| `/auth` | Sign-in (OTP/Google/email) | Screen (auth stack) |
+| `/reset-password` | Password-reset landing | Deep link handler |
+| `/profile` | Account, credits, settings, tradition-select, language, briefing prefs | Screen (Profile tab) |
+| `/my-day` | Daily briefing | Screen (My Day tab) |
+| `/pricing` · `/checkout` · `/checkout/return` | Buy credits/Premium; checkout return | Screen(s) (+ Play Billing) |
+| `/referral` | Referral program | Screen |
+| `/reports` | Reports hub (6 report types) | Screen (Reports tab) |
+| `/vedic` `/western` `/chinese` `/hellenistic` `/horary` `/medical` | 6 tradition dashboards | Screen ×6 |
+| `/chat` | Chat with Astrologer (streaming, memory, deep-dive) | Screen (Chat tab) |
+| `/kundli` · `/kundli/cities` · `/kundli/[city]` | Kundli (+ SEO city pages) | Screen; city = **In-feature** picker; city URLs = Deep link |
+| `/matching` · `/match/[token]` | Matching + shared result | Screen; shared result = Deep link |
+| `/palmistry` | Palmistry (camera/upload) | Screen |
+| `/horoscope` · `/horoscope/[sign]` · `/horoscope/[sign]/[period]` | Horoscope (+ SEO sign/period) | Screen; sign/period = **In-feature**; URLs = Deep link |
+| `/panchang` · `/panchang/cities` · `/panchang/[city]` | Panchang (+ SEO city) | Screen; city = **In-feature**; URLs = Deep link |
+| `/muhurat` | Muhurat | Screen |
+| `/decision-room` | Decision Room | Screen |
+| `/cosmic-calendar` | Cosmic Calendar | Screen |
+| `/divisional` | Divisional charts | Screen |
+| `/kp-astrology` | KP astrology | Screen |
+| `/numerology` | Numerology | Screen |
+| `/tarot` | Tarot | Screen |
+| `/vastu` | Vastu | Screen |
+| `/vedic/dasha` `/vedic/dosha` `/vedic/mulank` | Dasha · Dosha · Mulank | Screen ×3 |
+| `/western/natal` `/western/transits` `/western/synastry` | Western ×3 | Screen ×3 |
+| `/chinese/bazi` `/chinese/zodiac` `/chinese/flying-stars` | Chinese ×3 | Screen ×3 |
+| `/hellenistic/natal` `/hellenistic/profections` `/hellenistic/zodiacal-releasing` | Hellenistic ×3 | Screen ×3 |
+| `/horary/ask` `/horary/history` | Horary ×2 | Screen ×2 |
+| `/medical/decumbiture` `/medical/body-zodiac` | Medical ×2 | Screen ×2 |
+| `/[locale]/…` (kundli, matching, muhurat, numerology, palmistry, vastu, tarot, horoscope/[sign], panchang/[city], home) | Locale-prefixed SEO duplicates of the above | **No new screens** — mobile does i18n in-app; these are web-SEO URLs |
+| `/admin` | Admin console | **Excluded (v1)** — separate web app (a mobile admin is a later, optional track) |
+| `/styleguide` | Dev component gallery | **Excluded (v1)** — internal only |
+
+> **Count:** ~**33 interactive feature screens** + **6 tradition dashboards** + the account/monetization
+> set. Localized `[locale]/*` routes add **0** mobile screens (i18n is in-app). `/admin` and
+> `/styleguide` are excluded from v1. Exact endpoint paths (a few above marked approximate — e.g.
+> `vastu`, `horary/history`, `mulank`→numerology, interpretation, match-share) are pinned against the
+> live controllers (`apps/api/src/modules/*`) during implementation.
 
 
 ## 5. Payments — dual rail with region-gated anti-steering
@@ -275,14 +326,15 @@ profiling run (Flashlight) on the emulator with pass/fail budgets (§6).
 - **P0 — Foundation:** `apps/mobile` + `packages/shared` scaffold, NativeWind theme from web tokens,
   Expo Router shell, EAS + CI, Sentry. Move api-client / types / i18n into shared.
 - **P1 — Auth + shell:** auth stack (OTP/Google/email), onboarding (incl. **tradition select**),
-  tabs, **tradition switcher + dashboard shell** (6 traditions, accent theming), My Day, Profile,
-  i18n, offline cache. + unit/E2E.
+  tabs, **tradition switcher + dashboard shell** (6 traditions, accent theming), My Day, Profile
+  (credits, language, **referral**, **daily-briefing preferences**), i18n, offline cache. + unit/E2E.
 - **P2 — Vedic features (17):** horoscope, panchang, cosmic calendar, kundli, matching, dasha, dosha,
   divisional, KP, numerology, mulank, tarot, muhurat, vastu, decision-room. + E2E per feature.
 - **P3 — Other 5 traditions:** Western (natal/transits/synastry), Chinese (bazi/zodiac/flying-stars),
   Hellenistic (natal/profections/zodiacal-releasing), Horary (ask/history), Medical
   (decumbiture/body-zodiac) + their dashboards. + E2E per feature.
-- **P4 — Rich features:** Chat (streaming), Reports (all types), Palmistry (camera). + E2E.
+- **P4 — Rich features:** Chat (streaming + **memory** + **deep-dive interpretation**), Reports (all 6
+  types), Palmistry (camera), **Match share** (`/match/[token]`). + E2E.
 - **P5 — Payments dual-rail:** consumption read + region-gated CTA; Play Billing + backend verify +
   RTDN; paywalls. + payment E2E (sandbox).
 - **P6 — Notifications + performance hardening:** FCM push, perf budgets / Reassure / Flashlight,
