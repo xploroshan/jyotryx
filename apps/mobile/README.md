@@ -95,8 +95,25 @@ Pure logic (SSE parser, report-status, palmistry queued/normalizers, share
 payload) is unit-tested (58 tests total); Detox specs cover the journeys. Camera
 capture + live streaming are verified manually on device.
 
+## Payments (P5) — dual rail
+
+- **Rail B — Play Billing** (`src/payments/`): SKU catalog + pricing parser
+  (`products.ts`, pure/unit-tested, same productIds as web), lazy
+  `react-native-iap` wrapper (`iap.ts`: buy → `POST /payments/google/verify`
+  server-authoritative → finish/consume only after the backend grants; restore
+  re-verifies idempotently), and the pricing storefront (`app/pricing`).
+  Paywalls are live: PaywallCard → /pricing; Reports/Palmistry locked cards buy
+  the exact entitlement SKU inline and auto-retry; chat credit note + profile
+  credits link to /pricing.
+- **Rail A — consumption**: balances/entitlements bought on the web are read
+  via the same `feature-access` results; the "Also available on the web" link
+  renders only when `storePolicy.allowWebCheckoutLink === 'true'` (fail-closed
+  → India anti-steering compliant).
+- Server setup (Play products, service account, RTDN): see
+  [`docs/PLAY_BILLING_SETUP.md`](../../docs/PLAY_BILLING_SETUP.md).
+
 ## Roadmap
 
 ~~P2 Vedic features~~ ✓ · ~~P3 Western/Chinese/Hellenistic/Horary/Medical~~ ✓ ·
-~~P4 chat/reports/palmistry/match-share~~ ✓ · P5 payments dual-rail ·
+~~P4 chat/reports/palmistry/match-share~~ ✓ · ~~P5 payments dual-rail~~ ✓ ·
 P6 notifications + perf · P7 full Detox suite + Play release.

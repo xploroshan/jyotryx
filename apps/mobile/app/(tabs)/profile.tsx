@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/auth';
 import { useI18nStore } from '@/store/i18n';
@@ -29,12 +29,12 @@ export default function Profile() {
           <Text className="text-fg text-lg font-semibold">{user?.name ?? 'Guest'}</Text>
           <Muted className="mt-1">{user?.email ?? ''}</Muted>
           <View className="flex-row justify-between mt-4">
-            <View>
+            <Pressable testID="profile-credits-link" onPress={() => router.push('/pricing')}>
               <Muted>Credits</Muted>
               <Text className="text-accent font-bold text-lg" testID="profile-credits">
-                {user?.credits ?? 0}
+                {user?.credits ?? 0} +
               </Text>
-            </View>
+            </Pressable>
             <View>
               <Muted>Primary tradition</Muted>
               <Text className="text-fg font-medium">{user?.primaryTradition ?? 'VEDIC'}</Text>

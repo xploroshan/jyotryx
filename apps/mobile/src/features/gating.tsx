@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { useRouter } from 'expo-router';
 import { resolveAccess, type FeatureGate, type GatingConfig, type UserAccess, type User } from '@myastro360/shared';
 import { Card, Button, Muted } from '@/components/ui';
 
@@ -43,6 +44,7 @@ export function PaywallCard({
   costCredits?: number;
   onContinue: () => void;
 }) {
+  const router = useRouter();
   return (
     <Card testID="paywall">
       <Text className="text-fg font-semibold mb-1">Unlock this reading</Text>
@@ -50,9 +52,8 @@ export function PaywallCard({
         {reasonCopy[reason] ?? 'This reading needs credits or Premium.'}
         {costCredits ? ` (${costCredits} credits)` : ''}
       </Muted>
-      {/* Buying credits / Premium ships with the payments milestone (P5). */}
       <View className="gap-2">
-        <Button title="Get credits — coming soon" onPress={() => {}} />
+        <Button testID="paywall-get-credits" title="Get credits" onPress={() => router.push('/pricing')} />
         <Button title="Continue anyway" variant="secondary" onPress={onContinue} />
       </View>
     </Card>

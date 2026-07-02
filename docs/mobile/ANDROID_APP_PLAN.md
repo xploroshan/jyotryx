@@ -311,15 +311,19 @@ profiling run (Flashlight) on the emulator with pass/fail budgets (§6).
 
 ## 8. Backend changes (small, additive — `apps/api`)
 
-1. `provider` extended to `google_play` (+ `apple_iap` reserved).
-2. `POST /payments/google/verify` (Play Developer API validation → `settlePaidOrder`).
-3. **RTDN** Pub/Sub webhook (renew/cancel/refund) reusing existing handlers; `payment-reconcile`
-   becomes per-provider.
+1. ✅ `provider` `'google_play'` in use (plain string column — no migration was needed).
+2. ✅ `POST /payments/google/verify` — Play Developer API validation (`purchases.products.get` /
+   `purchases.subscriptionsv2.get`) → the same idempotent `settlePaidOrder` /
+   `activateSubscription` paths; purchases acknowledged server-side. (`apple_iap` reserved.)
+3. ✅ **RTDN** — `POST /payments/google/rtdn` (Pub/Sub push, constant-time `?token=` auth,
+   fail-closed): renew/recover → activate; cancel/revoke/expire → terminate + PREMIUM revoke;
+   voided purchases claw back through the shared guarded refund path. Setup runbook:
+   [`docs/PLAY_BILLING_SETUP.md`](../PLAY_BILLING_SETUP.md).
 4. `POST /users/push-token` (register FCM device token) + a push-send hook in the
-   notification/daily-briefing services.
+   notification/daily-briefing services. *(P6)*
 5. CORS/allowed origins + universal-link/deep-link return URLs for the app.
-6. Optional `region` / store-policy flag in `/payments/pricing` or `/users/me` to drive the
-   anti-steering UI.
+6. ✅ `storePolicy.region` / `storePolicy.allowWebCheckoutLink` in `GET /payments/pricing`
+   (SiteSettings `store.*`, fail-closed `false` → India-safe anti-steering).
 
 ## 9. Offline, i18n, notifications, analytics
 

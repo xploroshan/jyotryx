@@ -135,8 +135,9 @@ export const endpoints = {
     subscribe: '/payments/subscribe',
     history: '/payments/history',
     webhook: '/payments/webhook',
-    // NEW mobile+backend work (§8) — Google Play receipt verification.
+    // Google Play receipt verification + RTDN (Pub/Sub push) — Rail B (§8).
     googleVerify: '/payments/google/verify',
+    googleRtdn: '/payments/google/rtdn',
   },
 
   referral: {

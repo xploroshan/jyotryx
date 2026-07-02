@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import { ApiError } from '@myastro360/shared';
 import { useI18nStore } from '@/store/i18n';
 import { Screen, Muted } from '@/components/ui';
@@ -23,6 +24,7 @@ const nextId = () => `m${++counter}`;
  * (An astrologer-persona roster is deferred; the category selector covers v1.)
  */
 export function ChatScreen() {
+  const router = useRouter();
   const locale = useI18nStore((s) => s.locale);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -121,9 +123,13 @@ export function ChatScreen() {
             ))
           )}
           {creditNote ? (
-            <View className="self-start bg-warning-subtle border border-warning/30 rounded-lg px-3 py-2 mt-1">
-              <Text className="text-xs text-warning">You're out of credits — top up in the payments update (P5).</Text>
-            </View>
+            <Pressable
+              testID="chat-credit-note"
+              onPress={() => router.push('/pricing')}
+              className="self-start bg-warning-subtle border border-warning/30 rounded-lg px-3 py-2 mt-1"
+            >
+              <Text className="text-xs text-warning">You're out of credits — tap to get more.</Text>
+            </Pressable>
           ) : null}
         </ScrollView>
 

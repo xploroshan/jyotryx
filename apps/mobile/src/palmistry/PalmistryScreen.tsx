@@ -9,6 +9,9 @@ import { Screen, Heading, Muted, Card, Button } from '@/components/ui';
 import { analyzeAndWait, type PalmImage } from './api';
 import { PalmistryResult } from './PalmistryResult';
 import type { PalmistryAnalysis } from '@/features/results/responses.p4';
+import { PALMISTRY_SKU } from '@/payments/products';
+import { buyProduct } from '@/payments/iap';
+import { usePricing } from '@/payments/usePricing';
 
 /**
  * Palmistry — gender (drives the palm the backend reads) + a palm photo
@@ -17,9 +20,12 @@ import type { PalmistryAnalysis } from '@/features/results/responses.p4';
  */
 export function PalmistryScreen() {
   const locale = useI18nStore((s) => s.locale);
+  const { pricing } = usePricing();
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
   const [image, setImage] = useState<PalmImage | null>(null);
   const [locked, setLocked] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState('');
 
   const toPalmImage = (a: ImagePicker.ImagePickerAsset): PalmImage => ({
     uri: a.uri,
@@ -100,7 +106,27 @@ export function PalmistryScreen() {
         {locked ? (
           <Card className="mb-4" testID="palm-locked">
             <Text className="text-fg font-semibold mb-1">Unlock your reading</Text>
-            <Muted>Palmistry is a one-time unlock. Purchasing ships with the payments update (P5).</Muted>
+            <Muted className="mb-3">One-time unlock · ₹{pricing.palmistryPrice}</Muted>
+            {buyError ? <Muted className="text-danger mb-2 text-xs">{buyError}</Muted> : null}
+            <Button
+              testID="palm-unlock"
+              title={buying ? 'Opening Play…' : `Unlock for ₹${pricing.palmistryPrice}`}
+              loading={buying}
+              onPress={async () => {
+                setBuying(true);
+                setBuyError('');
+                const res = await buyProduct(PALMISTRY_SKU);
+                setBuying(false);
+                if (res.ok && res.entitlementGranted) {
+                  setLocked(false);
+                  // Auto-retry with the image already selected (mirrors web's
+                  // sessionStorage + ?unlocked=1 flow).
+                  run.mutate();
+                } else {
+                  setBuyError(res.message ?? 'Purchase failed.');
+                }
+              }}
+            />
           </Card>
         ) : null}
 
