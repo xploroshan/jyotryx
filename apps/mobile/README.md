@@ -54,7 +54,18 @@ the root lockfile stays lean. Mobile installs separately with
 are pinned via `apps/mobile`'s own `overrides` (single `react-native@0.76.5`);
 reconcile native versions with `npx expo install --fix` after checkout.
 
+## Feature framework (P2)
+
+Vedic features are spec-driven (`src/features/`): a per-feature `FeatureSpec`
+(input fields + gate + a **pure request builder** matching the web payload + a
+result renderer) runs through one `FeatureRunner` (profile guard → form → gating
+pre-check → request → result + interpretation panel). 15 Vedic features are
+wired (kundli, dasha, dosha, divisional, kp, matching, horoscope, panchang,
+muhurat, cosmic-calendar, decision-room, numerology×3-modes, mulank, tarot,
+vastu). Request builders and the registry are unit-tested; feature journeys have
+Detox specs. Other traditions fall back to the endpoint-contract view until P3.
+
 ## Roadmap
 
-P2 Vedic features · P3 other 4 traditions · P4 chat/reports/palmistry/match-share ·
+~~P2 Vedic features~~ ✓ · P3 other 4 traditions · P4 chat/reports/palmistry/match-share ·
 P5 payments dual-rail · P6 notifications + perf · P7 full Detox suite + Play release.
