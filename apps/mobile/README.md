@@ -71,12 +71,32 @@ slug)` resolves the spec across all traditions.
   zodiacal-releasing · **Horary (2):** ask + client-side history (MMKV, no API,
   saved via `onSuccess`) · **Medical (2):** decumbiture, body-zodiac.
 
-Request builders and both registries are unit-tested (43 tests); feature
-journeys + tradition switching + horary persistence have Detox specs. chat +
-palmistry (the last 2 Vedic) are P4.
+Request builders and both registries are unit-tested; feature journeys +
+tradition switching + horary persistence have Detox specs.
+
+## Rich features (P4)
+
+- **Chat** (`src/chat/`) — streaming replies via `POST /chat/stream` (expo/fetch
+  `response.body` + a pure SSE frame parser), with a non-streaming
+  `POST /chat/message` fallback; session persistence; category selector.
+  Tab + Vedic `chat` feature (custom screen).
+- **Reports** (`src/reports/`) — 6 report types; async generate → poll
+  `/:id/status` → GET full report; generate + history tabs + reader; 402 = locked.
+- **Palmistry** (`src/palmistry/`) — gender + palm photo (camera/gallery via
+  `expo-image-picker`) → multipart `POST /palmistry/analyze` → poll → reading.
+  Vedic `palmistry` feature (custom). This completes all **17 Vedic** features.
+- **Match-share** — a Share action (`FeatureSpec.Extra`) on the matching result
+  (`POST …/matching/share` → native share sheet of `{webOrigin}/match/:token`)
+  + a public deep-link screen `app/match/[token].tsx` (universal link).
+- **Memory** (`src/profile/`) — `/memory` CRUD panel in Profile (the astrologer
+  folds these into its prompt server-side).
+
+Pure logic (SSE parser, report-status, palmistry queued/normalizers, share
+payload) is unit-tested (58 tests total); Detox specs cover the journeys. Camera
+capture + live streaming are verified manually on device.
 
 ## Roadmap
 
 ~~P2 Vedic features~~ ✓ · ~~P3 Western/Chinese/Hellenistic/Horary/Medical~~ ✓ ·
-P4 chat/reports/palmistry/match-share · P5 payments dual-rail ·
+~~P4 chat/reports/palmistry/match-share~~ ✓ · P5 payments dual-rail ·
 P6 notifications + perf · P7 full Detox suite + Play release.

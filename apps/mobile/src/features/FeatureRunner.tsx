@@ -92,6 +92,7 @@ function RunnerInner({ spec }: { spec: FeatureSpec }) {
   };
 
   const Result = spec.Result;
+  const Extra = spec.Extra;
   const data = run.data;
 
   return (
@@ -151,6 +152,11 @@ function RunnerInner({ spec }: { spec: FeatureSpec }) {
                 {spec.domain && spec.interpretationPayload ? (
                   <View className="mt-4">
                     <InterpretationPanel domain={spec.domain} payload={spec.interpretationPayload(data as never)} />
+                  </View>
+                ) : null}
+                {Extra ? (
+                  <View className="mt-4">
+                    <Extra data={data} values={values} />
                   </View>
                 ) : null}
               </View>

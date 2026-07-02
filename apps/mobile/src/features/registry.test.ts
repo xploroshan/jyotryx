@@ -1,6 +1,6 @@
 import { VEDIC_FEATURES, getVedicFeature } from './registry';
 
-// The 15 Vedic features built in P2 (chat + palmistry are P4).
+// Vedic features (P2 built 15; P4 adds chat + palmistry → the full 17).
 const EXPECTED = [
   'kundli',
   'dasha',
@@ -17,6 +17,8 @@ const EXPECTED = [
   'mulank',
   'tarot',
   'vastu',
+  'chat',
+  'palmistry',
 ];
 
 describe('Vedic feature registry', () => {

@@ -1,5 +1,7 @@
-import type { FieldSpec } from './types';
+import type { BuildRequest, FieldSpec } from './types';
 import { FeatureSpec, asResult, dobField as dob, tobField as tob, pobField as pob, latField as latOpt, lngField as lngOpt } from './spec';
+import { ChatScreen } from '@/chat/ChatScreen';
+import { PalmistryScreen } from '@/palmistry/PalmistryScreen';
 import { VEDIC_REQUESTS } from './requests';
 import {
   ZODIAC_SIGNS,
@@ -16,10 +18,15 @@ import {
 import { KundliResult, DashaResult, DoshaResult, DivisionalResult, KpResult, MatchingResult } from './results/birthChart';
 import { HoroscopeResult, PanchangResult, MuhuratResult, CosmicResult, DecisionResult } from './results/timeCalendar';
 import { NumerologyResult, MulankResult, TarotResult, VastuResult } from './results/misc';
+import { ShareMatch } from './ShareMatch';
 
 export type { FeatureSpec } from './spec';
 
 const activity: FieldSpec = { key: 'activity', label: 'Activity', type: 'select', options: ELECTIONAL_ACTIVITIES, default: 'general' };
+
+// Custom-screen features (chat, palmistry) don't use the generic request flow.
+const customBuild: BuildRequest = () => ({ method: 'GET', path: '' });
+const NullResult = asResult(() => null);
 const cityField: FieldSpec = { key: 'city', label: 'City', type: 'select', options: CITY_OPTIONS, default: '0' };
 
 const CUR_YEAR = String(new Date().getFullYear());
@@ -123,9 +130,11 @@ export const VEDIC_FEATURES: Record<string, FeatureSpec> = {
     featureKey: 'matching',
     submitLabel: 'Check compatibility',
     fields: [
+      { key: 'a_name', label: 'Person A · name', type: 'text', optional: true, prefillFromProfile: 'name' },
       { key: 'a_dob', label: 'Person A · date of birth', type: 'date', required: true, prefillFromProfile: 'dateOfBirth' },
       { key: 'a_tob', label: 'Person A · time of birth', type: 'time', required: true, prefillFromProfile: 'timeOfBirth' },
       { key: 'a_pob', label: 'Person A · place of birth', type: 'place', required: true, prefillFromProfile: 'placeOfBirth' },
+      { key: 'b_name', label: 'Person B · name', type: 'text', optional: true },
       { key: 'b_dob', label: 'Person B · date of birth', type: 'date', required: true },
       { key: 'b_tob', label: 'Person B · time of birth', type: 'time', required: true },
       { key: 'b_pob', label: 'Person B · place of birth', type: 'place', required: true },
@@ -133,6 +142,7 @@ export const VEDIC_FEATURES: Record<string, FeatureSpec> = {
     build: VEDIC_REQUESTS.matching!,
     Result: asResult(MatchingResult),
     domain: 'matching',
+    Extra: ShareMatch,
   },
 
   horoscope: {
@@ -263,6 +273,28 @@ export const VEDIC_FEATURES: Record<string, FeatureSpec> = {
     ],
     build: VEDIC_REQUESTS.vastu!,
     Result: asResult(VastuResult),
+  },
+
+  chat: {
+    slug: 'chat',
+    title: 'Chat with Astrologer',
+    gate: 'credit',
+    featureKey: 'chat',
+    fields: [],
+    build: customBuild,
+    Result: NullResult,
+    custom: ChatScreen,
+  },
+
+  palmistry: {
+    slug: 'palmistry',
+    title: 'Palmistry',
+    gate: 'entitlement',
+    featureKey: 'palmistry',
+    fields: [],
+    build: customBuild,
+    Result: NullResult,
+    custom: PalmistryScreen,
   },
 };
 

@@ -32,7 +32,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         action: 'VIEW',
         autoVerify: true,
-        data: [{ scheme: 'https', host: 'myastro360.com', pathPrefix: '/app' }],
+        data: [
+          { scheme: 'https', host: 'myastro360.com', pathPrefix: '/app' },
+          // Shared compatibility links open in-app (app/match/[token]).
+          { scheme: 'https', host: 'myastro360.com', pathPrefix: '/match' },
+          { scheme: 'https', host: 'www.myastro360.com', pathPrefix: '/match' },
+        ],
         category: ['BROWSABLE', 'DEFAULT'],
       },
     ],
@@ -47,6 +52,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-secure-store',
     'expo-localization',
     ['expo-camera', { cameraPermission: 'MyAstro360 uses the camera to capture your palm for palmistry readings.' }],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'MyAstro360 accesses your photos so you can upload a palm image for a reading.',
+        cameraPermission: 'MyAstro360 uses the camera to capture your palm for palmistry readings.',
+      },
+    ],
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#c43200' }],
     '@react-native-firebase/app',
     '@react-native-firebase/auth',
@@ -57,6 +69,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'https://api.myastro360.com/api',
+    webOrigin: process.env.EXPO_PUBLIC_WEB_ORIGIN ?? 'https://www.myastro360.com',
     router: { origin: false },
     eas: {
       projectId: process.env.EAS_PROJECT_ID ?? '',

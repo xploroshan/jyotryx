@@ -1,8 +1,9 @@
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/auth';
 import { useI18nStore } from '@/store/i18n';
 import { Screen, Heading, Muted, Card, Button } from '@/components/ui';
+import { MemorySection } from '@/profile/MemorySection';
 
 /**
  * Profile — account, credits, language, and the account actions. Referral,
@@ -21,34 +22,40 @@ export default function Profile() {
 
   return (
     <Screen>
-      <Heading className="mt-4 mb-4">Profile</Heading>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 16 }}>
+        <Heading className="mb-4">Profile</Heading>
 
-      <Card className="mb-4">
-        <Text className="text-fg text-lg font-semibold">{user?.name ?? 'Guest'}</Text>
-        <Muted className="mt-1">{user?.email ?? ''}</Muted>
-        <View className="flex-row justify-between mt-4">
-          <View>
-            <Muted>Credits</Muted>
-            <Text className="text-accent font-bold text-lg" testID="profile-credits">
-              {user?.credits ?? 0}
-            </Text>
+        <Card className="mb-4">
+          <Text className="text-fg text-lg font-semibold">{user?.name ?? 'Guest'}</Text>
+          <Muted className="mt-1">{user?.email ?? ''}</Muted>
+          <View className="flex-row justify-between mt-4">
+            <View>
+              <Muted>Credits</Muted>
+              <Text className="text-accent font-bold text-lg" testID="profile-credits">
+                {user?.credits ?? 0}
+              </Text>
+            </View>
+            <View>
+              <Muted>Primary tradition</Muted>
+              <Text className="text-fg font-medium">{user?.primaryTradition ?? 'VEDIC'}</Text>
+            </View>
+            <View>
+              <Muted>Language</Muted>
+              <Text className="text-fg font-medium uppercase">{locale}</Text>
+            </View>
           </View>
-          <View>
-            <Muted>Primary tradition</Muted>
-            <Text className="text-fg font-medium">{user?.primaryTradition ?? 'VEDIC'}</Text>
-          </View>
-          <View>
-            <Muted>Language</Muted>
-            <Text className="text-fg font-medium uppercase">{locale}</Text>
-          </View>
+        </Card>
+
+        <View className="mb-4">
+          <MemorySection />
         </View>
-      </Card>
 
-      <Card className="mb-4">
-        <Muted>Referral, briefing preferences, and password change wire up in P1.</Muted>
-      </Card>
+        <Card className="mb-4">
+          <Muted>Referral, briefing preferences, and password change wire up in P1.</Muted>
+        </Card>
 
-      <Button testID="profile-logout" title="Log out" variant="secondary" onPress={onLogout} />
+        <Button testID="profile-logout" title="Log out" variant="secondary" onPress={onLogout} />
+      </ScrollView>
     </Screen>
   );
 }

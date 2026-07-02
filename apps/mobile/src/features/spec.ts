@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import type { FeatureGate, User } from '@myastro360/shared';
-import type { BuildRequest, FieldSpec } from './types';
+import type { BuildRequest, FieldSpec, Values } from './types';
 
 /**
  * A feature spec drives the FeatureRunner: input fields + gate + a pure request
@@ -23,6 +23,8 @@ export interface FeatureSpec {
   interpretationPayload?: (data: never) => Record<string, unknown>;
   /** Side-effect after a successful request (e.g. horary saves to local history). */
   onSuccess?: (data: unknown, user: User | null) => void;
+  /** Extra UI rendered after the result (e.g. matching's Share button). */
+  Extra?: ComponentType<{ data: unknown; values: Values }>;
   /** Fully custom screen (bypasses the generic form/request flow). */
   custom?: ComponentType;
 }

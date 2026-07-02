@@ -62,6 +62,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="tradition/[slug]" options={{ headerShown: true, title: '' }} />
               <Stack.Screen name="feature/[slug]" options={{ headerShown: true, title: '' }} />
+              <Stack.Screen name="match/[token]" options={{ headerShown: true, title: '' }} />
             </Stack>
           </ThemeProvider>
         </QueryClientProvider>

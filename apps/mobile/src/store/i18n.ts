@@ -12,11 +12,15 @@ import { SUPPORTED_LOCALES, type Locale } from '@myastro360/shared';
 import { zustandMMKVStorage } from '@/lib/mmkv';
 
 export function detectDeviceLocale(): Locale {
-  for (const l of getLocales()) {
-    const primary = l.languageCode?.toLowerCase();
-    if (primary && (SUPPORTED_LOCALES as readonly string[]).includes(primary)) {
-      return primary as Locale;
+  try {
+    for (const l of getLocales()) {
+      const primary = l.languageCode?.toLowerCase();
+      if (primary && (SUPPORTED_LOCALES as readonly string[]).includes(primary)) {
+        return primary as Locale;
+      }
     }
+  } catch {
+    // expo-localization's native module is unavailable (unit tests / SSR).
   }
   return 'en';
 }
