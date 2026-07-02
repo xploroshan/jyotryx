@@ -1,16 +1,26 @@
 # App assets
 
-`app.config.ts` references these binary assets. Add them before the first EAS
-build (they're intentionally not committed as placeholders so nobody ships a
-grey square to the Play Store):
+These are **real, build-ready** assets generated from the web brand mark (the
+"shatkona-dial" `LogoMark` in `apps/web/src/components/ui/Logo.tsx`) — not
+placeholders. `app.config.ts` references them.
 
 | File | Size | Purpose |
 |---|---|---|
-| `icon.png` | 1024×1024 | App icon |
-| `adaptive-icon.png` | 1024×1024 (safe zone) | Android adaptive foreground |
-| `splash.png` | 1284×2778 | Splash image (linen `#ede4d0` background) |
-| `notification-icon.png` | 96×96 (white, transparent) | Android notification small icon |
+| `icon.png` | 1024×1024 | App icon — mark in the sunrise gradient on the linen canvas |
+| `adaptive-icon.png` | 1024×1024 | Android adaptive foreground — mark on transparent, inside the ~66% safe zone (background `#ede4d0` is set in `app.config.ts`) |
+| `splash.png` | 1284×2778 | Splash — mark + "MyAstro360" wordmark on linen |
+| `notification-icon.png` | 96×96 | Android notification small icon — white silhouette on transparent (Android uses only the alpha channel) |
 
-Generate them from the brand mark used on web (`apps/web` `LogoMark`). Until
-they exist, `npx expo prebuild` / EAS build will fail on the missing paths —
-that's deliberate.
+## Regenerating / replacing
+
+The generator `apps/mobile/scripts/gen-assets.mjs` renders the SVG mark to PNG
+via Chromium (Playwright). To refresh after a brand tweak:
+
+```bash
+PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome \
+  node apps/mobile/scripts/gen-assets.mjs
+```
+
+(Drop the env var to use Playwright's managed browser.) A designer can also
+replace any file directly — keep the dimensions above and the linen background
+(`#ede4d0`).
