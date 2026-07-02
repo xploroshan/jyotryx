@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Headers,
+  Query,
   Req,
   UseGuards,
   HttpCode,
@@ -19,7 +20,7 @@ import {
   SubscriptionResult,
   PaymentHistoryItem,
 } from './payment.service';
-import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto } from './dto';
+import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto, GoogleVerifyDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, JwtPayload, Public } from '../../common/decorators/current-user.decorator';
 
@@ -68,6 +69,30 @@ export class PaymentController {
     @Body() dto: CreateSubscriptionDto,
   ): Promise<SubscriptionResult> {
     return this.paymentService.createSubscription(user.sub, dto);
+  }
+
+  @Post('google/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify a Google Play Billing purchase (server-authoritative)' })
+  @ApiResponse({ status: 200, description: 'Purchase verified and granted' })
+  @ApiResponse({ status: 400, description: 'Token invalid / product unknown / not purchased' })
+  async verifyGooglePurchase(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: GoogleVerifyDto,
+  ): Promise<PaymentVerificationResult> {
+    return this.paymentService.verifyGooglePurchase(user.sub, dto);
+  }
+
+  @Post('google/rtdn')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Google Play Real-time Developer Notifications (Pub/Sub push)' })
+  @ApiResponse({ status: 200, description: 'Notification received' })
+  async handleGoogleRtdn(
+    @Body() envelope: Record<string, any>,
+    @Query('token') token?: string,
+  ): Promise<{ received: boolean }> {
+    return this.paymentService.handleGoogleRtdn(envelope, token);
   }
 
   @Post('webhook')
