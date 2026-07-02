@@ -17,3 +17,4 @@ artifacts/
 # Env
 .env*.local
 .env
+.reassure/

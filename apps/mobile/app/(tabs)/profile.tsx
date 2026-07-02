@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth';
 import { useI18nStore } from '@/store/i18n';
 import { Screen, Heading, Muted, Card, Button } from '@/components/ui';
 import { MemorySection } from '@/profile/MemorySection';
+import { unregisterPush } from '@/notifications/push';
 
 /**
  * Profile — account, credits, language, and the account actions. Referral,
@@ -16,6 +17,9 @@ export default function Profile() {
   const { locale } = useI18nStore();
 
   const onLogout = async () => {
+    // Unregister BEFORE tokens clear — the API call needs the session, and a
+    // shared device must stop receiving this account's pushes.
+    await unregisterPush();
     await logout();
     router.replace('/(auth)/sign-in');
   };

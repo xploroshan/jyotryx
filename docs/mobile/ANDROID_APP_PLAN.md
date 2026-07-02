@@ -319,8 +319,10 @@ profiling run (Flashlight) on the emulator with pass/fail budgets (§6).
    fail-closed): renew/recover → activate; cancel/revoke/expire → terminate + PREMIUM revoke;
    voided purchases claw back through the shared guarded refund path. Setup runbook:
    [`docs/PLAY_BILLING_SETUP.md`](../PLAY_BILLING_SETUP.md).
-4. `POST /users/push-token` (register FCM device token) + a push-send hook in the
-   notification/daily-briefing services. *(P6)*
+4. ✅ `POST /users/push-token` (+ `…/delete`) with a `PushToken` model; `PushService` sends via
+   firebase-admin messaging (dead-token pruning) and an hourly cron delivers the daily-briefing
+   nudge (SiteSettings-gated: `notification.briefing.push_enabled` / `push_hour_utc`, deduped per
+   user/day via BriefingDelivery `channel:'push'`).
 5. CORS/allowed origins + universal-link/deep-link return URLs for the app.
 6. ✅ `storePolicy.region` / `storePolicy.allowWebCheckoutLink` in `GET /payments/pricing`
    (SiteSettings `store.*`, fail-closed `false` → India-safe anti-steering).

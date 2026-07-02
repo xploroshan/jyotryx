@@ -32,8 +32,10 @@ export const endpoints = {
   user: {
     me: '/users/me',
     credits: '/users/me/credits',
-    // NEW mobile+backend work (§8) — not yet implemented on the API.
+    // FCM device-token registration (§8) — POST to register, POST …/delete to
+    // unregister (some proxies strip DELETE bodies).
     pushToken: '/users/push-token',
+    pushTokenDelete: '/users/push-token/delete',
   },
 
   astrology: {

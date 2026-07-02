@@ -46,6 +46,13 @@ jobs:
         run: cd apps/mobile && npm run lint
       - name: Unit tests
         run: cd apps/mobile && npm test -- --ci
+      - name: Perf render tests (Reassure)
+        # Baseline-mode run: measures and validates the perf suite executes.
+        # Regression comparison needs a stable baseline machine — run
+        # `npm run perf:baseline` on main, then `npm run perf` on the branch.
+        run: cd apps/mobile && npx reassure --baseline
+      - name: JS bundle budget
+        run: cd apps/mobile && npm run bundle:check
 
   e2e-android:
     name: Mobile — Detox E2E (Android emulator)

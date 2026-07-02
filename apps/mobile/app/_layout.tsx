@@ -1,7 +1,8 @@
 import '../global.css';
 
-import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { InteractionManager } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, DefaultTheme, type Theme } from '@react-navigation/native';
@@ -12,6 +13,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { queryClient, initQueryPersistence } from '@/api/queryClient';
 import { useAuthStore } from '@/store/auth';
 import { initSentry } from '@/lib/sentry';
+import { registerForPush, listenForNotificationTaps } from '@/notifications/push';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { colors } from '@/theme';
 
 // Build the navigation theme from DefaultTheme so it carries the required
@@ -30,12 +33,13 @@ const navigationTheme: Theme = {
 };
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
-initSentry();
-initQueryPersistence();
 
 export default function RootLayout() {
+  const router = useRouter();
   const hydrateTokens = useAuthStore((s) => s.hydrateTokens);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [ready, setReady] = useState(false);
+  const deferredDone = useRef(false);
 
   useEffect(() => {
     // Read tokens back from SecureStore before we decide auth routing, then
@@ -48,6 +52,29 @@ export default function RootLayout() {
     })();
   }, [hydrateTokens]);
 
+  // Startup budget (§6): nothing non-essential before first paint. Sentry,
+  // query-cache persistence, and the notification tap listener start only
+  // after interactions settle.
+  useEffect(() => {
+    if (!ready || deferredDone.current) return;
+    deferredDone.current = true;
+    const task = InteractionManager.runAfterInteractions(() => {
+      initSentry();
+      initQueryPersistence();
+      listenForNotificationTaps((path) => router.push(path as never));
+    });
+    return () => task.cancel();
+  }, [ready, router]);
+
+  // Register the device for push once signed in (best-effort, deferred).
+  useEffect(() => {
+    if (!ready || !isAuthenticated) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      registerForPush();
+    });
+    return () => task.cancel();
+  }, [ready, isAuthenticated]);
+
   if (!ready) return null;
 
   return (
@@ -56,6 +83,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={navigationTheme}>
             <StatusBar style="dark" />
+            <OfflineBanner />
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="(auth)" />

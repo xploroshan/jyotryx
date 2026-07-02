@@ -112,8 +112,23 @@ capture + live streaming are verified manually on device.
 - Server setup (Play products, service account, RTDN): see
   [`docs/PLAY_BILLING_SETUP.md`](../../docs/PLAY_BILLING_SETUP.md).
 
+## Notifications + performance (P6)
+
+- **Push** (`src/notifications/push.ts`): after sign-in the app registers its
+  native FCM token via `POST /users/push-token` (unregistered on logout);
+  notification taps deep-link via `data.url`. Server side: `PushService`
+  (firebase-admin) + an hourly cron for the daily-briefing nudge, gated by the
+  `notification.briefing.push_enabled` SiteSetting (default OFF).
+- **Offline**: a connectivity banner (`expo-network`) that also drives TanStack
+  Query's `onlineManager` — cached readings stay readable, fetches pause/resume.
+- **Performance**: Sentry/query-persistence/notification listeners init AFTER
+  first paint (`InteractionManager`); chat renders through FlashList with a
+  memoized row; Reassure render-perf tests (`npm run perf`, baseline in
+  `.reassure/`, git-ignored); JS bundle budget (`npm run bundle:check`,
+  baseline **5.48 MB** Hermes bundle, budget 8 MB) — both wired into mobile CI.
+
 ## Roadmap
 
 ~~P2 Vedic features~~ ✓ · ~~P3 Western/Chinese/Hellenistic/Horary/Medical~~ ✓ ·
 ~~P4 chat/reports/palmistry/match-share~~ ✓ · ~~P5 payments dual-rail~~ ✓ ·
-P6 notifications + perf · P7 full Detox suite + Play release.
+~~P6 notifications + perf~~ ✓ · P7 full Detox suite + Play release.
