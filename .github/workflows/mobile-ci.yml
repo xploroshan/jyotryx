@@ -16,6 +16,8 @@ on:
       - 'apps/mobile/**'
       - 'packages/shared/**'
       - '.github/workflows/mobile-ci.yml'
+  # Manual trigger — runs the full Detox emulator job on demand.
+  workflow_dispatch:
 
 concurrency:
   group: mobile-ci-${{ github.ref }}
@@ -56,9 +58,9 @@ jobs:
 
   e2e-android:
     name: Mobile — Detox E2E (Android emulator)
-    # Gate the expensive emulator job so it doesn't block on every push. Enable
-    # once the debug build is green locally; needs KVM (ubuntu) + an AVD.
-    if: ${{ false }}
+    # Expensive emulator job: opt-in via the workflow_dispatch trigger so it
+    # never blocks routine pushes/PRs. Run it before a release tag.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

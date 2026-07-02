@@ -12,11 +12,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "android": { "buildType": "apk" },
       "env": { "EXPO_PUBLIC_API_URL": "https://api.myastro360.com/api" }
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "android": { "buildType": "app-bundle" },
       "env": { "EXPO_PUBLIC_API_URL": "https://api.myastro360.com/api" }
     }
@@ -24,6 +26,7 @@
   "submit": {
     "production": {
       "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
         "track": "internal",
         "releaseStatus": "draft"
       }

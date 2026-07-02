@@ -18,3 +18,4 @@ artifacts/
 .env*.local
 .env
 .reassure/
+play-service-account.json
