@@ -97,25 +97,29 @@ E=entitlement/one-time-unlock, P=premium.
 
 **🕉️ VEDIC** (flagship, 17 features)
 
-| Feature | Route | API endpoint | Gate |
+Gate = **default policy (admin-tunable)** — F/C/E/P are the shipped defaults, but access is
+resolved at runtime by `feature-access.service.ts` + SiteSettings (`pricing.credits.*`,
+`feature.subscriptions_enabled`, `feature.free_mode`, entitlements), not hard-coded in the client.
+
+| Feature | Route | API endpoint (verified vs controllers) | Gate |
 |---|---|---|---|
-| Chat with Astrologer | `/chat` | `/chat/message` (stream), `/chat/sessions` | C |
-| Kundli | `/kundli` | `POST /astrology/kundli` | C |
-| Palmistry (camera) | `/palmistry` | `POST /palmistry/analyze` | E |
-| Matching | `/matching` | `/astrology/matching` | C |
-| Horoscope | `/horoscope` | `/astrology/horoscope` | F |
-| Panchang | `/panchang` | `/astrology/panchang` | F |
-| Muhurat | `/muhurat` | `/astrology/muhurat` | F/C |
-| Decision Room | `/decision-room` | `/chat/decision` | C |
-| Cosmic Calendar | `/cosmic-calendar` | `/astrology/calendar` | F |
-| Dasha | `/vedic/dasha` | `/astrology/dasha` | C |
-| Dosha | `/vedic/dosha` | `/astrology/dosha` | C |
-| Divisional charts | `/divisional` | `/astrology/divisional` | C |
-| KP astrology | `/kp-astrology` | `/astrology/kp` | C |
-| Numerology | `/numerology` | `/astrology/numerology` | F/C |
-| Mulank | `/vedic/mulank` | `/astrology/numerology` (mulank) | F/C |
-| Tarot | `/tarot` | `/tarot/draw` | C |
-| Vastu | `/vastu` | `/astrology/vastu` | C |
+| Chat with Astrologer | `/chat` | `POST /chat/message`, `POST /chat/stream`; `GET /chat/sessions`, `GET /chat/sessions/:id` | C |
+| Kundli | `/kundli` | `POST /astrology/kundli` (also fetches `GET /astrology/dosha`) | C |
+| Palmistry (camera) | `/palmistry` | `POST /palmistry/analyze` (multipart), `GET /palmistry/:id/status`, `GET /palmistry/:id/image` | E |
+| Matching | `/matching` | `POST /astrology/matching` (share → cross-tradition table) | C |
+| Horoscope | `/horoscope` | `GET /astrology/horoscope/:sign`, `GET /astrology/horoscope/:sign/multi` | F |
+| Panchang | `/panchang` | `GET /astrology/panchang` | F |
+| Muhurat | `/muhurat` | `POST /astrology/muhurat` | F/C |
+| Decision Room | `/decision-room` | `POST /astrology/timing-decision` | C |
+| Cosmic Calendar | `/cosmic-calendar` | `GET /astrology/cosmic-calendar?year=&month=&activity=` | F |
+| Dasha | `/vedic/dasha` | **reuses `POST /astrology/kundli`** (dasha is in the kundli response — no dedicated route) | C |
+| Dosha | `/vedic/dosha` | `GET /astrology/dosha` (+ `GET /astrology/sade-sati`, `GET /astrology/mitigation/:issue`) | C |
+| Divisional charts | `/divisional` | `POST /astrology/divisional/:type` | C |
+| KP astrology | `/kp-astrology` | `POST /astrology/kp-chart` | C |
+| Numerology | `/numerology` | `POST /numerology/name`, `POST /numerology/brand`, `GET /numerology/personal-year` | F/C |
+| Mulank | `/vedic/mulank` | `GET /numerology/mulank` | F/C |
+| Tarot | `/tarot` | `POST /tarot/draw`, `GET /tarot/history` | C |
+| Vastu | `/vastu` | `POST /vastu/analyze` | C |
 
 **♈ WESTERN** (3): Natal `POST /astrology/western/natal` · Transits `POST /astrology/western/transits`
 · Synastry `POST /astrology/western/synastry`.
@@ -126,29 +130,34 @@ E=entitlement/one-time-unlock, P=premium.
 **🏛️ HELLENISTIC** (3): Natal `POST /astrology/kundli` (shared engine, no extra charge) · Profections
 `POST /astrology/hellenistic/profections` · Zodiacal Releasing `POST /astrology/hellenistic/zodiacal-releasing`.
 
-**⌛ HORARY** (2): Ask a question `POST /astrology/horary/ask` · History `GET /astrology/horary/history`.
+**⌛ HORARY** (2): Ask a question `POST /astrology/horary/ask` · History = **client-side localStorage**
+(`apps/web/src/app/horary/_history.ts`), **not** an API — mobile persists it locally (MMKV/AsyncStorage).
+(Contrast: Tarot & Chat histories are server-side.)
 
 **⚕️ MEDICAL** (2): Decumbiture chart `POST /astrology/medical/decumbiture` · Body/Zodiac (melothesia)
 `GET /astrology/medical/body-zodiac`.
 
 **Cross-tradition / global**
 
-| Feature | Route | API endpoint(s) | Gate |
+| Feature | Route | API endpoint(s) (verified vs controllers) | Gate |
 |---|---|---|---|
-| My Day / daily briefing | `/my-day` | `/astrology/daily`, `/users/me` | F |
-| Tradition dashboards (×6) | `/vedic` `/western` `/chinese` `/hellenistic` `/horary` `/medical` | registry (client) | F |
-| Reports (Life/Career/Marriage/Wealth/Annual/Palm) | `/reports` | `/reports/generate`, `/reports/:id` (report.controller) | E |
-| **Deep-dive interpretation** (chart/report interpretation) | (invoked in-feature) | interpretation.controller | C |
-| **Match share** (share a compatibility result) | `/match/[token]` | match-share.controller | F |
-| Chat memory / personalization | (implicit in chat) | memory.controller | — |
-| Pricing / buy credits & Premium | `/pricing`, `/checkout`, `/checkout/return` | payment.controller (`/payments/*`) | — |
-| Profile / credits / **tradition select** / language | `/profile` | user.controller (`/users/*`), `/auth/change-password` | — |
-| **Daily-briefing preferences** | (in Profile) | briefing-preferences.controller | — |
-| Referral program | `/referral` | referral.controller (`/referral/*`) | — |
-| Notifications center | (in-app panel) | user/notification endpoints | — |
-| Auth / sign-in | `/auth` | auth.controller (`/auth/*`) | — |
+| My Day / daily briefing | `/my-day` | `GET /daily-briefing` (+ `GET /daily-briefing/planetary-hours`, `GET /daily-briefing/offline-pack`), `GET /users/me` | F |
+| Tradition dashboards (×6) | `/vedic` `/western` `/chinese` `/hellenistic` `/horary` `/medical` | `GET /astrology/traditions` (config) + registry (client) | F |
+| Reports (Life/Career/Marriage/Wealth/Annual/Palm) | `/reports` | `POST /reports/generate`, `GET /reports/:id`, `GET /reports/:id/status`, `GET /reports` | E |
+| **Deep-dive interpretation** (chart/report interpretation) | (invoked in-feature) | `POST /interpretation/deep-dive` (+ `POST /interpretation`) | C |
+| **Match share** (share a compatibility result) | `/match/[token]` | `POST /astrology/matching/share`, `GET /astrology/matching/shared/:token` | F |
+| Chat memory / personalization | (implicit in chat) | `GET/POST /memory`, `DELETE /memory/:id` | — |
+| Pricing / buy credits & Premium | `/pricing`, `/checkout`, `/checkout/return` | `GET /payments/pricing`, `POST /payments/create-order`, `POST /payments/verify`, `POST /payments/subscribe`, `GET /payments/history`, `POST /payments/webhook` | — |
+| Profile / credits / **tradition select** / language | `/profile` | `GET /users/me`, `PUT /users/me`, `GET /users/me/credits`; `POST /auth/change-password` | — |
+| **Daily-briefing preferences** | (in Profile) | `GET /briefing/preferences`, `PUT /briefing/preferences` | — |
+| Referral program | `/referral` | `GET /referral/me`, `GET /referral/preview` | — |
+| Auth / sign-in | `/auth` | `POST /auth/{register,login,otp/send,otp/verify,google,firebase,refresh,logout,forgot-password,change-password,set-password}`, `GET /auth/status` | — |
 | Password reset landing | `/reset-password` | Firebase (deep-link handler) | — |
-| Paywall A/B experiment | (client) | experiment.controller | — |
+| Paywall A/B experiment | (client) | `POST /experiment/paywall/{assign,link,convert}`, `GET /experiment/paywall/preview` | — |
+
+> **Not an existing endpoint:** the earlier "Notifications center → `/notifications`" row was dropped —
+> there is no notifications route or controller. In-app notifications + **FCM push + a new
+> `POST /users/push-token`** are **new mobile+backend work** (tracked in §8), not an existing feature.
 
 ### 4.1 Complete website route inventory (authoritative) & mobile treatment
 
@@ -182,11 +191,11 @@ screen; **Deep link** = handled via `myastro360://` / universal link, not a dist
 | `/numerology` | Numerology | Screen |
 | `/tarot` | Tarot | Screen |
 | `/vastu` | Vastu | Screen |
-| `/vedic/dasha` `/vedic/dosha` `/vedic/mulank` | Dasha · Dosha · Mulank | Screen ×3 |
+| `/vedic/dasha` `/vedic/dosha` `/vedic/mulank` | Dasha (reuses kundli) · Dosha (+ Sade Sati, Remedies/Mitigation) · Mulank | Screen ×3 |
 | `/western/natal` `/western/transits` `/western/synastry` | Western ×3 | Screen ×3 |
 | `/chinese/bazi` `/chinese/zodiac` `/chinese/flying-stars` | Chinese ×3 | Screen ×3 |
 | `/hellenistic/natal` `/hellenistic/profections` `/hellenistic/zodiacal-releasing` | Hellenistic ×3 | Screen ×3 |
-| `/horary/ask` `/horary/history` | Horary ×2 | Screen ×2 |
+| `/horary/ask` `/horary/history` | Horary Ask (API) · History (client-side localStorage, no API) | Screen ×2 |
 | `/medical/decumbiture` `/medical/body-zodiac` | Medical ×2 | Screen ×2 |
 | `/[locale]/…` (kundli, matching, muhurat, numerology, palmistry, vastu, tarot, horoscope/[sign], panchang/[city], home) | Locale-prefixed SEO duplicates of the above | **No new screens** — mobile does i18n in-app; these are web-SEO URLs |
 | `/admin` | Admin console | **Excluded (v1)** — separate web app (a mobile admin is a later, optional track) |
@@ -194,9 +203,18 @@ screen; **Deep link** = handled via `myastro360://` / universal link, not a dist
 
 > **Count:** ~**33 interactive feature screens** + **6 tradition dashboards** + the account/monetization
 > set. Localized `[locale]/*` routes add **0** mobile screens (i18n is in-app). `/admin` and
-> `/styleguide` are excluded from v1. Exact endpoint paths (a few above marked approximate — e.g.
-> `vastu`, `horary/history`, `mulank`→numerology, interpretation, match-share) are pinned against the
-> live controllers (`apps/api/src/modules/*`) during implementation.
+> `/styleguide` are excluded from v1.
+>
+> **Endpoints verified (not approximate):** every path in §4 was pinned by reading the live controllers
+> (`apps/api/src/**/*.controller.ts`, all `/api`-prefixed) and the web call sites. Corrections applied:
+> `daily-briefing` (not `/astrology/daily`), `/astrology/timing-decision` (not `/chat/decision`),
+> `/astrology/cosmic-calendar`, `/astrology/kp-chart`, `/astrology/divisional/:type`,
+> `/numerology/{name,brand,personal-year,mulank}`, `/vastu/analyze`, `/astrology/horoscope/:sign(/multi)`,
+> `/interpretation/deep-dive`, `/astrology/matching/share` + `/shared/:token`, `/referral/{me,preview}`,
+> `/briefing/preferences`. **Dasha** and **Hellenistic Natal** have no dedicated route — both reuse
+> `POST /astrology/kundli`. **Sade Sati** (`GET /astrology/sade-sati`) and **Remedies/Mitigation**
+> (`GET /astrology/mitigation/:issue`) are added as Dosha/My-Day sub-features. **Horary History** and
+> **Notifications** are reclassified (client-side; new work) — see §4 notes.
 
 
 ## 5. Payments — dual rail with region-gated anti-steering
@@ -273,7 +291,7 @@ behavior.
 - **Traditions (Western / Chinese / Hellenistic / Horary / Medical):** switch tradition via the rail
   → correct dashboard + accent theming; each sub-feature generates (Western natal/transits/synastry;
   Chinese bazi/zodiac/flying-stars; Hellenistic natal/profections/zodiacal-releasing; Horary
-  ask + history; Medical decumbiture/body-zodiac); per-feature credit/entitlement gating; primary +
+  ask + **local** history; Medical decumbiture/body-zodiac); per-feature credit/entitlement gating; primary +
   multi-select tradition persists to profile and re-resolves the active tradition on relaunch.
 - **Payments — Rail A (consumption):** balance/entitlement read; region=IN → **no in-app web link**;
   region=US → deep-link to web checkout returns and reflects the new balance.
@@ -303,7 +321,9 @@ profiling run (Flashlight) on the emulator with pass/fail budgets (§6).
 ## 9. Offline, i18n, notifications, analytics
 
 - **Offline:** TanStack Query + MMKV persistence — cached My Day / horoscope / kundli readable
-  offline; mutations queued/retried; clear "offline" affordances.
+  offline; mutations queued/retried; clear "offline" affordances. **Reuse the existing web caching
+  layer** `apps/web/src/lib/offline-api.ts` (and the `GET /daily-briefing/offline-pack` endpoint it
+  consumes) as the source pattern rather than inventing a new one.
 - **i18n:** reuse the 12 locale TS objects from `@myastro360/shared`; a thin `t.*` hook; language
   persists in the store; per-locale number/date formatting.
 - **Notifications:** expo-notifications + FCM; token registered on login; daily-briefing + re-engage
@@ -328,11 +348,12 @@ profiling run (Flashlight) on the emulator with pass/fail budgets (§6).
 - **P1 — Auth + shell:** auth stack (OTP/Google/email), onboarding (incl. **tradition select**),
   tabs, **tradition switcher + dashboard shell** (6 traditions, accent theming), My Day, Profile
   (credits, language, **referral**, **daily-briefing preferences**), i18n, offline cache. + unit/E2E.
-- **P2 — Vedic features (17):** horoscope, panchang, cosmic calendar, kundli, matching, dasha, dosha,
-  divisional, KP, numerology, mulank, tarot, muhurat, vastu, decision-room. + E2E per feature.
+- **P2 — Vedic features (17):** horoscope, panchang, cosmic calendar, kundli, matching, dasha (reuses
+  kundli), dosha (+ Sade Sati + Remedies/Mitigation), divisional, KP, numerology (name/brand/personal-year),
+  mulank, tarot, muhurat, vastu, decision-room. + E2E per feature.
 - **P3 — Other 5 traditions:** Western (natal/transits/synastry), Chinese (bazi/zodiac/flying-stars),
-  Hellenistic (natal/profections/zodiacal-releasing), Horary (ask/history), Medical
-  (decumbiture/body-zodiac) + their dashboards. + E2E per feature.
+  Hellenistic (natal reuses kundli / profections / zodiacal-releasing), Horary (ask via API; history
+  stored locally), Medical (decumbiture/body-zodiac) + their dashboards. + E2E per feature.
 - **P4 — Rich features:** Chat (streaming + **memory** + **deep-dive interpretation**), Reports (all 6
   types), Palmistry (camera), **Match share** (`/match/[token]`). + E2E.
 - **P5 — Payments dual-rail:** consumption read + region-gated CTA; Play Billing + backend verify +
