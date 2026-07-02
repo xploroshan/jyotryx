@@ -69,46 +69,84 @@ both web and mobile. Web migrates its `lib/api.ts`, `lib/store.ts` types, and `i
 
 ## 3. Navigation & screen architecture (Expo Router)
 
+The app is organized around **6 astrology traditions**, each with its own **dashboard** and
+sub-features (registry: `apps/web/src/lib/traditions.ts`). Mobile reproduces that architecture.
+
 - **Auth stack** (unauthenticated): welcome, sign-in (phone OTP / Google / email), OTP verify,
-  birth-details onboarding.
-- **App tabs** (authenticated): **My Day** · **Explore** (feature grid) · **Chat** · **Reports** ·
+  birth-details onboarding (incl. **tradition selection** — `primaryTradition` + multi-select
+  `astrologyTraditions[]`).
+- **App tabs** (authenticated): **My Day** (cross-tradition) · **Explore** · **Chat** · **Reports** ·
   **Profile**.
-- **Stack routes per feature** pushed from Explore/My Day. Deep links (`myastro360://…` + universal
-  links on `myastro360.com`) for notifications and the payment return flow.
+- **Tradition switcher + dashboards:** a persistent tradition rail/switcher (Vedic · Western ·
+  Chinese · Hellenistic · Horary · Medical) drives a per-tradition **dashboard** screen with its own
+  accent theming (badge/hero colors from the registry) and the tradition's feature chips. Mirrors
+  web's `AstrologyTraditionSelector` + `TraditionDashboard`.
+- **Stack routes per feature** pushed from a dashboard/Explore. Tradition-scoped routing
+  (`/western/natal`, `/vedic/dasha`, …) + top-level shared features (`/chat`, `/kundli`, `/horoscope`).
+  Deep links (`myastro360://…` + universal links) for notifications and the payment return flow.
 - Guard: a root layout reads Zustand auth state (hydrated from SecureStore) and redirects — same
-  logic as web's `useAuthHydrated` gate.
+  logic as web's `useAuthHydrated` gate; active tradition resolved like `resolveActiveTradition`.
 
-## 4. Feature parity map (all web features → mobile screens → API)
+## 4. Feature parity map — 6 traditions + cross-tradition features
 
-Every feature below ships in v1, consumed via `@myastro360/shared` api-client. Gate column: F=free,
-C=credit-gated, E=entitlement/one-time-unlock, P=premium/subscriber.
+The app spans **6 traditions** (`TraditionId`: VEDIC, WESTERN, CHINESE, HELLENISTIC, HORARY,
+MEDICAL). Authoritative registries: web `apps/web/src/lib/traditions.ts`, API
+`apps/api/src/modules/astrology/traditions/index.ts` + the Prisma tradition enum. **Every feature
+below ships in v1** — one Detox suite per feature (§7). Gate: F=free, C=credit-gated,
+E=entitlement/one-time-unlock, P=premium.
 
-| Feature | Screen(s) | Key API endpoints (`/api` prefix) | Gate |
+**🕉️ VEDIC** (flagship, 17 features)
+
+| Feature | Route | API endpoint | Gate |
 |---|---|---|---|
-| My Day / daily briefing | `my-day` | `/astrology/daily`, `/users/me` | F |
-| Horoscope | `horoscope` | `/astrology/horoscope` (multi-tradition) | F |
-| Chat with Astrologer | `chat`, `chat/[id]` | `/chat/message` (stream), `/chat/sessions` | C |
-| Kundli | `kundli` | `/astrology/kundli` | C |
-| Kundli Matching | `matching` | `/astrology/matching` | C |
-| Palmistry (camera/upload) | `palmistry` | `/palmistry/analyze` (image upload) | E |
-| Panchang | `panchang` | `/astrology/panchang` | F |
-| Muhurat | `muhurat` | `/astrology/muhurat` | F/C |
-| Reports (Life/Career/Marriage/Wealth/Annual/Palm) | `reports`, `reports/[type]` | `/reports/generate`, `/reports/:id` | E |
-| Tarot | `tarot` | `/tarot/draw` | C |
-| Numerology | `numerology` | `/astrology/numerology` | F/C |
-| Dasha periods | `dasha` | `/astrology/dasha` | C |
-| Dosha check | `dosha` | `/astrology/dosha` | C |
-| Divisional charts | `divisional` | `/astrology/divisional` | C |
-| KP astrology | `kp` | `/astrology/kp` | C |
-| Decision Room | `decision-room` | `/chat/decision` | C |
-| Cosmic Calendar | `cosmic-calendar` | `/astrology/calendar` | F |
-| Pricing / buy credits & Premium | `pricing`, `checkout` | `/payments/pricing`, `/payments/create-order`, `/payments/verify`, `/payments/subscribe` | — |
-| Profile / credits / settings / language | `profile`, `settings` | `/users/me`, `/auth/change-password`, `/payments/history` | — |
-| Notifications center | `notifications` | `/notifications` | — |
+| Chat with Astrologer | `/chat` | `/chat/message` (stream), `/chat/sessions` | C |
+| Kundli | `/kundli` | `POST /astrology/kundli` | C |
+| Palmistry (camera) | `/palmistry` | `POST /palmistry/analyze` | E |
+| Matching | `/matching` | `/astrology/matching` | C |
+| Horoscope | `/horoscope` | `/astrology/horoscope` | F |
+| Panchang | `/panchang` | `/astrology/panchang` | F |
+| Muhurat | `/muhurat` | `/astrology/muhurat` | F/C |
+| Decision Room | `/decision-room` | `/chat/decision` | C |
+| Cosmic Calendar | `/cosmic-calendar` | `/astrology/calendar` | F |
+| Dasha | `/vedic/dasha` | `/astrology/dasha` | C |
+| Dosha | `/vedic/dosha` | `/astrology/dosha` | C |
+| Divisional charts | `/divisional` | `/astrology/divisional` | C |
+| KP astrology | `/kp-astrology` | `/astrology/kp` | C |
+| Numerology | `/numerology` | `/astrology/numerology` | F/C |
+| Mulank | `/vedic/mulank` | `/astrology/numerology` (mulank) | F/C |
+| Tarot | `/tarot` | `/tarot/draw` | C |
+| Vastu | `/vastu` | `/astrology/vastu` | C |
 
-> Implementation confirms exact endpoint paths against the live controllers
-> (`apps/api/src/modules/*`) and the web usages in `apps/web/src/lib/api.ts`; the table is the parity
-> checklist — one Detox suite per row (§7).
+**♈ WESTERN** (3): Natal `POST /astrology/western/natal` · Transits `POST /astrology/western/transits`
+· Synastry `POST /astrology/western/synastry`.
+
+**🐉 CHINESE** (3): BaZi (Four Pillars) `POST /astrology/bazi` · Zodiac `GET /astrology/chinese-zodiac/{year}`
+· Flying Stars (Feng Shui) `GET /astrology/chinese/flying-stars?year=`.
+
+**🏛️ HELLENISTIC** (3): Natal `POST /astrology/kundli` (shared engine, no extra charge) · Profections
+`POST /astrology/hellenistic/profections` · Zodiacal Releasing `POST /astrology/hellenistic/zodiacal-releasing`.
+
+**⌛ HORARY** (2): Ask a question `POST /astrology/horary/ask` · History `GET /astrology/horary/history`.
+
+**⚕️ MEDICAL** (2): Decumbiture chart `POST /astrology/medical/decumbiture` · Body/Zodiac (melothesia)
+`GET /astrology/medical/body-zodiac`.
+
+**Cross-tradition / global**
+
+| Feature | Route | API endpoint | Gate |
+|---|---|---|---|
+| My Day / daily briefing | `/my-day` | `/astrology/daily`, `/users/me` | F |
+| Tradition dashboards | `/vedic` `/western` `/chinese` `/hellenistic` `/horary` `/medical` | registry (client) | F |
+| Reports (Life/Career/Marriage/Wealth/Annual/Palm) | `/reports`, `/reports/[type]` | `/reports/generate`, `/reports/:id` | E |
+| Pricing / buy credits & Premium | `/pricing`, `/checkout` | `/payments/pricing`, `/payments/create-order`, `/payments/verify`, `/payments/subscribe` | — |
+| Profile / credits / settings / **tradition select** / language | `/profile`, `/settings` | `/users/me`, `/auth/change-password`, `/payments/history` | — |
+| Notifications center | `/notifications` | `/notifications` | — |
+| Referral | `/referral` | `/referral/*` | — |
+
+> Exact endpoint paths (a few marked approximate) are confirmed against the live controllers
+> (`apps/api/src/modules/astrology/*`) and the web page usages during implementation. Total surface:
+> **~30 feature screens + 6 tradition dashboards + the global set.**
+
 
 ## 5. Payments — dual rail with region-gated anti-steering
 
@@ -181,6 +219,11 @@ behavior.
 - **Chat (streaming):** send message → streamed tokens render; session list; credit deduction;
   network-drop mid-stream recovery.
 - **Decision Room:** multi-input decision → response.
+- **Traditions (Western / Chinese / Hellenistic / Horary / Medical):** switch tradition via the rail
+  → correct dashboard + accent theming; each sub-feature generates (Western natal/transits/synastry;
+  Chinese bazi/zodiac/flying-stars; Hellenistic natal/profections/zodiacal-releasing; Horary
+  ask + history; Medical decumbiture/body-zodiac); per-feature credit/entitlement gating; primary +
+  multi-select tradition persists to profile and re-resolves the active tradition on relaunch.
 - **Payments — Rail A (consumption):** balance/entitlement read; region=IN → **no in-app web link**;
   region=US → deep-link to web checkout returns and reflects the new balance.
 - **Payments — Rail B (Play Billing, sandbox):** buy a credit pack (test track) → backend verify →
@@ -231,16 +274,20 @@ profiling run (Flashlight) on the emulator with pass/fail budgets (§6).
 
 - **P0 — Foundation:** `apps/mobile` + `packages/shared` scaffold, NativeWind theme from web tokens,
   Expo Router shell, EAS + CI, Sentry. Move api-client / types / i18n into shared.
-- **P1 — Auth + shell:** auth stack (OTP/Google/email), onboarding, tabs, My Day, Profile, i18n,
-  offline cache. + unit/E2E.
-- **P2 — Free + credit features:** horoscope, panchang, cosmic calendar, kundli, matching, dasha,
-  dosha, divisional, KP, numerology, tarot, muhurat. + E2E per feature.
-- **P3 — Rich features:** Chat (streaming), Reports (all types), Palmistry (camera). + E2E.
-- **P4 — Payments dual-rail:** consumption read + region-gated CTA; Play Billing + backend verify +
+- **P1 — Auth + shell:** auth stack (OTP/Google/email), onboarding (incl. **tradition select**),
+  tabs, **tradition switcher + dashboard shell** (6 traditions, accent theming), My Day, Profile,
+  i18n, offline cache. + unit/E2E.
+- **P2 — Vedic features (17):** horoscope, panchang, cosmic calendar, kundli, matching, dasha, dosha,
+  divisional, KP, numerology, mulank, tarot, muhurat, vastu, decision-room. + E2E per feature.
+- **P3 — Other 5 traditions:** Western (natal/transits/synastry), Chinese (bazi/zodiac/flying-stars),
+  Hellenistic (natal/profections/zodiacal-releasing), Horary (ask/history), Medical
+  (decumbiture/body-zodiac) + their dashboards. + E2E per feature.
+- **P4 — Rich features:** Chat (streaming), Reports (all types), Palmistry (camera). + E2E.
+- **P5 — Payments dual-rail:** consumption read + region-gated CTA; Play Billing + backend verify +
   RTDN; paywalls. + payment E2E (sandbox).
-- **P5 — Notifications + performance hardening:** FCM push, perf budgets / Reassure / Flashlight,
+- **P6 — Notifications + performance hardening:** FCM push, perf budgets / Reassure / Flashlight,
   bundle trim, offline polish.
-- **P6 — Full Detox suite + Play release pipeline:** green E2E matrix, internal→production tracks.
+- **P7 — Full Detox suite + Play release pipeline:** green E2E matrix, internal→production tracks.
 
 ## 12. Critical files / directories (created during implementation)
 
