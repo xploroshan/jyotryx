@@ -31,9 +31,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # Root install = web + api + shared only (apps/mobile is NOT a root
+      # workspace — it has its own lockfile). This validates the root lock and
+      # gives packages/shared its typescript.
       - run: npm ci
       - name: Typecheck shared
         run: cd packages/shared && npx tsc --noEmit
+      # Mobile is a standalone project with its own package-lock.json.
+      - name: Install mobile
+        run: cd apps/mobile && npm ci
       - name: Typecheck mobile
         run: cd apps/mobile && npm run typecheck
       - name: Lint mobile
@@ -53,7 +59,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: cd apps/mobile && npm ci
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

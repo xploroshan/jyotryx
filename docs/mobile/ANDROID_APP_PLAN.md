@@ -31,7 +31,10 @@ Confirmed decisions:
 
 ## 1. Monorepo & package structure
 
-Add two workspaces (npm workspaces + `turbo.json` pipeline entries mirroring web/api):
+Add `packages/shared` as an npm workspace; add `apps/mobile` as a **standalone
+project with its own `package-lock.json`** (deliberately *not* a root workspace, so
+web/api `npm ci` never installs the React Native/Expo tree and the root lockfile
+stays lean — mobile pulls `@myastro360/shared` via a `file:` link):
 
 ```
 apps/

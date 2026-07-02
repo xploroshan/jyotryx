@@ -25,9 +25,10 @@ gating, DTO types) lives in [`@myastro360/shared`](../../packages/shared).
 ## Setup
 
 ```bash
-# from the repo root
+# from the repo root — installs web + api + shared only
 npm install
-cd apps/mobile
+# mobile is a standalone project with its own lockfile
+cd apps/mobile && npm install
 npm run align        # npx expo install --fix — reconcile native versions
 npm start            # expo start
 ```
@@ -44,11 +45,14 @@ Add the binary assets in `assets/` (see `assets/README.md`) before building.
 
 ## Monorepo / CI note
 
-`@myastro360/mobile` is an npm workspace, so a root `npm ci` now also installs
-the React Native/Expo tree. The existing web/api CI jobs (`.github/workflows/ci.yml`)
-are unaffected in behaviour but will install more packages; mobile has its own
-pipeline in `.github/workflows/mobile-ci.yml`. Native versions should be
-reconciled with `npx expo install --fix` after checkout.
+`apps/mobile` is intentionally **not** a root npm workspace — it has its own
+`package-lock.json` and pulls `@myastro360/shared` via a `file:` link. So a root
+`npm ci` (the web/api jobs in `.github/workflows/ci.yml`) installs only
+**web + api + shared** — the React Native/Expo tree never touches those jobs and
+the root lockfile stays lean. Mobile installs separately with
+`cd apps/mobile && npm ci` in `.github/workflows/mobile-ci.yml`. RN/Expo peers
+are pinned via `apps/mobile`'s own `overrides` (single `react-native@0.76.5`);
+reconcile native versions with `npx expo install --fix` after checkout.
 
 ## Roadmap
 
