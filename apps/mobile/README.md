@@ -127,8 +127,29 @@ capture + live streaming are verified manually on device.
   `.reassure/`, git-ignored); JS bundle budget (`npm run bundle:check`,
   baseline **5.48 MB** Hermes bundle, budget 8 MB) — both wired into mobile CI.
 
+## Auth & account (P1 completion)
+
+- Sign-in screen has three first-party modes — email login, email register
+  (server password rules enforced client-side too), and **phone OTP** via the
+  backend's own OTP (`/auth/otp/send` + `verify`, auto-creates accounts; the
+  dev API returns the code as an on-screen hint) — plus **native Google**
+  (`expo-auth-session` ID-token flow → `POST /auth/google`; set
+  `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` = the API's `GOOGLE_CLIENT_ID`).
+  Auth responses use the NESTED `{ user, tokens: {...} }` shape.
+- Profile: referral card (`GET /referral/me`, native share sheet) + the
+  self-saving daily-briefing toggle (`GET/PUT /briefing/preferences`).
+
+## Release (P7)
+
+Tag `mobile-vX.Y.Z` → `.github/workflows/mobile-release.yml` builds the
+production AAB via EAS and submits to the Play internal track. Detox emulator
+job runs on demand (Actions → Mobile CI → Run workflow). Full procedure:
+[`docs/mobile/RELEASE_RUNBOOK.md`](../../docs/mobile/RELEASE_RUNBOOK.md).
+
 ## Roadmap
 
 ~~P2 Vedic features~~ ✓ · ~~P3 Western/Chinese/Hellenistic/Horary/Medical~~ ✓ ·
 ~~P4 chat/reports/palmistry/match-share~~ ✓ · ~~P5 payments dual-rail~~ ✓ ·
-~~P6 notifications + perf~~ ✓ · P7 full Detox suite + Play release.
+~~P6 notifications + perf~~ ✓ · ~~P7 release pipeline + P1 auth/account~~ ✓ —
+**feature-parity v1 complete.** Remaining before store launch: run the Detox
+matrix on an emulator, EAS/Play one-time setup, then tag.

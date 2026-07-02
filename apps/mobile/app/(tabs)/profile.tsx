@@ -4,6 +4,8 @@ import { useAuthStore } from '@/store/auth';
 import { useI18nStore } from '@/store/i18n';
 import { Screen, Heading, Muted, Card, Button } from '@/components/ui';
 import { MemorySection } from '@/profile/MemorySection';
+import { ReferralCard } from '@/profile/ReferralCard';
+import { BriefingPrefs } from '@/profile/BriefingPrefs';
 import { unregisterPush } from '@/notifications/push';
 
 /**
@@ -51,12 +53,16 @@ export default function Profile() {
         </Card>
 
         <View className="mb-4">
-          <MemorySection />
+          <ReferralCard />
         </View>
 
-        <Card className="mb-4">
-          <Muted>Referral, briefing preferences, and password change wire up in P1.</Muted>
-        </Card>
+        <View className="mb-4">
+          <BriefingPrefs />
+        </View>
+
+        <View className="mb-4">
+          <MemorySection />
+        </View>
 
         <Button testID="profile-logout" title="Log out" variant="secondary" onPress={onLogout} />
       </ScrollView>

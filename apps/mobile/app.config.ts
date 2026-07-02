@@ -70,6 +70,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'https://api.myastro360.com/api',
     webOrigin: process.env.EXPO_PUBLIC_WEB_ORIGIN ?? 'https://www.myastro360.com',
+    // Must equal the API's GOOGLE_CLIENT_ID (the /auth/google audience check).
+    googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
     router: { origin: false },
     eas: {
       projectId: process.env.EAS_PROJECT_ID ?? '',

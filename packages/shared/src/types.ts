@@ -50,10 +50,53 @@ export interface BirthDetails {
   gender?: string | null;
 }
 
-export interface AuthResponse {
-  user: User;
+/** Token bundle as the API returns it — NESTED under `tokens` in auth
+ *  responses (`auth.service.ts` AuthResponse), not flat. `expiresIn` is a
+ *  duration string like `"1d"`. */
+export interface AuthTokensPayload {
   accessToken: string;
   refreshToken: string;
+  expiresIn?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  tokens: AuthTokensPayload;
+}
+
+/** POST /auth/otp/send response. `expiresIn` is SECONDS; `devOtp` is present
+ *  only outside production (OTP_EXPOSE_IN_RESPONSE). */
+export interface OtpSendResponse {
+  message: string;
+  expiresIn: number;
+  devOtp?: string;
+}
+
+/** GET /referral/me */
+export interface ReferralStatus {
+  enabled: boolean;
+  bonusDays: number;
+  code: string;
+  shareUrl: string;
+  totalReferrals: number;
+  activatedReferrals: number;
+  pendingReferrals: number;
+  rejectedReferrals: number;
+  maxPerReferrer: number;
+  remainingSlots: number;
+  recent: {
+    refereeName: string;
+    refereeEmail: string;
+    bonusDays: number;
+    status: string;
+    activatedAt: string | null;
+    createdAt: string;
+  }[];
+}
+
+/** GET/PUT /briefing/preferences */
+export interface BriefingPreferences {
+  briefingEmailEnabled: boolean;
 }
 
 export interface CreditsResponse {
