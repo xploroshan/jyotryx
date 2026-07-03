@@ -534,6 +534,19 @@ describe('PaymentService (Cashfree)', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('fails closed in production when Cashfree is not configured (no fake session)', async () => {
+      (service as any).cashfree = null;
+      const prev = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      try {
+        await expect(
+          service.createOrder('test-uuid', { amount: 99, productId: 'credits_starter' } as any),
+        ).rejects.toThrow(InternalServerErrorException);
+      } finally {
+        process.env.NODE_ENV = prev;
+      }
+    });
+
     it('accepts the correct rupee amount and persists the advertised credit count', async () => {
       const order = await service.createOrder('test-uuid', {
         amount: 99, // rupees, not paise

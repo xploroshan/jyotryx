@@ -86,6 +86,17 @@ export default () => ({
     webhookToleranceSeconds: parseIntEnv('CASHFREE_WEBHOOK_TOLERANCE_SECONDS', 300),
   },
 
+  googlePlay: {
+    // Service-account JSON (single line) with the AndroidPublisher scope —
+    // NOT the Firebase account; create a dedicated one in Play Console →
+    // API access. Same env-encoding convention as FIREBASE_SERVICE_ACCOUNT_JSON.
+    serviceAccountJson: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON || '',
+    packageName: process.env.GOOGLE_PLAY_PACKAGE_NAME || 'com.myastro360.app',
+    // Shared secret appended as ?token= on the RTDN Pub/Sub push endpoint.
+    // The endpoint fails closed when this is unset.
+    rtdnToken: process.env.GOOGLE_PLAY_RTDN_TOKEN || '',
+  },
+
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
     model: process.env.OPENAI_MODEL || 'gpt-4o-mini',

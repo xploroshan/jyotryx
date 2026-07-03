@@ -29,7 +29,8 @@ import { isProfileComplete } from '../user/user.service';
 import { SignupContext } from './signup-context';
 import { ReferralService } from '../referral/referral.service';
 import { normalizePhone, phoneMatchCandidates } from '../../common/phone.util';
-import * as admin from 'firebase-admin';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
 
 type PrismaUser = {
   id: string;
@@ -133,7 +134,7 @@ export class AuthService {
     @Optional() private readonly referralService?: ReferralService,
   ) {
     // Initialize Firebase Admin SDK
-    if (!admin.apps.length) {
+    if (!getApps().length) {
       const serviceAccount = this.configService.get<string>('firebase.serviceAccountJson');
       const projectId = this.configService.get<string>('firebase.projectId');
 
@@ -148,8 +149,8 @@ export class AuthService {
             cleanJson = cleanJson.slice(1, -1);
           }
           const parsed = JSON.parse(cleanJson);
-          admin.initializeApp({
-            credential: admin.credential.cert(parsed),
+          initializeApp({
+            credential: cert(parsed),
           });
           this.logger.log('Firebase Admin SDK initialized with service account');
         } catch (error) {
@@ -158,7 +159,7 @@ export class AuthService {
           // Fall back to project ID if available
           if (projectId) {
             try {
-              admin.initializeApp({ projectId });
+              initializeApp({ projectId });
               this.logger.log('Firebase Admin SDK fallback: initialized with project ID only');
             } catch (fallbackError) {
               this.logger.warn(`Firebase Admin SDK fallback also failed: ${fallbackError}`);
@@ -167,7 +168,7 @@ export class AuthService {
         }
       } else if (projectId) {
         try {
-          admin.initializeApp({ projectId });
+          initializeApp({ projectId });
           this.logger.log('Firebase Admin SDK initialized with project ID only');
         } catch (error) {
           this.logger.warn(`Firebase Admin SDK init with project ID failed: ${error}`);
@@ -189,9 +190,9 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
     // Also create user in Firebase Auth so password reset emails work
-    if (admin.apps.length) {
+    if (getApps().length) {
       try {
-        await admin.auth().createUser({
+        await getAuth().createUser({
           email: dto.email,
           password: dto.password,
           displayName: dto.name,
@@ -338,19 +339,19 @@ export class AuthService {
       return { message: 'If an account exists with this email, a password reset link has been sent.' };
     }
 
-    if (!admin.apps.length) {
+    if (!getApps().length) {
       this.logger.warn('Firebase Admin SDK not configured - cannot send password reset email');
       throw new BadRequestException('Password reset is not available at this time. Please contact support.');
     }
 
     // Ensure the user exists in Firebase Auth
     try {
-      await admin.auth().getUserByEmail(email);
+      await getAuth().getUserByEmail(email);
     } catch (firebaseError: any) {
       if (firebaseError.code === 'auth/user-not-found') {
         // Create the user in Firebase Auth so password reset works
         try {
-          await admin.auth().createUser({
+          await getAuth().createUser({
             email: user.email,
             displayName: user.name,
             // Generate a random password - user will reset it via the email link
@@ -369,7 +370,7 @@ export class AuthService {
 
     // Generate password reset link via Firebase Admin SDK
     try {
-      const resetLink = await admin.auth().generatePasswordResetLink(email);
+      const resetLink = await getAuth().generatePasswordResetLink(email);
       this.logger.log(`Password reset link generated for: ${email}`);
       // In production, you would send this via an email service
       // For now, Firebase will send its default reset email
@@ -665,13 +666,13 @@ export class AuthService {
   }
 
   async firebaseAuth(dto: FirebaseAuthDto, signupContext?: SignupContext): Promise<AuthResponse> {
-    if (!admin.apps.length) {
+    if (!getApps().length) {
       throw new UnauthorizedException('Firebase is not configured on the server');
     }
 
-    let decodedToken: admin.auth.DecodedIdToken;
+    let decodedToken: DecodedIdToken;
     try {
-      decodedToken = await admin.auth().verifyIdToken(dto.idToken);
+      decodedToken = await getAuth().verifyIdToken(dto.idToken);
     } catch (error) {
       this.logger.error(`Firebase token verification failed: ${error}`);
       throw new UnauthorizedException('Invalid Firebase token. Please try again.');

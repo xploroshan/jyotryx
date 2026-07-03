@@ -3,6 +3,7 @@ import {
   Optional,
   BadRequestException,
   InternalServerErrorException,
+  UnauthorizedException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -16,16 +17,34 @@ import {
   EntitlementTypeName,
 } from '../../common/feature-access/feature-access.service';
 import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
-import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto } from './dto';
+import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto, GoogleVerifyDto } from './dto';
 import {
   CashfreeClient,
   CashfreeConfig,
   verifyCashfreeSignature,
 } from './cashfree.client';
+import { GooglePlayClient } from './google-play.client';
 
 /** Default INR prices for one-time entitlement products (admin-overridable). */
 const DEFAULT_REPORT_PRICE_INR = 199;
 const DEFAULT_PALMISTRY_PRICE_INR = 250;
+
+/** Play subscription SKUs → logical plan tier (mirrors CASHFREE_PLAN_* mapping). */
+const GOOGLE_SUB_PLANS: Record<string, 'MONTHLY' | 'ANNUAL'> = {
+  premium_monthly: 'MONTHLY',
+  premium_annual: 'ANNUAL',
+};
+
+const sha256Hex = (value: string): string =>
+  crypto.createHash('sha256').update(value).digest('hex');
+
+/** Constant-time string compare (hashes first so lengths never leak). */
+function timingSafeEqualStr(a: string, b: string): boolean {
+  return crypto.timingSafeEqual(
+    crypto.createHash('sha256').update(a).digest(),
+    crypto.createHash('sha256').update(b).digest(),
+  );
+}
 
 /**
  * Map a one-time-purchase productId to its EntitlementType, or null if the
@@ -135,6 +154,8 @@ export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
   /** Null when no credentials are configured → "mock mode" for local dev. */
   private cashfree: CashfreeClient | null = null;
+  /** Null when no Play service account is configured → "mock mode" (Rail B). */
+  private googlePlay: GooglePlayClient | null = null;
   /** Throttle for Sentry webhook-failure alerts, keyed by outcome (epoch ms). */
   private readonly lastWebhookAlertAt: Record<string, number> = {};
 
@@ -148,6 +169,7 @@ export class PaymentService {
     @Optional() private readonly metrics?: MetricsService,
   ) {
     this.initCashfree();
+    this.initGooglePlay();
   }
 
   /**
@@ -188,6 +210,26 @@ export class PaymentService {
     } else {
       this.cashfree = null;
       this.logger.warn('Cashfree credentials not configured, using mock mode');
+    }
+  }
+
+  private initGooglePlay(): void {
+    const serviceAccountJson = this.configService.get<string>('googlePlay.serviceAccountJson');
+    const packageName =
+      this.configService.get<string>('googlePlay.packageName') || 'com.myastro360.app';
+    if (serviceAccountJson) {
+      try {
+        this.googlePlay = new GooglePlayClient({ serviceAccountJson, packageName });
+        this.logger.log(`Google Play client initialized (${packageName})`);
+      } catch (error) {
+        this.googlePlay = null;
+        this.logger.error(
+          `Google Play service-account JSON is invalid: ${(error as Error).message}`,
+        );
+      }
+    } else {
+      this.googlePlay = null;
+      this.logger.warn('Google Play credentials not configured, using mock mode');
     }
   }
 
@@ -376,8 +418,16 @@ export class PaymentService {
         this.logger.error('Cashfree order creation failed', error as Error);
         throw new InternalServerErrorException('Failed to create payment order');
       }
+    } else if ((process.env.NODE_ENV ?? '') === 'production') {
+      // Fail-CLOSED: in production a missing Cashfree config must surface a
+      // clear error, not a fake `session_mock_…` that the browser SDK then
+      // rejects with a cryptic "payment_session_id is invalid". This is the
+      // signal that CASHFREE_CLIENT_ID / CASHFREE_CLIENT_SECRET aren't set (or
+      // the API wasn't redeployed after setting them).
+      this.logger.error('createOrder: Cashfree not configured — refusing to create order');
+      throw new InternalServerErrorException('Payments are not configured');
     } else {
-      // Mock mode (local dev): deterministic ids, no network call.
+      // Mock mode (local dev only): deterministic ids, no network call.
       paymentSessionId = `session_mock_${crypto.randomUUID().substring(0, 14)}`;
     }
 
@@ -1040,6 +1090,325 @@ export class PaymentService {
     });
   }
 
+  // ── Google Play (Rail B) ──────────────────────────────────────────────────
+
+  /**
+   * Verify a Google Play Billing purchase server-side and grant through the
+   * SAME hardened paths as Cashfree: products flow through `settlePaidOrder`
+   * (status-guarded, exactly-once), subscriptions through the idempotent
+   * `activateSubscription`. Play SKU ids are the same productIds the web sends
+   * (`credits_starter/popular/pro`, `report_*`, `palm_reading`,
+   * `premium_monthly/annual`), so the existing product resolution is reused
+   * unchanged. Fail-closed in production when the Play client is unconfigured.
+   */
+  async verifyGooglePurchase(
+    userId: string,
+    dto: GoogleVerifyDto,
+  ): Promise<PaymentVerificationResult> {
+    if (dto.kind === 'subscription') {
+      return this.verifyGoogleSubscription(userId, dto);
+    }
+    const { productId, purchaseToken } = dto;
+
+    // Resolve what this SKU grants BEFORE talking to Play — unknown SKUs fail fast.
+    const entType = entitlementTypeForProduct(productId);
+    let credits: number | null = null;
+    let amountINR: number | null = null;
+    if (entType) {
+      amountINR = await this.getExpectedPrice(productId);
+    } else {
+      const pack = await this.resolveCreditPack(productId);
+      if (pack) {
+        credits = pack.credits;
+        amountINR = pack.priceINR;
+      } else {
+        // Legacy static packs (credits_10/50/100).
+        amountINR = await this.getExpectedPrice(productId);
+        if (amountINR != null) credits = this.calculateCredits(amountINR);
+      }
+    }
+    if (amountINR == null) {
+      throw new BadRequestException(`Unknown product: ${productId}`);
+    }
+
+    // Validate the token with the Play Developer API.
+    let orderId: string;
+    let needsAck = false;
+    let playMeta: Record<string, unknown> = {};
+    if (this.googlePlay) {
+      const purchase = await this.googlePlay
+        .getProductPurchase(productId, purchaseToken)
+        .catch((error) => {
+          this.logger.warn(`google verify: token lookup failed: ${(error as Error).message}`);
+          return null;
+        });
+      if (!purchase) {
+        throw new BadRequestException('Purchase token could not be validated with Google Play');
+      }
+      if (purchase.purchaseState !== 0) {
+        throw new BadRequestException('Purchase is not in a purchased state');
+      }
+      orderId = purchase.orderId || `gp_${sha256Hex(purchaseToken).slice(0, 40)}`;
+      needsAck = purchase.acknowledgementState === 0;
+      playMeta = {
+        playRegionCode: purchase.regionCode,
+        playPurchaseTimeMillis: purchase.purchaseTimeMillis,
+      };
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new InternalServerErrorException('Google Play verification is not configured');
+    } else {
+      orderId = dto.orderId || `gp_mock_${sha256Hex(purchaseToken).slice(0, 32)}`;
+    }
+
+    // Record the payment keyed on the UNIQUE Play orderId (+ token hash as the
+    // unique gatewayPaymentId) — a replayed token hits P2002 and is treated as
+    // already-recorded; the status-guarded settle below then makes the grant
+    // exactly-once. Amount is our authoritative INR price (Play's regional
+    // price lives in metadata only).
+    const tokenHash = `gp_${sha256Hex(purchaseToken)}`;
+    try {
+      await this.prisma.payment.create({
+        data: {
+          userId,
+          amount: amountINR,
+          currency: 'INR',
+          status: 'PENDING',
+          gatewayOrderId: orderId,
+          gatewayPaymentId: tokenHash,
+          provider: 'google_play',
+          type: entType ? 'REPORT' : 'CREDITS',
+          metadata: {
+            productId,
+            source: 'google_play',
+            kind: entType ? 'entitlement' : 'credits',
+            ...(credits ? { credits } : {}),
+            ...(entType ? { entitlementType: entType } : {}),
+            ...playMeta,
+          },
+        },
+      });
+    } catch (error: any) {
+      if (error?.code !== 'P2002') throw error;
+      // Duplicate orderId/token: fine if it's this user's replay, hostile if
+      // someone is replaying another account's token.
+      const existing = await this.prisma.payment.findFirst({
+        where: { gatewayOrderId: orderId },
+        select: { userId: true },
+      });
+      if (existing && existing.userId !== userId) {
+        throw new BadRequestException('Purchase belongs to another account');
+      }
+    }
+
+    const settled = await this.settlePaidOrder(orderId, { userId });
+
+    // Acknowledge so Play doesn't auto-refund the purchase (~3 days). Failing
+    // to ack is retried implicitly: the client may re-verify, and RTDN resends.
+    if (needsAck && this.googlePlay) {
+      await this.googlePlay
+        .acknowledgeProduct(productId, purchaseToken)
+        .catch((error) =>
+          this.logger.warn(`google verify: acknowledge failed: ${(error as Error).message}`),
+        );
+    }
+
+    const row = await this.prisma.payment.findFirst({
+      where: { gatewayOrderId: orderId, userId },
+      select: { id: true },
+    });
+    return {
+      verified: true,
+      paymentId: row?.id ?? '',
+      orderId,
+      ...(settled.creditsAdded > 0 ? { creditsAdded: settled.creditsAdded } : {}),
+      ...(settled.entitlementGranted ? { entitlementGranted: true } : {}),
+    };
+  }
+
+  private async verifyGoogleSubscription(
+    userId: string,
+    dto: GoogleVerifyDto,
+  ): Promise<PaymentVerificationResult> {
+    const plan = GOOGLE_SUB_PLANS[dto.productId];
+    if (!plan) {
+      throw new BadRequestException(`Unknown subscription product: ${dto.productId}`);
+    }
+
+    let expiry: Date | null = null;
+    let needsAck = false;
+    if (this.googlePlay) {
+      const sub = await this.googlePlay
+        .getSubscriptionPurchase(dto.purchaseToken)
+        .catch((error) => {
+          this.logger.warn(`google verify: sub lookup failed: ${(error as Error).message}`);
+          return null;
+        });
+      if (!sub) {
+        throw new BadRequestException('Subscription token could not be validated with Google Play');
+      }
+      const state = String(sub.subscriptionState ?? '');
+      if (!['SUBSCRIPTION_STATE_ACTIVE', 'SUBSCRIPTION_STATE_IN_GRACE_PERIOD'].includes(state)) {
+        throw new BadRequestException('Subscription is not active');
+      }
+      expiry = parseDateOrNull(sub.lineItems?.[0]?.expiryTime);
+      needsAck = sub.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_PENDING';
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new InternalServerErrorException('Google Play verification is not configured');
+    }
+
+    // Our Subscription row is keyed on the purchase token (Play's stable
+    // subscription identity); create it once, then run the shared idempotent
+    // activation (sets ACTIVE + PREMIUM + rolls endDate).
+    const existing = await this.prisma.subscription.findFirst({
+      where: { gatewaySubscriptionId: dto.purchaseToken },
+      select: { userId: true },
+    });
+    if (existing && existing.userId !== userId) {
+      throw new BadRequestException('Subscription belongs to another account');
+    }
+    if (!existing) {
+      await this.prisma.subscription.create({
+        data: {
+          userId,
+          plan,
+          status: 'PENDING',
+          provider: 'google_play',
+          gatewaySubscriptionId: dto.purchaseToken,
+          ...(expiry ? { endDate: expiry } : {}),
+        },
+      });
+    }
+    await this.activateSubscription(dto.purchaseToken, expiry);
+
+    if (needsAck && this.googlePlay) {
+      await this.googlePlay
+        .acknowledgeSubscription(dto.productId, dto.purchaseToken)
+        .catch((error) =>
+          this.logger.warn(`google verify: sub acknowledge failed: ${(error as Error).message}`),
+        );
+    }
+
+    return { verified: true, paymentId: '', orderId: dto.purchaseToken };
+  }
+
+  /**
+   * Google Play Real-time Developer Notifications (Pub/Sub push). Auth is a
+   * shared token in the query string, compared constant-time and fail-closed
+   * when unconfigured — the RTDN analogue of the Cashfree signature guards.
+   * Payload is the base64 DeveloperNotification inside the Pub/Sub envelope.
+   * Unknown/irrelevant notification types are acked (200) without side effects
+   * so Pub/Sub doesn't retry forever.
+   */
+  async handleGoogleRtdn(
+    envelope: Record<string, any>,
+    token: string | undefined,
+  ): Promise<{ received: boolean }> {
+    const expected = this.configService.get<string>('googlePlay.rtdnToken');
+    if (!expected) {
+      this.recordWebhookOutcome('rtdn_no_secret');
+      throw new InternalServerErrorException('RTDN token not configured');
+    }
+    if (!token || !timingSafeEqualStr(token, expected)) {
+      this.recordWebhookOutcome('rtdn_bad_token');
+      throw new UnauthorizedException('Invalid RTDN token');
+    }
+
+    const data64 = envelope?.message?.data;
+    if (typeof data64 !== 'string' || !data64) {
+      this.recordWebhookOutcome('rtdn_bad_envelope');
+      return { received: true };
+    }
+    let notif: any;
+    try {
+      notif = JSON.parse(Buffer.from(data64, 'base64').toString('utf8'));
+    } catch {
+      this.recordWebhookOutcome('rtdn_bad_payload');
+      return { received: true };
+    }
+
+    try {
+      if (notif?.testNotification) {
+        this.recordWebhookOutcome('ok');
+        return { received: true };
+      }
+      const sub = notif?.subscriptionNotification;
+      if (sub?.purchaseToken) {
+        await this.handleGoogleSubscriptionNotification(sub);
+        this.recordWebhookOutcome('ok');
+        return { received: true };
+      }
+      const voided = notif?.voidedPurchaseNotification;
+      if (voided) {
+        await this.handleGoogleVoidedPurchase(voided);
+        this.recordWebhookOutcome('ok');
+        return { received: true };
+      }
+      if (notif?.oneTimeProductNotification) {
+        // Grants happen through client verify (+ reconcile via re-verify);
+        // voids/refunds arrive as voidedPurchaseNotification. Ack only.
+        this.recordWebhookOutcome('ok');
+        return { received: true };
+      }
+      this.recordWebhookOutcome('rtdn_unknown_type');
+      return { received: true };
+    } catch (error) {
+      // Never bubble processing errors into a Pub/Sub retry storm for
+      // deliveries we already authenticated; log + alert instead.
+      this.logger.error(`RTDN processing failed: ${(error as Error).message}`);
+      this.recordWebhookOutcome('rtdn_processing_error');
+      return { received: true };
+    }
+  }
+
+  /** RTDN notificationType → subscription lifecycle. Mirrors the Cashfree
+   *  status-change handler's "err toward revoking access" policy. */
+  private async handleGoogleSubscriptionNotification(sub: {
+    notificationType?: number;
+    purchaseToken: string;
+  }): Promise<void> {
+    const t = Number(sub.notificationType);
+    const ACTIVATE = [1, 2, 4, 6, 7]; // RECOVERED, RENEWED, PURCHASED, IN_GRACE_PERIOD, RESTARTED
+    const CANCELLED = [3]; // CANCELED
+    const TERMINAL = [5, 10, 12, 13]; // ON_HOLD, PAUSED, REVOKED, EXPIRED
+
+    if (ACTIVATE.includes(t)) {
+      let expiry: Date | null = null;
+      if (this.googlePlay) {
+        const s = await this.googlePlay
+          .getSubscriptionPurchase(sub.purchaseToken)
+          .catch(() => null);
+        expiry = parseDateOrNull(s?.lineItems?.[0]?.expiryTime);
+      }
+      await this.activateSubscription(sub.purchaseToken, expiry);
+    } else if (CANCELLED.includes(t)) {
+      await this.terminateSubscription(sub.purchaseToken, 'CANCELLED');
+    } else if (TERMINAL.includes(t)) {
+      await this.terminateSubscription(sub.purchaseToken, 'EXPIRED');
+    }
+    // Other types (price change confirmed, deferred, pause scheduled) are
+    // informational — no state change.
+  }
+
+  /** Voided-purchase clawback. productType 1 = subscription, 2 = one-time. The
+   *  one-time path reuses the provider-agnostic guarded reversal in
+   *  `handleRefund` (it keys on gatewayOrderId, which for Play is the GPA
+   *  order id we stored at verify time). */
+  private async handleGoogleVoidedPurchase(voided: {
+    purchaseToken?: string;
+    orderId?: string;
+    productType?: number;
+  }): Promise<void> {
+    if (voided.productType === 1 && voided.purchaseToken) {
+      await this.terminateSubscription(voided.purchaseToken, 'CANCELLED');
+      return;
+    }
+    if (voided.orderId) {
+      await this.handleRefund({
+        refund: { refund_status: 'SUCCESS', order_id: voided.orderId },
+      });
+    }
+  }
+
   /**
    * The current user's subscription for the profile billing card: the active
    * one if present, else the most recent. Null when the user never subscribed.
@@ -1146,12 +1515,16 @@ export class PaymentService {
       'feature.overage_for_free_enabled',
     ];
     const socialKeys = ['social.report_count_base'];
+    // App-store policy knobs (admin-tunable). The mobile app hides its "buy on
+    // the web" link unless allowWebCheckoutLink is exactly 'true' — absent or
+    // anything else means hidden (fail-closed anti-steering; India default).
+    const storeKeys = ['store.region_mode', 'store.allow_web_checkout_link'];
     const rows = await this.prisma.siteSetting.findMany({
       where: {
         OR: [
           { key: { startsWith: 'pricing.' } },
           { key: { startsWith: 'limits.' } },
-          { key: { in: [...featureKeys, ...socialKeys] } },
+          { key: { in: [...featureKeys, ...socialKeys, ...storeKeys] } },
         ],
       },
     });
@@ -1159,6 +1532,14 @@ export class PaymentService {
     for (const row of rows) {
       result[row.key] = row.value;
     }
+
+    // Surface store policy under stable storePolicy.* keys (raw store.* keys
+    // stay internal). Defaults: region IN, web-checkout link hidden.
+    result['storePolicy.region'] = result['store.region_mode'] || 'IN';
+    result['storePolicy.allowWebCheckoutLink'] =
+      result['store.allow_web_checkout_link'] === 'true' ? 'true' : 'false';
+    delete result['store.region_mode'];
+    delete result['store.allow_web_checkout_link'];
 
     if (result['feature.subscriptions_enabled'] === undefined) result['feature.subscriptions_enabled'] = 'false';
     if (result['feature.pricing_page_enabled'] === undefined) result['feature.pricing_page_enabled'] = 'false';

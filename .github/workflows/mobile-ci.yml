@@ -1,0 +1,86 @@
+name: Mobile CI
+
+# Scoped to mobile changes so the RN/Expo toolchain install doesn't run on
+# unrelated web/api PRs. The heavier Detox emulator job only runs on PRs that
+# touch the mobile app or its shared package.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/shared/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/shared/**'
+      - '.github/workflows/mobile-ci.yml'
+  # Manual trigger — runs the full Detox emulator job on demand.
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck-and-unit:
+    name: Mobile — Typecheck, Lint, Unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # Root install = web + api + shared only (apps/mobile is NOT a root
+      # workspace — it has its own lockfile). This validates the root lock and
+      # gives packages/shared its typescript.
+      - run: npm ci
+      - name: Typecheck shared
+        run: cd packages/shared && npx tsc --noEmit
+      # Mobile is a standalone project with its own package-lock.json.
+      - name: Install mobile
+        run: cd apps/mobile && npm ci
+      - name: Typecheck mobile
+        run: cd apps/mobile && npm run typecheck
+      - name: Lint mobile
+        run: cd apps/mobile && npm run lint
+      - name: Unit tests
+        run: cd apps/mobile && npm test -- --ci
+      - name: Perf render tests (Reassure)
+        # Baseline-mode run: measures and validates the perf suite executes.
+        # Regression comparison needs a stable baseline machine — run
+        # `npm run perf:baseline` on main, then `npm run perf` on the branch.
+        run: cd apps/mobile && npx reassure --baseline
+      - name: JS bundle budget
+        run: cd apps/mobile && npm run bundle:check
+
+  e2e-android:
+    name: Mobile — Detox E2E (Android emulator)
+    # Expensive emulator job: opt-in via the workflow_dispatch trigger so it
+    # never blocks routine pushes/PRs. Run it before a release tag.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: cd apps/mobile && npm ci
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Prebuild (generate android/)
+        run: cd apps/mobile && npx expo prebuild -p android --no-install
+      - name: Detox build
+        run: cd apps/mobile && npm run e2e:build
+      - name: Detox test (AVD)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_4a
+          script: cd apps/mobile && npm run e2e:test

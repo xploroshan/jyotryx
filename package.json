@@ -4,7 +4,8 @@
   "private": true,
   "description": "Vedic Astrology Platform - iOS | Android | Web",
   "workspaces": [
-    "apps/*",
+    "apps/web",
+    "apps/api",
     "packages/*"
   ],
   "scripts": {

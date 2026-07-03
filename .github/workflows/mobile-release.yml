@@ -1,0 +1,58 @@
+name: Mobile Release
+
+# Tag-driven Play release (plan §10): mobile-vX.Y.Z → EAS Build production AAB
+# → EAS Submit to the Play INTERNAL track (promote to closed/open/production in
+# Play Console). Also manually dispatchable for a build-only dry run.
+#
+# Required repo secrets:
+#   EXPO_TOKEN                    — expo.dev access token (eas whoami works)
+#   Play submission uses the service-account JSON referenced by
+#   eas.json submit config; store it as an EAS secret (eas secret:create)
+#   or commit-free file injected here from GOOGLE_PLAY_SERVICE_ACCOUNT_JSON.
+on:
+  push:
+    tags: ['mobile-v*']
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: 'Submit to the Play internal track after building'
+        type: boolean
+        default: false
+
+concurrency:
+  group: mobile-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-submit:
+    name: EAS Build → Play internal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install mobile
+        run: cd apps/mobile && npm ci
+      - name: Gate — typecheck + unit tests must pass before any build
+        run: |
+          cd apps/mobile
+          npx tsc --noEmit
+          npm test -- --ci
+      - name: Write Play service account (submission credential)
+        if: ${{ github.event_name == 'push' || inputs.submit }}
+        run: |
+          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > apps/mobile/play-service-account.json
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+      - name: EAS Build (production AAB)
+        run: cd apps/mobile && eas build --platform android --profile production --non-interactive --no-wait=false
+      - name: EAS Submit (Play internal track)
+        if: ${{ github.event_name == 'push' || inputs.submit }}
+        run: cd apps/mobile && eas submit --platform android --profile production --latest --non-interactive

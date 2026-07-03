@@ -24,6 +24,11 @@ const config: Config = {
     // `prisma generate`; tests mock Prisma through DI so the stub's
     // no-op methods are never invoked.
     '^@prisma/client$': '<rootDir>/test/helpers/prisma-client-stub.ts',
+    // firebase-admin 14 pulls jwks-rsa → jose, which ships ESM-only and
+    // breaks Jest's CJS parser at import time. Unit tests never run real
+    // JWKS verification (firebase-admin is mocked / apps-length guarded),
+    // so jose maps to a throwing stub — same pattern as @prisma/client.
+    '^jose$': '<rootDir>/test/helpers/jose-stub.ts',
   },
 };
 
