@@ -8,6 +8,7 @@ import { LlmService } from '../../llm/llm.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { ModerationService } from '../../safety/moderation.service';
 import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { MemoryService } from '../memory/memory.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getAstrologer } from './astrologers';
@@ -31,6 +32,12 @@ export interface ChatSession {
 }
 
 import { SendMessageDto } from './dto/send-message.dto';
+
+/** How a chat message is paid for under the active monetization mode. */
+type ChatAccess =
+  | { mode: 'free' }
+  | { mode: 'legacy' }
+  | { mode: 'meter'; periodKey: string };
 
 @Injectable()
 export class ChatService {
@@ -57,20 +64,21 @@ export class ChatService {
       this.configService.get<number>('credits.chatCost', 1),
     );
 
-    // Chat is free when the master free switch is on or the user is an
-    // active subscriber (Mode B); everyone else spends a credit per message.
-    // `charged` gates the refund paths below so we never credit a user we
-    // never debited.
-    const free =
-      (await this.featureAccess.paidFeaturesFree()) ||
-      (await this.featureAccess.isActiveSubscriber(userId));
+    // Resolve how this message is paid for. Legacy (credits on): free for the
+    // master switch / active subscribers, else spend a credit (`charged` gates
+    // the refund paths). New model (credits off): metered by message count —
+    // `meter` is set and the counter is incremented on success.
+    const access = await this.resolveChatAccess(userId);
     let charged = false;
-    if (!free) {
+    let meter: { periodKey: string } | null = null;
+    if (access.mode === 'legacy') {
       const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
       if (!deducted) {
         throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');
       }
       charged = true;
+    } else if (access.mode === 'meter') {
+      meter = { periodKey: access.periodKey };
     }
 
     let dbSession;
@@ -166,6 +174,12 @@ export class ChatService {
       },
     });
 
+    // Metered model: count this message only now that a reply was delivered,
+    // so blocked/failed messages never consume the user's allowance.
+    if (meter) {
+      await this.featureAccess.incrementUsage(userId, 'chat', meter.periodKey);
+    }
+
     // Build session from data we already have (avoids extra DB query)
     const allMessages = [
       ...existingMessages.map((m: any) => ({
@@ -239,13 +253,24 @@ export class ChatService {
       this.configService.get<number>('credits.chatCost', 1),
     );
 
-    // Free when the master free switch is on or the user is a subscriber
-    // (Mode B); everyone else spends a credit.
-    const free =
-      (await this.featureAccess.paidFeaturesFree()) ||
-      (await this.featureAccess.isActiveSubscriber(userId));
+    // Same access resolution as the non-streaming path. On a metered limit we
+    // emit an upgrade event (subscribe for free users, top-up for subscribers)
+    // and complete the stream rather than throwing — the client is mid-SSE.
+    let access: ChatAccess;
+    try {
+      access = await this.resolveChatAccess(userId);
+    } catch (err) {
+      if (err instanceof PaymentRequiredException) {
+        const r = (err.getResponse?.() as any) ?? {};
+        subscriber.next({ data: JSON.stringify({ message: (err as Error).message, upgrade: true, subscribe: r.subscribe !== false }) } as MessageEvent);
+        subscriber.complete();
+        return;
+      }
+      throw err;
+    }
     let charged = false;
-    if (!free) {
+    let meter: { periodKey: string } | null = null;
+    if (access.mode === 'legacy') {
       const deducted = await this.userService.deductCredits(userId, creditCost, 'Chat message');
       if (!deducted) {
         subscriber.next({ data: JSON.stringify({ message: 'Insufficient credits', refunded: false }) } as MessageEvent);
@@ -253,6 +278,8 @@ export class ChatService {
         return;
       }
       charged = true;
+    } else if (access.mode === 'meter') {
+      meter = { periodKey: access.periodKey };
     }
 
     // Load or create session
@@ -343,6 +370,7 @@ export class ChatService {
         const msg = await this.prisma.chatMessage.create({
           data: { sessionId: dbSession.id, role: 'ASSISTANT', content: fallback },
         });
+        if (meter) await this.featureAccess.incrementUsage(userId, 'chat', meter.periodKey);
         subscriber.next({ data: JSON.stringify({ messageId: msg.id, sessionId: dbSession.id }) } as MessageEvent);
         subscriber.complete();
         return;
@@ -359,6 +387,7 @@ export class ChatService {
       const assistantMsg = await this.prisma.chatMessage.create({
         data: { sessionId: dbSession.id, role: 'ASSISTANT', content: fullContent },
       });
+      if (meter) await this.featureAccess.incrementUsage(userId, 'chat', meter.periodKey);
 
       subscriber.next({ data: JSON.stringify({ messageId: assistantMsg.id, sessionId: dbSession.id }) } as MessageEvent);
       subscriber.complete();
@@ -370,6 +399,36 @@ export class ChatService {
       subscriber.next({ data: JSON.stringify({ message: (error as Error).message, refunded: charged }) } as MessageEvent);
       subscriber.complete();
     }
+  }
+
+  /**
+   * Decide how a chat message is paid for under the current monetization mode:
+   *  - 'free'   : master free switch on — never charged or metered.
+   *  - 'legacy' : credits on — caller deducts a credit (with refund on failure).
+   *  - 'meter'  : credits off (subscription model) — caller increments the chat
+   *               usage counter on success. Throws 402 when the allowance is
+   *               exhausted (free users → subscribe; subscribers → top-up).
+   */
+  private async resolveChatAccess(userId: string): Promise<ChatAccess> {
+    if (await this.featureAccess.paidFeaturesFree()) return { mode: 'free' };
+    if (await this.featureAccess.creditsEnabled()) {
+      // Legacy (credits on): an active subscriber (Mode B) chats free — mirrors
+      // the original `free = paidFeaturesFree() || isActiveSubscriber()` gate.
+      // Only non-subscribers spend a credit per message.
+      if (await this.featureAccess.isActiveSubscriber(userId)) return { mode: 'free' };
+      return { mode: 'legacy' };
+    }
+
+    const usage = await this.featureAccess.checkUsage(userId, 'chat');
+    if (!usage.allowed) {
+      throw new PaymentRequiredException(
+        usage.isSubscriber
+          ? "You've used all your chat messages for this month. Buy a top-up to keep chatting."
+          : "You've used up your free chat messages. Subscribe for unlimited fair-use chat.",
+        { subscribe: !usage.isSubscriber, feature: 'chat' },
+      );
+    }
+    return { mode: 'meter', periodKey: usage.periodKey };
   }
 
   async getSessions(userId: string): Promise<Omit<ChatSession, 'messages'>[]> {

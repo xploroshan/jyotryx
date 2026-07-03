@@ -16,22 +16,21 @@ import { mockConfigService, createMockRedis } from './helpers/mocks';
 import * as bcrypt from 'bcrypt';
 
 // ─── firebase-admin mock ────────────────────────────────────────────────────
-// Tests control `admin.apps.length` and `admin.auth().verifyIdToken(...)` via
-// the handles below. Default state: Firebase is configured (apps.length > 0)
-// and verifyIdToken returns a Google-style decoded token.
+// Tests control `getApps().length` and `getAuth().verifyIdToken(...)` via the
+// handles below (firebase-admin 14 modular API). Default state: Firebase is
+// configured (getApps() non-empty) and verifyIdToken returns a Google-style
+// decoded token.
 const firebaseAppsList: any[] = [{ name: '[DEFAULT]' }];
 const verifyIdTokenMock = jest.fn();
 
-jest.mock('firebase-admin', () => {
-  return {
-    get apps() {
-      return firebaseAppsList;
-    },
-    auth: () => ({ verifyIdToken: verifyIdTokenMock }),
-    credential: { cert: jest.fn(() => ({ type: 'cert' })) },
-    initializeApp: jest.fn(),
-  };
-});
+jest.mock('firebase-admin/app', () => ({
+  getApps: () => firebaseAppsList,
+  initializeApp: jest.fn(),
+  cert: jest.fn(() => ({ type: 'cert' })),
+}));
+jest.mock('firebase-admin/auth', () => ({
+  getAuth: () => ({ verifyIdToken: verifyIdTokenMock }),
+}));
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

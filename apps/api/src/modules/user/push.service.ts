@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
-import * as admin from 'firebase-admin';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /** FCM error codes that mean the token is dead and must be pruned. */
@@ -45,7 +46,7 @@ export class PushService {
   }
 
   private initFirebaseIfNeeded(): void {
-    if (admin.apps.length) return;
+    if (getApps().length) return;
     const raw = this.configService.get<string>('firebase.serviceAccountJson');
     if (!raw) {
       this.logger.warn('Firebase credentials not configured — push in mock mode');
@@ -55,7 +56,7 @@ export class PushService {
       // Same quote-stripping as AuthService (Render double-wraps env values).
       const cleaned = raw.trim().replace(/^['"]|['"]$/g, '');
       const parsed = JSON.parse(cleaned);
-      admin.initializeApp({ credential: admin.credential.cert(parsed) });
+      initializeApp({ credential: cert(parsed) });
       this.logger.log('Firebase initialized by PushService');
     } catch (error) {
       this.logger.error(`Firebase init failed: ${(error as Error).message}`);
@@ -63,7 +64,7 @@ export class PushService {
   }
 
   private messagingAvailable(): boolean {
-    return admin.apps.length > 0;
+    return getApps().length > 0;
   }
 
   // ── Token registry ────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ export class PushService {
 
     const tokens = rows.map((r: { token: string }) => r.token);
     try {
-      const res = await admin.messaging().sendEachForMulticast({
+      const res = await getMessaging().sendEachForMulticast({
         tokens,
         notification: { title: message.title, body: message.body },
         data: { url: message.url ?? '/(tabs)' },

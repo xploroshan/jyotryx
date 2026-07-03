@@ -17,6 +17,7 @@ describe('ChatService', () => {
   let prisma: any;
   let userService: any;
   let openaiService: any;
+  let featureAccess: any;
 
   const mockUser = {
     id: 'test-uuid',
@@ -74,6 +75,18 @@ describe('ChatService', () => {
       getModel: jest.fn().mockReturnValue('gpt-4o'),
     };
 
+    // creditsEnabled defaults true so the legacy credit path is exercised by
+    // the existing specs; the metered helpers are stubbed for the subscription
+    // model. Individual tests override (e.g. isActiveSubscriber for Mode B).
+    featureAccess = {
+      isActiveSubscriber: jest.fn().mockResolvedValue(false),
+      paidFeaturesFree: jest.fn().mockResolvedValue(false),
+      creditsEnabled: jest.fn().mockResolvedValue(true),
+      getCreditCost: jest.fn(async (_name: string, fb: number) => fb),
+      checkUsage: jest.fn().mockResolvedValue({ allowed: true, periodKey: 'LIFETIME', isSubscriber: false }),
+      incrementUsage: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatService,
@@ -98,11 +111,7 @@ describe('ChatService', () => {
         { provide: MemoryService, useValue: mockMemoryService() },
         {
           provide: FeatureAccessService,
-          useValue: {
-            isActiveSubscriber: jest.fn().mockResolvedValue(false),
-            paidFeaturesFree: jest.fn().mockResolvedValue(false),
-            getCreditCost: jest.fn(async (_name: string, fb: number) => fb),
-          },
+          useValue: featureAccess,
         },
       ],
     }).compile();
@@ -125,6 +134,39 @@ describe('ChatService', () => {
       });
 
       expect(userService.deductCredits).toHaveBeenCalledWith('test-uuid', 1, expect.any(String));
+    });
+
+    it('does NOT charge an active subscriber in legacy mode (Mode B)', async () => {
+      // Regression: credits on + active subscription must stay free (the old
+      // `free = paidFeaturesFree() || isActiveSubscriber()` behavior).
+      featureAccess.isActiveSubscriber.mockResolvedValue(true);
+      prisma.chatSession.findFirst.mockResolvedValue(null);
+      prisma.chatSession.create.mockResolvedValue(mockSession);
+      prisma.chatMessage.create
+        .mockResolvedValueOnce({ id: 'msg-user', role: 'user', content: 'Tell me about my career' })
+        .mockResolvedValueOnce(mockMessage);
+      prisma.chatMessage.findMany.mockResolvedValue([]);
+
+      await service.sendMessage('test-uuid', { message: 'Tell me about my career', category: 'career' });
+
+      expect(userService.deductCredits).not.toHaveBeenCalled();
+      expect(featureAccess.incrementUsage).not.toHaveBeenCalled();
+    });
+
+    it('meters (does not deduct credits) when credits are off', async () => {
+      featureAccess.creditsEnabled.mockResolvedValue(false);
+      prisma.chatSession.findFirst.mockResolvedValue(null);
+      prisma.chatSession.create.mockResolvedValue(mockSession);
+      prisma.chatMessage.create
+        .mockResolvedValueOnce({ id: 'msg-user', role: 'user', content: 'Hi' })
+        .mockResolvedValueOnce(mockMessage);
+      prisma.chatMessage.findMany.mockResolvedValue([]);
+
+      await service.sendMessage('test-uuid', { message: 'Hi', category: 'general' });
+
+      expect(userService.deductCredits).not.toHaveBeenCalled();
+      expect(featureAccess.checkUsage).toHaveBeenCalledWith('test-uuid', 'chat');
+      expect(featureAccess.incrementUsage).toHaveBeenCalledWith('test-uuid', 'chat', 'LIFETIME');
     });
 
     it('should create a new session when none exists', async () => {

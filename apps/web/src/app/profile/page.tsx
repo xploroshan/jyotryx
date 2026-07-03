@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
 import { Toast, RequiredMark } from "@/components/ui/Toast";
 import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSection";
+import SubscriptionSection from "@/components/profile/SubscriptionSection";
 import MemorySection from "@/components/profile/MemorySection";
 import TimeOfBirthInput from "@/components/ui/TimeOfBirthInput";
 import { track } from "@/lib/analytics";
@@ -53,7 +54,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [activeTab, setActiveTab] = useState<"profile" | "credits" | "security">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "subscription" | "credits" | "security">("profile");
 
   // Onboarding step: 1 = birth details, 2 = astrology traditions
   const [onboardingStep, setOnboardingStep] = useState(1);
@@ -430,6 +431,7 @@ export default function ProfilePage() {
             <div className="flex gap-2 mb-6 rounded-xl bg-[rgba(255,252,245,0.78)] p-1 w-fit">
               {([
                 { id: "profile" as const, label: t.profile.tabBirthDetails },
+                { id: "subscription" as const, label: "Subscription" },
                 { id: "security" as const, label: t.profile.tabSecurity },
               ]).map((tab) => (
                 <button key={tab.id} onClick={() => { setActiveTab(tab.id); setError(""); setSuccess(""); }}
@@ -438,6 +440,11 @@ export default function ProfilePage() {
                 </button>
               ))}
             </div>
+
+            {/* Subscription Tab */}
+            {activeTab === "subscription" && accessToken && (
+              <SubscriptionSection token={accessToken} onCancelled={loadProfile} />
+            )}
 
             {/* Birth Details Tab (hidden during onboarding step 2) */}
             {activeTab === "profile" && !(completeMode && !profile?.profileComplete && onboardingStep === 2) && (

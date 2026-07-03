@@ -720,4 +720,94 @@ describe('PaymentService (Cashfree)', () => {
       expect(result[0].orderId).toBe('cf_o1');
     });
   });
+
+  // ── User-initiated cancel ─────────────────────────────────────────────────
+  describe('cancelSubscriptionForUser', () => {
+    it('throws 400 when there is no active subscription', async () => {
+      prisma.subscription.findMany = jest.fn().mockResolvedValue([]);
+      await expect(service.cancelSubscriptionForUser('test-uuid')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('cancels a local-only (no gateway) subscription without calling Cashfree, and revokes PREMIUM', async () => {
+      prisma.subscription.findMany = jest
+        .fn()
+        .mockResolvedValue([{ id: 's1', provider: null, gatewaySubscriptionId: null }]);
+      const cfSpy = jest.spyOn((service as any).cashfree, 'manageSubscription');
+      const subUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const userUpdateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const txStub = {
+        subscription: { updateMany: subUpdateMany, count: jest.fn().mockResolvedValue(0) },
+        user: { updateMany: userUpdateMany },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const res = await service.cancelSubscriptionForUser('test-uuid');
+      expect(res).toEqual({ cancelled: true });
+      expect(cfSpy).not.toHaveBeenCalled();
+      expect(subUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'CANCELLED' }) }),
+      );
+      expect(userUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { role: 'USER' } }),
+      );
+    });
+
+    it('cancels the Cashfree mandate for a gateway subscription before marking it cancelled', async () => {
+      prisma.subscription.findMany = jest
+        .fn()
+        .mockResolvedValue([{ id: 's2', provider: 'cashfree', gatewaySubscriptionId: 'sub_x' }]);
+      const cfSpy = jest
+        .spyOn((service as any).cashfree, 'manageSubscription')
+        .mockResolvedValue({});
+      const txStub = {
+        subscription: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          count: jest.fn().mockResolvedValue(0),
+        },
+        user: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const res = await service.cancelSubscriptionForUser('test-uuid');
+      expect(res).toEqual({ cancelled: true });
+      expect(cfSpy).toHaveBeenCalledWith('sub_x', { action: 'CANCEL' });
+    });
+
+    it('aborts with 500 and makes no local change when the gateway cancel fails', async () => {
+      prisma.subscription.findMany = jest
+        .fn()
+        .mockResolvedValue([{ id: 's3', provider: 'cashfree', gatewaySubscriptionId: 'sub_y' }]);
+      jest
+        .spyOn((service as any).cashfree, 'manageSubscription')
+        .mockRejectedValue(new Error('gateway down'));
+      prisma.$transaction = jest.fn();
+
+      await expect(service.cancelSubscriptionForUser('test-uuid')).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMySubscription', () => {
+    it('returns the active subscription marked active/cancellable', async () => {
+      prisma.subscription.findFirst = jest.fn().mockResolvedValue({
+        id: 's1',
+        plan: 'MONTHLY',
+        status: 'ACTIVE',
+        startDate: new Date('2026-06-01'),
+        endDate: null,
+        provider: 'cashfree',
+      });
+      const res = await service.getMySubscription('test-uuid');
+      expect(res).toMatchObject({ plan: 'MONTHLY', status: 'ACTIVE', active: true, cancellable: true });
+    });
+
+    it('returns null when the user never subscribed', async () => {
+      prisma.subscription.findFirst = jest.fn().mockResolvedValue(null);
+      expect(await service.getMySubscription('test-uuid')).toBeNull();
+    });
+  });
 });

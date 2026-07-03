@@ -9,6 +9,7 @@ import {
   EntitlementTypeName,
   UnlockMode,
 } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
@@ -74,8 +75,38 @@ export class ReportService {
     // inside runReportGeneration, only after the Report row exists, so a
     // failed generation never silently burns the unlock.
     const entType = `REPORT_${dto.type}` as EntitlementTypeName;
-    const mode = await this.featureAccess.resolveUnlock(userId, entType);
-    return this.runReportGeneration(userId, dto, entType, mode);
+
+    // Legacy (credits on): pay-to-unlock per report type via one-time
+    // entitlement / subscription (unchanged).
+    if (await this.featureAccess.creditsEnabled()) {
+      const mode = await this.featureAccess.resolveUnlock(userId, entType);
+      return this.runReportGeneration(userId, dto, entType, mode);
+    }
+
+    // Subscription model: one report of EACH type per period — free users once
+    // for life, subscribers once per billing month — then View-only until the
+    // next cycle. Metered per type (counter `report_<type>`) against a shared
+    // `report` limit, so the user gets a full set, not one report total. The
+    // master free switch bypasses the cap.
+    if (await this.featureAccess.paidFeaturesFree()) {
+      return this.runReportGeneration(userId, dto, entType, 'subscriber');
+    }
+    const counterFeature = `report_${dto.type.toLowerCase()}`;
+    const usage = await this.featureAccess.checkUsage(userId, counterFeature, 'report');
+    if (!usage.allowed) {
+      throw new PaymentRequiredException(
+        usage.isSubscriber
+          ? `You've already generated your ${dto.type.toLowerCase()} report this cycle — it unlocks again next month.`
+          : 'Subscribe to generate your personalized report.',
+        { subscribe: !usage.isSubscriber, feature: 'report' },
+      );
+    }
+    const result = await this.runReportGeneration(userId, dto, entType, 'subscriber', {
+      feature: counterFeature,
+      periodKey: usage.periodKey,
+    });
+    await this.featureAccess.incrementUsage(userId, counterFeature, usage.periodKey);
+    return result;
   }
 
   private async runReportGeneration(
@@ -83,6 +114,8 @@ export class ReportService {
     dto: GenerateReportDto,
     entType: EntitlementTypeName,
     mode: UnlockMode,
+    /** Subscription-model meter to give back if the async job fails. */
+    metered?: { feature: string; periodKey: string },
   ): Promise<ReportResponse> {
     // Fetch user's profile for personalized reports
     const user = await this.prisma.user.findUnique({
@@ -133,6 +166,8 @@ export class ReportService {
           name: user?.name || 'User',
           gender: user?.gender,
           locale: dto.locale,
+          meteredFeature: metered?.feature,
+          meteredPeriodKey: metered?.periodKey,
         } satisfies ReportJobData);
       } catch (err) {
         // The unlock was already spent above; if enqueue fails (e.g. Redis

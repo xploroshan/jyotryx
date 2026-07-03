@@ -90,6 +90,24 @@ export class UserService {
 
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Whether the credit currency is on. Read directly (not via
+   * FeatureAccessService) to avoid coupling UserService — a widely-injected
+   * provider — to the monetization module. Defaults to true (legacy/charge) if
+   * the setting is unset or the lookup fails, so the credit path is never
+   * silently disabled by an error.
+   */
+  private async creditsEnabled(): Promise<boolean> {
+    try {
+      const row = await this.prisma.siteSetting.findUnique({
+        where: { key: 'feature.credits_enabled' },
+      });
+      return row?.value !== 'false';
+    } catch {
+      return true;
+    }
+  }
+
   async getProfile(userId: string): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -347,6 +365,14 @@ export class UserService {
     description: string,
     work: () => Promise<T>,
   ): Promise<T> {
+    // New subscription model: when the credit currency is switched off, the
+    // deterministic features that fund themselves through credits become free.
+    // Short-circuit here so every `deductWithRefund` caller (kundli, matching,
+    // divisional/KP charts, tarot, vastu) is freed in one place — no per-call
+    // changes, and the refund dance is skipped entirely.
+    if (!(await this.creditsEnabled())) {
+      return work();
+    }
     const deducted = await this.deductCredits(userId, cost, description);
     if (!deducted) {
       throw new BadRequestException('Insufficient credits. Please purchase more credits to continue.');

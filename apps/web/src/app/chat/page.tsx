@@ -48,6 +48,9 @@ export default function ChatPage() {
   // Shown when a send fails because the user ran out of chat credits — a value
   // moment (they were mid-conversation), so we offer the upgrade, not an error.
   const [showUpgrade, setShowUpgrade] = useState(false);
+  // When the limit is hit by a SUBSCRIBER (server hint `subscribe === false`)
+  // the CTA is a ₹100 message top-up; otherwise it's Subscribe.
+  const [upgradeOverage, setUpgradeOverage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Begin a consultation with the chosen astrologer: reset the thread and
@@ -101,11 +104,17 @@ export default function ChatPage() {
       // credits…") is a value moment, not a dead end — surface the upgrade
       // prompt instead of an error message. track("paywall_view") fires from
       // the prompt itself.
+      // 402 (subscription model: out of free/monthly messages) or the legacy
+      // 400 "insufficient credits" both surface the upgrade prompt. A 402 with
+      // `subscribe === false` means a subscriber hit their monthly cap → offer
+      // the ₹100 top-up instead of Subscribe.
       const isCreditError =
         err?.status === 400 &&
         typeof err?.message === "string" &&
         err.message.toLowerCase().includes("credit");
-      if (isCreditError) {
+      const isPaymentRequired = err?.status === 402;
+      if (isCreditError || isPaymentRequired) {
+        setUpgradeOverage(isPaymentRequired && err?.body?.subscribe === false);
         setShowUpgrade(true);
       } else {
         // Differentiate so users know whether to retry (network) or act
@@ -343,12 +352,16 @@ export default function ChatPage() {
       <UpgradePrompt
         open={showUpgrade}
         trigger="chat_credits"
-        title={t.pricing.planPremiumName}
-        message={t.pricing.subtitle}
-        primaryCta={t.pricing.ctaSubscribe}
-        primaryHref="/pricing"
-        secondaryCta={t.pricing.buyNow}
-        secondaryHref="/checkout?type=credits&pack=popular"
+        title={upgradeOverage ? "Out of messages" : t.pricing.planPremiumName}
+        message={
+          upgradeOverage
+            ? "You've used your messages for this month. Top up to keep the conversation going."
+            : t.pricing.subtitle
+        }
+        primaryCta={upgradeOverage ? "Buy more messages" : t.pricing.ctaSubscribe}
+        primaryHref={upgradeOverage ? "/checkout?type=credits&pack=overage_chat" : "/pricing"}
+        secondaryCta={upgradeOverage ? undefined : t.pricing.buyNow}
+        secondaryHref={upgradeOverage ? undefined : "/pricing"}
         onClose={() => setShowUpgrade(false)}
       />
     </div>

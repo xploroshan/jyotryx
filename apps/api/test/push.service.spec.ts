@@ -3,17 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import { PushService } from '../src/modules/user/push.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
-// firebase-admin is mocked module-wide; `apps` is mutated per test to flip
-// between initialized and mock mode.
+// firebase-admin (14, modular API) is mocked module-wide; the apps list is
+// mutated per test to flip between initialized and mock mode.
 const sendEachForMulticast = jest.fn();
-jest.mock('firebase-admin', () => ({
-  apps: [] as unknown[],
+const firebaseAppsList: unknown[] = [];
+jest.mock('firebase-admin/app', () => ({
+  getApps: () => firebaseAppsList,
   initializeApp: jest.fn(),
-  credential: { cert: jest.fn() },
-  messaging: () => ({ sendEachForMulticast }),
+  cert: jest.fn(),
 }));
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const adminMock = require('firebase-admin');
+jest.mock('firebase-admin/messaging', () => ({
+  getMessaging: () => ({ sendEachForMulticast }),
+}));
 
 describe('PushService', () => {
   let service: PushService;
@@ -23,8 +24,8 @@ describe('PushService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    adminMock.apps.length = 0;
-    adminMock.apps.push({}); // default: initialized
+    firebaseAppsList.length = 0;
+    firebaseAppsList.push({}); // default: initialized
 
     prisma = {
       pushToken: {
@@ -97,7 +98,7 @@ describe('PushService', () => {
   });
 
   it('is a no-op in mock mode (Firebase not initialized)', async () => {
-    adminMock.apps.length = 0;
+    firebaseAppsList.length = 0;
     const res = await service.sendToUser(USER_ID, { title: 'T', body: 'B' });
     expect(res.sent).toBe(0);
     expect(prisma.pushToken.findMany).not.toHaveBeenCalled();

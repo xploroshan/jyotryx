@@ -17,9 +17,12 @@ import { firstValueFrom, toArray } from 'rxjs';
 const mockFeatureAccess = () => ({
   isActiveSubscriber: jest.fn().mockResolvedValue(false),
   paidFeaturesFree: jest.fn().mockResolvedValue(false),
+  creditsEnabled: jest.fn().mockResolvedValue(true),
   getCreditCost: jest.fn(async (_name: string, fallback: number) => fallback),
   resolveUnlock: jest.fn(),
   consumeEntitlement: jest.fn(),
+  checkUsage: jest.fn().mockResolvedValue({ allowed: true, periodKey: 'LIFETIME', isSubscriber: false }),
+  incrementUsage: jest.fn().mockResolvedValue(undefined),
 });
 
 describe('ChatService — SSE Streaming (Item 3)', () => {

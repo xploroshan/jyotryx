@@ -29,16 +29,23 @@ export class ApiError extends Error {
   status: number | null;
   isTimeout: boolean;
   isNetwork: boolean;
+  /**
+   * The parsed JSON error body, when the server returned one. Lets callers
+   * read structured hints beyond `message` — e.g. a 402 carries
+   * `{ subscribe, feature }` so the paywall UI can pick Subscribe vs top-up.
+   */
+  body: Record<string, unknown> | null;
 
   constructor(
     message: string,
-    opts: { status?: number | null; isTimeout?: boolean; isNetwork?: boolean } = {},
+    opts: { status?: number | null; isTimeout?: boolean; isNetwork?: boolean; body?: Record<string, unknown> | null } = {},
   ) {
     super(message);
     this.name = "ApiError";
     this.status = opts.status ?? null;
     this.isTimeout = opts.isTimeout ?? false;
     this.isNetwork = opts.isNetwork ?? false;
+    this.body = opts.body ?? null;
   }
 }
 
@@ -147,6 +154,7 @@ async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promis
     const error = await response.json().catch(() => ({ message: "Request failed" }));
     throw new ApiError(error.message || `API Error: ${response.status}`, {
       status: response.status,
+      body: error,
     });
   }
 
@@ -216,6 +224,7 @@ export const api = {
       const error = await response.json().catch(() => ({ message: "Upload failed" }));
       throw new ApiError(error.message || `API Error: ${response.status}`, {
         status: response.status,
+        body: error,
       });
     }
 

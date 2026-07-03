@@ -222,6 +222,7 @@ model User {
   sharedMatches      SharedMatch[]
   deepDiveUnlocks    DeepDiveUnlock[]
   pushTokens         PushToken[]
+  usageCounters      UsageCounter[]
 
   // Relations removed for partitioned tables (FK constraints dropped):
   // notifications, llmUsage — see 20260413_partition_tables migration
@@ -561,6 +562,31 @@ model Entitlement {
 
   @@index([userId, type, consumedAt])
   @@map("entitlements")
+}
+
+/// Per-user, per-feature usage meter for the subscription model (chat
+/// messages, palmistry readings, report bundles). `periodKey` is "LIFETIME"
+/// for free-tier allowances and a "YYYY-MM" billing month for subscribers, so
+/// a new month is a fresh row (auto-reset) with no cron needed. Effective
+/// allowance = the plan limit (site_settings `limits.<feature>.<tier>`) plus
+/// `bonus` (purchased overage packs). Used instead of credit deduction when
+/// `feature.credits_enabled` is off. The credit ledger is retained untouched
+/// for the legacy/credits-on path and for audit.
+model UsageCounter {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  feature   String /// "chat" | "palmistry" | "report_bundle"
+  periodKey String /// "LIFETIME" | "YYYY-MM"
+  used      Int      @default(0)
+  bonus     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, periodKey])
+  @@index([userId])
+  @@map("usage_counters")
 }
 
 model Report {

@@ -19,6 +19,7 @@ import {
   PaymentVerificationResult,
   SubscriptionResult,
   PaymentHistoryItem,
+  MySubscription,
 } from './payment.service';
 import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto, GoogleVerifyDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -69,6 +70,26 @@ export class PaymentController {
     @Body() dto: CreateSubscriptionDto,
   ): Promise<SubscriptionResult> {
     return this.paymentService.createSubscription(user.sub, dto);
+  }
+
+  @Get('subscription')
+  @ApiOperation({ summary: "Get the current user's subscription summary" })
+  @ApiResponse({ status: 200, description: 'Subscription returned (or null)' })
+  async getMySubscription(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<MySubscription | null> {
+    return this.paymentService.getMySubscription(user.sub);
+  }
+
+  @Post('subscription/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Cancel the current user's active subscription" })
+  @ApiResponse({ status: 200, description: 'Subscription cancelled' })
+  @ApiResponse({ status: 400, description: 'No active subscription to cancel' })
+  async cancelMySubscription(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<{ cancelled: boolean }> {
+    return this.paymentService.cancelSubscriptionForUser(user.sub);
   }
 
   @Post('google/verify')

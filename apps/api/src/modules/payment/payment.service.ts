@@ -16,6 +16,7 @@ import {
   FeatureAccessService,
   EntitlementTypeName,
 } from '../../common/feature-access/feature-access.service';
+import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { CreateOrderDto, VerifyPaymentDto, CreateSubscriptionDto, GoogleVerifyDto } from './dto';
 import {
   CashfreeClient,
@@ -51,6 +52,22 @@ function timingSafeEqualStr(a: string, b: string): boolean {
  * variants unlock that specific report type; `palm_reading` is the
  * canonical palmistry product (legacy `report_palm` maps to REPORT_PALM).
  */
+/**
+ * Map an overage-pack productId to the usage feature it tops up, or null if the
+ * product is not an overage pack. Overage packs are sold through the same
+ * one-time-order rails as credit packs (productId `credits_overage_<feature>`,
+ * priced/sized by `pricing.credits.overage_<feature>.{price,credits}`), but at
+ * settlement they raise the feature's usage allowance rather than granting
+ * generic credits.
+ */
+function overageFeatureForProduct(productId?: string): 'palmistry' | 'chat' | null {
+  if (!productId) return null;
+  const packId = productId.replace(/^credits[_.]/i, '');
+  if (packId === 'overage_palmistry') return 'palmistry';
+  if (packId === 'overage_chat') return 'chat';
+  return null;
+}
+
 function entitlementTypeForProduct(productId: string): EntitlementTypeName | null {
   switch (productId) {
     case 'report_life':
@@ -118,6 +135,20 @@ export interface PaymentHistoryItem {
   createdAt: string;
 }
 
+/** The current user's subscription summary for the profile billing card. */
+export interface MySubscription {
+  id: string;
+  plan: string;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  provider: string | null;
+  /** True when the subscription currently entitles the user (ACTIVE + not expired). */
+  active: boolean;
+  /** Whether a cancel action applies (an active subscription exists). */
+  cancellable: boolean;
+}
+
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
@@ -175,6 +206,7 @@ export class PaymentService {
       };
       this.cashfree = new CashfreeClient(cfg);
       this.logger.log(`Cashfree initialized (mode=${cfg.mode})`);
+      this.warnOnIncompleteConfig();
     } else {
       this.cashfree = null;
       this.logger.warn('Cashfree credentials not configured, using mock mode');
@@ -198,6 +230,33 @@ export class PaymentService {
     } else {
       this.googlePlay = null;
       this.logger.warn('Google Play credentials not configured, using mock mode');
+    }
+  }
+
+  /**
+   * Surface common misconfigurations at boot rather than at the first failing
+   * request. With credentials set but these missing, the failures are otherwise
+   * cryptic and late: a missing plan id throws "Subscription plan is not
+   * configured" only when a user tries to subscribe, and a missing API_PUBLIC_URL
+   * silently omits the webhook notify_url so subscriptions never activate.
+   */
+  private warnOnIncompleteConfig(): void {
+    const planMonthly = this.configService.get<string>('cashfree.planMonthly');
+    const planAnnual = this.configService.get<string>('cashfree.planAnnual');
+    if (!planMonthly || !planAnnual) {
+      this.logger.warn(
+        'Cashfree subscription plan IDs incomplete — set CASHFREE_PLAN_MONTHLY and ' +
+          'CASHFREE_PLAN_ANNUAL to the plan IDs from the Cashfree dashboard. ' +
+          'Subscribe requests will fail until both are set (one-time orders still work).',
+      );
+    }
+    if (!this.configService.get<string>('apiUrl')) {
+      this.logger.warn(
+        'API_PUBLIC_URL is not set — Cashfree webhooks have no per-order notify_url. ' +
+          'Set it to the public HTTPS API base (…/api), or configure the webhook globally ' +
+          'in the Cashfree dashboard. Without webhook delivery, subscription activation ' +
+          'will not happen (one-time orders still settle via the synchronous verify path).',
+      );
     }
   }
 
@@ -282,6 +341,20 @@ export class PaymentService {
     let entitlementType: EntitlementTypeName | null = null;
     let paymentType: 'CREDITS' | 'REPORT' = 'CREDITS';
     if (dto.productId) {
+      // Subscribe-first: only active subscribers may buy overage top-ups,
+      // unless the operator has opened them to free users. Blocks a free user
+      // from hitting the checkout URL directly to bypass subscribing.
+      if (overageFeatureForProduct(dto.productId)) {
+        const allowed =
+          (await this.featureAccess.overageForFreeEnabled()) ||
+          (await this.featureAccess.isActiveSubscriber(userId));
+        if (!allowed) {
+          throw new PaymentRequiredException(
+            'Subscribe to unlock top-ups for this feature.',
+            { subscribe: true },
+          );
+        }
+      }
       const pack = await this.resolveCreditPack(dto.productId);
       if (pack) {
         if (dto.amount !== pack.priceINR) {
@@ -501,6 +574,17 @@ export class PaymentService {
       if (entType) {
         await this.featureAccess.grantEntitlement(payment.userId, payment.id, entType, tx);
         return { claimed: true, creditsAdded: 0, entitlementGranted: true };
+      }
+      // Overage pack (subscription model): top up the feature's usage allowance
+      // instead of granting generic credits. The pack's unit count is the
+      // `credits` captured in metadata (e.g. +2 palmistry, +350 chat messages).
+      const overageFeature = overageFeatureForProduct(
+        (payment.metadata as { productId?: string } | null)?.productId,
+      );
+      if (overageFeature) {
+        const units = this.creditsForPayment(payment);
+        await this.featureAccess.addUsageBonus(payment.userId, overageFeature, units, tx);
+        return { claimed: true, creditsAdded: 0, entitlementGranted: false };
       }
       const creditsToAdd = this.creditsForPayment(payment);
       await tx.user.update({
@@ -1325,6 +1409,81 @@ export class PaymentService {
     }
   }
 
+  /**
+   * The current user's subscription for the profile billing card: the active
+   * one if present, else the most recent. Null when the user never subscribed.
+   */
+  async getMySubscription(userId: string): Promise<MySubscription | null> {
+    const now = new Date();
+    const active = await this.prisma.subscription.findFirst({
+      where: { userId, status: 'ACTIVE', OR: [{ endDate: null }, { endDate: { gt: now } }] },
+      orderBy: { startDate: 'desc' },
+    });
+    const sub =
+      active ??
+      (await this.prisma.subscription.findFirst({
+        where: { userId },
+        orderBy: { startDate: 'desc' },
+      }));
+    if (!sub) return null;
+    return {
+      id: sub.id,
+      plan: sub.plan,
+      status: sub.status,
+      startDate: sub.startDate.toISOString(),
+      endDate: sub.endDate ? sub.endDate.toISOString() : null,
+      provider: sub.provider ?? null,
+      active: !!active,
+      cancellable: !!active,
+    };
+  }
+
+  /**
+   * User-initiated cancel of their own subscription(s). Cancels the mandate at
+   * the gateway first (so no further charges), then marks the row CANCELLED and
+   * revokes PREMIUM if no other subscription is still active. Immediate (mirrors
+   * the admin cancel). Idempotent with the SUBSCRIPTION_STATUS_CHANGE webhook
+   * Cashfree sends afterwards. Throws 400 when there's nothing to cancel.
+   */
+  async cancelSubscriptionForUser(userId: string): Promise<{ cancelled: boolean }> {
+    const now = new Date();
+    const subs = await this.prisma.subscription.findMany({
+      where: { userId, status: 'ACTIVE', OR: [{ endDate: null }, { endDate: { gt: now } }] },
+    });
+    if (subs.length === 0) {
+      throw new BadRequestException('You have no active subscription to cancel.');
+    }
+
+    // Cancel at the gateway FIRST for gateway-backed subs. If that fails we abort
+    // without touching local state — never report "cancelled" while Cashfree
+    // could still charge. Local-only grants (e.g. referral bonuses) skip this.
+    for (const sub of subs) {
+      if (this.cashfree && sub.provider === 'cashfree' && sub.gatewaySubscriptionId) {
+        try {
+          await this.cashfree.manageSubscription(sub.gatewaySubscriptionId, { action: 'CANCEL' });
+        } catch (err) {
+          this.logger.error(
+            `Cashfree cancel failed for subscription ${sub.gatewaySubscriptionId}`,
+            err as Error,
+          );
+          throw new InternalServerErrorException(
+            'Could not cancel your subscription with the payment provider. Please try again.',
+          );
+        }
+      }
+    }
+
+    await this.prisma.$transaction(async (tx: any) => {
+      await tx.subscription.updateMany({
+        where: { id: { in: subs.map((s) => s.id) } },
+        data: { status: 'CANCELLED', endDate: now },
+      });
+      await this.revokePremiumIfNoActiveSub(tx, userId);
+    });
+    this.logger.log(`User ${userId} cancelled ${subs.length} subscription(s)`);
+    return { cancelled: true };
+  }
+
   async getPaymentHistory(userId: string): Promise<PaymentHistoryItem[]> {
     const payments = await this.prisma.payment.findMany({
       where: { userId },
@@ -1352,6 +1511,8 @@ export class PaymentService {
       'feature.subscriptions_enabled',
       'feature.pricing_page_enabled',
       'feature.free_mode',
+      'feature.credits_enabled',
+      'feature.overage_for_free_enabled',
     ];
     const socialKeys = ['social.report_count_base'];
     // App-store policy knobs (admin-tunable). The mobile app hides its "buy on
@@ -1362,6 +1523,7 @@ export class PaymentService {
       where: {
         OR: [
           { key: { startsWith: 'pricing.' } },
+          { key: { startsWith: 'limits.' } },
           { key: { in: [...featureKeys, ...socialKeys, ...storeKeys] } },
         ],
       },
@@ -1382,6 +1544,9 @@ export class PaymentService {
     if (result['feature.subscriptions_enabled'] === undefined) result['feature.subscriptions_enabled'] = 'false';
     if (result['feature.pricing_page_enabled'] === undefined) result['feature.pricing_page_enabled'] = 'false';
     if (result['feature.free_mode'] === undefined) result['feature.free_mode'] = 'false';
+    // Credits default ON (legacy-safe) when unset — mirrors FeatureAccessService.
+    if (result['feature.credits_enabled'] === undefined) result['feature.credits_enabled'] = 'true';
+    if (result['feature.overage_for_free_enabled'] === undefined) result['feature.overage_for_free_enabled'] = 'false';
     if (result['pricing.report.price'] === undefined) result['pricing.report.price'] = String(DEFAULT_REPORT_PRICE_INR);
     if (result['pricing.palmistry.price'] === undefined) result['pricing.palmistry.price'] = String(DEFAULT_PALMISTRY_PRICE_INR);
 
