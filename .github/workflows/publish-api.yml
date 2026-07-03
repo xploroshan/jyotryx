@@ -45,7 +45,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           # The Dockerfile assumes `apps/api/` is the entire build
           # context (matches the Railway / single-service deploy
