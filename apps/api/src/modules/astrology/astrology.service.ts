@@ -3128,34 +3128,41 @@ export class AstrologyService {
       degree: parseFloat((ketuLng % 30).toFixed(4)),
     });
 
-    // Cusp analysis with sub-lords
+    // Cusp analysis with sub-lords. The binding's `cusps` array is 0-indexed:
+    // cusps[0] is the 1st-house cusp (ascendant), cusps[11] the 12th — see the
+    // bhavaOf helper above. Indexing cusps[i] for i=1..12 shifted every cusp by
+    // one house and made cusp 12 fall back to a fabricated longitude.
     const cuspAnalysis = [];
+    const cuspSignIdx: number[] = []; // cuspSignIdx[h-1] = sidereal sign index of house h's cusp
+    const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
     for (let i = 1; i <= 12; i++) {
-      const cuspLng = cusps[i] ? ((cusps[i] % 360 + 360) % 360) : ((i - 1) * 30);
-      // Apply ayanamsa for sidereal
-      const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
+      const raw = cusps[i - 1];
+      const cuspLng = Number.isFinite(raw) ? ((raw % 360 + 360) % 360) : ((i - 1) * 30);
       const sidCusp = ((cuspLng - ayanamsa + 360) % 360);
       const cuspNakIdx = Math.floor(sidCusp / nakshatraSpan) % 27;
+      const signIdx = Math.floor(sidCusp / 30) % 12;
+      cuspSignIdx.push(signIdx);
       cuspAnalysis.push({
         cusp: i,
         longitude: parseFloat(sidCusp.toFixed(4)),
-        sign: ALL_SIGNS[Math.floor(sidCusp / 30) % 12],
+        sign: ALL_SIGNS[signIdx],
         nakshatra: NAKSHATRA_NAMES[cuspNakIdx],
         starLord: DASHA_LORDS[cuspNakIdx % 9],
         subLord: this.getKPSubLord(sidCusp, subLordTable),
       });
     }
 
-    // Significators: planets signify houses through star-lord and sub-lord connections
+    // Significators: a planet signifies a house whose ACTUAL cusp sign (from
+    // cuspAnalysis) is ruled by the planet's star-lord. The old `SIGN_LORDS[h] ->
+    // house h+1` mapping assumed house N carries sign N (an Aries ascendant),
+    // which is wrong for ~11/12 of charts.
     const significators: Record<number, string[]> = {};
     for (let h = 1; h <= 12; h++) significators[h] = [];
     for (const pp of planetPositions) {
-      // A planet signifies a house if its star-lord owns that house
-      for (let h = 0; h < 12; h++) {
-        if (SIGN_LORDS[h] === pp.starLord) {
-          const houseNum = h + 1;
-          if (!significators[houseNum].includes(pp.planet)) {
-            significators[houseNum].push(pp.planet);
+      for (let h = 1; h <= 12; h++) {
+        if (SIGN_LORDS[cuspSignIdx[h - 1]] === pp.starLord) {
+          if (!significators[h].includes(pp.planet)) {
+            significators[h].push(pp.planet);
           }
         }
       }

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { OpenAIService } from '../../openai/openai.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService, KbNumberMeaningPayload, KbBusinessSectorPayload, KbPersonalYearThemePayload } from '../../knowledge/kb.service';
@@ -225,7 +225,14 @@ export class NumerologyService {
 
   async analyzeBrand(brandName: string, industry?: string, locale?: string): Promise<BrandAnalysisResult> {
     const cleanName = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const nameNumber = this.reduceToSingle(this.calculateChaldean(cleanName.replace(/[0-9]/g, '')));
+    const letters = cleanName.replace(/[0-9]/g, '');
+    // Guard against names with no Latin letters (non-Latin scripts, or
+    // digits-only like "247"): the Chaldean sum would be 0 and produce a
+    // confident but meaningless "strong Sun energy" result.
+    if (!letters) {
+      throw new BadRequestException('Brand name must contain Latin letters (a–z) for numerology analysis.');
+    }
+    const nameNumber = this.reduceToSingle(this.calculateChaldean(letters));
 
     const [data, sectors, recStrong, recBalanced, recChallenging] = await Promise.all([
       this.loadNumberMeaning(nameNumber, locale),
@@ -270,12 +277,25 @@ export class NumerologyService {
 
   async getPersonalYear(dateOfBirth: string, locale?: string): Promise<PersonalYearResult> {
     const dob = new Date(dateOfBirth);
+    // Reject an unparseable date rather than letting NaN collapse to a confident
+    // "Personal Year 1" forecast.
+    if (isNaN(dob.getTime())) {
+      throw new BadRequestException('A valid date of birth is required.');
+    }
     const currentYear = new Date().getFullYear();
     // UTC components so the same birth date yields the same Personal Year
     // regardless of server timezone (matches buildMulankReading).
-    const personalYear = this.reduceToSingle(
+    let personalYear = this.reduceToSingle(
       dob.getUTCDate() + (dob.getUTCMonth() + 1) + this.reduceToSingle(currentYear),
     );
+    // Personal Year is a 1–9 cycle and the theme tables don't cover master
+    // numbers, so fully reduce 11/22 — otherwise the response reports year 11/22
+    // while all theme/career/finance content silently falls back to year 1.
+    while (personalYear > 9) {
+      personalYear = String(personalYear)
+        .split('')
+        .reduce((s, d) => s + Number(d), 0);
+    }
 
     const data = await this.loadPersonalYearTheme(personalYear, locale);
 
