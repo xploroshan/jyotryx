@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
@@ -57,9 +57,12 @@ export default function VedicDashaPage() {
     user?.dateOfBirth && user?.timeOfBirth && user?.placeOfBirth,
   );
 
-  useEffect(() => {
+  // Generate on an explicit user action only. This endpoint deducts 2 credits
+  // per call, so auto-firing it from a mount effect silently drained purchased
+  // credits every time the page was opened or re-rendered — real money spent by
+  // navigation alone. Requiring a button press mirrors the /kundli page.
+  const generate = useCallback(() => {
     if (!isAuthenticated || !hasBirth) return;
-    let cancelled = false;
     setLoading(true);
     setError('');
     api
@@ -70,18 +73,9 @@ export default function VedicDashaPage() {
         locale,
         tradition: 'VEDIC',
       })
-      .then((res) => {
-        if (!cancelled) setData(res);
-      })
-      .catch((err: any) => {
-        if (!cancelled) setError(err?.message || t.kundli.generateFailed);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .then((res) => setData(res))
+      .catch((err: any) => setError(err?.message || t.kundli.generateFailed))
+      .finally(() => setLoading(false));
   }, [isAuthenticated, hasBirth, user, locale, t.kundli.generateFailed]);
 
   const currentDashaIdx = useMemo(() => {
@@ -137,6 +131,19 @@ export default function VedicDashaPage() {
           >
             {fp.profile}
           </Link>
+        </div>
+      )}
+
+      {isAuthenticated && hasBirth && !data && !loading && (
+        <div className="rounded-2xl bg-[rgba(255,252,245,0.70)] border border-[rgba(12,8,5,0.08)] p-10 text-center">
+          <p className="text-[rgba(12,8,5,0.72)] mb-5">{fp.description}</p>
+          <button
+            type="button"
+            onClick={generate}
+            className="inline-block px-6 py-2.5 btn-primary rounded-full text-sm"
+          >
+            {(t.kundli as { generate?: string }).generate || 'Generate'}
+          </button>
         </div>
       )}
 
