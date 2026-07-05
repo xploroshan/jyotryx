@@ -61,17 +61,19 @@ export class ReportProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(`Report ${reportId} failed: ${(error as Error).message}`);
 
-      // Mark as failed in DB
-      await this.prisma.report.update({
-        where: { id: reportId },
-        data: { status: 'FAILED' },
-      }).catch(() => {});
-
-      // Refund on final attempt. Reports are now pay-to-unlock, so restore
-      // the one-time entitlement bound to this report (no-op for
-      // subscriber/free generations). Legacy credit-charged jobs
-      // (creditCost > 0) still get a credit refund.
+      // Only act on the FINAL attempt. BullMQ retries after backoff, so flipping
+      // the row to FAILED (or refunding) mid-retry makes clients that treat
+      // FAILED as terminal abort on a report that later succeeds — and would
+      // double-refund across attempts.
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
+        await this.prisma.report.update({
+          where: { id: reportId },
+          data: { status: 'FAILED' },
+        }).catch(() => {});
+
+        // Reports are pay-to-unlock, so restore the one-time entitlement bound
+        // to this report (no-op for subscriber/free generations). Legacy
+        // credit-charged jobs (creditCost > 0) still get a credit refund.
         await this.featureAccess.refundEntitlementByRef(reportId);
         // Subscription model: give back the metered report counted at enqueue.
         if (meteredFeature && meteredPeriodKey) {
@@ -153,11 +155,16 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
       feature: `report:${type.toLowerCase()}`,
     });
 
-    if (result?.sections && Array.isArray(result.sections)) {
+    if (result?.sections && Array.isArray(result.sections) && result.sections.length > 0) {
       return result.sections;
     }
 
-    return this.loadFallbackSections(type, name, locale);
+    // The provider returned null / empty sections (the most common failure mode
+    // — it does NOT throw). Do NOT silently store the generic canned fallback as
+    // a READY *paid* report: throw so the job retries and, on the final attempt,
+    // the catch block refunds the unlock and marks the report FAILED. (The
+    // no-birth-data path above still returns the fallback intentionally.)
+    throw new Error(`Report generation returned no usable sections for ${type}`);
   }
 
   /**
