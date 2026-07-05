@@ -162,7 +162,8 @@ export class GocharService {
 
     return {
       pakshaKey,
-      tithiKey: PANCHANG_TITHIS[tithiIdx % 15],
+      // tithiIdx 29 is the new moon (Amavasya); % 15 would mislabel it 'Purnima'.
+      tithiKey: tithiIdx === 29 ? 'Amavasya' : PANCHANG_TITHIS[tithiIdx % 15],
       nakshatraKey: PANCHANG_NAKSHATRAS[nakIdx],
       yogaKey: PANCHANG_YOGAS[yogaIdx],
       varaKey: PANCHANG_VARA_KEYS[today.getDay()],
