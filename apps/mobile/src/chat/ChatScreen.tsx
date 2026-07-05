@@ -53,7 +53,10 @@ export function ChatScreen() {
   const patch = (id: string, fn: (m: Msg) => Msg) => setMessages((prev) => prev.map((m) => (m.id === id ? fn(m) : m)));
 
   const finishError = (id: string, message: string) => {
-    if (message.toLowerCase().includes('credit')) setCreditNote(true);
+    // Show the tap-to-pricing note for any paywall message. Matching only
+    // 'credit' missed the subscription-model limit copy ("Subscribe…", "…this
+    // cycle"), so meter-mode users never saw the CTA.
+    if (/credit|subscribe|cycle/.test(message.toLowerCase())) setCreditNote(true);
     patch(id, (m) => ({ ...m, content: m.content || message || 'Something went wrong.' }));
     setSending(false);
   };
@@ -70,9 +73,13 @@ export function ChatScreen() {
 
     const body: ChatRequestBody = { message: text, sessionId: sessionId.current, category, locale };
 
+    let sawAnyToken = false;
     try {
       await streamChat(body, {
-        onToken: (chunk) => patch(asstId, (m) => ({ ...m, content: m.content + chunk })),
+        onToken: (chunk) => {
+          sawAnyToken = true;
+          patch(asstId, (m) => ({ ...m, content: m.content + chunk }));
+        },
         onDone: ({ sessionId: sid }) => {
           if (sid) sessionId.current = sid;
           setSending(false);
@@ -80,14 +87,21 @@ export function ChatScreen() {
         onError: (msg) => finishError(asstId, msg),
       });
     } catch {
-      // Streaming unavailable — fall back to the non-streaming endpoint.
-      try {
-        const res = await sendMessage(body);
-        sessionId.current = res.session.id;
-        patch(asstId, (m) => ({ ...m, content: res.reply.content }));
-        setSending(false);
-      } catch (e) {
-        finishError(asstId, e instanceof ApiError ? e.message : 'Unable to reach the astrologer.');
+      // Streaming transport failed. Only fall back to the non-streaming endpoint
+      // if NOTHING streamed yet — if tokens already arrived, the server has
+      // already processed (and charged for) this message, so re-sending would
+      // double-charge and duplicate the turn.
+      if (sawAnyToken) {
+        finishError(asstId, 'The connection dropped mid-reply. Please check the response before retrying.');
+      } else {
+        try {
+          const res = await sendMessage(body);
+          sessionId.current = res.session.id;
+          patch(asstId, (m) => ({ ...m, content: res.reply.content }));
+          setSending(false);
+        } catch (e) {
+          finishError(asstId, e instanceof ApiError ? e.message : 'Unable to reach the astrologer.');
+        }
       }
     }
   };

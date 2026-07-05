@@ -25,9 +25,21 @@ export async function generateAndWait(type: string, locale: string): Promise<Rep
   if (isReportDone(initial.status) && initial.sections?.length) return initial;
   if (isReportFailed(initial.status)) throw new ApiError('Report generation failed');
 
+  let consecutiveErrors = 0;
   for (let i = 0; i < POLL_MAX_ATTEMPTS; i++) {
     await sleep(POLL_INTERVAL_MS);
-    const st = await getReportStatus(initial.id);
+    let st: ReportStatusResponse;
+    try {
+      st = await getReportStatus(initial.id);
+      consecutiveErrors = 0;
+    } catch {
+      // A single transient network/timeout error must not surface a false
+      // failure for a report the server is still completing — tolerate a few.
+      if (++consecutiveErrors >= 5) {
+        throw new ApiError('Your report is taking longer than expected. Check back shortly.');
+      }
+      continue;
+    }
     if (isReportFailed(st.status)) throw new ApiError('Report generation failed');
     if (isReportDone(st.status)) return getReport(initial.id);
   }
