@@ -24,27 +24,51 @@ export class WorkerPool {
 
   async initialize(): Promise<void> {
     for (let i = 0; i < this.poolSize; i++) {
-      const worker = new Worker(this.workerPath);
-      worker.on('message', (msg: { id: string; result?: any; error?: string }) => {
-        const task = this.pendingTasks.get(msg.id);
-        if (!task) return;
-        this.pendingTasks.delete(msg.id);
-        clearTimeout(task.timer);
-
-        if (msg.error) {
-          task.reject(new Error(msg.error));
-        } else {
-          task.resolve(msg.result);
-        }
-      });
-
-      worker.on('error', (err: Error) => {
-        this.logger.error(`Worker ${i} error: ${err.message}`);
-      });
-
-      this.workers.push(worker);
+      this.workers.push(this.spawnWorker(i));
     }
     this.logger.log(`Worker pool initialized with ${this.poolSize} workers`);
+  }
+
+  private spawnWorker(index: number): Worker {
+    const worker = new Worker(this.workerPath);
+    worker.on('message', (msg: { id: string; result?: any; error?: string }) => {
+      const task = this.pendingTasks.get(msg.id);
+      if (!task) return;
+      this.pendingTasks.delete(msg.id);
+      clearTimeout(task.timer);
+
+      if (msg.error) {
+        task.reject(new Error(msg.error));
+      } else {
+        task.resolve(msg.result);
+      }
+    });
+
+    // Respawn on crash/exit so a single worker failure doesn't permanently
+    // remove a slot (and keep routing tasks to a dead worker that then hang
+    // until the timeout). In-flight tasks on the dead worker still reject via
+    // their own timeout.
+    worker.on('error', (err: Error) => {
+      this.logger.error(`Worker ${index} error: ${err.message}`);
+      this.replaceWorker(index, worker);
+    });
+    worker.on('exit', (code: number) => {
+      if (!this.destroyed && code !== 0) {
+        this.logger.warn(`Worker ${index} exited (code ${code}) — respawning`);
+        this.replaceWorker(index, worker);
+      }
+    });
+
+    return worker;
+  }
+
+  private replaceWorker(index: number, dead: Worker): void {
+    if (this.destroyed) return;
+    // Guard against error+exit both firing for the same worker: only replace if
+    // this dead worker is still the one occupying the slot.
+    if (this.workers[index] !== dead) return;
+    dead.terminate().catch(() => {});
+    this.workers[index] = this.spawnWorker(index);
   }
 
   async execute<T>(type: string, payload: any): Promise<T> {

@@ -151,18 +151,27 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
    * subsequent requests so users don't eat a 10-second wait per
    * request waiting for a pool we already know is broken.
    */
-  private poolDeadAfterFirstFailure = false;
+  // Only disable the pool after several CONSECUTIVE failures — a single timeout
+  // under a load burst (or one worker crash, which the pool now respawns) must
+  // not permanently downgrade every subsequent request to synchronous. Any
+  // success resets the counter.
+  private poolConsecutiveFailures = 0;
+  private static readonly POOL_FAILURE_THRESHOLD = 5;
 
   private async computeWithFallback(input: ChartInput): Promise<ChartResult> {
-    if (this.pool && !this.poolDeadAfterFirstFailure) {
+    if (this.pool && this.poolConsecutiveFailures < EphemerisService.POOL_FAILURE_THRESHOLD) {
       try {
-        return await this.pool.execute<ChartResult>('computeFullChart', input);
+        const result = await this.pool.execute<ChartResult>('computeFullChart', input);
+        this.poolConsecutiveFailures = 0; // healthy — reset
+        return result;
       } catch (err: any) {
+        this.poolConsecutiveFailures++;
         this.logger.error(
-          `Worker pool failed (${err?.message ?? err}); falling back to sync swisseph and disabling pool for this process.`,
+          `Worker pool task failed (${err?.message ?? err}); using sync fallback ` +
+            `(${this.poolConsecutiveFailures}/${EphemerisService.POOL_FAILURE_THRESHOLD} consecutive).`,
         );
-        this.poolDeadAfterFirstFailure = true;
-        // Fall through to sync.
+        // Fall through to sync for THIS request; the pool stays enabled unless it
+        // keeps failing.
       }
     }
     if (!this.swisseph) {

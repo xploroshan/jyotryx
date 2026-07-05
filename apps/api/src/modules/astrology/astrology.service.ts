@@ -404,6 +404,17 @@ export class AstrologyService {
   async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
     assertValidBirthDetails(birthDetails);
+    // The web kundli form sends only a place LABEL (no lat/lng), so without this
+    // every web-generated chart was silently computed at the Delhi/IST fallback —
+    // wrong ascendant/houses for anyone not born there. Resolve the user's stored
+    // birth coordinates when the caller didn't supply them, mirroring
+    // getBazi/getWesternNatal.
+    if (birthDetails.latitude == null || birthDetails.longitude == null) {
+      const coords = await this.resolveUserBirthCoords(userId);
+      if (coords) {
+        birthDetails = { ...birthDetails, latitude: coords.lat, longitude: coords.lng };
+      }
+    }
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
     return this.userService.deductWithRefund(userId, creditCost, 'Kundli generation', async () => {
       const chartData = await this.generateAIKundli(birthDetails);
