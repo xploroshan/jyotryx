@@ -1575,7 +1575,7 @@ export class AstrologyService {
    */
   async getWesternNatal(
     userId: string,
-    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; latitude?: number; longitude?: number; locale?: string },
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; latitude?: number; longitude?: number; locale?: string; alreadyUtc?: boolean },
   ) {
     assertValidBirthDetails({
       dateOfBirth: dto.dateOfBirth,
@@ -1595,11 +1595,17 @@ export class AstrologyService {
     // it were already UTC — an up-to-±14h error that put the tropical ascendant
     // multiple signs off and poisoned synastry/horary/decumbiture (which reuse
     // this chart). Falls back to IST when coordinates are unknown.
-    const utHour = resolveUtHour({
-      year, month, day, hour, minute,
-      latitude: coords?.lat ?? null,
-      longitude: coords?.lng ?? null,
-    });
+    // When alreadyUtc is set the caller passed a real UTC instant (e.g. horary /
+    // decumbiture "now"), so the date/time are ALREADY UT — using them directly
+    // avoids the double timezone shift that resolveUtHour would apply by treating
+    // them as civil wall-clock at the birthplace.
+    const utHour = dto.alreadyUtc
+      ? hour + minute / 60
+      : resolveUtHour({
+          year, month, day, hour, minute,
+          latitude: coords?.lat ?? null,
+          longitude: coords?.lng ?? null,
+        });
     const jd = swisseph.swe_julday(year, month, day, utHour, swisseph.SE_GREG_CAL);
     const sunLon = this.tropicalLongitude(jd, swisseph.SE_SUN);
     const moonLon = this.tropicalLongitude(jd, swisseph.SE_MOON);
@@ -1700,6 +1706,10 @@ export class AstrologyService {
     const natal = await this.getWesternNatal(userId, {
       dateOfBirth: now.toISOString().slice(0, 10),
       timeOfBirth: now.toISOString().slice(11, 16),
+      // "now" is a UTC instant — cast it directly rather than treating the UTC
+      // wall clock as civil time at the birthplace (which double-shifted the
+      // horary chart by the birthplace offset, ~5.5h for India).
+      alreadyUtc: true,
     });
     const ascSign = natal.ascendant.sign;
     const moonSign = natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown';
@@ -1851,8 +1861,12 @@ export class AstrologyService {
 
     const harmonious = aspects.filter(a => a.quality === 'harmonious').length;
     const challenging = aspects.filter(a => a.quality === 'challenging').length;
-    const totalPossible = Math.max(aspects.length, 1);
-    const score = Math.round((harmonious / totalPossible) * 100);
+    // With zero detected cross-aspects, harmonious/challenging are both 0 — report
+    // a neutral 50 rather than 0% (which wrongly renders as "challenging /
+    // maximum friction"). Absence of aspects is not friction.
+    const score = aspects.length === 0
+      ? 50
+      : Math.round((harmonious / aspects.length) * 100);
 
     const summaryKey = score >= 60
       ? 'western-synastry.summary.harmonious'
@@ -2112,11 +2126,16 @@ export class AstrologyService {
     dto: { decumbitureDate?: string; decumbitureTime?: string; symptomsDescription?: string; locale?: string },
   ) {
     const now = new Date();
+    // Only the pure-default "now" is a UTC instant (cast it directly); a
+    // user-supplied decumbiture date/time is civil wall-clock at their location
+    // and must go through the normal timezone conversion.
+    const usingNow = !dto.decumbitureDate && !dto.decumbitureTime;
     const dateStr = dto.decumbitureDate || now.toISOString().slice(0, 10);
     const timeStr = dto.decumbitureTime || now.toISOString().slice(11, 16);
     const natal = await this.getWesternNatal(userId, {
       dateOfBirth: dateStr,
       timeOfBirth: timeStr,
+      alreadyUtc: usingNow,
     });
     const elementOf = (sign: string): string => {
       const map: Record<string, string> = {
@@ -3032,8 +3051,12 @@ export class AstrologyService {
     // refunded.
     const divisorMap: Record<string, number> = { '9': 9, '10': 10, 'navamsa': 9, 'dashamsha': 10 };
     const divisor = divisorMap[type.toLowerCase()] || parseInt(type, 10);
-    if (!divisor || divisor < 2 || divisor > 60) {
-      throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
+    // Only D9 (Navamsa) and D10 (Dashamsha) have classically-correct math here.
+    // The generic varga formula does NOT match the Parashari rules for other
+    // divisors (D2/D3/D7/D12/D30/D60…), so refuse them rather than charge a
+    // credit for a chart that disagrees with every standard reference.
+    if (divisor !== 9 && divisor !== 10) {
+      throw new BadRequestException('Only Navamsa (D9) and Dashamsha (D10) divisional charts are supported.');
     }
     assertValidBirthDetails(birthDetails);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
