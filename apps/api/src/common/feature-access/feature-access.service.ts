@@ -377,4 +377,28 @@ export class FeatureAccessService {
     });
     return periodKey;
   }
+
+  /**
+   * Reverse a previously-granted usage bonus (e.g. a refunded overage pack).
+   * Only reduces an EXISTING bonus and floors at 0 — never creates a row or
+   * drives the bonus negative, so a pack whose period already rolled (and thus
+   * has nothing left to reverse) is a safe no-op. Mirrors addUsageBonus's
+   * period-key resolution so it targets the same counter row.
+   */
+  async removeUsageBonus(userId: string, feature: string, count: number, tx?: any): Promise<void> {
+    const client = tx ?? this.prisma;
+    const isSubscriber = await this.isActiveSubscriber(userId, client);
+    const periodKey = this.periodKeyFor(isSubscriber);
+    const row = await client.usageCounter.findUnique({
+      where: { userId_feature_periodKey: { userId, feature, periodKey } },
+      select: { bonus: true },
+    });
+    const dec = Math.min(count, row?.bonus ?? 0);
+    if (dec > 0) {
+      await client.usageCounter.update({
+        where: { userId_feature_periodKey: { userId, feature, periodKey } },
+        data: { bonus: { decrement: dec } },
+      });
+    }
+  }
 }
