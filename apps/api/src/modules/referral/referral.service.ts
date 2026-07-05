@@ -451,7 +451,10 @@ function clampInt(
 
 function buildShareUrl(base: string, code: string): string {
   const trimmed = (base || '').replace(/\/+$/, '');
-  return `${trimmed}/auth/register?ref=${encodeURIComponent(code)}`;
+  // The web app has no /auth/register route — the signup page is /auth, and it
+  // reads the ?ref= code from there. Pointing at /auth/register 404'd every
+  // shared referral link.
+  return `${trimmed}/auth?ref=${encodeURIComponent(code)}`;
 }
 
 /**
