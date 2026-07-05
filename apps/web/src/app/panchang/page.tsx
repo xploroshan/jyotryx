@@ -124,7 +124,7 @@ export default function PanchangPage() {
             <div className="surface-card p-6 mb-8 text-center">
               <p className="text-sm text-[rgba(12,8,5,0.66)] mb-1">{t.panchang.date}</p>
               <p className="text-2xl font-bold text-surface-950">
-                {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { timeZone: "UTC", weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
               <p className="text-sm text-accent-400 mt-1">{translateVara(panchang.vara, locale)}</p>
             </div>

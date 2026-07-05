@@ -182,7 +182,7 @@ export default function MuhuratPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <p className="text-lg font-bold text-surface-950">
-                            {new Date(time.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                            {new Date(time.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { timeZone: "UTC", weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                           </p>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${qualityColor(time.quality)}`}>
                             {time.quality === "excellent" ? t.muhurat.qualityExcellent : time.quality === "good" ? t.muhurat.qualityGood : t.muhurat.qualityAverage}

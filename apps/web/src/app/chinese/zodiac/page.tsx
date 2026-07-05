@@ -19,7 +19,7 @@ interface ChineseZodiacResponse {
 export default function ChineseZodiacPage() {
   const { t, locale } = useTranslation();
   const fp = t.featurePages.chineseZodiac;
-  const { user, accessToken, isAuthenticated } = useAuthStore();
+  const { user, accessToken } = useAuthStore();
   const [year, setYear] = useState<string>(
     user?.dateOfBirth ? String(new Date(user.dateOfBirth).getFullYear()) : '',
   );
@@ -66,7 +66,7 @@ export default function ChineseZodiacPage() {
         </div>
         <button
           type="submit"
-          disabled={loading || !isAuthenticated}
+          disabled={loading}
           className="btn-primary rounded-lg px-4 py-2 text-sm disabled:opacity-50"
         >
           {loading ? t.common.processing : fp.submit}

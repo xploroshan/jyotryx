@@ -73,6 +73,29 @@ export default function ReportsPage() {
     }
   };
 
+  // The queued generate path returns 202 "generating" with empty sections. Poll
+  // its status until it resolves, then refresh the list — otherwise the card
+  // shows "Generating" forever until a manual page reload. Transient poll errors
+  // are tolerated.
+  const pollReportUntilReady = async (id: string) => {
+    for (let i = 0; i < 40; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      try {
+        const st = await api.get<{ id: string; status: string }>(
+          `/reports/${id}/status`,
+          { token: accessToken! }
+        );
+        const s = st.status?.toLowerCase();
+        if (s === "ready" || s === "completed" || s === "failed") {
+          await loadReports();
+          return;
+        }
+      } catch {
+        // transient network error — keep polling
+      }
+    }
+  };
+
   const handleGenerate = async (type: string) => {
     setGenerating(type);
     setError("");
@@ -84,6 +107,10 @@ export default function ReportsPage() {
       );
       setReports((prev) => [res, ...prev]);
       setActiveView("history");
+      // Queue path → poll until the report finishes so the card updates itself.
+      if (res.status?.toLowerCase() === "generating") {
+        void pollReportUntilReady(res.id);
+      }
     } catch (err: any) {
       // 402 → report locked. Route by the server's hint:
       //  - subscribe === true  → free user → Subscribe
