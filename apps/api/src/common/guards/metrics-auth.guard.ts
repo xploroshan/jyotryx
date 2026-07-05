@@ -29,10 +29,16 @@ export class MetricsAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const expected = process.env.METRICS_TOKEN?.trim();
     if (!expected) {
+      // Fail CLOSED in production: an unset token must not expose route
+      // inventory and business/cost metrics (llm_cost_usd_*) to the internet.
+      // Outside production, allow scraping with a one-time warning for dev use.
+      if (process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('Metrics endpoint is not configured');
+      }
       if (!this.warnedOpen) {
         this.logger.warn(
-          'METRICS_TOKEN is not set — /api/metrics is publicly reachable. ' +
-            'Set METRICS_TOKEN to require a bearer token in production.',
+          'METRICS_TOKEN is not set — /api/metrics is open in non-production. ' +
+            'Set METRICS_TOKEN to require a bearer token.',
         );
         this.warnedOpen = true;
       }
