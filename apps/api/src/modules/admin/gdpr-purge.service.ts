@@ -46,13 +46,21 @@ export class GdprPurgeService {
       `,
     ]);
 
+    const tables = ['llm_usage', 'chat_messages', 'notifications', 'activity_logs'];
+    const failed: string[] = [];
     for (const [i, result] of results.entries()) {
-      const tables = ['llm_usage', 'chat_messages', 'notifications', 'activity_logs'];
       if (result.status === 'rejected') {
-        this.logger.error(
-          `GDPR purge failed for ${tables[i]}: ${result.reason}`,
-        );
+        this.logger.error(`GDPR purge failed for ${tables[i]}: ${result.reason}`);
+        failed.push(tables[i]);
       }
+    }
+
+    if (failed.length > 0) {
+      // Surface the failure so the caller does NOT delete the user row and mark
+      // the request 'fulfilled' while PII may still remain — the request stays
+      // pending and can be retried (the daily orphan sweep is a backstop, not a
+      // guarantee of completeness).
+      throw new Error(`GDPR purge incomplete for user ${userId}: ${failed.join(', ')}`);
     }
 
     this.logger.log(`GDPR purge completed for user ${userId}`);
