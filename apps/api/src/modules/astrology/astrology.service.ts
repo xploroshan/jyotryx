@@ -48,6 +48,12 @@ const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17] as const;
 const PANCHANG_VARA_NAMES = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'] as const;
 const PANCHANG_TITHI_NAMES = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'] as const;
 const PANCHANG_YOGA_NAMES = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'] as const;
+/**
+ * Classical Nadi (0=Aadi/Vata, 1=Madhya/Pitta, 2=Antya/Kapha) per nakshatra
+ * index. This is the traditional zigzag assignment (0,1,2,2,1,0 repeating) —
+ * NOT a plain nakIdx % 3, which mislabels 8 of the 27 nakshatras.
+ */
+const NADI_BY_NAKSHATRA = [0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2] as const;
 
 // Sign lords: Aries=Mars, Taurus=Venus, Gemini=Mercury, Cancer=Moon, Leo=Sun, Virgo=Mercury, Libra=Venus, Scorpio=Mars, Sagittarius=Jupiter, Capricorn=Saturn, Aquarius=Saturn, Pisces=Jupiter
 const SIGN_LORDS = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'] as const;
@@ -757,7 +763,7 @@ export class AstrologyService {
       const moonLng = moonPos.degree + (ALL_SIGNS.indexOf(moonPos.sign as any) * 30);
       const moonNakIdx = Math.floor(((moonLng % 360 + 360) % 360) / (360 / 27)) % 27;
       const nadiTypes = ['Aadi (Vata)', 'Madhya (Pitta)', 'Antya (Kapha)'];
-      const nadiType = nadiTypes[moonNakIdx % 3];
+      const nadiType = nadiTypes[NADI_BY_NAKSHATRA[moonNakIdx] ?? 0];
       doshas.push({
         key: 'nadi',
         name: 'Nadi Dosha',
@@ -1130,7 +1136,13 @@ export class AstrologyService {
     // Tara (3 pts): Count nakshatras from bride to groom, divide by 9, check remainder
     const taraDiff = ((m2.nakIdx - m1.nakIdx + 27) % 27);
     const taraRemainder = taraDiff % 9;
-    const auspiciousTara = [1, 2, 4, 6, 8]; // 2nd, 3rd, 5th, 7th, 9th are favorable
+    // Tara position = taraRemainder + 1. The auspicious taras are 2 (Sampat),
+    // 4 (Kshema), 6 (Sadhaka), 8 (Mitra) and 9 (Ati-Mitra) — i.e. remainders
+    // {1,3,5,7,8}. The old set {1,2,4,6,8} treated the INAUSPICIOUS 3rd (Vipat),
+    // 5th (Pratyari) and 7th (Vadha) taras as favorable and the favorable
+    // 4th/6th/8th as unfavorable — exactly backwards. Remainder 0 = Janma
+    // (own star) scores the neutral partial point.
+    const auspiciousTara = [1, 3, 5, 7, 8];
     const taraScore = auspiciousTara.includes(taraRemainder) ? 3 : taraRemainder === 0 ? 1 : 0;
 
     // Yoni (4 pts): Traditional 14-animal system based on nakshatra
@@ -1149,12 +1161,16 @@ export class AstrologyService {
     const lord2 = signLords[m2.signIdx];
     // Friendship matrix: 2=best friend, 1=friend, 0=neutral, -1=enemy, -2=bitter enemy
     const friendshipTable: Record<string, number> = {
-      '0-1': 1, '0-2': 1, '0-4': 1, '0-3': -1, '0-5': -1, '0-6': -1,
+      // Naisargika (natural) planetary friendships. Corrected against the
+      // classical maitri table: Sun→Mercury is neutral (was -1); Mercury→Sun is
+      // a friend (was -1); Mercury→Moon is an enemy (was 0); Venus→Moon is an
+      // enemy (was 0). The table is intentionally asymmetric (Graha Maitri is).
+      '0-1': 1, '0-2': 1, '0-4': 1, '0-3': 0, '0-5': -1, '0-6': -1,
       '1-0': 1, '1-3': 1, '1-2': 0, '1-4': 0, '1-5': 0, '1-6': 0,
       '2-0': 1, '2-1': 1, '2-4': 1, '2-3': -1, '2-5': 0, '2-6': 0,
-      '3-0': -1, '3-5': 1, '3-1': 0, '3-2': 0, '3-4': 0, '3-6': 0,
+      '3-0': 1, '3-5': 1, '3-1': -1, '3-2': 0, '3-4': 0, '3-6': 0,
       '4-0': 1, '4-1': 1, '4-2': 1, '4-3': -1, '4-5': -1, '4-6': 0,
-      '5-3': 1, '5-6': 1, '5-0': -1, '5-1': 0, '5-2': 0, '5-4': 0,
+      '5-3': 1, '5-6': 1, '5-0': -1, '5-1': -1, '5-2': 0, '5-4': 0,
       '6-3': 1, '6-5': 1, '6-0': -1, '6-1': -1, '6-2': -1, '6-4': 0,
     };
     const fKey = `${lord1}-${lord2}`;
@@ -1171,14 +1187,25 @@ export class AstrologyService {
     const ganaMap = [0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0];
     const g1 = ganaMap[m1.nakIdx];
     const g2 = ganaMap[m2.nakIdx];
-    const ganaScore = g1 === g2 ? 6 : (g1 === 0 && g2 === 1) || (g1 === 1 && g2 === 0) ? 3 : 0;
+    // Standard Gana Milan grid (0=Deva,1=Manushya,2=Rakshasa): same gana 6;
+    // Deva+Manushya are compatible (6, not the old 3); Deva+Rakshasa 1 (not 0);
+    // Manushya+Rakshasa 0 (the genuinely incompatible pairing).
+    const ganaPoints: Record<string, number> = {
+      '0-0': 6, '1-1': 6, '2-2': 6,
+      '0-1': 6, '1-0': 6,
+      '0-2': 1, '2-0': 1,
+      '1-2': 0, '2-1': 0,
+    };
+    const ganaScore = ganaPoints[`${g1}-${g2}`] ?? 0;
 
     // Bhakoot (7 pts): 2/12, 5/9, 6/8 apart = dosha. Order-independent; same sign = 7.
     // (See guna.util.computeBhakootScore for the symmetric rule + tests.)
     const bhakootScore = computeBhakootScore(m1.signIdx, m2.signIdx);
 
-    // Nadi (8 pts): Based on nakshatra's Nadi (Aadi, Madhya, Antya)
-    const nadiMap = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2];
+    // Nadi (8 pts): classical zigzag assignment (see NADI_BY_NAKSHATRA), NOT a
+    // plain nakIdx%3 — the naive map got 8 of 27 nakshatras wrong, which could
+    // both miss a real Nadi Dosha and invent one that isn't there.
+    const nadiMap = NADI_BY_NAKSHATRA;
     const n1 = nadiMap[m1.nakIdx];
     const n2 = nadiMap[m2.nakIdx];
     const nadiScore = n1 !== n2 ? 8 : 0; // Same Nadi = 0 (Nadi Dosha)
@@ -1199,7 +1226,11 @@ export class AstrologyService {
     const activePeriod = period || 'daily';
     const activeTradition = tradition || 'VEDIC';
     const today = new Date().toISOString().split('T')[0];
-    const cacheKey = `horoscope:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${today}`;
+    // The generated content is locale-specific (callOpenAI appends the locale
+    // instruction), so the locale MUST be part of the cache key — otherwise the
+    // first language requested each day is served to every other language for 24h.
+    const localeKey = (locale || 'en').toLowerCase();
+    const cacheKey = `horoscope:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${localeKey}:${today}`;
     const cached = await this.cacheService.get<HoroscopeResult>(cacheKey);
     if (cached) return cached;
 
@@ -1948,7 +1979,10 @@ export class AstrologyService {
     const y = year ?? new Date().getUTCFullYear();
     // Annual facing star = 11 - (year mod 9), adjust for Period 9 (2024+).
     // Compact deterministic formula: center star = ((year - 1) mod 9) + 1 reversed.
-    const centerStar = ((11 - ((y - 1) % 9)) % 9) || 9;
+    // Annual center star runs backwards from the year's digit root: use y % 9,
+    // not (y - 1) % 9, which shifted the whole 9-palace grid by one every year
+    // (e.g. 2025 is the 2-Black year; the old formula returned 3).
+    const centerStar = ((11 - (y % 9)) % 9) || 9;
     // Build grid walking the Lo Shu path: center, NW, W, NE, S, N, SW, E, SE
     const path = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // base Lo Shu
     const offset = centerStar - 5;
@@ -2173,11 +2207,17 @@ export class AstrologyService {
     const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
     const earthlyBranches = ['Zi', 'Chou', 'Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai'];
     const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
-    // Days since a known Jia-Zi epoch (1900-01-31 was Jia-Zi day in the 60-day cycle).
+    // 1900-01-31 is actually the 41st day of the 60-day sexagenary cycle
+    // (index 40 = Jia-Chen), NOT Jia-Zi, so day 0 must map to cycle index 40.
+    // The old code assumed Jia-Zi (index 0): the stem stayed correct only
+    // because 40 ≡ 0 (mod 10), but the earthly branch/animal was shifted by 4
+    // for every birth date. Offsetting by +40 realigns it. (Verified against
+    // 1949-10-01, the canonical Jia-Zi day, which now resolves to Jia-Zi.)
     const epoch = Date.UTC(1900, 0, 31);
     const daysSinceEpoch = Math.floor((date.getTime() - epoch) / 86400000);
-    const stemIdx = ((daysSinceEpoch % 10) + 10) % 10;
-    const branchIdx = ((daysSinceEpoch % 12) + 12) % 12;
+    const cycleIdx = (((daysSinceEpoch + 40) % 60) + 60) % 60;
+    const stemIdx = cycleIdx % 10;
+    const branchIdx = cycleIdx % 12;
     return {
       heavenlyStem: heavenlyStems[stemIdx],
       earthlyBranch: earthlyBranches[branchIdx],
@@ -2255,7 +2295,9 @@ export class AstrologyService {
     const elongation = ((moonTropical.longitude - sunTropical.longitude) % 360 + 360) % 360;
     const tithiIdx = Math.floor(elongation / 12) % 30;
     const paksha = tithiIdx < 15 ? 'Shukla' : 'Krishna';
-    const tithiName = PANCHANG_TITHI_NAMES[tithiIdx % 15];
+    // tithiIdx 29 is the new moon (Amavasya); tithiIdx % 15 would mislabel it as
+    // the full-moon 'Purnima'. (tithiLabel() already encodes this rule.)
+    const tithiName = tithiIdx === 29 ? 'Amavasya' : PANCHANG_TITHI_NAMES[tithiIdx % 15];
 
     // Nakshatra from Moon's sidereal longitude
     const nakIdx = Math.floor(moonSid / (360 / 27)) % 27;
