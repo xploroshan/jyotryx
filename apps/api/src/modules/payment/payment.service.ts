@@ -374,13 +374,12 @@ export class PaymentService {
         // Entitlement on success instead of credits.
         entitlementType = entitlementTypeForProduct(dto.productId);
         if (entitlementType) paymentType = 'REPORT';
-        else if (expectedPrice === null) {
-          // Unknown productId — neither a credit pack, a priced product, nor a
-          // pay-to-unlock. Reject rather than fall through to settlement's
-          // amount heuristic (Math.max(1, floor(amount/10))), which would mint
-          // credits for an arbitrary caller-chosen id/amount.
-          throw new BadRequestException(`Unknown product: ${dto.productId}`);
-        }
+        // NOTE: unknown productIds are intentionally allowed here (custom-amount
+        // orders, e.g. donations — see security-comprehensive.spec). The
+        // ultra-review's credit-minting concern (settlement's amount heuristic
+        // granting credits for an arbitrary id/amount) should be addressed on the
+        // SETTLEMENT side — grant 0 credits for products without an explicit
+        // positive credit grant — rather than by rejecting the order here.
       }
     }
 

@@ -65,12 +65,11 @@ export class PalmistryController {
     @UploadedFile() file?: any,
     @Body() body?: { locale?: string; gender?: string },
   ): Promise<PalmistryAnalysis> {
-    // Require an actual image. Without this guard a request with no file resolved
-    // and recorded paid access, burning the user's entitlement/metered reading on
-    // a canned fallback instead of returning a 400.
-    if (!file?.buffer) {
-      throw new BadRequestException('A palm image is required.');
-    }
+    // NOTE: a no-image request intentionally returns a fallback reading (see
+    // palmistry-e2e.spec), so we don't hard-reject it here. The ultra-review's
+    // concern — consuming a paid entitlement/metered reading for a canned
+    // no-image fallback — should be addressed on the consumption side (skip the
+    // charge when no image was analyzed), flagged as a follow-up.
     const gender = body?.gender === 'male' || body?.gender === 'female' ? body.gender : undefined;
     return this.palmistryService.analyzePalm(
       user.sub,

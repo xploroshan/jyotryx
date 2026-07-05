@@ -76,7 +76,7 @@ export const mockPrismaService = () => ({
     create: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'READY', fileUrl: null, price: 5, userId: 'test-uuid' }),
     findFirst: jest.fn(),
     findMany: jest.fn().mockResolvedValue([]),
-    update: jest.fn().mockResolvedValue({ id: 'report-1', status: 'COMPLETED' }),
+    update: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'READY', fileUrl: '{}', price: 5, userId: 'test-uuid' }),
     count: jest.fn().mockResolvedValue(0),
   },
   knowledgeDocument: {
