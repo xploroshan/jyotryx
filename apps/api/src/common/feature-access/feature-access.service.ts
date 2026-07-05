@@ -346,6 +346,65 @@ export class FeatureAccessService {
   }
 
   /**
+   * Atomically CLAIM one metered unit: increment `used` only if it is still
+   * below the ceiling (limit + bonus), in a single guarded UPDATE. This is the
+   * race-safe replacement for the check-then-increment sequence (`checkUsage`
+   * then `incrementUsage`), which let N concurrent requests all pass the read
+   * and all get served. Callers should claim BEFORE delivering the unit and give
+   * it back via `decrementUsage` if delivery ultimately fails.
+   *
+   * Returns `allowed:false` (claiming nothing) when already at/over the ceiling.
+   */
+  async tryConsumeUsage(
+    userId: string,
+    feature: string,
+    limitFeature: string = feature,
+  ): Promise<{
+    allowed: boolean;
+    used: number;
+    bonus: number;
+    limit: number;
+    remaining: number;
+    isSubscriber: boolean;
+    periodKey: string;
+  }> {
+    const isSubscriber = await this.isActiveSubscriber(userId);
+    const periodKey = this.periodKeyFor(isSubscriber);
+    const limit = await this.getUsageLimit(limitFeature, isSubscriber);
+
+    // Ensure the counter row exists first (Prisma manages id/updatedAt/createdAt
+    // and the unique constraint collapses concurrent first-inserts to one row),
+    // so the guarded claim below is a pure UPDATE with no INSERT-default concerns.
+    await this.prisma.usageCounter.upsert({
+      where: { userId_feature_periodKey: { userId, feature, periodKey } },
+      create: { userId, feature, periodKey, used: 0 },
+      update: {},
+    });
+
+    // Single atomic guard: only one of N concurrent requests can move `used`
+    // from ceiling-1 to ceiling.
+    const rows = await this.prisma.$queryRawUnsafe<{ used: number; bonus: number }[]>(
+      `UPDATE usage_counters
+         SET used = used + 1, "updatedAt" = NOW()
+         WHERE "userId" = $1::uuid AND feature = $2 AND "periodKey" = $3
+           AND used < ($4::int + bonus)
+         RETURNING used, bonus`,
+      userId,
+      feature,
+      periodKey,
+      limit,
+    );
+
+    if (rows.length > 0) {
+      const { used, bonus } = rows[0];
+      return { allowed: true, used, bonus, limit, remaining: Math.max(0, limit + bonus - used), isSubscriber, periodKey };
+    }
+    // At/over ceiling — nothing claimed. Return the current snapshot.
+    const snap = await this.checkUsage(userId, feature, limitFeature);
+    return { ...snap, allowed: false };
+  }
+
+  /**
    * Give back one metered unit, e.g. when an async (queued) palmistry/report
    * generation ultimately fails after the unit was counted at enqueue — the
    * mirror of refundEntitlementByRef for the subscription model. Floors at 0

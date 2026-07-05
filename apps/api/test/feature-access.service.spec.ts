@@ -284,4 +284,30 @@ describe('FeatureAccessService', () => {
       });
     });
   });
+
+  describe('tryConsumeUsage (atomic claim)', () => {
+    beforeEach(() => {
+      // Mode A / free tier: subscriptions disabled, no limit override (default 1).
+      prisma.siteSetting.findUnique.mockResolvedValue(null);
+      prisma.usageCounter.upsert.mockResolvedValue({});
+    });
+
+    it('claims a unit when the guarded UPDATE affects a row', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([{ used: 1, bonus: 0 }]);
+      const r = await service.tryConsumeUsage('u1', 'report_life', 'report');
+      expect(r.allowed).toBe(true);
+      expect(r.used).toBe(1);
+      // Row is ensured first, then the single guarded UPDATE enforces atomicity.
+      expect(prisma.usageCounter.upsert).toHaveBeenCalledTimes(1);
+      expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
+    });
+
+    it('denies (claims nothing) when the guarded UPDATE affects no row', async () => {
+      prisma.$queryRawUnsafe.mockResolvedValue([]); // ceiling reached — guard blocked the increment
+      prisma.usageCounter.findUnique.mockResolvedValue({ used: 1, bonus: 0 });
+      const r = await service.tryConsumeUsage('u1', 'report_life', 'report');
+      expect(r.allowed).toBe(false);
+      expect(r.used).toBe(1);
+    });
+  });
 });

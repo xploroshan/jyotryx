@@ -101,7 +101,10 @@ export class ReportService {
       return this.runReportGeneration(userId, dto, entType, 'subscriber');
     }
     const counterFeature = `report_${dto.type.toLowerCase()}`;
-    const usage = await this.featureAccess.checkUsage(userId, counterFeature, 'report');
+    // Atomically CLAIM the once-per-cycle slot up front — the old check-then-
+    // increment let two concurrent same-type requests both pass the cap and both
+    // generate.
+    const usage = await this.featureAccess.tryConsumeUsage(userId, counterFeature, 'report');
     if (!usage.allowed) {
       throw new PaymentRequiredException(
         usage.isSubscriber
@@ -110,12 +113,19 @@ export class ReportService {
         { subscribe: !usage.isSubscriber, feature: 'report' },
       );
     }
-    const result = await this.runReportGeneration(userId, dto, entType, 'subscriber', {
-      feature: counterFeature,
-      periodKey: usage.periodKey,
-    });
-    await this.featureAccess.incrementUsage(userId, counterFeature, usage.periodKey);
-    return result;
+    // The slot is claimed. Give it back if starting generation fails, so a failed
+    // report doesn't permanently consume the allowance. (The async job also gives
+    // it back on later job failure via decrementUsage — different failure point,
+    // no double-refund.)
+    try {
+      return await this.runReportGeneration(userId, dto, entType, 'subscriber', {
+        feature: counterFeature,
+        periodKey: usage.periodKey,
+      });
+    } catch (err) {
+      await this.featureAccess.decrementUsage(userId, counterFeature, usage.periodKey).catch(() => {});
+      throw err;
+    }
   }
 
   private async runReportGeneration(

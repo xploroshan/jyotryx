@@ -67,6 +67,8 @@ function makePrismaMock(overrides: Partial<AnyPrisma> = {}): AnyPrisma {
         .mockImplementation(({ where }: any) => Promise.resolve({ id: where.id })),
     },
     $transaction: transaction,
+    // Advisory lock used by grantBonusAtomically to serialize per-referrer.
+    $executeRawUnsafe: (jest as any).fn().mockResolvedValue(undefined),
   };
   return Object.assign(prisma, overrides);
 }
