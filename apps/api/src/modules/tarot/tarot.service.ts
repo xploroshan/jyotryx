@@ -100,8 +100,14 @@ export class TarotService {
   }
 
   private async runTarotDraw(userId: string, dto: DrawCardsDto, config: typeof SPREAD_CONFIG[keyof typeof SPREAD_CONFIG]) {
-    // Shuffle and draw
-    const shuffled = [...FULL_DECK].sort(() => Math.random() - 0.5);
+    // Shuffle and draw. Fisher-Yates — the `.sort(() => Math.random() - 0.5)`
+    // idiom is a biased, non-uniform shuffle (distribution depends on the JS
+    // engine's sort), so cards near their deck position were over/under-drawn.
+    const shuffled = [...FULL_DECK];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     const drawn = shuffled.slice(0, config.count).map((card, i) => ({
       ...card,
       position: config.positions[i],

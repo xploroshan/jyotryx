@@ -50,6 +50,20 @@ export class AnthropicProvider implements LlmProvider {
       messages.push({ role: 'user', content: 'Please respond.' });
     }
 
+    // Anthropic has no native json_object mode. Honour options.jsonMode with the
+    // documented technique: instruct JSON-only in the system prompt AND prefill
+    // the assistant turn with "{" so the model is forced to continue a JSON
+    // object. Without this the tertiary failover returned prose that the
+    // caller's JSON.parse rejected — i.e. reports/interpretation silently broke
+    // on this provider while still billing its tokens.
+    const jsonMode = options.jsonMode === true;
+    if (jsonMode) {
+      const jsonInstruction =
+        'Respond with ONLY a single valid JSON object. No markdown, no code fences, no commentary before or after.';
+      systemPrompt = systemPrompt ? `${systemPrompt}\n${jsonInstruction}` : jsonInstruction;
+      messages.push({ role: 'assistant', content: '{' });
+    }
+
     const response = await this.client.messages.create({
       model,
       max_tokens: options.maxTokens ?? 1500,
@@ -58,10 +72,18 @@ export class AnthropicProvider implements LlmProvider {
       messages,
     });
 
-    const content = response.content
+    let content = response.content
       .filter((block: any) => block.type === 'text')
       .map((block: any) => block.text)
       .join('');
+
+    if (jsonMode) {
+      // Re-attach the prefilled "{" and trim anything after the final "}" so the
+      // caller receives a complete, parseable JSON object.
+      content = `{${content}`;
+      const lastBrace = content.lastIndexOf('}');
+      if (lastBrace !== -1) content = content.slice(0, lastBrace + 1);
+    }
 
     return {
       content,

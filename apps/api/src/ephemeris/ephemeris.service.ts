@@ -117,12 +117,14 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
    */
   async computeCurrentChart(lat: number, lng: number): Promise<ChartResult> {
     const now = new Date();
-    // Round to nearest 5 minutes for cache alignment
-    const minute = Math.floor(now.getMinutes() / 5) * 5;
+    // ALL fields must be UTC to match tzOffset:0 — mixing server-local calendar
+    // fields (getFullYear/Month/Date/Minutes) with a UTC hour produced a chart
+    // for a nonexistent instant on any non-UTC server.
+    const minute = Math.floor(now.getUTCMinutes() / 5) * 5; // round to 5 min for cache alignment
     const input: ChartInput = {
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
-      day: now.getDate(),
+      year: now.getUTCFullYear(),
+      month: now.getUTCMonth() + 1,
+      day: now.getUTCDate(),
       hour: now.getUTCHours(),
       minute,
       lat,
@@ -149,18 +151,27 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
    * subsequent requests so users don't eat a 10-second wait per
    * request waiting for a pool we already know is broken.
    */
-  private poolDeadAfterFirstFailure = false;
+  // Only disable the pool after several CONSECUTIVE failures — a single timeout
+  // under a load burst (or one worker crash, which the pool now respawns) must
+  // not permanently downgrade every subsequent request to synchronous. Any
+  // success resets the counter.
+  private poolConsecutiveFailures = 0;
+  private static readonly POOL_FAILURE_THRESHOLD = 5;
 
   private async computeWithFallback(input: ChartInput): Promise<ChartResult> {
-    if (this.pool && !this.poolDeadAfterFirstFailure) {
+    if (this.pool && this.poolConsecutiveFailures < EphemerisService.POOL_FAILURE_THRESHOLD) {
       try {
-        return await this.pool.execute<ChartResult>('computeFullChart', input);
+        const result = await this.pool.execute<ChartResult>('computeFullChart', input);
+        this.poolConsecutiveFailures = 0; // healthy — reset
+        return result;
       } catch (err: any) {
+        this.poolConsecutiveFailures++;
         this.logger.error(
-          `Worker pool failed (${err?.message ?? err}); falling back to sync swisseph and disabling pool for this process.`,
+          `Worker pool task failed (${err?.message ?? err}); using sync fallback ` +
+            `(${this.poolConsecutiveFailures}/${EphemerisService.POOL_FAILURE_THRESHOLD} consecutive).`,
         );
-        this.poolDeadAfterFirstFailure = true;
-        // Fall through to sync.
+        // Fall through to sync for THIS request; the pool stays enabled unless it
+        // keeps failing.
       }
     }
     if (!this.swisseph) {

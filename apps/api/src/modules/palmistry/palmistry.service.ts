@@ -327,11 +327,25 @@ export class PalmistryService {
       });
       readingId = reading.id;
       createdAt = reading.createdAt.toISOString();
-      await this.recordPalmConsumption(userId, access, reading.id);
     } catch (err) {
       this.logger.error(
         `Palmistry DB write failed, returning analysis without persistence: ${(err as Error)?.message}`,
       );
+    }
+
+    // Consume the unlock separately and do NOT swallow its failure. Previously
+    // this ran inside the persistence try/catch, so a consumption failure — e.g.
+    // a concurrent request already claimed the only entitlement (402) — was
+    // logged as "DB write failed" and the full reading was still returned for
+    // free. If consumption fails, remove the persisted reading and surface the
+    // error instead of delivering an unpaid reading.
+    if (readingId) {
+      try {
+        await this.recordPalmConsumption(userId, access, readingId);
+      } catch (err) {
+        await this.prisma.palmistryReading.delete({ where: { id: readingId } }).catch(() => {});
+        throw err;
+      }
     }
 
     return {

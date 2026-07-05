@@ -160,7 +160,7 @@ describe('PaymentService (Google Play)', () => {
     // The claim is status-guarded (exactly-once across replays/races).
     expect(tx.payment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: { not: 'SUCCESS' } }),
+        where: expect.objectContaining({ status: { notIn: ['SUCCESS', 'REFUNDED'] } }),
       }),
     );
     expect(tx.user.update).toHaveBeenCalledWith(

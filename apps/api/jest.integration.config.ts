@@ -25,6 +25,13 @@ const config: Config = {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
+    // firebase-admin 14 → jwks-rsa → jose, which ships ESM-only and Jest's
+    // CJS runtime cannot parse. auth.service imports firebase-admin/auth at
+    // module load, so any integration spec that (transitively) imports it
+    // fails to even parse without this stub. Integration specs exercise the
+    // real redis/postgres wiring, not JWKS verification, so the throwing
+    // stub is never actually invoked — same mapping as the unit config.
+    '^jose$': '<rootDir>/test/helpers/jose-stub.ts',
   },
   // Daemons + Prisma migrate typically boot in a few seconds but we leave
   // a wide margin so CI cold starts don't thrash.

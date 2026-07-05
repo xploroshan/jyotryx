@@ -168,7 +168,9 @@ describe('ReportService — Sync Fallback', () => {
     prisma = {
       user: { findUnique: jest.fn().mockResolvedValue(mockUser) },
       report: {
-        create: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'READY', price: 5, userId: 'test-uuid', fileUrl: '{}' }),
+        create: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'GENERATING', price: 5, userId: 'test-uuid' }),
+        // Sync path now creates GENERATING then flips to READY via update.
+        update: jest.fn().mockResolvedValue({ id: 'report-1', createdAt: new Date(), type: 'LIFE', status: 'READY', price: 5, userId: 'test-uuid', fileUrl: '{}' }),
         findFirst: jest.fn(),
         findMany: jest.fn().mockResolvedValue([]),
       },

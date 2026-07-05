@@ -66,8 +66,17 @@ export class ReportService {
     this.queueEnabled = this.configService.get<string>('QUEUE_ENABLED', 'false') === 'true' && !!this.reportQueue;
   }
 
+  private static readonly VALID_REPORT_TYPES = ['LIFE', 'CAREER', 'MARRIAGE', 'WEALTH', 'PALM', 'ANNUAL'];
+
   async generateReport(userId: string, dto: GenerateReportDto): Promise<ReportResponse> {
     this.logger.log(`Generating ${dto.type} report for user: ${userId}`);
+    // GenerateReportDto is a plain interface, so the global ValidationPipe cannot
+    // validate it. Guard `type` explicitly — otherwise an invalid value runs a
+    // full (billed) LLM generation before crashing on the Prisma enum, i.e.
+    // unmetered LLM spend triggered by arbitrary caller input.
+    if (!dto?.type || !ReportService.VALID_REPORT_TYPES.includes(dto.type)) {
+      throw new BadRequestException('Invalid report type.');
+    }
     // Reports are pay-to-unlock: a subscriber (Mode B) gets it free, else
     // the user must hold an unused one-time entitlement. resolveUnlock
     // throws 402 (PaymentRequired) when neither path is available, which
@@ -92,7 +101,10 @@ export class ReportService {
       return this.runReportGeneration(userId, dto, entType, 'subscriber');
     }
     const counterFeature = `report_${dto.type.toLowerCase()}`;
-    const usage = await this.featureAccess.checkUsage(userId, counterFeature, 'report');
+    // Atomically CLAIM the once-per-cycle slot up front — the old check-then-
+    // increment let two concurrent same-type requests both pass the cap and both
+    // generate.
+    const usage = await this.featureAccess.tryConsumeUsage(userId, counterFeature, 'report');
     if (!usage.allowed) {
       throw new PaymentRequiredException(
         usage.isSubscriber
@@ -101,12 +113,19 @@ export class ReportService {
         { subscribe: !usage.isSubscriber, feature: 'report' },
       );
     }
-    const result = await this.runReportGeneration(userId, dto, entType, 'subscriber', {
-      feature: counterFeature,
-      periodKey: usage.periodKey,
-    });
-    await this.featureAccess.incrementUsage(userId, counterFeature, usage.periodKey);
-    return result;
+    // The slot is claimed. Give it back if starting generation fails, so a failed
+    // report doesn't permanently consume the allowance. (The async job also gives
+    // it back on later job failure via decrementUsage — different failure point,
+    // no double-refund.)
+    try {
+      return await this.runReportGeneration(userId, dto, entType, 'subscriber', {
+        feature: counterFeature,
+        periodKey: usage.periodKey,
+      });
+    } catch (err) {
+      await this.featureAccess.decrementUsage(userId, counterFeature, usage.periodKey).catch(() => {});
+      throw err;
+    }
   }
 
   private async runReportGeneration(
@@ -151,9 +170,18 @@ export class ReportService {
 
       // Spend the one-time unlock now that the report row exists. Skipped
       // for subscribers (Mode B). If a concurrent request already spent the
-      // only unlock, this throws 402 before any LLM cost is incurred.
+      // only unlock, this throws 402 before any LLM cost is incurred — but the
+      // GENERATING row already exists, so fail it rather than leaving it
+      // stranded in GENERATING forever.
       if (mode === 'entitlement') {
-        await this.featureAccess.consumeEntitlement(userId, entType, report.id);
+        try {
+          await this.featureAccess.consumeEntitlement(userId, entType, report.id);
+        } catch (err) {
+          await this.prisma.report
+            .update({ where: { id: report.id }, data: { status: 'FAILED' } })
+            .catch(() => {});
+          throw err;
+        }
       }
 
       try {
@@ -203,31 +231,41 @@ export class ReportService {
     // Sync path (fallback when QUEUE_ENABLED=false)
     const sections = await this.generateAIReportSections(dto.type, birthDetails, user?.name || 'User', user?.gender, userId, dto.locale);
 
+    // Persist as GENERATING and flip to READY only AFTER the one-time unlock is
+    // consumed. Creating a READY row with full sections up front let a concurrent
+    // request that lost the single-entitlement race (consumeEntitlement throws
+    // 402) keep a fully-generated report readable for free via GET /reports.
     const report = await this.prisma.report.create({
-      data: {
-        userId,
-        type: dto.type,
-        status: 'READY',
-        price: 0,
-        fileUrl: JSON.stringify({ sections }),
-      },
+      data: { userId, type: dto.type, status: 'GENERATING', price: 0 },
     });
 
     if (mode === 'entitlement') {
-      await this.featureAccess.consumeEntitlement(userId, entType, report.id);
+      try {
+        await this.featureAccess.consumeEntitlement(userId, entType, report.id);
+      } catch (err) {
+        await this.prisma.report
+          .update({ where: { id: report.id }, data: { status: 'FAILED' } })
+          .catch(() => {});
+        throw err;
+      }
     }
 
+    const finalized = await this.prisma.report.update({
+      where: { id: report.id },
+      data: { status: 'READY', fileUrl: JSON.stringify({ sections }) },
+    });
+
     return {
-      id: report.id,
+      id: finalized.id,
       userId,
       type: dto.type,
       title: reportTitles[dto.type] || 'Astrology Report',
       status: 'completed',
       summary: sections[0]?.content?.substring(0, 200) + '...' || `Your comprehensive ${dto.type.toLowerCase()} report has been generated.`,
       sections,
-      pdfUrl: report.fileUrl,
+      pdfUrl: finalized.fileUrl,
       creditsCharged: 0,
-      createdAt: report.createdAt.toISOString(),
+      createdAt: finalized.createdAt.toISOString(),
       completedAt: new Date().toISOString(),
     };
   }
@@ -472,17 +510,26 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
 
     if (!report) throw new NotFoundException('Report not found');
 
-    // Use stored sections if available, otherwise regenerate (legacy reports)
+    // Use stored sections if available. For a legacy READY report with no stored
+    // sections, regenerate ONCE and persist so subsequent views are free and
+    // deterministic — previously every GET re-ran a full (billed) LLM generation
+    // and returned different content each time, including for in-flight
+    // GENERATING and FAILED rows.
     let sections: ReportSection[];
     if (report.fileUrl && report.fileUrl.startsWith('{')) {
       try {
-        const stored = JSON.parse(report.fileUrl);
-        sections = stored.sections;
+        sections = JSON.parse(report.fileUrl).sections ?? [];
       } catch {
-        sections = await this.regenerateSections(userId, report.type);
+        sections = [];
       }
-    } else {
+    } else if (report.status === 'READY') {
       sections = await this.regenerateSections(userId, report.type);
+      await this.prisma.report
+        .update({ where: { id: report.id }, data: { fileUrl: JSON.stringify({ sections }) } })
+        .catch(() => {});
+    } else {
+      // GENERATING / FAILED: nothing to show yet — never run a paid generation here.
+      sections = [];
     }
 
     const reportTitles: Record<string, string> = {

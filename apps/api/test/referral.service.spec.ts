@@ -67,6 +67,8 @@ function makePrismaMock(overrides: Partial<AnyPrisma> = {}): AnyPrisma {
         .mockImplementation(({ where }: any) => Promise.resolve({ id: where.id })),
     },
     $transaction: transaction,
+    // Advisory lock used by grantBonusAtomically to serialize per-referrer.
+    $executeRawUnsafe: (jest as any).fn().mockResolvedValue(undefined),
   };
   return Object.assign(prisma, overrides);
 }
@@ -106,13 +108,13 @@ describe('ReferralService helpers', () => {
 
   it('buildShareUrl strips trailing slashes and URL-encodes the code', () => {
     expect(helpers.buildShareUrl('https://www.myastro360.com', 'ABC123')).toBe(
-      'https://www.myastro360.com/auth/register?ref=ABC123',
+      'https://www.myastro360.com/auth?ref=ABC123',
     );
     expect(helpers.buildShareUrl('https://www.myastro360.com/', 'ABC')).toBe(
-      'https://www.myastro360.com/auth/register?ref=ABC',
+      'https://www.myastro360.com/auth?ref=ABC',
     );
     expect(helpers.buildShareUrl('https://x.com', 'A B')).toBe(
-      'https://x.com/auth/register?ref=A%20B',
+      'https://x.com/auth?ref=A%20B',
     );
   });
 

@@ -48,6 +48,12 @@ const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17] as const;
 const PANCHANG_VARA_NAMES = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'] as const;
 const PANCHANG_TITHI_NAMES = ['Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami', 'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami', 'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima'] as const;
 const PANCHANG_YOGA_NAMES = ['Vishkambha', 'Preeti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shoola', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'] as const;
+/**
+ * Classical Nadi (0=Aadi/Vata, 1=Madhya/Pitta, 2=Antya/Kapha) per nakshatra
+ * index. This is the traditional zigzag assignment (0,1,2,2,1,0 repeating) —
+ * NOT a plain nakIdx % 3, which mislabels 8 of the 27 nakshatras.
+ */
+const NADI_BY_NAKSHATRA = [0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2] as const;
 
 // Sign lords: Aries=Mars, Taurus=Venus, Gemini=Mercury, Cancer=Moon, Leo=Sun, Virgo=Mercury, Libra=Venus, Scorpio=Mars, Sagittarius=Jupiter, Capricorn=Saturn, Aquarius=Saturn, Pisces=Jupiter
 const SIGN_LORDS = ['Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter'] as const;
@@ -398,6 +404,17 @@ export class AstrologyService {
   async generateKundli(userId: string, birthDetails: BirthDetails, locale?: string): Promise<KundliResult> {
     this.logger.log(`Generating Kundli for user: ${userId}`);
     assertValidBirthDetails(birthDetails);
+    // The web kundli form sends only a place LABEL (no lat/lng), so without this
+    // every web-generated chart was silently computed at the Delhi/IST fallback —
+    // wrong ascendant/houses for anyone not born there. Resolve the user's stored
+    // birth coordinates when the caller didn't supply them, mirroring
+    // getBazi/getWesternNatal.
+    if (birthDetails.latitude == null || birthDetails.longitude == null) {
+      const coords = await this.resolveUserBirthCoords(userId);
+      if (coords) {
+        birthDetails = { ...birthDetails, latitude: coords.lat, longitude: coords.lng };
+      }
+    }
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
     return this.userService.deductWithRefund(userId, creditCost, 'Kundli generation', async () => {
       const chartData = await this.generateAIKundli(birthDetails);
@@ -757,7 +774,7 @@ export class AstrologyService {
       const moonLng = moonPos.degree + (ALL_SIGNS.indexOf(moonPos.sign as any) * 30);
       const moonNakIdx = Math.floor(((moonLng % 360 + 360) % 360) / (360 / 27)) % 27;
       const nadiTypes = ['Aadi (Vata)', 'Madhya (Pitta)', 'Antya (Kapha)'];
-      const nadiType = nadiTypes[moonNakIdx % 3];
+      const nadiType = nadiTypes[NADI_BY_NAKSHATRA[moonNakIdx] ?? 0];
       doshas.push({
         key: 'nadi',
         name: 'Nadi Dosha',
@@ -1130,7 +1147,13 @@ export class AstrologyService {
     // Tara (3 pts): Count nakshatras from bride to groom, divide by 9, check remainder
     const taraDiff = ((m2.nakIdx - m1.nakIdx + 27) % 27);
     const taraRemainder = taraDiff % 9;
-    const auspiciousTara = [1, 2, 4, 6, 8]; // 2nd, 3rd, 5th, 7th, 9th are favorable
+    // Tara position = taraRemainder + 1. The auspicious taras are 2 (Sampat),
+    // 4 (Kshema), 6 (Sadhaka), 8 (Mitra) and 9 (Ati-Mitra) — i.e. remainders
+    // {1,3,5,7,8}. The old set {1,2,4,6,8} treated the INAUSPICIOUS 3rd (Vipat),
+    // 5th (Pratyari) and 7th (Vadha) taras as favorable and the favorable
+    // 4th/6th/8th as unfavorable — exactly backwards. Remainder 0 = Janma
+    // (own star) scores the neutral partial point.
+    const auspiciousTara = [1, 3, 5, 7, 8];
     const taraScore = auspiciousTara.includes(taraRemainder) ? 3 : taraRemainder === 0 ? 1 : 0;
 
     // Yoni (4 pts): Traditional 14-animal system based on nakshatra
@@ -1149,12 +1172,16 @@ export class AstrologyService {
     const lord2 = signLords[m2.signIdx];
     // Friendship matrix: 2=best friend, 1=friend, 0=neutral, -1=enemy, -2=bitter enemy
     const friendshipTable: Record<string, number> = {
-      '0-1': 1, '0-2': 1, '0-4': 1, '0-3': -1, '0-5': -1, '0-6': -1,
+      // Naisargika (natural) planetary friendships. Corrected against the
+      // classical maitri table: Sun→Mercury is neutral (was -1); Mercury→Sun is
+      // a friend (was -1); Mercury→Moon is an enemy (was 0); Venus→Moon is an
+      // enemy (was 0). The table is intentionally asymmetric (Graha Maitri is).
+      '0-1': 1, '0-2': 1, '0-4': 1, '0-3': 0, '0-5': -1, '0-6': -1,
       '1-0': 1, '1-3': 1, '1-2': 0, '1-4': 0, '1-5': 0, '1-6': 0,
       '2-0': 1, '2-1': 1, '2-4': 1, '2-3': -1, '2-5': 0, '2-6': 0,
-      '3-0': -1, '3-5': 1, '3-1': 0, '3-2': 0, '3-4': 0, '3-6': 0,
+      '3-0': 1, '3-5': 1, '3-1': -1, '3-2': 0, '3-4': 0, '3-6': 0,
       '4-0': 1, '4-1': 1, '4-2': 1, '4-3': -1, '4-5': -1, '4-6': 0,
-      '5-3': 1, '5-6': 1, '5-0': -1, '5-1': 0, '5-2': 0, '5-4': 0,
+      '5-3': 1, '5-6': 1, '5-0': -1, '5-1': -1, '5-2': 0, '5-4': 0,
       '6-3': 1, '6-5': 1, '6-0': -1, '6-1': -1, '6-2': -1, '6-4': 0,
     };
     const fKey = `${lord1}-${lord2}`;
@@ -1171,14 +1198,25 @@ export class AstrologyService {
     const ganaMap = [0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0];
     const g1 = ganaMap[m1.nakIdx];
     const g2 = ganaMap[m2.nakIdx];
-    const ganaScore = g1 === g2 ? 6 : (g1 === 0 && g2 === 1) || (g1 === 1 && g2 === 0) ? 3 : 0;
+    // Standard Gana Milan grid (0=Deva,1=Manushya,2=Rakshasa): same gana 6;
+    // Deva+Manushya are compatible (6, not the old 3); Deva+Rakshasa 1 (not 0);
+    // Manushya+Rakshasa 0 (the genuinely incompatible pairing).
+    const ganaPoints: Record<string, number> = {
+      '0-0': 6, '1-1': 6, '2-2': 6,
+      '0-1': 6, '1-0': 6,
+      '0-2': 1, '2-0': 1,
+      '1-2': 0, '2-1': 0,
+    };
+    const ganaScore = ganaPoints[`${g1}-${g2}`] ?? 0;
 
     // Bhakoot (7 pts): 2/12, 5/9, 6/8 apart = dosha. Order-independent; same sign = 7.
     // (See guna.util.computeBhakootScore for the symmetric rule + tests.)
     const bhakootScore = computeBhakootScore(m1.signIdx, m2.signIdx);
 
-    // Nadi (8 pts): Based on nakshatra's Nadi (Aadi, Madhya, Antya)
-    const nadiMap = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2];
+    // Nadi (8 pts): classical zigzag assignment (see NADI_BY_NAKSHATRA), NOT a
+    // plain nakIdx%3 — the naive map got 8 of 27 nakshatras wrong, which could
+    // both miss a real Nadi Dosha and invent one that isn't there.
+    const nadiMap = NADI_BY_NAKSHATRA;
     const n1 = nadiMap[m1.nakIdx];
     const n2 = nadiMap[m2.nakIdx];
     const nadiScore = n1 !== n2 ? 8 : 0; // Same Nadi = 0 (Nadi Dosha)
@@ -1199,7 +1237,11 @@ export class AstrologyService {
     const activePeriod = period || 'daily';
     const activeTradition = tradition || 'VEDIC';
     const today = new Date().toISOString().split('T')[0];
-    const cacheKey = `horoscope:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${today}`;
+    // The generated content is locale-specific (callOpenAI appends the locale
+    // instruction), so the locale MUST be part of the cache key — otherwise the
+    // first language requested each day is served to every other language for 24h.
+    const localeKey = (locale || 'en').toLowerCase();
+    const cacheKey = `horoscope:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${localeKey}:${today}`;
     const cached = await this.cacheService.get<HoroscopeResult>(cacheKey);
     if (cached) return cached;
 
@@ -1544,7 +1586,7 @@ export class AstrologyService {
    */
   async getWesternNatal(
     userId: string,
-    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; latitude?: number; longitude?: number; locale?: string },
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; latitude?: number; longitude?: number; locale?: string; alreadyUtc?: boolean },
   ) {
     assertValidBirthDetails({
       dateOfBirth: dto.dateOfBirth,
@@ -1564,11 +1606,17 @@ export class AstrologyService {
     // it were already UTC — an up-to-±14h error that put the tropical ascendant
     // multiple signs off and poisoned synastry/horary/decumbiture (which reuse
     // this chart). Falls back to IST when coordinates are unknown.
-    const utHour = resolveUtHour({
-      year, month, day, hour, minute,
-      latitude: coords?.lat ?? null,
-      longitude: coords?.lng ?? null,
-    });
+    // When alreadyUtc is set the caller passed a real UTC instant (e.g. horary /
+    // decumbiture "now"), so the date/time are ALREADY UT — using them directly
+    // avoids the double timezone shift that resolveUtHour would apply by treating
+    // them as civil wall-clock at the birthplace.
+    const utHour = dto.alreadyUtc
+      ? hour + minute / 60
+      : resolveUtHour({
+          year, month, day, hour, minute,
+          latitude: coords?.lat ?? null,
+          longitude: coords?.lng ?? null,
+        });
     const jd = swisseph.swe_julday(year, month, day, utHour, swisseph.SE_GREG_CAL);
     const sunLon = this.tropicalLongitude(jd, swisseph.SE_SUN);
     const moonLon = this.tropicalLongitude(jd, swisseph.SE_MOON);
@@ -1669,6 +1717,10 @@ export class AstrologyService {
     const natal = await this.getWesternNatal(userId, {
       dateOfBirth: now.toISOString().slice(0, 10),
       timeOfBirth: now.toISOString().slice(11, 16),
+      // "now" is a UTC instant — cast it directly rather than treating the UTC
+      // wall clock as civil time at the birthplace (which double-shifted the
+      // horary chart by the birthplace offset, ~5.5h for India).
+      alreadyUtc: true,
     });
     const ascSign = natal.ascendant.sign;
     const moonSign = natal.planets.find(p => p.planet === 'Moon')?.sign ?? 'unknown';
@@ -1820,8 +1872,12 @@ export class AstrologyService {
 
     const harmonious = aspects.filter(a => a.quality === 'harmonious').length;
     const challenging = aspects.filter(a => a.quality === 'challenging').length;
-    const totalPossible = Math.max(aspects.length, 1);
-    const score = Math.round((harmonious / totalPossible) * 100);
+    // With zero detected cross-aspects, harmonious/challenging are both 0 — report
+    // a neutral 50 rather than 0% (which wrongly renders as "challenging /
+    // maximum friction"). Absence of aspects is not friction.
+    const score = aspects.length === 0
+      ? 50
+      : Math.round((harmonious / aspects.length) * 100);
 
     const summaryKey = score >= 60
       ? 'western-synastry.summary.harmonious'
@@ -1948,7 +2004,10 @@ export class AstrologyService {
     const y = year ?? new Date().getUTCFullYear();
     // Annual facing star = 11 - (year mod 9), adjust for Period 9 (2024+).
     // Compact deterministic formula: center star = ((year - 1) mod 9) + 1 reversed.
-    const centerStar = ((11 - ((y - 1) % 9)) % 9) || 9;
+    // Annual center star runs backwards from the year's digit root: use y % 9,
+    // not (y - 1) % 9, which shifted the whole 9-palace grid by one every year
+    // (e.g. 2025 is the 2-Black year; the old formula returned 3).
+    const centerStar = ((11 - (y % 9)) % 9) || 9;
     // Build grid walking the Lo Shu path: center, NW, W, NE, S, N, SW, E, SE
     const path = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // base Lo Shu
     const offset = centerStar - 5;
@@ -2078,11 +2137,16 @@ export class AstrologyService {
     dto: { decumbitureDate?: string; decumbitureTime?: string; symptomsDescription?: string; locale?: string },
   ) {
     const now = new Date();
+    // Only the pure-default "now" is a UTC instant (cast it directly); a
+    // user-supplied decumbiture date/time is civil wall-clock at their location
+    // and must go through the normal timezone conversion.
+    const usingNow = !dto.decumbitureDate && !dto.decumbitureTime;
     const dateStr = dto.decumbitureDate || now.toISOString().slice(0, 10);
     const timeStr = dto.decumbitureTime || now.toISOString().slice(11, 16);
     const natal = await this.getWesternNatal(userId, {
       dateOfBirth: dateStr,
       timeOfBirth: timeStr,
+      alreadyUtc: usingNow,
     });
     const elementOf = (sign: string): string => {
       const map: Record<string, string> = {
@@ -2173,11 +2237,17 @@ export class AstrologyService {
     const heavenlyStems = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
     const earthlyBranches = ['Zi', 'Chou', 'Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai'];
     const stemElements = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
-    // Days since a known Jia-Zi epoch (1900-01-31 was Jia-Zi day in the 60-day cycle).
+    // 1900-01-31 is actually the 41st day of the 60-day sexagenary cycle
+    // (index 40 = Jia-Chen), NOT Jia-Zi, so day 0 must map to cycle index 40.
+    // The old code assumed Jia-Zi (index 0): the stem stayed correct only
+    // because 40 ≡ 0 (mod 10), but the earthly branch/animal was shifted by 4
+    // for every birth date. Offsetting by +40 realigns it. (Verified against
+    // 1949-10-01, the canonical Jia-Zi day, which now resolves to Jia-Zi.)
     const epoch = Date.UTC(1900, 0, 31);
     const daysSinceEpoch = Math.floor((date.getTime() - epoch) / 86400000);
-    const stemIdx = ((daysSinceEpoch % 10) + 10) % 10;
-    const branchIdx = ((daysSinceEpoch % 12) + 12) % 12;
+    const cycleIdx = (((daysSinceEpoch + 40) % 60) + 60) % 60;
+    const stemIdx = cycleIdx % 10;
+    const branchIdx = cycleIdx % 12;
     return {
       heavenlyStem: heavenlyStems[stemIdx],
       earthlyBranch: earthlyBranches[branchIdx],
@@ -2219,11 +2289,19 @@ export class AstrologyService {
   }
 
   async getPanchang(lat?: number, lng?: number, locale?: string): Promise<PanchangResult> {
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    // Default to Delhi if no location provided
+    // Default to Delhi if no location provided.
     const pLat = lat ?? 28.6139;
     const pLng = lng ?? 77.2090;
+    // Derive "today" in the LOCATION's local civil time (offset ≈ lng/15 hours),
+    // not the server's UTC clock — otherwise users near midnight (e.g. before
+    // 05:30 IST) were shown the PREVIOUS day's panchang. A longitude
+    // approximation (no DST) is sufficient for selecting the lunar day/vara.
+    const localNow = new Date(Date.now() + (pLng / 15) * 3600 * 1000);
+    const year = localNow.getUTCFullYear();
+    const month = localNow.getUTCMonth() + 1;
+    const day = localNow.getUTCDate();
+    const weekday = localNow.getUTCDay();
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const localeKey = locale || 'en';
     const cacheKey = `panchang:${dateStr}:${pLat.toFixed(2)}:${pLng.toFixed(2)}:${localeKey}`;
     const cached = await this.cacheService.get<PanchangResult>(cacheKey);
@@ -2242,7 +2320,7 @@ export class AstrologyService {
     // Swiss Ephemeris: Sun & Moon at LOCAL NOON for this longitude (UT = 12 −
     // lng/15h), not a fixed 0:30 UT (~6:00 IST), so the lunar day is correct
     // for non-Indian coordinates too.
-    const jd = swisseph.swe_julday(today.getFullYear(), today.getMonth() + 1, today.getDate(), 12 - pLng / 15, swisseph.SE_GREG_CAL);
+    const jd = swisseph.swe_julday(year, month, day, 12 - pLng / 15, swisseph.SE_GREG_CAL);
     const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
     const sunResult = swisseph.swe_calc_ut(jd, swisseph.SE_SUN, flags);
     const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags);
@@ -2255,7 +2333,9 @@ export class AstrologyService {
     const elongation = ((moonTropical.longitude - sunTropical.longitude) % 360 + 360) % 360;
     const tithiIdx = Math.floor(elongation / 12) % 30;
     const paksha = tithiIdx < 15 ? 'Shukla' : 'Krishna';
-    const tithiName = PANCHANG_TITHI_NAMES[tithiIdx % 15];
+    // tithiIdx 29 is the new moon (Amavasya); tithiIdx % 15 would mislabel it as
+    // the full-moon 'Purnima'. (tithiLabel() already encodes this rule.)
+    const tithiName = tithiIdx === 29 ? 'Amavasya' : PANCHANG_TITHI_NAMES[tithiIdx % 15];
 
     // Nakshatra from Moon's sidereal longitude
     const nakIdx = Math.floor(moonSid / (360 / 27)) % 27;
@@ -2268,7 +2348,7 @@ export class AstrologyService {
     const karanaIdx = (tithiIdx * 2) % 11;
 
     // Sunrise/sunset using astronomical formula (Swiss Eph swe_rise_trans is unreliable in this binding)
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    const dayOfYear = Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 86400000);
     const declination = 23.45 * Math.sin(2 * Math.PI * (284 + dayOfYear) / 365);
     const latRad = pLat * Math.PI / 180;
     const decRad = declination * Math.PI / 180;
@@ -2297,13 +2377,13 @@ export class AstrologyService {
       nakshatra: NAKSHATRA_NAMES[nakIdx],
       yoga: PANCHANG_YOGA_NAMES[yogaIdx],
       karana: karanaNames[karanaIdx],
-      vara: PANCHANG_VARA_NAMES[today.getDay()],
+      vara: PANCHANG_VARA_NAMES[weekday],
       sunrise: formatHour(sunriseHour),
       sunset: formatHour(sunsetHour),
       moonrise: formatHour(moonriseHour),
-      rahukaal: rahuKaals[today.getDay()],
-      gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][today.getDay()],
-      yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][today.getDay()],
+      rahukaal: rahuKaals[weekday],
+      gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][weekday],
+      yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][weekday],
     };
     const localizedResult = await this.localizePanchang(result, locale);
     await this.cacheService.set(cacheKey, localizedResult, 24 * 60 * 60 * 1000);
@@ -2990,8 +3070,12 @@ export class AstrologyService {
     // refunded.
     const divisorMap: Record<string, number> = { '9': 9, '10': 10, 'navamsa': 9, 'dashamsha': 10 };
     const divisor = divisorMap[type.toLowerCase()] || parseInt(type, 10);
-    if (!divisor || divisor < 2 || divisor > 60) {
-      throw new BadRequestException('Invalid divisional chart type. Use 9 (Navamsa), 10 (Dashamsha), or a number 2-60.');
+    // Only D9 (Navamsa) and D10 (Dashamsha) have classically-correct math here.
+    // The generic varga formula does NOT match the Parashari rules for other
+    // divisors (D2/D3/D7/D12/D30/D60…), so refuse them rather than charge a
+    // credit for a chart that disagrees with every standard reference.
+    if (divisor !== 9 && divisor !== 10) {
+      throw new BadRequestException('Only Navamsa (D9) and Dashamsha (D10) divisional charts are supported.');
     }
     assertValidBirthDetails(birthDetails);
     const creditCost = this.configService.get<number>('credits.kundliCost', 2);
@@ -3086,34 +3170,41 @@ export class AstrologyService {
       degree: parseFloat((ketuLng % 30).toFixed(4)),
     });
 
-    // Cusp analysis with sub-lords
+    // Cusp analysis with sub-lords. The binding's `cusps` array is 0-indexed:
+    // cusps[0] is the 1st-house cusp (ascendant), cusps[11] the 12th — see the
+    // bhavaOf helper above. Indexing cusps[i] for i=1..12 shifted every cusp by
+    // one house and made cusp 12 fall back to a fabricated longitude.
     const cuspAnalysis = [];
+    const cuspSignIdx: number[] = []; // cuspSignIdx[h-1] = sidereal sign index of house h's cusp
+    const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
     for (let i = 1; i <= 12; i++) {
-      const cuspLng = cusps[i] ? ((cusps[i] % 360 + 360) % 360) : ((i - 1) * 30);
-      // Apply ayanamsa for sidereal
-      const ayanamsa = swisseph.swe_get_ayanamsa_ut(jd);
+      const raw = cusps[i - 1];
+      const cuspLng = Number.isFinite(raw) ? ((raw % 360 + 360) % 360) : ((i - 1) * 30);
       const sidCusp = ((cuspLng - ayanamsa + 360) % 360);
       const cuspNakIdx = Math.floor(sidCusp / nakshatraSpan) % 27;
+      const signIdx = Math.floor(sidCusp / 30) % 12;
+      cuspSignIdx.push(signIdx);
       cuspAnalysis.push({
         cusp: i,
         longitude: parseFloat(sidCusp.toFixed(4)),
-        sign: ALL_SIGNS[Math.floor(sidCusp / 30) % 12],
+        sign: ALL_SIGNS[signIdx],
         nakshatra: NAKSHATRA_NAMES[cuspNakIdx],
         starLord: DASHA_LORDS[cuspNakIdx % 9],
         subLord: this.getKPSubLord(sidCusp, subLordTable),
       });
     }
 
-    // Significators: planets signify houses through star-lord and sub-lord connections
+    // Significators: a planet signifies a house whose ACTUAL cusp sign (from
+    // cuspAnalysis) is ruled by the planet's star-lord. The old `SIGN_LORDS[h] ->
+    // house h+1` mapping assumed house N carries sign N (an Aries ascendant),
+    // which is wrong for ~11/12 of charts.
     const significators: Record<number, string[]> = {};
     for (let h = 1; h <= 12; h++) significators[h] = [];
     for (const pp of planetPositions) {
-      // A planet signifies a house if its star-lord owns that house
-      for (let h = 0; h < 12; h++) {
-        if (SIGN_LORDS[h] === pp.starLord) {
-          const houseNum = h + 1;
-          if (!significators[houseNum].includes(pp.planet)) {
-            significators[houseNum].push(pp.planet);
+      for (let h = 1; h <= 12; h++) {
+        if (SIGN_LORDS[cuspSignIdx[h - 1]] === pp.starLord) {
+          if (!significators[h].includes(pp.planet)) {
+            significators[h].push(pp.planet);
           }
         }
       }

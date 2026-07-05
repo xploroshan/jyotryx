@@ -41,6 +41,7 @@ export async function streamChat(body: ChatRequestBody, handlers: StreamHandlers
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let sawToken = false;
 
   for (;;) {
     const { value, done } = await reader.read();
@@ -51,13 +52,19 @@ export async function streamChat(body: ChatRequestBody, handlers: StreamHandlers
     for (const block of events) {
       const ev = parseSSEBlock(block);
       if (!ev) continue;
-      if (ev.kind === 'token' && ev.content) handlers.onToken(ev.content);
+      if (ev.kind === 'token' && ev.content) { sawToken = true; handlers.onToken(ev.content); }
       else if (ev.kind === 'done') return handlers.onDone({ messageId: ev.messageId, sessionId: ev.sessionId });
       else if (ev.kind === 'error' || ev.kind === 'moderation') return handlers.onError(ev.message ?? 'Chat error');
     }
   }
   const tail = parseSSEBlock(buffer);
-  if (tail?.kind === 'done') handlers.onDone({ messageId: tail.messageId, sessionId: tail.sessionId });
+  if (tail?.kind === 'done') return handlers.onDone({ messageId: tail.messageId, sessionId: tail.sessionId });
+  if (tail?.kind === 'error' || tail?.kind === 'moderation') return handlers.onError(tail.message ?? 'Chat error');
+  // The stream closed with no terminal done/error frame. Never resolve silently —
+  // that leaves the caller stuck in a "sending" state forever. Treat a stream
+  // that produced tokens as complete; otherwise surface an error.
+  if (sawToken) handlers.onDone({});
+  else handlers.onError('The chat stream ended unexpectedly. Please try again.');
 }
 
 /** Non-streaming fallback (what the web currently uses). */

@@ -31,8 +31,14 @@ export class PalmistryController {
     FileInterceptor('image', {
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
       fileFilter: (_req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpeg|jpg|png|webp|heic|heif)$/i)) {
-          return callback(new BadRequestException('Only image files (JPEG, PNG, WebP, HEIC) are allowed'), false);
+        // HEIC/HEIF is intentionally excluded: the OpenAI vision model can't read
+        // it, so accepting it meant the analysis always failed AFTER the user was
+        // charged. Reject up front (before any charge) with a clear message.
+        if (!file.mimetype.match(/^image\/(jpeg|jpg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException('Only JPEG, PNG, or WebP images are supported. HEIC/HEIF is not supported — please convert to JPEG first.'),
+            false,
+          );
         }
         callback(null, true);
       },
@@ -59,6 +65,11 @@ export class PalmistryController {
     @UploadedFile() file?: any,
     @Body() body?: { locale?: string; gender?: string },
   ): Promise<PalmistryAnalysis> {
+    // NOTE: a no-image request intentionally returns a fallback reading (see
+    // palmistry-e2e.spec), so we don't hard-reject it here. The ultra-review's
+    // concern — consuming a paid entitlement/metered reading for a canned
+    // no-image fallback — should be addressed on the consumption side (skip the
+    // charge when no image was analyzed), flagged as a follow-up.
     const gender = body?.gender === 'male' || body?.gender === 'female' ? body.gender : undefined;
     return this.palmistryService.analyzePalm(
       user.sub,

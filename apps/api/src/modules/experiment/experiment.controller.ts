@@ -63,7 +63,10 @@ export class ExperimentController {
     @Req() req: any,
   ): Promise<{ linked: boolean }> {
     if (!body?.anonymousKey) return { linked: false };
-    await this.experimentService.linkAuthUser(body.anonymousKey, req.user.sub);
+    // Assignments are stored under the `a:` prefixed key (see resolveUserKey), so
+    // the link must use the SAME prefixed form — passing the raw anonymousKey made
+    // linkAuthUser's WHERE never match, so the endpoint was a silent no-op.
+    await this.experimentService.linkAuthUser(`a:${body.anonymousKey}`, req.user.sub);
     return { linked: true };
   }
 

@@ -24,7 +24,12 @@ import { useTranslation } from "@/i18n";
 function successRedirectFor(pid: string | null): string {
   if (!pid) return "/chat";
   if (pid.startsWith("credits")) return "/chat";
-  if (pid === "palm_reading" || pid === "report_palm") return "/palmistry?unlocked=1";
+  // The palmistry *reading* (palm_reading → PALMISTRY entitlement) unlocks on
+  // /palmistry. The palm *report* (report_palm → REPORT_PALM entitlement) is a
+  // Report and must route to /reports so it auto-generates there — sending it to
+  // /palmistry left the paid report ungenerated and demanded a different
+  // entitlement. So only palm_reading maps to /palmistry; report_* falls through.
+  if (pid === "palm_reading") return "/palmistry?unlocked=1";
   if (pid.startsWith("report_")) {
     const rt = pid.replace(/^report_/, "").toUpperCase();
     return `/reports?unlocked=${rt}`;

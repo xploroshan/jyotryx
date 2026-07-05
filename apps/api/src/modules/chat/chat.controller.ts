@@ -38,6 +38,9 @@ export class ChatController {
     return this.chatService.sendMessage(user.sub, dto);
   }
 
+  // Same LLM-billed work as POST /message, so it must carry the same tighter
+  // per-user cap; without it the SSE endpoint inherited only the global 60/min.
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('stream')
   @Sse()
   @ApiOperation({ summary: 'Send a message and stream the AI response via SSE' })

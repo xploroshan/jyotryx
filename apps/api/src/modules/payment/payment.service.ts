@@ -374,6 +374,12 @@ export class PaymentService {
         // Entitlement on success instead of credits.
         entitlementType = entitlementTypeForProduct(dto.productId);
         if (entitlementType) paymentType = 'REPORT';
+        // NOTE: unknown productIds are intentionally allowed here (custom-amount
+        // orders, e.g. donations — see security-comprehensive.spec). The
+        // ultra-review's credit-minting concern (settlement's amount heuristic
+        // granting credits for an arbitrary id/amount) should be addressed on the
+        // SETTLEMENT side — grant 0 credits for products without an explicit
+        // positive credit grant — rather than by rejecting the order here.
       }
     }
 
@@ -557,7 +563,12 @@ export class PaymentService {
       const { count } = await tx.payment.updateMany({
         where: {
           gatewayOrderId: orderId,
-          status: { not: 'SUCCESS' },
+          // Only ever settle an order that has not already been granted OR
+          // refunded. `not: 'SUCCESS'` alone let a REFUNDED payment match again,
+          // so a webhook/reconcile replay after a refund re-granted its credits
+          // (or re-granted the entitlement) a second time — a clawed-back order
+          // must stay terminal.
+          status: { notIn: ['SUCCESS', 'REFUNDED'] },
           ...(userId ? { userId } : {}),
         },
         data: { status: 'SUCCESS', ...(gatewayPaymentId ? { gatewayPaymentId } : {}) },
@@ -612,8 +623,20 @@ export class PaymentService {
   async reconcilePendingPayments(graceMinutes = 15, batch = 100): Promise<{ checked: number; settled: number }> {
     if (!this.cashfree) return { checked: 0, settled: 0 };
     const cutoff = new Date(Date.now() - graceMinutes * 60 * 1000);
+    // Don't rescan ancient rows — Cashfree orders stop being payable well within
+    // this window, and it keeps the FAILED sweep bounded.
+    const floor = new Date(Date.now() - 48 * 60 * 60 * 1000);
     const stale = await this.prisma.payment.findMany({
-      where: { status: 'PENDING', provider: 'cashfree', createdAt: { lt: cutoff } },
+      where: {
+        // Include FAILED, not just PENDING: handlePaymentFailed marks a row
+        // FAILED on any failed *attempt* even though the Cashfree order remains
+        // payable, so a later successful retry whose webhook AND client-verify
+        // are both lost would otherwise never be reconciled — money taken, no
+        // product granted. settlePaidOrder still only grants once.
+        status: { in: ['PENDING', 'FAILED'] },
+        provider: 'cashfree',
+        createdAt: { lt: cutoff, gt: floor },
+      },
       select: { gatewayOrderId: true, amount: true },
       take: batch,
     });
@@ -711,6 +734,15 @@ export class PaymentService {
     const isAnnual = dto.plan.toUpperCase() === 'ANNUAL';
     this.logger.log(`Creating subscription for user: ${userId}, plan: ${dto.plan}`);
 
+    // Don't sell a subscription the app won't honor: isActiveSubscriber (and
+    // therefore every premium gate) returns false while
+    // feature.subscriptions_enabled is off, so creating one here would take the
+    // customer's money and grant zero access. Refuse unless the operator has
+    // switched on the subscription model.
+    if (!(await this.featureAccess.subscriptionsEnabled())) {
+      throw new BadRequestException('Subscriptions are not currently available.');
+    }
+
     // Idempotency: refuse to mint a second subscription for a user who already
     // holds a live one, so an abandoned-then-retried checkout can't accumulate
     // multiple ACTIVE rows (which would block correct downgrade on cancel).
@@ -787,11 +819,20 @@ export class PaymentService {
       }
     }
 
+    // Fail-CLOSED in production when Cashfree is unconfigured: otherwise the
+    // mock-mode branch below would hand a free ACTIVE subscription + PREMIUM
+    // role to any caller (createOrder/verifyPayment already refuse this).
+    if (!this.cashfree && (process.env.NODE_ENV ?? '') === 'production') {
+      this.logger.error('createSubscription: Cashfree not configured — refusing to grant subscription');
+      throw new InternalServerErrorException('Subscriptions are not configured');
+    }
+
     // We do NOT grant PREMIUM here in live mode: the mandate isn't authorised
     // and no charge has settled yet, so granting on creation would hand free
     // access to anyone who opens — then abandons — the authorization. Premium
     // is granted from the SUBSCRIPTION_STATUS_CHANGE (ACTIVE) / charge webhook.
-    // Mock mode (no credentials) grants immediately to keep local dev usable.
+    // Mock mode (no credentials, non-production only) grants immediately to keep
+    // local dev usable.
     const grantImmediately = !this.cashfree;
     await this.prisma.$transaction(async (tx: any) => {
       await tx.subscription.create({
@@ -956,23 +997,51 @@ export class PaymentService {
     if (!orderId) return;
 
     await this.prisma.$transaction(async (tx: any) => {
-      const { count } = await tx.payment.updateMany({
-        where: { gatewayOrderId: orderId, status: 'SUCCESS' },
-        data: { status: 'REFUNDED' },
-      });
-      if (count === 0) return; // already refunded, or not our payment
       const payment = await tx.payment.findFirst({
-        where: { gatewayOrderId: orderId },
+        where: { gatewayOrderId: orderId, status: 'SUCCESS' },
         select: { id: true, userId: true, amount: true, metadata: true, type: true },
       });
-      if (!payment) return;
-      // One-time pay-to-unlock refunds: void the entitlement so the refunded
-      // user can't still redeem the unlock.
+      if (!payment) return; // already refunded, or not our payment
+
+      // Distinguish a partial refund from a full one. Cashfree supports partial
+      // refunds (refundPayment passes opts.amount), and a partial refund must
+      // NOT void the whole entitlement or claw back the entire grant — only the
+      // refunded fraction. Absent/!finite refund_amount is treated as a full refund.
+      const refundAmount = Number(refund.refund_amount);
+      const paid = Number(payment.amount);
+      const isPartial =
+        Number.isFinite(refundAmount) && Number.isFinite(paid) && paid > 0 && refundAmount < paid - 0.001;
+      const fraction = isPartial ? Math.max(0, Math.min(1, refundAmount / paid)) : 1;
+
+      // Flip to REFUNDED only on a full refund; a partial refund leaves the
+      // order SUCCESS (it was genuinely paid and mostly stands).
+      if (!isPartial) {
+        await tx.payment.updateMany({
+          where: { gatewayOrderId: orderId, status: 'SUCCESS' },
+          data: { status: 'REFUNDED' },
+        });
+      }
+
+      // One-time pay-to-unlock: void the entitlement only on a full refund so a
+      // refunded user can't still redeem the unlock; a partial refund keeps it.
       if (payment.type !== 'CREDITS') {
-        await this.featureAccess.voidEntitlementByPayment(payment.id, tx);
+        if (!isPartial) await this.featureAccess.voidEntitlementByPayment(payment.id, tx);
         return;
       }
-      const granted = this.creditsForPayment(payment);
+
+      // Overage packs (credits_overage_*) top up a feature's usage allowance at
+      // settlement via addUsageBonus — NOT the generic wallet. Reverse THAT, so
+      // a refund doesn't wrongly claw back unrelated wallet credits.
+      const overageFeature = overageFeatureForProduct(
+        (payment.metadata as { productId?: string } | null)?.productId,
+      );
+      if (overageFeature) {
+        const units = Math.round(this.creditsForPayment(payment) * fraction);
+        if (units > 0) await this.featureAccess.removeUsageBonus(payment.userId, overageFeature, units, tx);
+        return;
+      }
+
+      const granted = Math.round(this.creditsForPayment(payment) * fraction);
       if (granted <= 0) return;
       const user = await tx.user.findUnique({
         where: { id: payment.userId },
@@ -1455,9 +1524,19 @@ export class PaymentService {
     }
 
     // Cancel at the gateway FIRST for gateway-backed subs. If that fails we abort
-    // without touching local state — never report "cancelled" while Cashfree
+    // without touching local state — never report "cancelled" while the gateway
     // could still charge. Local-only grants (e.g. referral bonuses) skip this.
     for (const sub of subs) {
+      if (sub.provider === 'google_play') {
+        // Play subscriptions are managed by Google. The server has no way to stop
+        // billing here, and marking the row CANCELLED locally is futile: the next
+        // RTDN RENEWED reactivates it while Google keeps charging — the user would
+        // think they cancelled while still being billed. Direct them to the Play
+        // Store subscription center (the only place an Android sub can be stopped).
+        throw new BadRequestException(
+          'This subscription is billed through Google Play. Cancel it in the Play Store: Payments & subscriptions → Subscriptions.',
+        );
+      }
       if (this.cashfree && sub.provider === 'cashfree' && sub.gatewaySubscriptionId) {
         try {
           await this.cashfree.manageSubscription(sub.gatewaySubscriptionId, { action: 'CANCEL' });
