@@ -2289,11 +2289,19 @@ export class AstrologyService {
   }
 
   async getPanchang(lat?: number, lng?: number, locale?: string): Promise<PanchangResult> {
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    // Default to Delhi if no location provided
+    // Default to Delhi if no location provided.
     const pLat = lat ?? 28.6139;
     const pLng = lng ?? 77.2090;
+    // Derive "today" in the LOCATION's local civil time (offset ≈ lng/15 hours),
+    // not the server's UTC clock — otherwise users near midnight (e.g. before
+    // 05:30 IST) were shown the PREVIOUS day's panchang. A longitude
+    // approximation (no DST) is sufficient for selecting the lunar day/vara.
+    const localNow = new Date(Date.now() + (pLng / 15) * 3600 * 1000);
+    const year = localNow.getUTCFullYear();
+    const month = localNow.getUTCMonth() + 1;
+    const day = localNow.getUTCDate();
+    const weekday = localNow.getUTCDay();
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const localeKey = locale || 'en';
     const cacheKey = `panchang:${dateStr}:${pLat.toFixed(2)}:${pLng.toFixed(2)}:${localeKey}`;
     const cached = await this.cacheService.get<PanchangResult>(cacheKey);
@@ -2312,7 +2320,7 @@ export class AstrologyService {
     // Swiss Ephemeris: Sun & Moon at LOCAL NOON for this longitude (UT = 12 −
     // lng/15h), not a fixed 0:30 UT (~6:00 IST), so the lunar day is correct
     // for non-Indian coordinates too.
-    const jd = swisseph.swe_julday(today.getFullYear(), today.getMonth() + 1, today.getDate(), 12 - pLng / 15, swisseph.SE_GREG_CAL);
+    const jd = swisseph.swe_julday(year, month, day, 12 - pLng / 15, swisseph.SE_GREG_CAL);
     const flags = swisseph.SEFLG_SIDEREAL | swisseph.SEFLG_SPEED;
     const sunResult = swisseph.swe_calc_ut(jd, swisseph.SE_SUN, flags);
     const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, flags);
@@ -2340,7 +2348,7 @@ export class AstrologyService {
     const karanaIdx = (tithiIdx * 2) % 11;
 
     // Sunrise/sunset using astronomical formula (Swiss Eph swe_rise_trans is unreliable in this binding)
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    const dayOfYear = Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 0)) / 86400000);
     const declination = 23.45 * Math.sin(2 * Math.PI * (284 + dayOfYear) / 365);
     const latRad = pLat * Math.PI / 180;
     const decRad = declination * Math.PI / 180;
@@ -2369,13 +2377,13 @@ export class AstrologyService {
       nakshatra: NAKSHATRA_NAMES[nakIdx],
       yoga: PANCHANG_YOGA_NAMES[yogaIdx],
       karana: karanaNames[karanaIdx],
-      vara: PANCHANG_VARA_NAMES[today.getDay()],
+      vara: PANCHANG_VARA_NAMES[weekday],
       sunrise: formatHour(sunriseHour),
       sunset: formatHour(sunsetHour),
       moonrise: formatHour(moonriseHour),
-      rahukaal: rahuKaals[today.getDay()],
-      gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][today.getDay()],
-      yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][today.getDay()],
+      rahukaal: rahuKaals[weekday],
+      gulikakaal: ['03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM', '12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM'][weekday],
+      yamakantaka: ['12:00 PM - 01:30 PM', '10:30 AM - 12:00 PM', '09:00 AM - 10:30 AM', '07:30 AM - 09:00 AM', '06:00 AM - 07:30 AM', '03:00 PM - 04:30 PM', '01:30 PM - 03:00 PM'][weekday],
     };
     const localizedResult = await this.localizePanchang(result, locale);
     await this.cacheService.set(cacheKey, localizedResult, 24 * 60 * 60 * 1000);
