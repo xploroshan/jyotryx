@@ -719,7 +719,10 @@ export default function KundliPage() {
                   status: p.status,
                 })),
                 yogas: kundli.yogas?.map((y) => y.name),
-                currentMahadasha: kundli.dashas?.[0]?.planet,
+                currentMahadasha: (kundli.dashas?.find((d) => {
+                  const now = Date.now();
+                  return now >= new Date(d.startDate).getTime() && now <= new Date(d.endDate).getTime();
+                }) ?? kundli.dashas?.[0])?.planet,
               }}
             />
           </div>
