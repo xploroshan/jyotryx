@@ -146,5 +146,25 @@ describe('PalmistryService', () => {
       expect(result).toBeDefined();
       expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
     });
+
+    it('does NOT consume the entitlement for a no-image request (only a canned fallback is returned)', async () => {
+      // A no-image request produces only the generic fallback (no Vision call).
+      // Access is still resolved, but nothing is consumed — the user isn't
+      // charged a one-time unlock for a reading that was never analysed.
+      await service.analyzePalm('test-uuid');
+
+      expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+    });
+
+    it('does NOT count a metered reading for a no-image request', async () => {
+      // Subscription model (credits off): a no-image request must not burn a
+      // metered reading either.
+      featureAccess.creditsEnabled.mockResolvedValue(false);
+
+      await service.analyzePalm('test-uuid');
+
+      expect(featureAccess.incrementUsage).not.toHaveBeenCalled();
+    });
   });
 });

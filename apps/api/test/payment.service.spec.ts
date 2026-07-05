@@ -214,6 +214,39 @@ describe('PaymentService (Cashfree)', () => {
       );
     });
 
+    it('grants ZERO credits for an unknown/custom-amount order (no credit-minting from the paid amount)', async () => {
+      // A donation / custom-amount order carries no `credits` in metadata.
+      // Settlement must grant exactly what was recorded (nothing) — never infer
+      // credits from the paid amount, which previously let ₹500 mint 50 credits.
+      const p = {
+        type: 'PAYMENT_SUCCESS_WEBHOOK',
+        data: { order: { order_id: 'cf_donation_1' }, payment: { cf_payment_id: 99010 } },
+      };
+      const ts = nowTs();
+      const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
+      const txStub = {
+        payment: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          findFirstOrThrow: jest.fn().mockResolvedValue({
+            id: 'p1',
+            userId: 'test-uuid',
+            amount: 500,
+            metadata: { productId: 'custom_donation' },
+          }),
+        },
+        user: { update: jest.fn().mockResolvedValue({}) },
+        creditTransaction: { create: jest.fn().mockResolvedValue({}) },
+      };
+      prisma.$transaction = jest.fn(async (cb: any) => cb(txStub));
+
+      const result = await service.handleWebhook(p, sig, ts);
+      expect(result.received).toBe(true);
+      // The order still settles (SUCCESS), but zero credits are granted.
+      expect(txStub.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { credits: { increment: 0 } } }),
+      );
+    });
+
     it('does NOT double-grant when the row was already claimed (race loser)', async () => {
       const p = {
         type: 'PAYMENT_SUCCESS_WEBHOOK',
@@ -568,6 +601,26 @@ describe('PaymentService (Cashfree)', () => {
           data: expect.objectContaining({
             provider: 'cashfree',
             metadata: expect.objectContaining({ credits: 25, productId: 'credits_starter' }),
+          }),
+        }),
+      );
+    });
+
+    it('persists the credit count for a legacy static pack (credits_10) so settlement never infers it', async () => {
+      // credits_10 has no dynamic SiteSettings pack, so it resolves via the
+      // static price map (₹99 → 10 credits). The credit count must be captured
+      // in metadata at order time — otherwise settlement would fall back to the
+      // amount heuristic. amount 99 is validated against the static price.
+      const order = await service.createOrder('test-uuid', {
+        amount: 99,
+        productId: 'credits_10',
+      } as any);
+
+      expect(order.amount).toBe(99);
+      expect(prisma.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            metadata: expect.objectContaining({ credits: 10, productId: 'credits_10' }),
           }),
         }),
       );
