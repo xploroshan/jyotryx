@@ -117,12 +117,14 @@ export class EphemerisService implements OnModuleInit, OnModuleDestroy {
    */
   async computeCurrentChart(lat: number, lng: number): Promise<ChartResult> {
     const now = new Date();
-    // Round to nearest 5 minutes for cache alignment
-    const minute = Math.floor(now.getMinutes() / 5) * 5;
+    // ALL fields must be UTC to match tzOffset:0 — mixing server-local calendar
+    // fields (getFullYear/Month/Date/Minutes) with a UTC hour produced a chart
+    // for a nonexistent instant on any non-UTC server.
+    const minute = Math.floor(now.getUTCMinutes() / 5) * 5; // round to 5 min for cache alignment
     const input: ChartInput = {
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
-      day: now.getDate(),
+      year: now.getUTCFullYear(),
+      month: now.getUTCMonth() + 1,
+      day: now.getUTCDate(),
       hour: now.getUTCHours(),
       minute,
       lat,

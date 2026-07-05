@@ -83,9 +83,11 @@ export class GocharService {
       const dob = new Date(user.dateOfBirth);
       const [hh, mm] = (user.timeOfBirth || '6:0').split(':');
       const natal = await this.ephemerisService.computeChart({
-        year: dob.getFullYear(),
-        month: dob.getMonth() + 1,
-        day: dob.getDate(),
+        // UTC accessors: a stored DateTime read with server-local getFullYear/
+        // getMonth/getDate shifts the natal date by a day on any non-UTC server.
+        year: dob.getUTCFullYear(),
+        month: dob.getUTCMonth() + 1,
+        day: dob.getUTCDate(),
         hour: parseInt(hh, 10) || 0,
         minute: parseInt(mm, 10) || 0,
         lat: coords.lat,
@@ -123,7 +125,7 @@ export class GocharService {
         natalNakshatra: PANCHANG_NAKSHATRAS[natalNakIdx],
         dayQuality,
         luckyColor: personalizedLuckyColor(natalMoonSignIdx),
-        luckyNumber: personalizedLuckyNumber(dob.getDate()),
+        luckyNumber: personalizedLuckyNumber(dob.getUTCDate()),
         transitAlert,
         summaryInsight,
       };
