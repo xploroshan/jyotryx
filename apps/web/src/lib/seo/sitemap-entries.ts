@@ -6,6 +6,7 @@ import { LOCALIZED_PATHS } from "./feature-pages";
 import { TRADITION_PAGES } from "./tradition-pages";
 import { FEATURE_CONTENT_LOCALE } from "./feature-content";
 import { PANCHANG_SITEMAP_LOCALES } from "./panchang-city-content";
+import { LEARN_ARTICLES } from "@/lib/learn/articles";
 import { localeUrl } from "./page-metadata";
 import { todayIST, startOfWeekIST, startOfMonthIST, startOfYearIST, CONTENT_VERSION } from "./dates";
 import { PREFIXED_LANDING_LOCALES, type Locale } from "@/i18n/locales";
@@ -178,9 +179,32 @@ export function localizedPanchangCityEntries(now = new Date()): MetadataRoute.Si
   );
 }
 
+/** /learn hub + article pages — lastModified from the article's own dates. */
+export function learnEntries(): MetadataRoute.Sitemap {
+  const newest = LEARN_ARTICLES.reduce(
+    (max, a) => (a.dateModified > max ? a.dateModified : max),
+    LEARN_ARTICLES[0]?.dateModified ?? "2026-07-07",
+  );
+  return [
+    {
+      url: `${SITE_ORIGIN}/learn`,
+      lastModified: new Date(newest),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    ...LEARN_ARTICLES.map((a) => ({
+      url: `${SITE_ORIGIN}/learn/${a.slug}`,
+      lastModified: new Date(a.dateModified),
+      changeFrequency: "monthly" as const,
+      priority: 0.65,
+    })),
+  ];
+}
+
 export function allSitemapEntries(now = new Date()): MetadataRoute.Sitemap {
   return [
     ...staticEntries(now),
+    ...learnEntries(),
     ...traditionEntries(),
     ...signEntries(now),
     ...signPeriodEntries(now),

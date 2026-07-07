@@ -68,6 +68,7 @@ export default function Footer() {
       links: [
         // Pricing link only when the operator has enabled the pricing page.
         ...(pricingEnabled ? [{ label: t.common.pricing, href: "/pricing" }] : []),
+        { label: "Learn", href: "/learn" },
         { label: `${t.nav.panchang} — ${t.footer.byCity}`, href: "/panchang/cities" },
         { label: `${t.nav.kundli} — ${t.footer.byCity}`, href: "/kundli/cities" },
         { label: t.common.reports, href: "/reports" },
