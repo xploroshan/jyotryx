@@ -16,7 +16,9 @@ import { ta } from '@/i18n/ta';
 describe('localizedFeatureMetadata', () => {
   it('composes the Hindi title from the translated dictionary, not the English fallback', async () => {
     const meta = await localizedFeatureMetadata('hi', '/numerology');
-    expect(meta.title).toBe(`${hi.numerology.title} ${hi.numerology.titleHighlight} | MyAstro360`);
+    // Bare title — the root layout's title.template appends the brand suffix
+    // for <title>; og:title carries it explicitly (see page-metadata.test.ts).
+    expect(meta.title).toBe(`${hi.numerology.title} ${hi.numerology.titleHighlight}`);
     expect(meta.description).toBe(hi.numerology.description);
     // It must NOT be the English FEATURE_PAGES title.
     expect(meta.title).not.toBe(FEATURE_PAGES['/numerology'].title);
@@ -24,8 +26,8 @@ describe('localizedFeatureMetadata', () => {
 
   it('omits the highlight segment when the section has only a title (tarot)', async () => {
     const meta = await localizedFeatureMetadata('ta', '/tarot');
-    // tarot has no `titleHighlight` — title is just `${title} | MyAstro360`.
-    expect(meta.title).toBe(`${ta.tarot.title} | MyAstro360`);
+    // tarot has no `titleHighlight` — bare translated title (template adds brand).
+    expect(meta.title).toBe(ta.tarot.title);
     expect(meta.description).toBe(ta.tarot.description);
   });
 
@@ -36,10 +38,12 @@ describe('localizedFeatureMetadata', () => {
     expect(alternates.languages?.['x-default']).toBeTruthy();
   });
 
-  it('falls back to the English entry for a path with no i18n key mapping', async () => {
-    // "/" is in FEATURE_PAGES but not in the feature→dictionary map.
+  it('localizes the home page from the hero strings (audit fix: no English titles on /hi)', async () => {
+    // "/" is special-cased: its strings live in home.heroTitle/heroHighlight,
+    // and the composed headline already contains the brand — so it opts out
+    // of the title.template via an absolute title.
     const meta = await localizedFeatureMetadata('hi', '/');
-    expect(meta.title).toBe(FEATURE_PAGES['/'].title);
-    expect(meta.description).toBe(FEATURE_PAGES['/'].description);
+    expect(meta.title).toEqual({ absolute: `${hi.home.heroTitle} ${hi.home.heroHighlight}` });
+    expect(meta.description).toBe(hi.home.heroDescription);
   });
 });

@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `${sign.name} Horoscope Today — ${today} | MyAstro360`;
+  const title = `${sign.name} Horoscope Today — ${today}`;
   const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
 

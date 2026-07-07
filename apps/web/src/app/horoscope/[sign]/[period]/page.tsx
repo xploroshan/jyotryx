@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
 
   const meta = PERIODS[period];
   const yearSuffix = period === 'yearly' ? ` ${new Date().getFullYear()}` : '';
-  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix} | MyAstro360`;
+  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix}`;
   const description = `${sign.name} (${sign.symbol}) ${meta.label.toLowerCase()} horoscope — love, career, money and health predictions for ${meta.adjective}. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`;
 

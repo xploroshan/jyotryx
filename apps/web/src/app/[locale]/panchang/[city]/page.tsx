@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/panchang/${city.slug}`,
-    title: `${cityName} ${t.panchang.titleHighlight} | MyAstro360`,
+    title: `${cityName} ${t.panchang.titleHighlight}`,
     description: t.panchang.description,
     hreflangLocales: PANCHANG_LOCALES,
   });

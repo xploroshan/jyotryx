@@ -93,7 +93,14 @@ const notoVars = [
 ].map((f) => f.variable).join(" ");
 
 export const metadata: Metadata = {
-  title: "MyAstro360 — Vedic Astrology Platform",
+  // Brand suffix is applied ONCE here via title.template — page metadata must
+  // supply the bare title (no hand-appended " | MyAstro360"). Note: Next
+  // applies the template to <title> only, NOT og:title/twitter:title, so
+  // pageMetadata() composes the suffixed string for those itself.
+  title: {
+    default: "MyAstro360 — Vedic Astrology Platform",
+    template: "%s | MyAstro360",
+  },
   description:
     "Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
   icons: {
@@ -108,7 +115,10 @@ export const metadata: Metadata = {
     "astrology", "vedic astrology", "kundli", "horoscope",
     "palmistry", "kundli matching", "panchang", "muhurat", "MyAstro360",
   ],
-  metadataBase: new URL("https://www.myastro360.com"),
+  // Same origin source as every canonical/hreflang/sitemap URL (server-api's
+  // SITE_ORIGIN) so an env override can never split canonical resolution
+  // from og:url/hreflang generation.
+  metadataBase: new URL(SITE_ORIGIN),
   // Google Search Console site verification. Set NEXT_PUBLIC_GSC_VERIFICATION
   // in the Vercel env to the token GSC gives you (the value of the
   // `google-site-verification` meta tag) to verify ownership without a code

@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `Panchang for ${city.name}, ${city.state} — ${today} | MyAstro360`;
+  const title = `Panchang for ${city.name}, ${city.state} — ${today}`;
   const description = `Today's Hindu calendar (Panchang) for ${city.name}: tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal, Gulika Kaal and Yamakantaka — calculated from Swiss Ephemeris for ${city.name}'s exact latitude and longitude.`;
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 

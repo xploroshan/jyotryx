@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const city = findCityBySlug(slug);
   if (!city) return {};
 
-  const title = `Free Kundli for ${city.name} — Vedic Birth Chart | MyAstro360`;
+  const title = `Free Kundli for ${city.name} — Vedic Birth Chart`;
   const description = `Generate your free, accurate Vedic Kundli (janma kundali) for ${city.name}. Computed from Swiss Ephemeris using ${city.name}'s exact coordinates and Lahiri ayanamsa — full rasi, navamsa, dasha, doshas, and yogas in seconds.`;
   const canonical = `${SITE_ORIGIN}/kundli/${city.slug}`;
 

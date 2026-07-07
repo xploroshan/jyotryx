@@ -31,6 +31,21 @@ const nextConfig: NextConfig = {
       "react-hot-toast",
     ],
   },
+  // X-Robots-Tag noindex for per-user / internal app surfaces. robots.txt
+  // disallows crawling these, but only a noindex signal removes an
+  // already-discovered URL from the index — belt (page metadata where the
+  // route has a server wrapper) and suspenders (this header for all of them).
+  async headers() {
+    const noindex = [
+      "/styleguide", "/chat", "/my-day", "/reports", "/referral",
+      "/decision-room", "/horary/ask", "/horary/history",
+      "/profile", "/checkout", "/auth", "/reset-password", "/admin/:path*",
+    ];
+    return noindex.map((source) => ({
+      source,
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    }));
+  },
   // Canonical host: 301 the apex (myastro360.com) to www, which is what
   // `metadataBase`, the sitemap, robots and every canonical URL already use.
   // Without this, Google can crawl both hosts as separate copies and split

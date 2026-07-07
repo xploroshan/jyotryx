@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/horoscope/${sign.slug}/${period}`,
-    title: `${signName} ${periodLabel} ${t.horoscope.titleHighlight} | MyAstro360`,
+    title: `${signName} ${periodLabel} ${t.horoscope.titleHighlight}`,
     description: t.horoscope.description,
     hreflangLocales: LANDING_LOCALES,
   });
