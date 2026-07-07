@@ -7,7 +7,7 @@ import {
   listCitySlugs,
 } from '@/lib/seo/cities';
 import { SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, faqLd, breadcrumbLd } from '@/lib/seo/json-ld';
 
 /**
  * "Free Kundli for <city>" SEO landing page.
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const city = findCityBySlug(slug);
   if (!city) return {};
 
-  const title = `Free Kundli for ${city.name} — Vedic Birth Chart | MyAstro360`;
+  const title = `Free Kundli for ${city.name} — Vedic Birth Chart`;
   const description = `Generate your free, accurate Vedic Kundli (janma kundali) for ${city.name}. Computed from Swiss Ephemeris using ${city.name}'s exact coordinates and Lahiri ayanamsa — full rasi, navamsa, dasha, doshas, and yogas in seconds.`;
   const canonical = `${SITE_ORIGIN}/kundli/${city.slug}`;
 
@@ -64,66 +64,42 @@ export default async function KundliCityPage({ params }: RouteProps) {
 
   const ctaHref = `/kundli?place=${encodeURIComponent(city.name)}`;
 
-  // FAQPage JSON-LD — Google still ranks city × service pages with FAQ
-  // snippets for India/astrology even after the 2023 rich-result trim;
-  // worst case the schema is silently dropped and the page reads fine
-  // as plain HTML.
-  const jsonLdFaq = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: `Is the kundli for ${city.name} free on MyAstro360?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Yes — generating a Vedic kundli (janma kundali) for ${city.name} is free for every signed-up user. The first chart costs no credits, and you can come back to view it any time without re-entering your details.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `Why does MyAstro360 compute the kundli for ${city.name}'s exact coordinates?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `The ascendant (lagna) and house cusps depend on the local horizon at your time of birth. Using ${city.name}'s exact latitude (${city.lat.toFixed(4)}) and longitude (${city.lng.toFixed(4)}) — instead of a national centroid — gives you the same accuracy a professional astrologer working in ${city.name} would.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: `Which ayanamsa does MyAstro360 use for ${city.name}?`,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: `Lahiri ayanamsa, the canonical sidereal zero point used by every standard Indian panchang and recognised by the Indian government's Calendar Reform Committee. All sidereal calculations — kundli, dasha, transits — use it consistently.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What does the kundli include?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'A full Vedic chart includes: rasi (D-1) chart, navamsa (D-9), Vimshottari dasha periods with sub-periods, planetary positions with degree/nakshatra, house lordships, key yogas, and dosha checks (Manglik, Kaal Sarp, Pitra, Nadi).',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'How accurate is the chart?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Charts are computed from Swiss Ephemeris, the same astronomical engine used by professional astrologers and academic researchers worldwide. Re-running the chart with the same inputs returns the same result byte-for-byte; nothing is randomised.',
-        },
-      },
-    ],
-  };
-  const jsonLdBreadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-      { '@type': 'ListItem', position: 2, name: 'Kundli', item: `${SITE_ORIGIN}/kundli` },
-      { '@type': 'ListItem', position: 3, name: 'Cities', item: `${SITE_ORIGIN}/kundli/cities` },
-      { '@type': 'ListItem', position: 4, name: city.name, item: `${SITE_ORIGIN}/kundli/${city.slug}` },
-    ],
-  };
+  // ONE faqs array feeds BOTH the visible FAQ <dl> below and the FAQPage
+  // JSON-LD — they can no longer diverge (the audit found 5 schema questions
+  // that never appeared on the page, a manual-action risk).
+  const faqs = [
+    {
+      q: `Is the kundli for ${city.name} free on MyAstro360?`,
+      a: `Yes — generating a Vedic kundli (janma kundali) for ${city.name} is free for every signed-up user. The first chart costs no credits, and you can come back to view it any time without re-entering your details.`,
+    },
+    {
+      q: `Why does MyAstro360 compute the kundli for ${city.name}'s exact coordinates?`,
+      a: `The ascendant (lagna) and house cusps depend on the local horizon at your time of birth. Using ${city.name}'s exact latitude (${city.lat.toFixed(4)}) and longitude (${city.lng.toFixed(4)}) — instead of a national centroid — gives you the same accuracy a professional astrologer working in ${city.name} would.`,
+    },
+    {
+      q: `Which ayanamsa does MyAstro360 use for ${city.name}?`,
+      a: `Lahiri ayanamsa, the canonical sidereal zero point used by every standard Indian panchang and recognised by the Indian government's Calendar Reform Committee. All sidereal calculations — kundli, dasha, transits — use it consistently.`,
+    },
+    {
+      q: `What if I don't know my exact time of birth?`,
+      a: `The Vedic chart is most accurate with a known time of birth. Without one, the rasi positions of the slow-moving planets are still correct, but the ascendant and house cusps cannot be calculated reliably. If you have only a hospital admission slip, use that — it's usually within a few minutes of the actual birth.`,
+    },
+    {
+      q: `Is my data shared with anyone in ${city.name}?`,
+      a: `No. Your birth details are stored privately to your account and used only to compute the chart. You can export or delete everything from your profile at any time, and we never share or sell user data.`,
+    },
+    {
+      q: `Can I generate a kundli for someone else who was born in ${city.name}?`,
+      a: `Yes — you can generate kundlis for as many people as you like. Most users start with their own and then add charts for partners, children and parents.`,
+    },
+  ];
+  const jsonLdFaq = faqLd(faqs);
+  const jsonLdBreadcrumb = breadcrumbLd([
+    { name: 'Home', url: SITE_ORIGIN },
+    { name: 'Kundli', url: `${SITE_ORIGIN}/kundli` },
+    { name: 'Cities', url: `${SITE_ORIGIN}/kundli/cities` },
+    { name: city.name, url: `${SITE_ORIGIN}/kundli/${city.slug}` },
+  ]);
 
   return (
     <div className="relative min-h-screen">
@@ -220,18 +196,9 @@ export default async function KundliCityPage({ params }: RouteProps) {
             Frequently asked questions about the {city.name} kundli
           </h2>
           <dl className="space-y-4 text-sm">
-            <Faq
-              q={`Is my data shared with anyone in ${city.name}?`}
-              a="No. Your birth details are stored privately to your account and used only to compute the chart. You can export or delete everything from your profile at any time, and we never share or sell user data."
-            />
-            <Faq
-              q="What if I don't know my exact time of birth?"
-              a="The Vedic chart is most accurate with a known time of birth. Without one, the rasi positions of the slow-moving planets are still correct, but the ascendant and house cusps cannot be calculated reliably. If you have only a hospital admission slip, use that — it's usually within a few minutes of the actual birth."
-            />
-            <Faq
-              q={`Can I generate a kundli for someone else who was born in ${city.name}?`}
-              a={`Yes — you can generate kundlis for as many people as you like. Most users start with their own and then add charts for partners, children and parents.`}
-            />
+            {faqs.map((f) => (
+              <Faq key={f.q} q={f.q} a={f.a} />
+            ))}
           </dl>
         </article>
 

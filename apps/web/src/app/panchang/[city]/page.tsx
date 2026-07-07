@@ -7,9 +7,11 @@ import {
   listCitySlugs,
 } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
+import { todayIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { PANCHANG_LOCALES } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 
 /**
  * Server-rendered SEO landing page for "Panchang for <city>".
@@ -54,7 +56,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `Panchang for ${city.name}, ${city.state} — ${today} | MyAstro360`;
+  const title = `Panchang for ${city.name}, ${city.state} — ${today}`;
   const description = `Today's Hindu calendar (Panchang) for ${city.name}: tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal, Gulika Kaal and Yamakantaka — calculated from Swiss Ephemeris for ${city.name}'s exact latitude and longitude.`;
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 
@@ -96,30 +98,13 @@ export default async function PanchangCityPage({ params }: RouteProps) {
   // emit two separate scripts so that, if Google's parser silently
   // rejects one (schema.org keeps tightening their requirements), the
   // other still lands.
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  const jsonLdArticle = articleLd({
     headline: `Panchang for ${city.name} — ${todayDisplay}`,
-    datePublished: today.toISOString(),
-    dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: `${SITE_ORIGIN}/panchang/${city.slug}`,
     description: `Today's Hindu calendar details for ${city.name}, computed from Swiss Ephemeris.`,
-    contentLocation: {
-      '@type': 'Place',
-      name: `${city.name}, ${city.state}, India`,
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: city.lat,
-        longitude: city.lng,
-      },
-    },
-  };
+    url: `${SITE_ORIGIN}/panchang/${city.slug}`,
+    datePublished: todayIST(),
+    contentLocation: { name: `${city.name}, ${city.state}, India`, latitude: city.lat, longitude: city.lng },
+  });
   const jsonLdBreadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -155,15 +140,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
       a: `It refreshes once per local day. Reload the page the next morning to see ${city.name}'s panchang for the new day.`,
     },
   ];
-  const jsonLdFaq = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  };
+  const jsonLdFaq = faqLd(faqs);
 
   return (
     <div className="relative min-h-screen">
@@ -320,6 +297,8 @@ export default async function PanchangCityPage({ params }: RouteProps) {
             </Link>
           </p>
         </section>
+
+        <LanguageLinkRow path={`/panchang/${city.slug}`} locales={PANCHANG_LOCALES} />
       </div>
     </div>
   );

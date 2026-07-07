@@ -12,6 +12,7 @@ import React from 'react';
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => '/',
 }));
 
 // ─── Mock store state ───────────────────────────────────────────────────────
@@ -48,7 +49,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // ─── Import component AFTER mocks ──────────────────────────────────────────
-import PricingPage from '@/app/pricing/page';
+import PricingPage from '@/app/pricing/PricingClient';
 
 describe('Pricing Page', () => {
   beforeEach(() => {

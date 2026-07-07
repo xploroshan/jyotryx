@@ -9,10 +9,15 @@ const nextConfig: NextConfig = {
   // Vercel ignores `output` and builds normally, so this is a no-op there.
   output: "standalone",
   images: {
+    // AVIF first (30-50% smaller than WebP for photos), WebP fallback.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.amazonaws.com",
+        // Narrowed from "**.amazonaws.com" (any S3 bucket on the internet —
+        // an open image-optimizer proxy) to our upload region. Widen only for
+        // hosts we actually serve from.
+        hostname: "*.s3.ap-south-1.amazonaws.com",
       },
     ],
   },
@@ -30,6 +35,21 @@ const nextConfig: NextConfig = {
       "framer-motion",
       "react-hot-toast",
     ],
+  },
+  // X-Robots-Tag noindex for per-user / internal app surfaces. robots.txt
+  // disallows crawling these, but only a noindex signal removes an
+  // already-discovered URL from the index — belt (page metadata where the
+  // route has a server wrapper) and suspenders (this header for all of them).
+  async headers() {
+    const noindex = [
+      "/styleguide", "/chat", "/my-day", "/reports", "/referral",
+      "/decision-room", "/horary/ask", "/horary/history",
+      "/profile", "/checkout", "/auth", "/reset-password", "/admin/:path*",
+    ];
+    return noindex.map((source) => ({
+      source,
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    }));
   },
   // Canonical host: 301 the apex (myastro360.com) to www, which is what
   // `metadataBase`, the sitemap, robots and every canonical URL already use.

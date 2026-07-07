@@ -29,7 +29,7 @@ const mockPanchangResponse = {
 };
 
 // ─── Import component AFTER mocks ──────────────────────────────────────────
-import PanchangPage from '@/app/panchang/page';
+import PanchangPage from '@/app/panchang/PanchangClient';
 
 describe('Panchang Page: Rendering', () => {
   beforeEach(() => {
@@ -45,7 +45,9 @@ describe('Panchang Page: Rendering', () => {
     );
     render(<PanchangPage />);
 
-    expect(await screen.findByText('Panchang')).toBeDefined();
+    // The page H1 ('Panchang') moved to the server shell (page.tsx);
+    // the client widget's own header content is the date card.
+    expect(await screen.findByText('Tithi')).toBeDefined();
   });
 
   it('should render all panchang elements', async () => {

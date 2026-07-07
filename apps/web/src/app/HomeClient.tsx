@@ -11,6 +11,9 @@ import HeroSun from "@/components/home/HeroSun";
 import { WEB_TRADITIONS, TRADITION_IDS, TRADITION_BADGE_COLORS } from "@/lib/traditions";
 import { TraditionGlyph } from "@/components/icons";
 
+// ssr:false is deliberate (audit-reviewed): BentoSummary is the
+// personalized, auth-gated briefing — below the fold, per-user, zero SEO
+// value — so server-rendering it would only burn TTFB on store hydration.
 const BentoSummary = dynamic(() => import("@/components/home/BentoSummary"), {
   ssr: false,
 });

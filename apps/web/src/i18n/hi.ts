@@ -1258,6 +1258,7 @@ export const hi: TranslationKeys = {
     copyright: 'सर्वाधिकार सुरक्षित।',
     groupFeatures: 'विशेषताएं',
     groupResources: 'संसाधन',
+    byCity: 'शहर के अनुसार',
     groupCompany: 'कंपनी',
     linkChat: 'ज्योतिषी चैट',
     linkPalm: 'हस्तरेखा',

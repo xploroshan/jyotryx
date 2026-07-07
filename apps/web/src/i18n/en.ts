@@ -1324,6 +1324,7 @@ export const en = {
     copyright: 'All rights reserved.',
     groupFeatures: 'Features',
     groupResources: 'Resources',
+    byCity: 'By city',
     groupCompany: 'Company',
     linkChat: 'Astrologer Chat',
     linkPalm: 'Palmistry',

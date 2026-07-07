@@ -5,7 +5,7 @@ import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
-import { RequiredMark } from "@/components/ui/Toast";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import Interpretation from "@/components/interpretation/Interpretation";
 import Mitigation from "@/components/mitigation/Mitigation";
 

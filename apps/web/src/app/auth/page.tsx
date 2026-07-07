@@ -12,16 +12,14 @@ import { Gift } from "lucide-react";
 import { useTranslation, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import {
-  auth,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  GoogleAuthProvider,
-  signInWithPopup,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-} from "@/lib/firebase";
-import type { ConfirmationResult } from "firebase/auth";
+import type { ConfirmationResult, RecaptchaVerifier } from "firebase/auth";
+
+// Firebase is loaded ON DEMAND inside the sign-in handlers rather than with
+// the page bundle: the login form itself needs none of it to render, and the
+// static import was shipping the whole firebase/auth SDK in /auth first-load
+// JS. The dynamic import resolves instantly after the first call (module
+// cache); @/lib/firebase itself initializes the app lazily on first use.
+const loadFirebase = () => import("@/lib/firebase");
 
 // Where we stash a captured `?ref=…` so it survives navigation between
 // /auth?ref=X and /auth/register, and any Firebase popup detours. The
@@ -314,7 +312,7 @@ function AuthPageContent() {
     router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
   }, [setAuth, router, applyUserLanguage, referralCode]);
 
-  const setupRecaptcha = useCallback(() => {
+  const setupRecaptcha = useCallback(async () => {
     // Tear down any previous verifier instance.
     if (recaptchaVerifierRef.current) {
       try { recaptchaVerifierRef.current.clear(); } catch {}
@@ -334,6 +332,7 @@ function AuthPageContent() {
     const host = document.createElement("div");
     wrapper.appendChild(host);
 
+    const { auth, RecaptchaVerifier } = await loadFirebase();
     recaptchaVerifierRef.current = new RecaptchaVerifier(auth, host, {
       size: "invisible",
     });
@@ -379,7 +378,8 @@ function AuthPageContent() {
     }
 
     try {
-      setupRecaptcha();
+      await setupRecaptcha();
+      const { auth, signInWithPhoneNumber } = await loadFirebase();
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current!);
       confirmationResultRef.current = result;
       otpChannelRef.current = "firebase";
@@ -492,6 +492,7 @@ function AuthPageContent() {
   const handleGoogleClick = async () => {
     setGoogleLoading(true); setError(""); setSuccess(""); setLastAction(null);
     try {
+      const { auth, GoogleAuthProvider, signInWithPopup } = await loadFirebase();
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
@@ -556,13 +557,13 @@ function AuthPageContent() {
       // second 15-30s hang waiting for Firebase.
       const isCredentialError =
         tab === "login" &&
-        (err?.status === 401 || (err?.message || "").toLowerCase().includes("invalid email or password")) &&
-        typeof signInWithEmailAndPassword === "function";
+        (err?.status === 401 || (err?.message || "").toLowerCase().includes("invalid email or password"));
 
       if (isCredentialError) {
         try {
           // Race the Firebase call against a short timer so a stuck
           // Firebase popup can't lock the login button forever.
+          const { auth, signInWithEmailAndPassword } = await loadFirebase();
           const credential = await Promise.race<any>([
             signInWithEmailAndPassword(auth, email, password),
             new Promise((_, reject) =>
@@ -596,6 +597,7 @@ function AuthPageContent() {
     try {
       // Firebase sends the reset email directly — works even if our backend
       // is down, as long as the Firebase project is configured.
+      const { auth, sendPasswordResetEmail } = await loadFirebase();
       await sendPasswordResetEmail(auth, resetEmail);
       setSuccess(t.auth.errResetLinkSent);
       setTimeout(() => {

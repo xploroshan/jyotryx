@@ -3,10 +3,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SEO_CITIES, findCityBySlug } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
+import { todayIST } from '@/lib/seo/dates';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
 import { prefixedPanchangLocale, PANCHANG_LOCALES, PREBUILD_PANCHANG_LOCALES } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
+import { PANCHANG_CITY_CONTENT_LOCALE, interpolateCity } from '@/lib/seo/panchang-city-content';
 
 /**
  * Localized daily Panchang landing page per city (Phase 2, Tier B).
@@ -43,7 +46,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/panchang/${city.slug}`,
-    title: `${cityName} ${t.panchang.titleHighlight} | MyAstro360`,
+    title: `${cityName} ${t.panchang.titleHighlight}`,
     description: t.panchang.description,
     hreflangLocales: PANCHANG_LOCALES,
   });
@@ -59,23 +62,20 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
   const p = t.panchang;
   const cityName = (city.i18n as Record<string, string>)[locale] ?? city.name;
   const panchang = await fetchPanchang(city.lat, city.lng, undefined, locale);
+  // Translated long-form template (per-locale, {city}-interpolated). Locales
+  // without a translation render the data table only — and stay out of the
+  // sitemap until their template lands (see panchang-city-content.ts).
+  const content = PANCHANG_CITY_CONTENT_LOCALE[locale];
+  const faqs = content ? interpolateCity(content.faqs, cityName) : null;
   const canonical = localeUrl(locale, `/panchang/${city.slug}`);
 
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  const jsonLdArticle = articleLd({
     headline: `${cityName} ${p.titleHighlight}`,
+    url: canonical,
     inLanguage: locale,
-    datePublished: new Date().toISOString(),
-    dateModified: new Date().toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: canonical,
-  };
+    datePublished: todayIST(),
+    contentLocation: { name: `${city.name}, ${city.state}, India`, latitude: city.lat, longitude: city.lng },
+  });
 
   return (
     <div className="relative min-h-screen">
@@ -115,6 +115,42 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
             <p className="text-sm text-[rgba(12,8,5,0.72)]">{p.retry}</p>
           </section>
         )}
+
+        {content && faqs && (
+          <>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(faqLd(faqs)) }} />
+            <article className="surface-card p-6 mb-6">
+              {interpolateCity(content.intro, cityName).map((para) => (
+                <p key={para.slice(0, 24)} className="text-sm text-emphasis leading-relaxed mb-3">{para}</p>
+              ))}
+              <h2 className="text-base font-semibold text-surface-950 mt-5 mb-2">
+                {content.inauspiciousHeading}
+              </h2>
+              <p className="text-sm text-emphasis leading-relaxed mb-3">{content.inauspiciousBody}</p>
+              <h2 className="text-base font-semibold text-surface-950 mt-5 mb-2">
+                {interpolateCity(content.computedHeading, cityName)}
+              </h2>
+              <p className="text-sm text-emphasis leading-relaxed">
+                {interpolateCity(content.computedBody, cityName)}
+              </p>
+            </article>
+            <section className="surface-card p-6 mb-6">
+              <h2 className="text-lg font-semibold text-surface-950 mb-3">
+                {interpolateCity(content.faqHeading, cityName)}
+              </h2>
+              <dl className="space-y-4 text-sm">
+                {faqs.map((f) => (
+                  <div key={f.q} className="border-l-2 border-primary-500/30 pl-3">
+                    <dt className="font-medium text-surface-950">{f.q}</dt>
+                    <dd className="text-emphasis mt-1 leading-relaxed">{f.a}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </>
+        )}
+
+        <LanguageLinkRow path={`/panchang/${city.slug}`} currentLocale={locale} locales={PANCHANG_LOCALES} />
       </div>
     </div>
   );

@@ -56,10 +56,10 @@ describe('Monorepo Structure', () => {
   const rootPkg = readJson(path.join(ROOT, 'package.json'));
 
   it('should define workspaces for apps and packages', () => {
-    expect(rootPkg.workspaces).toBeDefined();
     // Apps are listed explicitly (mobile is an Expo/RN app, deliberately NOT an
     // npm workspace to avoid hoisting issues), so assert the web + api apps and
     // the packages glob rather than an 'apps/*' glob.
+    expect(rootPkg.workspaces).toBeDefined();
     expect(rootPkg.workspaces).toContain('apps/web');
     expect(rootPkg.workspaces).toContain('apps/api');
     expect(rootPkg.workspaces).toContain('packages/*');

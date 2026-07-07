@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, breadcrumbLd, faqLd } from '@/lib/seo/json-ld';
+import { todayIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
@@ -37,7 +39,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     month: 'long',
     year: 'numeric',
   });
-  const title = `${sign.name} Horoscope Today — ${today} | MyAstro360`;
+  const title = `${sign.name} Horoscope Today — ${today}`;
   const description = `Today's ${sign.name} (${sign.symbol}) horoscope: love, career, health and lucky number. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}, born between ${sign.dateRange}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}`;
 
@@ -76,32 +78,21 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
     year: 'numeric',
   });
 
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  // Stable dates: the daily forecast's real publish boundary is midnight IST,
+  // not render time (render-time stamps churn on every ISR regeneration).
+  const jsonLdArticle = articleLd({
     headline: `${sign.name} Horoscope — ${todayDisplay}`,
-    datePublished: today.toISOString(),
-    dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}`,
     description:
       horoscope?.forecast?.slice(0, 200) ??
       `Daily ${sign.name} horoscope covering love, career, health and lucky numbers.`,
-  };
-  const jsonLdBreadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-      { '@type': 'ListItem', position: 2, name: 'Horoscope', item: `${SITE_ORIGIN}/horoscope` },
-      { '@type': 'ListItem', position: 3, name: sign.name, item: `${SITE_ORIGIN}/horoscope/${sign.slug}` },
-    ],
-  };
+    url: `${SITE_ORIGIN}/horoscope/${sign.slug}`,
+    datePublished: todayIST(),
+  });
+  const jsonLdBreadcrumb = breadcrumbLd([
+    { name: 'Home', url: SITE_ORIGIN },
+    { name: 'Horoscope', url: `${SITE_ORIGIN}/horoscope` },
+    { name: sign.name, url: `${SITE_ORIGIN}/horoscope/${sign.slug}` },
+  ]);
 
   // Single source of truth for the FAQ: rendered visibly below AND emitted
   // as FAQPage structured data, so the two never drift (Google requires the
@@ -124,15 +115,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
       a: `The ${sign.name} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside MyAstro360.`,
     },
   ];
-  const jsonLdFaq = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  };
+  const jsonLdFaq = faqLd(faqs);
 
   return (
     <div className="relative min-h-screen">
@@ -276,6 +259,8 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
             ))}
           </div>
         </section>
+
+        <LanguageLinkRow path={`/horoscope/${sign.slug}`} locales={LANDING_LOCALES} />
       </div>
     </div>
   );

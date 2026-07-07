@@ -1258,6 +1258,7 @@ export const or_: TranslationKeys = {
     copyright: 'ସମସ୍ତ ଅଧିକାର ସଂରକ୍ଷିତ।',
     groupFeatures: 'ବୈଶିଷ୍ଟ୍ୟ',
     groupResources: 'ସଂସାଧନ',
+    byCity: 'ସହର ଅନୁଯାୟୀ',
     groupCompany: 'କମ୍ପାନୀ',
     linkChat: 'ଜ୍ୟୋତିଷୀ ଚାଟ୍',
     linkPalm: 'ହସ୍ତରେଖା',

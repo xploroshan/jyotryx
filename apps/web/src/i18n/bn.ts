@@ -1258,6 +1258,7 @@ export const bn: TranslationKeys = {
     copyright: 'সমস্ত অধিকার সংরক্ষিত।',
     groupFeatures: 'বৈশিষ্ট্য',
     groupResources: 'সংস্থান',
+    byCity: 'শহর অনুযায়ী',
     groupCompany: 'কোম্পানি',
     linkChat: 'জ্যোতিষী চ্যাট',
     linkPalm: 'হস্তরেখা',
