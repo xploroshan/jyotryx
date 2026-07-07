@@ -164,6 +164,15 @@ export class PalmistryService {
     gender: string | undefined,
     access: PalmAccess,
   ): Promise<PalmistryAnalysis> {
+    // A request with no image only ever produces the generic, canned fallback
+    // reading — the Vision call below is skipped entirely (it requires an
+    // imageBuffer). Consuming a paid one-time entitlement, or counting a
+    // metered reading, for that canned output would bill the user for a reading
+    // that was never actually performed. So skip consumption when no image was
+    // analysed. The access check in resolvePalmAccess still runs; only the
+    // charge (consumeEntitlement / incrementUsage) is waived here.
+    const imageProvided = !!imageBuffer;
+
     // Upload image to R2 first (needed by both sync and async paths)
     let imageKey: string | null = null;
     let imageUrl = '';
@@ -208,8 +217,10 @@ export class PalmistryService {
           gender,
           // Metered model: pass the counter so a failed job gives the reading
           // back (the unit is counted now, in recordPalmConsumption below).
-          meteredFeature: access.kind === 'metered' ? 'palmistry' : undefined,
-          meteredPeriodKey: access.kind === 'metered' ? access.periodKey : undefined,
+          // Only when an image was actually provided — a no-image fallback
+          // isn't counted, so the processor must not try to restore it either.
+          meteredFeature: access.kind === 'metered' && imageProvided ? 'palmistry' : undefined,
+          meteredPeriodKey: access.kind === 'metered' && imageProvided ? access.periodKey : undefined,
         } satisfies PalmistryJobData);
       } catch (err) {
         this.logger.error(
@@ -223,7 +234,11 @@ export class PalmistryService {
         // reading row exists (no-op for subscribers; consumes a one-time
         // entitlement in legacy mode, or counts a metered reading in the
         // subscription model). The processor restores it if analysis fails.
-        await this.recordPalmConsumption(userId, access, reading.id);
+        // Skipped for a no-image request — nothing was analysed, so nothing
+        // is charged.
+        if (imageProvided) {
+          await this.recordPalmConsumption(userId, access, reading.id);
+        }
 
         return {
           id: reading.id,
@@ -339,7 +354,7 @@ export class PalmistryService {
     // logged as "DB write failed" and the full reading was still returned for
     // free. If consumption fails, remove the persisted reading and surface the
     // error instead of delivering an unpaid reading.
-    if (readingId) {
+    if (readingId && imageProvided) {
       try {
         await this.recordPalmConsumption(userId, access, readingId);
       } catch (err) {

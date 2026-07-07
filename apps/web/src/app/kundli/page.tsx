@@ -14,10 +14,9 @@ export const metadata = pageMetadata({ path: "/kundli", ...FEATURE_PAGES["/kundl
 export default function Page() {
   return (
     <>
-      {/* H1 lives HERE, not in KundliClient: the client tree below is
-          suspended with fallback={null} (it reads ?place= via
-          useSearchParams), so anything inside it is missing from the
-          crawler-visible initial HTML. */}
+{/* H1 lives HERE, not in KundliClient: the client tree below is
+          suspended (it reads ?place= via useSearchParams), so anything
+          inside it is missing from the crawler-visible initial HTML. */}
       <FeatureHeader
         tint="amber"
         eyebrow={en.kundli.badge}
@@ -25,7 +24,18 @@ export default function Page() {
         headline={`${en.kundli.title} {em}${en.kundli.titleHighlight}{/em}`}
         tagline={en.kundli.description}
       />
-      <Suspense fallback={null}>
+      {/*
+        CLS guard: KundliClient renders client-side behind this Suspense
+        boundary. With a `null` fallback it contributed zero height on first
+        paint and then expanded to the birth-details form on hydration,
+        shoving FeatureSeoSection (and the footer) down — a 0.87 CLS on
+        /kundli before the fixes. Two things now hold the layout still:
+        the hero (~324px) is server-rendered above (so it never shifts), and
+        this fallback reserves the FORM's height (~743px at Lighthouse's
+        412px mobile width — the original 1067px measurement minus the
+        hoisted hero). Re-measure if the form gains or loses fields.
+      */}
+      <Suspense fallback={<div className="min-h-[743px]" aria-hidden />}>
         <KundliClient />
       </Suspense>
       <FeatureSeoSection content={FEATURE_CONTENT["/kundli"]} />

@@ -373,13 +373,20 @@ export class PaymentService {
         // One-time pay-to-unlock products (reports/palmistry) grant an
         // Entitlement on success instead of credits.
         entitlementType = entitlementTypeForProduct(dto.productId);
-        if (entitlementType) paymentType = 'REPORT';
-        // NOTE: unknown productIds are intentionally allowed here (custom-amount
-        // orders, e.g. donations — see security-comprehensive.spec). The
-        // ultra-review's credit-minting concern (settlement's amount heuristic
-        // granting credits for an arbitrary id/amount) should be addressed on the
-        // SETTLEMENT side — grant 0 credits for products without an explicit
-        // positive credit grant — rather than by rejecting the order here.
+        if (entitlementType) {
+          paymentType = 'REPORT';
+        } else if (expectedPrice !== null) {
+          // Known legacy static credit pack (credits_10/50/100): capture its
+          // fixed credit count now, from the authoritative price, so settlement
+          // records an explicit grant and never has to infer credits from the
+          // paid amount.
+          grantedCredits = this.calculateCredits(expectedPrice);
+        }
+        // Unknown productId (expectedPrice === null) is intentionally allowed:
+        // it's a custom-amount order (e.g. a donation — see
+        // security-comprehensive.spec). grantedCredits stays undefined, so no
+        // `credits` is recorded and settlement grants 0 — an arbitrary
+        // caller-chosen id + amount can never mint credits.
       }
     }
 
@@ -1652,7 +1659,11 @@ export class PaymentService {
       meta && typeof meta.credits === 'number' && Number.isFinite(meta.credits) && meta.credits > 0
         ? meta.credits
         : null;
-    return metaCredits ?? this.calculateCredits(Number(payment.amount));
+    // Grant ONLY what the order explicitly recorded as credits. A payment with
+    // no positive `credits` in metadata (an unknown/custom-amount order such as
+    // a donation) grants nothing — never infer credits from the paid amount,
+    // which would let any caller mint credits with an arbitrary id + amount.
+    return metaCredits ?? 0;
   }
 
   /**
