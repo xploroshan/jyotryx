@@ -7,7 +7,8 @@ import {
   listCitySlugs,
 } from '@/lib/seo/cities';
 import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
+import { todayIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { PANCHANG_LOCALES } from '@/i18n/locales';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
@@ -97,30 +98,13 @@ export default async function PanchangCityPage({ params }: RouteProps) {
   // emit two separate scripts so that, if Google's parser silently
   // rejects one (schema.org keeps tightening their requirements), the
   // other still lands.
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  const jsonLdArticle = articleLd({
     headline: `Panchang for ${city.name} — ${todayDisplay}`,
-    datePublished: today.toISOString(),
-    dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: `${SITE_ORIGIN}/panchang/${city.slug}`,
     description: `Today's Hindu calendar details for ${city.name}, computed from Swiss Ephemeris.`,
-    contentLocation: {
-      '@type': 'Place',
-      name: `${city.name}, ${city.state}, India`,
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: city.lat,
-        longitude: city.lng,
-      },
-    },
-  };
+    url: `${SITE_ORIGIN}/panchang/${city.slug}`,
+    datePublished: todayIST(),
+    contentLocation: { name: `${city.name}, ${city.state}, India`, latitude: city.lat, longitude: city.lng },
+  });
   const jsonLdBreadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -156,15 +140,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
       a: `It refreshes once per local day. Reload the page the next morning to see ${city.name}'s panchang for the new day.`,
     },
   ];
-  const jsonLdFaq = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  };
+  const jsonLdFaq = faqLd(faqs);
 
   return (
     <div className="relative min-h-screen">

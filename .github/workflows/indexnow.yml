@@ -20,9 +20,18 @@ on:
         description: "Site origin to submit (no trailing slash)"
         required: false
         default: "https://www.myastro360.com"
+  # Deploy-completion trigger: point a Vercel deploy webhook (or any bridge)
+  # at GitHub's repository_dispatch API with this event type, and new/changed
+  # pages get pinged within minutes of going live — which is IndexNow's whole
+  # point. Wiring the sender is a one-time owner step (see docs/seo runbook);
+  # until then the daily cron below is the fallback cadence.
+  repository_dispatch:
+    types: [deploy-succeeded]
   schedule:
-    # Weekly, Mondays 06:00 UTC.
-    - cron: "0 6 * * 1"
+    # Daily 01:00 UTC (06:30 IST) — right after the panchang/horoscope pages
+    # roll over to the new IST day, so the daily-changing URLs are re-pinged
+    # when their content has actually changed.
+    - cron: "0 1 * * *"
 
 # Don't pile up overlapping submissions.
 concurrency:

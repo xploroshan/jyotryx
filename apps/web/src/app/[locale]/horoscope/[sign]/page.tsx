@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd } from '@/lib/seo/json-ld';
+import { todayIST } from '@/lib/seo/dates';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
 import {
@@ -75,22 +76,12 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
   const horoscope = await fetchHoroscope(sign.slug, 'daily', undefined, locale);
 
   const canonical = localeUrl(locale, `/horoscope/${sign.slug}`);
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  const jsonLdArticle = articleLd({
     headline: `${signName} ${horoscopeWord}`,
+    url: canonical,
     inLanguage: locale,
-    datePublished: new Date().toISOString(),
-    dateModified: new Date().toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: canonical,
-    description: horoscope?.forecast?.slice(0, 200) ?? `${signName} ${horoscopeWord}`,
-  };
+    datePublished: todayIST(),
+  });
   const jsonLdBreadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',

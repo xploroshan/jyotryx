@@ -23,7 +23,7 @@ import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShe
 import NavbarV2 from "@/components/layout/v2/NavbarV2";
 import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
-import { jsonLdHtml } from "@/lib/seo/json-ld";
+import { jsonLdHtml, organizationLd, websiteLd } from "@/lib/seo/json-ld";
 import HtmlLangSync from "@/components/i18n/HtmlLangSync";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/analytics/PostHogAnalytics";
@@ -35,21 +35,16 @@ import WebVitals from "@/components/analytics/WebVitals";
 // sitelinks search box. Emitted once in the root layout so every route
 // carries it without per-page duplication.
 const ORGANIZATION_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "MyAstro360",
-  url: SITE_ORIGIN,
-  logo: `${SITE_ORIGIN}/logo.svg`,
+  ...organizationLd({
+    // Owner input: add real social/app-store profile URLs here as they exist
+    // (X/Instagram/YouTube/Play Store). Never list placeholder links.
+    sameAs: [],
+  }),
   description:
     "MyAstro360 is a Vedic astrology platform offering instant, personalized Kundli, horoscopes, palmistry, compatibility matching, panchang, and muhurat guidance.",
 };
 
-const WEBSITE_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "MyAstro360",
-  url: SITE_ORIGIN,
-};
+const WEBSITE_JSON_LD = websiteLd();
 
 // We expose the next/font families as their own CSS variables and let the
 // theme tokens in globals.css extend them with system fallbacks. Doing it
