@@ -66,3 +66,31 @@ export const FEATURE_PAGES: Record<string, FeatureMeta> = {
 
 /** Paths (without locale prefix) that have localized variants. */
 export const LOCALIZED_PATHS = Object.keys(FEATURE_PAGES);
+
+/**
+ * Hub pages: high-priority routes that exist ONLY at the English root — there
+ * are no `/<locale>/horoscope` or `/<locale>/panchang` hub routes (only the
+ * [sign]/[city] children beneath them). Kept SEPARATE from FEATURE_PAGES on
+ * purpose: LOCALIZED_PATHS is derived from FEATURE_PAGES keys and drives the
+ * sitemap's localized fan-out, so adding these there would sitemap URLs that
+ * 404. Consequently hub metadata must NOT set `hreflang`.
+ */
+export const HUB_PAGES: Record<string, FeatureMeta> = {
+  "/horoscope": {
+    title: "Today's Horoscope — Daily, Weekly, Monthly & Yearly for All 12 Signs | MyAstro360",
+    description:
+      "Free daily horoscope for all 12 zodiac signs — today's predictions for love, career and health, plus weekly, monthly and yearly forecasts across Vedic, Western and Chinese traditions.",
+    keywords: ["horoscope", "today's horoscope", "daily horoscope", "rashifal", "zodiac signs"],
+  },
+  "/panchang": {
+    title: "Aaj Ka Panchang — Today's Tithi, Nakshatra & Rahu Kaal | MyAstro360",
+    description:
+      "Today's Panchang (Hindu calendar): tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal and Gulika Kaal — computed from Swiss Ephemeris, with city-accurate timings for 50+ Indian cities.",
+    keywords: ["panchang", "aaj ka panchang", "today panchang", "tithi today", "rahu kaal today"],
+  },
+  "/pricing": {
+    title: "Pricing & Plans — Astrology Consultations and Reports | MyAstro360",
+    description:
+      "Simple, transparent pricing for MyAstro360 — free kundli and horoscopes, plus affordable credits and plans for detailed reports and astrologer consultations.",
+  },
+};

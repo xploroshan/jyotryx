@@ -1258,6 +1258,7 @@ export const pa: TranslationKeys = {
     copyright: 'ਸਾਰੇ ਹੱਕ ਰਾਖਵੇਂ।',
     groupFeatures: 'ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ',
     groupResources: 'ਸਰੋਤ',
+    byCity: 'ਸ਼ਹਿਰ ਅਨੁਸਾਰ',
     groupCompany: 'ਕੰਪਨੀ',
     linkChat: 'ਜੋਤਿਸ਼ੀ ਚੈਟ',
     linkPalm: 'ਹਸਤਰੇਖਾ',

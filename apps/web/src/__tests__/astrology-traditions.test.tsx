@@ -227,7 +227,7 @@ describe('Horoscope Page — Tradition Features', () => {
   });
 
   it('should render the zodiac sign grid by default', async () => {
-    const HoroscopePage = (await import('@/app/horoscope/page')).default;
+    const HoroscopePage = (await import('@/app/horoscope/HoroscopeClient')).default;
     render(<HoroscopePage />);
 
     const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
@@ -238,7 +238,7 @@ describe('Horoscope Page — Tradition Features', () => {
   });
 
   it('should render period tabs', async () => {
-    const HoroscopePage = (await import('@/app/horoscope/page')).default;
+    const HoroscopePage = (await import('@/app/horoscope/HoroscopeClient')).default;
     render(<HoroscopePage />);
 
     expect(await screen.findByText('Daily')).toBeDefined();

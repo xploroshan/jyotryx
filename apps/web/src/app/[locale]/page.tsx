@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { isLocale } from '@/i18n/locales';
 import { localizedMetadata } from '@/lib/seo/page-metadata';
 import { FEATURE_PAGES } from '@/lib/seo/feature-pages';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import HomeClient from '@/app/HomeClient';
 
 const PATH = '/';
@@ -16,6 +17,12 @@ export async function generateMetadata({
   return localizedMetadata({ locale, path: PATH, ...FEATURE_PAGES[PATH] });
 }
 
-export default function Page() {
-  return <HomeClient />;
+export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return (
+    <>
+      <HomeClient />
+      {isLocale(locale) && <LanguageLinkRow path={PATH} currentLocale={locale} />}
+    </>
+  );
 }

@@ -10,6 +10,7 @@ import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { jsonLdHtml } from '@/lib/seo/json-ld';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { PANCHANG_LOCALES } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 
 /**
  * Server-rendered SEO landing page for "Panchang for <city>".
@@ -320,6 +321,8 @@ export default async function PanchangCityPage({ params }: RouteProps) {
             </Link>
           </p>
         </section>
+
+        <LanguageLinkRow path={`/panchang/${city.slug}`} locales={PANCHANG_LOCALES} />
       </div>
     </div>
   );

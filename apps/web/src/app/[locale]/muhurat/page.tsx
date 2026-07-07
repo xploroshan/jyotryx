@@ -3,6 +3,7 @@ import { isLocale } from '@/i18n/locales';
 import { localizedFeatureMetadata } from '@/lib/seo/page-metadata';
 import { getFeatureContent } from '@/lib/seo/feature-content';
 import { FeatureSeoSection } from '@/components/seo/FeatureSeoSection';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import MuhuratClient from '@/app/muhurat/MuhuratClient';
 
 const PATH = '/muhurat';
@@ -24,6 +25,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     <>
       <MuhuratClient />
       <FeatureSeoSection content={content} />
+      {isLocale(locale) && <LanguageLinkRow path={PATH} currentLocale={locale} />}
     </>
   );
 }

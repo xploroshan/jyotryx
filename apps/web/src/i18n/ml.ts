@@ -1258,6 +1258,7 @@ export const ml: TranslationKeys = {
     copyright: 'എല്ലാ അവകാശങ്ങളും നിക്ഷിപ്തം.',
     groupFeatures: 'സവിശേഷതകൾ',
     groupResources: 'വിഭവങ്ങൾ',
+    byCity: 'നഗരം അനുസരിച്ച്',
     groupCompany: 'കമ്പനി',
     linkChat: 'ജ്യോതിഷ ചാറ്റ്',
     linkPalm: 'ഹസ്തരേഖ',

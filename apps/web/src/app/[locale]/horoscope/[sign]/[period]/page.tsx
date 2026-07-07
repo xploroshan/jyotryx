@@ -7,6 +7,7 @@ import { jsonLdHtml } from '@/lib/seo/json-ld';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
 import { prefixedLandingLocale, LANDING_LOCALES, PREBUILD_LANDING_LOCALES } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -143,6 +144,8 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
             <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.horoscope.retry}</p>
           )}
         </section>
+
+        <LanguageLinkRow path={`/horoscope/${sign.slug}/${period}`} currentLocale={locale} locales={LANDING_LOCALES} />
       </div>
     </div>
   );

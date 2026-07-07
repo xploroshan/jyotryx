@@ -1258,6 +1258,7 @@ export const kn: TranslationKeys = {
     copyright: 'ಎಲ್ಲಾ ಹಕ್ಕುಗಳು ಕಾಯ್ದಿರಿಸಲ್ಪಟ್ಟಿವೆ.',
     groupFeatures: 'ವೈಶಿಷ್ಟ್ಯಗಳು',
     groupResources: 'ಸಂಪನ್ಮೂಲಗಳು',
+    byCity: 'ನಗರದ ಪ್ರಕಾರ',
     groupCompany: 'ಕಂಪನಿ',
     linkChat: 'ಜ್ಯೋತಿಷ ಚಾಟ್',
     linkPalm: 'ಹಸ್ತರೇಖೆ',

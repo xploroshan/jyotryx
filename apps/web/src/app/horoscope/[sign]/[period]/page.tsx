@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { jsonLdHtml } from '@/lib/seo/json-ld';
 import { localeUrl } from '@/lib/seo/page-metadata';
@@ -263,6 +264,8 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
             ))}
           </div>
         </section>
+
+        <LanguageLinkRow path={`/horoscope/${sign.slug}/${period}`} locales={LANDING_LOCALES} />
       </div>
     </div>
   );

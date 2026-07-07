@@ -1,202 +1,142 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTranslation } from "@/i18n";
-import {
-  translateTithi,
-  translateNakshatra,
-  translateYoga,
-  translateVara,
-  translateTimeRange,
-} from "@/i18n/panchang-terms";
+import { en } from "@/i18n/en";
+import { pageMetadata } from "@/lib/seo/page-metadata";
+import { HUB_PAGES } from "@/lib/seo/feature-pages";
+import { SEO_CITIES } from "@/lib/seo/cities";
+import { fetchPanchang, SITE_ORIGIN } from "@/lib/seo/server-api";
+import { jsonLdHtml } from "@/lib/seo/json-ld";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
-import Interpretation from "@/components/interpretation/Interpretation";
-import { Moon, Star, Link as LinkIcon, Zap, CalendarDays, Sunrise, Sunset, MoonStar } from "lucide-react";
+import PanchangClient from "./PanchangClient";
 
-interface PanchangData {
-  date: string;
-  tithi: string;
-  nakshatra: string;
-  yoga: string;
-  karana: string;
-  vara: string;
-  sunrise: string;
-  sunset: string;
-  moonrise: string;
-  rahukaal: string;
-  gulikakaal: string;
-  yamakantaka: string;
-}
+/**
+ * Server shell for the /panchang hub ("aaj ka panchang").
+ *
+ * Previously a fully client page: no metadata, today's panchang fetched
+ * after hydration, and the ONLY link to the 50 /panchang/[city] landing
+ * pages hidden inside the post-fetch success branch. Now the server fetches
+ * the panchang (Delhi as the national reference point — city pages carry
+ * the location-exact values) and passes it to the client widget as a prop,
+ * so the full card grid is in initial HTML; the city/feature links below
+ * are server-rendered and always visible.
+ *
+ * No hreflang on purpose: /<locale>/panchang hub routes do not exist (only
+ * the [city] children) — see HUB_PAGES in feature-pages.ts.
+ */
 
-const LOCALE_MAP: Record<string, string> = {
-  en: "en-IN", hi: "hi-IN", ta: "ta-IN", te: "te-IN", bn: "bn-IN", mr: "mr-IN",
-  gu: "gu-IN", kn: "kn-IN", ml: "ml-IN", pa: "pa-IN", or: "or-IN", as: "as-IN",
-};
+export const metadata = pageMetadata({
+  path: "/panchang",
+  ...HUB_PAGES["/panchang"],
+});
 
-export default function PanchangPage() {
-  const { t, locale } = useTranslation();
-  const [panchang, setPanchang] = useState<PanchangData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+// New Delhi — the conventional national reference for a city-less panchang.
+const DELHI = { lat: 28.6139, lng: 77.209 } as const;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchPanchang(); }, [locale]);
+export default async function PanchangHubPage() {
+  // 6h ISR via the fetch-level revalidate inside fetchPanchang. Null is
+  // tolerated: the client widget falls back to its own fetch, and the links
+  // + explainer below render regardless — this page is never empty.
+  const panchang = await fetchPanchang(DELHI.lat, DELHI.lng);
 
-  const fetchPanchang = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/astrology/panchang?locale=${locale}`
-      );
-      if (!res.ok) throw new Error(t.panchang.fetchFailed);
-      const data = await res.json();
-      setPanchang(data);
-    } catch (err: any) {
-      setError(err.message || t.panchang.loadFailed);
-    } finally {
-      setLoading(false);
-    }
+  const topCities = [...SEO_CITIES]
+    .sort((a, b) => b.population - a.population)
+    .slice(0, 10);
+
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_ORIGIN },
+      { "@type": "ListItem", position: 2, name: "Panchang", item: `${SITE_ORIGIN}/panchang` },
+    ],
   };
-
-  const panchangItems = panchang
-    ? [
-        { label: t.panchang.tithi, value: translateTithi(panchang.tithi, locale), icon: Moon, desc: t.panchang.tithiDesc },
-        { label: t.panchang.nakshatraLabel, value: translateNakshatra(panchang.nakshatra, locale), icon: Star, desc: t.panchang.nakshatraDesc },
-        { label: t.panchang.yoga, value: translateYoga(panchang.yoga, locale), icon: LinkIcon, desc: t.panchang.yogaDesc },
-        { label: t.panchang.karana, value: panchang.karana, icon: Zap, desc: t.panchang.karanaDesc },
-        { label: t.panchang.vara, value: translateVara(panchang.vara, locale), icon: CalendarDays, desc: t.panchang.varaDesc },
-      ]
-    : [];
-
-  const timings = panchang
-    ? [
-        { label: t.panchang.sunrise, value: translateTimeRange(panchang.sunrise, locale), icon: Sunrise },
-        { label: t.panchang.sunset, value: translateTimeRange(panchang.sunset, locale), icon: Sunset },
-        { label: t.panchang.moonrise, value: translateTimeRange(panchang.moonrise, locale), icon: MoonStar },
-      ]
-    : [];
-
-  const inauspicious = panchang
-    ? [
-        { label: t.panchang.rahuKaal, value: translateTimeRange(panchang.rahukaal, locale), desc: t.panchang.rahuKaalDesc },
-        { label: t.panchang.gulikaKaal, value: translateTimeRange(panchang.gulikakaal, locale), desc: t.panchang.gulikaKaalDesc },
-        { label: t.panchang.yamakantaka, value: translateTimeRange(panchang.yamakantaka, locale), desc: t.panchang.yamakantakaDesc },
-      ]
-    : [];
+  const jsonLdItemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "City-accurate panchang pages",
+    itemListElement: topCities.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: `Panchang for ${c.name}`,
+      url: `${SITE_ORIGIN}/panchang/${c.slug}`,
+    })),
+  };
 
   return (
     <div>
-      <FeatureHeader
-        tint="amber"
-        eyebrow={t.panchang.badge}
-        eyebrowIcon={<FeatureGlyph slug="panchang" size={18} />}
-        headline={`${t.panchang.title} {em}${t.panchang.titleHighlight}{/em}`}
-        tagline={t.panchang.description}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdItemList) }}
       />
 
-      <div className="relative mx-auto max-w-5xl px-4 py-10 sm:py-14 fade-in-up">
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <svg className="w-8 h-8 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          </div>
-        )}
+      <FeatureHeader
+        tint="amber"
+        eyebrow={en.panchang.badge}
+        eyebrowIcon={<FeatureGlyph slug="panchang" size={18} />}
+        headline={`${en.panchang.title} {em}${en.panchang.titleHighlight}{/em}`}
+        tagline={en.panchang.description}
+      />
 
-        {error && (
-          <div className="text-center py-12">
-            <div className="inline-block p-4 rounded-2xl bg-red-500/10 border border-red-500/20 mb-4">
-              <p className="text-red-400">{error}</p>
-            </div>
-            <button onClick={fetchPanchang} className="mt-4 px-6 py-2 rounded-xl btn-secondary text-sm text-primary-400 hover:bg-[rgba(12,8,5,0.06)]">
-              {t.panchang.retry}
-            </button>
-          </div>
-        )}
+      {/* Interactive panchang cards — server data arrives via prop, so the
+          grid is in initial HTML; the widget re-fetches only for non-English
+          locales. */}
+      <PanchangClient initialPanchang={panchang} />
 
-        {panchang && !loading && (
-          <>
-            {/* Date */}
-            <div className="surface-card p-6 mb-8 text-center">
-              <p className="text-sm text-[rgba(12,8,5,0.66)] mb-1">{t.panchang.date}</p>
-              <p className="text-2xl font-bold text-surface-950">
-                {new Date(panchang.date).toLocaleDateString(LOCALE_MAP[locale] || "en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-              </p>
-              <p className="text-sm text-accent-400 mt-1">{translateVara(panchang.vara, locale)}</p>
-            </div>
+      {/* Crawlable city directory — always visible, independent of the data
+          fetch. This is the link path from the hub into the 50-city cluster. */}
+      <section className="relative mx-auto max-w-5xl px-4 pb-12">
+        <div className="surface-card p-6">
+          <h2 className="text-lg font-semibold text-surface-950 mb-1">
+            Panchang for your city
+          </h2>
+          <p className="text-sm text-[rgba(12,8,5,0.66)] mb-4">
+            Sunrise, sunset, Rahu Kaal and tithi timings shift with location — open your city for
+            minute-accurate values.
+          </p>
+          <ul className="flex flex-wrap gap-2 mb-4">
+            {topCities.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  href={`/panchang/${c.slug}`}
+                  className="inline-block px-3 py-1.5 rounded-full bg-[rgba(255,252,245,0.78)] hover:bg-[rgba(255,252,245,0.92)] text-sm text-emphasis transition-colors"
+                >
+                  {c.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="text-sm">
+            <Link href="/panchang/cities" className="text-primary-300 hover:text-primary-400">
+              Browse all {SEO_CITIES.length} cities →
+            </Link>
+          </p>
+        </div>
 
-            {/* Panchang Elements */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {panchangItems.map((item) => (
-                <div key={item.label} className="surface-card p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <item.icon size={22} strokeWidth={1.7} className="text-primary-700" aria-hidden />
-                    <div>
-                      <p className="text-xs text-[rgba(12,8,5,0.66)]">{item.desc}</p>
-                      <p className="text-sm font-medium text-[rgba(12,8,5,0.66)]">{item.label}</p>
-                    </div>
-                  </div>
-                  <p className="text-xl font-bold text-surface-950">{item.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Sun/Moon Timings */}
-            <h2 className="text-xl font-bold text-gradient mb-4">{t.panchang.sunMoonTimings}</h2>
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              {timings.map((tm) => (
-                <div key={tm.label} className="surface-card p-5 text-center">
-                  <tm.icon size={28} strokeWidth={1.6} className="mb-2 mx-auto text-primary-700" aria-hidden />
-                  <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{tm.label}</p>
-                  <p className="text-lg font-bold text-surface-950">{tm.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Inauspicious Periods */}
-            <h2 className="text-xl font-bold text-red-400 mb-4">{t.panchang.inauspiciousPeriods}</h2>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {inauspicious.map((item) => (
-                <div key={item.label} className="surface-card p-5 border border-red-500/10">
-                  <p className="text-sm font-medium text-red-400 mb-1">{item.label}</p>
-                  <p className="text-lg font-bold text-surface-950 mb-1">{item.value}</p>
-                  <p className="text-xs text-[rgba(12,8,5,0.66)]">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <Interpretation
-              domain="panchang"
-              className="mt-8"
-              input={{
-                vara: panchang.vara,
-                tithi: panchang.tithi,
-                nakshatra: panchang.nakshatra,
-                yoga: panchang.yoga,
-                karana: panchang.karana,
-                rahukaal: panchang.rahukaal,
-              }}
-            />
-
-            {/* SEO city directory link — surfaces the static landing pages
-                so authenticated users can hop to a specific-city panchang
-                without losing their daily-default view. */}
-            <div className="mt-8 surface-card p-4 text-sm text-secondary flex items-center justify-between gap-4">
-              <span>Want today's panchang for a specific city?</span>
-              <Link
-                href="/panchang/cities"
-                className="text-primary-300 hover:text-primary-300 whitespace-nowrap"
-              >
-                Browse cities →
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          <Link
+            href="/kundli"
+            className="block surface-card p-4 hover:bg-[rgba(255,252,245,0.92)] transition-colors"
+          >
+            <p className="text-sm font-medium text-surface-950">Free Kundli (birth chart)</p>
+            <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">
+              Full Vedic janam kundali with dashas, doshas and predictions.
+            </p>
+          </Link>
+          <Link
+            href="/muhurat"
+            className="block surface-card p-4 hover:bg-[rgba(255,252,245,0.92)] transition-colors"
+          >
+            <p className="text-sm font-medium text-surface-950">Find an auspicious muhurat</p>
+            <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">
+              Wedding, griha-pravesh, vehicle and naming timings from today&apos;s panchang.
+            </p>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { jsonLdHtml } from '@/lib/seo/json-ld';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
 import { prefixedPanchangLocale, PANCHANG_LOCALES, PREBUILD_PANCHANG_LOCALES } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 
 /**
  * Localized daily Panchang landing page per city (Phase 2, Tier B).
@@ -115,6 +116,8 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
             <p className="text-sm text-[rgba(12,8,5,0.72)]">{p.retry}</p>
           </section>
         )}
+
+        <LanguageLinkRow path={`/panchang/${city.slug}`} currentLocale={locale} locales={PANCHANG_LOCALES} />
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import {
   LANDING_LOCALES,
   PREBUILD_LANDING_LOCALES,
 } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -163,6 +164,8 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
             ))}
           </div>
         </section>
+
+        <LanguageLinkRow path={`/horoscope/${sign.slug}`} currentLocale={locale} locales={LANDING_LOCALES} />
       </div>
     </div>
   );

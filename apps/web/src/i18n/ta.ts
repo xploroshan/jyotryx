@@ -1258,6 +1258,7 @@ export const ta: TranslationKeys = {
     copyright: 'அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.',
     groupFeatures: 'அம்சங்கள்',
     groupResources: 'வளங்கள்',
+    byCity: 'நகரம் வாரியாக',
     groupCompany: 'நிறுவனம்',
     linkChat: 'ஜோதிடர் அரட்டை',
     linkPalm: 'கைரேகை',

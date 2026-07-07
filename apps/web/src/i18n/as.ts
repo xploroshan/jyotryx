@@ -1258,6 +1258,7 @@ export const as_: TranslationKeys = {
     copyright: 'সকলো অধিকাৰ সংৰক্ষিত।',
     groupFeatures: 'বৈশিষ্ট্য',
     groupResources: 'সম্পদ',
+    byCity: 'চহৰ অনুযায়ী',
     groupCompany: 'কোম্পানী',
     linkChat: 'জ্যোতিষী চেট',
     linkPalm: 'হস্তৰেখা',

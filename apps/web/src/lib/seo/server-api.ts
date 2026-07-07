@@ -104,6 +104,27 @@ export async function fetchHoroscope(
   }
 }
 
+/**
+ * Fetch the operator-configured pricing settings (public endpoint — the same
+ * one PricingClient hits). Used by the /pricing server wrapper so plan cards
+ * and the Service/Offer JSON-LD render with real prices in initial HTML.
+ * Hourly revalidate: pricing changes are rare, admin-driven events.
+ */
+export async function fetchPricing(
+  revalidateSeconds = 60 * 60,
+): Promise<Record<string, string> | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/pricing`, {
+      next: { revalidate: revalidateSeconds, tags: ['pricing'] },
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as Record<string, string>;
+  } catch {
+    return null;
+  }
+}
+
 export interface SharedMatchGuna {
   guna: string;
   maxPoints: number;

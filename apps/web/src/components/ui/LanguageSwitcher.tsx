@@ -1,28 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useTranslation, type Locale } from '@/i18n';
 import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
-
-const locales: { code: Locale; label: string; native: string }[] = [
-  { code: 'en', label: 'EN', native: 'English' },
-  { code: 'hi', label: 'हि', native: 'हिन्दी' },
-  { code: 'ta', label: 'த', native: 'தமிழ்' },
-  { code: 'te', label: 'తె', native: 'తెలుగు' },
-  { code: 'bn', label: 'বা', native: 'বাংলা' },
-  { code: 'mr', label: 'म', native: 'मराठी' },
-  { code: 'gu', label: 'ગુ', native: 'ગુજરાતી' },
-  { code: 'kn', label: 'ಕ', native: 'ಕನ್ನಡ' },
-  { code: 'ml', label: 'മ', native: 'മലയാളം' },
-  { code: 'pa', label: 'ਪੰ', native: 'ਪੰਜਾਬੀ' },
-  { code: 'or', label: 'ଓ', native: 'ଓଡ଼ିଆ' },
-  { code: 'as', label: 'অ', native: 'অসমীয়া' },
-];
+import { LOCALE_LABELS, switchHref } from '@/lib/seo/locale-links';
 
 export default function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const pathname = usePathname() ?? '/';
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -48,12 +37,27 @@ export default function LanguageSwitcher() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const current = locales.find((l) => l.code === locale) || locales[0];
+  const current = LOCALE_LABELS.find((l) => l.code === locale) || LOCALE_LABELS[0];
+
+  const itemClass = (code: Locale) =>
+    `w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
+      locale === code
+        ? 'text-primary-700 bg-primary-500/10 font-medium'
+        : 'text-emphasis hover:text-surface-950 hover:bg-[rgba(255,252,245,0.86)]'
+    }`;
+
+  const check = (code: Locale) =>
+    locale === code ? (
+      <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+      </svg>
+    ) : null;
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border divider bg-[rgba(255,252,245,0.78)] text-xs font-medium text-secondary hover:text-emphasis transition-colors"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -65,28 +69,40 @@ export default function LanguageSwitcher() {
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-44 v2-surface py-1.5 z-50 max-h-80 overflow-y-auto shadow-xl shadow-black/10">
-          {locales.map((l) => (
-            <button
+      {/* Always in the DOM (CSS-hidden when closed) so the locale anchors are
+          present in server-rendered HTML — the switcher contributes crawlable
+          links to the /<locale> tree instead of being invisible to crawlers. */}
+      <div
+        className={`absolute right-0 top-full mt-1.5 w-44 v2-surface py-1.5 z-50 max-h-80 overflow-y-auto shadow-xl shadow-black/10 ${
+          open ? '' : 'hidden'
+        }`}
+      >
+        {LOCALE_LABELS.map((l) => {
+          // URL is the source of truth: when the current page has an
+          // equivalent in l's tree, switching NAVIGATES there (so users get
+          // localized SSR HTML + shareable localized URLs); the store write
+          // rides along for persistence. Routes with no localized variant
+          // (e.g. /reports) keep the old store-only behavior.
+          const href = switchHref(l.code, pathname);
+          return href !== null ? (
+            <Link
               key={l.code}
+              href={href}
+              prefetch={false}
               onClick={() => handleSelect(l.code)}
-              className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
-                locale === l.code
-                  ? 'text-primary-700 bg-primary-500/10 font-medium'
-                  : 'text-emphasis hover:text-surface-950 hover:bg-[rgba(255,252,245,0.86)]'
-              }`}
+              className={itemClass(l.code)}
             >
               <span>{l.native}</span>
-              {locale === l.code && (
-                <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-              )}
+              {check(l.code)}
+            </Link>
+          ) : (
+            <button key={l.code} onClick={() => handleSelect(l.code)} className={itemClass(l.code)}>
+              <span>{l.native}</span>
+              {check(l.code)}
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

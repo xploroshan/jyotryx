@@ -1258,6 +1258,7 @@ export const te: TranslationKeys = {
     copyright: 'అన్ని హక్కులు రక్షించబడ్డాయి.',
     groupFeatures: 'ఫీచర్‌లు',
     groupResources: 'వనరులు',
+    byCity: 'నగరం వారీగా',
     groupCompany: 'కంపెనీ',
     linkChat: 'జ్యోతిష్య చాట్',
     linkPalm: 'హస్తరేఖ',
