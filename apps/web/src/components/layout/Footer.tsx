@@ -1,31 +1,76 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LogoMark, Wordmark } from "@/components/ui/Logo";
 import { useTranslation } from "@/i18n";
+import { LANDING_LOCALES, type Locale } from "@/i18n/locales";
+import { LOCALIZED_PATHS } from "@/lib/seo/feature-pages";
+import { ZODIAC_SIGNS } from "@/lib/seo/zodiac";
 import { usePricingConfig } from "@/lib/usePricingConfig";
 
+/**
+ * Site footer. Doubles as the site-wide internal-linking backbone: it links
+ * every Tier-A feature page, both cities hubs, and all 12 horoscope sign
+ * pages (the pattern competitors use to keep those clusters crawlable from
+ * every URL). This component is server-rendered into initial HTML by the
+ * root layout, so these are real links for crawlers.
+ *
+ * Locale-aware: on /<locale>/… pages, links whose localized variant exists
+ * point at the /<locale> equivalent, keeping the localized tree internally
+ * connected instead of dumping users (and crawlers) back to English.
+ */
 export default function Footer() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { pricingEnabled } = usePricingConfig();
+  const pathname = usePathname() ?? "/";
+
+  // The locale whose URL tree we're currently inside (from the URL, not the
+  // store — URL is the source of truth for where links should point).
+  const urlLocale = pathname.split("/")[1];
+  const inLocaleTree = LANDING_LOCALES.includes(urlLocale as Locale) && urlLocale !== "en";
+
+  /** /kundli → /hi/kundli when browsing the /hi tree and the variant exists. */
+  const localized = (href: string): string =>
+    inLocaleTree && LOCALIZED_PATHS.includes(href) ? `/${urlLocale}${href}` : href;
+
+  /** Sign landing pages exist for LANDING_LOCALES only. */
+  const signHref = (slug: string): string =>
+    inLocaleTree ? `/${urlLocale}/horoscope/${slug}` : `/horoscope/${slug}`;
 
   const footerGroups = [
     {
       title: t.footer.groupFeatures,
       links: [
         { label: t.nav.consult, href: "/chat" },
-        { label: t.nav.palmistry, href: "/palmistry" },
-        { label: t.nav.kundli, href: "/kundli" },
-        { label: t.nav.matching, href: "/matching" },
+        { label: t.nav.kundli, href: localized("/kundli") },
+        { label: t.nav.matching, href: localized("/matching") },
         { label: t.nav.horoscope, href: "/horoscope" },
         { label: t.nav.panchang, href: "/panchang" },
+        { label: t.nav.palmistry, href: localized("/palmistry") },
+        { label: t.nav.numerology, href: localized("/numerology") },
+        { label: t.nav.tarot, href: localized("/tarot") },
+        { label: t.nav.vastu, href: localized("/vastu") },
+        { label: t.muhurat.title, href: localized("/muhurat") },
       ],
+    },
+    {
+      // 12-sign cluster: keeps the 336 sign/period landing pages one hop
+      // from every page on the site.
+      title: t.nav.horoscope,
+      links: ZODIAC_SIGNS.map((s) => ({
+        label: (t.horoscope as unknown as Record<string, string>)[s.slug] ?? s.name,
+        href: signHref(s.slug),
+      })),
     },
     {
       title: t.footer.groupResources,
       links: [
         // Pricing link only when the operator has enabled the pricing page.
         ...(pricingEnabled ? [{ label: t.common.pricing, href: "/pricing" }] : []),
+        { label: "Learn", href: "/learn" },
+        { label: `${t.nav.panchang} — ${t.footer.byCity}`, href: "/panchang/cities" },
+        { label: `${t.nav.kundli} — ${t.footer.byCity}`, href: "/kundli/cities" },
         { label: t.common.reports, href: "/reports" },
         { label: t.common.signup, href: "/auth?mode=signup" },
       ],
@@ -62,7 +107,7 @@ export default function Footer() {
       />
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8 py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-12">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-5">
               <LogoMark className="h-7 w-7" />
@@ -76,8 +121,8 @@ export default function Footer() {
             </p>
           </div>
 
-          {footerGroups.map((group) => (
-            <div key={group.title}>
+          {footerGroups.map((group, gi) => (
+            <div key={`${group.title}-${gi}`}>
               <h3 className="text-[11px] font-medium text-surface-50/55 uppercase tracking-[0.22em] mb-4">
                 {group.title}
               </h3>
@@ -101,11 +146,6 @@ export default function Footer() {
           <p className="text-xs text-surface-50/45">
             &copy; {new Date().getFullYear()} MyAstro360. {t.footer.copyright}
           </p>
-          <div className="flex gap-8">
-            <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">Twitter</a>
-            <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">Instagram</a>
-            <a href="#" className="text-surface-50/55 hover:text-primary-300 transition-colors text-xs">YouTube</a>
-          </div>
         </div>
       </div>
     </footer>

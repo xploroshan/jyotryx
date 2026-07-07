@@ -3,6 +3,7 @@ import { isLocale } from '@/i18n/locales';
 import { localizedFeatureMetadata } from '@/lib/seo/page-metadata';
 import { getFeatureContent } from '@/lib/seo/feature-content';
 import { FeatureSeoSection } from '@/components/seo/FeatureSeoSection';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import PalmistryClient from '@/app/palmistry/PalmistryClient';
 
 const PATH = '/palmistry';
@@ -24,6 +25,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     <>
       <PalmistryClient />
       <FeatureSeoSection content={content} />
+      {isLocale(locale) && <LanguageLinkRow path={PATH} currentLocale={locale} />}
     </>
   );
 }

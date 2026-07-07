@@ -25,7 +25,7 @@ const mockHoroscopeResponse = {
 };
 
 // ─── Import component AFTER mocks ──────────────────────────────────────────
-import HoroscopePage from '@/app/horoscope/page';
+import HoroscopePage from '@/app/horoscope/HoroscopeClient';
 
 describe('Horoscope Page: Rendering', () => {
   beforeEach(() => {
@@ -41,8 +41,8 @@ describe('Horoscope Page: Rendering', () => {
     );
     render(<HoroscopePage />);
 
-    const horoscopeEls = await screen.findAllByText(/Horoscope/);
-    expect(horoscopeEls.length).toBeGreaterThanOrEqual(1);
+    // The page H1 moved to the server shell (page.tsx); the client widget
+    // still owns the interactive sign grid asserted below.
 
     const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
     for (const sign of signs) {

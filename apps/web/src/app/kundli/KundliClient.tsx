@@ -7,12 +7,10 @@ import { useTranslation } from "@/i18n";
 import { Gift } from "lucide-react";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
-import { RequiredMark } from "@/components/ui/Toast";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 import { track, trackOnce } from "@/lib/analytics";
-import FeatureHeader from "@/components/editorial/FeatureHeader";
-import { FeatureGlyph } from "@/components/icons";
 import { NorthIndianChart } from "@/components/kundli/NorthIndianChart";
 import { SouthIndianChart } from "@/components/kundli/SouthIndianChart";
 import { orderPlanets } from "@/components/kundli/chart-common";
@@ -214,16 +212,12 @@ export default function KundliPage() {
     }
   };
 
+  // NOTE: the page H1 (FeatureHeader) is rendered by the SERVER wrappers in
+  // page.tsx / [locale]/kundli/page.tsx — this whole component sits inside a
+  // <Suspense fallback={null}> (it reads ?place= via useSearchParams), so
+  // anything rendered here is ABSENT from the crawler-visible initial HTML.
   return (
     <div>
-      <FeatureHeader
-        tint="amber"
-        eyebrow={t.kundli.badge}
-        eyebrowIcon={<FeatureGlyph slug="kundli" size={18} />}
-        headline={`${t.kundli.title} {em}${t.kundli.titleHighlight}{/em}`}
-        tagline={t.kundli.description}
-      />
-
       <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14 fade-in-up">
         {/* Birth Details Form */}
         {!kundli && (

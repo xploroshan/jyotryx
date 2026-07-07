@@ -21,7 +21,14 @@ import { SITE_ORIGIN } from '@/lib/seo/server-api';
  * the brand surfaced inside ChatGPT, Claude, Perplexity, and Google's AI
  * Overviews / Gemini grounding.
  */
-const COMMON_DISALLOW = ['/admin', '/admin/', '/auth', '/reset-password', '/checkout', '/api/', '/profile'];
+const COMMON_DISALLOW = [
+  '/admin', '/admin/', '/auth', '/reset-password', '/checkout', '/api/', '/profile',
+  // Internal tooling + per-user app surfaces (no SEO value; several also get
+  // an X-Robots-Tag noindex header via next.config headers() — disallow stops
+  // crawling, the header actually keeps already-discovered URLs deindexed).
+  '/styleguide', '/chat', '/my-day', '/reports', '/referral',
+  '/decision-room', '/horary/ask', '/horary/history',
+];
 
 // Answer-engine + training crawlers we explicitly welcome.
 const AI_CRAWLERS = [

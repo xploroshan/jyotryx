@@ -23,7 +23,7 @@ import { ConditionalLayoutShell } from "@/components/layout/ConditionalLayoutShe
 import NavbarV2 from "@/components/layout/v2/NavbarV2";
 import FeatureBarV2 from "@/components/layout/v2/FeatureBarV2";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
-import { jsonLdHtml } from "@/lib/seo/json-ld";
+import { jsonLdHtml, organizationLd, websiteLd } from "@/lib/seo/json-ld";
 import HtmlLangSync from "@/components/i18n/HtmlLangSync";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/analytics/PostHogAnalytics";
@@ -35,36 +35,35 @@ import WebVitals from "@/components/analytics/WebVitals";
 // sitelinks search box. Emitted once in the root layout so every route
 // carries it without per-page duplication.
 const ORGANIZATION_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "MyAstro360",
-  url: SITE_ORIGIN,
-  logo: `${SITE_ORIGIN}/logo.svg`,
+  ...organizationLd({
+    // Owner input: add real social/app-store profile URLs here as they exist
+    // (X/Instagram/YouTube/Play Store). Never list placeholder links.
+    sameAs: [],
+  }),
   description:
     "MyAstro360 is a Vedic astrology platform offering instant, personalized Kundli, horoscopes, palmistry, compatibility matching, panchang, and muhurat guidance.",
 };
 
-const WEBSITE_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "MyAstro360",
-  url: SITE_ORIGIN,
-};
+const WEBSITE_JSON_LD = websiteLd();
 
 // We expose the next/font families as their own CSS variables and let the
 // theme tokens in globals.css extend them with system fallbacks. Doing it
 // this way avoids a recursive `--font-sans: var(--font-sans), …` declaration
 // in `@theme`.
+// Variable fonts: omitting `weight` makes next/font serve the single
+// variable-axis file per family/style instead of one file per weight —
+// this page previously preloaded 12 font files (4 Inter + 8 Fraunces),
+// which competed with the text-based LCP for bandwidth. Now it's 3
+// (Inter var, Fraunces var, Fraunces italic var); every weight 100-900
+// remains available.
 const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   variable: "--font-sans-inter",
   display: "swap",
 });
 
 const display = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-display-fraunces",
   display: "swap",
@@ -93,7 +92,14 @@ const notoVars = [
 ].map((f) => f.variable).join(" ");
 
 export const metadata: Metadata = {
-  title: "MyAstro360 — Vedic Astrology Platform",
+  // Brand suffix is applied ONCE here via title.template — page metadata must
+  // supply the bare title (no hand-appended " | MyAstro360"). Note: Next
+  // applies the template to <title> only, NOT og:title/twitter:title, so
+  // pageMetadata() composes the suffixed string for those itself.
+  title: {
+    default: "MyAstro360 — Vedic Astrology Platform",
+    template: "%s | MyAstro360",
+  },
   description:
     "Instant, personalized Vedic astrology consultations. Kundli, palmistry, horoscopes, compatibility matching, and spiritual guidance — available 24/7.",
   icons: {
@@ -108,7 +114,10 @@ export const metadata: Metadata = {
     "astrology", "vedic astrology", "kundli", "horoscope",
     "palmistry", "kundli matching", "panchang", "muhurat", "MyAstro360",
   ],
-  metadataBase: new URL("https://www.myastro360.com"),
+  // Same origin source as every canonical/hreflang/sitemap URL (server-api's
+  // SITE_ORIGIN) so an env override can never split canonical resolution
+  // from og:url/hreflang generation.
+  metadataBase: new URL(SITE_ORIGIN),
   // Google Search Console site verification. Set NEXT_PUBLIC_GSC_VERIFICATION
   // in the Vercel env to the token GSC gives you (the value of the
   // `google-site-verification` meta tag) to verify ownership without a code

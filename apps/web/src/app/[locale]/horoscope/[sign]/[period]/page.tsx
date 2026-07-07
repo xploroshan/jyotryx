@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd } from '@/lib/seo/json-ld';
+import { periodStartIST } from '@/lib/seo/dates';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
 import { prefixedLandingLocale, LANDING_LOCALES, PREBUILD_LANDING_LOCALES } from '@/i18n/locales';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -45,7 +47,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   return localizedMetadata({
     locale,
     path: `/horoscope/${sign.slug}/${period}`,
-    title: `${signName} ${periodLabel} ${t.horoscope.titleHighlight} | MyAstro360`,
+    title: `${signName} ${periodLabel} ${t.horoscope.titleHighlight}`,
     description: t.horoscope.description,
     hreflangLocales: LANDING_LOCALES,
   });
@@ -67,22 +69,12 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
   const horoscope = await fetchHoroscope(sign.slug, period, undefined, locale);
   const canonical = localeUrl(locale, `/horoscope/${sign.slug}/${period}`);
 
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  const jsonLdArticle = articleLd({
     headline: `${signName} ${periodLabel} ${horoscopeWord}`,
+    url: canonical,
     inLanguage: locale,
-    datePublished: new Date().toISOString(),
-    dateModified: new Date().toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: canonical,
-    description: horoscope?.forecast?.slice(0, 200) ?? `${signName} ${periodLabel} ${horoscopeWord}`,
-  };
+    datePublished: periodStartIST(period),
+  });
 
   return (
     <div className="relative min-h-screen">
@@ -143,6 +135,8 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
             <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.horoscope.retry}</p>
           )}
         </section>
+
+        <LanguageLinkRow path={`/horoscope/${sign.slug}/${period}`} currentLocale={locale} locales={LANDING_LOCALES} />
       </div>
     </div>
   );

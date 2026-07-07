@@ -281,6 +281,11 @@ jobs:
             for (const budget of budgets) {
               const maxBytes = parseInt(budget.maxSize) * 1024;
               const files = globSync(budget.path);
+              if (files.length === 0) {
+                console.error('BUDGET GLOB MATCHED NOTHING: ' + budget.path + ' — dead budgets pass silently; fix the glob or remove the entry.');
+                failed = true;
+                continue;
+              }
               for (const file of files) {
                 const size = fs.statSync(file).size;
                 const sizeKB = (size / 1024).toFixed(1);

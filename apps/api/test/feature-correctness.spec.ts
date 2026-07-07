@@ -799,7 +799,16 @@ describe('Panchang — Calendar & Astronomical Correctness', () => {
   describe('Vara validation', () => {
     it('should match actual day of week', async () => {
       const result = await service.getPanchang();
-      const todayIdx = new Date().getDay();
+      // getPanchang() defaults to Delhi and (correctly) computes the panchang
+      // for the LOCATION's local day — so the expected weekday must be read in
+      // Asia/Kolkata, not the server's zone. Comparing against server-local
+      // new Date() made this test fail every day between 18:30 and 24:00 UTC,
+      // when India is already on the next date.
+      const istWeekday = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'short',
+      }).format(new Date());
+      const todayIdx = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(istWeekday);
       expect(result.vara).toBe(VALID_VARAS[todayIdx]);
     });
   });
@@ -835,7 +844,11 @@ describe('Panchang — Calendar & Astronomical Correctness', () => {
   describe('Date validation', () => {
     it('should return today\'s date', async () => {
       const result = await service.getPanchang();
-      const today = new Date().toISOString().split('T')[0];
+      // Same IST rule as the vara test: the Delhi panchang's "today" is the
+      // Indian calendar date, which is one day ahead of UTC every evening.
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+      }).format(new Date()); // en-CA → YYYY-MM-DD
       expect(result.date).toBe(today);
     });
   });

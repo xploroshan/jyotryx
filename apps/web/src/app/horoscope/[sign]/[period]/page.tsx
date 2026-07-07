@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
+import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
+import { periodStartIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { LANDING_LOCALES } from '@/i18n/locales';
 import { ZodiacGlyph } from '@/components/icons/astro';
@@ -51,7 +53,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
 
   const meta = PERIODS[period];
   const yearSuffix = period === 'yearly' ? ` ${new Date().getFullYear()}` : '';
-  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix} | MyAstro360`;
+  const title = `${sign.name} ${meta.label} Horoscope${yearSuffix}`;
   const description = `${sign.name} (${sign.symbol}) ${meta.label.toLowerCase()} horoscope — love, career, money and health predictions for ${meta.adjective}. ${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}.`;
   const canonical = `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`;
 
@@ -84,23 +86,14 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
     { key: 'yearly', label: 'Yearly', href: `/horoscope/${sign.slug}/yearly` },
   ];
 
-  const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+  const jsonLdArticle = articleLd({
     headline: `${sign.name} ${meta.label} Horoscope`,
-    datePublished: today.toISOString(),
-    dateModified: today.toISOString(),
-    author: { '@type': 'Organization', name: 'MyAstro360' },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MyAstro360',
-      logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/favicon.svg` },
-    },
-    mainEntityOfPage: `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`,
     description:
       horoscope?.forecast?.slice(0, 200) ??
       `${sign.name} ${meta.label.toLowerCase()} horoscope covering love, career, money and health.`,
-  };
+    url: `${SITE_ORIGIN}/horoscope/${sign.slug}/${period}`,
+    datePublished: periodStartIST(period),
+  });
   const jsonLdBreadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -131,15 +124,7 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
       a: `It looks at the major life areas for ${meta.adjective}: love and relationships, career and work, money and finances, and health and wellbeing.`,
     },
   ];
-  const jsonLdFaq = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  };
+  const jsonLdFaq = faqLd(faqs);
 
   return (
     <div className="relative min-h-screen">
@@ -263,6 +248,8 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
             ))}
           </div>
         </section>
+
+        <LanguageLinkRow path={`/horoscope/${sign.slug}/${period}`} locales={LANDING_LOCALES} />
       </div>
     </div>
   );

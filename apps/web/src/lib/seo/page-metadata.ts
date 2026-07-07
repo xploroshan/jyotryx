@@ -15,6 +15,8 @@ interface PageMetaInput {
    * emits reciprocal hreflang alternates so Google links the language set.
    */
   hreflang?: boolean;
+  /** Opt out of the root layout's title.template (brand-led titles). */
+  absoluteTitle?: boolean;
 }
 
 /** Absolute URL for a path in a given locale (English = root, no prefix). */
@@ -40,6 +42,22 @@ function languagesFor(path: string, locales: readonly Locale[] = SUPPORTED_LOCAL
 const OG_IMAGE = { url: "/og", width: 1200, height: 630 } as const;
 
 /**
+ * The root layout sets `title.template = "%s | MyAstro360"`, so page titles
+ * passed to these helpers must be BARE (no hand-appended suffix). Next applies
+ * the template to <title> only — NOT og:title/twitter:title — so the helpers
+ * compose the suffixed string for the social cards themselves.
+ */
+const BRAND_SUFFIX = " | MyAstro360";
+const withBrand = (title: string) =>
+  title.endsWith(BRAND_SUFFIX) ? title : `${title}${BRAND_SUFFIX}`;
+
+/** og:locale values (Indian-audience variants) per supported locale. */
+const OG_LOCALE: Record<string, string> = {
+  en: "en_IN", hi: "hi_IN", ta: "ta_IN", te: "te_IN", bn: "bn_IN", mr: "mr_IN",
+  gu: "gu_IN", kn: "kn_IN", ml: "ml_IN", pa: "pa_IN", or: "or_IN", as: "as_IN",
+};
+
+/**
  * Builds per-page metadata with a SELF-referencing canonical plus matching
  * OpenGraph/Twitter cards.
  *
@@ -49,10 +67,10 @@ const OG_IMAGE = { url: "/og", width: 1200, height: 630 } as const;
  * homepage. Routing every page through this helper guarantees a correct
  * self-canonical and keeps titles/descriptions unique per page.
  */
-export function pageMetadata({ title, description, path, keywords, hreflang }: PageMetaInput): Metadata {
+export function pageMetadata({ title, description, path, keywords, hreflang, absoluteTitle }: PageMetaInput): Metadata {
   const url = `${SITE_ORIGIN}${path === "/" ? "" : path}`;
   return {
-    title,
+    title: absoluteTitle ? { absolute: title } : title,
     description,
     ...(keywords ? { keywords } : {}),
     // Relative canonical is resolved against `metadataBase` by Next.
@@ -63,14 +81,20 @@ export function pageMetadata({ title, description, path, keywords, hreflang }: P
     // NOTE: Next shallow-merges `openGraph`, so a page that sets it does NOT
     // inherit the layout's images — we must include the card here explicitly.
     openGraph: {
-      title,
+      title: absoluteTitle ? title : withBrand(title),
       description,
       url,
       type: "website",
       siteName: "MyAstro360",
+      locale: OG_LOCALE.en,
       images: [{ ...OG_IMAGE, alt: title }],
     },
-    twitter: { card: "summary_large_image", title, description, images: ["/og"] },
+    twitter: {
+      card: "summary_large_image",
+      title: absoluteTitle ? title : withBrand(title),
+      description,
+      images: ["/og"],
+    },
   };
 }
 
@@ -83,6 +107,8 @@ interface LocalizedMetaInput {
   keywords?: string[];
   /** Locales this page actually exists in (for hreflang). Defaults to all 12. */
   hreflangLocales?: readonly Locale[];
+  /** Opt out of the root layout's title.template (title used verbatim). */
+  absoluteTitle?: boolean;
 }
 
 /**
@@ -100,6 +126,8 @@ const FEATURE_I18N_KEY: Record<string, string> = {
   "/vastu": "vastu",
   "/muhurat": "muhurat",
   "/palmistry": "palmistry",
+  // "/" (home) is handled as a special case in localizedFeatureMetadata —
+  // its strings live under home.heroTitle/heroHighlight/heroDescription.
 };
 
 /**
@@ -111,14 +139,34 @@ const FEATURE_I18N_KEY: Record<string, string> = {
  */
 export async function localizedFeatureMetadata(locale: Locale, path: string): Promise<Metadata> {
   const fallback = FEATURE_PAGES[path];
-  const key = FEATURE_I18N_KEY[path];
   const t = await getServerTranslations(locale);
+
+  // Home page: its localized strings live in the hero, and the highlight
+  // already contains the brand name — so use the composed hero verbatim as
+  // an ABSOLUTE title (no template suffix) to avoid "…MyAstro360 | MyAstro360".
+  if (path === "/") {
+    const home = (t as unknown as { home?: { heroTitle?: string; heroHighlight?: string; heroDescription?: string } }).home;
+    const headline = home?.heroTitle
+      ? `${home.heroTitle} ${home.heroHighlight ?? ""}`.trim()
+      : null;
+    return localizedMetadata({
+      locale,
+      path,
+      title: headline ?? fallback.title,
+      description: home?.heroDescription ?? fallback.description,
+      keywords: fallback.keywords,
+      absoluteTitle: true,
+    });
+  }
+
+  const key = FEATURE_I18N_KEY[path];
   const section = key ? (t as unknown as Record<string, { title?: string; titleHighlight?: string; description?: string }>)[key] : undefined;
 
   const headline = section?.title
     ? `${section.title}${section.titleHighlight ? ` ${section.titleHighlight}` : ""}`
     : null;
-  const title = headline ? `${headline} | MyAstro360` : fallback.title;
+  // Bare title — the root layout's title.template appends the brand suffix.
+  const title = headline ?? fallback.title;
   const description = section?.description ?? fallback.description;
 
   return localizedMetadata({ locale, path, title, description, keywords: fallback.keywords });
@@ -130,21 +178,27 @@ export async function localizedFeatureMetadata(locale: Locale, path: string): Pr
  * exists in + x-default) so the language set is correctly linked for search
  * engines.
  */
-export function localizedMetadata({ locale, path, title, description, keywords, hreflangLocales }: LocalizedMetaInput): Metadata {
+export function localizedMetadata({ locale, path, title, description, keywords, hreflangLocales, absoluteTitle }: LocalizedMetaInput): Metadata {
   const canonical = localeUrl(locale, path);
+  const ogTitle = absoluteTitle ? title : withBrand(title);
+  const locales = hreflangLocales ?? SUPPORTED_LOCALES;
   return {
-    title,
+    title: absoluteTitle ? { absolute: title } : title,
     description,
     ...(keywords ? { keywords } : {}),
-    alternates: { canonical, languages: languagesFor(path, hreflangLocales) },
+    alternates: { canonical, languages: languagesFor(path, locales) },
     openGraph: {
-      title,
+      title: ogTitle,
       description,
       url: canonical,
       type: "website",
       siteName: "MyAstro360",
+      locale: OG_LOCALE[locale] ?? "en_IN",
+      alternateLocale: locales
+        .filter((l) => l !== locale)
+        .map((l) => OG_LOCALE[l] ?? "en_IN"),
       images: [{ ...OG_IMAGE, alt: title }],
     },
-    twitter: { card: "summary_large_image", title, description, images: ["/og"] },
+    twitter: { card: "summary_large_image", title: ogTitle, description, images: ["/og"] },
   };
 }

@@ -1258,6 +1258,7 @@ export const gu: TranslationKeys = {
     copyright: 'બધા હક્કો અનામત.',
     groupFeatures: 'વિશેષતાઓ',
     groupResources: 'સંસાધનો',
+    byCity: 'શહેર પ્રમાણે',
     groupCompany: 'કંપની',
     linkChat: 'જ્યોતિષી ચેટ',
     linkPalm: 'હસ્તરેખા',
