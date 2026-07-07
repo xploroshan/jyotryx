@@ -7,7 +7,7 @@ import { useTranslation } from "@/i18n";
 import { Gift } from "lucide-react";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
-import { RequiredMark } from "@/components/ui/Toast";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 import { track, trackOnce } from "@/lib/analytics";

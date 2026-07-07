@@ -1,6 +1,3 @@
-'use client';
-
-import { motion, useReducedMotion } from 'framer-motion';
 import type { CSSProperties } from 'react';
 
 /**
@@ -8,7 +5,13 @@ import type { CSSProperties } from 'react';
  * page-specific skeletons instead of using a spinner alone — the user
  * sees the layout the real content will settle into.
  *
- * Respects prefers-reduced-motion: falls back to a static tint.
+ * The pulse is a pure-CSS keyframe (`animate-skeleton-pulse` in
+ * globals.css) rather than framer-motion: skeletons render on
+ * first-load-critical pages (/horoscope, /reports), and a looping
+ * opacity tween is exactly what CSS animations are for — dropping the
+ * motion runtime (~45KB gz) from those pages' first-load JS.
+ * `prefers-reduced-motion` is honoured in CSS (`motion-reduce:animate-none`).
+ * No 'use client' needed anymore — it renders anywhere.
  */
 export function Skeleton({
   className,
@@ -19,14 +22,11 @@ export function Skeleton({
   rounded?: string;
   style?: CSSProperties;
 }) {
-  const reduce = useReducedMotion();
   return (
-    <motion.div
+    <div
       aria-hidden
-      className={`${rounded} bg-[rgba(255,252,245,0.86)] ${className ?? ''}`}
+      className={`${rounded} bg-[rgba(255,252,245,0.86)] animate-skeleton-pulse motion-reduce:animate-none ${className ?? ''}`}
       style={style}
-      animate={reduce ? undefined : { opacity: [0.55, 0.85, 0.55] }}
-      transition={reduce ? undefined : { duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
     />
   );
 }

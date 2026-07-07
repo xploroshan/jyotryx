@@ -50,16 +50,20 @@ const WEBSITE_JSON_LD = websiteLd();
 // theme tokens in globals.css extend them with system fallbacks. Doing it
 // this way avoids a recursive `--font-sans: var(--font-sans), …` declaration
 // in `@theme`.
+// Variable fonts: omitting `weight` makes next/font serve the single
+// variable-axis file per family/style instead of one file per weight —
+// this page previously preloaded 12 font files (4 Inter + 8 Fraunces),
+// which competed with the text-based LCP for bandwidth. Now it's 3
+// (Inter var, Fraunces var, Fraunces italic var); every weight 100-900
+// remains available.
 const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   variable: "--font-sans-inter",
   display: "swap",
 });
 
 const display = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-display-fraunces",
   display: "swap",

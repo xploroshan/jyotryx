@@ -655,6 +655,19 @@
   50% { opacity: 1; }
 }
 
+/* Skeleton shimmer — CSS replacement for the former framer-motion opacity
+   tween in ui/Skeleton.tsx (keeps the motion runtime out of first-load JS on
+   /horoscope and /reports). Reduced-motion is handled at the call site via
+   Tailwind's motion-reduce:animate-none. */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.85; }
+}
+
+.animate-skeleton-pulse {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
 /* HeroSun corona — slow breathing pulse. Opacity ONLY (no transform): the
    corona carries a large blur, and animating scale forces the GPU to
    re-rasterize that blur every frame (sustained GPU load / heat while idle).

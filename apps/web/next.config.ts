@@ -9,10 +9,15 @@ const nextConfig: NextConfig = {
   // Vercel ignores `output` and builds normally, so this is a no-op there.
   output: "standalone",
   images: {
+    // AVIF first (30-50% smaller than WebP for photos), WebP fallback.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.amazonaws.com",
+        // Narrowed from "**.amazonaws.com" (any S3 bucket on the internet —
+        // an open image-optimizer proxy) to our upload region. Widen only for
+        // hosts we actually serve from.
+        hostname: "*.s3.ap-south-1.amazonaws.com",
       },
     ],
   },

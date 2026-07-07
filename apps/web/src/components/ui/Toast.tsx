@@ -81,14 +81,5 @@ export function Toast({
   );
 }
 
-/**
- * A visually prominent required-field asterisk. Accessible label conveys
- * "required" for screen readers without relying on color alone.
- */
-export function RequiredMark({ label = 'required' }: { label?: string }) {
-  return (
-    <span className="ml-1 text-sm font-semibold text-accent-400" aria-label={label} title={label}>
-      *
-    </span>
-  );
-}
+// RequiredMark moved to ui/RequiredMark.tsx so motion-free form pages don't
+// pull framer-motion through this module.
