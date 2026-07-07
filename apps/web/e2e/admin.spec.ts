@@ -434,19 +434,56 @@ async function installAdminMocks(page: Page, extras: Record<string, any> = {}) {
     'DELETE /admin/users/11111111-1111-1111-1111-111111111111': async (route: Route) => {
       await route.fulfill(json({ deleted: true }));
     },
+    // PaymentsTab reads `{ payments, total }` (matches adminService.listPayments),
+    // not a bare array — a bare array left res.payments undefined and rendered
+    // zero rows.
     'GET /admin/payments': async (route: Route) => {
       await route.fulfill(
-        json([
-          {
-            id: 'pay-1',
-            userName: 'Alice Sharma',
-            userEmail: 'alice@example.com',
-            amount: 49900,
-            status: 'COMPLETED',
-            type: 'SUBSCRIPTION',
-            createdAt: '2026-04-25T09:00:00Z',
-          },
-        ]),
+        json({
+          payments: [
+            {
+              id: 'pay-1',
+              userName: 'Alice Sharma',
+              userEmail: 'alice@example.com',
+              amount: 49900,
+              currency: 'INR',
+              status: 'COMPLETED',
+              type: 'SUBSCRIPTION',
+              provider: 'cashfree',
+              gatewayOrderId: 'cf_alice_1',
+              createdAt: '2026-04-25T09:00:00Z',
+            },
+          ],
+          total: 1,
+        }),
+      );
+    },
+    // PaymentsTab.load() fetches metrics + health BEFORE the list; if either is
+    // unmocked the mock router 500s, load() throws, and the tab renders
+    // <TabError> — so the payments table (and Alice Sharma) never appears.
+    'GET /admin/payments/metrics': async (route: Route) => {
+      await route.fulfill(
+        json({
+          revenue: { today: 49900, last7: 149700, last30: 499000, gross: 499000 },
+          byType: [{ type: 'SUBSCRIPTION', count: 1, amount: 49900 }],
+          successRate: 0.98,
+          refundRate: 0.01,
+          pendingStuck: 0,
+          dailyRevenue: [{ date: '2026-04-25', amount: 49900 }],
+          windowDays: 30,
+        }),
+      );
+    },
+    'GET /admin/payments/health': async (route: Route) => {
+      await route.fulfill(
+        json({
+          pendingStuck: 0,
+          succeeded24h: 12,
+          failed24h: 1,
+          refunded24h: 0,
+          successRate24h: 0.92,
+          lastPaymentAt: '2026-04-25T09:00:00Z',
+        }),
       );
     },
     'GET /admin/chats': async (route: Route) => {
@@ -639,9 +676,12 @@ test.describe('Admin dashboard — tabs', () => {
     await gotoAdmin(page);
     await page.getByRole('button', { name: /Payments/ }).click();
 
-    // Wait for the row from the mocked /admin/payments response.
-    await expect(page.getByText('Alice Sharma')).toBeVisible();
-    await expect(page.getByText('SUBSCRIPTION')).toBeVisible();
+    // Wait for the row from the mocked /admin/payments response. Target the
+    // table cell specifically: "SUBSCRIPTION" also appears in the type-filter
+    // <option> and the by-type metrics breakdown, so a bare getByText is an
+    // ambiguous (strict-mode) match.
+    await expect(page.getByRole('cell', { name: 'Alice Sharma' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'SUBSCRIPTION' })).toBeVisible();
   });
 
   test('Chats tab loads /admin/chats and shows the table', async ({ page }) => {
