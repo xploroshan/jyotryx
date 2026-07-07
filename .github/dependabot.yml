@@ -94,6 +94,20 @@ updates:
       # pair stays aligned.
       - dependency-name: "@types/uuid"
         update-types: [version-update:semver-major]
+      # cockatiel 4.x is ESM-only; ts-jest (CJS) can't `require()` it, so the
+      # entire API jest suite fails to run ("Unexpected token 'export'"). Stay
+      # on 3.x until the jest suite is migrated to ESM (tracked with the jest-30
+      # upgrade above). Re-bumping this to 4.x has twice broken CI.
+      - dependency-name: "cockatiel"
+        update-types: [version-update:semver-major]
+      # OpenTelemetry packages are all 0.x (pre-stable, every minor can break)
+      # and must stay version-aligned with @sentry/node's bundled OTel peer.
+      # Bumping the API's auto-instrumentations/sdk ahead of Sentry de-hoists
+      # @opentelemetry/instrumentation out of the root node_modules, which
+      # breaks @sentry/node-core's peer resolution and fails the Next.js/Vercel
+      # build. Pin until a coordinated Sentry + OpenTelemetry upgrade.
+      - dependency-name: "@opentelemetry/*"
+        update-types: [version-update:semver-minor, version-update:semver-major]
 
   # ─── Web (Next.js frontend) ────────────────────────────────────────
   - package-ecosystem: npm
