@@ -417,7 +417,7 @@ export default function MatchingPage() {
                 <div className="p-4 rounded-xl bg-[rgba(255,252,245,0.78)] flex items-center justify-between">
                   <span className="text-sm text-[rgba(12,8,5,0.66)]">{personB.name || t.matching.personB} - {t.matching.manglik}</span>
                   <span className={`text-sm font-semibold ${results.manglikB ? "text-red-400" : "text-emerald-400"}`}>
-                    {results.manglikB ? t.matching.yesMild : t.matching.no}
+                    {results.manglikB ? t.matching.yes : t.matching.no}
                   </span>
                 </div>
               </div>

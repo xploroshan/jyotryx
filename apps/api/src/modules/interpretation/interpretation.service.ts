@@ -330,27 +330,46 @@ export class InterpretationService {
 
     if (!existing && isReal) {
       if (!free) {
-        // Credits on (otherwise we would already have 402'd): charge once.
-        const cost = await this.featureAccess.getCreditCost(
-          'deep_dive',
-          this.config.get<number>('credits.deepDiveCost', 3),
-        );
-        const ok = await this.users.deductCredits(
-          userId,
-          cost,
-          `Deep-dive interpretation (${domain})`,
-        );
-        if (!ok) {
-          throw new PaymentRequiredException(
-            'Not enough credits for a deep dive. Top up to unlock the full reading.',
-          );
+        // Claim the unlock atomically FIRST via the unique (userId,domain,
+        // inputHash) constraint, so only ONE of N concurrent requests for the
+        // same input charges — the old check-then-charge let both deduct the
+        // full cost.
+        let claimed = false;
+        try {
+          await this.prisma.deepDiveUnlock.create({ data: { userId, domain, inputHash } });
+          claimed = true;
+        } catch (err: any) {
+          // P2002 = a concurrent request already claimed (and will charge) this
+          // unlock, or it was unlocked between our read and now — don't charge.
+          if (err?.code !== 'P2002') throw err;
         }
+        if (claimed) {
+          const cost = await this.featureAccess.getCreditCost(
+            'deep_dive',
+            this.config.get<number>('credits.deepDiveCost', 3),
+          );
+          const ok = await this.users.deductCredits(
+            userId,
+            cost,
+            `Deep-dive interpretation (${domain})`,
+          );
+          if (!ok) {
+            // Couldn't charge — release the unlock we just claimed so the user
+            // isn't handed a free permanent unlock, then surface 402.
+            await this.prisma.deepDiveUnlock
+              .delete({ where: { userId_domain_inputHash: { userId, domain, inputHash } } })
+              .catch(() => undefined);
+            throw new PaymentRequiredException(
+              'Not enough credits for a deep dive. Top up to unlock the full reading.',
+            );
+          }
+        }
+      } else {
+        // Free (subscriber / free-mode): just record the unlock idempotently.
+        await this.prisma.deepDiveUnlock
+          .create({ data: { userId, domain, inputHash } })
+          .catch(() => undefined);
       }
-      // Record the unlock so re-views are free. Idempotent — a concurrent
-      // request may win the unique race; ignore that.
-      await this.prisma.deepDiveUnlock
-        .create({ data: { userId, domain, inputHash } })
-        .catch(() => undefined);
     }
     return result;
   }

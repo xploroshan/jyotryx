@@ -124,11 +124,13 @@ export default () => ({
     length: parseIntEnv('OTP_LENGTH', 6),
     // Per-phone wrong-guess cap before the current OTP is burned (brute-force guard).
     maxVerifyAttempts: parseIntEnv('OTP_MAX_VERIFY_ATTEMPTS', 5),
-    // When true, the /auth/otp/send response includes the OTP (dev/staging only).
-    // Automatically enabled outside production unless explicitly disabled.
-    exposeOtpInResponse:
-      process.env.OTP_EXPOSE_IN_RESPONSE === 'true' ||
-      (process.env.NODE_ENV !== 'production' && process.env.OTP_EXPOSE_IN_RESPONSE !== 'false'),
+    // When true, the /auth/otp/send response includes the OTP for local
+    // development. This is opt-in ONLY and must never be keyed off NODE_ENV:
+    // any publicly-reachable staging/preview deploy runs with
+    // NODE_ENV !== 'production' and would otherwise return every OTP in its
+    // API response, enabling takeover of any phone number. Require an explicit
+    // OTP_EXPOSE_IN_RESPONSE=true to turn it on.
+    exposeOtpInResponse: process.env.OTP_EXPOSE_IN_RESPONSE === 'true',
   },
 
   sms: {

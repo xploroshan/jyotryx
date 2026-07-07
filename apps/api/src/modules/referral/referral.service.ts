@@ -113,15 +113,24 @@ export class ReferralService {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const candidate = generateCode();
       try {
-        const updated = await this.prisma.user.update({
-          where: { id: userId },
+        // Claim the code ONLY while the user still has none. A concurrent first
+        // call may have already set one; overwriting it would invalidate a code
+        // that was already returned to (and possibly shared by) the other caller.
+        const { count } = await this.prisma.user.updateMany({
+          where: { id: userId, referralCode: null },
           data: { referralCode: candidate },
+        });
+        if (count > 0) return candidate;
+        // Lost the race — a concurrent call set the code first. Return theirs.
+        const fresh = await this.prisma.user.findUnique({
+          where: { id: userId },
           select: { referralCode: true },
         });
-        return updated.referralCode!;
+        if (fresh?.referralCode) return fresh.referralCode;
+        // Still null (unexpected) — retry.
       } catch (err: any) {
-        // Prisma surfaces the unique-violation as P2002 — retry with a
-        // fresh code. Anything else is a real failure.
+        // P2002 = the candidate collided with ANOTHER user's code — retry with a
+        // fresh one. Anything else is a real failure.
         if (err?.code !== 'P2002') throw err;
       }
     }
@@ -207,10 +216,17 @@ export class ReferralService {
     }
 
     try {
-      await this.grantBonusAtomically(referrer.id, refereeId, code, settings.bonusDays);
-      this.logger.log(
-        `Referral activated: referrer=${referrer.email} referee=${refereeId} bonus=${settings.bonusDays}d`,
+      const granted = await this.grantBonusAtomically(
+        referrer.id, refereeId, code, settings.bonusDays, settings.maxPerReferrer,
       );
+      if (granted) {
+        this.logger.log(
+          `Referral activated: referrer=${referrer.email} referee=${refereeId} bonus=${settings.bonusDays}d`,
+        );
+      } else {
+        // Lost the concurrent cap race — the in-transaction re-check rejected it.
+        await this.recordRejection(referrer.id, refereeId, code, settings.bonusDays, 'cap_reached');
+      }
     } catch (err) {
       // Don't fail the signup over this. The referrer's slot is not
       // consumed because the referrals row never landed.
@@ -232,8 +248,19 @@ export class ReferralService {
     refereeId: string,
     code: string,
     bonusDays: number,
-  ): Promise<void> {
-    await this.prisma.$transaction(async (tx: any) => {
+    maxPerReferrer: number,
+  ): Promise<boolean> {
+    return this.prisma.$transaction(async (tx: any) => {
+      // Serialize concurrent activations for THIS referrer so the cap re-check
+      // and the ACTIVATED insert are atomic. A plain count() outside the tx let
+      // two simultaneous signups both pass the cap and both grant, over-issuing
+      // Premium. The xact advisory lock releases automatically at commit/rollback.
+      await tx.$executeRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))', `referral:${referrerId}`);
+      const activatedCount = await tx.referral.count({
+        where: { referrerId, status: 'ACTIVATED' },
+      });
+      if (activatedCount >= maxPerReferrer) return false;
+
       const referrerSubId = await extendOrCreateSubscription(tx, referrerId, bonusDays);
       const refereeSubId = await extendOrCreateSubscription(tx, refereeId, bonusDays);
 
@@ -262,6 +289,7 @@ export class ReferralService {
           activatedAt: new Date(),
         },
       });
+      return true;
     });
   }
 
@@ -451,7 +479,10 @@ function clampInt(
 
 function buildShareUrl(base: string, code: string): string {
   const trimmed = (base || '').replace(/\/+$/, '');
-  return `${trimmed}/auth/register?ref=${encodeURIComponent(code)}`;
+  // The web app has no /auth/register route — the signup page is /auth, and it
+  // reads the ?ref= code from there. Pointing at /auth/register 404'd every
+  // shared referral link.
+  return `${trimmed}/auth?ref=${encodeURIComponent(code)}`;
 }
 
 /**

@@ -18,7 +18,7 @@ describe('InterpretationService', () => {
     getNumberMeaning: jest.Mock;
     renderStatus: jest.Mock;
   };
-  let prisma: { deepDiveUnlock: { findUnique: jest.Mock; create: jest.Mock } };
+  let prisma: { deepDiveUnlock: { findUnique: jest.Mock; create: jest.Mock; delete: jest.Mock } };
   let users: { deductCredits: jest.Mock };
   let featureAccess: { paidFeaturesFree: jest.Mock; isActiveSubscriber: jest.Mock; creditsEnabled: jest.Mock; getCreditCost: jest.Mock };
 
@@ -47,6 +47,9 @@ describe('InterpretationService', () => {
       deepDiveUnlock: {
         findUnique: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue({ id: 'u1' }),
+        // generateDeepDive now claims the unlock BEFORE charging and releases it
+        // (delete) if the charge fails, so the mock needs delete.
+        delete: jest.fn().mockResolvedValue({}),
       },
     };
     users = { deductCredits: jest.fn().mockResolvedValue(true) };
@@ -292,7 +295,11 @@ describe('InterpretationService', () => {
     await expect(
       service.generateDeepDive({ userId: 'user-1', domain: 'kundli', payload: { ascendant: 'Leo' } }),
     ).rejects.toMatchObject({ status: 402 });
-    expect(prisma.deepDiveUnlock.create).not.toHaveBeenCalled();
+    // The unlock is now claimed BEFORE charging (idempotency) and released when
+    // the charge fails, so create is called once and then delete once — the net
+    // effect is still no persisted unlock.
+    expect(prisma.deepDiveUnlock.create).toHaveBeenCalledTimes(1);
+    expect(prisma.deepDiveUnlock.delete).toHaveBeenCalledTimes(1);
   });
 
   it('deep dive does not charge when the LLM falls back (no real sections)', async () => {

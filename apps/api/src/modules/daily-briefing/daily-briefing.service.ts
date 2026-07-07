@@ -560,6 +560,12 @@ export class DailyBriefingService {
 
     const hours: PlanetaryHour[] = [];
 
+    // The night hours run past midnight (slot minutes 1080–1800), so a time
+    // between local midnight and sunrise (nowMinutes 0–360) belongs to the
+    // PREVIOUS night cycle — shift it forward a day to match, otherwise no hora
+    // is ever marked current between midnight and 06:00.
+    const effectiveNow = nowMinutes < sunriseMinutes ? nowMinutes + 24 * 60 : nowMinutes;
+
     for (let i = 0; i < 24; i++) {
       const planetIdx = (startIdx + i) % 7;
       const planet = HORA_ORDER[planetIdx];
@@ -571,7 +577,7 @@ export class DailyBriefingService {
       const startMin = Math.round(baseMinutes + hourInPeriod * hourLength);
       const endMin = Math.round(baseMinutes + (hourInPeriod + 1) * hourLength);
 
-      const isCurrent = nowMinutes >= startMin && nowMinutes < endMin;
+      const isCurrent = effectiveNow >= startMin && effectiveNow < endMin;
 
       const { do: doList, avoid } = activitiesFor(planet);
 
@@ -655,7 +661,8 @@ export class DailyBriefingService {
 
     return {
       pakshaKey,
-      tithiKey: tithis[tithiIdx % 15],
+      // tithiIdx 29 is the new moon (Amavasya); % 15 would mislabel it 'Purnima'.
+      tithiKey: tithiIdx === 29 ? 'Amavasya' : tithis[tithiIdx % 15],
       nakshatraKey: nakshatras[nakIdx],
       yogaKey: yogas[yogaIdx],
       varaKey: VARA_KEYS[z.weekday],

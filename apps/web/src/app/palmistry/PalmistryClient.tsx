@@ -860,7 +860,7 @@ export default function PalmistryPage() {
                 tone="error"
                 onClose={() => { setError(""); setErrorRetryable(false); }}
                 closeLabel={t.common.close}
-                action={errorRetryable && imageFile ? { label: t.common.retry, onClick: handleAnalyze } : undefined}
+                action={errorRetryable && imageFile ? { label: t.common.retry, onClick: () => handleAnalyze() } : undefined}
               />
             )}
 

@@ -142,6 +142,9 @@ export class ChatService {
         timeOfBirth: true,
         placeOfBirth: true,
         gender: true,
+        // Required by getSystemPrompt's tradition-aware persona; without it the
+        // assistant always degrades to Vedic-only.
+        astrologyTraditions: true,
       },
     });
 
@@ -328,17 +331,23 @@ export class ChatService {
       return;
     }
 
-    // Fetch user profile + KB context
+    // Fetch user profile + KB context. astrologyTraditions must be selected or
+    // getSystemPrompt's tradition-aware persona always degrades to Vedic-only.
     const userProfile = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true },
+      select: { name: true, dateOfBirth: true, timeOfBirth: true, placeOfBirth: true, gender: true, astrologyTraditions: true },
     });
 
     const kbCategory = this.mapCategoryToKB(dbSession.category);
     const kbResults = await this.knowledgeService.search(dto.message, kbCategory, 5);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
-    const systemPrompt = this.getSystemPrompt(dbSession.category, userProfile, dbSession.astrologerId) + getLocaleInstruction(dto.locale) + ChatService.INJECTION_GUARD;
+    // Inject the user's stored memories, exactly like the non-streaming path.
+    // Omitting it here left the UserMemory feature dead on mobile, the only
+    // client that streams.
+    const memoryBlock = await this.memoryService.buildMemoryBlock(userId);
+
+    const systemPrompt = this.getSystemPrompt(dbSession.category, userProfile, dbSession.astrologerId) + getLocaleInstruction(dto.locale) + memoryBlock + ChatService.INJECTION_GUARD;
     const enrichedPrompt = kbContext
       ? `${systemPrompt}\n\nReference Knowledge (use this to ground your responses):\n${kbContext}`
       : systemPrompt;

@@ -83,6 +83,9 @@ describe('PaymentService (Cashfree)', () => {
       resolveUnlock: jest.fn(),
       consumeEntitlement: jest.fn(),
       isActiveSubscriber: jest.fn().mockResolvedValue(false),
+      subscriptionsEnabled: jest.fn().mockResolvedValue(true),
+      addUsageBonus: jest.fn().mockResolvedValue('LIFETIME'),
+      removeUsageBonus: jest.fn().mockResolvedValue(undefined),
     };
 
     metrics = { cashfreeWebhookTotal: { inc: jest.fn() } };
@@ -203,7 +206,7 @@ describe('PaymentService (Cashfree)', () => {
       const result = await service.handleWebhook(p, sig, ts);
       expect(result.received).toBe(true);
       expect(txStub.payment.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ status: { not: 'SUCCESS' } }) }),
+        expect.objectContaining({ where: expect.objectContaining({ status: { notIn: ['SUCCESS', 'REFUNDED'] } }) }),
       );
       expect(txStub.user.update).toHaveBeenCalledTimes(1);
       expect(txStub.user.update).toHaveBeenCalledWith(
@@ -308,7 +311,9 @@ describe('PaymentService (Cashfree)', () => {
       const p = refundPayload('cf_order_r3');
       const ts = nowTs();
       const sig = cashfreeWebhookSig(TEST_SECRET, ts, p);
-      const findFirst = jest.fn();
+      // handleRefund now probes with findFirst(status: SUCCESS) first; when the
+      // order was already refunded there is no SUCCESS row, so nothing reverses.
+      const findFirst = jest.fn().mockResolvedValue(null);
       const txStub = {
         payment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }), findFirst },
         user: { findUnique: jest.fn(), update: jest.fn() },
@@ -318,7 +323,10 @@ describe('PaymentService (Cashfree)', () => {
 
       const result = await service.handleWebhook(p, sig, ts);
       expect(result).toEqual({ received: true });
-      expect(findFirst).not.toHaveBeenCalled();
+      expect(findFirst).toHaveBeenCalled();
+      expect(txStub.payment.updateMany).not.toHaveBeenCalled();
+      expect(txStub.user.update).not.toHaveBeenCalled();
+      expect(txStub.creditTransaction.create).not.toHaveBeenCalled();
     });
 
     it('ignores a non-SUCCESS refund status', async () => {

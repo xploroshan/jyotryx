@@ -98,7 +98,19 @@ export async function fetchHoroscope(
       headers: { Accept: 'application/json' },
     });
     if (!res.ok) return null;
-    return (await res.json()) as HoroscopePayload;
+    // The API (HoroscopeResult) returns prediction/luckyColor/luckyNumber, but
+    // the SEO pages read forecast/lucky_color/lucky_number. Map explicitly —
+    // casting the raw JSON left forecast/lucky_* undefined, so the forecast body
+    // and lucky stats rendered blank on every horoscope landing page.
+    const raw = (await res.json()) as Record<string, unknown>;
+    return {
+      sign: String(raw.sign ?? sign),
+      period: String(raw.period ?? period),
+      forecast: String(raw.forecast ?? raw.prediction ?? ''),
+      lucky_color: (raw.lucky_color ?? raw.luckyColor) as string | undefined,
+      lucky_number: (raw.lucky_number ?? raw.luckyNumber) as number | undefined,
+      compatibility: (raw.compatibility ?? raw.compatibleSign) as string | undefined,
+    };
   } catch {
     return null;
   }

@@ -306,6 +306,15 @@ export class AuthService {
       data: { passwordHash: hashedPassword },
     });
 
+    // A password change is a credential-rotation event: revoke every existing
+    // refresh-token family so sessions established with the old password can't
+    // outlive it (they otherwise survive for the full 30-day refresh lifetime).
+    // The current access token remains valid until it expires (~1h) — the
+    // standard short-lived-JWT trade-off — but no session can be refreshed.
+    await this.revokeAllUserTokens(userId).catch((err) =>
+      this.logger.error(`Failed to revoke tokens after password change for ${user.email}: ${err?.message || err}`),
+    );
+
     this.logger.log(`Password changed for user: ${user.email}`);
     return { message: 'Password changed successfully' };
   }
@@ -681,12 +690,22 @@ export class AuthService {
     const uid = decodedToken.uid;
     const phone_number = decodedToken.phone_number;
     const email = decodedToken.email;
+    const emailVerified = decodedToken.email_verified === true;
     const firebaseName = (decodedToken as any).name as string | undefined;
     const sign_in_provider = decodedToken.firebase?.sign_in_provider;
 
     // Determine provider type
     const isPhone = sign_in_provider === 'phone' || !!phone_number;
     const isGoogle = sign_in_provider === 'google.com';
+
+    // SECURITY: only trust the email as an account-matching key when Firebase
+    // reports it verified (federated sign-in such as google.com always is).
+    // An unverified email/password token must NOT be able to match — and thereby
+    // log into — an existing account, otherwise anyone can register in Firebase
+    // with a victim's email address (without ever proving ownership) and take
+    // over that victim's account here. Returning users still match on their
+    // stable Firebase uid via providerId below, so this does not break login.
+    const trustedEmail = email && (emailVerified || isGoogle) ? email : undefined;
 
     // Find existing user. Phone is matched against every equivalent format
     // (E.164, no-plus, 10-digit, trunk-zero) so a returning user whose number
@@ -699,7 +718,7 @@ export class AuthService {
       where: {
         OR: [
           ...(phoneCandidates.length ? [{ phone: { in: phoneCandidates } }] : []),
-          ...(email ? [{ email }] : []),
+          ...(trustedEmail ? [{ email: trustedEmail }] : []),
           { providerId: uid },
         ],
       },

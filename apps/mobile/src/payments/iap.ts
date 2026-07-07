@@ -135,10 +135,13 @@ async function buy(sku: string, kind: 'product' | 'subscription'): Promise<Purch
     const verified = await verifyWithBackend(sku, purchase, kind);
     if (!verified.verified) return { ok: false, message: 'Purchase could not be verified.' };
 
-    // Finish ONLY after the backend granted — credits packs are consumable so
-    // they can be bought again; entitlements/subscriptions are not.
+    // Finish ONLY after the backend granted. EVERY one-time product here is
+    // consumed per use server-side (credit packs, per-report unlocks, palm
+    // readings), so all must be finished as consumable — otherwise Play marks the
+    // SKU owned forever and rejects the user's second purchase of a report/palm.
+    // Subscriptions are not consumable.
     await iap
-      .finishTransaction({ purchase, isConsumable: kind === 'product' && sku.startsWith('credits_') })
+      .finishTransaction({ purchase, isConsumable: kind === 'product' })
       .catch(() => {});
 
     return { ok: true, creditsAdded: verified.creditsAdded, entitlementGranted: verified.entitlementGranted };
@@ -166,7 +169,15 @@ export async function restorePurchases(): Promise<{ restored: number; message?: 
       const kind = planForSku(purchase.productId) ? 'subscription' : 'product';
       try {
         const res = await verifyWithBackend(purchase.productId, purchase, kind);
-        if (res.verified) restored++;
+        if (res.verified) {
+          restored++;
+          // Finish any consumable a prior buy() left un-finished (its
+          // finishTransaction can fail and is swallowed there), so Play stops
+          // reporting the SKU as owned and the user can purchase it again.
+          if (kind === 'product') {
+            await iap.finishTransaction({ purchase, isConsumable: true }).catch(() => {});
+          }
+        }
       } catch {
         /* keep going — restore is best-effort per purchase */
       }
