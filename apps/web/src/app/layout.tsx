@@ -36,9 +36,9 @@ import WebVitals from "@/components/analytics/WebVitals";
 // carries it without per-page duplication.
 const ORGANIZATION_JSON_LD = {
   ...organizationLd({
-    // Owner input: add real social/app-store profile URLs here as they exist
-    // (X/Instagram/YouTube/Play Store). Never list placeholder links.
-    sameAs: [],
+    // Real, owner-verified social/app-store profiles only — never placeholders.
+    // Add more (X/YouTube/Play Store) here as they go live.
+    sameAs: ["https://www.instagram.com/myastro360/"],
   }),
   description:
     "MyAstro360 is a Vedic astrology platform offering instant, personalized Kundli, horoscopes, palmistry, compatibility matching, panchang, and muhurat guidance.",
