@@ -216,6 +216,16 @@ export default function NavbarV2() {
               )}
             </div>
 
+            {/* Always visible: the /learn content hub is a primary
+                discovery + SEO surface, so every visitor gets a nav path to
+                it (it was previously reachable only from the footer). */}
+            <Link
+              href="/learn"
+              className={`${navLink} ${pathname.startsWith("/learn") ? navLinkActive : navLinkInactive}`}
+            >
+              Learn
+            </Link>
+
             {showAuth && (
               <Link
                 href="/reports"
@@ -321,6 +331,19 @@ export default function NavbarV2() {
             }`}
           >
             {t.nav.myDay}
+          </Link>
+
+          {/* Always visible — the /learn hub is a primary discovery surface. */}
+          <Link
+            href="/learn"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center px-3 h-10 rounded-md text-[14px] font-medium ${
+              pathname.startsWith("/learn")
+                ? "bg-[var(--color-bg-subtle)] text-[var(--color-fg)]"
+                : "text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg)]"
+            }`}
+          >
+            Learn
           </Link>
 
           <p className="px-3 pt-3 pb-1 text-[11px] uppercase tracking-wider font-medium text-[var(--color-fg-subtle)]">
