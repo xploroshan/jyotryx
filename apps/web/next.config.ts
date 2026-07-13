@@ -51,6 +51,28 @@ const nextConfig: NextConfig = {
       headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
     }));
   },
+  // Branded, same-origin Firebase auth: serve the OAuth handler pages from
+  // OUR host instead of jyotron-8a830.firebaseapp.com. With
+  // NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=www.myastro360.com, signInWithPopup
+  // opens www.myastro360.com/__/auth/handler and these rewrites proxy the
+  // request to Firebase's hosted handler (the documented reverse-proxy
+  // pattern). Users see our domain in the popup, and the flow is same-origin
+  // with the app — immune to third-party cookie/storage partitioning.
+  // Requires (console, one-time): the domain in Firebase Auth ➜ Settings ➜
+  // Authorized domains, and https://www.myastro360.com/__/auth/handler as an
+  // authorized redirect URI on the Google OAuth web client.
+  async rewrites() {
+    return [
+      {
+        source: "/__/auth/:path*",
+        destination: "https://jyotron-8a830.firebaseapp.com/__/auth/:path*",
+      },
+      {
+        source: "/__/firebase/:path*",
+        destination: "https://jyotron-8a830.firebaseapp.com/__/firebase/:path*",
+      },
+    ];
+  },
   // Canonical host: 301 the apex (myastro360.com) to www, which is what
   // `metadataBase`, the sitemap, robots and every canonical URL already use.
   // Without this, Google can crawl both hosts as separate copies and split
