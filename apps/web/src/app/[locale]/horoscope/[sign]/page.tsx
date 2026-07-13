@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ZODIAC_SIGNS, findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml, articleLd } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
 import { todayIST } from '@/lib/seo/dates';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
+import { en } from '@/i18n/en';
+import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import {
   isLocale,
   type Locale,
@@ -21,9 +23,10 @@ import { ZodiacGlyph } from '@/components/icons/astro';
  *
  * Unlike the English route, the visible copy here is sourced entirely from
  * the existing human-translated locale dictionary + the API's locale-aware
- * forecast — NO machine-translated prose. Strings that have no dictionary
- * translation (the English bespoke FAQ / narrative) are simply not rendered
- * on localized pages. Enabled for the LANDING_LOCALES only.
+ * forecast — NO machine-translated prose. The FAQ section is built from the
+ * locale dictionary's `horoscopeLanding` templates (same source the English
+ * route uses via en.ts), so the visible FAQs and the FAQPage JSON-LD stay in
+ * the page's own language. Enabled for the LANDING_LOCALES only.
  */
 
 export function generateStaticParams() {
@@ -91,11 +94,30 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
     ],
   };
 
+  // FAQ — single source for the visible section and the FAQPage JSON-LD,
+  // built from the locale dictionary's templates. Entity tokens use localized
+  // values where the dictionary has them (sign name, element) and fall back
+  // to the English entity data otherwise (date range, modality, planet).
+  // Until every locale dictionary carries horoscopeLanding.*, fall back to
+  // the English templates at runtime (the i18n parity test tracks the gap).
+  const landing = t.horoscopeLanding ?? en.horoscopeLanding;
+  const faqTokens = {
+    sign: signName,
+    symbol: sign.symbol,
+    dateRange: sign.dateRange,
+    modality: sign.modality.toLowerCase(),
+    element: elementLabel,
+    rulingPlanet: sign.rulingPlanet,
+  };
+  const faqs = buildFaqs(landing.faqs, faqTokens);
+  const jsonLdFaq = faqLd(faqs);
+
   return (
     <div className="relative min-h-screen">
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdArticle) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdFaq) }} />
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
@@ -133,6 +155,21 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
           ) : (
             <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.horoscope.retry}</p>
           )}
+        </section>
+
+        {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
+        <section className="surface-card p-6 mb-6">
+          <h2 className="text-lg font-semibold text-surface-950 mb-3">
+            {interpolate(landing.faqHeading, faqTokens)}
+          </h2>
+          <dl className="space-y-4 text-sm">
+            {faqs.map((f) => (
+              <div key={f.q} className="border-l-2 border-primary-500/30 pl-3">
+                <dt className="font-medium text-surface-950">{f.q}</dt>
+                <dd className="text-emphasis mt-1 leading-relaxed">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
         {/* All signs — localized names */}

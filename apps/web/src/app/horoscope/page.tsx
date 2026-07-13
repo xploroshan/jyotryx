@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo/page-metadata";
 import { HUB_PAGES } from "@/lib/seo/feature-pages";
 import { ZODIAC_SIGNS } from "@/lib/seo/zodiac";
 import { fetchHoroscope, SITE_ORIGIN } from "@/lib/seo/server-api";
-import { jsonLdHtml } from "@/lib/seo/json-ld";
+import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { ZodiacGlyph } from "@/components/icons/astro";
@@ -70,12 +70,22 @@ export default async function HoroscopeHubPage() {
       url: `${SITE_ORIGIN}/horoscope/${s.slug}`,
     })),
   };
+  const jsonLdService = serviceLd({
+    name: "Today's Horoscope for All 12 Zodiac Signs",
+    serviceType: "Daily horoscope",
+    description: HUB_PAGES["/horoscope"].description,
+    url: `${SITE_ORIGIN}/horoscope`,
+  });
 
   return (
     <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdService) }}
       />
       <script
         type="application/ld+json"

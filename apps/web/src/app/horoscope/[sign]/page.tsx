@@ -8,6 +8,8 @@ import { jsonLdHtml, articleLd, breadcrumbLd, faqLd } from '@/lib/seo/json-ld';
 import { todayIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { LANDING_LOCALES } from '@/i18n/locales';
+import { en } from '@/i18n/en';
+import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { ZodiacGlyph } from '@/components/icons/astro';
 import { ShareButton } from '@/components/share/ShareButton';
 
@@ -96,25 +98,18 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
 
   // Single source of truth for the FAQ: rendered visibly below AND emitted
   // as FAQPage structured data, so the two never drift (Google requires the
-  // schema content to be present on the page).
-  const faqs: { q: string; a: string }[] = [
-    {
-      q: `What dates does the ${sign.name} zodiac sign cover?`,
-      a: `${sign.name} (${sign.symbol}) covers birthdays between ${sign.dateRange}. This is the Western/tropical sun-sign range; in Vedic (sidereal) astrology the dates shift by roughly three weeks, which is why your Vedic moon sign can differ from your sun sign.`,
-    },
-    {
-      q: `What element and ruling planet govern ${sign.name}?`,
-      a: `${sign.name} is a ${sign.modality.toLowerCase()} ${sign.element.toLowerCase()} sign ruled by ${sign.rulingPlanet}. Its element shapes temperament, its modality describes how it acts, and its ruling planet colours its core motivations.`,
-    },
-    {
-      q: `Is the sun sign horoscope enough, or do I need my full kundli?`,
-      a: `A sun-sign horoscope is a broad daily snapshot for everyone born under ${sign.name}. For guidance specific to you, your Vedic kundli uses your exact date, time, and place of birth to calculate your moon sign (rashi) and ascendant (lagna), which matter more than the sun sign in Vedic astrology.`,
-    },
-    {
-      q: `How often is the ${sign.name} horoscope updated?`,
-      a: `The ${sign.name} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside MyAstro360.`,
-    },
-  ];
+  // schema content to be present on the page). The copy lives as templates in
+  // the i18n dictionary so localized routes render the same FAQs from their
+  // own dictionaries (AEO: no mixed-language signal).
+  const faqTokens = {
+    sign: sign.name,
+    symbol: sign.symbol,
+    dateRange: sign.dateRange,
+    modality: sign.modality.toLowerCase(),
+    element: sign.element.toLowerCase(),
+    rulingPlanet: sign.rulingPlanet,
+  };
+  const faqs = buildFaqs(en.horoscopeLanding.faqs, faqTokens);
   const jsonLdFaq = faqLd(faqs);
 
   return (
@@ -229,7 +224,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
         {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
         <section className="surface-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">
-            {sign.name} horoscope — frequently asked questions
+            {interpolate(en.horoscopeLanding.faqHeading, faqTokens)}
           </h2>
           <dl className="space-y-4 text-sm">
             {faqs.map((f) => (

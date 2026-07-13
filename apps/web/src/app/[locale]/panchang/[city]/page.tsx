@@ -11,6 +11,8 @@ import { prefixedPanchangLocale, PREBUILD_PANCHANG_LOCALES } from '@/i18n/locale
 import { PANCHANG_SITEMAP_LOCALES } from '@/lib/seo/panchang-city-content';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { PANCHANG_CITY_CONTENT_LOCALE, interpolateCity } from '@/lib/seo/panchang-city-content';
+import { en } from '@/i18n/en';
+import { interpolate, buildFaqs } from '@/i18n/interpolate';
 
 /**
  * Localized daily Panchang landing page per city (Phase 2, Tier B).
@@ -64,10 +66,17 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
   const cityName = (city.i18n as Record<string, string>)[locale] ?? city.name;
   const panchang = await fetchPanchang(city.lat, city.lng, undefined, locale);
   // Translated long-form template (per-locale, {city}-interpolated). Locales
-  // without a translation render the data table only — and stay out of the
-  // sitemap until their template lands (see panchang-city-content.ts).
+  // without a long-form translation fall back to the dictionary-driven FAQ
+  // templates (t.panchangLanding) below — they stay out of the sitemap until
+  // their long-form template lands (see panchang-city-content.ts).
   const content = PANCHANG_CITY_CONTENT_LOCALE[locale];
   const faqs = content ? interpolateCity(content.faqs, cityName) : null;
+  // Dictionary FAQ path for locales WITHOUT a long-form template (no double
+  // render for hi). Until every locale dictionary carries panchangLanding.*,
+  // fall back to the English templates (the i18n parity test tracks the gap).
+  const landing = t.panchangLanding ?? en.panchangLanding;
+  const dictFaqTokens = { city: cityName, lat: city.lat.toFixed(4), lng: city.lng.toFixed(4) };
+  const dictFaqs = content ? null : buildFaqs(landing.faqs, dictFaqTokens);
   const canonical = localeUrl(locale, `/panchang/${city.slug}`);
 
   const jsonLdArticle = articleLd({
@@ -141,6 +150,25 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
               </h2>
               <dl className="space-y-4 text-sm">
                 {faqs.map((f) => (
+                  <div key={f.q} className="border-l-2 border-primary-500/30 pl-3">
+                    <dt className="font-medium text-surface-950">{f.q}</dt>
+                    <dd className="text-emphasis mt-1 leading-relaxed">{f.a}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </>
+        )}
+
+        {dictFaqs && (
+          <>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(faqLd(dictFaqs)) }} />
+            <section className="surface-card p-6 mb-6">
+              <h2 className="text-lg font-semibold text-surface-950 mb-3">
+                {interpolate(landing.faqHeading, dictFaqTokens)}
+              </h2>
+              <dl className="space-y-4 text-sm">
+                {dictFaqs.map((f) => (
                   <div key={f.q} className="border-l-2 border-primary-500/30 pl-3">
                     <dt className="font-medium text-surface-950">{f.q}</dt>
                     <dd className="text-emphasis mt-1 leading-relaxed">{f.a}</dd>

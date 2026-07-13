@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo/page-metadata";
 import { HUB_PAGES } from "@/lib/seo/feature-pages";
 import { SEO_CITIES } from "@/lib/seo/cities";
 import { fetchPanchang, SITE_ORIGIN } from "@/lib/seo/server-api";
-import { jsonLdHtml } from "@/lib/seo/json-ld";
+import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import PanchangClient from "./PanchangClient";
@@ -61,12 +61,22 @@ export default async function PanchangHubPage() {
       url: `${SITE_ORIGIN}/panchang/${c.slug}`,
     })),
   };
+  const jsonLdService = serviceLd({
+    name: "Today's Panchang (Aaj Ka Panchang)",
+    serviceType: "Daily panchang",
+    description: HUB_PAGES["/panchang"].description,
+    url: `${SITE_ORIGIN}/panchang`,
+  });
 
   return (
     <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdService) }}
       />
       <script
         type="application/ld+json"
