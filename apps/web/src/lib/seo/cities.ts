@@ -113,3 +113,43 @@ export function slugifyCityName(input: string): string {
 
 export const SUPPORTED_SEO_LOCALES = ['en', 'hi', 'bn', 'kn', 'ta', 'te', 'ml'] as const;
 export type SeoLocale = (typeof SUPPORTED_SEO_LOCALES)[number];
+
+/**
+ * Cities "near" a given city, for the kundli city pages' cross-link block:
+ * same-state cities first (the strongest topical relation for a reader),
+ * topped up with the geographically nearest others. Deterministic, excludes
+ * the city itself, returns exactly `count` entries (SEO_CITIES has 51, so a
+ * small count always fills).
+ */
+export function nearbyCities(slug: string, count = 4): SeoCity[] {
+  const self = findCityBySlug(slug);
+  if (!self) return [];
+  const others = SEO_CITIES.filter((c) => c.slug !== self.slug);
+  const dist = (c: SeoCity) => {
+    const dLat = c.lat - self.lat;
+    const dLng = c.lng - self.lng;
+    return dLat * dLat + dLng * dLng; // squared degrees — fine for ranking
+  };
+  const sameState = others
+    .filter((c) => c.state === self.state)
+    .sort((a, b) => dist(a) - dist(b));
+  const rest = others
+    .filter((c) => c.state !== self.state)
+    .sort((a, b) => dist(a) - dist(b));
+  return [...sameState, ...rest].slice(0, count);
+}
+
+/**
+ * Two well-known metros to CONTRAST a city with in copy (e.g. "the rising
+ * sign in Jaipur differs from the same moment in Mumbai or Kolkata").
+ * Never includes the city itself — the previous hardcoded "Mumbai or
+ * Kolkata" produced "in Mumbai ... different from ... Mumbai" on Mumbai's
+ * own page (a visible over-templating bug flagged in review).
+ */
+export function contrastCities(slug: string): [SeoCity, SeoCity] {
+  const preferred = ['mumbai', 'kolkata', 'delhi', 'chennai', 'bangalore']
+    .filter((s) => s !== slug)
+    .map((s) => findCityBySlug(s))
+    .filter((c): c is SeoCity => Boolean(c));
+  return [preferred[0], preferred[1]];
+}

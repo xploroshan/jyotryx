@@ -3,7 +3,7 @@ import Script from "next/script";
 /**
  * Google Analytics 4 (gtag.js), wired the App-Router way instead of pasting
  * the raw <head> snippet GA hands you — `next/script` with
- * `strategy="afterInteractive"` loads it without blocking first paint.
+ * `strategy="lazyOnload"` loads it without blocking first paint.
  *
  * GA4's Enhanced Measurement tracks client-side route changes (history
  * events) on its own, so no manual page_view firing on navigation is needed.
@@ -18,9 +18,9 @@ export function GoogleAnalytics({ gaId }: { gaId: string }) {
     <>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="ga-init" strategy="afterInteractive">
+      <Script id="ga-init" strategy="lazyOnload">
         {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());

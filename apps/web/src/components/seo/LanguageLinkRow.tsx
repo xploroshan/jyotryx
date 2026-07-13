@@ -1,4 +1,5 @@
-import { type Locale, SUPPORTED_LOCALES } from "@/i18n/locales";
+import { type Locale } from "@/i18n/locales";
+import { featureContentLocales } from "@/lib/seo/feature-content";
 import { LOCALE_LABELS, relativeLocaleHref } from "@/lib/seo/locale-links";
 
 /**
@@ -17,13 +18,19 @@ import { LOCALE_LABELS, relativeLocaleHref } from "@/lib/seo/locale-links";
 export function LanguageLinkRow({
   path,
   currentLocale = "en",
-  locales = SUPPORTED_LOCALES,
+  locales = featureContentLocales(),
 }: {
   /** Route path WITHOUT locale prefix, e.g. "/kundli" or "/horoscope/aries". */
   path: string;
   /** Locale of the page this row renders on (excluded from the list). */
   currentLocale?: Locale;
-  /** Locales the page exists in. Defaults to all 12. */
+  /**
+   * Locales the page should ADVERTISE. Defaults to content-backed feature
+   * locales (en + FEATURE_CONTENT_LOCALE keys) — deliberately not all 12, so
+   * this row never invites crawlers into thin locale variants the sitemap
+   * dropped. Pages with their own locale sets (signs, panchang cities) pass
+   * them explicitly.
+   */
   locales?: readonly Locale[];
 }) {
   const targets = LOCALE_LABELS.filter(

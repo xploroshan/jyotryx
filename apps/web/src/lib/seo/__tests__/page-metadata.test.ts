@@ -3,6 +3,7 @@ import { pageMetadata, localizedMetadata, localeUrl } from "../page-metadata";
 import { FEATURE_PAGES, HUB_PAGES } from "../feature-pages";
 import { TRADITION_PAGES } from "../tradition-pages";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { featureContentLocales } from "../feature-content";
 
 /**
  * Title/brand-suffix and hreflang-reciprocity guards (SEO PR 2).
@@ -55,11 +56,27 @@ describe("hreflang reciprocity", () => {
     expect(root.alternates?.languages).toEqual(hi.alternates?.languages);
   });
 
-  it("language maps cover every supported locale + x-default", () => {
+  it("language maps cover exactly the CONTENT-BACKED locales + x-default", () => {
+    // Crawl-budget alignment (SEO phase 2): hreflang must advertise only
+    // locales with real feature content — currently en + hi. Advertising all
+    // 12 pushed ~600 thin URLs into "Discovered - currently not indexed".
     const md = pageMetadata({ path: "/kundli", ...FEATURE_PAGES["/kundli"], hreflang: true });
     const langs = md.alternates?.languages as Record<string, string>;
-    for (const l of SUPPORTED_LOCALES) expect(langs[l], l).toBe(localeUrl(l, "/kundli"));
+    const expected = featureContentLocales();
+    expect(Object.keys(langs).sort()).toEqual([...expected, "x-default"].sort());
+    for (const l of expected) expect(langs[l], l).toBe(localeUrl(l, "/kundli"));
     expect(langs["x-default"]).toBe(localeUrl("en", "/kundli"));
+    // Thin locales must NOT be advertised until their content lands.
+    expect(langs["gu"]).toBeUndefined();
+    expect(langs["as"]).toBeUndefined();
+  });
+
+  it("featureContentLocales auto-expands from FEATURE_CONTENT_LOCALE (single source)", () => {
+    const locales = featureContentLocales();
+    expect(locales[0]).toBe("en");
+    expect(locales).toContain("hi");
+    // Every entry is a supported locale (guards against typo'd dictionary keys).
+    for (const l of locales) expect(SUPPORTED_LOCALES).toContain(l);
   });
 
   it("localized pages canonicalise to THEMSELVES, never to English", () => {

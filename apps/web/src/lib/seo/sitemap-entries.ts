@@ -4,7 +4,7 @@ import { ZODIAC_SIGNS } from "./zodiac";
 import { SITE_ORIGIN } from "./server-api";
 import { LOCALIZED_PATHS } from "./feature-pages";
 import { TRADITION_PAGES } from "./tradition-pages";
-import { FEATURE_CONTENT_LOCALE } from "./feature-content";
+import { FEATURE_CONTENT_LOCALE, featureContentLocales } from "./feature-content";
 import { PANCHANG_SITEMAP_LOCALES } from "./panchang-city-content";
 import { LEARN_ARTICLES } from "@/lib/learn/articles";
 import { localeUrl } from "./page-metadata";
@@ -37,9 +37,13 @@ const PERIOD_START = {
   yearly: startOfYearIST,
 } as const;
 
-/** Locales whose localized FEATURE pages are sitemap-listed. */
+/**
+ * Locales whose localized FEATURE pages are sitemap-listed (non-English
+ * subset of featureContentLocales() — the shared content-gated source that
+ * also drives hreflang defaults and the LanguageLinkRow).
+ */
 export function sitemapFeatureLocales(): Locale[] {
-  return Object.keys(FEATURE_CONTENT_LOCALE).filter((l) => l !== "en") as Locale[];
+  return featureContentLocales().filter((l) => l !== "en");
 }
 
 export function staticEntries(now = new Date()): MetadataRoute.Sitemap {
@@ -112,11 +116,13 @@ export function panchangCityEntries(now = new Date()): MetadataRoute.Sitemap {
   }));
 }
 
-export function kundliCityEntries(): MetadataRoute.Sitemap {
+export function kundliCityEntries(now = new Date()): MetadataRoute.Sitemap {
+  // Daily since the pages embed today's live panchang for the city (the
+  // "Today in {city}" section) — the content genuinely changes each day.
   return SEO_CITIES.map((city) => ({
     url: `${SITE_ORIGIN}/kundli/${city.slug}`,
-    lastModified: CONTENT_VERSION.directories,
-    changeFrequency: "weekly" as const,
+    lastModified: todayIST(now),
+    changeFrequency: "daily" as const,
     priority: 0.75,
   }));
 }
@@ -209,7 +215,7 @@ export function allSitemapEntries(now = new Date()): MetadataRoute.Sitemap {
     ...signEntries(now),
     ...signPeriodEntries(now),
     ...panchangCityEntries(now),
-    ...kundliCityEntries(),
+    ...kundliCityEntries(now),
     ...localizedFeatureEntries(),
     ...localizedSignEntries(now),
     ...localizedPanchangCityEntries(now),

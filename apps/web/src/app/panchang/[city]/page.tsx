@@ -10,7 +10,7 @@ import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
 import { todayIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
-import { PANCHANG_LOCALES } from '@/i18n/locales';
+import { PANCHANG_SITEMAP_LOCALES } from '@/lib/seo/panchang-city-content';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 
 /**
@@ -61,7 +61,9 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const canonical = `${SITE_ORIGIN}/panchang/${city.slug}`;
 
   const languages: Record<string, string> = {};
-  for (const l of PANCHANG_LOCALES) languages[l] = localeUrl(l, `/panchang/${city.slug}`);
+  // Content-gated (en + translated long-form locales) — matches the sitemap
+  // so hreflang never advertises thin localized variants.
+  for (const l of PANCHANG_SITEMAP_LOCALES) languages[l] = localeUrl(l, `/panchang/${city.slug}`);
   languages['x-default'] = localeUrl('en', `/panchang/${city.slug}`);
 
   return {
@@ -298,7 +300,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
           </p>
         </section>
 
-        <LanguageLinkRow path={`/panchang/${city.slug}`} locales={PANCHANG_LOCALES} />
+        <LanguageLinkRow path={`/panchang/${city.slug}`} locales={PANCHANG_SITEMAP_LOCALES} />
       </div>
     </div>
   );

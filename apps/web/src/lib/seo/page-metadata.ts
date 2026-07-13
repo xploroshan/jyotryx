@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { SITE_ORIGIN } from "./server-api";
-import { SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
 import { getServerTranslations } from "@/i18n/server";
 import { FEATURE_PAGES } from "./feature-pages";
+import { featureContentLocales } from "./feature-content";
 
 interface PageMetaInput {
   title: string;
@@ -27,12 +28,19 @@ export function localeUrl(locale: Locale, path: string): string {
 }
 
 /**
- * hreflang map + x-default → English. Defaults to every supported locale
- * (Tier-A feature pages exist in all 12); pass a subset for pages that only
- * exist in some locales (e.g. landing pages live in en + hi for now) so we
- * never emit an hreflang to a URL that 404s.
+ * hreflang map + x-default → English.
+ *
+ * DEFAULT = featureContentLocales(): only locales whose feature pages carry
+ * real long-form content (en + FEATURE_CONTENT_LOCALE keys — currently
+ * en/hi). Deliberately NOT all 12: advertising every thin locale variant via
+ * hreflang made Google discover ~600 pages it then declined to index
+ * ("Discovered – currently not indexed"), diluting crawl budget. The sitemap,
+ * these alternates and the visible LanguageLinkRow all share this source, so
+ * adding a locale's content auto-expands all three. Pages that exist in a
+ * different locale set (sign/period pages → LANDING_LOCALES, panchang city
+ * pages → PANCHANG_SITEMAP_LOCALES) pass their set explicitly.
  */
-function languagesFor(path: string, locales: readonly Locale[] = SUPPORTED_LOCALES): Record<string, string> {
+function languagesFor(path: string, locales: readonly Locale[] = featureContentLocales()): Record<string, string> {
   const languages: Record<string, string> = {};
   for (const l of locales) languages[l] = localeUrl(l, path);
   languages["x-default"] = localeUrl(DEFAULT_LOCALE, path);
@@ -181,7 +189,9 @@ export async function localizedFeatureMetadata(locale: Locale, path: string): Pr
 export function localizedMetadata({ locale, path, title, description, keywords, hreflangLocales, absoluteTitle }: LocalizedMetaInput): Metadata {
   const canonical = localeUrl(locale, path);
   const ogTitle = absoluteTitle ? title : withBrand(title);
-  const locales = hreflangLocales ?? SUPPORTED_LOCALES;
+  // Same content-gated default as languagesFor — keeps localized pages'
+  // hreflang reciprocal with the English side (see languagesFor doc).
+  const locales = hreflangLocales ?? featureContentLocales();
   return {
     title: absoluteTitle ? { absolute: title } : title,
     description,
