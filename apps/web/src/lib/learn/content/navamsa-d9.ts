@@ -50,6 +50,11 @@ export const navamsaD9: LearnArticle = {
       ],
     },
   ],
+  definedTerm: {
+    term: "Navamsa (D9) chart",
+    definition:
+      "The ninth divisional chart of Vedic astrology, dividing each 30° sign into nine parts of 3°20′ — the span of a nakshatra pada — read alongside the birth chart for marriage, the spouse, and the underlying strength a planet's promise matures into.",
+  },
   faqs: [
     {
       q: "Is the Navamsa more important than the birth chart?",
@@ -80,5 +85,5 @@ export const navamsaD9: LearnArticle = {
       blurb: "D1 through D60 vargas with per-chart interpretations.",
     },
   ],
-  related: ["nakshatras-overview", "rashi-vs-sun-sign"],
+  related: ["nakshatras-overview", "rashi-vs-sun-sign", "kundli-matching", "kundli"],
 };

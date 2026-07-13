@@ -18,8 +18,8 @@ const routeExists = (href: string): boolean => {
 };
 
 describe("learn articles", () => {
-  it("has at least the 6 seed articles with unique slugs", () => {
-    expect(LEARN_ARTICLES.length).toBeGreaterThanOrEqual(6);
+  it("has at least the 14 published articles (6 seed + 8 expansion) with unique slugs", () => {
+    expect(LEARN_ARTICLES.length).toBeGreaterThanOrEqual(14);
     const slugs = LEARN_ARTICLES.map((a) => a.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
   });

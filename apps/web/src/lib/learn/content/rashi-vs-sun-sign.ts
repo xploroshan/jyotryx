@@ -44,6 +44,11 @@ export const rashiVsSunSign: LearnArticle = {
       ],
     },
   ],
+  definedTerm: {
+    term: "Rashi (Moon sign)",
+    definition:
+      "The sidereal zodiac sign the Moon occupied at a person's birth. In Vedic astrology the rashi — not the Western sun sign — anchors daily predictions, dasha interpretation and kundli matching, and carries the nakshatra system layered beneath it.",
+  },
   faqs: [
     {
       q: "My Western sign is Leo but my rashi says Cancer. Which is correct?",
@@ -74,5 +79,5 @@ export const rashiVsSunSign: LearnArticle = {
       blurb: "Daily, weekly, monthly and yearly forecasts for all 12 signs.",
     },
   ],
-  related: ["nakshatras-overview", "navamsa-d9"],
+  related: ["nakshatras-overview", "navamsa-d9", "vedic-vs-western-astrology", "kundli"],
 };

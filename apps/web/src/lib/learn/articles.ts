@@ -66,6 +66,14 @@ import { kaalSarpDosha } from "./content/kaal-sarp-dosha";
 import { rashiVsSunSign } from "./content/rashi-vs-sun-sign";
 import { choosingMuhurat } from "./content/choosing-muhurat";
 import { navamsaD9 } from "./content/navamsa-d9";
+import { kundliGuide } from "./content/kundli";
+import { kundliMatching } from "./content/kundli-matching";
+import { sadeSati } from "./content/sade-sati";
+import { rahuKaal } from "./content/rahu-kaal";
+import { panchangExplained } from "./content/panchang-explained";
+import { mulank } from "./content/mulank";
+import { vimshottariDasha } from "./content/vimshottari-dasha";
+import { vedicVsWestern } from "./content/vedic-vs-western-astrology";
 
 export const LEARN_ARTICLES: LearnArticle[] = [
   nakshatrasOverview,
@@ -74,6 +82,14 @@ export const LEARN_ARTICLES: LearnArticle[] = [
   rashiVsSunSign,
   choosingMuhurat,
   navamsaD9,
+  kundliGuide,
+  kundliMatching,
+  sadeSati,
+  rahuKaal,
+  panchangExplained,
+  mulank,
+  vimshottariDasha,
+  vedicVsWestern,
 ];
 
 export const findArticleBySlug = (slug: string): LearnArticle | undefined =>

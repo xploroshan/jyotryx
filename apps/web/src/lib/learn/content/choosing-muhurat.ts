@@ -55,6 +55,22 @@ export const choosingMuhurat: LearnArticle = {
       ],
     },
   ],
+  definedTerm: {
+    term: "Muhurat (Muhurta)",
+    definition:
+      "A deliberately chosen auspicious moment to begin an activity — classically a 48-minute unit — selected by screening the day's panchang, subtracting flawed windows such as Rahu Kaal and Bhadra, and matching what remains to the person's chart and the purpose.",
+  },
+  howTo: {
+    heading: "How to choose a shubh muhurat",
+    steps: [
+      "Shortlist candidate dates from a trustworthy panchang computed for the city where the event will actually happen — sunrise-dependent windows differ by location.",
+      "Screen the five limbs for the activity: favourable tithi and vara, a nakshatra suited to the purpose, and no Vyatipata or Vaidhriti yoga or Vishti (Bhadra) karana.",
+      "Subtract the flawed windows within each surviving day: Rahu Kaal, Gulika and Yamaganda kaal, Bhadra spans, eclipse-adjacent days, and the sandhi minutes where tithi or nakshatra changes.",
+      "Check the finalists against your own chart: the chandra-tara count from your janma nakshatra, and the Moon's transit position from your rashi (3rd, 6th, 10th, 11th favoured).",
+      "Apply the purpose-specific rules — marriage nakshatras and Venus/Jupiter combustion checks for weddings, fixed signs for griha pravesh, disha shool by weekday for travel.",
+      "Fix the final minute so a clean lagna rises; if the ideal window is impractical, keep the nakshatra and tithi clean and protect the lagna.",
+    ],
+  },
   faqs: [
     {
       q: "What is Rahu Kaal and does it change daily?",
@@ -85,5 +101,5 @@ export const choosingMuhurat: LearnArticle = {
       blurb: "Tithi, nakshatra, yoga, karana and Rahu Kaal for your city.",
     },
   ],
-  related: ["nakshatras-overview", "rashi-vs-sun-sign"],
+  related: ["nakshatras-overview", "rashi-vs-sun-sign", "rahu-kaal", "panchang-explained"],
 };

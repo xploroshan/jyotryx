@@ -3,6 +3,8 @@ import { en } from "@/i18n/en";
 import { pageMetadata } from "@/lib/seo/page-metadata";
 import { FEATURE_PAGES } from "@/lib/seo/feature-pages";
 import { FEATURE_CONTENT } from "@/lib/seo/feature-content";
+import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
+import { SITE_ORIGIN } from "@/lib/seo/server-api";
 import { FeatureSeoSection } from "@/components/seo/FeatureSeoSection";
 import { LanguageLinkRow } from "@/components/seo/LanguageLinkRow";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
@@ -14,6 +16,19 @@ export const metadata = pageMetadata({ path: "/kundli", ...FEATURE_PAGES["/kundl
 export default function Page() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdHtml(
+            serviceLd({
+              name: "Free Kundli (Vedic Birth Chart)",
+              serviceType: "Vedic birth chart generation",
+              description: FEATURE_PAGES["/kundli"].description,
+              url: `${SITE_ORIGIN}/kundli`,
+            }),
+          ),
+        }}
+      />
 {/* H1 lives HERE, not in KundliClient: the client tree below is
           suspended (it reads ?place= via useSearchParams), so anything
           inside it is missing from the crawler-visible initial HTML. */}

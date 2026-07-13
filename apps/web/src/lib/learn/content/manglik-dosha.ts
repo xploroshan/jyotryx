@@ -60,6 +60,11 @@ export const manglikDosha: LearnArticle = {
       ],
     },
   ],
+  definedTerm: {
+    term: "Manglik (Mangal) dosha",
+    definition:
+      "A condition in a Vedic birth chart where Mars occupies the 1st, 2nd, 4th, 7th, 8th or 12th house, positions from which it influences the houses of marriage and home; classical texts list many cancellations (bhanga) that neutralise it.",
+  },
   faqs: [
     {
       q: "Which houses cause Mangal dosha?",
@@ -90,5 +95,5 @@ export const manglikDosha: LearnArticle = {
       blurb: "36-guna score with an explicit Manglik comparison for both charts.",
     },
   ],
-  related: ["kaal-sarp-dosha", "nakshatras-overview"],
+  related: ["kaal-sarp-dosha", "nakshatras-overview", "kundli-matching", "kundli"],
 };

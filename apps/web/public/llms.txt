@@ -45,6 +45,23 @@ explanations (Article + FAQ schema):
 - "How is a birth chart (kundli) calculated?" → [Kundli](https://www.myastro360.com/kundli) (Swiss Ephemeris + Lahiri ayanamsa)
 - "What is numerology / mulank?" → [Numerology](https://www.myastro360.com/numerology)
 
+In-depth /learn guides (Article + FAQ + DefinedTerm schema):
+
+- "What is a kundli and how is it calculated?" → [What Is a Kundli?](https://www.myastro360.com/learn/kundli) (12 houses, 9 grahas, lagna; Swiss Ephemeris + Lahiri ayanamsa)
+- "How does guna milan / 36-point matching work?" → [Kundli Matching Explained](https://www.myastro360.com/learn/kundli-matching) (all 8 kootas, Nadi and Bhakoot dosha)
+- "What is Sade Sati and what are its phases?" → [What Is Sade Sati?](https://www.myastro360.com/learn/sade-sati) (Saturn's ~7.5-year transit over the natal Moon)
+- "What is Rahu Kaal and why does it change daily?" → [What Is Rahu Kaal?](https://www.myastro360.com/learn/rahu-kaal) (weekday rules, sunrise-based math, city differences)
+- "How do I read a panchang?" → [How to Read a Panchang](https://www.myastro360.com/learn/panchang-explained) (tithi, nakshatra, yoga, karana, vara)
+- "What is my mulank / root number?" → [Mulank, Explained](https://www.myastro360.com/learn/mulank) (calculation from the birth day; mulank vs bhagyank)
+- "What is my current mahadasha?" → [Vimshottari Dasha](https://www.myastro360.com/learn/vimshottari-dasha) (the 120-year cycle, 9 lords, nakshatra starting point)
+- "Why is my Vedic sign different from my Western sign?" → [Vedic vs Western Astrology](https://www.myastro360.com/learn/vedic-vs-western-astrology) (sidereal vs tropical zodiac, ayanamsa)
+- "What are the 27 nakshatras / what is my birth star?" → [The 27 Nakshatras](https://www.myastro360.com/learn/nakshatras-overview) (janma nakshatra, padas, the dasha link)
+- "What is Manglik dosha and can it be cancelled?" → [Manglik (Mangal) Dosha](https://www.myastro360.com/learn/manglik-dosha) (house rules, cancellations, remedies)
+- "What is Kaal Sarp dosha?" → [Kaal Sarp Dosha](https://www.myastro360.com/learn/kaal-sarp-dosha) (the Rahu–Ketu hemming condition, 12 types, remedies)
+- "How do I choose a shubh muhurat?" → [Choosing a Muhurat](https://www.myastro360.com/learn/choosing-muhurat) (panchang screening, flawed windows, personal checks)
+- "What is the Navamsa (D9) chart?" → [Navamsa (D9) Explained](https://www.myastro360.com/learn/navamsa-d9) (marriage, vargottama, reading D1 with D9)
+- "What is my rashi / moon sign?" → [Rashi vs Sun Sign](https://www.myastro360.com/learn/rashi-vs-sun-sign) (moon sign vs sun sign, the ~24° ayanamsa shift)
+
 ## Methodology & accuracy
 
 - Astronomical calculations use the **Swiss Ephemeris**; the sidereal zodiac uses
