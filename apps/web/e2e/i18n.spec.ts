@@ -30,13 +30,17 @@ test.describe('Language switcher', () => {
 
     // Open the navbar language dropdown. The trigger shows the active code,
     // default "EN", and clicking reveals the menu with native names.
-    const navbar = page.locator('nav');
+    // .first() — the page also renders a <nav> LanguageLinkRow ("other languages").
+    const navbar = page.locator('nav').first();
     await navbar.getByRole('button', { name: /^EN/ }).click();
 
-    // Select Hindi.
-    await page.getByRole('button', { name: /हिन्दी/ }).click();
+    // Select Hindi. Since SEO PR 1 the option is a LINK when the current page
+    // has a localized equivalent — switching NAVIGATES to /hi (localized SSR
+    // HTML), with the store write riding along for persistence.
+    await navbar.getByRole('link', { name: 'हिन्दी' }).click();
+    await expect(page).toHaveURL(/\/hi$/);
 
-    // Hero retranslates — "आपके सितारे," from hi.ts.
+    // Hero renders in Hindi — "आपके सितारे," from hi.ts.
     await expect(page.getByRole('heading', { level: 1 })).toContainText('आपके सितारे');
 
     // Hard reload and confirm the choice persisted.
@@ -52,14 +56,15 @@ test.describe('Language switcher', () => {
 
   test('language trigger shows the currently active code', async ({ page }) => {
     await gotoAndHydrate(page, '/');
-    const navbar = page.locator('nav');
+    // .first() — the page also renders a <nav> LanguageLinkRow ("other languages").
+    const navbar = page.locator('nav').first();
 
     // Starts on EN.
     await expect(navbar.getByRole('button', { name: /^EN/ })).toBeVisible();
 
-    // Switch to Hindi, trigger label updates to "हि".
+    // Switch to Hindi (a link — navigates to /hi), trigger label updates to "हि".
     await navbar.getByRole('button', { name: /^EN/ }).click();
-    await page.getByRole('button', { name: /हिन्दी/ }).click();
+    await navbar.getByRole('link', { name: 'हिन्दी' }).click();
     await expect(navbar.getByRole('button', { name: /^हि/ })).toBeVisible();
   });
 });
