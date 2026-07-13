@@ -10,8 +10,23 @@
  * password manager handles it via the input's autoComplete
  * attribute. Nothing to test client-side beyond that.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { installApiMocks, json } from './helpers/mock-api';
+
+/**
+ * Open the Email sign-in tab, surviving hydration races: a click fired
+ * before React attaches handlers is silently dropped (see the caveat on
+ * gotoAndHydrate in helpers/mock-api.ts), which intermittently left the
+ * phone panel open and #auth-email unmounted. aria-selected only flips
+ * once React actually processed the click, so retry until it does.
+ */
+async function openEmailTab(page: Page) {
+  const tab = page.getByRole('tab', { name: /^email$/i });
+  await expect(async () => {
+    await tab.click();
+    await expect(tab).toHaveAttribute('aria-selected', 'true', { timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+}
 
 const authedResponse = (overrides: Record<string, unknown> = {}) => ({
   user: {
@@ -44,7 +59,7 @@ test.describe('Auth — Remember me', () => {
     });
 
     await page.goto('/auth?mode=login', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('tab', { name: /^email$/i }).click();
+    await openEmailTab(page);
 
     // First visit — no stored email; checkbox should be unchecked.
     const checkbox = page.locator('input[type="checkbox"]', { hasText: /remember/i }).first().or(
@@ -66,7 +81,7 @@ test.describe('Auth — Remember me', () => {
     // Revisit /auth — email should pre-fill, box pre-checked.
     await page.evaluate(() => localStorage.removeItem('myastro360-auth'));
     await page.goto('/auth?mode=login', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('tab', { name: /^email$/i }).click();
+    await openEmailTab(page);
     await expect(page.locator('#auth-email')).toHaveValue('sumanth@example.com');
     await expect(page.getByLabel(/remember me/i)).toBeChecked();
   });
@@ -83,7 +98,7 @@ test.describe('Auth — Remember me', () => {
     });
 
     await page.goto('/auth?mode=login', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('tab', { name: /^email$/i }).click();
+    await openEmailTab(page);
 
     // Stored email pre-fills the field and pre-checks the box.
     await expect(page.locator('#auth-email')).toHaveValue('old@example.com');

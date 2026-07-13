@@ -1,3 +1,4 @@
+import type { Locale } from '@/i18n/locales';
 /**
  * Long-form, server-rendered SEO content for the Tier-A FEATURE pages
  * (/numerology, /tarot, …). These pages are otherwise just an interactive
@@ -402,4 +403,20 @@ export const FEATURE_CONTENT_LOCALE: Record<string, Record<string, FeatureConten
 export function getFeatureContent(locale: string, path: string): FeatureContent | undefined {
   if (!locale || locale === 'en') return FEATURE_CONTENT[path];
   return FEATURE_CONTENT_LOCALE[locale]?.[path];
+}
+
+/**
+ * Locales in which the Tier-A feature pages have REAL long-form content
+ * (English + every locale with a FEATURE_CONTENT_LOCALE section).
+ *
+ * This is the single source of truth that keeps the three discovery
+ * surfaces aligned: the sitemap (sitemap-entries.ts), the hreflang
+ * alternates (page-metadata.ts defaults) and the visible "Also available
+ * in" language rows (LanguageLinkRow default) all derive from it — so
+ * Google is only pointed at locale variants that carry real content, and
+ * adding a translation here auto-expands all three at once. Thin locale
+ * pages stay live (200, self-canonical) — they're just not advertised.
+ */
+export function featureContentLocales(): Locale[] {
+  return ['en', ...Object.keys(FEATURE_CONTENT_LOCALE).filter((l) => l !== 'en')] as Locale[];
 }

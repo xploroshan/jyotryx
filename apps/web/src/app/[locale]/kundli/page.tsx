@@ -41,7 +41,15 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           tagline={t.kundli.description}
         />
       )}
-      <Suspense fallback={null}>
+      {/*
+        CLS guard, mirroring the root /kundli page: with a `null` fallback
+        KundliClient contributed zero height on first paint and then expanded
+        to the birth-details form on hydration, shoving FeatureSeoSection down
+        (0.43 CLS on /hi/kundli). The fallback reserves the form's height
+        (~743px at Lighthouse's 412px mobile width) — keep in sync with
+        app/kundli/page.tsx if the form changes.
+      */}
+      <Suspense fallback={<div className="min-h-[743px]" aria-hidden />}>
         <KundliClient />
       </Suspense>
       <FeatureSeoSection content={content} />

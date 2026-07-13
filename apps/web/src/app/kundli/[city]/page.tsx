@@ -5,8 +5,10 @@ import {
   SEO_CITIES,
   findCityBySlug,
   listCitySlugs,
+  nearbyCities,
+  contrastCities,
 } from '@/lib/seo/cities';
-import { SITE_ORIGIN } from '@/lib/seo/server-api';
+import { fetchPanchang, SITE_ORIGIN } from '@/lib/seo/server-api';
 import { jsonLdHtml, faqLd, breadcrumbLd } from '@/lib/seo/json-ld';
 
 /**
@@ -19,11 +21,13 @@ import { jsonLdHtml, faqLd, breadcrumbLd } from '@/lib/seo/json-ld';
  * uncomplicated for logged-in users while giving the SEO traffic a
  * crawlable, content-heavy target distinct from the interactive app.
  *
- * Static-generated for the top-50 city list with infrequent ISR (the
- * content here is evergreen — only the page boilerplate changes).
+ * Statically generated for the top-50 city list with DAILY ISR: the page
+ * embeds today's live panchang for the city (sunrise/tithi/nakshatra via
+ * fetchPanchang — the same URL+revalidate the /panchang/[city] pages use,
+ * so the data comes from Next's shared fetch cache at ~zero extra cost).
+ * The live values are what make each city page genuinely unique instead of
+ * a name-swapped template ("doorway page" pattern the SEO review flagged).
  */
-
-// Evergreen content; weekly ISR is enough to pick up any KB tweaks.
 export function generateStaticParams() {
   return listCitySlugs().map((city) => ({ city }));
 }
@@ -63,6 +67,20 @@ export default async function KundliCityPage({ params }: RouteProps) {
   if (!city) notFound();
 
   const ctaHref = `/kundli?place=${encodeURIComponent(city.name)}`;
+
+  // Today's live panchang for THIS city (shared fetch cache with
+  // /panchang/[city]). Null-tolerant: on failure the section below is
+  // omitted and the page renders exactly as before — never a regression.
+  const panchang = await fetchPanchang(city.lat, city.lng);
+  const todayDisplay = new Date().toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const neighbours = nearbyCities(city.slug, 4);
+  const [contrastA, contrastB] = contrastCities(city.slug);
 
   // ONE faqs array feeds BOTH the visible FAQ <dl> below and the FAQPage
   // JSON-LD — they can no longer diverge (the audit found 5 schema questions
@@ -151,6 +169,39 @@ export default async function KundliCityPage({ params }: RouteProps) {
           </Link>
         </section>
 
+        {/* Live per-city data — today's panchang snapshot. This is computed
+            for the city's own coordinates, so it differs on every city page
+            every day (real uniqueness, not template variation). */}
+        {panchang && (
+          <section className="surface-card p-6 mb-6">
+            <h2 className="text-lg font-semibold text-surface-950 mb-1">
+              Today in {city.name} — {todayDisplay}
+            </h2>
+            <p className="text-xs text-[rgba(12,8,5,0.66)] mb-4">
+              Live panchang computed for {city.name}'s coordinates ({Math.abs(city.lat).toFixed(2)}°
+              {city.lat >= 0 ? 'N' : 'S'}, {Math.abs(city.lng).toFixed(2)}°{city.lng >= 0 ? 'E' : 'W'}).
+            </p>
+            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm mb-4">
+              <TodayStat label="Sunrise" value={panchang.sunrise} />
+              <TodayStat label="Sunset" value={panchang.sunset} />
+              <TodayStat label="Moonrise" value={panchang.moonrise} />
+              <TodayStat label="Tithi" value={panchang.tithi} />
+              <TodayStat label="Nakshatra" value={panchang.nakshatra} />
+              <TodayStat label="Rahu Kaal" value={panchang.rahukaal} />
+            </dl>
+            <p className="text-xs text-emphasis leading-relaxed">
+              Why this matters for your kundli: sunrise in {city.name} marks the start of the
+              Vedic day and anchors the first lagna; the ascendant then advances roughly one sign
+              every two hours at {city.name}'s longitude. A birth time read against the wrong
+              city's sunrise can shift the lagna — which is exactly why your chart here is
+              computed for {city.name}, not a national reference point.{' '}
+              <Link href={`/panchang/${city.slug}`} className="text-primary-300 hover:text-primary-400">
+                Full panchang for {city.name} →
+              </Link>
+            </p>
+          </section>
+        )}
+
         {/* SEO long-form */}
         <article className="surface-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">
@@ -172,8 +223,8 @@ export default async function KundliCityPage({ params }: RouteProps) {
             The ascendant (<em>lagna</em>) — the rashi rising on the eastern horizon at your
             birth — depends on your geographic location. {city.name} sits at{' '}
             {Math.abs(city.lat).toFixed(2)}°{city.lat >= 0 ? 'N' : 'S'}, {Math.abs(city.lng).toFixed(2)}°{city.lng >= 0 ? 'E' : 'W'},
-            so the rising sign at, say, 6:00 AM in {city.name} is different from the same time in
-            Mumbai or Kolkata. National-average kundli generators ignore this and produce charts
+            so the rising sign at, say, 6:00 AM in {city.name} is different from the same moment in{' '}
+            {contrastA.name} or {contrastB.name}. National-average kundli generators ignore this and produce charts
             that can be a sign or two off. MyAstro360 uses {city.name}'s exact coordinates, so the
             lagna, house cusps and planetary house placements match what a professional
             astrologer working in {city.name} would draw by hand.
@@ -223,7 +274,20 @@ export default async function KundliCityPage({ params }: RouteProps) {
               <p className="text-xs text-[rgba(12,8,5,0.72)] mt-1">36-guna milan score and dosha check.</p>
             </Link>
           </div>
-          <p className="text-xs text-[rgba(12,8,5,0.66)] mt-5">
+          {neighbours.length > 0 && (
+            <p className="text-xs text-[rgba(12,8,5,0.66)] mt-5">
+              Kundli for nearby cities:{' '}
+              {neighbours.map((n, i) => (
+                <span key={n.slug}>
+                  {i > 0 && ' · '}
+                  <Link href={`/kundli/${n.slug}`} className="text-primary-300 hover:text-primary-400">
+                    {n.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
+          <p className="text-xs text-[rgba(12,8,5,0.66)] mt-3">
             Born somewhere else?{' '}
             <Link href="/kundli/cities" className="text-primary-300 hover:text-primary-300">
               Browse all {SEO_CITIES.length} cities →
@@ -231,6 +295,15 @@ export default async function KundliCityPage({ params }: RouteProps) {
           </p>
         </section>
       </div>
+    </div>
+  );
+}
+
+function TodayStat({ label, value }: { label: string; value: string | undefined }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-[rgba(12,8,5,0.06)] pb-1.5">
+      <dt className="text-xs uppercase tracking-wide text-[rgba(12,8,5,0.66)]">{label}</dt>
+      <dd className="text-sm text-surface-950">{value === undefined || value === '' ? '—' : value}</dd>
     </div>
   );
 }

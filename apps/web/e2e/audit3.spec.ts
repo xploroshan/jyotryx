@@ -90,9 +90,11 @@ test('language switcher opens, swaps locale, and persists', async ({ page }) => 
   const dropdown = page.locator('text=हिन्दी').first();
   await expect(dropdown).toBeVisible({ timeout: 5_000 });
 
-  // Pick Hindi
-  await page.locator('button').filter({ hasText: 'हिन्दी' }).first().click();
-  await page.waitForTimeout(2000); // wait for the hi locale chunk to load
+  // Pick Hindi. The option is a LINK (switching navigates to the /hi tree);
+  // the navbar dropdown comes first in DOM order, ahead of the on-page
+  // LanguageLinkRow links.
+  await page.locator('nav a, nav button').filter({ hasText: 'हिन्दी' }).first().click();
+  await page.waitForTimeout(2000); // wait for the /hi page to render
 
   await page.screenshot({ path: path.join(SHOT_DIR, 'switcher-hi.png'), fullPage: false });
 
@@ -104,10 +106,10 @@ test('language switcher opens, swaps locale, and persists', async ({ page }) => 
   // Brand must remain Latin "MyAstro360", not a transliteration
   expect(heroAfterHi).toContain('MyAstro360');
 
-  // Switch back to English
+  // Switch back to English (also a link — navigates from /hi back to /)
   await page.locator('button').filter({ hasText: /^\s*हि\s*$/ }).first().click();
   await page.waitForTimeout(300);
-  await page.locator('button').filter({ hasText: 'English' }).first().click();
+  await page.locator('nav a, nav button').filter({ hasText: 'English' }).first().click();
   await page.waitForTimeout(1500);
   await page.screenshot({ path: path.join(SHOT_DIR, 'switcher-en.png'), fullPage: false });
 

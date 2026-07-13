@@ -74,6 +74,7 @@ Once indexed, ranking is driven by **authority and content**, not markup:
 - **Backlinks** — directories (Google Business Profile, Product Hunt, astrology
   directories), social profiles (Instagram, YouTube, Pinterest, Quora, Reddit)
   all linking the domain, guest posts / partnerships with astrology blogs.
+  **Full playbook with targets, templates and cadence: `docs/seo-backlinks.md`.**
 - **Content depth** — make the localized panchang/horoscope city × language
   pages genuinely useful (explanations, FAQs), not thin templates.
 - **Long-tail first** — you'll rank for "panchang for Coimbatore in Tamil"

@@ -7,7 +7,8 @@ import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
 import { todayIST } from '@/lib/seo/dates';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
-import { prefixedPanchangLocale, PANCHANG_LOCALES, PREBUILD_PANCHANG_LOCALES } from '@/i18n/locales';
+import { prefixedPanchangLocale, PREBUILD_PANCHANG_LOCALES } from '@/i18n/locales';
+import { PANCHANG_SITEMAP_LOCALES } from '@/lib/seo/panchang-city-content';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { PANCHANG_CITY_CONTENT_LOCALE, interpolateCity } from '@/lib/seo/panchang-city-content';
 
@@ -20,7 +21,7 @@ import { PANCHANG_CITY_CONTENT_LOCALE, interpolateCity } from '@/lib/seo/panchan
  * `i18n` entry. No machine-translated prose.
  */
 
-// Prebuild only the high-volume locale(s); the rest of PANCHANG_LOCALES are
+// Prebuild only the high-volume locale(s); the remaining routed locales are
 // generated on demand via ISR (dynamicParams stays default-true) so the build
 // doesn't fan out to 6 × 50 locale-aware panchang fetches. All locales remain
 // crawlable and sitemap-listed.
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     path: `/panchang/${city.slug}`,
     title: `${cityName} ${t.panchang.titleHighlight}`,
     description: t.panchang.description,
-    hreflangLocales: PANCHANG_LOCALES,
+    hreflangLocales: PANCHANG_SITEMAP_LOCALES,
   });
 }
 
@@ -150,7 +151,7 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
           </>
         )}
 
-        <LanguageLinkRow path={`/panchang/${city.slug}`} currentLocale={locale} locales={PANCHANG_LOCALES} />
+        <LanguageLinkRow path={`/panchang/${city.slug}`} currentLocale={locale} locales={PANCHANG_SITEMAP_LOCALES} />
       </div>
     </div>
   );

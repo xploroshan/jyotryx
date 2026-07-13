@@ -4,7 +4,9 @@ import { track, identify, trackOnce } from "../analytics";
 
 type TestWindow = Window & {
   gtag?: (...args: unknown[]) => void;
+  dataLayer?: unknown[];
   posthog?: { capture: (...a: unknown[]) => void; identify: (...a: unknown[]) => void };
+  __phq?: [string, ...unknown[]][];
 };
 
 function w(): TestWindow {
@@ -15,6 +17,8 @@ beforeEach(() => {
   window.localStorage.clear();
   w().gtag = vi.fn();
   w().posthog = { capture: vi.fn(), identify: vi.fn() };
+  delete w().dataLayer;
+  delete w().__phq;
 });
 
 describe("analytics fan-out", () => {
@@ -47,5 +51,47 @@ describe("analytics fan-out", () => {
     expect(() => track("noop", { x: true })).not.toThrow();
     expect(() => identify("x")).not.toThrow();
     expect(() => trackOnce("k2", "noop")).not.toThrow();
+  });
+});
+
+describe("pre-load queueing (SDKs are lazyOnload — events must not be dropped)", () => {
+  beforeEach(() => {
+    delete w().gtag;
+    delete w().posthog;
+  });
+
+  it("track() before gtag.js loads queues an Arguments entry in dataLayer", () => {
+    track("early_event", { a: 1 });
+    const dl = w().dataLayer!;
+    expect(dl).toHaveLength(1);
+    // gtag.js only drains Arguments objects — a plain array would be ignored.
+    expect(Array.isArray(dl[0])).toBe(false);
+    expect(Array.from(dl[0] as ArrayLike<unknown>)).toEqual(["event", "early_event", { a: 1 }]);
+  });
+
+  it("track() before PostHog loads buffers in __phq for the init script to drain", () => {
+    track("early_event", { a: 1 });
+    track("second", undefined);
+    expect(w().__phq).toEqual([
+      ["capture", "early_event", { a: 1 }],
+      ["capture", "second", undefined],
+    ]);
+  });
+
+  it("identify() before load queues on both sides", () => {
+    identify("user-9", { plan: "pro" });
+    expect(Array.from(w().dataLayer![0] as ArrayLike<unknown>)).toEqual([
+      "set",
+      { user_id: "user-9" },
+    ]);
+    expect(w().__phq).toEqual([["identify", "user-9", { plan: "pro" }]]);
+  });
+
+  it("queues are NOT touched once the real sinks exist", () => {
+    w().gtag = vi.fn();
+    w().posthog = { capture: vi.fn(), identify: vi.fn() };
+    track("late_event");
+    expect(w().dataLayer).toBeUndefined();
+    expect(w().__phq).toBeUndefined();
   });
 });
