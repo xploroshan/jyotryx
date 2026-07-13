@@ -19,7 +19,24 @@ import type { ConfirmationResult, RecaptchaVerifier } from "firebase/auth";
 // static import was shipping the whole firebase/auth SDK in /auth first-load
 // JS. The dynamic import resolves instantly after the first call (module
 // cache); @/lib/firebase itself initializes the app lazily on first use.
-const loadFirebase = () => import("@/lib/firebase");
+let firebasePromise: Promise<typeof import("@/lib/firebase")> | null = null;
+const loadFirebase = () => (firebasePromise ??= import("@/lib/firebase"));
+// Warm the chunk as soon as the page module loads (client only — this file is
+// "use client"): handleGoogleClick must call signInWithPopup while the
+// click's "user activation" is still live. If the await inside the handler
+// had to fetch the chunk over the network, strict browsers (Safari always,
+// Chrome under load) revoke the gesture and silently block the popup — the
+// button then spins on "Signing in..." forever with no account picker. With
+// the module already cached the click-time await is a resolved microtask.
+// Phone-OTP flows benefit identically. (Never at test/SSR module-eval time:
+// only in a real browser, via a post-paint task.)
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    loadFirebase().catch(() => {
+      firebasePromise = null; // offline — let the click path retry + surface it
+    });
+  }, 0);
+}
 
 // Where we stash a captured `?ref=…` so it survives navigation between
 // /auth?ref=X and /auth/register, and any Firebase popup detours. The
@@ -241,20 +258,6 @@ function AuthPageContent() {
       if (!cancelled) setServerWaking(false);
     });
     return () => { cancelled = true; };
-  }, []);
-
-  // Pre-load the Firebase chunk on mount. handleGoogleClick must call
-  // signInWithPopup while the click's "user activation" is still live —
-  // if `await loadFirebase()` has to fetch the chunk over the network,
-  // strict browsers (Safari always, Chrome under load) revoke the gesture
-  // and silently block the popup: the button then spins on "Signing in..."
-  // forever with no account picker. With the module already cached, the
-  // click-time await resolves in a microtask and the popup opens inside
-  // the activation window. Phone-OTP flows benefit identically.
-  useEffect(() => {
-    void loadFirebase().catch(() => {
-      /* offline / blocked CDN — the click path will retry and surface it */
-    });
   }, []);
 
   // Reset the one-shot auto-submit flag whenever a new OTP is requested, so
