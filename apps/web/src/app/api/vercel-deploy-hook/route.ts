@@ -54,10 +54,11 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ ok: false, reason: "bad-json" }, { status: 400 });
   }
 
-  // Only production deploys are worth an IndexNow ping (previews aren't public).
+  // Only production deploys are worth an IndexNow ping. Vercel sets
+  // payload.target to "production" for prod and null for previews, so a
+  // strict check is required — treating null as prod would fire on previews.
   const isProdSuccess =
-    body.type === "deployment.succeeded" &&
-    (body.payload?.target === "production" || body.payload?.target == null);
+    body.type === "deployment.succeeded" && body.payload?.target === "production";
   if (!isProdSuccess) {
     return Response.json({ ok: true, skipped: body.type ?? "unknown" }, { status: 200 });
   }

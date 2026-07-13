@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { featureContentLocales } from '../src/lib/seo/feature-content';
+
+// Single source of truth the app itself uses — when a locale's content lands
+// these expectations expand with it instead of breaking.
+const CONTENT_LOCALES = featureContentLocales();
 
 /**
  * E2E guards for SEO phase 2 (crawl-budget alignment + city-page enrichment).
@@ -15,26 +20,26 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('hreflang / language-row alignment (feature pages)', () => {
-  test('/kundli head advertises exactly en + hi + x-default', async ({ page }) => {
+  test('/kundli head advertises exactly the content-backed locales + x-default', async ({ page }) => {
     await page.goto('/kundli');
     const alternates = page.locator('link[rel="alternate"][hreflang]');
     const hreflangs = await alternates.evaluateAll((els) =>
       els.map((e) => e.getAttribute('hreflang')).sort(),
     );
-    expect(hreflangs).toEqual(['en', 'hi', 'x-default']);
+    expect(hreflangs).toEqual([...CONTENT_LOCALES, 'x-default'].sort());
     // The thin locales must NOT be advertised until their content lands.
     expect(hreflangs).not.toContain('gu');
     expect(hreflangs).not.toContain('as');
   });
 
-  test('/kundli language row links only the content-backed locale', async ({ page }) => {
+  test('/kundli language row links only the content-backed locales', async ({ page }) => {
     await page.goto('/kundli');
     const row = page.getByRole('navigation', { name: /other languages/i });
     await expect(row).toBeVisible();
     const links = row.locator('a');
-    await expect(links).toHaveCount(1);
-    await expect(links.first()).toHaveAttribute('href', '/hi/kundli');
-    await expect(links.first()).toHaveText('हिन्दी');
+    // The English page links every OTHER content-backed locale (today: just hi).
+    await expect(links).toHaveCount(CONTENT_LOCALES.length - 1);
+    await expect(row.locator('a[href="/hi/kundli"]')).toHaveText('हिन्दी');
   });
 
   test('sign pages keep their wider (content-backed) landing-locale row', async ({ page }) => {

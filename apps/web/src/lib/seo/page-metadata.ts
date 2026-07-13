@@ -113,7 +113,8 @@ interface LocalizedMetaInput {
   title: string;
   description: string;
   keywords?: string[];
-  /** Locales this page actually exists in (for hreflang). Defaults to all 12. */
+  /** Locales this page actually exists in (for hreflang). Defaults to the
+   *  content-backed set from featureContentLocales() — never all 12. */
   hreflangLocales?: readonly Locale[];
   /** Opt out of the root layout's title.template (title used verbatim). */
   absoluteTitle?: boolean;
