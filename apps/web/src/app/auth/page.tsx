@@ -243,6 +243,20 @@ function AuthPageContent() {
     return () => { cancelled = true; };
   }, []);
 
+  // Pre-load the Firebase chunk on mount. handleGoogleClick must call
+  // signInWithPopup while the click's "user activation" is still live —
+  // if `await loadFirebase()` has to fetch the chunk over the network,
+  // strict browsers (Safari always, Chrome under load) revoke the gesture
+  // and silently block the popup: the button then spins on "Signing in..."
+  // forever with no account picker. With the module already cached, the
+  // click-time await resolves in a microtask and the popup opens inside
+  // the activation window. Phone-OTP flows benefit identically.
+  useEffect(() => {
+    void loadFirebase().catch(() => {
+      /* offline / blocked CDN — the click path will retry and surface it */
+    });
+  }, []);
+
   // Reset the one-shot auto-submit flag whenever a new OTP is requested, so
   // that each freshly-sent OTP gets exactly one auto-verify attempt.
   useEffect(() => {
@@ -491,13 +505,22 @@ function AuthPageContent() {
 
   const handleGoogleClick = async () => {
     setGoogleLoading(true); setError(""); setSuccess(""); setLastAction(null);
+    // Watchdog: when the popup is blocked in a way Firebase can't detect
+    // (automation, aggressive blockers), signInWithPopup never settles and
+    // the button would spin forever. Surface the popup-blocked hint instead.
+    // Harmless when the picker IS open — a slow account choice still
+    // completes and navigates away.
+    const popupHint = setTimeout(() => setError(t.auth.errPopupBlocked), 20_000);
     try {
       const { auth, GoogleAuthProvider, signInWithPopup } = await loadFirebase();
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      clearTimeout(popupHint);
+      setError("");
       const idToken = await result.user.getIdToken();
       await authenticateWithBackend(idToken);
     } catch (err: any) {
+      clearTimeout(popupHint);
       if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
         // User closed popup, don't show error
       } else if (err.code === "auth/popup-blocked") {
@@ -507,7 +530,7 @@ function AuthPageContent() {
         setError(message);
         if (retryable) setLastAction(() => handleGoogleClick);
       }
-    } finally { setGoogleLoading(false); }
+    } finally { clearTimeout(popupHint); setGoogleLoading(false); }
   };
 
   const handleEmailAuth = async () => {
