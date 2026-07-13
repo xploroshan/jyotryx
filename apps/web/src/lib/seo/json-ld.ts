@@ -140,6 +140,69 @@ export function faqLd(faqs: { q: string; a: string }[]) {
   };
 }
 
+/**
+ * Glossary entry for a /learn article. Every DefinedTerm points at the same
+ * DefinedTermSet (the /learn hub) so the glossary reads as one entity.
+ */
+export function definedTermLd(opts: { name: string; description: string; url: string }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    name: opts.name,
+    description: opts.description,
+    url: opts.url,
+    inDefinedTermSet: {
+      '@type': 'DefinedTermSet',
+      '@id': `${SITE_ORIGIN}/learn#glossary`,
+      name: 'MyAstro360 Vedic astrology glossary',
+      url: `${SITE_ORIGIN}/learn`,
+    },
+  };
+}
+
+/**
+ * HowTo from the SAME steps the page renders visibly — pass the rendered
+ * list, never a parallel copy.
+ */
+export function howToLd(opts: {
+  name: string;
+  description?: string;
+  url: string;
+  steps: string[];
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: opts.name,
+    ...(opts.description ? { description: opts.description } : {}),
+    url: opts.url,
+    step: opts.steps.map((text, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      text,
+    })),
+  };
+}
+
+/** Service node for a product/tool page, provided by the canonical Org. */
+export function serviceLd(opts: {
+  name: string;
+  serviceType: string;
+  description: string;
+  url: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: opts.name,
+    serviceType: opts.serviceType,
+    description: opts.description,
+    url: opts.url,
+    provider: orgRef(),
+    areaServed: ['India', 'Indian diaspora worldwide'],
+  };
+}
+
 export function itemListLd(name: string, items: { name: string; url: string }[]) {
   return {
     '@context': 'https://schema.org',

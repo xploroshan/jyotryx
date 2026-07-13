@@ -1,0 +1,167 @@
+/* ==========================================================================
+   myastro360.com — Instagram template brand stylesheet
+   Canvas: 1080 x 1350 (4:5 portrait). No JS. No external assets.
+   Values mirror apps/web/src/lib/brand/og-mark.ts + globals.css.
+   ========================================================================== */
+
+/* ---- Reset ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* ---- Brand tokens ---------------------------------------------------- */
+:root {
+  /* Surfaces */
+  --ink-bg: linear-gradient(135deg, #1a1206 0%, #2e1d0a 55%, #0d0904 100%);
+
+  /* Text */
+  --text-primary: #f5ecd8;
+  --text-secondary: #d9c9a6;
+  --text-muted: #9a8a6a;
+
+  /* Gold / saffron accents */
+  --gold: #ffb627;
+  --gold-2: #ffcb52;
+  --gold-3: #ffdc85;
+  --grad-hero: linear-gradient(90deg, #ffb627, #ff7a40, #ff4d00);
+  --hairline: rgba(255, 182, 39, 0.35);
+
+  /* Type */
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", system-ui, sans-serif;
+
+  /* Rhythm */
+  --pad-canvas: 96px;
+}
+
+/* ---- Canvas ----------------------------------------------------------- */
+.canvas {
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad-canvas);
+  background: var(--ink-bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Star-dot texture (subtle, CSS only) ------------------------------ */
+/* Add alongside .canvas: <div class="canvas star-dots"> */
+.star-dots::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image:
+    radial-gradient(2px 2px at 8% 12%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1.5px 1.5px at 22% 6%, #ffdc85 45%, transparent 55%),
+    radial-gradient(1px 1px at 37% 15%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(2px 2px at 54% 8%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1px 1px at 68% 18%, #ffdc85 45%, transparent 55%),
+    radial-gradient(1.5px 1.5px at 82% 9%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1px 1px at 93% 22%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1.5px 1.5px at 12% 38%, #ffdc85 45%, transparent 55%),
+    radial-gradient(1px 1px at 88% 44%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1px 1px at 5% 66%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1.5px 1.5px at 94% 71%, #ffdc85 45%, transparent 55%),
+    radial-gradient(1px 1px at 15% 88%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1.5px 1.5px at 46% 93%, #f5ecd8 45%, transparent 55%),
+    radial-gradient(1px 1px at 76% 90%, #ffdc85 45%, transparent 55%),
+    radial-gradient(1px 1px at 60% 55%, #f5ecd8 45%, transparent 55%);
+  background-repeat: no-repeat;
+}
+
+/* ---- Gradient text helper (the "360" / hero-number treatment) --------- */
+.grad-text {
+  display: inline-block;
+  background-image: var(--grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ---- Wordmark ---------------------------------------------------------- */
+/* <span class="wordmark">MyAstro<span class="grad-text">360</span></span> */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* ---- Gold hairline rule ------------------------------------------------ */
+.rule {
+  border: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--hairline);
+}
+
+.rule--short {
+  width: 120px;
+}
+
+/* ---- Eyebrow label ----------------------------------------------------- */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 26px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--text-secondary);
+}
+
+/* ---- Footer bar (mark + wordmark) -------------------------------------- */
+/* <footer class="footer">
+     <img class="footer__mark" src="OG_MARK_DATA_URI" alt="">
+     <span class="wordmark">MyAstro<span class="grad-text">360</span></span>
+   </footer> */
+.footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 40px;
+  border-top: 1px solid var(--hairline);
+}
+
+.footer__mark {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+}
+
+.footer .wordmark {
+  font-size: 30px;
+}
