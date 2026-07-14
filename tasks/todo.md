@@ -5,7 +5,7 @@ Plan docs (this branch):
 - `marketing/social/instagram-daily-engine.md` — automated daily Instagram engine
 
 ## SEO/AEO — P0 (this week, ops)
-- [ ] Owner-review + publish the 6 draft `/learn` articles (flip `status:"draft"`)
+- [x] Owner-review + publish the 6 draft `/learn` articles (flip `status:"draft"`)
 - [ ] Verify prod Vercel env vars: `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_GSC_VERIFICATION`
 - [ ] GSC domain property verified + sitemap submitted + top-10 URLs requested
 - [ ] Bing Webmaster Tools (import from GSC)
@@ -13,27 +13,34 @@ Plan docs (this branch):
 - [ ] Baseline: first AEO prompt-test pass + GA4 "AI referrers" segment
 
 ## SEO/AEO — P1 (weeks 1–4)
-- [ ] `/learn` cluster → 10 playbook slugs (2/week)
-- [ ] `DefinedTerm` + `HowTo` JSON-LD emitters; `Service` on tool pages
-- [ ] `llms.txt` + `sitemap.ts` updated per new slug
-- [ ] Localize horoscope/panchang FAQs (13 locale files in one change)
+- [x] `/learn` cluster → 10 playbook slugs (2/week)
+- [x] `DefinedTerm` + `HowTo` JSON-LD emitters; `Service` on tool pages
+- [x] `llms.txt` + `sitemap.ts` updated per new slug
+- [x] Localize horoscope/panchang FAQs (13 locale files in one change)
 
 ## Instagram engine — Phase 0 (setup)
 - [ ] IG Business account + linked Facebook Page
 - [ ] Meta app + long-lived token (`IG_ACCESS_TOKEN`, `IG_USER_ID` as secrets)
 - [ ] S3 hosting path for post images
-- [ ] Build `daily-sky.html` + `glossary.html` templates
+- [x] Build `daily-sky.html` + `glossary.html` templates
 - [ ] Hand-post 3 seed posts, check the grid on a phone
 
 ## Instagram engine — Phase 1 (human-in-loop, weeks 1–2)
-- [ ] Seed `marketing/social/queue/queue.json` (14 topics in plan §7)
-- [ ] Create daily Claude Routine (cron `0 2 * * *` UTC) — draft mode
-- [ ] Create weekly Sunday Routine (insights, token refresh, queue top-up)
+- [x] Seed `marketing/social/queue/queue.json` (14 topics in plan §7)
+- [x] Create daily Claude Routine (cron `0 2 * * *` UTC) — draft mode
+- [x] Create weekly Sunday Routine (insights, token refresh, queue top-up)
 - [ ] 10 consecutive no-edit approvals → go to Phase 2
 
 ## Instagram engine — Phase 2+ (auto)
 - [ ] Remove review gate; guardrails on (template-only, honesty rule, 1/day cap, kill switch, weekly digest)
-- [ ] Month 2: port pipeline to GitHub Actions + Claude Agent SDK (`scripts/social/daily-post.mjs`)
+- [x] Month 2: port pipeline to GitHub Actions + Claude Agent SDK (`scripts/social/daily-post.mjs`)
 
-## Review
-_(fill in as items complete)_
+## Review (2026-07-14)
+Development complete on this branch: 14 published /learn articles (no status
+field existed — "publish" was editorial-comment + dates), DefinedTerm/HowTo/
+Service JSON-LD, FAQ localization across all 12 locales (parity green),
+full Instagram engine (templates, render/publish pipeline, queue with 14
+posts of copy, GH Actions with kill switch, node:test suite incl. chromium
+renders), 20 Playwright e2e guards, Claude Routines created (disabled until
+merge). Remaining unticked items are human/ops tasks (accounts, tokens,
+GSC/Bing, env vars) — see marketing/seo-aeo-action-plan.md P0.

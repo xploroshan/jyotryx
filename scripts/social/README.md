@@ -160,3 +160,19 @@ Either of these stops posting immediately; both are safe to use at any time:
 
 Belt-and-braces: revoking `IG_ACCESS_TOKEN` (or removing the repo secret) also
 makes publishing impossible while leaving draft mode usable.
+
+## Claude Routines (created, currently disabled)
+
+Two scheduled Claude Routines exist for Phase 1 and are **disabled until this
+branch merges to `main`** (fresh Routine sessions clone `main`, so the engine
+files must exist there first):
+
+| Routine | Trigger ID | Schedule | Job |
+|---|---|---|---|
+| Daily draft-mode post | `trig_01SCn8hsKwoFjTLVWWG73vwV` | `0 2 * * *` UTC (07:30 IST) | Renders today's queue entry, commits the draft to `social-drafts` for approval. Never publishes in Phase 1. |
+| Weekly insights + queue top-up | `trig_01TKudVvvReNTah8Gcr1F5qC` | `0 3 * * 0` UTC (Sun) | Insights merge, token health, tops the queue back up to 30 days with fresh copy. |
+
+**To enable after merge:** ask Claude to "enable the MyAstro360 Instagram
+Routines" (update_trigger enabled:true), or toggle them in the Claude Code
+Routines UI. **Kill switch:** disable the Routine, or set the repo variable
+`SOCIAL_ENGINE_ENABLED=false` for the GitHub Actions path.
