@@ -7,15 +7,25 @@
  * spirit as FEATURE_CONTENT: reviewable in PRs, rendered fully server-side,
  * and the single source for both the visible page and its structured data.
  *
- * IMPORTANT (owner review): seed articles ship with status:"draft" content
- * written for editorial review — datePublished is set when the owner
- * approves. Draft articles still render (they're accurate), but keep the
- * review loop in mind before promoting heavily.
+ * IMPORTANT (editorial dates): the 6 seed articles are owner-approved and
+ * published — their datePublished values stand as the real publication
+ * dates. Keep the discipline: datePublished is set once on approval and
+ * never churned; bump dateModified only on substantive content edits.
  */
 
 export interface LearnFaq {
   q: string;
   a: string;
+}
+
+export interface LearnHowTo {
+  heading: string;
+  steps: string[];
+}
+
+export interface LearnDefinedTerm {
+  term: string;
+  definition: string;
 }
 
 export interface LearnSection {
@@ -41,6 +51,10 @@ export interface LearnArticle {
   };
   sections: LearnSection[];
   faqs: LearnFaq[];
+  /** Optional glossary entry emitted as DefinedTerm JSON-LD. */
+  definedTerm?: LearnDefinedTerm;
+  /** Optional step-by-step block emitted as HowTo JSON-LD. */
+  howTo?: LearnHowTo;
   /** CTAs into the product — every article must link its tool page(s). */
   toolLinks: { label: string; href: string; blurb: string }[];
   related: string[]; // slugs
@@ -52,6 +66,14 @@ import { kaalSarpDosha } from "./content/kaal-sarp-dosha";
 import { rashiVsSunSign } from "./content/rashi-vs-sun-sign";
 import { choosingMuhurat } from "./content/choosing-muhurat";
 import { navamsaD9 } from "./content/navamsa-d9";
+import { kundliGuide } from "./content/kundli";
+import { kundliMatching } from "./content/kundli-matching";
+import { sadeSati } from "./content/sade-sati";
+import { rahuKaal } from "./content/rahu-kaal";
+import { panchangExplained } from "./content/panchang-explained";
+import { mulank } from "./content/mulank";
+import { vimshottariDasha } from "./content/vimshottari-dasha";
+import { vedicVsWestern } from "./content/vedic-vs-western-astrology";
 
 export const LEARN_ARTICLES: LearnArticle[] = [
   nakshatrasOverview,
@@ -60,6 +82,14 @@ export const LEARN_ARTICLES: LearnArticle[] = [
   rashiVsSunSign,
   choosingMuhurat,
   navamsaD9,
+  kundliGuide,
+  kundliMatching,
+  sadeSati,
+  rahuKaal,
+  panchangExplained,
+  mulank,
+  vimshottariDasha,
+  vedicVsWestern,
 ];
 
 export const findArticleBySlug = (slug: string): LearnArticle | undefined =>

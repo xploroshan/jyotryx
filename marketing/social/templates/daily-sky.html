@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyAstro360 — Today's Sky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,800;1,500;1,600;1,800&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+Devanagari:wght@400;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_brand.css">
+<style>
+  .date {
+    margin-top: 28px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 52px;
+    line-height: 1.15;
+    color: var(--text-primary);
+  }
+
+  .sky-grid {
+    margin: 56px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 44px 56px;
+  }
+
+  .sky-grid .cell__label {
+    font-size: 22px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--text-muted);
+  }
+
+  .sky-grid .cell__value {
+    margin-top: 12px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 44px;
+    line-height: 1.15;
+    color: var(--text-secondary);
+  }
+
+  /* HERO — the Rahu Kaal window. Must read at 200px-wide thumbnail. */
+  .hero {
+    margin-top: 56px;
+  }
+
+  .hero__label {
+    font-size: 28px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--gold-3);
+  }
+
+  .hero__value {
+    margin-top: 16px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 132px;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+
+  .footnote {
+    margin-top: 28px;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--text-muted);
+    max-width: 820px;
+  }
+</style>
+</head>
+<body>
+<div class="canvas star-dots">
+
+  <p class="eyebrow">Today's Sky &middot; {{city}}</p>
+  <h1 class="date">{{date_label}}</h1>
+
+  <div class="sky-grid">
+    <div class="cell">
+      <p class="cell__label">Tithi</p>
+      <p class="cell__value">{{tithi}}</p>
+    </div>
+    <div class="cell">
+      <p class="cell__label">Nakshatra</p>
+      <p class="cell__value">{{nakshatra}}</p>
+    </div>
+    <div class="cell">
+      <p class="cell__label">Sunrise</p>
+      <p class="cell__value">{{sunrise}}</p>
+    </div>
+    <div class="cell">
+      <p class="cell__label">Sunset</p>
+      <p class="cell__value">{{sunset}}</p>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <div class="hero">
+    <p class="hero__label">Rahu Kaal</p>
+    <p class="hero__value grad-text">{{rahu_kaal}}</p>
+    <p class="footnote">{{footnote}}</p>
+  </div>
+
+  <footer class="footer">
+    <img class="footer__mark" alt="" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iciIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIxNCIgeTE9IjE0IiB4Mj0iODYiIHkyPSI4NiI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZDA4OSIvPjxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjZmZiNjI3Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmY3YTQwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjMwIiB5MT0iMzAiIHgyPSI3MCIgeTI9IjcwIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZjNTZiIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmY3YTQwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3IpIiBzdHJva2Utd2lkdGg9IjIuNCIgb3BhY2l0eT0iMC45Ii8+CiAgPGcgc3Ryb2tlPSJ1cmwoI3IpIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC43NSI+CiAgICA8bGluZSB4MT0iODQiIHkxPSI1MCIgeDI9IjkwIiB5Mj0iNTAiLz48bGluZSB4MT0iNzkuNCIgeTE9IjY3IiB4Mj0iODQuNiIgeTI9IjcwIi8+CiAgICA8bGluZSB4MT0iNjciIHkxPSI3OS40IiB4Mj0iNzAiIHkyPSI4NC42Ii8+PGxpbmUgeDE9IjUwIiB5MT0iODQiIHgyPSI1MCIgeTI9IjkwIi8+CiAgICA8bGluZSB4MT0iMzMiIHkxPSI3OS40IiB4Mj0iMzAiIHkyPSI4NC42Ii8+PGxpbmUgeDE9IjIwLjYiIHkxPSI2NyIgeDI9IjE1LjQiIHkyPSI3MCIvPgogICAgPGxpbmUgeDE9IjE2IiB5MT0iNTAiIHgyPSIxMCIgeTI9IjUwIi8+PGxpbmUgeDE9IjIwLjYiIHkxPSIzMyIgeDI9IjE1LjQiIHkyPSIzMCIvPgogICAgPGxpbmUgeDE9IjMzIiB5MT0iMjAuNiIgeDI9IjMwIiB5Mj0iMTUuNCIvPjxsaW5lIHgxPSI1MCIgeTE9IjE2IiB4Mj0iNTAiIHkyPSIxMCIvPgogICAgPGxpbmUgeDE9IjY3IiB5MT0iMjAuNiIgeDI9IjcwIiB5Mj0iMTUuNCIvPjxsaW5lIHgxPSI3OS40IiB5MT0iMzMiIHgyPSI4NC42IiB5Mj0iMzAiLz4KICA8L2c+CiAgPHBhdGggZD0iTTUwIDI0IEw3MyA2NCBMMjcgNjQgWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3MpIiBzdHJva2Utd2lkdGg9IjQuMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik01MCA3NiBMMjcgMzYgTDczIDM2IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNzKSIgc3Ryb2tlLXdpZHRoPSI0LjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIzLjYiIGZpbGw9InVybCgjcykiLz4KPC9zdmc+">
+    <span class="wordmark">MyAstro<span class="grad-text">360</span></span>
+  </footer>
+
+</div>
+</body>
+</html>

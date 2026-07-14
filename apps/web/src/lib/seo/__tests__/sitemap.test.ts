@@ -23,7 +23,9 @@ import { PANCHANG_LOCALES, PREFIXED_LOCALES, type Locale } from "@/i18n/locales"
  * template — and never a URL that robots.txt disallows.
  */
 
-const NOW = new Date("2026-07-07T12:00:00Z");
+// Frozen clock for the suite — must be on/after the newest LEARN_ARTICLES
+// dateModified, or the "no future lastModified" guard fires spuriously.
+const NOW = new Date("2026-07-13T12:00:00Z");
 const urls = () => allSitemapEntries(NOW).map((e) => e.url);
 
 describe("sitemap inclusion rules", () => {

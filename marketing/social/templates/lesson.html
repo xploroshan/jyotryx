@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyAstro360 — Mini-lesson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,800;1,500;1,600;1,800&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+Devanagari:wght@400;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_brand.css">
+<style>
+  /* HERO — the headline. Must read at 200px-wide thumbnail. */
+  .headline {
+    margin-top: 32px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 72px;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    max-width: 880px;
+    /* Cap at 3 lines. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  .lesson .rule {
+    margin-top: 52px;
+  }
+
+  /* Body: renderer passes 2-3 short <p> paragraphs via the raw slot. */
+  .body {
+    margin-top: 52px;
+    max-width: 860px;
+  }
+
+  .body p {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .body p + p {
+    margin-top: 32px;
+  }
+
+  /* The chart factor this lesson traces to — every claim earns its keep. */
+  .factor-line {
+    margin-top: 56px;
+    padding: 8px 0 8px 32px;
+    border-left: 3px solid var(--gold);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 1.45;
+    color: var(--gold-3);
+    max-width: 840px;
+  }
+</style>
+</head>
+<body>
+<div class="canvas star-dots lesson">
+
+  <p class="eyebrow">{{eyebrow}}</p>
+  <h1 class="headline">{{headline}}</h1>
+
+  <hr class="rule rule--short">
+
+  <div class="body">{{{body_html}}}</div>
+
+  <p class="factor-line">{{factor_line}}</p>
+
+  <footer class="footer">
+    <img class="footer__mark" alt="" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iciIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIxNCIgeTE9IjE0IiB4Mj0iODYiIHkyPSI4NiI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZDA4OSIvPjxzdG9wIG9mZnNldD0iMC41IiBzdG9wLWNvbG9yPSIjZmZiNjI3Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmY3YTQwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjMwIiB5MT0iMzAiIHgyPSI3MCIgeTI9IjcwIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZjNTZiIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmY3YTQwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3IpIiBzdHJva2Utd2lkdGg9IjIuNCIgb3BhY2l0eT0iMC45Ii8+CiAgPGcgc3Ryb2tlPSJ1cmwoI3IpIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC43NSI+CiAgICA8bGluZSB4MT0iODQiIHkxPSI1MCIgeDI9IjkwIiB5Mj0iNTAiLz48bGluZSB4MT0iNzkuNCIgeTE9IjY3IiB4Mj0iODQuNiIgeTI9IjcwIi8+CiAgICA8bGluZSB4MT0iNjciIHkxPSI3OS40IiB4Mj0iNzAiIHkyPSI4NC42Ii8+PGxpbmUgeDE9IjUwIiB5MT0iODQiIHgyPSI1MCIgeTI9IjkwIi8+CiAgICA8bGluZSB4MT0iMzMiIHkxPSI3OS40IiB4Mj0iMzAiIHkyPSI4NC42Ii8+PGxpbmUgeDE9IjIwLjYiIHkxPSI2NyIgeDI9IjE1LjQiIHkyPSI3MCIvPgogICAgPGxpbmUgeDE9IjE2IiB5MT0iNTAiIHgyPSIxMCIgeTI9IjUwIi8+PGxpbmUgeDE9IjIwLjYiIHkxPSIzMyIgeDI9IjE1LjQiIHkyPSIzMCIvPgogICAgPGxpbmUgeDE9IjMzIiB5MT0iMjAuNiIgeDI9IjMwIiB5Mj0iMTUuNCIvPjxsaW5lIHgxPSI1MCIgeTE9IjE2IiB4Mj0iNTAiIHkyPSIxMCIvPgogICAgPGxpbmUgeDE9IjY3IiB5MT0iMjAuNiIgeDI9IjcwIiB5Mj0iMTUuNCIvPjxsaW5lIHgxPSI3OS40IiB5MT0iMzMiIHgyPSI4NC42IiB5Mj0iMzAiLz4KICA8L2c+CiAgPHBhdGggZD0iTTUwIDI0IEw3MyA2NCBMMjcgNjQgWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3MpIiBzdHJva2Utd2lkdGg9IjQuMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik01MCA3NiBMMjcgMzYgTDczIDM2IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNzKSIgc3Ryb2tlLXdpZHRoPSI0LjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIzLjYiIGZpbGw9InVybCgjcykiLz4KPC9zdmc+">
+    <span class="wordmark">MyAstro<span class="grad-text">360</span></span>
+  </footer>
+
+</div>
+</body>
+</html>

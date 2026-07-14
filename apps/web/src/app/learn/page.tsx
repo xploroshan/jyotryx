@@ -11,9 +11,9 @@ import { SITE_ORIGIN } from "@/lib/seo/server-api";
 
 export const metadata = pageMetadata({
   path: "/learn",
-  title: "Learn Vedic Astrology — Nakshatras, Doshas, Muhurat & Charts",
+  title: "Learn Vedic Astrology — Kundli, Nakshatras, Dashas & More",
   description:
-    "Clear, practical guides to Vedic astrology: the 27 nakshatras, Manglik and Kaal Sarp dosha, choosing a shubh muhurat, the Navamsa chart, and how rashi differs from your sun sign.",
+    "Clear, practical guides to Vedic astrology: kundli, matching, dashas, sade sati, rahu kaal, panchang, numerology, nakshatras, doshas and muhurat.",
   keywords: ["learn vedic astrology", "jyotish basics", "astrology guides"],
 });
 

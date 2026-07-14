@@ -11,6 +11,8 @@ import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
 import { todayIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { PANCHANG_SITEMAP_LOCALES } from '@/lib/seo/panchang-city-content';
+import { en } from '@/i18n/en';
+import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 
 /**
@@ -120,28 +122,15 @@ export default async function PanchangCityPage({ params }: RouteProps) {
 
   // FAQ — single source of truth, rendered visibly below and mirrored as
   // FAQPage structured data so the schema content is present on the page.
-  const faqs: { q: string; a: string }[] = [
-    {
-      q: `What is the Panchang for ${city.name}?`,
-      a: `The Panchang is the Hindu almanac listing the five limbs (pancha-anga) of each day — tithi (lunar day), nakshatra (lunar mansion), yoga, karana, and vara (weekday) — together with sunrise, sunset, and inauspicious windows. For ${city.name} these are computed from Swiss Ephemeris using the city's exact latitude and longitude.`,
-    },
-    {
-      q: `Why is ${city.name}'s panchang different from a national panchang?`,
-      a: `Tithi, nakshatra, sunrise, and sunset change at different clock times depending on location. Because the moon and sun cross local horizons at ${city.name}'s coordinates (${city.lat.toFixed(4)}, ${city.lng.toFixed(4)}) rather than a national reference point, a generic panchang can be off by hours — the values here are local to ${city.name}.`,
-    },
-    {
-      q: `What are Rahu Kaal, Gulika Kaal, and Yamakantaka?`,
-      a: `They are short daily windows traditionally avoided for starting something new — signing a contract, beginning a journey, or starting a ceremony. Routine activities already in progress are unaffected; the convention is simply to time first acts outside these windows.`,
-    },
-    {
-      q: `Which ayanamsa and engine does MyAstro360 use?`,
-      a: `Sidereal values use the canonical Lahiri ayanamsa, and all positions are computed from Swiss Ephemeris — the same astronomical engine used by professional astrologers and standard panchangs. Re-running with the same date returns identical results.`,
-    },
-    {
-      q: `How often does this panchang update?`,
-      a: `It refreshes once per local day. Reload the page the next morning to see ${city.name}'s panchang for the new day.`,
-    },
-  ];
+  // The copy lives as templates in the i18n dictionary so localized routes
+  // render the same FAQs from their own dictionaries (AEO: no mixed-language
+  // signal).
+  const faqTokens = {
+    city: city.name,
+    lat: city.lat.toFixed(4),
+    lng: city.lng.toFixed(4),
+  };
+  const faqs = buildFaqs(en.panchangLanding.faqs, faqTokens);
   const jsonLdFaq = faqLd(faqs);
 
   return (
@@ -259,7 +248,7 @@ export default async function PanchangCityPage({ params }: RouteProps) {
         {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
         <section className="surface-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">
-            Panchang for {city.name} — frequently asked questions
+            {interpolate(en.panchangLanding.faqHeading, faqTokens)}
           </h2>
           <dl className="space-y-4 text-sm">
             {faqs.map((f) => (

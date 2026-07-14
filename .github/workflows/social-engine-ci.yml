@@ -1,0 +1,57 @@
+name: Social engine CI
+
+on:
+  pull_request:
+    paths:
+      - "scripts/social/**"
+      - "marketing/social/templates/**"
+      - "marketing/social/queue/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/instagram-*.yml"
+      - ".github/workflows/social-engine-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/social/**"
+      - "marketing/social/templates/**"
+      - "marketing/social/queue/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/instagram-*.yml"
+      - ".github/workflows/social-engine-ci.yml"
+
+concurrency:
+  group: social-engine-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Social engine tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers
+        # On a cache hit the browser binaries are already restored, so only
+        # (re)install chromium (cheap no-op). On a miss, pull the OS deps too.
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run social:test

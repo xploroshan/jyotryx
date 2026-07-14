@@ -60,6 +60,11 @@ export const kaalSarpDosha: LearnArticle = {
       ],
     },
   ],
+  definedTerm: {
+    term: "Kaal Sarp dosha",
+    definition:
+      "A birth-chart formation in which all seven classical planets — Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn — sit within one half of the zodiac between Rahu and Ketu; a strict geometric condition that a single planet outside the axis breaks.",
+  },
   faqs: [
     {
       q: "Do Uranus, Neptune or Pluto break the formation?",
@@ -90,5 +95,5 @@ export const kaalSarpDosha: LearnArticle = {
       blurb: "See the full Rahu–Ketu axis and every planet's placement.",
     },
   ],
-  related: ["manglik-dosha", "nakshatras-overview"],
+  related: ["manglik-dosha", "nakshatras-overview", "kundli", "sade-sati"],
 };

@@ -60,6 +60,11 @@ export const nakshatrasOverview: LearnArticle = {
       ],
     },
   ],
+  definedTerm: {
+    term: "Nakshatra",
+    definition:
+      "One of 27 equal divisions of the sidereal zodiac, each spanning 13°20′ of the ecliptic and tracked by the Moon rather than the Sun; the nakshatra the Moon occupied at birth is a person's janma nakshatra, or birth star.",
+  },
   faqs: [
     {
       q: "What is my nakshatra if I only know my date of birth?",
@@ -90,5 +95,5 @@ export const nakshatrasOverview: LearnArticle = {
       blurb: "The Vimshottari sequence your nakshatra starts, with current periods.",
     },
   ],
-  related: ["rashi-vs-sun-sign", "navamsa-d9"],
+  related: ["rashi-vs-sun-sign", "navamsa-d9", "vimshottari-dasha", "panchang-explained"],
 };

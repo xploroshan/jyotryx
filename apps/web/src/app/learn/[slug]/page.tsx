@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { findArticleBySlug, listArticleSlugs, LEARN_ARTICLES } from "@/lib/learn/articles";
 import { pageMetadata } from "@/lib/seo/page-metadata";
-import { jsonLdHtml, articleLd, breadcrumbLd } from "@/lib/seo/json-ld";
+import { jsonLdHtml, articleLd, breadcrumbLd, definedTermLd, howToLd } from "@/lib/seo/json-ld";
 import { FaqSection } from "@/components/seo/FaqSection";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
 
@@ -57,6 +57,16 @@ export default async function LearnArticlePage({ params }: RouteProps) {
     { name: "Learn", url: `${SITE_ORIGIN}/learn` },
     { name: article.hero.headline, url },
   ]);
+  const jsonLdDefinedTerm = article.definedTerm
+    ? definedTermLd({
+        name: article.definedTerm.term,
+        description: article.definedTerm.definition,
+        url,
+      })
+    : undefined;
+  const jsonLdHowTo = article.howTo
+    ? howToLd({ name: article.howTo.heading, steps: article.howTo.steps, url })
+    : undefined;
 
   const related = article.related
     .map((s) => LEARN_ARTICLES.find((a) => a.slug === s))
@@ -73,6 +83,18 @@ export default async function LearnArticlePage({ params }: RouteProps) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdBreadcrumb) }}
         />
+        {jsonLdDefinedTerm && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdDefinedTerm) }}
+          />
+        )}
+        {jsonLdHowTo && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdHowTo) }}
+          />
+        )}
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
@@ -90,6 +112,14 @@ export default async function LearnArticlePage({ params }: RouteProps) {
           </p>
           <h1 className="text-3xl font-bold text-gradient text-balance">{article.hero.headline}</h1>
           <p className="text-sm text-secondary mt-3 max-w-2xl">{article.hero.tagline}</p>
+          {article.definedTerm && (
+            <dl className="mt-4 max-w-2xl rounded-lg bg-[rgba(255,252,245,0.78)] p-4">
+              <dt className="text-sm font-semibold text-surface-950">{article.definedTerm.term}</dt>
+              <dd className="text-sm leading-relaxed text-[rgba(12,8,5,0.7)] mt-1">
+                {article.definedTerm.definition}
+              </dd>
+            </dl>
+          )}
         </header>
 
         <article>
@@ -114,6 +144,17 @@ export default async function LearnArticlePage({ params }: RouteProps) {
             </section>
           ))}
         </article>
+
+        {article.howTo && (
+          <section className="surface-card p-6 mb-5">
+            <h2 className="text-lg font-semibold text-surface-950 mb-3">{article.howTo.heading}</h2>
+            <ol className="list-decimal pl-5 space-y-2 text-sm leading-relaxed text-[rgba(12,8,5,0.7)]">
+              {article.howTo.steps.map((step) => (
+                <li key={step.slice(0, 32)}>{step}</li>
+              ))}
+            </ol>
+          </section>
+        )}
 
         <FaqSection
           heading="Frequently asked questions"

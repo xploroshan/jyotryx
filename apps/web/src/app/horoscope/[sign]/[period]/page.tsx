@@ -8,6 +8,8 @@ import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
 import { periodStartIST } from '@/lib/seo/dates';
 import { localeUrl } from '@/lib/seo/page-metadata';
 import { LANDING_LOCALES } from '@/i18n/locales';
+import { en } from '@/i18n/en';
+import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { ZodiacGlyph } from '@/components/icons/astro';
 
 /**
@@ -110,20 +112,15 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
     ],
   };
 
-  const faqs: { q: string; a: string }[] = [
-    {
-      q: `How often is the ${sign.name} ${meta.label.toLowerCase()} horoscope updated?`,
-      a: `It refreshes ${meta.cadence}. You can also read ${sign.name}'s daily forecast and the other periods from the links at the top of this page.`,
-    },
-    {
-      q: `Is the ${meta.label.toLowerCase()} horoscope based on the sun sign or moon sign?`,
-      a: `This forecast is a general guide for everyone born under ${sign.name}. For predictions specific to you — based on your moon sign (rashi) and ascendant (lagna) — generate your free Vedic kundli with your exact date, time and place of birth.`,
-    },
-    {
-      q: `What does the ${sign.name} ${meta.label.toLowerCase()} horoscope cover?`,
-      a: `It looks at the major life areas for ${meta.adjective}: love and relationships, career and work, money and finances, and health and wellbeing.`,
-    },
-  ];
+  // Single source of truth for the FAQ (visible section + FAQPage JSON-LD),
+  // templated in the i18n dictionary so localized routes can reuse it.
+  const faqTokens = {
+    sign: sign.name,
+    period: meta.label.toLowerCase(),
+    cadence: meta.cadence,
+    adjective: meta.adjective,
+  };
+  const faqs = buildFaqs(en.horoscopeLanding.periodFaqs, faqTokens);
   const jsonLdFaq = faqLd(faqs);
 
   return (
@@ -218,7 +215,7 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
         {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
         <section className="surface-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-surface-950 mb-3">
-            {sign.name} {meta.label.toLowerCase()} horoscope — frequently asked questions
+            {interpolate(en.horoscopeLanding.periodFaqHeading, faqTokens)}
           </h2>
           <dl className="space-y-4 text-sm">
             {faqs.map((f) => (

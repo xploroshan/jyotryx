@@ -10,6 +10,8 @@ plan says *what* and *why*; these say *how*, grounded in the actual codebase.
 | AI-SEO | [ai-seo/aeo-playbook.md](ai-seo/aeo-playbook.md) | Answer-engine optimization: target queries, the `/learn` definitional-cluster build spec, FAQ localization, llms.txt upkeep, monthly prompt-tests. |
 | Pricing | [pricing/pricing-packaging.md](pricing/pricing-packaging.md) | Annual-default rationale, value-anchor copy bank, the paywall trigger→message map, NRI geo-pricing, the first A/B tests. |
 | Social | [social/social-playbook.md](social/social-playbook.md) | The share loop (ShareButton + per-reading OG snapshot build), short-form video plan, content calendar, hooks bank. |
+| Social (automation) | [social/instagram-daily-engine.md](social/instagram-daily-engine.md) | The automated daily Instagram post engine: 7-pillar content rotation, HTML-template visual system, Claude-agent pipeline (pick→write→render→publish→log), phased rollout with guardrails. |
+| SEO/AEO | [seo-aeo-action-plan.md](seo-aeo-action-plan.md) | Gap-driven, prioritized action plan (P0 ops unlocks → /learn expansion → authority → monitoring) sequencing the `docs/seo*` runbooks and the AEO playbook. |
 | Community | [community/community-playbook.md](community/community-playbook.md) | Reddit/Quora/FB channel map, value-first rules, weekly cadence + UTM tracking, honest review seeding, 90-day ramp. |
 | Ideas | [ideas/idea-backlog.md](ideas/idea-backlog.md) | ICE-scored, AARRR-tagged backlog of 30+ ideas tailored to this stage, acquisition-first, with a "pull the next 5". |
 

@@ -1,0 +1,90 @@
+name: Instagram weekly insights
+
+on:
+  schedule:
+    # Sundays 03:00 UTC (08:30 IST) — pull last week's insights.
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+# Shared with instagram-daily so daily+weekly runs serialize and never race
+# the same-branch artifact push (they overlap on Sundays). cancel-in-progress
+# must stay false so an in-flight commit is never aborted mid-push.
+concurrency:
+  group: social-engine-commit
+  cancel-in-progress: false
+
+jobs:
+  weekly-insights:
+    name: Fetch insights
+    runs-on: ubuntu-latest
+    # Master kill switch: repo variable SOCIAL_ENGINE_ENABLED must be 'true'.
+    if: ${{ vars.SOCIAL_ENGINE_ENABLED == 'true' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run weekly insights
+        id: run
+        # Don't abort the job on failure: the commit step below must still
+        # persist any state changes. The final step re-fails the job so the
+        # run still shows red.
+        continue-on-error: true
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          # Optional Meta app credentials for the token-refresh path. Empty when
+          # unset; never echoed.
+          FB_APP_ID: ${{ secrets.FB_APP_ID }}
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MYASTRO_API_URL: ${{ vars.MYASTRO_API_URL }}
+          TZ: Asia/Kolkata
+        run: node scripts/social/weekly-insights.mjs
+      - name: Commit artifacts
+        # Persist insights back to the branch whether the script succeeded or
+        # failed (if: always()). Guard against empty commits, then rebase-retry
+        # so a concurrent same-branch push (e.g. Sunday's daily run) doesn't
+        # clobber or reject ours.
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ -z "$(git status --porcelain -- marketing/social/)" ]; then
+            echo "No social artifacts to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add marketing/social/
+          # Empty-commit guard: the staged tree may still equal HEAD.
+          if git diff --cached --quiet; then
+            echo "No staged changes to commit."
+            exit 0
+          fi
+          # [skip ci] so committing marketing/social/** doesn't re-trigger
+          # social-engine-ci on the push.
+          git commit -m "chore(social): weekly insights $(date +%Y-%m-%d) [skip ci]"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase origin "$BRANCH" && git push origin "HEAD:${BRANCH}"; then
+              echo "Pushed artifacts on attempt ${i}."
+              exit 0
+            fi
+            echo "Push attempt ${i} failed; retrying after backoff..."
+            sleep 5
+          done
+          echo "::error::Failed to push social artifacts after 5 attempts; an operator must reconcile the branch before the next scheduled run."
+          exit 1
+      - name: Fail job if insights script failed
+        # Re-surface the script failure AFTER state is committed, so the run
+        # shows red for an operator while state is still persisted.
+        if: steps.run.outcome == 'failure'
+        run: |
+          echo "::error::weekly-insights.mjs failed; state committed. See the 'Run weekly insights' step logs."
+          exit 1

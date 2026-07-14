@@ -873,6 +873,43 @@ export const en = {
     zdPisces: 'Mar 15 - Apr 13',
   },
 
+  // Server-rendered horoscope landing pages (/horoscope/[sign] and
+  // /horoscope/[sign]/[period]) — FAQ templates, single source for both the
+  // visible FAQ section and the FAQPage JSON-LD. Tokens in {braces} are
+  // substituted at render time (see src/i18n/interpolate.ts): {sign} sign
+  // name, {symbol} zodiac glyph, {dateRange} tropical date range, {modality}
+  // cardinal/fixed/mutable, {element} fire/earth/air/water, {rulingPlanet}
+  // ruling planet, {period} weekly/monthly/yearly, {cadence} "every week"
+  // etc., {adjective} "this week" etc.
+  horoscopeLanding: {
+    faqHeading: '{sign} horoscope — frequently asked questions',
+    faqs: {
+      q1: 'What dates does the {sign} zodiac sign cover?',
+      a1: '{sign} ({symbol}) covers birthdays between {dateRange}. This is the Western/tropical sun-sign range; in Vedic (sidereal) astrology the dates shift by roughly three weeks, which is why your Vedic moon sign can differ from your sun sign.',
+      q2: 'What element and ruling planet govern {sign}?',
+      a2: '{sign} is a {modality} {element} sign ruled by {rulingPlanet}. Its element shapes temperament, its modality describes how it acts, and its ruling planet colours its core motivations.',
+      q3: 'Is the sun sign horoscope enough, or do I need my full kundli?',
+      a3: 'A sun-sign horoscope is a broad daily snapshot for everyone born under {sign}. For guidance specific to you, your Vedic kundli uses your exact date, time, and place of birth to calculate your moon sign (rashi) and ascendant (lagna), which matter more than the sun sign in Vedic astrology.',
+      q4: 'How often is the {sign} horoscope updated?',
+      a4: 'The {sign} forecast on this page is refreshed every day. Weekly, monthly, and yearly horoscopes are also available inside MyAstro360.',
+    },
+    periodFaqHeading: '{sign} {period} horoscope — frequently asked questions',
+    periodFaqs: {
+      q1: 'How often is the {sign} {period} horoscope updated?',
+      a1: "It refreshes {cadence}. You can also read {sign}'s daily forecast and the other periods from the links at the top of this page.",
+      q2: 'Is the {period} horoscope based on the sun sign or moon sign?',
+      a2: 'This forecast is a general guide for everyone born under {sign}. For predictions specific to you — based on your moon sign (rashi) and ascendant (lagna) — generate your free Vedic kundli with your exact date, time and place of birth.',
+      q3: 'What does the {sign} {period} horoscope cover?',
+      a3: 'It looks at the major life areas for {adjective}: love and relationships, career and work, money and finances, and health and wellbeing.',
+    },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'cardinal', fixed: 'fixed', mutable: 'mutable' },
+    outerPlanets: { Pluto: 'Pluto', Uranus: 'Uranus', Neptune: 'Neptune' },
+    periodCadence: { weekly: 'every week', monthly: 'every month', yearly: 'every year' },
+    periodAdjective: { weekly: 'this week', monthly: 'this month', yearly: 'this year' },
+  },
+
   // Numerology
   numerology: {
     title: 'Numerology',
@@ -1009,6 +1046,26 @@ export const en = {
     retry: 'Retry',
     fetchFailed: 'Failed to fetch Panchang data',
     loadFailed: 'Could not load Panchang. Please try again later.',
+  },
+
+  // Server-rendered panchang city landing pages (/panchang/[city]) — FAQ
+  // templates, single source for both the visible FAQ section and the FAQPage
+  // JSON-LD. Tokens (see src/i18n/interpolate.ts): {city} localized city
+  // name, {lat}/{lng} the city's coordinates fixed to 4 decimals.
+  panchangLanding: {
+    faqHeading: 'Panchang for {city} — frequently asked questions',
+    faqs: {
+      q1: 'What is the Panchang for {city}?',
+      a1: "The Panchang is the Hindu almanac listing the five limbs (pancha-anga) of each day — tithi (lunar day), nakshatra (lunar mansion), yoga, karana, and vara (weekday) — together with sunrise, sunset, and inauspicious windows. For {city} these are computed from Swiss Ephemeris using the city's exact latitude and longitude.",
+      q2: "Why is {city}'s panchang different from a national panchang?",
+      a2: "Tithi, nakshatra, sunrise, and sunset change at different clock times depending on location. Because the moon and sun cross local horizons at {city}'s coordinates ({lat}, {lng}) rather than a national reference point, a generic panchang can be off by hours — the values here are local to {city}.",
+      q3: 'What are Rahu Kaal, Gulika Kaal, and Yamakantaka?',
+      a3: 'They are short daily windows traditionally avoided for starting something new — signing a contract, beginning a journey, or starting a ceremony. Routine activities already in progress are unaffected; the convention is simply to time first acts outside these windows.',
+      q4: 'Which ayanamsa and engine does MyAstro360 use?',
+      a4: 'Sidereal values use the canonical Lahiri ayanamsa, and all positions are computed from Swiss Ephemeris — the same astronomical engine used by professional astrologers and standard panchangs. Re-running with the same date returns identical results.',
+      q5: 'How often does this panchang update?',
+      a5: "It refreshes once per local day. Reload the page the next morning to see {city}'s panchang for the new day.",
+    },
   },
 
   // Chat
