@@ -32,7 +32,15 @@ export async function fetchPanchang({ lat, lng, apiBase = process.env.MYASTRO_AP
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    // Guard against a 2xx body that is empty or missing fields: rendering a
+    // daily-sky card with blank cells or literal {tokens} is worse than
+    // falling back to evergreen, so treat an incomplete payload as no data.
+    const required = ['tithi', 'nakshatra', 'sunrise', 'sunset', 'rahukaal'];
+    for (const field of required) {
+      if (typeof data?.[field] !== 'string' || data[field].trim() === '') return null;
+    }
+    return data;
   } catch {
     return null;
   }

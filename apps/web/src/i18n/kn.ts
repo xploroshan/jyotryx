@@ -859,6 +859,12 @@ export const kn: TranslationKeys = {
       q3: '{sign} {period} ರಾಶಿಫಲ ಏನೆಲ್ಲವನ್ನು ಒಳಗೊಳ್ಳುತ್ತದೆ?',
       a3: 'ಇದು {adjective} ಅವಧಿಯ ಪ್ರಮುಖ ಜೀವನ ಕ್ಷೇತ್ರಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ: ಪ್ರೀತಿ ಮತ್ತು ಸಂಬಂಧಗಳು, ವೃತ್ತಿ ಮತ್ತು ಕೆಲಸ, ಹಣ ಮತ್ತು ಹಣಕಾಸು, ಹಾಗೂ ಆರೋಗ್ಯ ಮತ್ತು ಸ್ವಾಸ್ಥ್ಯ.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'ಚರ', fixed: 'ಸ್ಥಿರ', mutable: 'ದ್ವಿಸ್ವಭಾವ' },
+    outerPlanets: { Pluto: 'ಪ್ಲುಟೋ', Uranus: 'ಯುರೇನಸ್', Neptune: 'ನೆಪ್ಚೂನ್' },
+    periodCadence: { weekly: 'ಪ್ರತಿ ವಾರ', monthly: 'ಪ್ರತಿ ತಿಂಗಳು', yearly: 'ಪ್ರತಿ ವರ್ಷ' },
+    periodAdjective: { weekly: 'ಈ ವಾರ', monthly: 'ಈ ತಿಂಗಳು', yearly: 'ಈ ವರ್ಷ' },
   },
   numerology: {
     title: 'ಸಂಖ್ಯಾಶಾಸ್ತ್ರ',

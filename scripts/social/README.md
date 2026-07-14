@@ -52,10 +52,16 @@ npm run social:test     # render every template with fixture data into drafts/, 
 
 1. **Kill-switch check** — exit immediately if the engine is disabled (see
    Operations below).
-2. **Idempotency check** — `hasEntryFor(logDir, today)`: if the month log
-   already has a `posted` or `drafted` record for today's date, exit 0. Safe
-   to re-run on retries, re-delivered cron events, or manual + scheduled
-   overlap; you can never double-post a day.
+2. **Idempotency check** — `hasEntryFor(logDir, today)`: if the month log has
+   **any** record for today's date, exit 0. This includes the write-ahead
+   `publishing` record (written *before* the Graph publish call) and the
+   `needs-review` / `skipped` records written on failure — so a crash or a
+   publish that may have gone live still blocks a same-day re-pick. Safe to
+   re-run on retries, re-delivered cron events, or manual + scheduled overlap;
+   you can never double-post a day. Publish is never retried at the transport
+   level for the non-idempotent `media_publish` call; an ambiguous outcome is
+   reconciled against the account's live media, and anything unresolved is left
+   for a human (`needs-review`), never auto-reposted.
 3. **Pick the entry** — `nextPending(queue)` takes the first `pending` entry
    (the queue is ordered as the 7-day pillar rotation).
 4. **Fetch live data** — for `daily-sky` / `muhurat` entries, call

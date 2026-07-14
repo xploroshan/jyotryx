@@ -76,10 +76,23 @@ async function renderPageToPng(browser, html, outPath, width, height) {
       await page.setContent(html, { waitUntil: 'networkidle', timeout: 30000 });
     } catch {
       // Network idle may never settle (e.g. blocked font CDNs). Fall back to
-      // 'load' plus a short grace period for rendering.
-      await page.setContent(html, { waitUntil: 'load', timeout: 30000 }).catch(() => {});
+      // 'load' plus a short grace period for rendering. If the 'load' fallback
+      // ALSO fails, the page never rendered — propagate rather than screenshot
+      // a broken frame (the caller then skips the day).
+      try {
+        await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+      } catch (loadErr) {
+        throw new Error(`render: page failed to load — ${loadErr?.message || loadErr}`);
+      }
       await page.waitForTimeout(500);
     }
+    // Let webfonts settle before the screenshot. A fallback font family is an
+    // acceptable outcome, so this has its own short timeout and never fails the
+    // render on its own (fonts.ready may reject or hang on some pages).
+    await Promise.race([
+      page.evaluate(() => document.fonts.ready.then(() => true)),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]).catch(() => {});
     await mkdir(path.dirname(outPath), { recursive: true });
     await page.screenshot({
       path: outPath,

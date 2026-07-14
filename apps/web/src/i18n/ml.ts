@@ -860,6 +860,12 @@ export const ml: TranslationKeys = {
       q3: '{sign} {period} രാശിഫലത്തിൽ എന്തെല്ലാം ഉൾപ്പെടുന്നു?',
       a3: 'ഈ കാലയളവിലെ ({adjective}) പ്രധാന ജീവിതമേഖലകളെല്ലാം ഇതിൽ പരിശോധിക്കുന്നു: പ്രണയവും ബന്ധങ്ങളും, കരിയറും ജോലിയും, പണവും സാമ്പത്തികവും, ആരോഗ്യവും ക്ഷേമവും.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'ചരം', fixed: 'സ്ഥിരം', mutable: 'ഉഭയം' },
+    outerPlanets: { Pluto: 'പ്ലൂട്ടോ', Uranus: 'യുറാനസ്', Neptune: 'നെപ്റ്റ്യൂൺ' },
+    periodCadence: { weekly: 'എല്ലാ ആഴ്ചയും', monthly: 'എല്ലാ മാസവും', yearly: 'എല്ലാ വർഷവും' },
+    periodAdjective: { weekly: 'ഈ ആഴ്ച', monthly: 'ഈ മാസം', yearly: 'ഈ വർഷം' },
   },
   numerology: {
     title: 'സംഖ്യാശാസ്ത്രം',

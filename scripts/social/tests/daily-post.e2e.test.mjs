@@ -75,6 +75,44 @@ const EVERGREEN_ENTRY = {
   },
 };
 
+const CAROUSEL_ENTRY = {
+  id: 'test-carousel-1',
+  pillar: 'myth-bust',
+  template: 'myth-bust-carousel',
+  status: 'pending',
+  topic: 'Mangal Dosha, honestly',
+  learnSlug: null,
+  copy: {
+    headline: 'The truth about Mangal Dosha',
+    eyebrow: 'MYTH-BUST · MANGAL DOSHA',
+    body: 'A placement, never a prophecy.',
+    factor_line: 'Mars measured from the lagna.',
+    caption: 'Mangal Dosha is a placement, not a prophecy. Link in bio.\n\n#mangaldosha #vedicastrology',
+    hashtags: ['mangaldosha', 'vedicastrology', 'myastro360'],
+    slides: [
+      { headline: 'Mangal Dosha?', body: 'The claim: a marriage-cursing chart.' },
+      { headline: 'What it actually is', body: 'Mars in the 1st, 2nd, 4th, 7th, 8th or 12th house from the lagna.' },
+      { headline: 'Read the chart', body: 'A placement to interpret, never a verdict. Link in bio.' },
+    ],
+  },
+};
+
+/**
+ * Read the actual dated drafts directory back from the script rather than
+ * recomputing TODAY(IST) in the test — a run that crosses IST midnight would
+ * otherwise name a different day than the test expects. In DRY_RUN the script
+ * creates exactly one dated child dir under the drafts root.
+ */
+function dayDirOf(sandbox) {
+  const dirs = fs
+    .readdirSync(sandbox.draftsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+  assert.equal(dirs.length, 1, `exactly one dated drafts dir expected, got [${dirs.join(', ')}]`);
+  assert.match(dirs[0], /^\d{4}-\d{2}-\d{2}$/, 'drafts dir is an ISO date');
+  return path.join(sandbox.draftsDir, dirs[0]);
+}
+
 /** Build a tmp sandbox: queue.json copy, empty log dir, drafts dir, template copies. */
 function makeSandbox(t, queue) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'social-e2e-'));
@@ -134,7 +172,7 @@ test('dry run drafts the first pending entry: PNG + caption.txt + meta.json', { 
   assert.equal(code, 0, `exit 0 expected\nstdout: ${stdout}\nstderr: ${stderr}`);
   assert.match(stdout, /DRY RUN/);
 
-  const dayDir = path.join(sandbox.draftsDir, TODAY);
+  const dayDir = dayDirOf(sandbox);
   const png = path.join(dayDir, 'slide-01.png');
   assertPng(png);
 
@@ -177,7 +215,7 @@ test('daily-sky with no MYASTRO_API_URL falls back to evergreen — never fabric
   assert.match(stderr, /no live panchang/i, 'the skip reason is surfaced');
   assert.match(stdout, /evergreen fallback/);
 
-  const dayDir = path.join(sandbox.draftsDir, TODAY);
+  const dayDir = dayDirOf(sandbox);
   const meta = JSON.parse(fs.readFileSync(path.join(dayDir, 'meta.json'), 'utf8'));
   assert.equal(meta.id, 'test-evergreen-tithi', 'the rendered post is the evergreen card');
   assert.equal(meta.template, 'glossary');
@@ -186,4 +224,27 @@ test('daily-sky with no MYASTRO_API_URL falls back to evergreen — never fabric
   const caption = fs.readFileSync(path.join(dayDir, 'caption.txt'), 'utf8');
   assert.ok(caption.includes('A tithi is a lunar day.'));
   assert.ok(!caption.includes('{'), 'no unresolved {tokens} in the shipped caption');
+});
+
+test('carousel entry renders one PNG per slide with matching meta.files', { timeout: E2E_TIMEOUT_MS }, async (t) => {
+  const sandbox = makeSandbox(t, { entries: [CAROUSEL_ENTRY], evergreen: [] });
+
+  const { code, stdout, stderr } = await runDailyPost(sandbox);
+  assert.equal(code, 0, `exit 0 expected\nstdout: ${stdout}\nstderr: ${stderr}`);
+  assert.match(stdout, /DRY RUN/);
+
+  const dayDir = dayDirOf(sandbox);
+  const expected = ['slide-01.png', 'slide-02.png', 'slide-03.png'];
+
+  // One valid 1080x1350 PNG per slide (three slides -> cover / content / closer).
+  for (const name of expected) assertPng(path.join(dayDir, name));
+
+  // No stray slide files beyond the three slides.
+  const pngs = fs.readdirSync(dayDir).filter((f) => f.endsWith('.png')).sort();
+  assert.deepEqual(pngs, expected, 'exactly one PNG per slide, no more');
+
+  const meta = JSON.parse(fs.readFileSync(path.join(dayDir, 'meta.json'), 'utf8'));
+  assert.equal(meta.id, 'test-carousel-1');
+  assert.equal(meta.template, 'myth-bust-carousel');
+  assert.deepEqual(meta.files, expected, 'meta.files length matches the rendered slides');
 });

@@ -858,6 +858,12 @@ export const pa: TranslationKeys = {
       q3: '{sign} {period} ਰਾਸ਼ੀਫਲ ਵਿੱਚ ਕੀ-ਕੀ ਸ਼ਾਮਲ ਹੁੰਦਾ ਹੈ?',
       a3: 'ਇਹ {adjective} ਲਈ ਜੀਵਨ ਦੇ ਮੁੱਖ ਖੇਤਰਾਂ ਉੱਤੇ ਨਜ਼ਰ ਮਾਰਦਾ ਹੈ: ਪਿਆਰ ਅਤੇ ਰਿਸ਼ਤੇ, ਕੈਰੀਅਰ ਅਤੇ ਕੰਮ, ਧਨ ਅਤੇ ਵਿੱਤ, ਅਤੇ ਸਿਹਤ ਅਤੇ ਤੰਦਰੁਸਤੀ।',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'ਚਰ', fixed: 'ਸਥਿਰ', mutable: 'ਦੁਭਾਵੀ' },
+    outerPlanets: { Pluto: 'ਪਲੂਟੋ', Uranus: 'ਯੂਰੇਨਸ', Neptune: 'ਨੈਪਚੂਨ' },
+    periodCadence: { weekly: 'ਹਰ ਹਫ਼ਤੇ', monthly: 'ਹਰ ਮਹੀਨੇ', yearly: 'ਹਰ ਸਾਲ' },
+    periodAdjective: { weekly: 'ਇਸ ਹਫ਼ਤੇ', monthly: 'ਇਸ ਮਹੀਨੇ', yearly: 'ਇਸ ਸਾਲ' },
   },
   numerology: {
     title: 'ਅੰਕ ਵਿਗਿਆਨ',

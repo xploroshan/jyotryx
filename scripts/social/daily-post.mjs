@@ -89,10 +89,23 @@ function progressDotsHtml(total, active) {
   ).join('');
 }
 
-/** "What is a nakshatra?" -> "nakshatra" (for the glossary {{term}} hero slot). */
+/**
+ * "What is a nakshatra?" -> "nakshatra"; "What is Kaal Sarp Dosha, honestly?"
+ * -> "Kaal Sarp Dosha" (for the glossary {{term}} hero slot). Strips the
+ * "what is (a|an|the)" lead-in, any trailing comma-clause, and trailing
+ * punctuation.
+ */
 function termFromHeadline(headline) {
-  const match = String(headline ?? '').match(/^what\s+is\s+(?:a\s+|an\s+|the\s+)?(.+?)[?,.!\s]*$/i);
-  return match ? match[1] : String(headline ?? '');
+  let s = String(headline ?? '').trim();
+  const match = s.match(/^what\s+is\s+(?:a\s+|an\s+|the\s+)?(.+)$/i);
+  if (match) s = match[1];
+  s = s.split(',')[0]; // drop a trailing comma-clause ("..., honestly?")
+  return s.replace(/[?.!\s]+$/, '').trim();
+}
+
+/** Escape a string for safe use inside a RegExp. */
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
@@ -102,9 +115,13 @@ function termFromHeadline(headline) {
  */
 function buildCaption(copy, tokens) {
   const caption = substituteTokens(copy.caption ?? '', tokens).trim();
+  // A tag counts as present only on a word boundary: #panchang must NOT be
+  // considered present just because the caption contains #panchangfacts (a
+  // longer tag sharing it as a prefix). The leading '#' anchors the left edge;
+  // the negative lookahead guards the right edge.
   const missing = (copy.hashtags ?? [])
     .map((t) => `#${String(t).replace(/^#/, '')}`)
-    .filter((tag) => !caption.toLowerCase().includes(tag.toLowerCase()));
+    .filter((tag) => !new RegExp(`${escapeRegExp(tag)}(?![\\w])`, 'i').test(caption));
   return missing.length > 0 ? `${caption}\n\n${missing.join('\n')}` : caption;
 }
 
@@ -115,7 +132,11 @@ async function main() {
   const dateLabel = dateLabelInKolkata(now);
   const draftsDir = path.join(DRAFTS_ROOT, today);
 
-  const dryRun = Boolean(process.env.DRY_RUN);
+  // Explicit truthy parse: '1'/'true'/'yes'/'on' => dry run; everything else
+  // (incl. the string 'false' and an empty value) => NOT a dry run.
+  const dryRun = ['1', 'true', 'yes', 'on'].includes(
+    String(process.env.DRY_RUN ?? '').trim().toLowerCase(),
+  );
   const mode = process.env.SOCIAL_MODE || 'draft';
 
   // Publish mode: validate env up front — fail fast, before any queue or
@@ -275,7 +296,7 @@ async function main() {
       // The glossary card is a crisp term/definition tile: the first body
       // paragraph is the definition; the factor line is the source line.
       data = {
-        term: termFromHeadline(copy.headline),
+        term: copy.term ?? termFromHeadline(copy.headline),
         term_devanagari: copy.term_devanagari ?? '',
         definition: sub(String(copy.body ?? '').split(/\n{2,}/)[0] ?? ''),
         source_line: sub(copy.factor_line),
@@ -329,9 +350,6 @@ async function main() {
     process.exit(0);
   }
 
-  // Evergreen cards are consumed by stamping usedOn (see pickEvergreen).
-  if (isEvergreen) activeEntry.usedOn = today;
-
   const baseLogRecord = {
     date: today,
     id: activeEntry.id,
@@ -342,7 +360,9 @@ async function main() {
 
   if (mode !== 'publish') {
     // ---- i. Draft mode (default): record and stop ---------------------------
-    if (!isEvergreen) markStatus(queue, activeEntry.id, 'drafted', { draftDir: draftsDir });
+    // An evergreen fallback is consumed as a draft by stamping usedOn.
+    if (isEvergreen) activeEntry.usedOn = today;
+    else markStatus(queue, activeEntry.id, 'drafted', { draftDir: draftsDir });
     saveQueue(QUEUE_FILE, queue);
     appendLog(LOG_DIR, { ...baseLogRecord, status: 'drafted', files: fileNames, draftDir: draftsDir });
     console.log(`DRAFTED ${today}: ${activeEntry.id} -> ${draftsDir}`);
@@ -364,12 +384,26 @@ async function main() {
     igUserId: process.env.IG_USER_ID,
   });
 
+  // Write-ahead intent: record a 'publishing' log BEFORE the Graph publish call
+  // and persist the queue. hasEntryFor matches ANY status for the date, so if
+  // the process dies mid-publish this record blocks a same-day re-pick (which
+  // would otherwise auto-repost). NB: usedOn is NOT stamped yet — the evergreen
+  // card must only be burned once the post is actually live.
+  appendLog(LOG_DIR, {
+    ...baseLogRecord,
+    status: 'publishing',
+    startedAt: new Date().toISOString(),
+  });
+  saveQueue(QUEUE_FILE, queue);
+
   try {
     const result = imageUrls.length > 1
       ? await client.publishCarousel({ imageUrls, caption })
       : await client.publishImage({ imageUrl: imageUrls[0], caption });
 
-    if (!isEvergreen) {
+    // Success: now it is safe to consume the evergreen card / mark the entry.
+    if (isEvergreen) activeEntry.usedOn = today;
+    else {
       markStatus(queue, activeEntry.id, 'posted', {
         mediaId: result.mediaId,
         permalink: result.permalink,
@@ -387,17 +421,34 @@ async function main() {
     warnQueueHealth(queue);
     process.exit(0);
   } catch (err) {
-    // Publish failed after the client's internal retries. The entry stays
-    // pending in the queue, but we log a 'skipped' record for today so the
-    // hasEntryFor guard prevents a re-run from double-posting the same day.
-    saveQueue(QUEUE_FILE, queue); // persists evergreen usedOn if applicable
+    // A publish attempt was made (the 'publishing' write-ahead record is
+    // already committed). NEVER leave the entry 'pending' — that would let a
+    // re-run auto-repost. Distinguish two cases:
+    //   - failure at/after media_publish (post MIGHT be live) -> the client
+    //     reconciles recoverable successes; an unrecovered one is marked
+    //     'skipped' and logged 'needs-review' for a human to check.
+    //   - failure strictly before any publish attempt (upload/container-create
+    //     or poll failed; nothing is live) -> 'skipped' + 'publish-failed'.
+    // Either way the evergreen card is NOT burned (it never went live).
+    const mayBeLive = err?.phase === 'media_publish';
+    if (!isEvergreen) {
+      markStatus(queue, activeEntry.id, 'skipped', {
+        reason: mayBeLive ? 'needs-review' : 'publish-failed',
+      });
+    } else {
+      delete activeEntry.usedOn;
+    }
+    saveQueue(QUEUE_FILE, queue);
     appendLog(LOG_DIR, {
       ...baseLogRecord,
-      status: 'skipped',
-      reason: 'publish-failed',
+      status: mayBeLive ? 'needs-review' : 'skipped',
+      reason: mayBeLive ? 'media_publish-ambiguous' : 'publish-failed',
       error: err?.message || String(err),
     });
-    console.error(`ERROR publish failed for ${activeEntry.id}: ${err?.message || err}`);
+    console.error(
+      `ERROR publish ${mayBeLive ? 'ambiguous — NEEDS REVIEW (post may be live)' : 'failed'} ` +
+      `for ${activeEntry.id}: ${err?.message || err}`,
+    );
     process.exit(1);
   }
 }

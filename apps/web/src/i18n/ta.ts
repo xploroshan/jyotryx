@@ -860,6 +860,12 @@ export const ta: TranslationKeys = {
       q3: '{sign} {period} ராசிபலன் எவற்றை உள்ளடக்கியது?',
       a3: 'அந்தந்தக் காலகட்டத்திற்கான ({adjective}) முக்கிய வாழ்க்கைத் துறைகளை இது ஆராய்கிறது: காதல் மற்றும் உறவுகள், தொழில் மற்றும் வேலை, பணம் மற்றும் நிதி, ஆரோக்கியம் மற்றும் நலம்.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'சரம்', fixed: 'ஸ்திரம்', mutable: 'உபயம்' },
+    outerPlanets: { Pluto: 'ப்ளூட்டோ', Uranus: 'யுரேனஸ்', Neptune: 'நெப்டியூன்' },
+    periodCadence: { weekly: 'ஒவ்வொரு வாரமும்', monthly: 'ஒவ்வொரு மாதமும்', yearly: 'ஒவ்வொரு ஆண்டும்' },
+    periodAdjective: { weekly: 'இந்த வாரம்', monthly: 'இந்த மாதம்', yearly: 'இந்த ஆண்டு' },
   },
   numerology: {
     title: 'எண்கணிதம்',

@@ -22,7 +22,10 @@ import { makeClient } from './lib/ig-api.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const QUEUE_FILE = path.join(REPO_ROOT, 'marketing/social/queue/queue.json');
-const LOG_DIR = path.join(REPO_ROOT, 'marketing/social/log');
+// LOG_DIR is env-overridable (SOCIAL_LOG_DIR, mirroring daily-post.mjs) so tests
+// can run against a tmp log without touching the real committed history.
+const LOG_DIR = process.env.SOCIAL_LOG_DIR
+  || path.join(REPO_ROOT, 'marketing/social/log');
 
 const TZ = 'Asia/Kolkata';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -94,8 +97,14 @@ async function main() {
     let touched = false;
     for (const record of targets) {
       const insights = await client.getInsights(record.mediaId); // never throws
-      record.insights = { ...insights, fetchedAt: new Date().toISOString() };
-      touched = true;
+      // Only overwrite committed metrics when the fetch actually returned at
+      // least one real metric. A soft-failure ({ warning } only) must never
+      // clobber previously stored numbers.
+      const hasRealMetric = Object.keys(insights).some((k) => k !== 'warning');
+      if (hasRealMetric) {
+        record.insights = { ...insights, fetchedAt: new Date().toISOString() };
+        touched = true;
+      }
       const summary = Object.entries(insights)
         .filter(([k]) => k !== 'warning')
         .map(([k, v]) => `${k}=${v}`)
@@ -163,8 +172,12 @@ async function main() {
 }
 
 main().catch((err) => {
-  // Only log-file unreadability is fatal (handled above with exit 1); any
-  // other unexpected failure is reported but does not fail the weekly job.
-  console.error(`ERROR weekly-insights: ${err?.stack || err}`);
-  process.exit(0);
+  // Explicitly tolerated degradations (missing IG creds in draft mode, the
+  // insights API soft-failing) are handled inside main() and exit 0. An
+  // unexpected throw reaching here is a real failure: surface it as a GitHub
+  // Actions error and exit 1 so the run shows red (the workflow still commits
+  // any partial artifacts via its if:always() step).
+  console.error(`::error::weekly-insights failed: ${err?.message || err}`);
+  console.error(err?.stack || err);
+  process.exit(1);
 });

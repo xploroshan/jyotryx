@@ -16,8 +16,11 @@ on:
         type: boolean
         default: false
 
+# Shared with instagram-weekly so daily+weekly runs serialize and never race
+# the same-branch artifact push (they overlap on Sundays). cancel-in-progress
+# must stay false so an in-flight commit is never aborted mid-push.
 concurrency:
-  group: instagram-daily
+  group: social-engine-commit
   cancel-in-progress: false
 
 jobs:
@@ -37,12 +40,34 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        # On a cache hit the browser binaries are already restored, so only
+        # (re)install chromium (cheap no-op). On a miss, pull the OS deps too.
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: Run daily post
+        id: run
+        # Don't abort the job on a publish failure: the commit step below must
+        # still persist the write-ahead / needs-review guard record. The final
+        # step re-fails the job so the run still shows red.
+        continue-on-error: true
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          # Optional Meta app credentials for the token-refresh path. Empty when
+          # unset; never echoed.
+          FB_APP_ID: ${{ secrets.FB_APP_ID }}
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -56,15 +81,43 @@ jobs:
         run: node scripts/social/daily-post.mjs
       - name: Commit artifacts
         # Persist drafts / queue / log changes back to the branch the run
-        # checked out. Guard against empty commits: only commit when git
-        # actually reports changes under marketing/social/.
+        # checked out — whether the script succeeded or failed (if: always()),
+        # so the write-ahead / needs-review guard record is never lost. Guard
+        # against empty commits, then rebase-retry so a concurrent same-branch
+        # push (e.g. Sunday's weekly run) doesn't clobber or reject ours.
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
         run: |
-          if [ -n "$(git status --porcelain -- marketing/social/)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add marketing/social/
-            git commit -m "chore(social): daily post artifacts $(date +%Y-%m-%d)"
-            git push origin "HEAD:${{ github.ref_name }}"
-          else
+          if [ -z "$(git status --porcelain -- marketing/social/)" ]; then
             echo "No social artifacts to commit."
+            exit 0
           fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add marketing/social/
+          # Empty-commit guard: the staged tree may still equal HEAD.
+          if git diff --cached --quiet; then
+            echo "No staged changes to commit."
+            exit 0
+          fi
+          # [skip ci] so committing marketing/social/** doesn't re-trigger
+          # social-engine-ci on the push.
+          git commit -m "chore(social): daily post artifacts $(date +%Y-%m-%d) [skip ci]"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase origin "$BRANCH" && git push origin "HEAD:${BRANCH}"; then
+              echo "Pushed artifacts on attempt ${i}."
+              exit 0
+            fi
+            echo "Push attempt ${i} failed; retrying after backoff..."
+            sleep 5
+          done
+          echo "::error::Failed to push social artifacts after 5 attempts; an operator must reconcile the branch before the next scheduled run."
+          exit 1
+      - name: Fail job if post script failed
+        # Re-surface the script failure AFTER the guard record is committed, so
+        # the run shows red for an operator while state is still persisted.
+        if: steps.run.outcome == 'failure'
+        run: |
+          echo "::error::daily-post.mjs failed; guard record committed. See the 'Run daily post' step logs."
+          exit 1

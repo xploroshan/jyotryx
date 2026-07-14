@@ -860,6 +860,12 @@ export const te: TranslationKeys = {
       q3: '{sign} {period} రాశిఫలం ఏమేమి తెలియజేస్తుంది?',
       a3: 'ఇది {adjective} కాలానికి సంబంధించిన ప్రధాన జీవిత రంగాలను పరిశీలిస్తుంది: ప్రేమ మరియు సంబంధాలు, కెరీర్ మరియు పని, డబ్బు మరియు ఆర్థిక విషయాలు, ఆరోగ్యం మరియు సంక్షేమం.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'చరము', fixed: 'స్థిరము', mutable: 'ఉభయము' },
+    outerPlanets: { Pluto: 'ప్లూటో', Uranus: 'యురేనస్', Neptune: 'నెప్ట్యూన్' },
+    periodCadence: { weekly: 'ప్రతి వారం', monthly: 'ప్రతి నెల', yearly: 'ప్రతి సంవత్సరం' },
+    periodAdjective: { weekly: 'ఈ వారం', monthly: 'ఈ నెల', yearly: 'ఈ సంవత్సరం' },
   },
   numerology: {
     title: 'సంఖ్యాశాస్త్రం',

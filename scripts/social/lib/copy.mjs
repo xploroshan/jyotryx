@@ -63,7 +63,7 @@ function topicBrief(entry) {
  * @param {string} text
  * @returns {object}
  */
-function parseJsonObject(text) {
+export function parseJsonObject(text) {
   let candidate = text.trim();
   const fenced = candidate.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fenced) candidate = fenced[1].trim();
@@ -79,7 +79,7 @@ function parseJsonObject(text) {
 }
 
 /** Validate the generated copy has everything downstream rendering needs. */
-function validateCopy(copy, entry) {
+export function validateCopy(copy, entry) {
   const problems = [];
   for (const field of ['headline', 'caption']) {
     if (typeof copy?.[field] !== 'string' || copy[field].trim() === '') {
@@ -89,6 +89,21 @@ function validateCopy(copy, entry) {
   if (/carousel/i.test(entry.template || '')) {
     if (!Array.isArray(copy?.slides) || copy.slides.length < 2) {
       problems.push('carousel template requires "slides" (>= 2)');
+    }
+  }
+  // Never-fabricate rule: a live post (daily-sky, or any city-bound entry) must
+  // keep its panchang values as {tokens} for downstream substitution — it must
+  // NEVER hard-code concrete numbers (a fabricated tithi/nakshatra/rahu-kaal).
+  // Require at least one live {token} and reject any literal clock time (HH:MM),
+  // which would only appear if a rahu-kaal/sunrise/sunset value had been baked in.
+  const isLive = entry?.template === 'daily-sky' || Boolean(entry?.city?.name);
+  if (isLive) {
+    const caption = typeof copy?.caption === 'string' ? copy.caption : '';
+    const liveTokens = ['{tithi}', '{nakshatra}', '{rahu_kaal}', '{sunrise}', '{sunset}'];
+    const keepsToken = liveTokens.some((tok) => caption.includes(tok));
+    const hasLiteralTime = /\b\d{1,2}:\d{2}\b/.test(caption);
+    if (!keepsToken || hasLiteralTime) {
+      problems.push('live entry caption must retain panchang {tokens} (never hard-code values)');
     }
   }
   if (problems.length > 0) {
@@ -133,6 +148,8 @@ export async function resolveCopy(
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: topicBrief(entry) }],
     }),
+    // Bound the call so a hung generation can't stall the daily run forever.
+    signal: AbortSignal.timeout(Number(process.env.ANTHROPIC_TIMEOUT_MS) || 30000),
   });
 
   if (!res.ok) {

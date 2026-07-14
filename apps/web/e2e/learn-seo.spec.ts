@@ -81,15 +81,30 @@ test.describe('/learn articles — structured data', () => {
         expect(steps.map((s) => s.position)).toEqual(
           article.howTo.steps.map((_, i) => i + 1),
         );
+
+        // C13/C19: the HowTo steps must render VISIBLY, not just in JSON-LD.
+        // The steps are the only decimal-ordered list on the page (breadcrumb
+        // is a flex <ol>, related/bullets are <ul>). Exactly one <li> per step,
+        // each visible — a truncating component would fail this.
+        const stepItems = page.locator('ol.list-decimal > li');
+        await expect(stepItems).toHaveCount(article.howTo.steps.length);
+        for (let i = 0; i < article.howTo.steps.length; i++) {
+          await expect(stepItems.nth(i)).toBeVisible();
+        }
       }
 
       // FAQPage mirrors the visible FAQ copy (single-source rule).
       const [faq] = byType(blocks, 'FAQPage');
       const questions = (faq.mainEntity as { name: string }[]).map((q) => q.name);
       expect(questions).toEqual(article.faqs.map((f) => f.q));
-      for (const q of questions.slice(0, 2)) {
+      // JSON-LD ↔ visible-copy parity: EVERY question must render visibly, not
+      // just the first couple — a component that truncated the list would fail.
+      for (const q of questions) {
         await expect(page.getByText(q, { exact: true }).first()).toBeVisible();
       }
+      // And the visible FAQ item count must equal the registry length (the FAQ
+      // <dl> is the only `divide-y` list; the DefinedTerm <dl> is not).
+      await expect(page.locator('dl.divide-y > div')).toHaveCount(article.faqs.length);
     });
   }
 
@@ -174,14 +189,22 @@ test.describe('localized landing FAQs (no English leakage)', () => {
     await expect(page.getByText(questions[0], { exact: true }).first()).toBeVisible();
   });
 
-  test('/ta/panchang/chennai renders Tamil dictionary FAQs', async ({ page }) => {
+  test('/ta/panchang/chennai renders localized page but no self-orphaning FAQPage', async ({ page }) => {
+    // Panchang FAQ gating: a locale OUTSIDE PANCHANG_SITEMAP_LOCALES (only
+    // en + long-form-template locales qualify; ta has neither) must render the
+    // data-table-only path. Emitting a standalone FAQ block + FAQPage there
+    // would be a self-orphaning thin page — indexable content with no sitemap
+    // entry and hreflang that omits it — so no FAQPage is expected.
     await page.goto('/ta/panchang/chennai');
     const blocks = await jsonLdBlocks(page);
-    const [faq] = byType(blocks, 'FAQPage');
-    expect(faq, 'ta city page must emit FAQPage from the dictionary').toBeTruthy();
-    const questions = (faq.mainEntity as { name: string }[]).map((q) => q.name);
-    expect(questions.join(' ')).toMatch(/[஀-௿]/); // Tamil block
-    expect(questions.join(' ')).not.toMatch(/\{[a-zA-Z]+\}/);
+    // Still a real, indexable page: Article JSON-LD is always emitted.
+    expect(byType(blocks, 'Article'), 'city page must still emit Article JSON-LD').toHaveLength(1);
+    // But no FAQPage for a non-sitemap locale.
+    expect(byType(blocks, 'FAQPage'), 'non-sitemap locale must not emit FAQPage').toHaveLength(0);
+    // And the page is genuinely localized (Tamil H1), not English-leaking.
+    const h1 = page.locator('h1');
+    await expect(h1).toBeVisible();
+    expect(await h1.innerText()).toMatch(/[஀-௿]/); // Tamil block
   });
 
   test('/hi/panchang/mumbai keeps the richer per-city content path (no double FAQ)', async ({ page }) => {

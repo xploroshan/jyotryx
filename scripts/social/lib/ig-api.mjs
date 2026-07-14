@@ -37,16 +37,30 @@ export function makeClient({
   retryDelayMs = 2000,
   pollIntervalMs = 3000,
   pollTimeoutMs = 180000,
+  requestTimeoutMs = Number(process.env.GRAPH_REQUEST_TIMEOUT_MS) || 20000,
 } = {}) {
   if (!accessToken) throw new Error('makeClient: accessToken is required');
   if (!igUserId) throw new Error('makeClient: igUserId is required');
 
   const base = apiBase.replace(/\/+$/, '');
 
-  /** Strip the token from any string that might end up in an error message. */
+  // Every secret that must never appear in an error message or log line.
+  // Built once at client-creation time (longest first so the app-secret
+  // composite is redacted before its parts). FB_APP_SECRET / the
+  // 'appId|appSecret' composite / client_secret all reduce to these.
+  const appId = process.env.FB_APP_ID;
+  const appSecret = process.env.FB_APP_SECRET;
+  const secrets = [accessToken, appSecret]
+    .filter((s) => typeof s === 'string' && s.length >= 6);
+  if (appId && appSecret && appSecret.length >= 6) secrets.push(`${appId}|${appSecret}`);
+  secrets.sort((a, b) => b.length - a.length);
+
+  /** Strip every known secret from any string that might reach an error/log. */
   function redact(text) {
     if (typeof text !== 'string') return text;
-    return text.split(accessToken).join('<redacted>');
+    let out = text;
+    for (const secret of secrets) out = out.split(secret).join('<redacted>');
+    return out;
   }
 
   /**
@@ -59,9 +73,16 @@ export function makeClient({
    * @param {'GET'|'POST'} [options.method]
    * @param {Record<string, string>} [options.params] - query string params (GET) .
    * @param {Record<string, string>} [options.form] - form body params (POST).
+   * @param {number} [options.retries] - override the client-wide retry count
+   *   (pass 0 for non-idempotent calls that must never be blindly retried).
+   * @param {number} [options.timeoutMs] - per-attempt abort timeout.
    * @returns {Promise<any>} parsed JSON body.
    */
-  async function request(path, { method = 'GET', params, form } = {}) {
+  async function request(
+    path,
+    { method = 'GET', params, form, retries: retriesOverride, timeoutMs = requestTimeoutMs } = {},
+  ) {
+    const maxRetries = retriesOverride ?? retries;
     const url = new URL(path.startsWith('http') ? path : `${base}${path}`);
     if (params) {
       for (const [k, v] of Object.entries(params)) {
@@ -81,16 +102,22 @@ export function makeClient({
     }
 
     let lastError;
-    for (let attempt = 0; attempt <= retries; attempt++) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       if (attempt > 0) {
         await sleep(retryDelayMs * 2 ** (attempt - 1));
       }
 
       let res;
       try {
-        res = await fetchImpl(url.toString(), { method, headers, body });
+        res = await fetchImpl(url.toString(), {
+          method,
+          headers,
+          body,
+          // A hung Graph fetch must not stall the run forever.
+          signal: AbortSignal.timeout(timeoutMs),
+        });
       } catch (err) {
-        // Network-level failure: retry.
+        // Network-level failure (incl. abort/timeout): retry when allowed.
         lastError = new Error(
           `Graph API ${method} ${url.pathname} failed: ${redact(err?.message || String(err))}`,
         );
@@ -151,14 +178,85 @@ export function makeClient({
     }
   }
 
-  /** Publish a finished container and return its media id. */
+  /** True when a Graph error says the container was already published. */
+  function isAlreadyPublished(err) {
+    const msg = String(err?.graphError?.message || err?.message || '').toLowerCase();
+    return /already\s+(?:been\s+)?published/.test(msg);
+  }
+
+  /**
+   * True when a media_publish failure is ambiguous — the POST may or may not
+   * have taken effect (network/timeout with no HTTP status, a 5xx/429, or an
+   * 'already published' error). A clean 4xx is NOT ambiguous (nothing went
+   * live), so it is never reconciled.
+   */
+  function isAmbiguousPublishError(err) {
+    if (isAlreadyPublished(err)) return true;
+    const status = err?.status;
+    if (status === undefined || status === null) return true; // network / abort / timeout
+    return status >= 500 || status === 429;
+  }
+
+  /**
+   * After an ambiguous media_publish failure, detect whether the post actually
+   * went live and recover its media id. Returns a media id on success, else
+   * null (caller rethrows so the day is marked needs-review, never re-posted).
+   */
+  async function reconcilePublishedId(creationId, assumeLive) {
+    let confirmed = assumeLive;
+    if (!confirmed) {
+      try {
+        const data = await request(`/${creationId}`, {
+          params: { fields: 'status_code', access_token: accessToken },
+        });
+        confirmed = data?.status_code === 'PUBLISHED';
+      } catch {
+        // Status probe failed — fall through; without confirmation we bail.
+      }
+    }
+    if (!confirmed) return null;
+    // The post is live; recover its id from the account's most recent media.
+    try {
+      const data = await request(`/${igUserId}/media`, {
+        params: { fields: 'id,timestamp', limit: 5, access_token: accessToken },
+      });
+      const items = Array.isArray(data?.data) ? data.data : [];
+      if (items[0]?.id) return items[0].id;
+    } catch {
+      // Could not list media — still live, so return a best-effort marker
+      // (a non-null id) rather than throwing and risking a re-post.
+    }
+    return creationId;
+  }
+
+  /**
+   * Publish a finished container and return its media id.
+   * The media_publish POST is NON-idempotent, so it is never blindly retried
+   * (retries: 0). On an ambiguous failure we reconcile against what actually
+   * went live instead of re-posting.
+   */
   async function publishContainer(creationId) {
-    const published = await request(`/${igUserId}/media_publish`, {
-      method: 'POST',
-      form: { creation_id: creationId, access_token: accessToken },
-    });
+    let published;
+    try {
+      published = await request(`/${igUserId}/media_publish`, {
+        method: 'POST',
+        form: { creation_id: creationId, access_token: accessToken },
+        retries: 0,
+      });
+    } catch (err) {
+      if (isAmbiguousPublishError(err)) {
+        const recovered = await reconcilePublishedId(creationId, isAlreadyPublished(err));
+        if (recovered) return recovered;
+      }
+      err.phase = 'media_publish';
+      throw err;
+    }
     const mediaId = published?.id;
-    if (!mediaId) throw new Error('media_publish returned no media id');
+    if (!mediaId) {
+      const err = new Error('media_publish returned no media id');
+      err.phase = 'media_publish';
+      throw err;
+    }
     return mediaId;
   }
 

@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { findSignBySlug, listSignSlugs } from '@/lib/seo/zodiac';
 import { fetchHoroscope, SITE_ORIGIN } from '@/lib/seo/server-api';
-import { jsonLdHtml, articleLd } from '@/lib/seo/json-ld';
+import { jsonLdHtml, articleLd, faqLd } from '@/lib/seo/json-ld';
 import { periodStartIST } from '@/lib/seo/dates';
 import { localizedMetadata, localeUrl } from '@/lib/seo/page-metadata';
 import { getServerTranslations } from '@/i18n/server';
+import { en } from '@/i18n/en';
+import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { prefixedLandingLocale, LANDING_LOCALES, PREBUILD_LANDING_LOCALES } from '@/i18n/locales';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
 import { ZodiacGlyph } from '@/components/icons/astro';
@@ -76,10 +78,27 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
     datePublished: periodStartIST(period),
   });
 
+  // FAQ — single source for the visible section and FAQPage JSON-LD, built
+  // from the locale dictionary's periodFaqs templates (mirrors the daily
+  // [sign] route). cadence/adjective use localized dictionary phrases so the
+  // sentences never inject English into a non-English page.
+  const landing = t.horoscopeLanding ?? en.horoscopeLanding;
+  const cadenceMap = landing.periodCadence ?? en.horoscopeLanding.periodCadence;
+  const adjectiveMap = landing.periodAdjective ?? en.horoscopeLanding.periodAdjective;
+  const faqTokens = {
+    sign: signName,
+    period: periodLabel,
+    cadence: (cadenceMap as Record<string, string>)[period],
+    adjective: (adjectiveMap as Record<string, string>)[period],
+  };
+  const faqs = buildFaqs(landing.periodFaqs, faqTokens);
+  const jsonLdFaq = faqLd(faqs);
+
   return (
     <div className="relative min-h-screen">
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-10 fade-in-up">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdArticle) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLdFaq) }} />
 
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-[rgba(12,8,5,0.66)]">
           <ol className="flex flex-wrap items-center gap-1.5">
@@ -134,6 +153,21 @@ export default async function LocalizedHoroscopePeriodPage({ params }: RouteProp
           ) : (
             <p className="text-sm text-[rgba(12,8,5,0.72)]">{t.horoscope.retry}</p>
           )}
+        </section>
+
+        {/* FAQ — visible content mirrored by the FAQPage JSON-LD above */}
+        <section className="surface-card p-6 mb-6">
+          <h2 className="text-lg font-semibold text-surface-950 mb-3">
+            {interpolate(landing.periodFaqHeading, faqTokens)}
+          </h2>
+          <dl className="space-y-4 text-sm">
+            {faqs.map((f) => (
+              <div key={f.q} className="border-l-2 border-primary-500/30 pl-3">
+                <dt className="font-medium text-surface-950">{f.q}</dt>
+                <dd className="text-emphasis mt-1 leading-relaxed">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
         <LanguageLinkRow path={`/horoscope/${sign.slug}/${period}`} currentLocale={locale} locales={LANDING_LOCALES} />

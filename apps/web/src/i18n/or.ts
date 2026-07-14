@@ -859,6 +859,12 @@ export const or_: TranslationKeys = {
       q3: "{sign} {period} ରାଶିଫଳରେ କ'ଣ ଅନ୍ତର୍ଭୁକ୍ତ?",
       a3: 'ଏହା {adjective} ପାଇଁ ଜୀବନର ମୁଖ୍ୟ କ୍ଷେତ୍ରଗୁଡ଼ିକୁ ଦେଖେ: ପ୍ରେମ ଏବଂ ସମ୍ପର୍କ, କ୍ୟାରିଅର ଏବଂ କାମ, ଧନ ଏବଂ ଆର୍ଥିକ, ଏବଂ ସ୍ୱାସ୍ଥ୍ୟ ଏବଂ ସୁସ୍ଥତା।',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'ଚର', fixed: 'ସ୍ଥିର', mutable: 'ଦ୍ୱିସ୍ୱଭାବ' },
+    outerPlanets: { Pluto: 'ପ୍ଲୁଟୋ', Uranus: 'ୟୁରାନସ', Neptune: 'ନେପଚୁନ' },
+    periodCadence: { weekly: 'ପ୍ରତି ସପ୍ତାହ', monthly: 'ପ୍ରତି ମାସ', yearly: 'ପ୍ରତି ବର୍ଷ' },
+    periodAdjective: { weekly: 'ଏହି ସପ୍ତାହ', monthly: 'ଏହି ମାସ', yearly: 'ଏହି ବର୍ଷ' },
   },
   numerology: {
     title: 'ସଂଖ୍ୟାଶାସ୍ତ୍ର',

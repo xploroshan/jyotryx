@@ -858,6 +858,12 @@ export const bn: TranslationKeys = {
       q3: '{sign} {period} রাশিফলে কী কী থাকে?',
       a3: 'এতে জীবনের প্রধান ক্ষেত্রগুলো দেখা হয় ({adjective}): প্রেম ও সম্পর্ক, ক্যারিয়ার ও কাজ, অর্থ ও আর্থিক বিষয়, এবং স্বাস্থ্য ও সুস্থতা।',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'চর', fixed: 'স্থির', mutable: 'দ্বিস্বভাব' },
+    outerPlanets: { Pluto: 'প্লুটো', Uranus: 'ইউরেনাস', Neptune: 'নেপচুন' },
+    periodCadence: { weekly: 'প্রতি সপ্তাহে', monthly: 'প্রতি মাসে', yearly: 'প্রতি বছরে' },
+    periodAdjective: { weekly: 'এই সপ্তাহে', monthly: 'এই মাসে', yearly: 'এই বছরে' },
   },
   numerology: {
     title: 'সংখ্যাতত্ত্ব',

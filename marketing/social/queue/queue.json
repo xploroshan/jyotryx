@@ -150,7 +150,7 @@
       "pillar": "muhurat",
       "template": "daily-sky",
       "status": "pending",
-      "topic": "Weekend muhurat window — how an auspicious time is built",
+      "topic": "Muhurat today — how an auspicious window is built",
       "learnSlug": null,
       "city": {
         "name": "Mumbai",
@@ -158,11 +158,11 @@
         "lng": 72.8777
       },
       "copy": {
-        "headline": "A good weekend to start something?",
-        "eyebrow": "WEEKEND WINDOW · {city} · {date_label}",
-        "body": "Good muhurat is arithmetic before it is anything else: a supportive tithi, a gentle nakshatra, the right weekday — minus Rahu Kaal.\n\nThis weekend in {city}: the Moon sits in {nakshatra} on {tithi}. Rahu Kaal to step around: {rahu_kaal}, with daylight running {sunrise}–{sunset}.",
+        "headline": "A good day to start something?",
+        "eyebrow": "MUHURAT · {city} · {date_label}",
+        "body": "Good muhurat is arithmetic before it is anything else: a supportive tithi, a gentle nakshatra, the right weekday — minus Rahu Kaal.\n\nToday in {city}: the Moon sits in {nakshatra} on {tithi}. Rahu Kaal to step around: {rahu_kaal}, with daylight running {sunrise}–{sunset}.",
         "factor_line": "A muhurat window is where tithi, nakshatra and vara line up — and Rahu Kaal is subtracted, never ignored.",
-        "caption": "Planning to start something this weekend? Here's the window — and the why.\n\nIn {city} the Moon moves through {nakshatra} on {tithi} ({date_label}). Classical muhurat weighs three things together: the tithi (lunar day), the nakshatra the Moon occupies, and the vara (weekday) — then subtracts Rahu Kaal, which runs {rahu_kaal} here between sunrise at {sunrise} and sunset at {sunset}.\n\nNone of this makes an hour magical. It's a traditional way of choosing a calm, considered moment — and because the inputs are astronomical, we can show every number behind the window instead of asking you to take it on faith.\n\nMuhurat is guidance by convention, not guarantee by physics — take the window as a nudge, not a command.\n\nWant the exact windows for your city and your task? Link in bio.\n\n#muhurat #panchang #shubhmuhurat\n#tithi #nakshatra #rahukaal #vedicastrology #astrology #jyotish #hindupanchang\n#myastro360 #showsitswork",
+        "caption": "Thinking of starting something today? Here's the window — and the why.\n\nIn {city} the Moon moves through {nakshatra} on {tithi} ({date_label}). Classical muhurat weighs three things together: the tithi (lunar day), the nakshatra the Moon occupies, and the vara (weekday) — then subtracts Rahu Kaal, which runs {rahu_kaal} here between sunrise at {sunrise} and sunset at {sunset}.\n\nNone of this makes an hour magical. It's a traditional way of choosing a calm, considered moment — and because the inputs are astronomical, we can show every number behind the window instead of asking you to take it on faith.\n\nMuhurat is guidance by convention, not guarantee by physics — take the window as a nudge, not a command.\n\nWant the exact windows for your city and your task? Link in bio.\n\n#muhurat #panchang #shubhmuhurat\n#tithi #nakshatra #rahukaal #vedicastrology #astrology #jyotish #hindupanchang\n#myastro360 #showsitswork",
         "hashtags": [
           "muhurat",
           "panchang",
@@ -409,7 +409,7 @@
       "pillar": "muhurat",
       "template": "daily-sky",
       "status": "pending",
-      "topic": "Weekend windows in Mumbai — muhurat, shown with its work",
+      "topic": "Today's windows in Mumbai — muhurat, shown with its work",
       "learnSlug": "choosing-muhurat",
       "city": {
         "name": "Mumbai",
@@ -417,11 +417,11 @@
         "lng": 72.8777
       },
       "copy": {
-        "headline": "This weekend's windows · {city}",
-        "eyebrow": "WEEKEND WINDOW · {date_label}",
+        "headline": "Today's windows · {city}",
+        "eyebrow": "MUHURAT · {date_label}",
         "body": "A muhurat is chosen, not felt: match the task to the tithi, check the Moon's nakshatra, respect the weekday — and step around Rahu Kaal.\n\nRight now in {city}: {tithi}, Moon in {nakshatra}, Rahu Kaal {rahu_kaal}, daylight {sunrise}–{sunset}. Those five numbers are the raw material of every 'auspicious time' you've ever been given.",
         "factor_line": "Every muhurat reduces to panchang arithmetic — tithi + nakshatra + vara, minus Rahu Kaal — computed from your city's actual sunrise.",
-        "caption": "Picking a time to sign, launch or move this weekend? Here's how the window is actually built.\n\nIn {city} on {date_label}: it's {tithi}, the Moon is in {nakshatra}, and Rahu Kaal runs {rahu_kaal} (daylight {sunrise}–{sunset}). Muhurat selection is those inputs plus rules: certain tithis suit beginnings, certain nakshatras suit certain tasks, and Rahu Kaal is conventionally excluded.\n\nBecause every input is astronomical, the window can be computed for your exact city — no borrowed almanac, no vague 'mornings are good'.\n\nMuhurat is a tradition of choosing moments deliberately — treat it as considered timing, not cosmic permission.\n\nGenerate a task-specific muhurat for your city — link in bio. Save this for your next big signature.\n\n#muhurat #shubhmuhurat #panchang\n#rahukaal #tithi #nakshatra #vedicastrology #jyotish #mumbai #hindupanchang\n#myastro360 #showsitswork",
+        "caption": "Picking a time to sign, launch or move today? Here's how the window is actually built.\n\nIn {city} on {date_label}: it's {tithi}, the Moon is in {nakshatra}, and Rahu Kaal runs {rahu_kaal} (daylight {sunrise}–{sunset}). Muhurat selection is those inputs plus rules: certain tithis suit beginnings, certain nakshatras suit certain tasks, and Rahu Kaal is conventionally excluded.\n\nBecause every input is astronomical, the window can be computed for your exact city — no borrowed almanac, no vague 'mornings are good'.\n\nMuhurat is a tradition of choosing moments deliberately — treat it as considered timing, not cosmic permission.\n\nGenerate a task-specific muhurat for your city — link in bio. Save this for your next big signature.\n\n#muhurat #shubhmuhurat #panchang\n#rahukaal #tithi #nakshatra #vedicastrology #jyotish #mumbai #hindupanchang\n#myastro360 #showsitswork",
         "hashtags": [
           "muhurat",
           "shubhmuhurat",

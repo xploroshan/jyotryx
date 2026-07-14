@@ -72,11 +72,17 @@ export default async function LocalizedPanchangCityPage({ params }: RouteProps) 
   const content = PANCHANG_CITY_CONTENT_LOCALE[locale];
   const faqs = content ? interpolateCity(content.faqs, cityName) : null;
   // Dictionary FAQ path for locales WITHOUT a long-form template (no double
-  // render for hi). Until every locale dictionary carries panchangLanding.*,
-  // fall back to the English templates (the i18n parity test tracks the gap).
+  // render for hi). Gated to PANCHANG_SITEMAP_LOCALES: a locale outside the
+  // hreflang/sitemap set that rendered a standalone FAQ block + FAQPage schema
+  // would be a self-orphaning thin page (indexable content with no sitemap
+  // entry and hreflang that omits it). Those locales render pre-M3 — the data
+  // table only. hi keeps its richer per-city long-form path above.
   const landing = t.panchangLanding ?? en.panchangLanding;
   const dictFaqTokens = { city: cityName, lat: city.lat.toFixed(4), lng: city.lng.toFixed(4) };
-  const dictFaqs = content ? null : buildFaqs(landing.faqs, dictFaqTokens);
+  const dictFaqs =
+    content || !PANCHANG_SITEMAP_LOCALES.includes(locale)
+      ? null
+      : buildFaqs(landing.faqs, dictFaqTokens);
   const canonical = localeUrl(locale, `/panchang/${city.slug}`);
 
   const jsonLdArticle = articleLd({

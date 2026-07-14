@@ -902,6 +902,12 @@ export const en = {
       q3: 'What does the {sign} {period} horoscope cover?',
       a3: 'It looks at the major life areas for {adjective}: love and relationships, career and work, money and finances, and health and wellbeing.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'cardinal', fixed: 'fixed', mutable: 'mutable' },
+    outerPlanets: { Pluto: 'Pluto', Uranus: 'Uranus', Neptune: 'Neptune' },
+    periodCadence: { weekly: 'every week', monthly: 'every month', yearly: 'every year' },
+    periodAdjective: { weekly: 'this week', monthly: 'this month', yearly: 'this year' },
   },
 
   // Numerology

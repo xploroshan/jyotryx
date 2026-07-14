@@ -859,6 +859,12 @@ export const hi: TranslationKeys = {
       q3: '{sign} का {period} राशिफल किन विषयों को कवर करता है?',
       a3: 'यह इस अवधि ({adjective}) के प्रमुख जीवन क्षेत्रों पर नज़र डालता है: प्रेम और रिश्ते, करियर और कार्य, धन और वित्त, तथा स्वास्थ्य और कल्याण।',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'चर', fixed: 'स्थिर', mutable: 'द्विस्वभाव' },
+    outerPlanets: { Pluto: 'प्लूटो', Uranus: 'यूरेनस', Neptune: 'नेपच्यून' },
+    periodCadence: { weekly: 'हर सप्ताह', monthly: 'हर महीने', yearly: 'हर साल' },
+    periodAdjective: { weekly: 'इस सप्ताह', monthly: 'इस महीने', yearly: 'इस साल' },
   },
   numerology: {
     title: 'अंकशास्त्र',

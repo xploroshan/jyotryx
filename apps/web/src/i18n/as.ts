@@ -860,6 +860,12 @@ export const as_: TranslationKeys = {
       q3: '{sign} {period} ৰাশিফলে কি কি সামৰি লয়?',
       a3: 'ই {adjective}-ৰ বাবে জীৱনৰ প্ৰধান ক্ষেত্ৰবোৰ চায়: প্ৰেম আৰু সম্পৰ্ক, জীৱিকা আৰু কাম, ধন আৰু বিত্ত, আৰু স্বাস্থ্য আৰু সুস্থতা।',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'চৰ', fixed: 'স্থিৰ', mutable: 'দ্বিস্বভাৱ' },
+    outerPlanets: { Pluto: 'প্লুটো', Uranus: 'ইউৰেনাচ', Neptune: 'নেপচুন' },
+    periodCadence: { weekly: 'প্ৰতি সপ্তাহত', monthly: 'প্ৰতি মাহত', yearly: 'প্ৰতি বছৰত' },
+    periodAdjective: { weekly: 'এই সপ্তাহত', monthly: 'এই মাহত', yearly: 'এই বছৰত' },
   },
   numerology: {
     title: 'অংকশাস্ত্ৰ',

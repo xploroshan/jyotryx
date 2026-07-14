@@ -263,3 +263,173 @@ test('getInsights: total failure returns {} with warning, never throws', async (
   assert.ok(typeof out.warning === 'string' && out.warning.length > 0, 'warning is set');
   assert.deepEqual(Object.keys(out), ['warning'], 'no metric values on total failure');
 });
+
+// ---------------------------------------------------------------------------
+// C34 — getInsights degradation paths
+// ---------------------------------------------------------------------------
+
+test('getInsights: unsupported metric is dropped and the call retried', async (t) => {
+  const { apiBase, requests } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/media-1/insights') {
+      if (req.count === 1) {
+        // First attempt 400s naming exactly one unsupported metric ("shares").
+        return {
+          status: 400,
+          body: { error: { message: 'metric shares is not supported for this media', code: 100 } },
+        };
+      }
+      // Retry (without "shares") succeeds.
+      return {
+        body: {
+          data: [
+            { name: 'reach', values: [{ value: 800 }] },
+            { name: 'saved', values: [{ value: 20 }] },
+            { name: 'likes', values: [{ value: 130 }] },
+            { name: 'comments', values: [{ value: 9 }] },
+          ],
+        },
+      };
+    }
+    return undefined;
+  });
+
+  const out = await client(apiBase).getInsights('media-1');
+  assert.equal(out.reach, 800);
+  assert.equal(out.saved, 20);
+  assert.equal(out.likes, 130);
+  assert.equal(out.comments, 9);
+  assert.equal(out.shares, undefined, 'the unsupported metric is absent');
+  assert.match(out.warning, /unsupported metrics dropped: shares/);
+
+  const calls = requests.filter((r) => r.path === '/media-1/insights');
+  assert.equal(calls.length, 2, 'one 400 + one successful retry');
+  assert.equal(calls[0].query.metric, 'reach,saved,shares,likes,comments');
+  assert.equal(calls[1].query.metric, 'reach,saved,likes,comments', 'shares dropped from the retry');
+});
+
+test('getInsights: insights fails entirely, falls back to like_count/comments_count', async (t) => {
+  const { apiBase, requests } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/media-1/insights') {
+      // A generic 400 that names no droppable metric -> no retry, fall through.
+      return { status: 400, body: { error: { message: 'application does not have permission', code: 10 } } };
+    }
+    if (req.method === 'GET' && req.path === '/media-1') {
+      return { body: { like_count: 210, comments_count: 12 } };
+    }
+    return undefined;
+  });
+
+  const out = await client(apiBase).getInsights('media-1');
+  assert.equal(out.likes, 210);
+  assert.equal(out.comments, 12);
+  assert.ok(typeof out.warning === 'string' && out.warning.length > 0, 'a warning explains the fallback');
+
+  const fallback = requests.find((r) => r.path === '/media-1');
+  assert.equal(fallback.query.fields, 'like_count,comments_count');
+});
+
+// ---------------------------------------------------------------------------
+// C23 — checkToken / refreshToken (FB app-credential branches)
+// ---------------------------------------------------------------------------
+
+/** Temporarily set/clear env vars for the duration of a test. */
+function withEnv(t, vars) {
+  const saved = {};
+  for (const [k, v] of Object.entries(vars)) {
+    saved[k] = process.env[k];
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  t.after(() => {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  });
+}
+
+test('checkToken: /debug_token is_valid:false returns { ok:false }', async (t) => {
+  withEnv(t, { FB_APP_ID: 'app123', FB_APP_SECRET: 'secretsecret' });
+  const { apiBase, requests } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/debug_token') {
+      return { body: { data: { is_valid: false, error: { message: 'token has expired' } } } };
+    }
+    return undefined;
+  });
+
+  const out = await client(apiBase).checkToken();
+  assert.equal(out.ok, false);
+  assert.match(out.error, /token has expired/);
+
+  const call = requests.find((r) => r.path === '/debug_token');
+  assert.equal(call.query.input_token, TOKEN);
+  assert.equal(call.query.access_token, 'app123|secretsecret');
+});
+
+test('checkToken: /debug_token expires_at -> ISO expiresAt', async (t) => {
+  withEnv(t, { FB_APP_ID: 'app123', FB_APP_SECRET: 'secretsecret' });
+  const ts = 1893456000; // a real unix timestamp (seconds)
+  const { apiBase } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/debug_token') {
+      return { body: { data: { is_valid: true, expires_at: ts } } };
+    }
+    return undefined;
+  });
+
+  const out = await client(apiBase).checkToken();
+  assert.equal(out.ok, true);
+  assert.equal(out.expiresAt, new Date(ts * 1000).toISOString());
+});
+
+test('checkToken: /debug_token expires_at:0 (never expires) -> no expiresAt', async (t) => {
+  withEnv(t, { FB_APP_ID: 'app123', FB_APP_SECRET: 'secretsecret' });
+  const { apiBase } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/debug_token') {
+      return { body: { data: { is_valid: true, expires_at: 0 } } };
+    }
+    return undefined;
+  });
+
+  const out = await client(apiBase).checkToken();
+  assert.deepEqual(out, { ok: true }, 'expires_at:0 means never expires -> no expiresAt field');
+});
+
+test('checkToken: without app creds falls back to /me', async (t) => {
+  withEnv(t, { FB_APP_ID: undefined, FB_APP_SECRET: undefined });
+  const { apiBase, requests } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/me') return { body: { id: 'me-1' } };
+    return undefined;
+  });
+
+  const out = await client(apiBase).checkToken();
+  assert.deepEqual(out, { ok: true });
+  assert.ok(requests.some((r) => r.path === '/me'), '/me was probed');
+  assert.ok(!requests.some((r) => r.path === '/debug_token'), '/debug_token was NOT used');
+});
+
+test('refreshToken: maps access_token + expires_in', async (t) => {
+  withEnv(t, { FB_APP_ID: 'app123', FB_APP_SECRET: 'secretsecret' });
+  const { apiBase, requests } = await startMock(t, (req) => {
+    if (req.method === 'GET' && req.path === '/oauth/access_token') {
+      return { body: { access_token: 'LONG_LIVED_TOKEN', expires_in: 5183944 } };
+    }
+    return undefined;
+  });
+
+  const out = await client(apiBase).refreshToken();
+  assert.deepEqual(out, { accessToken: 'LONG_LIVED_TOKEN', expiresIn: 5183944 });
+
+  const call = requests.find((r) => r.path === '/oauth/access_token');
+  assert.equal(call.query.grant_type, 'fb_exchange_token');
+  assert.equal(call.query.client_id, 'app123');
+  assert.equal(call.query.fb_exchange_token, TOKEN);
+});
+
+test('refreshToken: returns null without app creds and makes no network call', async (t) => {
+  withEnv(t, { FB_APP_ID: undefined, FB_APP_SECRET: undefined });
+  const { apiBase, requests } = await startMock(t, () => ({ body: {} }));
+
+  const out = await client(apiBase).refreshToken();
+  assert.equal(out, null);
+  assert.equal(requests.length, 0, 'no token exchange is attempted without FB_APP_ID/SECRET');
+});

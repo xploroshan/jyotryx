@@ -859,6 +859,12 @@ export const gu: TranslationKeys = {
       q3: '{sign} રાશિનું {period} રાશિફળ શું આવરી લે છે?',
       a3: 'તે {adjective} માટે જીવનનાં મુખ્ય ક્ષેત્રો પર નજર નાખે છે: પ્રેમ અને સંબંધો, કારકિર્દી અને કામ, પૈસા અને નાણાં, તથા આરોગ્ય અને સુખાકારી.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'ચર', fixed: 'સ્થિર', mutable: 'દ્વિસ્વભાવ' },
+    outerPlanets: { Pluto: 'પ્લુટો', Uranus: 'યુરેનસ', Neptune: 'નેપ્ચ્યુન' },
+    periodCadence: { weekly: 'દર અઠવાડિયે', monthly: 'દર મહિને', yearly: 'દર વર્ષે' },
+    periodAdjective: { weekly: 'આ અઠવાડિયે', monthly: 'આ મહિને', yearly: 'આ વર્ષે' },
   },
   numerology: {
     title: 'અંકશાસ્ત્ર',

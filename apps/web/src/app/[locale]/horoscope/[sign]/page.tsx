@@ -101,13 +101,39 @@ export default async function LocalizedHoroscopeSignPage({ params }: RouteProps)
   // Until every locale dictionary carries horoscopeLanding.*, fall back to
   // the English templates at runtime (the i18n parity test tracks the gap).
   const landing = t.horoscopeLanding ?? en.horoscopeLanding;
+  // Localize the entity tokens so non-English FAQ sentences don't inject
+  // English planet/modality names. Classical grahas reuse the already-
+  // translated myDay.* names; the three modern outer planets (compound
+  // rulers like "Mars / Pluto") and the zodiac qualities come from the
+  // horoscopeLanding dictionary. Fall back to English only if truly absent.
+  const classicalPlanets: Record<string, string> = {
+    Sun: t.myDay.sun,
+    Moon: t.myDay.moon,
+    Mars: t.myDay.mars,
+    Mercury: t.myDay.mercury,
+    Jupiter: t.myDay.jupiter,
+    Venus: t.myDay.venus,
+    Saturn: t.myDay.saturn,
+  };
+  const outerPlanets = landing.outerPlanets ?? en.horoscopeLanding.outerPlanets;
+  const planetName = (p: string): string =>
+    classicalPlanets[p] ?? (outerPlanets as Record<string, string>)[p] ?? p;
+  // Compound rulers ("Mars / Pluto") localize each part, keep the separator.
+  const localizedRulingPlanet = sign.rulingPlanet
+    .split(' / ')
+    .map((p) => planetName(p.trim()))
+    .join(' / ');
+  const modalityKey = sign.modality.toLowerCase();
+  const modalities = landing.modalities ?? en.horoscopeLanding.modalities;
+  const localizedModality =
+    (modalities as Record<string, string>)[modalityKey] ?? modalityKey;
   const faqTokens = {
     sign: signName,
     symbol: sign.symbol,
     dateRange: sign.dateRange,
-    modality: sign.modality.toLowerCase(),
+    modality: localizedModality,
     element: elementLabel,
-    rulingPlanet: sign.rulingPlanet,
+    rulingPlanet: localizedRulingPlanet,
   };
   const faqs = buildFaqs(landing.faqs, faqTokens);
   const jsonLdFaq = faqLd(faqs);

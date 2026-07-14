@@ -859,6 +859,12 @@ export const mr: TranslationKeys = {
       q3: '{sign} राशीच्या {period} भविष्यात काय समाविष्ट असते?',
       a3: 'त्यात {adjective} या कालावधीतील आयुष्याच्या प्रमुख क्षेत्रांचा आढावा असतो: प्रेम आणि नाती, करिअर आणि काम, पैसा आणि आर्थिक बाबी, तसेच आरोग्य आणि तंदुरुस्ती.',
     },
+    // Localized zodiac quality + ruling-planet display names for the FAQ
+    // tokens (single-source visible copy + FAQPage schema).
+    modalities: { cardinal: 'चर', fixed: 'स्थिर', mutable: 'द्विस्वभाव' },
+    outerPlanets: { Pluto: 'प्लूटो', Uranus: 'युरेनस', Neptune: 'नेपच्यून' },
+    periodCadence: { weekly: 'दर आठवड्याला', monthly: 'दर महिन्याला', yearly: 'दर वर्षी' },
+    periodAdjective: { weekly: 'या आठवड्यात', monthly: 'या महिन्यात', yearly: 'या वर्षी' },
   },
   numerology: {
     title: 'अंकशास्त्र',

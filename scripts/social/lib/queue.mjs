@@ -127,7 +127,12 @@ export function appendLog(logDir, entry) {
   let log = [];
   if (fs.existsSync(file)) {
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (Array.isArray(parsed)) log = parsed;
+    // A non-array log file is corruption: throw (like a parse failure) rather
+    // than silently discarding committed history by replacing it.
+    if (!Array.isArray(parsed)) {
+      throw new Error(`appendLog: existing log ${file} is not a JSON array`);
+    }
+    log = parsed;
   }
   const { date, ...rest } = entry;
   log.push({ date, ...rest });
