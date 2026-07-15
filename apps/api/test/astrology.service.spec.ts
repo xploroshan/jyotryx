@@ -448,6 +448,20 @@ describe('AstrologyService', () => {
       expect(res.pillars.year.earthlyBranch).toBe('Si');
       expect(res.pillars.year.element).toBe('Earth');
     });
+
+    it('uses coordinates picked for the chart instead of the stored profile coords', async () => {
+      // When the birthplace autocomplete supplies coordinates, the solar-term
+      // computation must use them and NOT fall back to the user's stored place.
+      const spy = jest.spyOn(service as any, 'resolveUserBirthCoords');
+      const res = await service.getBazi('test-uuid', {
+        dateOfBirth: '1990-05-15',
+        timeOfBirth: '14:30',
+        latitude: 35.6762,
+        longitude: 139.6503, // Tokyo
+      });
+      expect(res.pillars.year.element).toBeTruthy();
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 
   // ─── Matching Tests ───────────────────────────────────────────────────────

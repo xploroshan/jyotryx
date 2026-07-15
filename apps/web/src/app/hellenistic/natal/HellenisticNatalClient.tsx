@@ -63,6 +63,8 @@ export default function HellenisticNatalPage() {
           dateOfBirth: birth.dateOfBirth,
           timeOfBirth: birth.timeOfBirth,
           placeOfBirth: birth.placeOfBirth,
+          latitude: birth.latitude,
+          longitude: birth.longitude,
           locale,
           tradition: 'HELLENISTIC',
         },

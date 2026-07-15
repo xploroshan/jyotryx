@@ -28,8 +28,10 @@ export default function KPAstrologyPage() {
     try {
       const data = await api.post<KPResult>("/astrology/kp-chart", {
         ...birth,
-        latitude: latitude ? parseFloat(latitude) : undefined,
-        longitude: longitude ? parseFloat(longitude) : undefined,
+        // Manual lat/lng is an advanced override; otherwise use the coordinates
+        // captured when the birthplace was picked from the autocomplete.
+        latitude: latitude ? parseFloat(latitude) : birth.latitude,
+        longitude: longitude ? parseFloat(longitude) : birth.longitude,
         locale,
       });
       setResult(data);

@@ -123,21 +123,21 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
 // by the API (LLM/KB), so the gap is cosmetic. Drive these back down as the
 // chrome is translated.
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // Each +5 vs the previous baseline: the My Day personalization prompt chrome
-  // (myDay.personalize* — title, no-data / missing-time / missing-place copy,
-  // and the "complete birth details" CTA) ships as English placeholders pending
-  // backfill. The personalized reading BODY is already localized by the API.
-  hi: 117,
-  ta: 156,
-  te: 508,
-  bn: 508,
-  mr: 503,
-  gu: 508,
-  kn: 508,
-  ml: 508,
-  pa: 508,
-  or: 508,
-  as: 508,
+  // +4 vs the previous baseline: the birthplace-autocomplete chrome
+  // (form.placeSearching / placeNoResults / placePickHint / placeLocated) ships
+  // as English placeholders pending backfill.
+  // (The prior +5 was the My Day personalization prompt chrome — myDay.personalize*.)
+  hi: 121,
+  ta: 160,
+  te: 512,
+  bn: 512,
+  mr: 507,
+  gu: 512,
+  kn: 512,
+  ml: 512,
+  pa: 512,
+  or: 512,
+  as: 512,
 };
 
 const locales: Array<[string, Dict]> = [

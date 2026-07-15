@@ -1517,7 +1517,7 @@ export class AstrologyService {
    */
   async getBazi(
     userId: string,
-    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; locale?: string },
+    dto: { dateOfBirth: string; timeOfBirth: string; placeOfBirth?: string; latitude?: number; longitude?: number; locale?: string },
   ) {
     // BaZi uses the LOCAL civil birth time (no UT conversion). Parse the parts
     // TZ-independently: the old `new Date("YYYY-MM-DDTHH:MM:SS")` was interpreted
@@ -1533,7 +1533,18 @@ export class AstrologyService {
     // to UT via the birthplace zone when known) to place both correctly — the
     // old code used the calendar year/month, so the year pillar was wrong for
     // anyone born Jan 1–early Feb and the month pillar drifted near boundaries.
-    const coords = await this.resolveUserBirthCoords(userId);
+    // Prefer coordinates picked for this chart (birthplace autocomplete); fall
+    // back to the user's own stored birth coordinates for a self-chart. Ignore
+    // out-of-range values so a bogus request can't skew the solar-term math
+    // (the stored-coords path is already validated on write).
+    const requestCoords =
+      typeof dto.latitude === 'number' &&
+      typeof dto.longitude === 'number' &&
+      Math.abs(dto.latitude) <= 90 &&
+      Math.abs(dto.longitude) <= 180
+        ? { lat: dto.latitude, lng: dto.longitude }
+        : null;
+    const coords = requestCoords ?? (await this.resolveUserBirthCoords(userId));
     const utHour = resolveUtHour({
       year, month, day, hour, minute,
       latitude: coords?.lat ?? null,

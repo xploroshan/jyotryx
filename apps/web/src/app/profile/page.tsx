@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AstrologyTraditionSelector from "@/components/ui/AstrologyTraditionSelector";
 import { Toast } from "@/components/ui/Toast";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { PlaceAutocomplete, type PlaceCoords } from "@/components/ui/PlaceAutocomplete";
 import BriefingPreferenceSection from "@/components/profile/BriefingPreferenceSection";
 import SubscriptionSection from "@/components/profile/SubscriptionSection";
 import MemorySection from "@/components/profile/MemorySection";
@@ -71,6 +72,10 @@ export default function ProfilePage() {
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
   const [pob, setPob] = useState("");
+  // Coordinates captured when the user picks their birthplace from the
+  // autocomplete. Without these the backend can't cast a chart for the actual
+  // place, so My Day / kundli fall back to the shared almanac / Delhi.
+  const [pobCoords, setPobCoords] = useState<PlaceCoords | null>(null);
   const [gender, setGender] = useState("");
   const [profession, setProfession] = useState("");
   const [selectedTraditions, setSelectedTraditions] = useState<string[]>(["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"]);
@@ -118,6 +123,18 @@ export default function ProfilePage() {
       setDob(profileData.dateOfBirth ? profileData.dateOfBirth.split("T")[0] : "");
       setTob(profileData.timeOfBirth || "");
       setPob(typeof profileData.placeOfBirth === "object" ? profileData.placeOfBirth?.name || "" : profileData.placeOfBirth || "");
+      // Restore stored coordinates so the "located" pin shows and a save that
+      // doesn't touch the place field preserves them.
+      if (
+        typeof profileData.placeOfBirth === "object" &&
+        typeof profileData.placeOfBirth?.lat === "number" &&
+        typeof profileData.placeOfBirth?.lng === "number" &&
+        !(profileData.placeOfBirth.lat === 0 && profileData.placeOfBirth.lng === 0)
+      ) {
+        setPobCoords({ lat: profileData.placeOfBirth.lat, lng: profileData.placeOfBirth.lng });
+      } else {
+        setPobCoords(null);
+      }
       setGender(profileData.gender || "");
       setProfession(profileData.profession || "");
       setSelectedTraditions((profileData as any).astrologyTraditions?.length ? (profileData as any).astrologyTraditions : ["VEDIC", "WESTERN", "CHINESE", "HELLENISTIC", "HORARY", "MEDICAL"]);
@@ -205,7 +222,10 @@ export default function ProfilePage() {
           phone: phone || undefined,
           dateOfBirth: dob || undefined,
           timeOfBirth: tob || undefined,
-          placeOfBirth: pob || undefined,
+          // Send the structured place (with coordinates) when the user picked
+          // it from the list; else the bare name string (backend stores the
+          // name, but the chart layer stays dark until coords exist).
+          placeOfBirth: pob ? (pobCoords ? { name: pob, lat: pobCoords.lat, lng: pobCoords.lng } : pob) : undefined,
           gender: gender || undefined,
           profession: profession || undefined,
           astrologyTraditions: selectedTraditions,
@@ -530,14 +550,21 @@ export default function ProfilePage() {
                     <label htmlFor="profile-pob" className="flex items-center text-xs font-medium text-emphasis mb-2">
                       {t.profile.pob} <RequiredMark />
                     </label>
-                    <input id="profile-pob" type="text" required value={pob} onChange={(e) => setPob(e.target.value)} placeholder={t.profile.pobPlaceholderEg}
+                    <PlaceAutocomplete
+                      id="profile-pob"
+                      required
+                      value={pob}
+                      coords={pobCoords}
+                      onChange={(name, coords) => { setPob(name); setPobCoords(coords); }}
+                      placeholder={t.profile.pobPlaceholderEg}
                       aria-invalid={showBirthFieldErrors && !pob.trim()}
-                      className="w-full px-4 py-3 rounded-xl surface-input" />
+                      aria-describedby="profile-pob-hint"
+                    />
                     {showBirthFieldErrors && !pob.trim() && (
                       <p role="alert" className="text-xs text-red-600 mt-1">{t.profile.missingPob}</p>
                     )}
-                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
-                      City where you were born — used for precise latitude/longitude in chart calculations.
+                    <p id="profile-pob-hint" className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
+                      {t.form.placePickHint}
                     </p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
