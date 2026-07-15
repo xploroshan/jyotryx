@@ -377,18 +377,16 @@ export class AuthService {
       }
     }
 
-    // Generate password reset link via Firebase Admin SDK
-    try {
-      const resetLink = await getAuth().generatePasswordResetLink(email);
-      this.logger.log(`Password reset link generated for: ${email}`);
-      // In production, you would send this via an email service
-      // For now, Firebase will send its default reset email
-    } catch (error: any) {
-      this.logger.error(`Failed to generate password reset link: ${error.message}`);
-      // Even if link generation fails, Firebase's client-side sendPasswordResetEmail
-      // should now work since the user exists in Firebase Auth
-    }
-
+    // NOTE: we deliberately do NOT call generatePasswordResetLink() here.
+    // That mints a NEW reset code, and Firebase invalidates every prior code
+    // for the email whenever a new one is issued — so it would kill the code
+    // the client's sendPasswordResetEmail() just emailed to the user (the
+    // "reset link expired / already used" bug on the very first click). It
+    // also sends no email of its own (the Admin SDK just returns a link
+    // string). This endpoint's only job is to guarantee the Firebase Auth
+    // user EXISTS (done above) so the client-side send can succeed for
+    // accounts created before Firebase was wired up; the client owns the
+    // single reset code + email.
     return { message: 'If an account exists with this email, a password reset link has been sent.' };
   }
 

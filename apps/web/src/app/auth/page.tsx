@@ -614,15 +614,22 @@ function AuthPageContent() {
   const handleForgotPassword = async () => {
     if (!resetEmail) { setError(t.auth.errEnterEmailReset); return; }
     setLoading(true); setError(""); setSuccess(""); setLastAction(null);
-    // Fire the backend hint in parallel (best-effort — it creates the
-    // Firebase Auth user on-demand for users who registered before Firebase
-    // was wired up). Its failure must NOT block the email being sent.
-    api.post("/auth/forgot-password", { email: resetEmail }, { timeoutMs: 15_000 })
-      .catch(() => {/* best-effort; Firebase path below is authoritative */});
 
     try {
+      // AWAIT the backend hint BEFORE emailing the reset code. It ensures the
+      // Firebase Auth user exists (accounts created before Firebase was wired
+      // up) — the client send below fails with user-not-found otherwise. It's
+      // best-effort: if the backend is down we still try the send, which works
+      // for anyone already in Firebase. It must run FIRST, not in parallel:
+      // the backend no longer mints its own reset code, but ordering the
+      // create-then-send keeps the single emailed code the authoritative one.
+      await api
+        .post("/auth/forgot-password", { email: resetEmail }, { timeoutMs: 15_000 })
+        .catch(() => {/* best-effort; the client send below is authoritative */});
+
       // Firebase sends the reset email directly — works even if our backend
-      // is down, as long as the Firebase project is configured.
+      // is down, as long as the Firebase project is configured. This is the
+      // ONLY place a reset code is minted, so the emailed link stays valid.
       const { auth, sendPasswordResetEmail } = await loadFirebase();
       await sendPasswordResetEmail(auth, resetEmail);
       setSuccess(t.auth.errResetLinkSent);

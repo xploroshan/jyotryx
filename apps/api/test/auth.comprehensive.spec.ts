@@ -22,6 +22,9 @@ import * as bcrypt from 'bcrypt';
 // decoded token.
 const firebaseAppsList: any[] = [{ name: '[DEFAULT]' }];
 const verifyIdTokenMock = jest.fn();
+const getUserByEmailMock = jest.fn();
+const createUserMock = jest.fn();
+const generatePasswordResetLinkMock = jest.fn();
 
 jest.mock('firebase-admin/app', () => ({
   getApps: () => firebaseAppsList,
@@ -29,7 +32,12 @@ jest.mock('firebase-admin/app', () => ({
   cert: jest.fn(() => ({ type: 'cert' })),
 }));
 jest.mock('firebase-admin/auth', () => ({
-  getAuth: () => ({ verifyIdToken: verifyIdTokenMock }),
+  getAuth: () => ({
+    verifyIdToken: verifyIdTokenMock,
+    getUserByEmail: getUserByEmailMock,
+    createUser: createUserMock,
+    generatePasswordResetLink: generatePasswordResetLinkMock,
+  }),
 }));
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -1261,6 +1269,59 @@ describe('Auth: Status', () => {
     const result = await service.getAuthStatus('ghost');
 
     expect(result.hasPassword).toBe(false);
+  });
+});
+
+// ─── FORGOT PASSWORD ───────────────────────────────────────────────────────
+
+describe('Auth: forgotPassword', () => {
+  let service: AuthService;
+  let prisma: any;
+  let jwtService: any;
+
+  beforeEach(async () => {
+    prisma = createPrismaMock();
+    jwtService = createJwtMock();
+    service = await buildAuthService(prisma, jwtService);
+    getUserByEmailMock.mockReset();
+    createUserMock.mockReset();
+    generatePasswordResetLinkMock.mockReset();
+  });
+
+  it('NEVER mints a server-side reset code (that would invalidate the emailed link)', async () => {
+    // Regression: the client mints + emails the single reset code via
+    // sendPasswordResetEmail. If this endpoint also called
+    // generatePasswordResetLink, Firebase would invalidate the emailed code —
+    // the "reset link expired / already used" bug on the first click.
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', name: 'A' });
+    getUserByEmailMock.mockResolvedValue({ uid: 'fb1' }); // already in Firebase
+
+    const res = await service.forgotPassword('a@b.com');
+
+    expect(generatePasswordResetLinkMock).not.toHaveBeenCalled();
+    expect(res.message).toMatch(/reset link has been sent/i);
+  });
+
+  it('creates the Firebase Auth user on demand (legacy accounts) but still no code', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u2', email: 'legacy@b.com', name: 'L' });
+    getUserByEmailMock.mockRejectedValue({ code: 'auth/user-not-found' });
+    createUserMock.mockResolvedValue({ uid: 'fb2' });
+
+    await service.forgotPassword('legacy@b.com');
+
+    expect(createUserMock).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'legacy@b.com' }),
+    );
+    expect(generatePasswordResetLinkMock).not.toHaveBeenCalled();
+  });
+
+  it('returns the same generic message for an unknown email (no enumeration)', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    const res = await service.forgotPassword('nobody@b.com');
+
+    expect(res.message).toMatch(/reset link has been sent/i);
+    expect(getUserByEmailMock).not.toHaveBeenCalled();
   });
 });
 
