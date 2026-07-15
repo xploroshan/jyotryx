@@ -19,8 +19,12 @@ export interface BriefingSettings {
 const DEFAULTS: BriefingSettings = {
   enabled: true,
   sendHourUtc: 1, // 06:30 IST
-  fromEmail: 'myastro360.astro@gmail.com',
-  fromName: 'myastro360',
+  // Must be an address on a Resend-verified domain — a @gmail.com sender is
+  // rejected by Resend, so the old default silently failed every send. The
+  // myastro360.com domain is verified for sending, so info@ works. (Overridable
+  // via the `notification.briefing.from_email` site setting.)
+  fromEmail: 'info@myastro360.com',
+  fromName: 'MyAstro360',
 };
 
 const REPEATABLE_JOB_KEY = 'briefing-daily-fanout';

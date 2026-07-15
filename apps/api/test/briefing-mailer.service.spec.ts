@@ -111,8 +111,8 @@ describe('BriefingMailerService.getSettings', () => {
     const s = await svc.getSettings();
     expect(s.enabled).toBe(true);
     expect(s.sendHourUtc).toBe(1);
-    expect(s.fromEmail).toBe('myastro360.astro@gmail.com');
-    expect(s.fromName).toBe('myastro360');
+    expect(s.fromEmail).toBe('info@myastro360.com');
+    expect(s.fromName).toBe('MyAstro360');
   });
 
   it('clamps invalid send-hour values to the default', async () => {
