@@ -6,10 +6,11 @@
 -- user out:
 --   * emailVerified := true for everyone who already has an account.
 --   * phoneVerified := true for anyone who already has a phone on file.
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phoneVerified" BOOLEAN NOT NULL DEFAULT false;
+-- (The User model maps to the "users" table — see @@map in schema.prisma.)
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "phoneVerified" BOOLEAN NOT NULL DEFAULT false;
 
 -- Grandfather all pre-existing accounts (run once, right after the columns
 -- are added — new signups created after this migration start unverified).
-UPDATE "User" SET "emailVerified" = true;
-UPDATE "User" SET "phoneVerified" = true WHERE "phone" IS NOT NULL;
+UPDATE "users" SET "emailVerified" = true;
+UPDATE "users" SET "phoneVerified" = true WHERE "phone" IS NOT NULL;
