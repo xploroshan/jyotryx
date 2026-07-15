@@ -123,10 +123,11 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
 // by the API (LLM/KB), so the gap is cosmetic. Drive these back down as the
 // chrome is translated.
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // hi: 69 + 26 interpretation/mitigation chrome = 95.
-  hi: 95,
-  // ta: 108 + 26 = 134.
-  ta: 134,
+  // hi: 69 + 26 interpretation/mitigation chrome = 95, + 10 auth email-verify
+  // chrome (English placeholders pending backfill) = 105.
+  hi: 105,
+  // ta: 108 + 26 = 134, + 10 auth email-verify placeholders = 144.
+  ta: 144,
   te: 496,
   bn: 496,
   mr: 491,

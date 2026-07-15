@@ -110,6 +110,7 @@ describe('Auth: Login', () => {
       email: 'arjun@example.com',
       phone: '+919876543210',
       passwordHash: hash,
+      emailVerified: true,
       credits: 10,
       role: 'USER',
     });
@@ -132,6 +133,7 @@ describe('Auth: Login', () => {
       id: 'user-1',
       email: 'arjun@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
 
     await expect(
@@ -166,6 +168,7 @@ describe('Auth: Login', () => {
       id: 'user-lock',
       email: 'lockme@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
 
     for (let i = 0; i < 5; i++) {
@@ -186,6 +189,7 @@ describe('Auth: Login', () => {
       id: 'user-warn',
       email: 'warnme@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
 
     // 3 failed attempts first
@@ -211,6 +215,7 @@ describe('Auth: Login', () => {
       email: 'clear@example.com',
       phone: null,
       passwordHash: hash,
+      emailVerified: true,
       credits: 10,
       role: 'USER',
     });
@@ -244,6 +249,7 @@ describe('Auth: Login', () => {
       email: 'noleak@example.com',
       phone: null,
       passwordHash: hash,
+      emailVerified: true,
       credits: 10,
       role: 'USER',
     });
@@ -265,6 +271,7 @@ describe('Auth: Login', () => {
       email: 'tokens@example.com',
       phone: null,
       passwordHash: hash,
+      emailVerified: true,
       credits: 5,
       role: 'USER',
     });
@@ -311,11 +318,14 @@ describe('Auth: Signup', () => {
       password: VALID_PASSWORD,
     });
 
-    expect(result.user.name).toBe('Arjun Sharma');
-    expect(result.user.email).toBe('arjun@example.com');
-    expect(result.user.credits).toBe(10);
-    expect(result.tokens.accessToken).toBeDefined();
-    expect(result.tokens.refreshToken).toBeDefined();
+    // Blocking email verification: register issues NO tokens — it returns the
+    // pending state and sends a verification email instead.
+    expect(result).toEqual({ requiresEmailVerification: true, email: 'arjun@example.com' });
+    expect(result).not.toHaveProperty('tokens');
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
+    expect(emailSendMock.mock.calls[0][0].to).toBe('arjun@example.com');
+    // The verification link points at our own /verify-email page.
+    expect(emailSendMock.mock.calls[0][0].html).toContain('/verify-email?token=');
   });
 
   it('should register with optional fields (phone, DOB, place)', async () => {
@@ -339,7 +349,7 @@ describe('Auth: Signup', () => {
       placeOfBirth: 'Delhi, India',
     });
 
-    expect(result.user.phone).toBe('+919876543210');
+    expect((result as any).requiresEmailVerification).toBe(true);
     expect(prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -405,8 +415,9 @@ describe('Auth: Signup', () => {
       password: VALID_PASSWORD,
     });
 
-    expect(result.user).not.toHaveProperty('passwordHash');
+    // Pending-verification response carries no user object and never the hash.
     expect(JSON.stringify(result)).not.toContain('$2b$');
+    expect(JSON.stringify(result)).not.toContain('passwordHash');
   });
 
   it('should assign default credits on registration', async () => {
@@ -978,6 +989,7 @@ describe('Auth: Change Password', () => {
       id: 'user-pw',
       email: 'pw@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
     prisma.user.update.mockResolvedValue({});
 
@@ -1003,6 +1015,7 @@ describe('Auth: Change Password', () => {
       id: 'user-pw2',
       email: 'pw2@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
 
     await expect(
@@ -1019,6 +1032,7 @@ describe('Auth: Change Password', () => {
       id: 'user-pw3',
       email: 'pw3@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
 
     await expect(
@@ -1062,6 +1076,7 @@ describe('Auth: Change Password', () => {
       id: 'user-hash',
       email: 'hash@example.com',
       passwordHash: hash,
+      emailVerified: true,
     });
     prisma.user.update.mockImplementation(async ({ data }: any) => {
       // Verify new password is hashed
@@ -1353,6 +1368,90 @@ describe('Auth: forgotPassword', () => {
     const res = await service.forgotPassword('c@b.com');
 
     expect(res.message).toMatch(/reset link has been sent/i);
+  });
+});
+
+// ─── EMAIL VERIFICATION (blocking) ─────────────────────────────────────────
+
+describe('Auth: email verification', () => {
+  let service: AuthService;
+  let prisma: any;
+  let jwtService: any;
+
+  beforeEach(async () => {
+    prisma = createPrismaMock();
+    jwtService = createJwtMock();
+    service = await buildAuthService(prisma, jwtService);
+    emailSendMock.mockClear();
+  });
+
+  it('login is BLOCKED for an unverified email/password account (403)', async () => {
+    const hash = await bcrypt.hash(VALID_PASSWORD, 12);
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      name: 'U',
+      email: 'u@b.com',
+      passwordHash: hash,
+      emailVerified: false, // not yet confirmed
+      credits: 10,
+      role: 'USER',
+    });
+
+    await expect(service.login({ email: 'u@b.com', password: VALID_PASSWORD })).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('verifyEmail consumes a valid token, flips the flag, and returns tokens', async () => {
+    const redis = (service as any).redis;
+    await redis.set('emailverify:tok-123', 'user-9', 'EX', 3600);
+    prisma.user.update.mockResolvedValue({
+      id: 'user-9',
+      name: 'V',
+      email: 'v@b.com',
+      emailVerified: true,
+      credits: 10,
+      role: 'USER',
+    });
+
+    const res = await service.verifyEmail('tok-123');
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-9' },
+      data: { emailVerified: true },
+    });
+    expect((res as any).tokens.accessToken).toBeDefined();
+    // Token is single-use — consumed from the store.
+    expect(await redis.get('emailverify:tok-123')).toBeNull();
+  });
+
+  it('verifyEmail rejects an unknown/expired token with 400', async () => {
+    await expect(service.verifyEmail('nope')).rejects.toThrow(BadRequestException);
+  });
+
+  it('resendVerification is a no-op (generic message) for an already-verified user', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      email: 'v@b.com',
+      passwordHash: 'x',
+      emailVerified: true,
+    });
+    const res = await service.resendVerification('v@b.com');
+    expect(res.message).toMatch(/verification/i);
+    expect(emailSendMock).not.toHaveBeenCalled();
+  });
+
+  it('resendVerification re-sends for an unverified email/password user', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u2',
+      email: 'p@b.com',
+      name: 'P',
+      passwordHash: 'x',
+      emailVerified: false,
+    });
+    await service.resendVerification('p@b.com');
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
+    expect(emailSendMock.mock.calls[0][0].html).toContain('/verify-email?token=');
   });
 });
 

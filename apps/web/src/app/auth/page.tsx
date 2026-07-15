@@ -210,6 +210,10 @@ function AuthPageContent() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  // Non-null when a signup/login needs email verification: holds the address
+  // we sent the verification link to, driving the "check your inbox" screen.
+  const [verifyPending, setVerifyPending] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(false);
   // When true, the error banner shows a Retry button that re-runs the last
   // failed action. Set for network/timeout failures only.
   const [lastAction, setLastAction] = useState<null | (() => void)>(null);
@@ -556,6 +560,15 @@ function AuthPageContent() {
       // means the first real request is warm, but Render can take 30s from
       // stone-cold so we don't abort before that.
       const res = await api.post<any>(endpoint, body, { timeoutMs: 30_000 });
+      // Blocking email verification: a fresh signup gets no tokens — the
+      // backend sent a verification email and returned the pending state.
+      // Show the "check your inbox" screen instead of logging in.
+      if (res?.requiresEmailVerification) {
+        if (rememberMe) saveRememberedEmail(email);
+        setVerifyPending(res.email ?? email);
+        setLoading(false);
+        return;
+      }
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       // Persist or clear the remembered email based on the checkbox.
       // We only ever store the email; the password stays with the
@@ -581,6 +594,18 @@ function AuthPageContent() {
       // the credentials (HTTP 401). We skip the fallback on timeouts, network
       // failures, and server errors so a slow backend doesn't compound into a
       // second 15-30s hang waiting for Firebase.
+      // Login rejected because the email isn't verified yet (403). Send the
+      // user to the "check your inbox" screen with a resend option instead of
+      // a dead-end error.
+      const needsVerification =
+        tab === "login" &&
+        (err?.status === 403 || (err?.message || "").toLowerCase().includes("verify your email"));
+      if (needsVerification) {
+        setVerifyPending(email);
+        setLoading(false);
+        return;
+      }
+
       const isCredentialError =
         tab === "login" &&
         (err?.status === 401 || (err?.message || "").toLowerCase().includes("invalid email or password"));
@@ -641,6 +666,22 @@ function AuthPageContent() {
     } finally { setLoading(false); }
   };
 
+  const handleResendVerification = async () => {
+    if (!verifyPending || resendCooldown) return;
+    setResendCooldown(true);
+    setError(""); setSuccess("");
+    try {
+      await api.post("/auth/resend-verification", { email: verifyPending }, { timeoutMs: 20_000 });
+      setSuccess(t.auth.verifyResent);
+    } catch {
+      // Endpoint is generic/best-effort; a transient failure shouldn't alarm.
+      setSuccess(t.auth.verifyResent);
+    } finally {
+      // Simple client-side throttle so the button can't be spammed.
+      setTimeout(() => setResendCooldown(false), 30_000);
+    }
+  };
+
   const passwordStrength = (pw: string) => {
     let score = 0;
     if (pw.length >= 8) score++;
@@ -685,8 +726,39 @@ function AuthPageContent() {
         </div>
 
         <div className="surface-card p-6">
-          {/* Forgot Password View */}
-          {showForgotPassword ? (
+          {/* Email-verification-pending View */}
+          {verifyPending ? (
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-500/10">
+                <svg className="h-6 w-6 text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-base font-semibold text-surface-950 mb-1">{t.auth.verifyTitle}</h2>
+              <p className="text-xs text-[rgba(12,8,5,0.66)] mb-1">{t.auth.verifyDesc}</p>
+              <p className="text-sm font-medium text-surface-950 mb-5 break-all">{verifyPending}</p>
+
+              {success && (
+                <div role="status" aria-live="polite" className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                  {success}
+                </div>
+              )}
+
+              <button
+                onClick={handleResendVerification}
+                disabled={resendCooldown}
+                className="btn-primary w-full py-2.5 text-sm disabled:opacity-60"
+              >
+                {resendCooldown ? t.auth.verifyResentShort : t.auth.verifyResend}
+              </button>
+              <button
+                onClick={() => { setVerifyPending(null); setError(""); setSuccess(""); setTab("login"); }}
+                className="mt-3 text-xs text-[rgba(12,8,5,0.66)] hover:text-secondary transition-colors"
+              >
+                {t.auth.backToLogin}
+              </button>
+            </div>
+          ) : showForgotPassword ? (
             <>
               <button
                 onClick={() => { setShowForgotPassword(false); setError(""); setSuccess(""); }}

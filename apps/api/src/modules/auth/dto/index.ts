@@ -7,3 +7,4 @@ export { ChangePasswordDto } from './change-password.dto';
 export { SetPasswordDto } from './set-password.dto';
 export { FirebaseAuthDto } from './firebase-auth.dto';
 export { ForgotPasswordDto } from './forgot-password.dto';
+export { VerifyEmailDto } from './verify-email.dto';

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { AuthService, AuthResponse, AuthTokens } from './auth.service';
+import { AuthService, AuthResponse, AuthTokens, RegisterResult } from './auth.service';
 import {
   RegisterDto,
   LoginDto,
@@ -22,6 +22,7 @@ import {
   SetPasswordDto,
   FirebaseAuthDto,
   ForgotPasswordDto,
+  VerifyEmailDto,
 } from './dto';
 import { Public } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -38,7 +39,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'User already exists' })
-  async register(@Body() dto: RegisterDto, @Request() req: any): Promise<AuthResponse> {
+  async register(@Body() dto: RegisterDto, @Request() req: any): Promise<RegisterResult> {
     const ctx = buildSignupContext({
       acceptLanguage: req?.headers?.['accept-language'],
       bodyLocale: dto.locale,
@@ -46,6 +47,27 @@ export class AuthController {
       bodySignupSource: dto.signupSource,
     });
     return this.authService.register(dto, ctx);
+  }
+
+  @Post('verify-email')
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Confirm an email address from the emailed token' })
+  @ApiResponse({ status: 200, description: 'Email verified; returns auth tokens' })
+  @ApiResponse({ status: 400, description: 'Token invalid or expired' })
+  async verifyEmail(@Body() dto: VerifyEmailDto): Promise<AuthResponse> {
+    return this.authService.verifyEmail(dto.token);
+  }
+
+  @Post('resend-verification')
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Re-send the email-verification link' })
+  @ApiResponse({ status: 200, description: 'Verification email sent if applicable' })
+  async resendVerification(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    return this.authService.resendVerification(dto.email);
   }
 
   @Post('login')

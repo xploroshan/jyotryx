@@ -76,10 +76,8 @@ describe('AuthService', () => {
         password: 'password123',
       });
 
-      expect(result.user.name).toBe('Test User');
-      expect(result.user.email).toBe('test@example.com');
-      expect(result.tokens.accessToken).toBe('mock-token');
-      expect(result.tokens.refreshToken).toBe('mock-token');
+      // Blocking email verification: no tokens until the address is confirmed.
+      expect(result).toEqual({ requiresEmailVerification: true, email: 'test@example.com' });
     });
 
     it('should throw ConflictException if user already exists', async () => {

@@ -88,9 +88,8 @@ describe('E2E: Auth → Chat Flow', () => {
       password: 'StrongPass123!',
     });
 
-    expect(registerResult.user.id).toBe('new-user-id');
-    expect(registerResult.user.email).toBe('e2e@example.com');
-    expect(registerResult.tokens.accessToken).toBe('mock-jwt-token');
+    // Blocking email verification: register returns pending, not tokens.
+    expect(registerResult).toEqual({ requiresEmailVerification: true, email: 'e2e@example.com' });
 
     // Step 2: Send chat message
     prisma.chatSession.findFirst.mockResolvedValue(null);
@@ -136,13 +135,14 @@ describe('E2E: Auth → Chat Flow', () => {
       role: 'USER',
     });
 
-    await authService.register({
+    const reg = await authService.register({
       name: 'Login Test',
       email: 'login@example.com',
       password: 'SecurePass456!',
     });
+    expect((reg as any).requiresEmailVerification).toBe(true);
 
-    // Login
+    // ...user clicks the verification link (emailVerified flips true), then logs in.
     prisma.user.findUnique.mockResolvedValueOnce({
       id: 'user-2',
       name: 'Login Test',
@@ -151,6 +151,7 @@ describe('E2E: Auth → Chat Flow', () => {
       credits: 10,
       role: 'USER',
       passwordHash: hash,
+      emailVerified: true,
     });
 
     const loginResult = await authService.login({

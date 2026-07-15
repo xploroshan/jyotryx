@@ -37,6 +37,7 @@ import {
   extractOobCode,
   buildResetUrl,
 } from './password-reset-email';
+import { renderVerificationEmail, buildVerifyUrl } from './email-verification-email';
 
 type PrismaUser = {
   id: string;
@@ -58,6 +59,15 @@ export interface AuthTokens {
   refreshToken: string;
   expiresIn: string;
 }
+
+/** Returned by register() when blocking email verification is required — no
+ *  tokens are issued until the user confirms their address. */
+export interface EmailVerificationPending {
+  requiresEmailVerification: true;
+  email: string;
+}
+
+export type RegisterResult = AuthResponse | EmailVerificationPending;
 
 export interface AuthResponse {
   user: {
@@ -188,12 +198,16 @@ export class AuthService {
     }
   }
 
-  async register(dto: RegisterDto, signupContext?: SignupContext): Promise<AuthResponse> {
+  async register(dto: RegisterDto, signupContext?: SignupContext): Promise<RegisterResult> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      // Block-on-collision policy: never create a second account for an email
+      // that's already registered. Guide the user to log in instead.
+      throw new ConflictException(
+        'An account with this email already exists. Please log in instead.',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
@@ -235,21 +249,78 @@ export class AuthService {
       },
     });
 
-    this.logger.log(`User registered: ${user.email}`);
+    this.logger.log(`User registered (pending email verification): ${user.email}`);
     // Phase 1 monetization — fan out to the referral service. Soft
     // failure here is intentional: signup must succeed even if the
     // referral grant doesn't (program disabled, cap reached, etc.).
     if (this.referralService) await this.referralService.activateAtSignup(user.id, dto.ref);
-    // Re-fetch the user so the response carries any role/credit
-    // changes the activation made (Premium upgrade, etc.) instead of
-    // showing the stale row created two statements ago.
-    const refreshed = await this.prisma.user.findUnique({ where: { id: user.id } });
-    const tokens = await this.generateTokens(user.id, user.email, user.name);
 
-    return {
-      user: toAuthUser(refreshed ?? user),
-      tokens,
+    // Blocking email verification: NO tokens are issued until the address is
+    // confirmed. Send the branded verification email and return the pending
+    // state; the client shows a "check your email" screen, and login() rejects
+    // this account until verifyEmail() flips emailVerified.
+    await this.sendVerificationEmail(user.id, user.email, user.name);
+    return { requiresEmailVerification: true, email: user.email };
+  }
+
+  /** Generate a one-time verification token, stash it in Redis (24h), and send
+   *  the branded "verify your email" email via Resend. */
+  private async sendVerificationEmail(userId: string, email: string, name?: string): Promise<void> {
+    const token = crypto.randomBytes(32).toString('hex');
+    await this.redis.set(`emailverify:${token}`, userId, 'EX', 24 * 60 * 60);
+    const appUrl = this.frontendUrl();
+    const verifyUrl = buildVerifyUrl(appUrl, token);
+    const { subject, html, text } = renderVerificationEmail({ verifyUrl, appUrl, name });
+    if (this.emailProvider.kind === 'log') {
+      this.logger.warn(
+        `RESEND_API_KEY not set — verification email for ${email} was LOGGED, not delivered.`,
+      );
+    }
+    await this.emailProvider.send({
+      to: email,
+      subject,
+      html,
+      text,
+      fromEmail: this.configService.get<string>('mail.fromEmail') || 'noreply@myastro360.com',
+      fromName: this.configService.get<string>('mail.fromName') || 'MyAstro360',
+      idempotencyKey: `verify:${token.slice(0, 24)}`,
+    });
+  }
+
+  /** Consume a verification token, mark the account verified, and log the user
+   *  in (issue tokens). Idempotent-ish: a spent/expired token 400s. */
+  async verifyEmail(token: string): Promise<AuthResponse> {
+    const userId = await this.redis.get(`emailverify:${token}`);
+    if (!userId) {
+      throw new BadRequestException('This verification link is invalid or has expired.');
+    }
+    await this.redis.del(`emailverify:${token}`);
+    let user: PrismaUser & { preferredLanguage?: string };
+    try {
+      user = (await this.prisma.user.update({
+        where: { id: userId },
+        data: { emailVerified: true },
+      })) as any;
+    } catch {
+      throw new BadRequestException('This verification link is no longer valid.');
+    }
+    this.logger.log(`Email verified: ${user.email}`);
+    const tokens = await this.generateTokens(user.id, user.email, user.name);
+    return { user: toAuthUser(user), tokens };
+  }
+
+  /** Re-send the verification email. Always returns a generic message so it
+   *  can't be used to probe which emails exist / are already verified. */
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const generic = {
+      message: 'If that account still needs verification, a new link has been sent.',
     };
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    // Only unverified email/password accounts get a (re)send. Verified users,
+    // phone-only placeholders and social logins are no-ops.
+    if (!user || user.emailVerified || !user.passwordHash) return generic;
+    await this.sendVerificationEmail(user.id, user.email, user.name);
+    return generic;
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
@@ -280,6 +351,16 @@ export class AuthService {
 
     // Clear attempts on successful login
     await this.clearLoginAttempts(dto.email);
+
+    // Blocking email verification: credentials are correct, but an unverified
+    // email/password account can't sign in yet. Distinct 403 so the client can
+    // show a "verify your email" state with a resend button (vs. a 401 for bad
+    // credentials). Grandfathered accounts are emailVerified=true (migration).
+    if (!user.emailVerified) {
+      throw new ForbiddenException(
+        'Please verify your email address before signing in. Check your inbox for the verification link.',
+      );
+    }
 
     this.logger.log(`User logged in: ${user.email}`);
     const tokens = await this.generateTokens(user.id, user.email, user.name);
@@ -535,6 +616,8 @@ export class AuthService {
           name: signupName && signupName.length > 0 ? signupName : 'User',
           email: `${phone.replace(/\+/g, '')}@phone.myastro360.com`,
           phone,
+          // OTP just proved ownership of this phone.
+          phoneVerified: true,
           credits: this.signupCredits,
           locale:       signupContext?.locale ?? undefined,
           country:      signupContext?.country ?? undefined,
@@ -685,20 +768,22 @@ export class AuthService {
     });
 
     if (user && user.provider !== 'GOOGLE') {
-      // Existing email user - link their Google account
+      // Existing email user - link their Google account. Google has verified
+      // the address, so this also confirms their email.
       user = await this.prisma.user.update({
         where: { id: user.id },
-        data: { provider: 'GOOGLE', providerId: googlePayload.sub },
+        data: { provider: 'GOOGLE', providerId: googlePayload.sub, emailVerified: true },
       });
       this.logger.log(`Linked Google account to existing user: ${user.email}`);
     } else if (!user) {
-      // Create new user
+      // Create new user. Google already verified the email address.
       user = await this.prisma.user.create({
         data: {
           name: googlePayload.name,
           email: googlePayload.email,
           provider: 'GOOGLE',
           providerId: googlePayload.sub,
+          emailVerified: true,
           credits: this.signupCredits,
           locale:       signupContext?.locale ?? undefined,
           country:      signupContext?.country ?? undefined,
@@ -778,8 +863,10 @@ export class AuthService {
         updates.provider = 'GOOGLE';
         updates.providerId = uid;
       }
+      if (isGoogle && !user.emailVerified) updates.emailVerified = true;
       if (phone_number && !user.phone) {
         updates.phone = phone_number;
+        updates.phoneVerified = true;
       }
       if (Object.keys(updates).length > 0) {
         user = await this.prisma.user.update({
@@ -799,6 +886,10 @@ export class AuthService {
           phone: phone_number || null,
           provider: isGoogle ? 'GOOGLE' : 'PHONE',
           providerId: uid,
+          // Firebase already proved ownership: Google verified the email,
+          // phone-OTP verified the number.
+          emailVerified: isGoogle,
+          phoneVerified: !!phone_number,
           credits: this.signupCredits,
           locale:       signupContext?.locale ?? undefined,
           country:      signupContext?.country ?? undefined,
