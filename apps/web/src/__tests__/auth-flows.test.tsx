@@ -216,10 +216,9 @@ describe('Auth Flow: Email Signup', () => {
     resetAllMocks();
   });
 
-  it('should signup successfully with name, email and password', async () => {
-    const mockUser = { id: '2', name: 'New User', email: 'new@test.com', profileComplete: true };
-    const mockTokens = { accessToken: 'at-new', refreshToken: 'rt-new' };
-    mockApiPost.mockResolvedValueOnce({ user: mockUser, tokens: mockTokens });
+  it('signup shows the "verify your email" screen (blocking) instead of logging in', async () => {
+    // Blocking email verification: register returns a pending state, no tokens.
+    mockApiPost.mockResolvedValueOnce({ requiresEmailVerification: true, email: 'new@test.com' });
 
     render(<AuthPage />);
     fireEvent.click(screen.getByText('Sign up'));
@@ -232,16 +231,29 @@ describe('Auth Flow: Email Signup', () => {
     await waitFor(() => {
       expect(mockApiPost).toHaveBeenCalledWith(
         '/auth/register',
-        {
-          name: 'New User',
-          email: 'new@test.com',
-          password: 'SecurePass123',
-        },
+        { name: 'New User', email: 'new@test.com', password: 'SecurePass123' },
         expect.anything(),
       );
     });
-    expect(mockStoreState.setAuth).toHaveBeenCalledWith(mockUser, 'at-new', 'rt-new');
-    expect(mockPush).toHaveBeenCalledWith('/my-day');
+    // No login: the "check your inbox" screen shows the address + resend.
+    expect(await screen.findByText('Verify your email')).toBeDefined();
+    expect(screen.getByText('new@test.com')).toBeDefined();
+    expect(screen.getByText('Resend verification email')).toBeDefined();
+    expect(mockStoreState.setAuth).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('login with an unverified account (403) shows the verify screen with resend', async () => {
+    mockApiPost.mockRejectedValueOnce({ status: 403, message: 'Please verify your email address before signing in.' });
+
+    render(<AuthPage />);
+    switchToEmail();
+    fillEmailForm('unverified@test.com', 'SecurePass123');
+    clickSubmit('Log in');
+
+    expect(await screen.findByText('Verify your email')).toBeDefined();
+    expect(screen.getByText('unverified@test.com')).toBeDefined();
+    expect(mockStoreState.setAuth).not.toHaveBeenCalled();
   });
 
   it('should show validation error when name is missing on signup', async () => {

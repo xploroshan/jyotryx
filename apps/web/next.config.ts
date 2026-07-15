@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
     const noindex = [
       "/styleguide", "/chat", "/my-day", "/reports", "/referral",
       "/decision-room", "/horary/ask", "/horary/history",
-      "/profile", "/checkout", "/auth", "/reset-password", "/admin/:path*",
+      "/profile", "/checkout", "/auth", "/reset-password", "/verify-email", "/admin/:path*",
     ];
     return noindex.map((source) => ({
       source,

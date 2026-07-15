@@ -83,7 +83,7 @@ describe('Performance: Auth Operations', () => {
 
     prisma.user.findUnique.mockResolvedValue({
       id: 'u1', name: 'User', email: 'login-perf@example.com',
-      phone: null, credits: 10, role: 'USER', passwordHash: hash,
+      phone: null, credits: 10, role: 'USER', passwordHash: hash, emailVerified: true,
     });
 
     const start = performance.now();

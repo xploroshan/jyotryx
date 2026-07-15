@@ -22,7 +22,7 @@ const APP_DIR = path.resolve(__dirname, "../../../app");
 // declare robots noindex (checked below) or be covered by the X-Robots-Tag
 // header list in next.config.ts.
 const PRIVATE_ROUTES = new Set([
-  "admin", "auth", "reset-password", "checkout", "profile", "chat", "my-day",
+  "admin", "auth", "reset-password", "verify-email", "checkout", "profile", "chat", "my-day",
   "reports", "referral", "decision-room", "horary/ask", "horary/history",
   "styleguide", "og", "match",
 ]);

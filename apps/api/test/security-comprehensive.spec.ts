@@ -501,10 +501,10 @@ describe('Security: Brute Force Protection', () => {
       try { await authService.login({ email, password: 'wrong' }); } catch { /* expected */ }
     }
 
-    // Now login with correct password
+    // Now login with correct password (verified account — grandfathered).
     prisma.user.findUnique.mockResolvedValue({
       id: 'u3', email, name: 'User', phone: null, credits: 10, role: 'USER',
-      passwordHash: hash,
+      passwordHash: hash, emailVerified: true,
     });
 
     const result = await authService.login({ email, password: 'CorrectPass1!' });
@@ -771,8 +771,9 @@ describe('Security: Password Hashing', () => {
       name: 'Test', email: 'nohash@example.com', password: 'Pass123!',
     });
 
-    expect(result.user).not.toHaveProperty('passwordHash');
+    // Register returns the pending-verification state — never a user/hash.
     expect(JSON.stringify(result)).not.toContain('$2b$');
+    expect(JSON.stringify(result)).not.toContain('passwordHash');
   });
 });
 

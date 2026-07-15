@@ -222,8 +222,9 @@ describe('Security: Authentication', () => {
         name: 'Test', email: 'test@example.com', password: 'Pass123!',
       });
 
-      expect(result.user).not.toHaveProperty('passwordHash');
+      // Register returns the pending-verification state — never a user/hash.
       expect(JSON.stringify(result)).not.toContain('$2b$');
+      expect(JSON.stringify(result)).not.toContain('passwordHash');
     });
   });
 });

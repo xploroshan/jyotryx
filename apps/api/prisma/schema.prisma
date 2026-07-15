@@ -168,6 +168,14 @@ model User {
   credits             Int                  @default(3)
   provider            AuthProvider         @default(LOCAL)
   providerId          String?
+  // Contact-ownership proof. emailVerified gates email/password login
+  // (blocking verification); phoneVerified is set the moment a phone passes
+  // OTP. Existing rows are grandfathered to true in the migration so the new
+  // gate never locks anyone out. Google/Firebase-Google logins set
+  // emailVerified=true (Google already verified the address); phone-only
+  // signups leave emailVerified=false on their placeholder address.
+  emailVerified       Boolean              @default(false)
+  phoneVerified       Boolean              @default(false)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 
