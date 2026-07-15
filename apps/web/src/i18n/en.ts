@@ -1122,6 +1122,11 @@ export const en = {
     todaysRemedy: "Today's Remedy",
     todaysMantra: "Today's Mantra",
     planetaryTransit: 'Planetary Transit',
+    personalizeTitle: 'Make this your reading',
+    personalizeNoData: 'Add your birth date, exact time and place in your profile to unlock a reading cast from your own chart — not the shared almanac.',
+    personalizeMissingTime: 'Add your exact birth time in your profile to unlock a reading cast from your own chart. Without it, this is the shared almanac for everyone.',
+    personalizeMissingPlace: 'Set your birthplace (pick it from the suggestions so it\'s located) in your profile to unlock a reading cast from your own chart.',
+    personalizeCta: 'Complete birth details',
     // Greetings
     goodMorning: 'Good Morning',
     goodAfternoon: 'Good Afternoon',

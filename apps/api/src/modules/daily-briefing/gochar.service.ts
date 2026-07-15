@@ -13,8 +13,11 @@ import {
   computeJupiterTransit,
   computeSadeSati,
   computeTaraBala,
+  moonSignLord,
   nakshatraIndexFromLongitude,
   personalizedDayQuality,
+  personalizedFocusGraha,
+  personalizedGuidance,
   personalizedLuckyColor,
   personalizedLuckyNumber,
   signIndexFromLongitude,
@@ -37,6 +40,18 @@ export interface GocharPersonalization {
   transitAlert: string | null;
   /** A short clause to weave into the daily summary. */
   summaryInsight: string;
+  /** Graha whose remedy/mantra is most relevant to the user's transits today. */
+  focusGraha: string;
+  /** The natal Moon-sign lord — used to pick the user's favourable hora window. */
+  moonSignLord: string;
+  /** One chart-based "do"/"avoid" clause to lead the daily lists. The `*Key`
+   *  fields let the merge localize the clause via the KB briefing-phrase layer
+   *  (same contract as the rest of the briefing prose); the text is the English
+   *  fallback. */
+  guidanceDo: string;
+  guidanceAvoid: string;
+  guidanceDoKey: string;
+  guidanceAvoidKey: string;
 }
 
 /** Canonical panchang keys computed from real ephemeris longitudes. */
@@ -120,6 +135,9 @@ export class GocharService {
         `For your ${moonSign} Moon, today's Moon forms ${tara.name} Tara` +
         `${tara.favorable ? ' (supportive)' : tara.index === 1 ? ' (handle yourself gently)' : ' (stay measured)'}.`;
 
+      const focusGraha = personalizedFocusGraha({ natalMoonSignIdx, tara, chandra, sadeSati });
+      const guidance = personalizedGuidance({ tara, chandra, jupiter, sadeSati });
+
       return {
         moonSign,
         natalNakshatra: PANCHANG_NAKSHATRAS[natalNakIdx],
@@ -128,6 +146,12 @@ export class GocharService {
         luckyNumber: personalizedLuckyNumber(dob.getUTCDate()),
         transitAlert,
         summaryInsight,
+        focusGraha,
+        moonSignLord: moonSignLord(natalMoonSignIdx),
+        guidanceDo: guidance.doItem,
+        guidanceAvoid: guidance.avoidItem,
+        guidanceDoKey: guidance.doKey,
+        guidanceAvoidKey: guidance.avoidKey,
       };
     } catch (err) {
       this.logger.warn(`Gochar personalization failed: ${(err as Error)?.message ?? err}`);

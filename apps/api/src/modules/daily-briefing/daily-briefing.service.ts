@@ -59,7 +59,31 @@ export interface DailyBriefingResult {
     rahukaal: string;
   };
   transitAlert: string | null;
+  /** True when the reading is derived from the user's own birth chart (Gochar).
+   *  When false, the chart layer is dark and the card is the shared almanac —
+   *  the client shows a "complete your birth details" prompt. */
+  personalized: boolean;
+  /** Why the chart layer is/ isn't active — drives the client's prompt copy. */
+  personalizationReason: PersonalizationReason;
+  /** Natal Moon sign, when the chart layer is active (else null). */
+  moonSign: string | null;
+  astrologyTraditions: string[];
 }
+
+/**
+ * Why the per-user chart layer is or isn't active.
+ *  - ok            → personalized from the user's chart
+ *  - no_birth_data → no date of birth on file
+ *  - missing_time  → has DOB but no exact birth time
+ *  - missing_place → has DOB + time but the birthplace isn't geocoded (no lat/lng)
+ *  - unavailable   → all data present but the ephemeris couldn't compute (or is off)
+ */
+export type PersonalizationReason =
+  | 'ok'
+  | 'no_birth_data'
+  | 'missing_time'
+  | 'missing_place'
+  | 'unavailable';
 
 // ─── Internal cache layer types ─────────────────────────────────────────────
 
@@ -361,11 +385,14 @@ export class DailyBriefingService {
     // and vice-versa. Falls back to null (→ shared almanac) when the ephemeris
     // is unavailable or the user has no usable birth data.
     let personal: GocharPersonalization | null = null;
+    let reason: PersonalizationReason = 'unavailable';
     if (this.gocharService) {
-      const personalKey = `briefing:gochar:${userId}:${dateStr}:${hourBucket}`;
-      const cached = await this.cacheService.get<GocharPersonalization | { __none: true }>(personalKey);
+      // v2 key: the cached value now carries the personalization reason too.
+      const personalKey = `briefing:gochar:v2:${userId}:${dateStr}:${hourBucket}`;
+      const cached = await this.cacheService.get<{ personal: GocharPersonalization | null; reason: PersonalizationReason }>(personalKey);
       if (cached) {
-        personal = (cached as any).__none ? null : (cached as GocharPersonalization);
+        personal = cached.personal;
+        reason = cached.reason;
       } else {
         if (!userRecord) {
           userRecord = await this.prisma.user.findUnique({
@@ -379,8 +406,12 @@ export class DailyBriefingService {
               now,
             )
           : null;
-        await this.cacheService.set(personalKey, personal ?? { __none: true }, 30 * 60 * 1000);
+        reason = this.computePersonalizationReason(userRecord, personal);
+        await this.cacheService.set(personalKey, { personal, reason }, 30 * 60 * 1000);
       }
+    } else {
+      // Ephemeris service not wired — every user gets the shared almanac.
+      reason = 'unavailable';
     }
 
     // ── 4. Merge into final response (personalization overrides global) ──
@@ -388,29 +419,113 @@ export class DailyBriefingService {
       ? `${personal.summaryInsight} ${overlay.summary}`
       : overlay.summary;
 
+    // Personalized do/avoid: lead each list with the user's own chart guidance,
+    // then the shared day-ruler/hora almanac (deduped). Keeps the almanac's
+    // substance while putting the user's sky first. The lead clause localizes
+    // through the same KB briefing-phrase layer as the rest of the briefing
+    // prose (English `guidanceDo/Avoid` is the fallback when the KB row is cold),
+    // so a non-English personalized list isn't led by an English clause once the
+    // guidance phrases are seeded.
+    let doList = global.doList;
+    let avoidList = global.avoidList;
+    if (personal) {
+      const [doLead, avoidLead] = await Promise.all([
+        this.resolveBriefingPhrase(personal.guidanceDoKey, personal.guidanceDo, locale),
+        this.resolveBriefingPhrase(personal.guidanceAvoidKey, personal.guidanceAvoid, locale),
+      ]);
+      doList = [...new Set([doLead, ...global.doList])].slice(0, 6);
+      avoidList = [...new Set([avoidLead, ...global.avoidList])].slice(0, 5);
+    }
+
+    // Personalized remedy/mantra: remedy the graha most relevant to the user's
+    // transits today (Saturn during Sade Sati, the Moon when afflicted, else the
+    // chart ruler) instead of only the shared day-ruler.
+    let remedy = global.remedy;
+    let mantra = global.mantra;
+    if (personal) {
+      const rm = await this.resolvePlanetRemedyMantra(personal.focusGraha, locale);
+      remedy = rm.remedy;
+      mantra = rm.mantra;
+    }
+
+    // Personalized lucky time: the next hora ruled by the user's Moon-sign lord,
+    // when one is present in today's hours; otherwise the shared window.
+    const luckyTime = personal
+      ? this.pickPersonalLuckyTime(global.planetaryHours, personal.moonSignLord) ?? global.luckyTime
+      : global.luckyTime;
+
     return {
       greeting: overlay.greeting,
       date: dateStr,
       dayQuality: personal?.dayQuality ?? global.dayQuality,
       summary,
-      doList: global.doList,
-      avoidList: global.avoidList,
+      doList,
+      avoidList,
       planetaryHours: global.planetaryHours,
       currentHora: global.currentHora,
       luckyColor: personal?.luckyColor ?? global.luckyColor,
       luckyNumber: personal?.luckyNumber ?? global.luckyNumber,
-      luckyTime: global.luckyTime,
+      luckyTime,
       professionInsight: overlay.professionInsight,
-      remedy: global.remedy,
-      mantra: global.mantra,
+      remedy,
+      mantra,
       panchang: global.panchang,
       // When personalization is available it is authoritative for the transit
       // (a null means "no notable transit today" — don't fall back to the
       // approximate age-based alert in that case).
       transitAlert: personal ? personal.transitAlert : overlay.transitAlert,
+      personalized: !!personal,
+      personalizationReason: reason,
       moonSign: personal?.moonSign ?? null,
       astrologyTraditions: userTraditions,
-    } as any;
+    };
+  }
+
+  /** Classify why the chart layer is / isn't active, for the client's prompt. */
+  private computePersonalizationReason(
+    userRecord: { dateOfBirth: Date | null; timeOfBirth: string | null; placeOfBirth: unknown } | null,
+    personal: GocharPersonalization | null,
+  ): PersonalizationReason {
+    if (personal) return 'ok';
+    if (!userRecord?.dateOfBirth) return 'no_birth_data';
+    if (!userRecord.timeOfBirth) return 'missing_time';
+    const pob = userRecord.placeOfBirth as { lat?: unknown; lng?: unknown } | null;
+    const lat = pob ? Number(pob.lat) : NaN;
+    const lng = pob ? Number(pob.lng) : NaN;
+    const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
+    if (!hasCoords) return 'missing_place';
+    // All data present but the chart still didn't compute (ephemeris error).
+    return 'unavailable';
+  }
+
+  /** Localize a briefing phrase by key, falling back to the given English text
+   *  when the KB row is cold — the same contract used for the summary template,
+   *  quality descriptions and transit alerts. */
+  private async resolveBriefingPhrase(key: string, fallback: string, locale?: string): Promise<string> {
+    const row = await this.kbService.getBriefingPhrase(key);
+    return this.kbService.render(row, locale)?.text ?? fallback;
+  }
+
+  /** Resolve a planet's remedy + mantra from the KB (localized), falling back to
+   *  the built-in English defaults when the KB row is unreachable. */
+  private async resolvePlanetRemedyMantra(
+    planet: string,
+    locale?: string,
+  ): Promise<{ remedy: string; mantra: string }> {
+    const rendered = this.kbService.render(await this.kbService.getPlanet(planet), locale);
+    return {
+      remedy: rendered?.remedy ?? DEFAULT_REMEDIES[planet] ?? DEFAULT_REMEDIES.Sun,
+      mantra: rendered?.mantra ?? DEFAULT_MANTRAS[planet] ?? DEFAULT_MANTRAS.Sun,
+    };
+  }
+
+  /** The window of the next/current hora ruled by `planet`, as "start - end". */
+  private pickPersonalLuckyTime(hours: PlanetaryHour[], planet: string): string | null {
+    // Prefer the current hora if it's the user's, else the first upcoming one,
+    // else any occurrence in the day.
+    const current = hours.find((h) => h.isCurrent && h.planet === planet);
+    const match = current ?? hours.find((h) => h.planet === planet);
+    return match ? `${match.startTime} - ${match.endTime}` : null;
   }
 
   // ─── Global briefing: identical for every user in the same 30-min slot ──

@@ -6,7 +6,15 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
+import { EphemerisService } from '../src/ephemeris/ephemeris.service';
 import { mockPrismaService, mockOpenAIService, mockKnowledgeService, mockKbService, mockCacheService, mockUser } from './helpers/mocks';
+
+// A ChartResult-like object from a map of planet -> sidereal longitude.
+function chart(longitudes: Record<string, number>) {
+  const positions = Object.entries(longitudes).map(([name, longitude]) => ({ name, longitude, speed: 0 }));
+  return { julianDay: 0, positions, ascendant: 0, houses: [] as number[] };
+}
 
 describe('greetingKeyForHour', () => {
   it('maps local hours to greeting buckets at the right boundaries', () => {
@@ -213,5 +221,148 @@ describe('DailyBriefingService', () => {
         expect(h.avoid.length).toBeGreaterThan(0);
       });
     });
+  });
+});
+
+// ─── Gochar (chart) personalization ──────────────────────────────────────────
+// Wires the REAL GocharService against a mocked ephemeris so the merge in
+// getDailyBriefing runs end-to-end: proves the reading is per-user (not the
+// shared almanac) and that `personalized`/`personalizationReason` are honest.
+describe('DailyBriefingService — My Day personalization', () => {
+  let service: DailyBriefingService;
+  let prisma: any;
+  let ephemeris: { computeChart: jest.Mock; computeCurrentChart: jest.Mock };
+
+  // Shared transit sky. tMoon=0, tSaturn=150 was chosen so an Aries natal Moon
+  // resolves to its lord (Mars) while a Cancer natal Moon resolves to the Moon —
+  // i.e. two users get a materially different focus graha → different remedy.
+  const TRANSIT = chart({ Sun: 30, Moon: 0, Saturn: 150, Jupiter: 60 });
+  const ARIES_NATAL = chart({ Moon: 10, Sun: 50 }); // idx 0 → Coral Red, lord Mars
+  const CANCER_NATAL = chart({ Moon: 100, Sun: 50 }); // idx 3 → Pearl White, lord Moon
+
+  // A user with complete, geocoded birth data (chart layer can light up).
+  const CHARTABLE_USER = {
+    ...mockUser,
+    dateOfBirth: new Date('1990-05-15'),
+    timeOfBirth: '10:30',
+    placeOfBirth: { name: 'Mumbai', lat: 19.076, lng: 72.8777 },
+  };
+
+  beforeEach(async () => {
+    prisma = mockPrismaService();
+    ephemeris = {
+      computeChart: jest.fn().mockResolvedValue(CANCER_NATAL),
+      computeCurrentChart: jest.fn().mockResolvedValue(TRANSIT),
+    };
+    prisma.user.findUnique.mockResolvedValue(CHARTABLE_USER);
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        DailyBriefingService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: OpenAIService, useValue: mockOpenAIService() },
+        { provide: KnowledgeService, useValue: mockKnowledgeService() },
+        { provide: KbService, useValue: mockKbService() },
+        { provide: MemoryCacheService, useValue: mockCacheService() },
+        { provide: EphemerisService, useValue: ephemeris },
+        GocharService,
+      ],
+    }).compile();
+
+    service = module.get<DailyBriefingService>(DailyBriefingService);
+  });
+
+  it('lights up the chart layer for a user with complete birth data', async () => {
+    const r = await service.getDailyBriefing('test-uuid');
+    expect(r.personalized).toBe(true);
+    expect(r.personalizationReason).toBe('ok');
+    expect(r.moonSign).toBe('Cancer');
+    // The summary leads with the user's own chart insight.
+    expect(r.summary).toContain('Cancer');
+  });
+
+  it('produces materially different readings for two different natal Moon signs', async () => {
+    ephemeris.computeChart.mockResolvedValueOnce(ARIES_NATAL);
+    const aries = await service.getDailyBriefing('user-a');
+
+    ephemeris.computeChart.mockResolvedValueOnce(CANCER_NATAL);
+    const cancer = await service.getDailyBriefing('user-b');
+
+    // Chart-derived fields must diverge — this is the whole point of the fix.
+    expect(aries.moonSign).toBe('Aries');
+    expect(cancer.moonSign).toBe('Cancer');
+    expect(aries.luckyColor).not.toBe(cancer.luckyColor); // Coral Red vs Pearl White
+    // Focus graha differs (Mars vs Moon) → the personalized remedy differs.
+    expect(aries.remedy).not.toBe(cancer.remedy);
+    expect(aries.summary).not.toBe(cancer.summary);
+    expect(aries.personalized).toBe(true);
+    expect(cancer.personalized).toBe(true);
+  });
+
+  it('leads the do/avoid lists with the user\'s own chart guidance', async () => {
+    // Baseline: chart layer dark → the shared almanac lists.
+    prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, timeOfBirth: null });
+    const shared = await service.getDailyBriefing('no-chart');
+
+    // Chart layer lit → the same lists, but now led by a chart-derived clause.
+    prisma.user.findUnique.mockResolvedValue(CHARTABLE_USER);
+    const personal = await service.getDailyBriefing('test-uuid');
+
+    expect(shared.personalized).toBe(false);
+    expect(personal.personalized).toBe(true);
+    // The personalized list leads with a clause the shared almanac never has.
+    expect(personal.doList[0]).not.toBe(shared.doList[0]);
+    expect(shared.doList).not.toContain(personal.doList[0]);
+    expect(personal.avoidList[0]).not.toBe(shared.avoidList[0]);
+  });
+
+  describe('personalizationReason is honest about missing data', () => {
+    it('no_birth_data when the user has no date of birth', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, dateOfBirth: null });
+      const r = await service.getDailyBriefing('test-uuid');
+      expect(r.personalized).toBe(false);
+      expect(r.personalizationReason).toBe('no_birth_data');
+      expect(r.moonSign).toBeNull();
+    });
+
+    it('missing_time when the user has a DOB but no exact birth time', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, timeOfBirth: null });
+      const r = await service.getDailyBriefing('test-uuid');
+      expect(r.personalized).toBe(false);
+      expect(r.personalizationReason).toBe('missing_time');
+    });
+
+    it('missing_place when the birthplace is not geocoded (no lat/lng)', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, placeOfBirth: { name: 'Mumbai' } });
+      const r = await service.getDailyBriefing('test-uuid');
+      expect(r.personalized).toBe(false);
+      expect(r.personalizationReason).toBe('missing_place');
+    });
+
+    it('missing_place when the coordinates are the null-island (0,0) sentinel', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, placeOfBirth: { name: 'Nowhere', lat: 0, lng: 0 } });
+      const r = await service.getDailyBriefing('test-uuid');
+      expect(r.personalized).toBe(false);
+      expect(r.personalizationReason).toBe('missing_place');
+    });
+
+    it('unavailable when all data is present but the ephemeris errors', async () => {
+      ephemeris.computeChart.mockRejectedValue(new Error('swisseph down'));
+      const r = await service.getDailyBriefing('test-uuid');
+      expect(r.personalized).toBe(false);
+      expect(r.personalizationReason).toBe('unavailable');
+    });
+  });
+
+  it('keeps the shared almanac (panchang, hours) identical regardless of the user\'s chart', async () => {
+    // Panchang and planetary hours are real astronomy — the same sky for
+    // everyone. They must NOT be faked into per-user values.
+    ephemeris.computeChart.mockResolvedValueOnce(ARIES_NATAL);
+    const aries = await service.getDailyBriefing('user-a');
+    ephemeris.computeChart.mockResolvedValueOnce(CANCER_NATAL);
+    const cancer = await service.getDailyBriefing('user-b');
+
+    expect(aries.panchang).toEqual(cancer.panchang);
+    expect(aries.planetaryHours).toEqual(cancer.planetaryHours);
   });
 });
