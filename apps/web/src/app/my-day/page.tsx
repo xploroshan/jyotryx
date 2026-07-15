@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
 import { PlanetGlyph } from "@/components/icons/astro";
@@ -337,6 +338,44 @@ export default function MyDayPage() {
           <div className="absolute top-4 left-4 w-1 h-8 rounded-full bg-gradient-to-b from-primary-500 to-accent-500" />
           <p className="text-emphasis leading-relaxed pl-4 text-[15px]">{translateSummary(briefing.summary, t, locale)}</p>
         </div>
+
+        {/* Personalization prompt — shown when the chart layer is dark for a
+            reason the user can act on (no birth data / missing time / missing
+            place), so we never dress up the shared almanac as their own reading.
+            Honest "(A)" behaviour: no approximated birth time. A transient
+            `unavailable` (all data present, ephemeris outage) is NOT the user's
+            fault, so we stay silent and serve the shared almanac rather than
+            telling them to add data they already have. */}
+        {briefing.personalized === false &&
+          (briefing.personalizationReason === "no_birth_data" ||
+            briefing.personalizationReason === "missing_time" ||
+            briefing.personalizationReason === "missing_place") && (
+          <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-primary-500/5 border border-amber-500/25">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m14.95-6.95l-1.4 1.4M7.45 16.55l-1.4 1.4m12.5 0l-1.4-1.4M7.45 7.45l-1.4-1.4" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-700 mb-1">{t.myDay.personalizeTitle}</p>
+                <p className="text-sm text-[rgba(26,20,16,0.7)] leading-relaxed mb-3">
+                  {briefing.personalizationReason === "missing_time"
+                    ? t.myDay.personalizeMissingTime
+                    : briefing.personalizationReason === "missing_place"
+                    ? t.myDay.personalizeMissingPlace
+                    : t.myDay.personalizeNoData}
+                </p>
+                <Link href="/profile" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-700 hover:text-primary-800">
+                  {t.myDay.personalizeCta}
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Transit Alert */}
         {briefing.transitAlert && (

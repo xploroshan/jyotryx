@@ -39,4 +39,9 @@ export interface DailyBriefing {
   /** Natal Moon sign (Rashi) when the briefing is personalized to the user's
    *  birth chart; null when only the shared almanac is available. */
   moonSign?: string | null;
+  /** True when the reading is derived from the user's own birth chart. When
+   *  false, the card is the shared almanac and we prompt for birth details. */
+  personalized?: boolean;
+  /** Why the chart layer is / isn't active — drives the prompt copy. */
+  personalizationReason?: 'ok' | 'no_birth_data' | 'missing_time' | 'missing_place' | 'unavailable';
 }

@@ -211,6 +211,65 @@ describe('My Day Page: Rendering', () => {
   });
 });
 
+describe('My Day Page: Personalization prompt', () => {
+  beforeEach(() => {
+    mockPush.mockReset();
+    mockApiGet.mockReset();
+    mockStoreState.isAuthenticated = true;
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const pinned = new Date();
+    pinned.setHours(11, 30, 0, 0);
+    vi.setSystemTime(pinned);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('shows the "make this your reading" prompt when the chart layer is dark (missing time)', async () => {
+    mockApiGet.mockResolvedValue({ ...mockBriefing, personalized: false, personalizationReason: 'missing_time', moonSign: null });
+    render(<MyDayPage />);
+    expect(await screen.findByText('Make this your reading')).toBeDefined();
+    // Reason-specific copy for a missing birth time.
+    expect(screen.getByText(/exact birth time/)).toBeDefined();
+    // The CTA links to the profile so the user can complete their details.
+    const cta = screen.getByText('Complete birth details');
+    expect(cta.closest('a')?.getAttribute('href')).toBe('/profile');
+  });
+
+  it('shows the missing-place copy when the birthplace is not geocoded', async () => {
+    mockApiGet.mockResolvedValue({ ...mockBriefing, personalized: false, personalizationReason: 'missing_place', moonSign: null });
+    render(<MyDayPage />);
+    await screen.findByText('Make this your reading');
+    expect(screen.getByText(/birthplace/)).toBeDefined();
+  });
+
+  it('shows the no-data copy when there is no birth date at all', async () => {
+    mockApiGet.mockResolvedValue({ ...mockBriefing, personalized: false, personalizationReason: 'no_birth_data', moonSign: null });
+    render(<MyDayPage />);
+    await screen.findByText('Make this your reading');
+    expect(screen.getByText(/birth date, exact time and place/)).toBeDefined();
+  });
+
+  it('does NOT show the prompt for a transient unavailable reason (user has complete data)', async () => {
+    // An ephemeris outage isn't the user's fault — telling them to "add birth
+    // details" they already have would be misleading, so we stay silent.
+    mockApiGet.mockResolvedValue({ ...mockBriefing, personalized: false, personalizationReason: 'unavailable', moonSign: null });
+    render(<MyDayPage />);
+    await screen.findByText('Good Morning, Test!');
+    expect(screen.queryByText('Make this your reading')).toBeNull();
+  });
+
+  it('does NOT show the prompt — and shows the Moon-sign badge — when the reading is personalized', async () => {
+    mockApiGet.mockResolvedValue({ ...mockBriefing, personalized: true, personalizationReason: 'ok', moonSign: 'Cancer' });
+    render(<MyDayPage />);
+    await screen.findByText('Good Morning, Test!');
+    expect(screen.queryByText('Make this your reading')).toBeNull();
+    // The natal Moon-sign badge marks the reading as chart-derived.
+    expect(screen.getByText('Cancer')).toBeDefined();
+  });
+});
+
 describe('My Day Page: Auth Guard', () => {
   it('should redirect to /auth when not authenticated', () => {
     const originalAuth = mockStoreState.isAuthenticated;

@@ -252,3 +252,100 @@ function ordinal(n: number): string {
   const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
+
+// ─── Personalized remedy + guidance (drive the per-user overlay) ─────────────
+
+/** Whether today's Moon is genuinely unfavourable for the user (bad Chandra
+ *  Bala, or an inauspicious Tara that isn't the neutral Janma). */
+function moonAfflicted(factors: {
+  tara: TaraResult;
+  chandra: { favorable: boolean };
+}): boolean {
+  const badTara = !factors.tara.favorable && factors.tara.index !== 1;
+  return !factors.chandra.favorable || badTara;
+}
+
+/**
+ * The graha whose remedy/mantra is most relevant to the user's transits today.
+ * Classical priority: remedy the afflicting planet first —
+ *   Saturn afflictions (Sade Sati / Dhaiya)      → Saturn
+ *   an afflicted Moon (bad Chandra Bala / Tara)   → Moon
+ *   otherwise strengthen the chart's own ruler    → the natal Moon-sign lord.
+ */
+export function personalizedFocusGraha(factors: {
+  natalMoonSignIdx: number;
+  tara: TaraResult;
+  chandra: { favorable: boolean };
+  sadeSati: SadeSatiResult;
+}): string {
+  if (factors.sadeSati.type !== 'none') return 'Saturn';
+  if (moonAfflicted(factors)) return 'Moon';
+  return SIGN_LORDS[factors.natalMoonSignIdx];
+}
+
+/**
+ * One chart-based "do" and "avoid" clause to LEAD the user's daily lists,
+ * derived deterministically from their transit state. Everything else in the
+ * do/avoid lists remains the shared day-ruler/hora almanac — this just puts the
+ * user's own sky first.
+ */
+export interface PersonalizedGuidance {
+  /** Stable KB key so the clause localizes through the same briefing-phrase
+   *  layer as the summary/quality/transit text (English `*Item` is the DEFAULT
+   *  fallback when the KB row is cold). */
+  doKey: string;
+  avoidKey: string;
+  doItem: string;
+  avoidItem: string;
+}
+export function personalizedGuidance(factors: {
+  tara: TaraResult;
+  chandra: { favorable: boolean };
+  jupiter: { favorable: boolean };
+  sadeSati: SadeSatiResult;
+}): PersonalizedGuidance {
+  if (factors.sadeSati.type === 'sadeSati' && factors.sadeSati.phase === 'peak') {
+    return {
+      doKey: 'guidance.sadeSatiPeak.do',
+      avoidKey: 'guidance.sadeSatiPeak.avoid',
+      doItem: 'Patient, disciplined effort on what already matters',
+      avoidItem: 'Impulsive commitments and confrontation',
+    };
+  }
+  if (factors.sadeSati.type !== 'none') {
+    return {
+      doKey: 'guidance.saturnPressure.do',
+      avoidKey: 'guidance.saturnPressure.avoid',
+      doItem: 'Steady, consistent work and self-care',
+      avoidItem: 'Overextending or taking on new burdens',
+    };
+  }
+  const moonFavorable = !moonAfflicted(factors);
+  if (moonFavorable && factors.jupiter.favorable) {
+    return {
+      doKey: 'guidance.doublyFavorable.do',
+      avoidKey: 'guidance.doublyFavorable.avoid',
+      doItem: 'Begin meaningful initiatives — the day supports you',
+      avoidItem: 'Second-guessing well-considered plans',
+    };
+  }
+  if (moonFavorable) {
+    return {
+      doKey: 'guidance.moonFavorable.do',
+      avoidKey: 'guidance.moonFavorable.avoid',
+      doItem: 'Progress on important tasks and relationships',
+      avoidItem: 'Rushing decisions late in the day',
+    };
+  }
+  return {
+    doKey: 'guidance.moonAfflicted.do',
+    avoidKey: 'guidance.moonAfflicted.avoid',
+    doItem: 'Routine, low-stakes work and consolidation',
+    avoidItem: 'Launching, signing, or committing to anything major',
+  };
+}
+
+/** The natal Moon-sign lord (used to pick the user's favourable hora window). */
+export function moonSignLord(natalMoonSignIdx: number): string {
+  return SIGN_LORDS[natalMoonSignIdx];
+}

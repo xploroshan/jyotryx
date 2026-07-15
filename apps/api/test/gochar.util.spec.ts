@@ -5,12 +5,22 @@ import {
   computeSadeSati,
   computeTaraBala,
   houseFromMoon,
+  moonSignLord,
   nakshatraIndexFromLongitude,
   personalizedDayQuality,
+  personalizedFocusGraha,
+  personalizedGuidance,
   personalizedLuckyColor,
   personalizedLuckyNumber,
   signIndexFromLongitude,
 } from '../src/modules/daily-briefing/gochar.util';
+
+const FAV_TARA = { index: 2, name: 'Sampat', favorable: true };
+const JANMA_TARA = { index: 1, name: 'Janma', favorable: false };
+const BAD_TARA = { index: 3, name: 'Vipat', favorable: false };
+const NO_SADE = { active: false, type: 'none' as const, phase: 'none' as const };
+const PEAK_SADE = { active: true, type: 'sadeSati' as const, phase: 'peak' as const };
+const DHAIYA = { active: true, type: 'dhaiya' as const, phase: 'none' as const };
 
 describe('gochar.util', () => {
   describe('position helpers', () => {
@@ -166,6 +176,53 @@ describe('gochar.util', () => {
         tara,
       });
       expect(text).toContain('Jupiter');
+    });
+  });
+
+  describe('personalizedFocusGraha', () => {
+    it('remedies Saturn during any Saturn affliction', () => {
+      expect(personalizedFocusGraha({ natalMoonSignIdx: 0, tara: FAV_TARA, chandra: { favorable: true }, sadeSati: PEAK_SADE })).toBe('Saturn');
+      expect(personalizedFocusGraha({ natalMoonSignIdx: 3, tara: FAV_TARA, chandra: { favorable: true }, sadeSati: DHAIYA })).toBe('Saturn');
+    });
+    it('remedies the Moon when the Moon is afflicted (bad Chandra Bala or Tara)', () => {
+      expect(personalizedFocusGraha({ natalMoonSignIdx: 0, tara: FAV_TARA, chandra: { favorable: false }, sadeSati: NO_SADE })).toBe('Moon');
+      expect(personalizedFocusGraha({ natalMoonSignIdx: 0, tara: BAD_TARA, chandra: { favorable: true }, sadeSati: NO_SADE })).toBe('Moon');
+    });
+    it('otherwise strengthens the natal Moon-sign lord (Janma tara is neutral)', () => {
+      // Aries → Mars is the lord.
+      expect(personalizedFocusGraha({ natalMoonSignIdx: 0, tara: JANMA_TARA, chandra: { favorable: true }, sadeSati: NO_SADE })).toBe('Mars');
+      // Cancer → Moon.
+      expect(personalizedFocusGraha({ natalMoonSignIdx: 3, tara: FAV_TARA, chandra: { favorable: true }, sadeSati: NO_SADE })).toBe('Moon');
+    });
+  });
+
+  describe('personalizedGuidance', () => {
+    it('gives disciplined guidance during Sade Sati peak', () => {
+      const g = personalizedGuidance({ tara: FAV_TARA, chandra: { favorable: true }, jupiter: { favorable: true }, sadeSati: PEAK_SADE });
+      expect(g.doItem).toMatch(/patient|disciplined/i);
+      expect(g.avoidItem).toMatch(/impulsive|confrontation/i);
+    });
+    it('encourages initiatives on a doubly-favourable day (Moon + Jupiter)', () => {
+      const g = personalizedGuidance({ tara: FAV_TARA, chandra: { favorable: true }, jupiter: { favorable: true }, sadeSati: NO_SADE });
+      expect(g.doItem).toMatch(/begin|initiatives/i);
+    });
+    it('recommends low-stakes work when the Moon is afflicted', () => {
+      const g = personalizedGuidance({ tara: BAD_TARA, chandra: { favorable: false }, jupiter: { favorable: false }, sadeSati: NO_SADE });
+      expect(g.doItem).toMatch(/routine|low-stakes|consolidation/i);
+      expect(g.avoidItem).toMatch(/launching|signing|committing/i);
+    });
+    it('is deterministic for the same factors', () => {
+      const f = { tara: FAV_TARA, chandra: { favorable: true }, jupiter: { favorable: false }, sadeSati: NO_SADE };
+      expect(personalizedGuidance(f)).toEqual(personalizedGuidance(f));
+    });
+  });
+
+  describe('moonSignLord', () => {
+    it('returns the classical sign lord', () => {
+      expect(moonSignLord(0)).toBe('Mars');   // Aries
+      expect(moonSignLord(4)).toBe('Sun');     // Leo
+      expect(moonSignLord(6)).toBe('Venus');   // Libra
+      expect(moonSignLord(9)).toBe('Saturn');  // Capricorn
     });
   });
 });
