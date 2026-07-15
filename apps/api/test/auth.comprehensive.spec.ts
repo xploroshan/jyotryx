@@ -1455,6 +1455,97 @@ describe('Auth: email verification', () => {
   });
 });
 
+// ─── Phase 2: isNewUser signal on OTP re-signup ────────────────────────────
+
+describe('Auth: verifyOtp isNewUser signal', () => {
+  let service: AuthService;
+  let prisma: any;
+  let jwtService: any;
+
+  beforeEach(async () => {
+    prisma = createPrismaMock();
+    jwtService = createJwtMock();
+    service = await buildAuthService(prisma, jwtService);
+    const redis = (service as any).redis;
+    await redis.set('otp:+919876500000', '123456', 'EX', 300);
+  });
+
+  it('isNewUser=true when OTP verify CREATES the account', async () => {
+    prisma.user.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue({ id: 'n1', name: 'New', email: 'x@phone.myastro360.com', phone: '+919876500000', credits: 10, role: 'USER' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'n1', name: 'New', email: 'x@phone.myastro360.com', phone: '+919876500000', credits: 10, role: 'USER' });
+
+    const res = await service.verifyOtp({ phone: '+919876500000', otp: '123456' } as any);
+    expect(res.isNewUser).toBe(true);
+  });
+
+  it('isNewUser=false when OTP verify logs into an EXISTING account', async () => {
+    prisma.user.findFirst.mockResolvedValue({ id: 'e1', name: 'Existing', email: 'e@phone.myastro360.com', phone: '+919876500000', credits: 10, role: 'USER' });
+
+    const res = await service.verifyOtp({ phone: '+919876500000', otp: '123456' } as any);
+    expect(res.isNewUser).toBe(false);
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Phase 3: add a login email to a phone-only account ────────────────────
+
+describe('Auth: addEmail (attach real login email)', () => {
+  let service: AuthService;
+  let prisma: any;
+  let jwtService: any;
+
+  beforeEach(async () => {
+    prisma = createPrismaMock();
+    jwtService = createJwtMock();
+    service = await buildAuthService(prisma, jwtService);
+    emailSendMock.mockClear();
+  });
+
+  it('sends a verification email and stashes the pending change (no immediate swap)', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce({ id: 'u1', name: 'Phone User', email: '9199@phone.myastro360.com', emailVerified: false }) // me
+      .mockResolvedValueOnce(null); // collision check: email free
+    const res = await service.addEmail('u1', 'Real@Example.com');
+    expect(res.message).toMatch(/verification link sent/i);
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
+    expect(emailSendMock.mock.calls[0][0].to).toBe('real@example.com'); // normalized
+    // The email is NOT applied yet — only sent for verification.
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('BLOCKS when the email already belongs to another account (no merge)', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce({ id: 'u1', name: 'Phone User', email: '9199@phone.myastro360.com' }) // me
+      .mockResolvedValueOnce({ id: 'other', email: 'taken@example.com' }); // collision
+    await expect(service.addEmail('u1', 'taken@example.com')).rejects.toThrow(ConflictException);
+    expect(emailSendMock).not.toHaveBeenCalled();
+  });
+
+  it('verifyEmail with an addemail token swaps the email in and verifies', async () => {
+    const redis = (service as any).redis;
+    await redis.set('addemail:tok9', JSON.stringify({ userId: 'u1', email: 'real@example.com' }), 'EX', 3600);
+    prisma.user.findUnique.mockResolvedValue(null); // no clash at consume time
+    prisma.user.update.mockResolvedValue({ id: 'u1', name: 'Phone User', email: 'real@example.com', emailVerified: true, credits: 10, role: 'USER' });
+
+    const res = await service.verifyEmail('tok9');
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { email: 'real@example.com', emailVerified: true },
+    });
+    expect((res as any).user.email).toBe('real@example.com');
+    expect((res as any).tokens.accessToken).toBeDefined();
+    expect(await redis.get('addemail:tok9')).toBeNull();
+  });
+
+  it('verifyEmail rejects an addemail token if the email got taken in the meantime', async () => {
+    const redis = (service as any).redis;
+    await redis.set('addemail:tok10', JSON.stringify({ userId: 'u1', email: 'real@example.com' }), 'EX', 3600);
+    prisma.user.findUnique.mockResolvedValue({ id: 'someone-else', email: 'real@example.com' });
+    await expect(service.verifyEmail('tok10')).rejects.toThrow(ConflictException);
+  });
+});
+
 // ─── AUTH CONTROLLER TESTS ─────────────────────────────────────────────────
 
 describe('Auth: Controller', () => {

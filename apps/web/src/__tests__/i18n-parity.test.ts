@@ -123,20 +123,20 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
 // by the API (LLM/KB), so the gap is cosmetic. Drive these back down as the
 // chrome is translated.
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // hi: 69 + 26 interpretation/mitigation chrome = 95, + 10 auth email-verify
-  // chrome (English placeholders pending backfill) = 105.
-  hi: 105,
-  // ta: 108 + 26 = 134, + 10 auth email-verify placeholders = 144.
-  ta: 144,
-  te: 496,
-  bn: 496,
-  mr: 491,
-  gu: 496,
-  kn: 496,
-  ml: 496,
-  pa: 496,
-  or: 496,
-  as: 496,
+  // Each +7 vs the previous baseline: the identity Phase 2/3 chrome (welcome-
+  // back notice + add-login-email profile keys) ships as English placeholders
+  // pending backfill.
+  hi: 112,
+  ta: 151,
+  te: 503,
+  bn: 503,
+  mr: 498,
+  gu: 503,
+  kn: 503,
+  ml: 503,
+  pa: 503,
+  or: 503,
+  as: 503,
 };
 
 const locales: Array<[string, Dict]> = [

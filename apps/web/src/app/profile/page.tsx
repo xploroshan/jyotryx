@@ -84,6 +84,12 @@ export default function ProfilePage() {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
+  // "Add login email" (phone-only accounts). loginEmail holds the input; the
+  // status/error strings drive the inline feedback under the form.
+  const [loginEmail, setLoginEmail] = useState("");
+  const [addingEmail, setAddingEmail] = useState(false);
+  const [addEmailMsg, setAddEmailMsg] = useState("");
+  const [addEmailError, setAddEmailError] = useState("");
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -234,6 +240,31 @@ export default function ProfilePage() {
       setError(err.message || t.profile.updateFailed);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddEmail = async () => {
+    setAddEmailMsg("");
+    setAddEmailError("");
+    const email = loginEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setAddEmailError(t.profile.addEmailInvalid);
+      return;
+    }
+    setAddingEmail(true);
+    try {
+      const res = await api.post<{ message: string }>(
+        "/auth/add-email",
+        { email },
+        { token: accessToken! },
+      );
+      setAddEmailMsg(res.message || t.profile.addEmailSent);
+      setLoginEmail("");
+    } catch (err: any) {
+      // 409 = email already registered to another account (block-on-collision).
+      setAddEmailError(err?.message || t.profile.addEmailFailed);
+    } finally {
+      setAddingEmail(false);
     }
   };
 
@@ -677,6 +708,39 @@ export default function ProfilePage() {
             {/* Security Tab */}
             {activeTab === "security" && (
               <div className="space-y-6">
+                {/* Add a real login email — only for phone-only accounts whose
+                    email is still the @phone.myastro360.com placeholder. */}
+                {profile?.email?.endsWith("@phone.myastro360.com") && (
+                  <div className="surface-card p-6">
+                    <h3 className="text-lg font-bold text-surface-950 mb-2">{t.profile.addEmailTitle}</h3>
+                    <p className="text-sm text-[rgba(12,8,5,0.66)] mb-6">{t.profile.addEmailDesc}</p>
+                    <div className="space-y-3">
+                      <input
+                        id="profile-login-email"
+                        type="email"
+                        autoComplete="email"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder={t.profile.addEmailPlaceholder}
+                        className="w-full px-4 py-3 rounded-xl surface-input"
+                      />
+                      {addEmailError && (
+                        <p role="alert" className="text-xs text-red-400">{addEmailError}</p>
+                      )}
+                      {addEmailMsg && (
+                        <p role="status" className="text-xs text-emerald-500">{addEmailMsg}</p>
+                      )}
+                      <button
+                        onClick={handleAddEmail}
+                        disabled={addingEmail}
+                        className="focus-ring px-8 py-3 rounded-xl btn-primary text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {addingEmail ? t.profile.saving : t.profile.addEmailButton}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="surface-card p-6">
                   <h3 className="text-lg font-bold text-surface-950 mb-2">
                     {hasPassword ? t.profile.changePassword : t.profile.setPassword}
