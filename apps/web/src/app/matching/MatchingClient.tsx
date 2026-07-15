@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/store";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { PlaceAutocomplete } from "@/components/ui/PlaceAutocomplete";
 import Interpretation from "@/components/interpretation/Interpretation";
 import Mitigation from "@/components/mitigation/Mitigation";
 
@@ -14,6 +15,9 @@ interface PersonForm {
   dob: string;
   time: string;
   place: string;
+  /** Coordinates captured when the birthplace was picked from the autocomplete. */
+  lat?: number;
+  lng?: number;
 }
 
 const emptyPerson: PersonForm = { name: "", dob: "", time: "", place: "" };
@@ -98,11 +102,11 @@ function PersonFormComponent({
         </div>
         <div>
           <label htmlFor={`${idPrefix}-place`} className="flex items-center text-sm text-[rgba(12,8,5,0.66)] mb-1.5">{t.form.placeOfBirth} <RequiredMark /></label>
-          <input
+          <PlaceAutocomplete
             id={`${idPrefix}-place`}
-            type="text"
             value={person.place}
-            onChange={(e) => setPerson({ ...person, place: e.target.value })}
+            coords={typeof person.lat === "number" && typeof person.lng === "number" ? { lat: person.lat, lng: person.lng } : null}
+            onChange={(name, coords) => setPerson({ ...person, place: name, lat: coords?.lat, lng: coords?.lng })}
             placeholder={t.matching.searchCity}
             aria-invalid={showErrors && !person.place}
             className={inputClass}
@@ -219,8 +223,8 @@ export default function MatchingPage() {
       }
       const { api } = await import("@/lib/api");
       const res = await api.post<any>("/astrology/matching", {
-        partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place },
-        partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place },
+        partner1: { dateOfBirth: personA.dob, timeOfBirth: personA.time, placeOfBirth: personA.place, latitude: personA.lat, longitude: personA.lng },
+        partner2: { dateOfBirth: personB.dob, timeOfBirth: personB.time, placeOfBirth: personB.place, latitude: personB.lat, longitude: personB.lng },
         locale,
         tradition: activeTradition,
       }, { token });

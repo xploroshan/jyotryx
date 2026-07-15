@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
+import { PlaceAutocomplete } from "@/components/ui/PlaceAutocomplete";
 import Interpretation from "@/components/interpretation/Interpretation";
 
 interface DivisionalResult {
@@ -100,7 +101,19 @@ export default function DivisionalPage() {
           </div>
           <div>
             <label className="text-sm text-secondary mb-1 block">{t.form.placeOfBirth}</label>
-            <input type="text" value={form.placeOfBirth} onChange={(e) => setForm({ ...form, placeOfBirth: e.target.value })} placeholder={t.form.placePlaceholder} className="w-full px-4 py-3 rounded-xl surface-input" />
+            <PlaceAutocomplete
+              value={form.placeOfBirth}
+              coords={form.latitude && form.longitude ? { lat: parseFloat(form.latitude), lng: parseFloat(form.longitude) } : null}
+              onChange={(name, coords) => setForm((f) => ({
+                ...f,
+                placeOfBirth: name,
+                // Picking a place fills the lat/lng fields; they stay editable as
+                // an advanced override.
+                latitude: coords ? String(coords.lat) : f.latitude,
+                longitude: coords ? String(coords.lng) : f.longitude,
+              }))}
+              placeholder={t.form.placePlaceholder}
+            />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>

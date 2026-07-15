@@ -24,6 +24,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { DailyBriefingModule } from './modules/daily-briefing/daily-briefing.module';
+import { GeoModule } from './modules/geo/geo.module';
 import { NumerologyModule } from './modules/numerology/numerology.module';
 import { InterpretationModule } from './modules/interpretation/interpretation.module';
 import { TarotModule } from './modules/tarot/tarot.module';
@@ -82,6 +83,7 @@ import { MetricsModule } from './metrics/metrics.module';
     AdminModule,
     KnowledgeModule,
     DailyBriefingModule,
+    GeoModule,
     NumerologyModule,
     InterpretationModule,
     TarotModule,

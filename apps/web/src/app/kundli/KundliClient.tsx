@@ -8,6 +8,7 @@ import { Gift } from "lucide-react";
 import type { TranslationKeys } from "@/i18n";
 import { useAuthStore } from "@/lib/store";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { PlaceAutocomplete, type PlaceCoords } from "@/components/ui/PlaceAutocomplete";
 import { ScrollableRow } from "@/components/ui/ScrollableRow";
 import { usePaywallVariant, recordPaywallConversion } from "@/lib/experiment";
 import { track, trackOnce } from "@/lib/analytics";
@@ -115,6 +116,10 @@ export default function KundliPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", dob: "", time: "", place: "" });
+  // Coordinates captured when the birthplace is picked from the autocomplete.
+  // Null for a name typed by hand or prefilled from the profile — the API then
+  // backfills the signed-in user's own stored coordinates for a self-chart.
+  const [placeCoords, setPlaceCoords] = useState<PlaceCoords | null>(null);
   const [prefilled, setPrefilled] = useState(false);
 
   // "Show Your Work": merge the deterministic factors the API returns for the
@@ -184,6 +189,8 @@ export default function KundliPage() {
               dateOfBirth: form.dob,
               timeOfBirth: form.time,
               placeOfBirth: form.place,
+              latitude: placeCoords?.lat,
+              longitude: placeCoords?.lng,
               locale,
               tradition: activeTradition,
             },
@@ -293,15 +300,13 @@ export default function KundliPage() {
                 </div>
                 <div>
                   <label htmlFor="kundli-pob" className="flex items-center text-sm text-emphasis mb-1.5">{t.form.placeOfBirth}<RequiredMark /></label>
-                  <input
+                  <PlaceAutocomplete
                     id="kundli-pob"
-                    type="text"
                     required
                     value={form.place}
-                    onChange={(e) => setForm({ ...form, place: e.target.value })}
+                    coords={placeCoords}
+                    onChange={(name, coords) => { setForm((f) => ({ ...f, place: name })); setPlaceCoords(coords); }}
                     placeholder={t.kundli.searchCity}
-                    aria-describedby="kundli-pob-hint"
-                    className="w-full px-4 py-3 rounded-xl surface-input"
                   />
                   <p id="kundli-pob-hint" className="text-xs text-[rgba(12,8,5,0.72)] mt-1">{t.kundli.birthCityNote}</p>
                 </div>

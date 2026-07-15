@@ -3,11 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/lib/store";
 import { useTranslation } from "@/i18n";
+import { PlaceAutocomplete } from "@/components/ui/PlaceAutocomplete";
 
 export interface BirthDetailsValue {
   dateOfBirth: string;
   timeOfBirth: string;
   placeOfBirth: string;
+  /** Coordinates when the place was picked from the autocomplete. Omitted when
+   *  seeded from the profile summary — the API backfills the user's own stored
+   *  coordinates in that case, so a self-chart is still cast correctly. */
+  latitude?: number;
+  longitude?: number;
 }
 
 interface SavedBirthDetailsProps {
@@ -185,13 +191,19 @@ export default function SavedBirthDetails({
           >
             {t.form.placeOfBirth}
           </label>
-          <input
+          <PlaceAutocomplete
             id={`${idPrefix}-pob`}
-            type="text"
-            value={value.placeOfBirth}
-            onChange={(e) => update({ placeOfBirth: e.target.value })}
-            placeholder={t.form.placePlaceholder}
             required
+            value={value.placeOfBirth}
+            coords={
+              typeof value.latitude === "number" && typeof value.longitude === "number"
+                ? { lat: value.latitude, lng: value.longitude }
+                : null
+            }
+            onChange={(name, coords) =>
+              update({ placeOfBirth: name, latitude: coords?.lat, longitude: coords?.lng })
+            }
+            placeholder={t.form.placePlaceholder}
             className="w-full bg-[rgba(255,252,245,0.86)] border divider rounded-lg px-3 py-2 text-sm text-surface-950"
           />
         </div>
