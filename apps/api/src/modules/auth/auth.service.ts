@@ -31,6 +31,12 @@ import { ReferralService } from '../referral/referral.service';
 import { normalizePhone, phoneMatchCandidates } from '../../common/phone.util';
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
+import { createEmailProvider, EmailProvider } from '../daily-briefing/email-provider';
+import {
+  renderPasswordResetEmail,
+  extractOobCode,
+  buildResetUrl,
+} from './password-reset-email';
 
 type PrismaUser = {
   id: string;
@@ -107,6 +113,9 @@ const LOCKOUT_SECONDS = 15 * 60; // 15 minutes
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  // Shared Resend-backed email sender (same provider the daily briefing uses).
+  // Falls back to a log-only provider when RESEND_API_KEY is unset.
+  private readonly emailProvider: EmailProvider = createEmailProvider();
 
   /**
    * Resolve the signup-credits default. `ConfigService.get` has returned
@@ -377,17 +386,56 @@ export class AuthService {
       }
     }
 
-    // NOTE: we deliberately do NOT call generatePasswordResetLink() here.
-    // That mints a NEW reset code, and Firebase invalidates every prior code
-    // for the email whenever a new one is issued — so it would kill the code
-    // the client's sendPasswordResetEmail() just emailed to the user (the
-    // "reset link expired / already used" bug on the very first click). It
-    // also sends no email of its own (the Admin SDK just returns a link
-    // string). This endpoint's only job is to guarantee the Firebase Auth
-    // user EXISTS (done above) so the client-side send can succeed for
-    // accounts created before Firebase was wired up; the client owns the
-    // single reset code + email.
+    // Mint the single reset code, wrap it in a link to OUR OWN /reset-password
+    // page, and send a branded email ourselves via Resend. We do NOT use
+    // Firebase's built-in email (its console template is locked once a custom
+    // email domain is set on Identity Platform, and its link points at the
+    // generic Firebase action handler). generatePasswordResetLink() is the
+    // ONLY place a code is minted for this request — the client no longer
+    // calls sendPasswordResetEmail(), so there's exactly one code and the
+    // emailed link stays valid (fixes the "expired on first click" bug).
+    try {
+      const firebaseLink = await getAuth().generatePasswordResetLink(email);
+      const oobCode = extractOobCode(firebaseLink);
+      if (!oobCode) throw new Error('oobCode missing from generated reset link');
+
+      const appUrl = this.frontendUrl();
+      const resetUrl = buildResetUrl(appUrl, oobCode);
+      const { subject, html, text } = renderPasswordResetEmail({ resetUrl, appUrl });
+
+      if (this.emailProvider.kind === 'log') {
+        // RESEND_API_KEY unset — nothing actually leaves the building. Warn
+        // loudly so a misconfigured env doesn't masquerade as a working reset.
+        this.logger.warn(
+          `RESEND_API_KEY not set — password reset email for ${email} was LOGGED, not delivered.`,
+        );
+      }
+      await this.emailProvider.send({
+        to: email,
+        subject,
+        html,
+        text,
+        fromEmail: this.configService.get<string>('mail.fromEmail') || 'noreply@myastro360.com',
+        fromName: this.configService.get<string>('mail.fromName') || 'MyAstro360',
+        // Dedupe retries of the same request without blocking a genuinely new
+        // reset (a new request mints a new oobCode → new key).
+        idempotencyKey: `pwreset:${oobCode.slice(0, 24)}`,
+      });
+      this.logger.log(`Password reset email dispatched for: ${email}`);
+    } catch (error: any) {
+      // Never leak whether the address exists / whether sending failed.
+      this.logger.error(`Password reset send failed for ${email}: ${error?.message ?? error}`);
+    }
+
     return { message: 'If an account exists with this email, a password reset link has been sent.' };
+  }
+
+  /** Site origin for links in transactional emails (no trailing slash). */
+  private frontendUrl(): string {
+    return (this.configService.get<string>('frontendUrl') || 'https://www.myastro360.com').replace(
+      /\/+$/,
+      '',
+    );
   }
 
   async sendOtp(

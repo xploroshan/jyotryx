@@ -616,39 +616,27 @@ function AuthPageContent() {
     setLoading(true); setError(""); setSuccess(""); setLastAction(null);
 
     try {
-      // AWAIT the backend hint BEFORE emailing the reset code. It ensures the
-      // Firebase Auth user exists (accounts created before Firebase was wired
-      // up) — the client send below fails with user-not-found otherwise. It's
-      // best-effort: if the backend is down we still try the send, which works
-      // for anyone already in Firebase. It must run FIRST, not in parallel:
-      // the backend no longer mints its own reset code, but ordering the
-      // create-then-send keeps the single emailed code the authoritative one.
-      await api
-        .post("/auth/forgot-password", { email: resetEmail }, { timeoutMs: 15_000 })
-        .catch(() => {/* best-effort; the client send below is authoritative */});
-
-      // Firebase sends the reset email directly — works even if our backend
-      // is down, as long as the Firebase project is configured. This is the
-      // ONLY place a reset code is minted, so the emailed link stays valid.
-      const { auth, sendPasswordResetEmail } = await loadFirebase();
-      await sendPasswordResetEmail(auth, resetEmail);
+      // The backend owns the whole reset flow now: it mints the single reset
+      // code, builds a link to our /reset-password page, and sends the branded
+      // email via Resend (from noreply@myastro360.com). We no longer call
+      // Firebase's client sendPasswordResetEmail() — that used Firebase's
+      // locked/ugly email template and, run alongside the backend, minted a
+      // second code that invalidated the emailed one ("expired on first
+      // click"). The endpoint always returns a generic success (no account
+      // enumeration), so we show the same confirmation regardless.
+      await api.post("/auth/forgot-password", { email: resetEmail }, { timeoutMs: 20_000 });
       setSuccess(t.auth.errResetLinkSent);
       setTimeout(() => {
         setShowForgotPassword(false);
         setSuccess("");
       }, 3000);
     } catch (err: any) {
-      if (err.code === "auth/user-not-found") {
-        setError(t.auth.errNoAccountFound);
-      } else if (err.code === "auth/invalid-email") {
-        setError(t.auth.errEmailInvalid);
-      } else if (err.code === "auth/too-many-requests") {
-        setError(t.auth.errResetTooManyRequests);
-      } else if (err.code === "auth/network-request-failed") {
+      // Only network/5xx reach here (the API returns 200 for unknown emails).
+      if (err?.isNetwork || err?.isTimeout) {
         setError(t.auth.errNetwork);
         setLastAction(() => handleForgotPassword);
       } else {
-        setError(err.message || t.auth.errResetFailed);
+        setError(err?.message || t.auth.errResetFailed);
       }
     } finally { setLoading(false); }
   };

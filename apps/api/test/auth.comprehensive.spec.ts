@@ -40,6 +40,14 @@ jest.mock('firebase-admin/auth', () => ({
   }),
 }));
 
+// ─── email-provider mock ─────────────────────────────────────────────────────
+// forgotPassword sends the branded reset email via the shared Resend provider.
+// Capture sends so we can assert the link targets OUR reset page with the code.
+const emailSendMock = jest.fn().mockResolvedValue({ providerId: 'res_test' });
+jest.mock('../src/modules/daily-briefing/email-provider', () => ({
+  createEmailProvider: () => ({ kind: 'resend', send: emailSendMock }),
+}));
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function createPrismaMock() {
@@ -1286,23 +1294,35 @@ describe('Auth: forgotPassword', () => {
     getUserByEmailMock.mockReset();
     createUserMock.mockReset();
     generatePasswordResetLinkMock.mockReset();
+    emailSendMock.mockClear();
+    generatePasswordResetLinkMock.mockResolvedValue(
+      'https://jyotron-8a830.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=TESTCODE123&apiKey=x',
+    );
   });
 
-  it('NEVER mints a server-side reset code (that would invalidate the emailed link)', async () => {
-    // Regression: the client mints + emails the single reset code via
-    // sendPasswordResetEmail. If this endpoint also called
-    // generatePasswordResetLink, Firebase would invalidate the emailed code —
-    // the "reset link expired / already used" bug on the first click.
+  it('mints ONE reset code and emails a link to OUR reset page (branded, single code)', async () => {
+    // The client no longer calls sendPasswordResetEmail — the backend mints
+    // the single code here and sends the branded email itself, so the emailed
+    // link stays valid (no second code invalidating it) AND points at our own
+    // /reset-password page instead of the Firebase action handler.
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', name: 'A' });
-    getUserByEmailMock.mockResolvedValue({ uid: 'fb1' }); // already in Firebase
+    getUserByEmailMock.mockResolvedValue({ uid: 'fb1' });
 
     const res = await service.forgotPassword('a@b.com');
 
-    expect(generatePasswordResetLinkMock).not.toHaveBeenCalled();
+    expect(generatePasswordResetLinkMock).toHaveBeenCalledTimes(1);
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
+    const sent = emailSendMock.mock.calls[0][0];
+    expect(sent.to).toBe('a@b.com');
+    // Link targets our page and carries the extracted oobCode, not the
+    // Firebase action-handler host.
+    expect(sent.html).toContain('/reset-password?mode=resetPassword&oobCode=TESTCODE123');
+    expect(sent.html).not.toContain('firebaseapp.com');
+    expect(sent.fromEmail).toBe('noreply@myastro360.com');
     expect(res.message).toMatch(/reset link has been sent/i);
   });
 
-  it('creates the Firebase Auth user on demand (legacy accounts) but still no code', async () => {
+  it('creates the Firebase Auth user on demand (legacy accounts) then sends', async () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u2', email: 'legacy@b.com', name: 'L' });
     getUserByEmailMock.mockRejectedValue({ code: 'auth/user-not-found' });
     createUserMock.mockResolvedValue({ uid: 'fb2' });
@@ -1312,16 +1332,27 @@ describe('Auth: forgotPassword', () => {
     expect(createUserMock).toHaveBeenCalledWith(
       expect.objectContaining({ email: 'legacy@b.com' }),
     );
-    expect(generatePasswordResetLinkMock).not.toHaveBeenCalled();
+    expect(emailSendMock).toHaveBeenCalledTimes(1);
   });
 
-  it('returns the same generic message for an unknown email (no enumeration)', async () => {
+  it('returns the same generic message for an unknown email, and sends nothing', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
 
     const res = await service.forgotPassword('nobody@b.com');
 
     expect(res.message).toMatch(/reset link has been sent/i);
     expect(getUserByEmailMock).not.toHaveBeenCalled();
+    expect(emailSendMock).not.toHaveBeenCalled();
+  });
+
+  it('still returns generic success (no leak) if the email send throws', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u3', email: 'c@b.com', name: 'C' });
+    getUserByEmailMock.mockResolvedValue({ uid: 'fb3' });
+    emailSendMock.mockRejectedValueOnce(new Error('Resend 500: down'));
+
+    const res = await service.forgotPassword('c@b.com');
+
+    expect(res.message).toMatch(/reset link has been sent/i);
   });
 });
 

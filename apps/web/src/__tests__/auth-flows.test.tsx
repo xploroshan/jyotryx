@@ -512,8 +512,10 @@ describe('Auth Flow: Forgot Password', () => {
     resetAllMocks();
   });
 
-  it('should navigate to forgot password view and send reset email', async () => {
-    mockSendPasswordResetEmail.mockResolvedValueOnce(undefined);
+  it('sends the reset request to the backend (which owns the branded email)', async () => {
+    // The client no longer touches Firebase for resets — it just calls the
+    // backend, which mints the code and sends the Resend email.
+    mockApiPost.mockResolvedValueOnce({ message: 'ok' });
 
     render(<AuthPage />);
     switchToEmail();
@@ -530,13 +532,21 @@ describe('Auth Flow: Forgot Password', () => {
     fireEvent.click(screen.getByText('Send Reset Link'));
 
     await waitFor(() => {
-      expect(mockSendPasswordResetEmail).toHaveBeenCalledWith({}, 'reset@test.com');
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/auth/forgot-password',
+        { email: 'reset@test.com' },
+        expect.anything(),
+      );
     });
+    // Firebase's client reset is never called anymore.
+    expect(mockSendPasswordResetEmail).not.toHaveBeenCalled();
     expect(await screen.findByText('Password reset email sent! Check your inbox.')).toBeDefined();
   });
 
-  it('should show error for non-existent email', async () => {
-    mockSendPasswordResetEmail.mockRejectedValueOnce({ code: 'auth/user-not-found' });
+  it('shows the same success for an unknown email (backend is enumeration-safe)', async () => {
+    // The endpoint returns 200 generic success regardless, so the UI must not
+    // reveal whether the address exists.
+    mockApiPost.mockResolvedValueOnce({ message: 'ok' });
 
     render(<AuthPage />);
     switchToEmail();
@@ -545,20 +555,22 @@ describe('Auth Flow: Forgot Password', () => {
     fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'nonexistent@test.com' } });
     fireEvent.click(screen.getByText('Send Reset Link'));
 
-    expect(await screen.findByText('No account found with this email address.')).toBeDefined();
+    expect(await screen.findByText('Password reset email sent! Check your inbox.')).toBeDefined();
   });
 
-  it('should show error for invalid email format', async () => {
-    mockSendPasswordResetEmail.mockRejectedValueOnce({ code: 'auth/invalid-email' });
+  it('shows a network error (with retry) when the backend is unreachable', async () => {
+    mockApiPost.mockRejectedValueOnce({ isNetwork: true });
 
     render(<AuthPage />);
     switchToEmail();
     fireEvent.click(screen.getByText('Forgot password?'));
 
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'not-an-email' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'reset@test.com' } });
     fireEvent.click(screen.getByText('Send Reset Link'));
 
-    expect(await screen.findByText('Please enter a valid email address.')).toBeDefined();
+    expect(
+      await screen.findByText("Can't reach the server. Check your connection and try again."),
+    ).toBeDefined();
   });
 
   it('should show validation error when email is empty', async () => {
@@ -569,7 +581,7 @@ describe('Auth Flow: Forgot Password', () => {
     fireEvent.click(screen.getByText('Send Reset Link'));
 
     expect(await screen.findByText('Please enter your email address')).toBeDefined();
-    expect(mockSendPasswordResetEmail).not.toHaveBeenCalled();
+    expect(mockApiPost).not.toHaveBeenCalled();
   });
 
   it('should navigate back to login from forgot password', () => {
@@ -601,17 +613,17 @@ describe('Auth Flow: Forgot Password', () => {
     expect(emailInput.value).toBe('prefill@test.com');
   });
 
-  it('should show rate limit error on too many reset attempts', async () => {
-    mockSendPasswordResetEmail.mockRejectedValueOnce({ code: 'auth/too-many-requests' });
+  it('surfaces a generic failure when the backend returns an unexpected error', async () => {
+    mockApiPost.mockRejectedValueOnce(new Error('boom'));
 
     render(<AuthPage />);
     switchToEmail();
     fireEvent.click(screen.getByText('Forgot password?'));
 
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'spam@test.com' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'reset@test.com' } });
     fireEvent.click(screen.getByText('Send Reset Link'));
 
-    expect(await screen.findByText('Too many requests. Please try again later.')).toBeDefined();
+    expect(await screen.findByText('boom')).toBeDefined();
   });
 });
 
