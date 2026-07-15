@@ -164,6 +164,9 @@ describe('AuthService — Redis-backed OTP & lockout (Phase 0)', () => {
           credits: 10,
           // bcrypt('right-password') — static hash so we don't re-hash every run.
           passwordHash: await require('bcrypt').hash('right-password', 10),
+          // These lockout tests exercise the successful-login path, which now
+          // requires a verified email (blocking email verification).
+          emailVerified: true,
         },
       });
     });
