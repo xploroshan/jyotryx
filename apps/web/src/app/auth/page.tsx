@@ -224,6 +224,13 @@ function AuthPageContent() {
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  // Mirror the active tab into a ref so the shared post-auth handlers (which
+  // are useCallbacks that don't re-close over `tab`) can tell a signup from a
+  // login for the "you already have an account" notice.
+  const tabRef = useRef(tab);
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
   // Once the user has typed 6 digits we auto-submit exactly once. The ref
   // prevents re-triggering the verify call if the user edits and retypes
   // the last digit, or if React re-runs the effect for other reasons.
@@ -328,10 +335,16 @@ function AuthPageContent() {
     // The bonus has been claimed (or rejected) server-side. Either way,
     // don't carry the code into a subsequent session.
     if (referralCode) clearStoredReferral();
+    // "You already have an account" — when a signup actually logged into an
+    // existing account (phone/Google re-signup), briefly surface the notice
+    // before navigating so it isn't a silent login.
+    const returning = tabRef.current === "signup" && res.isNewUser === false;
+    if (returning) setSuccess(t.auth.alreadyHaveAccount);
     // Profile onboarding needs to open with `?complete=1` so the guided
     // two-step flow kicks in, not the "edit profile" view.
-    router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
-  }, [setAuth, router, applyUserLanguage, referralCode]);
+    const dest = res.user?.profileComplete ? "/my-day" : "/profile?complete=1";
+    setTimeout(() => router.push(dest), returning ? 1800 : 0);
+  }, [setAuth, router, applyUserLanguage, referralCode, t]);
 
   const setupRecaptcha = useCallback(async () => {
     // Tear down any previous verifier instance.
@@ -486,7 +499,11 @@ function AuthPageContent() {
         }
         applyUserLanguage(res.user?.preferredLanguage);
         if (tab === "signup" && referralCode) clearStoredReferral();
-        router.push(res.user?.profileComplete ? "/my-day" : "/profile?complete=1");
+        // Notice when a phone re-signup logged into an existing account.
+        const returning = tab === "signup" && res.isNewUser === false;
+        if (returning) setSuccess(t.auth.alreadyHaveAccount);
+        const dest = res.user?.profileComplete ? "/my-day" : "/profile?complete=1";
+        setTimeout(() => router.push(dest), returning ? 1800 : 0);
         return;
       }
 

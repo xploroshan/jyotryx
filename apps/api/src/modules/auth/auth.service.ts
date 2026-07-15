@@ -88,6 +88,10 @@ export interface AuthResponse {
     primaryTradition?: string | null;
   };
   tokens: AuthTokens;
+  /** True when this call CREATED the account, false when it logged into an
+   *  existing one. Set by the phone-OTP and Firebase paths so the client can
+   *  show "welcome back" instead of silently logging in on a re-signup. */
+  isNewUser?: boolean;
 }
 
 function extractPlaceName(place: any): string | null {
@@ -263,11 +267,17 @@ export class AuthService {
     return { requiresEmailVerification: true, email: user.email };
   }
 
-  /** Generate a one-time verification token, stash it in Redis (24h), and send
-   *  the branded "verify your email" email via Resend. */
+  /** Generate a one-time signup-verification token, stash it in Redis (24h),
+   *  and send the branded "verify your email" email via Resend. */
   private async sendVerificationEmail(userId: string, email: string, name?: string): Promise<void> {
     const token = crypto.randomBytes(32).toString('hex');
     await this.redis.set(`emailverify:${token}`, userId, 'EX', 24 * 60 * 60);
+    await this.sendVerificationEmailTo(email, token, name);
+  }
+
+  /** Send the branded verification email to `email` for an already-minted
+   *  token (used by both signup verification and add/change-email). */
+  private async sendVerificationEmailTo(email: string, token: string, name?: string): Promise<void> {
     const appUrl = this.frontendUrl();
     const verifyUrl = buildVerifyUrl(appUrl, token);
     const { subject, html, text } = renderVerificationEmail({ verifyUrl, appUrl, name });
@@ -288,25 +298,90 @@ export class AuthService {
   }
 
   /** Consume a verification token, mark the account verified, and log the user
-   *  in (issue tokens). Idempotent-ish: a spent/expired token 400s. */
+   *  in (issue tokens). Handles BOTH signup verification (`emailverify:*`) and
+   *  add/change-email verification (`addemail:*`, which also swaps the email in).
+   *  Idempotent-ish: a spent/expired token 400s. */
   async verifyEmail(token: string): Promise<AuthResponse> {
-    const userId = await this.redis.get(`emailverify:${token}`);
-    if (!userId) {
-      throw new BadRequestException('This verification link is invalid or has expired.');
+    // 1) Signup verification — just flip the flag.
+    const signupUserId = await this.redis.get(`emailverify:${token}`);
+    if (signupUserId) {
+      await this.redis.del(`emailverify:${token}`);
+      let user: PrismaUser & { preferredLanguage?: string };
+      try {
+        user = (await this.prisma.user.update({
+          where: { id: signupUserId },
+          data: { emailVerified: true },
+        })) as any;
+      } catch {
+        throw new BadRequestException('This verification link is no longer valid.');
+      }
+      this.logger.log(`Email verified: ${user.email}`);
+      const tokens = await this.generateTokens(user.id, user.email, user.name);
+      return { user: toAuthUser(user), tokens };
     }
-    await this.redis.del(`emailverify:${token}`);
-    let user: PrismaUser & { preferredLanguage?: string };
-    try {
-      user = (await this.prisma.user.update({
-        where: { id: userId },
-        data: { emailVerified: true },
-      })) as any;
-    } catch {
-      throw new BadRequestException('This verification link is no longer valid.');
+
+    // 2) Add/change-email verification — swap the address in, then verify.
+    const addRaw = await this.redis.get(`addemail:${token}`);
+    if (addRaw) {
+      const { userId, email } = JSON.parse(addRaw) as { userId: string; email: string };
+      await this.redis.del(`addemail:${token}`);
+      // Re-check the collision at consume time: the email could have been
+      // registered by someone else between request and click.
+      const clash = await this.prisma.user.findUnique({ where: { email } });
+      if (clash && clash.id !== userId) {
+        throw new ConflictException(
+          'That email is now registered to another account. Please use a different one.',
+        );
+      }
+      let user: PrismaUser & { preferredLanguage?: string };
+      try {
+        user = (await this.prisma.user.update({
+          where: { id: userId },
+          data: { email, emailVerified: true },
+        })) as any;
+      } catch {
+        throw new BadRequestException('This verification link is no longer valid.');
+      }
+      this.logger.log(`Login email added/verified for user ${userId}: ${email}`);
+      const tokens = await this.generateTokens(user.id, user.email, user.name);
+      return { user: toAuthUser(user), tokens };
     }
-    this.logger.log(`Email verified: ${user.email}`);
-    const tokens = await this.generateTokens(user.id, user.email, user.name);
-    return { user: toAuthUser(user), tokens };
+
+    throw new BadRequestException('This verification link is invalid or has expired.');
+  }
+
+  /**
+   * Attach a real login email to an existing account (typically a phone-only
+   * user whose email is the `@phone.myastro360.com` placeholder), verified
+   * out-of-band. Block-on-collision: if the email already belongs to ANOTHER
+   * account we reject rather than merge. The email isn't applied until the
+   * user clicks the verification link (see verifyEmail's addemail branch).
+   */
+  async addEmail(userId: string, email: string): Promise<{ message: string }> {
+    const normalized = email.trim().toLowerCase();
+    const me = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!me) throw new UnauthorizedException('User not found');
+    if (me.email === normalized && me.emailVerified) {
+      throw new BadRequestException('That email is already on your account.');
+    }
+    // Block-on-collision.
+    const existing = await this.prisma.user.findUnique({ where: { email: normalized } });
+    if (existing && existing.id !== userId) {
+      throw new ConflictException(
+        'An account with this email already exists. Please log in with it instead.',
+      );
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    await this.redis.set(
+      `addemail:${token}`,
+      JSON.stringify({ userId, email: normalized }),
+      'EX',
+      24 * 60 * 60,
+    );
+    await this.sendVerificationEmailTo(normalized, token, me.name);
+    this.logger.log(`Add-email verification sent for user ${userId} -> ${normalized}`);
+    return { message: 'Verification link sent. Check that inbox to confirm your email.' };
   }
 
   /** Re-send the verification email. Always returns a generic message so it
@@ -608,6 +683,7 @@ export class AuthService {
       where: { phone: { in: phoneMatchCandidates(phone) } },
       orderBy: { createdAt: 'asc' },
     });
+    const isNewUser = !user;
 
     if (!user) {
       const signupName = dto.name?.trim();
@@ -636,6 +712,7 @@ export class AuthService {
     return {
       user: toAuthUser(user),
       tokens,
+      isNewUser,
     };
   }
 
@@ -855,6 +932,7 @@ export class AuthService {
       },
       orderBy: { createdAt: 'asc' },
     });
+    const isNewUser = !user;
 
     if (user) {
       // Update provider info if needed
@@ -908,6 +986,7 @@ export class AuthService {
     return {
       user: toAuthUser(user),
       tokens,
+      isNewUser,
     };
   }
 

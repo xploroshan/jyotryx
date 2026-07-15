@@ -23,6 +23,7 @@ import {
   FirebaseAuthDto,
   ForgotPasswordDto,
   VerifyEmailDto,
+  AddEmailDto,
 } from './dto';
 import { Public } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -196,6 +197,20 @@ export class AuthController {
     @Request() req: any,
   ): Promise<{ message: string }> {
     return this.authService.setPassword(req.user.sub, dto.password);
+  }
+
+  @Post('add-email')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Attach + verify a real login email (phone-only accounts)' })
+  @ApiResponse({ status: 200, description: 'Verification link sent to the new email' })
+  @ApiResponse({ status: 409, description: 'Email already registered to another account' })
+  async addEmail(
+    @Body() dto: AddEmailDto,
+    @Request() req: any,
+  ): Promise<{ message: string }> {
+    return this.authService.addEmail(req.user.sub, dto.email);
   }
 
   @Get('status')
