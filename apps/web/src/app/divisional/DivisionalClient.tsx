@@ -107,10 +107,11 @@ export default function DivisionalPage() {
               onChange={(name, coords) => setForm((f) => ({
                 ...f,
                 placeOfBirth: name,
-                // Picking a place fills the lat/lng fields; they stay editable as
-                // an advanced override.
-                latitude: coords ? String(coords.lat) : f.latitude,
-                longitude: coords ? String(coords.lng) : f.longitude,
+                // Picking a place fills the lat/lng fields; hand-editing the name
+                // clears them so we never submit stale coordinates under a new
+                // place name (they stay manually editable as an advanced override).
+                latitude: coords ? String(coords.lat) : "",
+                longitude: coords ? String(coords.lng) : "",
               }))}
               placeholder={t.form.placePlaceholder}
             />

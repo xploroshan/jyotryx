@@ -558,11 +558,12 @@ export default function ProfilePage() {
                       onChange={(name, coords) => { setPob(name); setPobCoords(coords); }}
                       placeholder={t.profile.pobPlaceholderEg}
                       aria-invalid={showBirthFieldErrors && !pob.trim()}
+                      aria-describedby="profile-pob-hint"
                     />
                     {showBirthFieldErrors && !pob.trim() && (
                       <p role="alert" className="text-xs text-red-600 mt-1">{t.profile.missingPob}</p>
                     )}
-                    <p className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
+                    <p id="profile-pob-hint" className="mt-1 text-[11px] text-[rgba(12,8,5,0.72)]">
                       {t.form.placePickHint}
                     </p>
                   </div>

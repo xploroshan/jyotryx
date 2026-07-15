@@ -36,6 +36,8 @@ interface PlaceAutocompleteProps {
   required?: boolean;
   disabled?: boolean;
   "aria-invalid"?: boolean;
+  /** Id of an external hint/description element, wired to the input for a11y. */
+  "aria-describedby"?: string;
   className?: string;
   /** Extra hint under the field (e.g. the existing "used for lat/lng" copy). */
   hint?: React.ReactNode;
@@ -59,6 +61,7 @@ export function PlaceAutocomplete({
   required,
   disabled,
   "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   className,
   hint,
 }: PlaceAutocompleteProps) {
@@ -98,6 +101,10 @@ export function PlaceAutocomplete({
       return;
     }
     setLoading(true);
+    // Open immediately so the "Searching…" row is visible during the
+    // debounce + network round-trip (existing suggestions, if any, stay put to
+    // avoid flicker; the fresh set replaces them when the query resolves).
+    setOpen(true);
     const seq = ++querySeq.current;
     const handle = setTimeout(async () => {
       try {
@@ -176,10 +183,15 @@ export function PlaceAutocomplete({
           required={required}
           disabled={disabled}
           aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
           value={value}
           placeholder={placeholder}
           onChange={(e) => {
             userEdited.current = true;
+            // A keystroke is real user intent — clear any leftover suppress flag
+            // (set by select() but never consumed when the picked name equalled
+            // the typed text) so this keystroke's search isn't wrongly skipped.
+            suppressSearch.current = false;
             onChange(e.target.value, null);
           }}
           onKeyDown={onKeyDown}

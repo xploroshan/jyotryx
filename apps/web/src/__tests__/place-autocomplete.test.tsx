@@ -100,4 +100,30 @@ describe('PlaceAutocomplete', () => {
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'zzzznotaplace' } });
     expect(await screen.findByText(en.form.placeNoResults)).toBeDefined();
   });
+
+  it('shows the "searching" state during the in-flight query', async () => {
+    let resolveFetch: (v: any) => void = () => {};
+    mockApiGet.mockReturnValue(new Promise((res) => { resolveFetch = res; }));
+    render(<Harness />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'mumbai' } });
+    // The dropdown opens with the searching row before the request resolves.
+    expect(await screen.findByText(en.form.placeSearching)).toBeDefined();
+    resolveFetch([MUMBAI]);
+    expect(await screen.findByText('Mumbai, Maharashtra, India')).toBeDefined();
+  });
+
+  it('still searches the next keystroke after picking a suggestion whose name equals the typed text', async () => {
+    // Regression: select() sets a suppress flag consumed by the value-change
+    // effect; if the picked name equals the current text the effect never runs,
+    // so a later keystroke must itself clear the flag and search.
+    mockApiGet.mockResolvedValue([MUMBAI]);
+    render(<Harness />);
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'Mumbai' } });
+    fireEvent.mouseDown(await screen.findByText('Mumbai, Maharashtra, India'));
+    mockApiGet.mockClear();
+    mockApiGet.mockResolvedValue([MUMBAI]);
+    fireEvent.change(input, { target: { value: 'Mumbai City' } });
+    await waitFor(() => expect(mockApiGet).toHaveBeenCalledWith(expect.stringContaining('Mumbai%20City')));
+  });
 });

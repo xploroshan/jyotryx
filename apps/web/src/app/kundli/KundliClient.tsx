@@ -307,6 +307,7 @@ export default function KundliPage() {
                     coords={placeCoords}
                     onChange={(name, coords) => { setForm((f) => ({ ...f, place: name })); setPlaceCoords(coords); }}
                     placeholder={t.kundli.searchCity}
+                    aria-describedby="kundli-pob-hint"
                   />
                   <p id="kundli-pob-hint" className="text-xs text-[rgba(12,8,5,0.72)] mt-1">{t.kundli.birthCityNote}</p>
                 </div>
