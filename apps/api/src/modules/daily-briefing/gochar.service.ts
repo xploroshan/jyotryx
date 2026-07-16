@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
+import { GeoService } from '../geo/geo.service';
 import {
   ALL_SIGNS,
   DayQuality,
@@ -74,7 +75,12 @@ const PANCHANG_REF_LNG = 75.7885;
 export class GocharService {
   private readonly logger = new Logger(GocharService.name);
 
-  constructor(private readonly ephemerisService: EphemerisService) {}
+  constructor(
+    private readonly ephemerisService: EphemerisService,
+    // Optional so the unit suite (which builds this service with only the
+    // ephemeris) still works — the geocode fallback simply stays off.
+    @Optional() private readonly geoService?: GeoService,
+  ) {}
 
   private parseLatLng(placeOfBirth: unknown): { lat: number; lng: number } | null {
     if (!placeOfBirth || typeof placeOfBirth !== 'object') return null;
@@ -85,13 +91,44 @@ export class GocharService {
     return { lat, lng };
   }
 
+  /** Extract the place NAME from either a `{ name }` object or a bare string. */
+  private placeName(placeOfBirth: unknown): string | null {
+    if (typeof placeOfBirth === 'string') return placeOfBirth.trim() || null;
+    if (placeOfBirth && typeof placeOfBirth === 'object') {
+      const n = (placeOfBirth as { name?: unknown }).name;
+      if (typeof n === 'string' && n.trim()) return n.trim();
+    }
+    return null;
+  }
+
+  /**
+   * Resolve birth coordinates: use stored lat/lng when present, else geocode
+   * the stored place NAME via the shared geo proxy (top hit). This lets a user
+   * who only ever typed a city name (the common case — coordinates are only
+   * captured when a place is picked from the autocomplete) still get a
+   * chart-personalized reading, instead of being stuck on the shared almanac.
+   */
+  private async resolveCoords(placeOfBirth: unknown): Promise<{ lat: number; lng: number } | null> {
+    const stored = this.parseLatLng(placeOfBirth);
+    if (stored) return stored;
+    const name = this.placeName(placeOfBirth);
+    if (!name || !this.geoService) return null;
+    try {
+      const hits = await this.geoService.search(name, 1);
+      if (hits[0]) return { lat: hits[0].lat, lng: hits[0].lng };
+    } catch (err) {
+      this.logger.warn(`Geocode of "${name}" failed: ${(err as Error)?.message ?? err}`);
+    }
+    return null;
+  }
+
   /**
    * Compute the per-user Gochar personalization, or null when the user lacks
    * the birth data needed (date / time / geocoded place) to cast a chart.
    */
   async computePersonalization(user: GocharUserInput, today: Date): Promise<GocharPersonalization | null> {
     if (!user.dateOfBirth || !user.timeOfBirth) return null;
-    const coords = this.parseLatLng(user.placeOfBirth);
+    const coords = await this.resolveCoords(user.placeOfBirth);
     if (!coords) return null;
 
     try {

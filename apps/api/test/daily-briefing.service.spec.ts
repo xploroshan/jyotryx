@@ -8,6 +8,7 @@ import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { EphemerisService } from '../src/ephemeris/ephemeris.service';
+import { GeoService } from '../src/modules/geo/geo.service';
 import { mockPrismaService, mockOpenAIService, mockKnowledgeService, mockKbService, mockCacheService, mockUser } from './helpers/mocks';
 
 // A ChartResult-like object from a map of planet -> sidereal longitude.
@@ -232,6 +233,7 @@ describe('DailyBriefingService — My Day personalization', () => {
   let service: DailyBriefingService;
   let prisma: any;
   let ephemeris: { computeChart: jest.Mock; computeCurrentChart: jest.Mock };
+  let geo: { search: jest.Mock };
 
   // Shared transit sky. tMoon=0, tSaturn=150 was chosen so an Aries natal Moon
   // resolves to its lord (Mars) while a Cancer natal Moon resolves to the Moon —
@@ -254,6 +256,9 @@ describe('DailyBriefingService — My Day personalization', () => {
       computeChart: jest.fn().mockResolvedValue(CANCER_NATAL),
       computeCurrentChart: jest.fn().mockResolvedValue(TRANSIT),
     };
+    // Geocoder returns nothing by default — the coord-bearing users below never
+    // hit it; the name-only test overrides it with a hit.
+    geo = { search: jest.fn().mockResolvedValue([]) };
     prisma.user.findUnique.mockResolvedValue(CHARTABLE_USER);
 
     const module: TestingModule = await Test.createTestingModule({
@@ -265,11 +270,36 @@ describe('DailyBriefingService — My Day personalization', () => {
         { provide: KbService, useValue: mockKbService() },
         { provide: MemoryCacheService, useValue: mockCacheService() },
         { provide: EphemerisService, useValue: ephemeris },
+        { provide: GeoService, useValue: geo },
         GocharService,
       ],
     }).compile();
 
     service = module.get<DailyBriefingService>(DailyBriefingService);
+  });
+
+  it('personalizes a user whose birthplace is only a name (geocoded server-side)', async () => {
+    // The reported bug: a user with a free-text birthplace ("Sakleshpur", no
+    // coordinates) was stuck on the shared almanac with the "complete birth
+    // details" prompt forever. The server now geocodes the name so the reading
+    // personalizes and the prompt disappears — no re-entry required.
+    prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, placeOfBirth: 'Sakleshpur' });
+    geo.search.mockResolvedValue([
+      { name: 'Sakleshpur', label: 'Sakleshpur, Karnataka, India', lat: 12.94, lng: 75.78, country: 'India', state: 'Karnataka', countryCode: 'IN' },
+    ]);
+    const r = await service.getDailyBriefing('test-uuid');
+    expect(geo.search).toHaveBeenCalledWith('Sakleshpur', 1);
+    expect(r.personalized).toBe(true);
+    expect(r.personalizationReason).toBe('ok');
+    expect(r.moonSign).toBe('Cancer');
+  });
+
+  it('still prompts (missing_place) when the name cannot be geocoded', async () => {
+    prisma.user.findUnique.mockResolvedValue({ ...CHARTABLE_USER, placeOfBirth: 'Nowhereville' });
+    geo.search.mockResolvedValue([]);
+    const r = await service.getDailyBriefing('test-uuid');
+    expect(r.personalized).toBe(false);
+    expect(r.personalizationReason).toBe('missing_place');
   });
 
   it('lights up the chart layer for a user with complete birth data', async () => {

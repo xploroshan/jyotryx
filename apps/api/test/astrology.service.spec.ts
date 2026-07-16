@@ -9,6 +9,7 @@ import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { EphemerisService } from '../src/ephemeris/ephemeris.service';
+import { GeoService } from '../src/modules/geo/geo.service';
 import { mockKnowledgeService, mockKbService, mockEphemerisService } from './helpers/mocks';
 
 describe('AstrologyService', () => {
@@ -17,6 +18,7 @@ describe('AstrologyService', () => {
   let userService: any;
   let openaiService: any;
   let cacheService: any;
+  let geoService: { search: jest.Mock };
 
   const mockBirthDetails = {
     dateOfBirth: '1990-05-15',
@@ -84,10 +86,13 @@ describe('AstrologyService', () => {
       set: jest.fn(),
     };
 
+    geoService = { search: jest.fn().mockResolvedValue([]) };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AstrologyService,
         { provide: PrismaService, useValue: prisma },
+        { provide: GeoService, useValue: geoService },
         {
           provide: ConfigService,
           useValue: {
@@ -461,6 +466,18 @@ describe('AstrologyService', () => {
       });
       expect(res.pillars.year.element).toBeTruthy();
       expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('geocodes a name-only stored birthplace instead of the Delhi fallback', async () => {
+      // A user who only ever typed a city name has no stored lat/lng; the
+      // service geocodes it so the chart is cast for the real place.
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, placeOfBirth: 'Sakleshpur' });
+      geoService.search.mockResolvedValue([
+        { name: 'Sakleshpur', label: 'Sakleshpur, Karnataka, India', lat: 12.94, lng: 75.78, country: 'India', state: 'Karnataka', countryCode: 'IN' },
+      ]);
+      const res = await service.getBazi('test-uuid', { dateOfBirth: '1990-05-15', timeOfBirth: '14:30' });
+      expect(geoService.search).toHaveBeenCalledWith('Sakleshpur', 1);
+      expect(res.pillars.year.element).toBeTruthy();
     });
   });
 
