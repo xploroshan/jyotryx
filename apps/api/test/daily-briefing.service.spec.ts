@@ -292,6 +292,9 @@ describe('DailyBriefingService — My Day personalization', () => {
     expect(r.personalized).toBe(true);
     expect(r.personalizationReason).toBe('ok');
     expect(r.moonSign).toBe('Cancer');
+    // The name-derived geocode stays transient — it is NOT written back to the
+    // profile as if it were a user-confirmed birthplace.
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('still prompts (missing_place) when the name cannot be geocoded', async () => {

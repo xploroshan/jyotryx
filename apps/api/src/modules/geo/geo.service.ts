@@ -1,12 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ProxyAgent } from 'undici';
-import { MemoryCacheService } from '../../common/cache.service';
 
 /** A single geocoding suggestion returned to the birthplace autocomplete. */
 export interface GeoSuggestion {
   /** The primary place name (e.g. "Mumbai"). */
   name: string;
-  /** A disambiguating label (e.g. "Mumbai, Maharashtra, India"). */
+  /** A disambiguating label (e.g. "Mumbai, India"). */
   label: string;
   lat: number;
   lng: number;
@@ -15,173 +13,175 @@ export interface GeoSuggestion {
   countryCode: string | null;
 }
 
-// Photon (Komoot) — a free, key-less OSM geocoder built for type-ahead. We
-// proxy it server-side so the browser never talks to it directly: that lets us
-// cache aggressively (birthplaces repeat heavily across users), send a proper
-// identifying User-Agent, and keep the upstream swappable without a client
-// deploy.
-const PHOTON_URL = 'https://photon.komoot.io/api/';
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days — place coordinates don't move
-const REQUEST_TIMEOUT_MS = 4000;
+// We geocode entirely OFFLINE from a bundled dataset (`all-the-cities`:
+// GeoNames populated places > 1000 people, ~135k worldwide). An earlier version
+// proxied the Photon web service, but the deployed backend can't reach it
+// (egress policy), so every lookup silently returned nothing. A bundled dataset
+// removes that whole class of failure: no network, no rate limits, deterministic
+// results, and — because each city carries its population — the most prominent
+// match ranks first (so "Delhi" resolves to Delhi, India, not a US hamlet).
 const MIN_QUERY_LEN = 2;
 const MAX_LIMIT = 8;
 
-// OSM feature classes that make sense as a "place of birth". Photon returns
-// streets, shops, POIs etc. too; we keep the answer to inhabited places and
-// administrative areas so the list reads like a city picker, not a map search.
-const PLACE_OSM_KEYS = new Set(['place', 'boundary']);
-const PLACE_OSM_VALUES = new Set([
-  'city', 'town', 'village', 'hamlet', 'suburb', 'municipality',
-  'county', 'district', 'state', 'region', 'province',
-  'administrative', 'locality',
-]);
-
-interface PhotonFeature {
-  geometry?: { coordinates?: [number, number] };
-  properties?: {
-    name?: string;
-    osm_key?: string;
-    osm_value?: string;
-    city?: string;
-    county?: string;
-    state?: string;
-    country?: string;
-    countrycode?: string;
-  };
+/**
+ * Normalise for matching: strip diacritics and lowercase, so an ASCII query
+ * ("Zurich", "Sao Paulo", "Bogota") matches the accented dataset name
+ * ("Zürich", "São Paulo", "Bogotá"). Applied symmetrically to the index and
+ * the query. Without this, accented cities silently return nothing — or worse,
+ * a tiny same-spelled homonym outranks the real city because the real one was
+ * filtered out.
+ */
+function fold(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
+
+interface CityRecord {
+  name: string;
+  nameLower: string;
+  country: string; // ISO-3166 alpha-2
+  lat: number;
+  lng: number;
+  population: number;
+}
+
+interface RawCity {
+  name: string;
+  country: string;
+  population: number;
+  loc: { coordinates: [number, number] }; // [lng, lat]
+}
+
+// Common historical/anglicised names GeoNames stores only under the modern
+// spelling. Without these, a user typing "Bangalore" or "Bombay" gets nothing.
+// Each clones the modern city's coordinates under the old name.
+const CITY_ALIASES: Array<{ name: string; lat: number; lng: number; country: string; population: number }> = [
+  { name: 'Bangalore', lat: 12.9719, lng: 77.5937, country: 'IN', population: 8443675 },
+  { name: 'Bombay', lat: 19.0760, lng: 72.8777, country: 'IN', population: 12691836 },
+  { name: 'Calcutta', lat: 22.5726, lng: 88.3639, country: 'IN', population: 4631392 },
+  { name: 'Madras', lat: 13.0827, lng: 80.2707, country: 'IN', population: 6727000 },
+  { name: 'Poona', lat: 18.5204, lng: 73.8567, country: 'IN', population: 2935744 },
+  { name: 'Trivandrum', lat: 8.5241, lng: 76.9366, country: 'IN', population: 743691 },
+  { name: 'Cochin', lat: 9.9312, lng: 76.2673, country: 'IN', population: 596473 },
+  { name: 'Mysore', lat: 12.2958, lng: 76.6394, country: 'IN', population: 887446 },
+  { name: 'Mangalore', lat: 12.9141, lng: 74.8560, country: 'IN', population: 484785 },
+  { name: 'Baroda', lat: 22.3072, lng: 73.1812, country: 'IN', population: 1666703 },
+  { name: 'Gurgaon', lat: 28.4595, lng: 77.0266, country: 'IN', population: 876824 },
+  { name: 'Pondicherry', lat: 11.9416, lng: 79.8083, country: 'IN', population: 244377 },
+  { name: 'Vizag', lat: 17.6868, lng: 83.2185, country: 'IN', population: 2035922 },
+  { name: 'Gauhati', lat: 26.1445, lng: 91.7362, country: 'IN', population: 957352 },
+];
 
 @Injectable()
 export class GeoService {
   private readonly logger = new Logger(GeoService.name);
-  // Native fetch (undici) does NOT honour HTTPS_PROXY on its own. In a
-  // locked-down egress environment where all outbound HTTPS must traverse a
-  // proxy, a direct call to Photon would silently fail (→ empty autocomplete).
-  // Build a ProxyAgent dispatcher once when a proxy is configured; otherwise
-  // fetch goes direct. Computed lazily so tests that mock fetch are unaffected.
-  private readonly proxyDispatcher = (() => {
-    const proxy =
-      process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy;
-    if (!proxy) return undefined;
-    try {
-      return new ProxyAgent(proxy);
-    } catch {
-      return undefined;
-    }
-  })();
+  // Sorted-by-name index, built lazily on first search (loading + sorting 135k
+  // rows costs a few hundred ms once, so we don't pay it at boot).
+  private index: CityRecord[] | null = null;
+  private readonly regionNames = this.buildRegionNames();
 
-  constructor(private readonly cache: MemoryCacheService) {}
+  private buildRegionNames(): Intl.DisplayNames | null {
+    try {
+      return new Intl.DisplayNames(['en'], { type: 'region' });
+    } catch {
+      return null;
+    }
+  }
+
+  private buildIndex(): CityRecord[] {
+    if (this.index) return this.index;
+    const recs: CityRecord[] = [];
+    try {
+      // Required lazily so module load stays light and test runs that never
+      // geocode don't pay for it.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const cities = require('all-the-cities') as RawCity[];
+      for (const c of cities) {
+        const coords = c.loc?.coordinates;
+        if (!coords || coords.length < 2) continue;
+        recs.push({
+          name: c.name,
+          nameLower: fold(c.name),
+          country: c.country,
+          lat: coords[1],
+          lng: coords[0],
+          population: c.population || 0,
+        });
+      }
+    } catch (err) {
+      this.logger.error(`Failed to load city dataset: ${(err as Error)?.message ?? err}`);
+    }
+    for (const a of CITY_ALIASES) {
+      recs.push({ name: a.name, nameLower: fold(a.name), country: a.country, lat: a.lat, lng: a.lng, population: a.population });
+    }
+    recs.sort((a, b) => (a.nameLower < b.nameLower ? -1 : a.nameLower > b.nameLower ? 1 : 0));
+    this.index = recs;
+    return recs;
+  }
 
   /**
-   * Type-ahead geocoding for a birthplace. Returns [] (never throws) for a too-
-   * short query or any upstream failure, so the autocomplete degrades to a
-   * plain text field rather than erroring.
+   * Type-ahead / geocoding for a birthplace. Prefix-matches the query against
+   * the bundled city index and returns the most-populous matches first. Returns
+   * [] (never throws) for a too-short query or any internal error.
    */
-  async search(query: string, limit = 6, lang = 'en'): Promise<GeoSuggestion[]> {
-    const q = (query ?? '').trim();
+  async search(query: string, limit = 6, _lang = 'en'): Promise<GeoSuggestion[]> {
+    const q = fold((query ?? '').trim());
     if (q.length < MIN_QUERY_LEN) return [];
     const cappedLimit = Math.min(Math.max(1, Math.floor(limit) || 6), MAX_LIMIT);
-    const safeLang = /^[a-z]{2}$/.test(lang) ? lang : 'en';
 
-    const cacheKey = `geo:search:v1:${safeLang}:${cappedLimit}:${q.toLowerCase()}`;
-    // Cache reads/writes are best-effort: a Redis outage must degrade to a live
-    // (or empty) lookup, never surface as a 500 on the autocomplete. Hence each
-    // cache call is guarded on its own rather than trusting Redis to be up.
     try {
-      const cached = await this.cache.get<GeoSuggestion[]>(cacheKey);
-      if (cached) return cached;
-    } catch (err) {
-      this.logger.warn(`Geo cache read failed for "${q}": ${(err as Error)?.message ?? err}`);
-    }
+      const idx = this.buildIndex();
+      // Binary-search the first entry whose name >= q, then walk the prefix run.
+      let lo = 0;
+      let hi = idx.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if (idx[mid].nameLower < q) lo = mid + 1;
+        else hi = mid;
+      }
+      const matches: CityRecord[] = [];
+      for (let i = lo; i < idx.length && idx[i].nameLower.startsWith(q); i++) {
+        matches.push(idx[i]);
+      }
+      // Most prominent first so an ambiguous name resolves to the city the user
+      // most likely means.
+      matches.sort((a, b) => b.population - a.population);
 
-    let results: GeoSuggestion[] = [];
-    try {
-      results = await this.fetchPhoton(q, cappedLimit, safeLang);
+      const out: GeoSuggestion[] = [];
+      const seen = new Set<string>();
+      for (const m of matches) {
+        const key = `${m.nameLower}|${m.country}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({
+          name: m.name,
+          label: this.buildLabel(m),
+          lat: m.lat,
+          lng: m.lng,
+          country: this.countryName(m.country),
+          state: null,
+          countryCode: m.country || null,
+        });
+        if (out.length >= cappedLimit) break;
+      }
+      return out;
     } catch (err) {
       this.logger.warn(`Geo search failed for "${q}": ${(err as Error)?.message ?? err}`);
       return [];
     }
-    // Cache even an empty result — a typo that yields nothing shouldn't hammer
-    // the upstream on every keystroke repeat.
+  }
+
+  private countryName(cc: string): string | null {
+    if (!cc) return null;
     try {
-      await this.cache.set(cacheKey, results, CACHE_TTL_MS);
-    } catch (err) {
-      this.logger.warn(`Geo cache write failed for "${q}": ${(err as Error)?.message ?? err}`);
-    }
-    return results;
-  }
-
-  private async fetchPhoton(q: string, limit: number, lang: string): Promise<GeoSuggestion[]> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try {
-      // Photon caps at the requested limit; over-fetch a little because we drop
-      // non-place features below, then trim back to `limit`.
-      const url = `${PHOTON_URL}?q=${encodeURIComponent(q)}&limit=${Math.min(limit * 3, 20)}&lang=${lang}`;
-      const res = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          // Photon/OSM etiquette: identify the app so the free service can
-          // reach us if we misbehave.
-          'User-Agent': 'MyAstro360/1.0 (birthplace autocomplete; +https://www.myastro360.com)',
-          Accept: 'application/json',
-        },
-        // `dispatcher` is an undici extension not present in the DOM fetch types.
-        ...(this.proxyDispatcher ? ({ dispatcher: this.proxyDispatcher } as Record<string, unknown>) : {}),
-      });
-      if (!res.ok) throw new Error(`upstream ${res.status}`);
-      const body = (await res.json()) as { features?: PhotonFeature[] };
-      return this.normalize(body.features ?? [], limit);
-    } finally {
-      clearTimeout(timer);
+      return this.regionNames?.of(cc) ?? cc;
+    } catch {
+      return cc;
     }
   }
 
-  private normalize(features: PhotonFeature[], limit: number): GeoSuggestion[] {
-    const out: GeoSuggestion[] = [];
-    const seen = new Set<string>();
-    for (const f of features) {
-      const p = f.properties ?? {};
-      const coords = f.geometry?.coordinates;
-      const name = p.name?.trim();
-      if (!name || !Array.isArray(coords) || coords.length < 2) continue;
-
-      // Keep the answer to inhabited/administrative places.
-      const isPlace =
-        (p.osm_key && PLACE_OSM_KEYS.has(p.osm_key)) ||
-        (p.osm_value && PLACE_OSM_VALUES.has(p.osm_value));
-      if (!isPlace) continue;
-
-      const lng = Number(coords[0]);
-      const lat = Number(coords[1]);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-
-      // Dedupe near-identical hits (same name + coarse coords) that Photon can
-      // return for a place's several OSM records.
-      const key = `${name.toLowerCase()}|${lat.toFixed(2)}|${lng.toFixed(2)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-
-      out.push({
-        name,
-        label: this.buildLabel(name, p),
-        lat,
-        lng,
-        country: p.country?.trim() || null,
-        state: p.state?.trim() || null,
-        countryCode: p.countrycode?.trim()?.toUpperCase() || null,
-      });
-      if (out.length >= limit) break;
-    }
-    return out;
-  }
-
-  /** "Mumbai, Maharashtra, India" — skips segments that repeat the name. */
-  private buildLabel(name: string, p: PhotonFeature['properties'] = {}): string {
-    const parts = [name];
-    for (const seg of [p.state, p.country]) {
-      const s = seg?.trim();
-      if (s && !parts.some((x) => x.toLowerCase() === s.toLowerCase())) parts.push(s);
-    }
-    return parts.join(', ');
+  /** "Mumbai, India" — omits the country when it would repeat the name. */
+  private buildLabel(m: CityRecord): string {
+    const cn = this.countryName(m.country);
+    return cn && cn.toLowerCase() !== m.name.toLowerCase() ? `${m.name}, ${cn}` : m.name;
   }
 }

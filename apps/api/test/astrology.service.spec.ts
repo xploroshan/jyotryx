@@ -56,6 +56,7 @@ describe('AstrologyService', () => {
       },
       user: {
         findUnique: jest.fn().mockResolvedValue(mockUser),
+        update: jest.fn().mockResolvedValue({}),
       },
     };
 

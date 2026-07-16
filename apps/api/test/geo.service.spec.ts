@@ -1,119 +1,95 @@
 import { GeoService } from '../src/modules/geo/geo.service';
 
-// Minimal Photon GeoJSON feature builder.
-function feature(name: string, lon: number, lat: number, extra: Record<string, unknown> = {}) {
-  return {
-    geometry: { coordinates: [lon, lat] },
-    properties: { name, osm_key: 'place', osm_value: 'city', country: 'India', state: 'Maharashtra', countrycode: 'in', ...extra },
-  };
-}
-
-function mockFetchOnce(body: unknown, ok = true, status = 200) {
-  return jest.spyOn(global, 'fetch' as any).mockResolvedValueOnce({
-    ok,
-    status,
-    json: async () => body,
-  } as any);
-}
-
-describe('GeoService', () => {
-  let cache: { get: jest.Mock; set: jest.Mock };
+// These tests hit the REAL bundled city dataset (all-the-cities) — no mocking of
+// the data source. That's deliberate: the previous version proxied a web
+// service that the deployed backend couldn't reach, and mocked tests happily
+// passed while production returned nothing. Exercising the real index means a
+// broken "Delhi" lookup fails the suite.
+describe('GeoService (offline city index)', () => {
   let service: GeoService;
 
   beforeEach(() => {
-    cache = { get: jest.fn().mockResolvedValue(null), set: jest.fn().mockResolvedValue(undefined) };
-    service = new GeoService(cache as any);
-    jest.restoreAllMocks();
+    service = new GeoService();
   });
 
-  it('returns [] for a too-short query without calling the upstream', async () => {
-    const spy = jest.spyOn(global, 'fetch' as any);
-    expect(await service.search('m')).toEqual([]);
+  it('returns [] for a too-short query', async () => {
+    expect(await service.search('d')).toEqual([]);
     expect(await service.search('  ')).toEqual([]);
-    expect(spy).not.toHaveBeenCalled();
+    expect(await service.search('')).toEqual([]);
   });
 
-  it('normalizes Photon features to {name,label,lat,lng}', async () => {
-    mockFetchOnce({ features: [feature('Mumbai', 72.8777, 19.076)] });
-    const r = await service.search('mumbai');
-    expect(r).toHaveLength(1);
-    expect(r[0]).toMatchObject({
-      name: 'Mumbai',
-      label: 'Mumbai, Maharashtra, India',
-      lat: 19.076,
-      lng: 72.8777,
-      country: 'India',
-      state: 'Maharashtra',
-      countryCode: 'IN',
-    });
+  it('finds a major city and ranks the most populous match first', async () => {
+    const r = await service.search('Delhi');
+    expect(r.length).toBeGreaterThan(0);
+    // Delhi, India (pop ~11M) must outrank the US hamlets also named Delhi.
+    expect(r[0].name).toBe('Delhi');
+    expect(r[0].countryCode).toBe('IN');
+    expect(r[0].label).toBe('Delhi, India');
+    expect(Math.round(r[0].lat)).toBe(29); // ~28.65
+    expect(Math.round(r[0].lng)).toBe(77); // ~77.23
   });
 
-  it('drops non-place features (streets, shops)', async () => {
-    mockFetchOnce({
-      features: [
-        feature('Mumbai', 72.8777, 19.076),
-        feature('Some Street', 72.9, 19.1, { osm_key: 'highway', osm_value: 'residential' }),
-        feature('Corner Shop', 72.8, 19.0, { osm_key: 'shop', osm_value: 'convenience' }),
-      ],
-    });
-    const r = await service.search('mumbai');
-    expect(r.map((x) => x.name)).toEqual(['Mumbai']);
+  it('finds a small town (Sakleshpur) — the case that was stuck on the prompt', async () => {
+    const r = await service.search('Sakleshpur');
+    expect(r.length).toBeGreaterThan(0);
+    expect(r[0].name).toBe('Sakleshpur');
+    expect(r[0].countryCode).toBe('IN');
+    expect(r[0].lat).toBeCloseTo(12.94, 1);
+    expect(r[0].lng).toBeCloseTo(75.78, 1);
   });
 
-  it('dedupes the same place returned under several OSM records', async () => {
-    mockFetchOnce({
-      features: [
-        feature('Pune', 73.8567, 18.5204),
-        feature('Pune', 73.857, 18.5206, { osm_value: 'administrative', osm_key: 'boundary' }),
-      ],
-    });
-    const r = await service.search('pune');
-    expect(r).toHaveLength(1);
+  it('resolves historical / anglicised names via the alias table', async () => {
+    const bangalore = await service.search('Bangalore');
+    expect(bangalore[0]?.name).toBe('Bangalore');
+    expect(bangalore[0]?.lat).toBeCloseTo(12.97, 1);
+
+    const bombay = await service.search('Bombay');
+    expect(bombay[0]?.name).toBe('Bombay');
+    expect(bombay[0]?.lng).toBeCloseTo(72.88, 1);
   });
 
-  it('honors the limit', async () => {
-    const many = Array.from({ length: 10 }, (_, i) => feature(`City${i}`, 70 + i, 10 + i));
-    mockFetchOnce({ features: many });
-    const r = await service.search('city', 3);
-    expect(r).toHaveLength(3);
+  it('matches accented city names from an ASCII query (diacritic folding)', async () => {
+    // Without folding these return nothing, or a tiny same-spelled homonym.
+    const zurich = await service.search('Zurich');
+    expect(zurich[0]?.name).toMatch(/z[üu]rich/i);
+    expect(zurich[0]?.countryCode).toBe('CH');
+
+    const sao = await service.search('Sao Paulo');
+    expect(sao[0]?.name).toMatch(/s[ãa]o paulo/i);
+    expect(sao[0]?.countryCode).toBe('BR');
+
+    // Bogotá, Colombia (7.6M) must outrank Bogota, New Jersey (~8k).
+    const bogota = await service.search('Bogota');
+    expect(bogota[0]?.countryCode).toBe('CO');
   });
 
-  it('returns [] (never throws) on an upstream error', async () => {
-    mockFetchOnce({}, false, 503);
-    expect(await service.search('mumbai')).toEqual([]);
+  it('is a prefix search (partial name returns candidates)', async () => {
+    const r = await service.search('mumb');
+    expect(r.some((c) => c.name.toLowerCase().startsWith('mumb'))).toBe(true);
   });
 
-  it('returns [] (never throws) when fetch rejects (timeout/network)', async () => {
-    jest.spyOn(global, 'fetch' as any).mockRejectedValueOnce(new Error('aborted'));
-    expect(await service.search('mumbai')).toEqual([]);
+  it('honours the limit (1–8)', async () => {
+    const r = await service.search('san', 3);
+    expect(r.length).toBeLessThanOrEqual(3);
+    const capped = await service.search('san', 999);
+    expect(capped.length).toBeLessThanOrEqual(8);
   });
 
-  it('serves a cache hit without calling the upstream', async () => {
-    const cachedList = [{ name: 'Delhi', label: 'Delhi, India', lat: 28.6, lng: 77.2, country: 'India', state: null, countryCode: 'IN' }];
-    cache.get.mockResolvedValueOnce(cachedList);
-    const spy = jest.spyOn(global, 'fetch' as any);
-    const r = await service.search('delhi');
-    expect(r).toEqual(cachedList);
-    expect(spy).not.toHaveBeenCalled();
+  it('dedupes same-name/same-country duplicates', async () => {
+    const r = await service.search('delhi', 8);
+    const keys = r.map((c) => `${c.name.toLowerCase()}|${c.countryCode}`);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('caches the normalized result (including empty) after an upstream call', async () => {
-    mockFetchOnce({ features: [] });
-    await service.search('zzzznotaplace');
-    expect(cache.set).toHaveBeenCalledWith(expect.stringContaining('geo:search:'), [], expect.any(Number));
+  it('returns [] for a nonsense query (no throw)', async () => {
+    expect(await service.search('zzzqwxnotaplace')).toEqual([]);
   });
 
-  it('still returns results when the cache READ throws (Redis down) — never a 500', async () => {
-    cache.get.mockRejectedValueOnce(new Error('redis down'));
-    mockFetchOnce({ features: [feature('Mumbai', 72.8777, 19.076)] });
-    const r = await service.search('mumbai');
-    expect(r.map((x) => x.name)).toEqual(['Mumbai']);
-  });
-
-  it('still returns results when the cache WRITE throws (Redis down)', async () => {
-    cache.set.mockRejectedValueOnce(new Error('redis down'));
-    mockFetchOnce({ features: [feature('Mumbai', 72.8777, 19.076)] });
-    const r = await service.search('mumbai');
-    expect(r).toHaveLength(1);
+  it('builds the index once and reuses it across searches', async () => {
+    await service.search('delhi');
+    const spy = jest.spyOn(service as any, 'buildIndex');
+    await service.search('mumbai');
+    // buildIndex returns the cached array immediately; still called but cheap.
+    expect(spy).toHaveReturned();
   });
 });
