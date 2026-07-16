@@ -8,45 +8,7 @@ import { FeatureAccessService } from '../src/common/feature-access/feature-acces
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { StorageService } from '../src/storage/storage.service';
-import { mockKnowledgeService, mockStorageService } from './helpers/mocks';
-
-/** A reading that passes validatePalmistryAnalysis (all majors, valid enums,
- *  substantive narrative sections). */
-export function validReadingJson() {
-  const line = (name: string) => ({
-    name,
-    subtitle: 'Life area',
-    description: 'Clear and well-defined across the palm.',
-    observations: ['Deep and clear'],
-    strength: 'strong',
-    interpretation: 'A substantive interpretation tied to what is visible in this palm.',
-  });
-  return {
-    atAGlance: { strengths: 'Resilient', lifePath: 'Growth', love: 'Sincere', bestSuitedFor: 'Strategy' },
-    handOverview: { handType: 'Air', palmShape: 'Square', fingers: 'Long', thumb: 'Strong', dominantHand: 'Likely right' },
-    handShape: { type: 'Air', description: 'Square palm with long fingers — analytical and communicative.' },
-    lines: [line('Heart Line'), line('Head Line'), line('Life Line'), line('Fate Line'), line('Sun Line')],
-    mounts: [
-      { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership.' },
-      { name: 'Mount of Saturn', prominence: 'normal', interpretation: 'Discipline.' },
-      { name: 'Mount of Venus', prominence: 'elevated', interpretation: 'Warmth.' },
-    ],
-    fingerAnalysis: [
-      { finger: 'Thumb', length: 'long', interpretation: 'Willpower.' },
-      { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Balanced confidence.' },
-      { finger: 'Middle (Saturn)', length: 'average', interpretation: 'Structured.' },
-    ],
-    specialMarkings: [],
-    timingInsights: [{ ageRange: '20-35 years', area: 'career', description: 'A self-chosen path strengthens.' }],
-    overallReading: 'A thorough holistic synthesis of the personality and life themes visible in this specific palm.',
-    healthInsights: 'Vitality is strong; manage stress with steady daily routines and hydration.',
-    careerInsights: 'Aptitude for structured, strategic work with a creative dimension; leadership develops steadily.',
-    relationshipInsights: 'Deep, loyal emotional patterns; partnership built on mutual respect suits this hand.',
-    spiritualInsights: 'Considered choices on the spiritual path.',
-    cautions: 'Avoid overextending; ground decisions in conversation.',
-    closingAffirmation: 'Your path is yours to build.',
-  };
-}
+import { mockKnowledgeService, mockStorageService, validPalmReadingJson } from './helpers/mocks';
 
 function chatResponse(payload: unknown) {
   return {
@@ -114,7 +76,7 @@ describe('PalmistryService', () => {
     // geometry polylines (the pipeline makes exactly these two calls).
     fakeCreate = jest
       .fn()
-      .mockResolvedValueOnce(chatResponse(validReadingJson()))
+      .mockResolvedValueOnce(chatResponse(validPalmReadingJson()))
       .mockResolvedValueOnce(
         chatResponse({
           polylines: [
@@ -159,6 +121,21 @@ describe('PalmistryService', () => {
   });
 
   describe('analyzePalm', () => {
+    it('MASTER SWITCH: "Make app completely free" overrides legacy credits mode (no 402, no charge)', async () => {
+      // Regression: the free_mode switch was only consulted when credits were
+      // OFF, so with credits on (the default) palmistry kept paywalling while
+      // the admin toggle claimed the app was free.
+      featureAccess.creditsEnabled.mockResolvedValue(true);
+      featureAccess.paidFeaturesFree.mockResolvedValue(true);
+
+      const result: any = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
+
+      expect(result.lines.length).toBeGreaterThanOrEqual(5);
+      expect(featureAccess.resolveUnlock).not.toHaveBeenCalled();
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+      expect(featureAccess.incrementUsage).not.toHaveBeenCalled();
+    });
+
     it('should gate palm analysis on a one-time entitlement', async () => {
       const imageBuffer = Buffer.from('fake-image-data');
 

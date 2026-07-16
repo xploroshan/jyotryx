@@ -105,10 +105,11 @@ export function groundAnalysis(
         pass,
       });
       if (!pass && analysis.handShape) {
+        // Correct the TYPE only (a canonical English token). The prose
+        // description is left untouched — injecting English text into an
+        // otherwise-localized reading would leak; the failed check in
+        // `verification.checks` is the audit trail for the correction.
         analysis.handShape.type = metrics.handShape;
-        analysis.handShape.description =
-          `${metrics.handShape} hand (measured from your palm's proportions). ` +
-          (analysis.handShape.description ?? '');
         if (analysis.handOverview?.handType) {
           analysis.handOverview.handType = metrics.handShape;
         }

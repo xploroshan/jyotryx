@@ -52,7 +52,7 @@ export class PalmistryController {
         image: {
           type: 'string',
           format: 'binary',
-          description: 'Palm image file (JPEG, PNG, WebP, or HEIC)',
+          description: 'Palm image file (JPEG, PNG, or WebP — HEIC is not supported)',
         },
       },
     },

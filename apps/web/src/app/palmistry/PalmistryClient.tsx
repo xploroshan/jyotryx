@@ -492,6 +492,11 @@ export default function PalmistryPage() {
     handedness: "Left" | "Right";
     score: number;
   } | null>(null);
+  // Generation token: detection is async and un-cancellable — if the user
+  // swaps photos while photo A's detection is still running, A's landmarks
+  // must never be attached to photo B's analysis (they'd corrupt the
+  // grounding/fingerprint of the "verified" layer).
+  const landmarkGenRef = useRef(0);
 
   // Cancel any in-flight polling on unmount
   useEffect(() => {
@@ -541,13 +546,14 @@ export default function PalmistryPage() {
         // MediaPipe). Fire-and-forget: the result enriches the analyze call
         // with real geometry; failure just means no wireframe.
         landmarksRef.current = null;
+        const gen = ++landmarkGenRef.current;
         import("@/lib/palm/handLandmarker")
           .then((m) => m.detectPalmLandmarks(prepared.dataUrl))
           .then((det) => {
-            landmarksRef.current = det;
+            if (gen === landmarkGenRef.current) landmarksRef.current = det;
           })
           .catch(() => {
-            landmarksRef.current = null;
+            if (gen === landmarkGenRef.current) landmarksRef.current = null;
           });
       } catch (prepErr) {
         if (prepErr instanceof ImagePrepError && prepErr.code === "decode_failed") {
@@ -604,7 +610,11 @@ export default function PalmistryPage() {
           return res.analysis;
         }
         if (res?.status === "failed") {
-          throw new Error(t.palmistry.analysisFailed);
+          // Tag as terminal so the catch below rethrows instead of swallowing
+          // it and polling a dead reading for the full 2-minute window.
+          const failed: any = new Error(t.palmistry.analysisFailed);
+          failed.status = 422;
+          throw failed;
         }
       } catch (e: any) {
         // 5xx / network errors: keep polling, otherwise rethrow

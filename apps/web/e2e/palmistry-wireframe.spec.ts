@@ -226,6 +226,19 @@ test.describe('MediaPipe self-hosted pipeline (best-effort)', () => {
   test('loads WASM from our origin and returns a result object', async ({ page }) => {
     await installApiMocks(page, { 'GET /payments/pricing': async (route) => route.fulfill(json({})) });
     await page.goto('/palmistry');
+
+    // Asset wiring is a HARD requirement — a 404 here means the copy script /
+    // committed model broke, which must fail the suite (skipping would hide
+    // the exact self-hosted-pipeline regression this test exists to catch).
+    for (const asset of [
+      '/models/mediapipe/vision_wasm_internal.js',
+      '/models/mediapipe/vision_wasm_internal.wasm',
+      '/models/mediapipe/hand_landmarker.task',
+      '/models/mediapipe/vision_bundle.mjs',
+    ]) {
+      const res = await page.request.get(asset);
+      expect(res.status(), `${asset} must be served from our origin`).toBe(200);
+    }
     const result = await page.evaluate(async () => {
       try {
         // URL import of the self-hosted bundle (bare npm specifiers don't

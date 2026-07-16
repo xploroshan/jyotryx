@@ -122,21 +122,43 @@ export class PalmistryProcessor extends WorkerHost {
       // Refund on final attempt. Palmistry is pay-to-unlock, so restore the
       // one-time entitlement bound to this reading (no-op for subscriber/
       // free readings). Legacy credit-charged jobs still get credits back.
+      // Every step is individually guarded: a DB blip in one refund must not
+      // skip the remaining refunds or the failed-marker (which the client's
+      // polling depends on to stop).
       if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
-        await this.featureAccess.refundEntitlementByRef(readingId);
+        await this.featureAccess
+          .refundEntitlementByRef(readingId)
+          .catch((e) => this.logger.error(`Entitlement refund failed for ${readingId}`, e as Error));
         // Subscription model: give back the metered reading counted at enqueue.
         if (meteredFeature && meteredPeriodKey) {
-          await this.featureAccess.decrementUsage(userId, meteredFeature, meteredPeriodKey);
+          await this.featureAccess
+            .decrementUsage(userId, meteredFeature, meteredPeriodKey)
+            .catch((e) => this.logger.error(`Metered refund failed for ${readingId}`, e as Error));
         }
         if (creditCost > 0) {
           this.logger.log(`Refunding ${creditCost} credits for failed palmistry ${readingId}`);
-          await this.userService.addCredits(userId, creditCost, 'PURCHASE', 'Refund: Palmistry analysis failed');
+          await this.userService
+            .addCredits(userId, creditCost, 'PURCHASE', 'Refund: Palmistry analysis failed')
+            .catch((e) => this.logger.error(`Credit refund failed for ${readingId}`, e as Error));
         }
-        // Mark the reading as failed so the client polling stops with a clear status
+        // Mark the reading as failed so the client polling stops with a clear
+        // status. Preserve the verification seed so a manual operator retry
+        // can still stitch the original hashes/id.
         try {
+          const row = await this.prisma.palmistryReading.findUnique({
+            where: { id: readingId },
+            select: { analysisData: true },
+          });
+          const seed = (row?.analysisData as any)?.verificationSeed;
           await this.prisma.palmistryReading.update({
             where: { id: readingId },
-            data: { analysisData: { status: 'failed', message: 'Analysis failed. Your purchase has been restored.' } },
+            data: {
+              analysisData: {
+                status: 'failed',
+                message: 'Analysis failed. Your purchase has been restored.',
+                ...(seed ? { verificationSeed: seed } : {}),
+              },
+            },
           });
         } catch (updateErr) {
           this.logger.error('Failed to mark reading as failed', updateErr as Error);

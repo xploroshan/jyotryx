@@ -150,11 +150,18 @@ export class PalmistryService {
    * — closing the previously-unbounded palmistry cost leak.
    */
   private async resolvePalmAccess(userId: string): Promise<PalmAccess> {
+    // The admin "Make app completely free" master switch (feature.free_mode)
+    // must override EVERY mode — including legacy credits mode. It was
+    // previously checked only after creditsEnabled(), so with credits on
+    // (the default) palmistry kept demanding a paid unlock while chat and
+    // reports honoured the switch — the exact "admin toggle does nothing"
+    // trap. Checked FIRST, mirroring resolveChatAccess.
+    if (await this.featureAccess.paidFeaturesFree()) return { kind: 'subscriber' };
+
     if (await this.featureAccess.creditsEnabled()) {
       const mode = await this.featureAccess.resolveUnlock(userId, 'PALMISTRY');
       return { kind: mode };
     }
-    if (await this.featureAccess.paidFeaturesFree()) return { kind: 'subscriber' };
 
     const usage = await this.featureAccess.checkUsage(userId, 'palmistry');
     if (!usage.allowed) {
@@ -223,14 +230,17 @@ export class PalmistryService {
       }
     }
 
-    // Async path: enqueue job for background processing.
-    // If either the DB write or queue.add fails, fall through to the sync
-    // path rather than 500ing — the user has already paid credits.
-    if (this.queueEnabled) {
-      // Only the create+enqueue is inside the fallback try. The entitlement
-      // consume is done AFTER, outside the try — so a consume failure (e.g.
-      // a concurrent 402 race) surfaces to the caller instead of silently
-      // falling through to the sync path and burning a SECOND unlock.
+    // Async path: enqueue job for background processing. Only taken for a
+    // real, R2-stored image — a no-image request or a failed upload has the
+    // buffer in memory (or nothing to analyse) and the sync path serves it
+    // directly instead of enqueuing a job that can only fail.
+    if (this.queueEnabled && imageProvided && imageKey) {
+      // Ordering matters for billing honesty:
+      //   1. create the stub row;
+      //   2. CONSUME (atomic claim — a concurrent 402 race surfaces here,
+      //      BEFORE any job exists that could deliver an unpaid reading);
+      //   3. enqueue; if enqueue fails, refund the claim and delete the stub,
+      //      then fall through to the sync path (which re-claims on success).
       let reading: any = null;
       try {
         reading = await this.prisma.palmistryReading.create({
@@ -254,41 +264,57 @@ export class PalmistryService {
             },
           },
         });
-
-        await this.palmistryQueue!.add('analyze', {
-          readingId: reading.id,
-          userId,
-          creditCost: 0,
-          imageKey: imageKey ?? undefined,
-          imageMimeType,
-          locale,
-          gender,
-          landmarks: landmarks ?? undefined,
-          // Metered model: pass the counter so a failed job gives the reading
-          // back (the unit is counted now, in recordPalmConsumption below).
-          // Only when an image was actually provided — a no-image fallback
-          // isn't counted, so the processor must not try to restore it either.
-          meteredFeature: access.kind === 'metered' && imageProvided ? 'palmistry' : undefined,
-          meteredPeriodKey: access.kind === 'metered' && imageProvided ? access.periodKey : undefined,
-        } satisfies PalmistryJobData);
       } catch (err) {
         this.logger.error(
-          `Palmistry async enqueue failed (${(err as Error)?.message}); falling back to sync analysis`,
+          `Palmistry stub create failed (${(err as Error)?.message}); falling back to sync analysis`,
         );
-        reading = null; // signal fall-through to the sync path below
+        reading = null;
+      }
+
+      let claimedPeriodKey: string | undefined;
+      if (reading) {
+        try {
+          claimedPeriodKey = await this.recordPalmConsumption(userId, access, reading.id);
+        } catch (err) {
+          // Not payable (e.g. concurrent request claimed the last unit):
+          // remove the stub so no orphan job/row exists, and surface the 402.
+          await this.prisma.palmistryReading.delete({ where: { id: reading.id } }).catch(() => {});
+          throw err;
+        }
+
+        try {
+          await this.palmistryQueue!.add('analyze', {
+            readingId: reading.id,
+            userId,
+            creditCost: 0,
+            imageKey,
+            imageMimeType,
+            locale,
+            gender,
+            landmarks: landmarks ?? undefined,
+            // Metered model: pass the claimed counter so a failed job gives
+            // the unit back.
+            meteredFeature: access.kind === 'metered' ? 'palmistry' : undefined,
+            meteredPeriodKey: access.kind === 'metered' ? claimedPeriodKey : undefined,
+          } satisfies PalmistryJobData);
+        } catch (err) {
+          this.logger.error(
+            `Palmistry enqueue failed (${(err as Error)?.message}); refunding and falling back to sync`,
+          );
+          // Give the claim back and remove the stub — the sync path below
+          // re-claims on success with its own fresh persistence. Without the
+          // delete, the stub's unique verificationId would collide with the
+          // sync insert (P2002) and orphan a forever-"processing" row.
+          await this.featureAccess.refundEntitlementByRef(reading.id).catch(() => {});
+          if (access.kind === 'metered' && claimedPeriodKey) {
+            await this.featureAccess.decrementUsage(userId, 'palmistry', claimedPeriodKey).catch(() => {});
+          }
+          await this.prisma.palmistryReading.delete({ where: { id: reading.id } }).catch(() => {});
+          reading = null;
+        }
       }
 
       if (reading) {
-        // Enqueue succeeded — record consumption exactly once now that the
-        // reading row exists (no-op for subscribers; consumes a one-time
-        // entitlement in legacy mode, or counts a metered reading in the
-        // subscription model). The processor restores it if analysis fails.
-        // Skipped for a no-image request — nothing was analysed, so nothing
-        // is charged.
-        if (imageProvided) {
-          await this.recordPalmConsumption(userId, access, reading.id);
-        }
-
         return {
           id: reading.id,
           userId,
@@ -452,10 +478,12 @@ export class PalmistryService {
     }
 
     return {
+      // Spread FIRST so the envelope fields below always win — analysisData is
+      // key-stripped at the pipeline, but old rows/defence-in-depth apply here.
+      ...analysisData,
       id: readingId,
       userId,
       imageUrl,
-      ...analysisData,
       createdAt,
     };
   }
@@ -463,14 +491,35 @@ export class PalmistryService {
   /**
    * Record that one palmistry reading was consumed, bound to the generated
    * `ref` row. No-op for subscribers; consumes a one-time entitlement in
-   * legacy mode; counts a metered reading in the subscription model.
+   * legacy mode; atomically CLAIMS a metered unit in the subscription model
+   * (`tryConsumeUsage` — the race-safe form; the old check-then-increment let
+   * N parallel requests all pass the read and blow through the ceiling).
+   *
+   * Returns the periodKey the claim landed in (metered mode) so refunds can
+   * target the exact counter.
    */
-  private async recordPalmConsumption(userId: string, access: PalmAccess, ref: string): Promise<void> {
+  private async recordPalmConsumption(
+    userId: string,
+    access: PalmAccess,
+    ref: string,
+  ): Promise<string | undefined> {
     if (access.kind === 'entitlement') {
       await this.featureAccess.consumeEntitlement(userId, 'PALMISTRY', ref);
-    } else if (access.kind === 'metered') {
-      await this.featureAccess.incrementUsage(userId, 'palmistry', access.periodKey);
+      return undefined;
     }
+    if (access.kind === 'metered') {
+      const claim = await this.featureAccess.tryConsumeUsage(userId, 'palmistry');
+      if (!claim.allowed) {
+        throw new PaymentRequiredException(
+          claim.isSubscriber
+            ? "You've used all your palmistry readings this month. Buy +2 readings to continue."
+            : "You've used your free palmistry readings. Subscribe for more.",
+          { subscribe: !claim.isSubscriber, feature: 'palmistry' },
+        );
+      }
+      return claim.periodKey;
+    }
+    return undefined;
   }
 
   async getReadingStatus(
@@ -495,11 +544,11 @@ export class PalmistryService {
       id: reading.id,
       status: 'completed',
       analysis: {
+        ...data,
         id: reading.id,
         userId: reading.userId,
         imageUrl: reading.imageUrl ?? undefined,
         status: 'completed',
-        ...data,
         createdAt: reading.createdAt.toISOString(),
       },
     };
@@ -624,7 +673,8 @@ Rules:
 - timingInsights should have 3-4 entries spanning life stages.
 - Each major line MUST include a "subtitle" (life area) and "observations" (2-4 short visual bullets) so the reading reads like an editorial guide, not a wall of text.
 - Speak with warmth and respect. Frame difficulties as "tendencies", never as fate.
-- Never claim to predict death, exact dates, or medical diagnoses.${palmKBSection}${getLocaleInstruction(locale)}`;
+- Never claim to predict death, exact dates, or medical diagnoses.
+- MACHINE-READABLE VALUES STAY IN ENGLISH regardless of the response language: every "name" (lines/mounts/fingers/markings), "strength", "prominence", "length", "kind", handShape "type" and "ageRange" must use the exact English values shown in the schema above. Translate all descriptive/interpretation text only.${palmKBSection}${getLocaleInstruction(locale)}`;
 }
 
 export function buildPalmistryUserPrompt(gender?: string): string {

@@ -10,7 +10,8 @@ import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { UserService } from '../src/modules/user/user.service';
 import { StorageService } from '../src/storage/storage.service';
-import { mockOpenAIService, mockKnowledgeService, mockKbService, mockUserService } from './helpers/mocks';
+import { mockOpenAIService,
+  mockPalmVisionClient, mockKnowledgeService, mockKbService, mockUserService } from './helpers/mocks';
 
 describe('ReportProcessor (Item 2 — BullMQ)', () => {
   let processor: ReportProcessor;
@@ -140,6 +141,17 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
     prisma = {
       palmistryReading: {
         update: jest.fn().mockResolvedValue({ id: 'palm-1' }),
+        findUnique: jest.fn().mockResolvedValue({
+          analysisData: {
+            status: 'processing',
+            verificationSeed: {
+              verificationId: 'seed-verif-1',
+              imageSha256: 'c'.repeat(64),
+              landmarkFingerprint: 'lm-fp',
+              duplicateOf: null,
+            },
+          },
+        }),
       },
     };
 
@@ -166,6 +178,49 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
     }).compile();
 
     processor = module.get<PalmistryProcessor>(PalmistryProcessor);
+  });
+
+  it('SUCCESS PATH: stitches the verification seed from the stub into the final reading', async () => {
+    // The queue path is the production path — a regression that drops the
+    // stub's verificationSeed would ship readings with an empty verification
+    // block and nothing would notice without this test.
+    storageService.isAvailable.mockReturnValue(true);
+    const openai = (processor as any).openaiService;
+    openai.getClient = jest.fn().mockReturnValue(mockPalmVisionClient());
+    openai.getModelForFeature = jest.fn().mockReturnValue('gpt-4o');
+    openai.recordUsage = jest.fn();
+
+    const job = {
+      id: 'job-ok',
+      data: {
+        readingId: 'palm-1',
+        userId: 'user-1',
+        creditCost: 0,
+        imageKey: 'palmistry/user-1/1.jpeg',
+      },
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+    } as any;
+
+    await processor.process(job);
+
+    expect(prisma.palmistryReading.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'palm-1' },
+        data: expect.objectContaining({
+          analysisData: expect.objectContaining({
+            verification: expect.objectContaining({
+              verificationId: 'seed-verif-1',
+              imageSha256: 'c'.repeat(64),
+              landmarkFingerprint: 'lm-fp',
+              authentic: true,
+            }),
+            factors: expect.any(Array),
+            lines: expect.any(Array),
+          }),
+        }),
+      }),
+    );
   });
 
   it('fails honestly when the job has no stored image — never serves the canned fallback', async () => {

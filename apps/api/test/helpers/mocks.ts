@@ -436,6 +436,7 @@ export const mockFeatureAccessService = () => ({
   getCreditCost: jest.fn(async (_name: string, fallback: number) => fallback),
   getUsageLimit: jest.fn().mockResolvedValue(50),
   checkUsage: jest.fn().mockResolvedValue({ allowed: true, used: 0, bonus: 0, limit: 50, remaining: 50, isSubscriber: false, periodKey: 'LIFETIME' }),
+  tryConsumeUsage: jest.fn().mockResolvedValue({ allowed: true, used: 1, bonus: 0, limit: 50, remaining: 49, isSubscriber: false, periodKey: 'LIFETIME' }),
   incrementUsage: jest.fn().mockResolvedValue(undefined),
   decrementUsage: jest.fn().mockResolvedValue(undefined),
   addUsageBonus: jest.fn().mockResolvedValue('LIFETIME'),

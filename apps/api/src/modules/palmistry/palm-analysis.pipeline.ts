@@ -123,7 +123,7 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
         );
         continue;
       }
-      analysisData = parsed as Record<string, unknown>;
+      analysisData = stripReservedKeys(parsed as Record<string, unknown>);
     } catch (err) {
       lastProblems = ['vision_call_failed'];
       opts.logger.error(`Palm reading attempt ${attempt} failed`, err);
@@ -189,4 +189,32 @@ function safeJsonParse(s: string): unknown | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Envelope keys the model must never control. The reading is later spread
+ * into the persisted/returned object (`{ id, userId, ...analysisData }`), so
+ * a model output smuggling e.g. `"status": "processing"` would freeze a
+ * charged reading in the client's polling loop, and `"id"`/`"verification"`
+ * would spoof the envelope/authenticity block. The image itself is user
+ * content, so prompt-injected outputs are in the threat model.
+ */
+const RESERVED_ANALYSIS_KEYS = [
+  'id',
+  'userId',
+  'imageUrl',
+  'status',
+  'createdAt',
+  'geometry',
+  'factors',
+  'verification',
+  'verificationSeed',
+  'message',
+] as const;
+
+function stripReservedKeys(data: Record<string, unknown>): Record<string, unknown> {
+  for (const key of RESERVED_ANALYSIS_KEYS) {
+    if (key in data) delete data[key];
+  }
+  return data;
 }
