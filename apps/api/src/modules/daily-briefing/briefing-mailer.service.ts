@@ -371,6 +371,9 @@ export class BriefingMailerService implements OnModuleInit {
     sentLast7d: number;
     failedLast7d: number;
     todayStatus: { sent: number; failed: number; skipped: number };
+    /** Error code of the most recent failed send today (e.g. "resend_403") —
+     *  so the operator can see WHY today's mail failed, not just that it did. */
+    lastError: string | null;
     settings: BriefingSettings;
     provider: 'resend' | 'log';
   }> {
@@ -378,7 +381,7 @@ export class BriefingMailerService implements OnModuleInit {
     const today = startOfUtcDate(new Date());
     const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [optedIn, last7d, todayRows] = await Promise.all([
+    const [optedIn, last7d, todayRows, lastFailure] = await Promise.all([
       this.prisma.user.count({ where: { briefingEmailEnabled: true } }),
       this.prisma.briefingDelivery.groupBy({
         by: ['status'],
@@ -389,6 +392,11 @@ export class BriefingMailerService implements OnModuleInit {
         by: ['status'],
         where: { sendDate: today },
         _count: { _all: true },
+      }),
+      this.prisma.briefingDelivery.findFirst({
+        where: { sendDate: today, status: 'FAILED', errorCode: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        select: { errorCode: true },
       }),
     ]);
 
@@ -402,6 +410,7 @@ export class BriefingMailerService implements OnModuleInit {
 
     return {
       optedInUsers: optedIn,
+      lastError: lastFailure?.errorCode ?? null,
       sentLast7d: last7Counts['SENT'] ?? 0,
       failedLast7d: last7Counts['FAILED'] ?? 0,
       todayStatus: todayCounts as { sent: number; failed: number; skipped: number },

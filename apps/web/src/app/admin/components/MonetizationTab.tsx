@@ -9,6 +9,7 @@ interface BriefingStats {
   sentLast7d: number;
   failedLast7d: number;
   todayStatus: { sent: number; failed: number; skipped: number };
+  lastError: string | null;
   settings: {
     enabled: boolean;
     sendHourUtc: number;
@@ -54,6 +55,7 @@ export function MonetizationTab({ token }: { token: string }) {
   const [briefingMsg, setBriefingMsg] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
   const [enrollingAll, setEnrollingAll] = useState(false);
+  const [runningNow, setRunningNow] = useState(false);
 
   // Paywall weights state
   const [paywallEnabled, setPaywallEnabled] = useState(true);
@@ -158,6 +160,30 @@ export function MonetizationTab({ token }: { token: string }) {
     } finally {
       setSendingTest(false);
       setTimeout(() => setBriefingMsg(null), 4000);
+    }
+  };
+
+  const runNow = async () => {
+    // Trigger today's fan-out immediately. Idempotent — anyone who already got
+    // today's mail is skipped — so this is safe to click after a fix/redeploy.
+    setRunningNow(true);
+    setBriefingMsg(null);
+    try {
+      const res = await api.post<{ selected: number; sent: number; failed: number; skipped: number }>(
+        "/admin/briefing/run-now",
+        {},
+        { token },
+      );
+      setBriefingMsg({
+        tone: res.failed > 0 ? "error" : "success",
+        text: `Daily send ran: ${res.sent} sent, ${res.skipped} skipped, ${res.failed} failed (of ${res.selected}).`,
+      });
+      await load();
+    } catch (err) {
+      setBriefingMsg({ tone: "error", text: errorMessage(err) });
+    } finally {
+      setRunningNow(false);
+      setTimeout(() => setBriefingMsg(null), 6000);
     }
   };
 
@@ -340,6 +366,16 @@ export function MonetizationTab({ token }: { token: string }) {
               </>
             )}
           </p>
+          {briefing.todayStatus.failed > 0 && briefing.lastError && (
+            <p className="text-xs mt-1 text-red-500">
+              Today&apos;s failures: <code className="text-red-600">{briefing.lastError}</code>
+              {/^resend_4\d\d$/.test(briefing.lastError) && (
+                <> — Resend rejected the send. Most often the <b>From email</b>&apos;s domain isn&apos;t
+                verified in your Resend account. Verify it in Resend, or set the From email to a
+                domain you have verified, then Save and re-run.</>
+              )}
+            </p>
+          )}
         </header>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
@@ -415,6 +451,14 @@ export function MonetizationTab({ token }: { token: string }) {
                 className="px-4 py-2 rounded-lg bg-black/[0.05] hover:bg-black/[0.08] text-ink-700 text-sm disabled:opacity-50"
               >
                 {sendingTest ? "Sending…" : "Send test to me"}
+              </button>
+              <button
+                onClick={runNow}
+                disabled={runningNow}
+                className="px-4 py-2 rounded-lg bg-emerald-100/70 hover:bg-emerald-100 border border-emerald-500/30 text-emerald-700 text-sm font-medium disabled:opacity-50"
+                title="Run today's daily-briefing fan-out immediately. Idempotent — users who already received today's email are skipped."
+              >
+                {runningNow ? "Sending today's mail…" : "Send today's mail now"}
               </button>
               <button
                 onClick={enableForAll}
