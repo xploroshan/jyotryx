@@ -534,12 +534,28 @@ export class AstrologyService {
     if (name && this.geoService) {
       try {
         const hits = await this.geoService.search(name, 1);
-        if (hits[0]) return { lat: hits[0].lat, lng: hits[0].lng };
+        if (hits[0]) {
+          const coords = { lat: hits[0].lat, lng: hits[0].lng };
+          // Persist the resolution once so it becomes visible + correctable in
+          // the profile (the birthplace field shows a "located" pin), and future
+          // charts skip the geocode. Fire-and-forget: never block or fail the
+          // chart on the write.
+          this.persistResolvedCoords(userId, name, coords);
+          return coords;
+        }
       } catch (err) {
         this.logger.warn(`Geocode of "${name}" failed: ${(err as Error)?.message ?? err}`);
       }
     }
     return null;
+  }
+
+  /** Lazily store geocoded coordinates back onto the user's birthplace, keeping
+   *  the original name. Best-effort — errors are swallowed. */
+  private persistResolvedCoords(userId: string, name: string, coords: { lat: number; lng: number }): void {
+    Promise.resolve(
+      this.prisma.user.update({ where: { id: userId }, data: { placeOfBirth: { name, lat: coords.lat, lng: coords.lng } } }),
+    ).catch((err) => this.logger.warn(`Backfill of birth coords failed: ${(err as Error)?.message ?? err}`));
   }
 
   // ─── Deterministic Yoga Detection ───────────────────────────────────────────

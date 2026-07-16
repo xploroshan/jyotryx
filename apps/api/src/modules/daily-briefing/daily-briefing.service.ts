@@ -387,8 +387,8 @@ export class DailyBriefingService {
     let personal: GocharPersonalization | null = null;
     let reason: PersonalizationReason = 'unavailable';
     if (this.gocharService) {
-      // v2 key: the cached value now carries the personalization reason too.
-      const personalKey = `briefing:gochar:v2:${userId}:${dateStr}:${hourBucket}`;
+      // v3 key: the cached value now carries the natal coordinates too.
+      const personalKey = `briefing:gochar:v3:${userId}:${dateStr}:${hourBucket}`;
       const cached = await this.cacheService.get<{ personal: GocharPersonalization | null; reason: PersonalizationReason }>(personalKey);
       if (cached) {
         personal = cached.personal;
@@ -408,6 +408,16 @@ export class DailyBriefingService {
           : null;
         reason = this.computePersonalizationReason(userRecord, personal);
         await this.cacheService.set(personalKey, { personal, reason }, 30 * 60 * 1000);
+        // When the birthplace was only a name, persist the coordinates we
+        // geocoded so they become visible + correctable in the profile and
+        // future reads skip the geocode. Fire-and-forget.
+        if (personal?.coordsGeocoded) {
+          const placeName =
+            typeof userRecord!.placeOfBirth === 'string'
+              ? userRecord!.placeOfBirth
+              : (userRecord!.placeOfBirth as { name?: string } | null)?.name;
+          if (placeName) this.persistResolvedCoords(userId, placeName, personal.natalCoords);
+        }
       }
     } else {
       // Ephemeris service not wired — every user gets the shared almanac.
@@ -479,6 +489,15 @@ export class DailyBriefingService {
       moonSign: personal?.moonSign ?? null,
       astrologyTraditions: userTraditions,
     };
+  }
+
+  /** Lazily store geocoded coordinates back onto the user's birthplace, keeping
+   *  the original name, so the profile shows it as located and future reads skip
+   *  the geocode. Best-effort — never blocks or fails the briefing. */
+  private persistResolvedCoords(userId: string, name: string, coords: { lat: number; lng: number }): void {
+    Promise.resolve(
+      this.prisma.user.update({ where: { id: userId }, data: { placeOfBirth: { name, lat: coords.lat, lng: coords.lng } } }),
+    ).catch((err) => this.logger.warn(`Backfill of birth coords failed: ${(err as Error)?.message ?? err}`));
   }
 
   /** Classify why the chart layer is / isn't active, for the client's prompt. */
