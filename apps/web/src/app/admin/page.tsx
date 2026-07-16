@@ -72,6 +72,36 @@ export default function AdminPage() {
   const [socialReportBase, setSocialReportBase] = useState("41345");
   // Bumped after every settings save so the effective-access readout refetches.
   const [accessMatrixRefresh, setAccessMatrixRefresh] = useState(0);
+  // Which mode flag is currently being written (disables the switches).
+  const [flagSaving, setFlagSaving] = useState<string | null>(null);
+
+  /**
+   * The three monetization mode switches SAVE IMMEDIATELY when flipped.
+   * They render as switches, and a switch that silently stages its value
+   * until a "Save Pricing" button several screens below is a trap: the
+   * palmistry-paywall reports came from exactly that — "Make app completely
+   * free" turned green on screen, was never saved, and the app kept
+   * charging. Optimistic flip, revert on failure, and the effective-access
+   * readout refetches so the admin SEES the gates change.
+   */
+  const saveModeFlag = async (key: string, next: boolean, apply: (v: boolean) => void) => {
+    if (!accessToken) return;
+    apply(next);
+    setFlagSaving(key);
+    setError("");
+    try {
+      await api.put("/admin/settings", { [key]: next ? "true" : "false" }, { token: accessToken });
+      setSuccess("Saved — live now.");
+      setTimeout(() => setSuccess(""), 3000);
+      setAccessMatrixRefresh((k) => k + 1);
+    } catch (err: any) {
+      // Revert: the switch must never show a state that didn't save.
+      apply(!next);
+      setError(err.message || "Failed to save the toggle — it has been reverted.");
+    } finally {
+      setFlagSaving(null);
+    }
+  };
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -304,15 +334,16 @@ export default function AdminPage() {
                 <p className="text-xs text-ink-500">
                   Master switch. When on, <strong>Chat with Astrologer, Palmistry and Reports
                   are free for everyone</strong> — no payment, no credits. Overrides the
-                  per-feature pricing below.
+                  per-feature pricing below. <strong>Saves instantly.</strong>
                 </p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={freeMode}
-                onClick={() => setFreeMode((v) => !v)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${freeMode ? "bg-emerald-500" : "bg-black/20"}`}
+                disabled={flagSaving !== null}
+                onClick={() => saveModeFlag("feature.free_mode", !freeMode, setFreeMode)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${freeMode ? "bg-emerald-500" : "bg-black/20"}`}
               >
                 <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${freeMode ? "translate-x-5" : ""}`} />
               </button>
@@ -324,15 +355,16 @@ export default function AdminPage() {
                   <h4 className="font-bold text-ink-900 mb-1">Subscriptions enabled</h4>
                   <p className="text-xs text-ink-500">
                     Off = whole app free except Chat, Palmistry &amp; Reports (pay-per-use).
-                    On = paid subscribers get everything free.
+                    On = paid subscribers get everything free. <strong>Saves instantly.</strong>
                   </p>
                 </div>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={subscriptionsEnabled}
-                  onClick={() => setSubscriptionsEnabled((v) => !v)}
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${subscriptionsEnabled ? "bg-emerald-500" : "bg-black/20"}`}
+                  disabled={flagSaving !== null}
+                  onClick={() => saveModeFlag("feature.subscriptions_enabled", !subscriptionsEnabled, setSubscriptionsEnabled)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${subscriptionsEnabled ? "bg-emerald-500" : "bg-black/20"}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${subscriptionsEnabled ? "translate-x-5" : ""}`} />
                 </button>
@@ -342,15 +374,16 @@ export default function AdminPage() {
                   <h4 className="font-bold text-ink-900 mb-1">Show pricing page</h4>
                   <p className="text-xs text-ink-500">
                     Off = hide /pricing, nav &amp; footer links and show the &ldquo;Free&rdquo; hero.
-                    Turn on once you&apos;re ready to sell subscriptions.
+                    Turn on once you&apos;re ready to sell subscriptions. <strong>Saves instantly.</strong>
                   </p>
                 </div>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={pricingPageEnabled}
-                  onClick={() => setPricingPageEnabled((v) => !v)}
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${pricingPageEnabled ? "bg-emerald-500" : "bg-black/20"}`}
+                  disabled={flagSaving !== null}
+                  onClick={() => saveModeFlag("feature.pricing_page_enabled", !pricingPageEnabled, setPricingPageEnabled)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${pricingPageEnabled ? "bg-emerald-500" : "bg-black/20"}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${pricingPageEnabled ? "translate-x-5" : ""}`} />
                 </button>
@@ -469,9 +502,10 @@ export default function AdminPage() {
                     "pricing.credits.deep_dive_cost": deepDiveCost,
                     "pricing.report.price": reportPrice,
                     "pricing.palmistry.price": palmistryPrice,
-                    "feature.subscriptions_enabled": subscriptionsEnabled ? "true" : "false",
-                    "feature.pricing_page_enabled": pricingPageEnabled ? "true" : "false",
-                    "feature.free_mode": freeMode ? "true" : "false",
+                    // The three feature.* mode flags are NOT written here —
+                    // the switches above save themselves the moment they're
+                    // flipped. Re-sending staged copies from this button
+                    // would let a stale tab silently revert a live flag.
                     "social.report_count_base": socialReportBase,
                   }, { token: accessToken! });
                   setSuccess("Pricing updated successfully");
@@ -490,8 +524,10 @@ export default function AdminPage() {
               {pricingSaving ? "Saving..." : "Save Pricing"}
             </button>
             <p className="text-xs text-ink-500 mt-3">
-              Feature gates (what users can access) apply immediately. The public /pricing
-              page is served from a cache and can take up to a minute to reflect changes.
+              Saves the prices, packs and credit costs above (the mode switches save
+              themselves when flipped). Feature gates apply immediately; the public
+              /pricing page is served from a cache and can take up to a minute to
+              reflect changes.
             </p>
           </div>
         )}

@@ -139,7 +139,8 @@ export function AccessMatrixCard({
       </div>
       <p className="text-xs text-ink-500 mb-4">
         Computed live by the server from the saved settings — this is exactly what the
-        feature gates enforce. Unsaved toggle changes above are NOT reflected until you save.
+        feature gates enforce. Mode switches update it the moment you flip them; price
+        and limit fields apply after their Save button.
       </p>
 
       {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
