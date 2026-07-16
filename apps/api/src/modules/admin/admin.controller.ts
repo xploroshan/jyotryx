@@ -317,6 +317,16 @@ export class AdminController {
     return { ok: true };
   }
 
+  @Post('briefing/run-now')
+  @ApiOperation({
+    summary:
+      "Run today's daily-briefing fan-out immediately (manual catch-up). " +
+      'Idempotent — users who already received today\'s mail are skipped.',
+  })
+  async runBriefingNow(): Promise<{ selected: number; sent: number; failed: number; skipped: number }> {
+    return this.briefingMailer.runDailyFanout();
+  }
+
   @Post('briefing/enable-for-all')
   @ApiOperation({
     summary:
