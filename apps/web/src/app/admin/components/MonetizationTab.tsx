@@ -9,6 +9,7 @@ interface BriefingStats {
   sentLast7d: number;
   failedLast7d: number;
   todayStatus: { sent: number; failed: number; skipped: number };
+  lastError: string | null;
   settings: {
     enabled: boolean;
     sendHourUtc: number;
@@ -365,6 +366,16 @@ export function MonetizationTab({ token }: { token: string }) {
               </>
             )}
           </p>
+          {briefing.todayStatus.failed > 0 && briefing.lastError && (
+            <p className="text-xs mt-1 text-red-500">
+              Today&apos;s failures: <code className="text-red-600">{briefing.lastError}</code>
+              {/^resend_4\d\d$/.test(briefing.lastError) && (
+                <> — Resend rejected the send. Most often the <b>From email</b>&apos;s domain isn&apos;t
+                verified in your Resend account. Verify it in Resend, or set the From email to a
+                domain you have verified, then Save and re-run.</>
+              )}
+            </p>
+          )}
         </header>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
