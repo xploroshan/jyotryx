@@ -34,14 +34,23 @@ Unit tests used hand-authored landmarks that encoded our own wrong
 assumptions (that MediaPipe's handedness label is anatomical; it follows the
 2D winding, and an opposite-hand dorsal view is geometrically identical to
 the expected palm). The "real MediaPipe" E2E only ever ran on a blank canvas.
+**Follow-up correction (owner-supplied palm + dorsal photos):** my first
+diagnostic (n=1) concluded "the label follows the winding" — WRONG. With all
+quadrants measured (n=4): the label is ANATOMICAL (the classifier sees
+nails), the winding encodes the SIDE, and the shipped formula was simply
+inverted — it rejected real palms and approved dorsals. The inverted formula
+had "passing tests" because the synthetic fixture was authored with the same
+backwards anatomy assumption.
 **Rules:**
 - Any gate built on an ML model's output must be validated against REAL
   inputs through the REAL model at least once (e2e/fixtures/ + the
   palmistry-real-pipeline.spec.ts harness) — measure, don't assume
   conventions from docs.
-- When a check turns out to be geometrically impossible (2D palm-vs-dorsal),
-  say so in the code and move the enforcement to a layer that has the needed
-  signal (server vision check sees appearance; landmarks don't).
+- One measured sample is not semantics: cover every quadrant of the decision
+  table (palm/dorsal × left/right) with LABELED ground truth before deriving
+  a formula. A theory fitted to n=1 encoded a second wrong model.
+- Never author a synthetic fixture from the same assumption the code makes —
+  derive fixtures from measured real-input values.
 - VIDEO-mode tracking state is not evidence about the captured STILL —
   re-verify the exact artifact you ship (post-capture IMAGE-mode confirm).
 - User-reported failures make the best regression fixtures (the incident

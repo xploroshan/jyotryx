@@ -112,25 +112,30 @@ export function evaluateHandPose(
     : opts.detectedHand;
   const correctHand = !opts.expectedHand || physicalHand === opts.expectedHand;
 
-  // Label-vs-winding sanity check — HONEST LIMITS (measured, not assumed):
-  // running the real landmarker on real photos showed MediaPipe's handedness
-  // label follows the 2D WINDING under a palm assumption (a back-of-left-hand
-  // photo is labelled like a right palm, at 0.97 confidence). Consequences:
-  //  - This check is nearly a tautology: it only trips on noisy frames.
-  //  - An OPPOSITE-hand dorsal view is geometrically IDENTICAL to the
-  //    expected palm in 2D and CANNOT be rejected from landmarks (the
-  //    dorsal-capture incident). Fingertip z-depth was measured and is
-  //    dominated by hand tilt — also unusable.
-  // Real dorsal rejection therefore lives in (a) the post-capture IMAGE-mode
-  // confirmation (evaluateCapturedStill) and (b) the server's vision-model
-  // image check, which sees appearance (nails/knuckles), not just geometry.
+  // Palm-vs-dorsal from label + winding — SEMANTICS MEASURED ON REAL PHOTOS
+  // (all four detected quadrants consistent, label scores 0.93–0.97):
+  //  - MediaPipe's handedness label is ANATOMICAL — the classifier sees
+  //    appearance (nails/knuckles), so a right hand is labelled 'Right'
+  //    whichever side faces the camera.
+  //  - The 2D winding (crossZ sign) encodes WHICH SIDE is shown. For an
+  //    un-mirrored photo of a RIGHT hand: palm → thumb/index on the image
+  //    RIGHT of the pinky → crossZ NEGATIVE; dorsal → POSITIVE. Left hand
+  //    mirrors both. (The originally shipped formula demanded the OPPOSITE
+  //    sign — built on a hand-authored fixture with backwards anatomy — so
+  //    it approved right-dorsal shots and rejected genuine right palms: the
+  //    dorsal-capture incident.)
+  //  - Mirrored (selfie) previews flip the label AND crossZ together, so the
+  //    formula needs no mirror correction.
+  // Residual risk is a MISLABELED frame (classifier error) — that's what the
+  // post-capture IMAGE confirmation and the server's vision image-check
+  // still backstop.
   const wrist = landmarks[0];
   const indexMcp = landmarks[5];
   const pinkyMcp = landmarks[17];
   const v1 = { x: indexMcp.x - wrist.x, y: indexMcp.y - wrist.y };
   const v2 = { x: pinkyMcp.x - wrist.x, y: pinkyMcp.y - wrist.y };
   const crossZ = v1.x * v2.y - v1.y * v2.x;
-  const palmFacing = opts.detectedHand === 'Right' ? crossZ > 0 : crossZ < 0;
+  const palmFacing = opts.detectedHand === 'Right' ? crossZ < 0 : crossZ > 0;
 
   // Coverage: hand bbox height fraction, inside frame margins.
   let minX = 1, maxX = 0, minY = 1, maxY = 0;

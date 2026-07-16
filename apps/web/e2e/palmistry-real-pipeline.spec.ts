@@ -9,18 +9,27 @@ import { evaluateCapturedStill } from '../src/lib/palm/quality';
  * MediaPipe HandLandmarker, plus the page-level dorsal-rejection flow.
  *
  * Born from the dorsal-capture incident: every guided-camera gate showed
- * green on a photo of the BACK of a hand, because (a) the live gates ran
- * only in VIDEO mode whose tracking carried a stale lock through the
- * shutter, and (b) MediaPipe's handedness label follows the 2D winding, so
- * an opposite-hand dorsal view is geometrically identical to the expected
- * palm. The synthetic-landmark unit tests could never see any of this —
- * ONLY real photos through the real model can.
+ * green on a photo of the BACK of a hand. Measured on these real photos:
+ *  - MediaPipe's handedness label is ANATOMICAL (the classifier sees
+ *    nails/knuckles): a right hand is 'Right' whichever side faces the
+ *    camera (scores 0.93–0.97 across our fixtures).
+ *  - The 2D winding (crossZ) encodes WHICH SIDE is shown: right palm →
+ *    negative, right dorsal → positive (left mirrors both). The originally
+ *    shipped palm-facing formula demanded the OPPOSITE sign — validated by
+ *    a synthetic fixture with backwards anatomy — so it approved dorsal
+ *    shots of the expected hand and rejected genuine palms.
+ *  - The live gates run in VIDEO mode; its tracking can carry a lock through
+ *    the shutter onto a still that IMAGE mode cannot even detect.
+ * ONLY real photos through the real model can pin any of this.
  *
- * Fixtures: e2e/fixtures/hand-dorsal-left.jpg is the incident capture
- * (back of a left hand); hand-dorsal-right.jpg is its mirror (back of a
- * right hand). To extend coverage, drop real PALM photos into e2e/fixtures/
- * as hand-palm-*.jpg — the detection harness below picks them up and
- * asserts they PASS the still confirmation.
+ * Fixtures (owner-supplied, anatomical names):
+ *  - hand-dorsal-incident.jpg — the incident capture (back of right hand);
+ *    undetectable in IMAGE mode.
+ *  - hand-dorsal-right.jpg — natural back-of-right-hand photo.
+ *  - hand-dorsal-left-mirrored.jpg — mirror of the incident (≙ left dorsal).
+ *  - hand-palm-right.jpg — real right palm; must PASS.
+ * Drop more real palm photos in as hand-palm-*.jpg — the harness picks them
+ * up and asserts they PASS the still confirmation.
  */
 
 const fakeAuthState = JSON.stringify({
@@ -80,22 +89,32 @@ test.describe('Real MediaPipe over real photos (capture-confirmation contract)',
 
   test('the incident capture is rejected by the post-capture confirmation', async ({ page }) => {
     test.setTimeout(120_000);
-    // The exact class of photo that sailed through the live gates: IMAGE-mode
+    // The exact photo that sailed through the live gates: IMAGE-mode
     // detection finds no hand in it, so evaluateCapturedStill rejects and the
-    // camera auto-retakes instead of shipping it to a paid analysis. If a
-    // future model update starts detecting this photo, this assertion fails —
-    // re-measure and re-derive the gate semantics before relaxing it.
-    const det = await detectFixture(page, 'hand-dorsal-left.jpg');
+    // camera auto-retakes instead of shipping it to a doomed paid analysis.
+    // If a future model update starts detecting this photo, this assertion
+    // fails — re-measure and re-derive the gate semantics before relaxing it.
+    const det = await detectFixture(page, 'hand-dorsal-incident.jpg');
     const verdict = evaluateCapturedStill(det, 'Right');
     expect(verdict.ok, 'the incident dorsal capture must never pass confirmation').toBe(false);
   });
 
-  test('a right-dorsal photo is rejected for a male (Right-palm) user', async ({ page }) => {
+  test('a natural right-dorsal photo is rejected even though the HAND matches', async ({ page }) => {
     test.setTimeout(120_000);
+    // Back of the right hand for a user whose expected hand IS Right — the
+    // incident scenario. Measured: anatomical label 'Right' + dorsal winding
+    // → the palm-facing check rejects the SIDE, not the hand.
     const det = await detectFixture(page, 'hand-dorsal-right.jpg');
-    // Measured behavior of the pinned model: the back of a right hand is
-    // detected and labelled 'Left' (the label follows the palm-hypothesis
-    // winding). The still confirmation therefore rejects it as wrong-hand.
+    expect(det, 'natural right-dorsal fixture should be detectable').not.toBeNull();
+    expect(det!.handedness).toBe('Right');
+    expect(evaluateCapturedStill(det, 'Right')).toEqual({ ok: false, reason: 'wrong_hand' });
+  });
+
+  test('a left-dorsal photo is rejected for a male (Right-palm) user', async ({ page }) => {
+    test.setTimeout(120_000);
+    const det = await detectFixture(page, 'hand-dorsal-left-mirrored.jpg');
+    // Mirror of the incident photo ≙ back of a LEFT hand: anatomical label
+    // 'Left' — wrong hand AND wrong side for a Right-palm expectation.
     expect(det, 'mirrored dorsal fixture should be detectable').not.toBeNull();
     expect(det!.handedness).toBe('Left');
     expect(evaluateCapturedStill(det, 'Right')).toEqual({ ok: false, reason: 'wrong_hand' });
@@ -140,7 +159,7 @@ test.describe('Dorsal rejection — page-level flow (mocked 422 verdict)', () =>
     await page.goto('/palmistry');
     await page.getByRole('radio', { name: /Male — Right Palm/ }).click();
     const input = page.locator('input[type="file"]');
-    await input.setInputFiles(path.join(__dirname, 'fixtures', 'hand-dorsal-left.jpg'));
+    await input.setInputFiles(path.join(__dirname, 'fixtures', 'hand-dorsal-incident.jpg'));
     await page.getByText(/Analyze Palm/).click();
 
     // The SPECIFIC, actionable verdict — the incident's generic "clearer,
