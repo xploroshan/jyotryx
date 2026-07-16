@@ -388,7 +388,7 @@ export default function MyDayPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-purple-700 mb-1">{t.myDay.planetaryTransit}</p>
-                <p className="text-sm text-purple-200/60 leading-relaxed">{translateTransitAlert(briefing.transitAlert, t)}</p>
+                <p className="text-sm text-purple-900/80 leading-relaxed">{translateTransitAlert(briefing.transitAlert, t)}</p>
               </div>
             </div>
           </div>

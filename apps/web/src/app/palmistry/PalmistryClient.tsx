@@ -1134,8 +1134,8 @@ export default function PalmistryPage() {
                       )}
                       {analysis.cautions && (
                         <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/20">
-                          <h4 className="font-semibold text-amber-200 text-sm mb-2">{t.palmistry.cautions}</h4>
-                          <p className="text-xs text-amber-100/70 leading-relaxed">{analysis.cautions}</p>
+                          <h4 className="font-semibold text-amber-800 text-sm mb-2">{t.palmistry.cautions}</h4>
+                          <p className="text-xs text-amber-900/80 leading-relaxed">{analysis.cautions}</p>
                         </div>
                       )}
                       {analysis.fingerAnalysis.length > 0 && (
