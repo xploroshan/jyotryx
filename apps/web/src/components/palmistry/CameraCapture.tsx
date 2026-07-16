@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { evaluateHandPose, landmarkMovement, measureFrameQuality } from "@/lib/palm/quality";
+import { evaluateCapturedStill, evaluateHandPose, landmarkMovement, measureFrameQuality } from "@/lib/palm/quality";
 
 interface CameraCaptureProps {
   onCapture: (file: File) => void;
@@ -25,6 +25,7 @@ interface CameraCaptureProps {
     gateSharp: string;
     gateSteady: string;
     gateReady: string;
+    confirmFailed: string;
   };
 }
 
@@ -109,6 +110,14 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
     };
   }, [facingMode, labels.error]);
 
+  // Clear the pending confirm-message timer on unmount.
+  useEffect(
+    () => () => {
+      if (confirmClearRef.current) clearTimeout(confirmClearRef.current);
+    },
+    [],
+  );
+
   // Load the (self-hosted) landmarker for the guided loop; degrade gracefully.
   useEffect(() => {
     let cancelled = false;
@@ -125,7 +134,10 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
     };
   }, []);
 
-  const handleCapture = useCallback(() => {
+  const [confirmFailed, setConfirmFailed] = useState(false);
+  const confirmClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCapture = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
     const w = video.videoWidth || 1280;
@@ -136,6 +148,35 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, w, h);
+
+    // Post-capture confirmation on the EXACT still (IMAGE mode). The live
+    // gates run in VIDEO mode, whose temporal tracking can carry a stale or
+    // borderline lock straight through the shutter — in the dorsal-capture
+    // incident every chip was green while the captured still wasn't even
+    // detectable as a hand in IMAGE mode. Confirm on the still; on failure,
+    // resume scanning instead of shipping a doomed photo to a paid analysis.
+    if (guided) {
+      try {
+        const { getHandLandmarker } = await import("@/lib/palm/handLandmarker");
+        const imageLandmarker = await getHandLandmarker("IMAGE");
+        const det = imageLandmarker.detectImage(canvas);
+        const verdict = evaluateCapturedStill(det, expectedHand);
+        if (!verdict.ok) {
+          setConfirmFailed(true);
+          if (confirmClearRef.current) clearTimeout(confirmClearRef.current);
+          confirmClearRef.current = setTimeout(() => setConfirmFailed(false), 4000);
+          passStreakRef.current = 0;
+          setReadyProgress(0);
+          capturedRef.current = false; // let the guided loop try again
+          return;
+        }
+      } catch {
+        // Confirmation unavailable (model failed to load in IMAGE mode) —
+        // fall through to a plain capture; the server re-validates anyway.
+      }
+    }
+
+    setConfirmFailed(false);
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -145,7 +186,7 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
       "image/jpeg",
       0.92,
     );
-  }, []);
+  }, [guided, expectedHand]);
 
   // ── The guided tick: pose gates + frame-quality gates + steadiness →
   // auto-capture after a short all-green streak. ──
@@ -304,6 +345,15 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
             ) : (
               chip(false, labels.gateHand, labels.gateHand, "init")
             )}
+          </div>
+        )}
+
+        {/* Post-capture confirmation failed → explain and keep scanning */}
+        {guided && confirmFailed && !snapshot && !starting && !error && (
+          <div className="absolute bottom-40 left-0 right-0 px-6 text-center">
+            <span className="inline-block px-3 py-1.5 rounded-full bg-amber-500/25 border border-amber-400/50 text-amber-200 text-xs font-semibold">
+              {labels.confirmFailed}
+            </span>
           </div>
         )}
 

@@ -53,6 +53,8 @@ export const validPalmReadingJson = () => {
     interpretation: 'A substantive interpretation tied to what is visible in this palm.',
   });
   return {
+    // The image-content gate: 'palm' is what a compliant reading asserts.
+    imageCheck: { subject: 'palm' },
     atAGlance: { strengths: 'Resilient', lifePath: 'Growth', love: 'Sincere', bestSuitedFor: 'Strategy' },
     handOverview: { handType: 'Air', palmShape: 'Square', fingers: 'Long', thumb: 'Strong', dominantHand: 'Likely right' },
     handShape: { type: 'Air', description: 'Square palm with long fingers — analytical and communicative.' },

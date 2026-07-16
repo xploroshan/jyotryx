@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   measureFrameQuality,
   evaluateHandPose,
+  evaluateCapturedStill,
   landmarkMovement,
   LUMA_MIN,
 } from '@/lib/palm/quality';
@@ -56,19 +57,24 @@ describe('measureFrameQuality', () => {
 
 // A synthetic upright RIGHT hand seen palm-on: index MCP left of pinky MCP.
 function palmOnRightHand(scale = 0.6): { x: number; y: number }[] {
+  // Anatomy verified against REAL photos through the real landmarker: a
+  // self-photographed RIGHT palm (upright, un-mirrored) has the thumb/index
+  // side on the image RIGHT of the pinky. (The original version of this
+  // fixture had it backwards, which "validated" an inverted palm-facing
+  // formula — the dorsal-capture incident.)
   const lm = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5 }));
   const top = 0.5 - scale / 2;
   const bottom = 0.5 + scale / 2;
   lm[0] = { x: 0.5, y: bottom }; // wrist
-  lm[5] = { x: 0.35, y: top + 0.1 }; // index MCP (left in image for right palm)
-  lm[9] = { x: 0.45, y: top + 0.08 };
-  lm[13] = { x: 0.55, y: top + 0.09 };
-  lm[17] = { x: 0.65, y: top + 0.12 }; // pinky MCP
+  lm[5] = { x: 0.65, y: top + 0.1 }; // index MCP (image RIGHT for a right palm)
+  lm[9] = { x: 0.55, y: top + 0.08 };
+  lm[13] = { x: 0.45, y: top + 0.09 };
+  lm[17] = { x: 0.35, y: top + 0.12 }; // pinky MCP (image LEFT)
   // Fingertips above the knuckles.
-  lm[8] = { x: 0.34, y: top };
-  lm[12] = { x: 0.45, y: top - 0.02 + 0.02 };
-  lm[16] = { x: 0.55, y: top };
-  lm[20] = { x: 0.66, y: top + 0.03 };
+  lm[8] = { x: 0.66, y: top };
+  lm[12] = { x: 0.55, y: top - 0.02 + 0.02 };
+  lm[16] = { x: 0.45, y: top };
+  lm[20] = { x: 0.34, y: top + 0.03 };
   return lm;
 }
 
@@ -113,16 +119,20 @@ describe('evaluateHandPose', () => {
     expect(gates.coverageOk).toBe(false);
   });
 
-  it('detects the back of the hand (palm not facing)', () => {
-    // Mirror the x-coordinates: for a detected RIGHT hand, index now sits to
-    // the RIGHT of pinky — the camera sees the back of the hand.
+  it('detects the back of the hand (anatomical label + flipped winding)', () => {
+    // Measured semantics: the label is anatomical (the classifier sees
+    // nails/knuckles), and showing the BACK of the hand mirrors the 2D
+    // winding. Back of the RIGHT hand → label 'Right' + index on the image
+    // LEFT of pinky → palmFacing false. This is exactly the incident photo's
+    // measured signature (label 'Right' @0.93, crossZ positive).
     const back = palmOnRightHand(0.7).map((p) => ({ x: 1 - p.x, y: p.y }));
     const gates = evaluateHandPose(back, {
       expectedHand: 'Right',
       detectedHand: 'Right',
       mirrored: false,
     });
-    expect(gates.palmFacing).toBe(false);
+    expect(gates.correctHand).toBe(true); // it IS the right hand…
+    expect(gates.palmFacing).toBe(false); // …but the wrong side of it
   });
 
   it('reports no hand for null/partial landmarks', () => {
@@ -131,6 +141,63 @@ describe('evaluateHandPose', () => {
       evaluateHandPose(palmOnRightHand().slice(0, 10), { expectedHand: null, detectedHand: 'Right', mirrored: false })
         .handPresent,
     ).toBe(false);
+  });
+});
+
+describe('evaluateCapturedStill (post-capture confirmation)', () => {
+  /** Back of the RIGHT hand: anatomical 'Right' label + mirrored winding —
+   *  the measured signature of the incident photo (label 'Right' @0.93,
+   *  positive crossZ). */
+  const dorsalRight = () => {
+    const lm = palmOnRightHand(0.7).map((p) => ({ x: 1 - p.x, y: p.y }));
+    return { landmarks: lm, handedness: 'Right' as const };
+  };
+  /** Back of the LEFT hand (mirror of dorsalRight): label 'Left', negative
+   *  crossZ — matches the mirrored real fixture (label 'Left' @0.97). */
+  const dorsalLeft = () => {
+    const lm = palmOnRightHand(0.7);
+    return { landmarks: lm, handedness: 'Left' as const };
+  };
+
+  it('rejects when no hand was detected in the still (the incident photo)', () => {
+    // The user's actual captured photo was NOT detectable in IMAGE mode —
+    // the VIDEO-mode tracker had carried a stale lock through the shutter.
+    expect(evaluateCapturedStill(null, 'Right')).toEqual({ ok: false, reason: 'no_hand' });
+    expect(
+      evaluateCapturedStill({ landmarks: palmOnRightHand().slice(0, 5), handedness: 'Right' }, 'Right'),
+    ).toEqual({ ok: false, reason: 'no_hand' });
+  });
+
+  it('rejects the back of the EXPECTED hand (the incident: right dorsal for a male user)', () => {
+    expect(evaluateCapturedStill(dorsalRight(), 'Right')).toEqual({
+      ok: false,
+      reason: 'wrong_hand',
+    });
+  });
+
+  it('rejects the back of the OPPOSITE hand (wrong hand AND wrong side)', () => {
+    expect(evaluateCapturedStill(dorsalLeft(), 'Right')).toEqual({
+      ok: false,
+      reason: 'wrong_hand',
+    });
+  });
+
+  it('accepts the expected palm regardless of frame coverage', () => {
+    // Small-in-frame is fine here: the live gate already enforced coverage
+    // on this exact frame; the still check is about presence + identity.
+    expect(evaluateCapturedStill({ landmarks: palmOnRightHand(0.3), handedness: 'Right' }, 'Right')).toEqual({
+      ok: true,
+      reason: null,
+    });
+  });
+
+  it('DOCUMENTED LIMIT: a MISLABELED dorsal slips the geometric check', () => {
+    // If the classifier ever labels the back of a left hand as 'Right'
+    // (appearance error), its winding matches a right palm and geometry
+    // cannot object — the server's vision image-check (back_of_hand → 422)
+    // is the authoritative backstop for that case.
+    const mislabeled = { landmarks: palmOnRightHand(0.7), handedness: 'Right' as const };
+    expect(evaluateCapturedStill(mislabeled, 'Right').ok).toBe(true);
   });
 });
 

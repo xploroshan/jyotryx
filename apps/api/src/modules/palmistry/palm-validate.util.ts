@@ -31,6 +31,15 @@ export function validatePalmistryAnalysis(data: unknown): AnalysisValidation {
     return { ok: false, problems: ['not_an_object'] };
   }
 
+  // The image-content verdict is REQUIRED — a reading without it never went
+  // through the palm-vs-back gate (the pipeline consumes the confident
+  // negatives before this validation; here we only insist it exists and is a
+  // known value, so non-compliant model output retries).
+  const subject = (d.imageCheck as { subject?: unknown } | undefined)?.subject;
+  if (!['palm', 'back_of_hand', 'not_a_hand', 'unclear'].includes(String(subject ?? '').toLowerCase().trim())) {
+    problems.push('missing_image_check');
+  }
+
   // Lines: array, ≥5 entries, all majors present, valid strengths, non-empty interpretations.
   const lines = d.lines;
   if (!Array.isArray(lines) || lines.length < 5) {

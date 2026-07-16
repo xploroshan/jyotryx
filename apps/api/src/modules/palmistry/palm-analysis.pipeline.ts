@@ -31,8 +31,19 @@ import { validatePalmistryAnalysis } from './palm-validate.util';
 import { buildPalmFactors, type PalmFactor } from './palm-factors.util';
 import { groundAnalysis, type VerificationCheck } from './palm-verification.util';
 
+/** Confident negative verdicts from the vision model's image check. */
+export type PalmImageRejection = 'back_of_hand' | 'not_a_hand';
+
 export class PalmAnalysisFailedError extends Error {
-  constructor(public readonly problems: string[]) {
+  constructor(
+    public readonly problems: string[],
+    /** Set when the image itself was rejected (wrong side / no hand) —
+     *  callers surface a SPECIFIC actionable error instead of the generic
+     *  "couldn't analyze" (the back-of-hand incident: the camera gates can't
+     *  geometrically tell an opposite-hand dorsal view from a palm, so this
+     *  appearance-aware verdict is the authoritative rejection). */
+    public readonly reason?: PalmImageRejection,
+  ) {
     super(`Palm analysis produced invalid output: ${problems.join(', ')}`);
     this.name = 'PalmAnalysisFailedError';
   }
@@ -115,6 +126,14 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
         opts.logger.warn(`Palm reading attempt ${attempt}: invalid JSON from vision model`);
         continue;
       }
+      // Image-content gate FIRST: the model classifies what it actually sees
+      // before any reading is accepted. A confident negative (back of hand /
+      // no hand) is an ANSWER, not a transient failure — no retry, and the
+      // caller turns it into a specific 422 instead of a generic 503.
+      const subject = readImageCheckSubject(parsed);
+      if (subject === 'back_of_hand' || subject === 'not_a_hand') {
+        throw new PalmAnalysisFailedError([`image_${subject}`], subject);
+      }
       const validation = validatePalmistryAnalysis(parsed);
       if (!validation.ok) {
         lastProblems = validation.problems;
@@ -125,6 +144,9 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
       }
       analysisData = stripReservedKeys(parsed as Record<string, unknown>);
     } catch (err) {
+      // A reasoned rejection must propagate — re-running the model on the
+      // same back-of-hand image would just burn tokens for the same verdict.
+      if (err instanceof PalmAnalysisFailedError) throw err;
       lastProblems = ['vision_call_failed'];
       opts.logger.error(`Palm reading attempt ${attempt} failed`, err);
     }
@@ -183,6 +205,13 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
   return { analysisData, geometry, factors, grounding };
 }
 
+/** Read the model's image-content verdict (tolerant of shape drift). */
+function readImageCheckSubject(parsed: unknown): string | null {
+  const check = (parsed as { imageCheck?: { subject?: unknown } } | null)?.imageCheck;
+  const subject = typeof check?.subject === 'string' ? check.subject.toLowerCase().trim() : null;
+  return subject;
+}
+
 function safeJsonParse(s: string): unknown | null {
   try {
     return JSON.parse(s);
@@ -210,6 +239,10 @@ const RESERVED_ANALYSIS_KEYS = [
   'verification',
   'verificationSeed',
   'message',
+  // Gate artifact, consumed above — not reading content, and the polling
+  // envelope uses failCode, which the model must not be able to spoof.
+  'imageCheck',
+  'failCode',
 ] as const;
 
 function stripReservedKeys(data: Record<string, unknown>): Record<string, unknown> {

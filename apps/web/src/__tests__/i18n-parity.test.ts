@@ -123,22 +123,24 @@ const UNTRANSLATED_VALUE_PATTERNS: RegExp[] = [
 // by the API (LLM/KB), so the gap is cosmetic. Drive these back down as the
 // chrome is translated.
 const UNTRANSLATED_BASELINE: Record<string, number> = {
-  // +18 vs the pre-palmistry baseline: the palmistry wireframe/verification
+  // +21 vs the pre-palmistry baseline: the palmistry wireframe/verification
   // chrome (+11: wireframe*/verifiedReading/verificationIdLabel/groundedness/
-  // sampleReading*/duplicateNotice) and the guided-camera gate chips (+7:
-  // gate*) ship as English placeholders pending backfill. The reading BODY is
-  // localized by the API. (Prior: +4 birthplace autocomplete, +5 My Day.)
-  hi: 139,
-  ta: 178,
-  te: 530,
-  bn: 530,
-  mr: 525,
-  gu: 530,
-  kn: 530,
-  ml: 530,
-  pa: 530,
-  or: 530,
-  as: 530,
+  // sampleReading*/duplicateNotice), the guided-camera gate chips (+7:
+  // gate*), and the image-rejection errors (+3: backOfHandError/notAHandError/
+  // captureConfirmFailed) ship as English placeholders pending backfill. The
+  // reading BODY is localized by the API. (Prior: +4 birthplace autocomplete,
+  // +5 My Day.)
+  hi: 142,
+  ta: 181,
+  te: 533,
+  bn: 533,
+  mr: 528,
+  gu: 533,
+  kn: 533,
+  ml: 533,
+  pa: 533,
+  or: 533,
+  as: 533,
 };
 
 const locales: Array<[string, Dict]> = [

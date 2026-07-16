@@ -76,6 +76,22 @@ describe('buildGeometryUserPrompt', () => {
 });
 
 describe('validatePalmistryAnalysis', () => {
+  it('requires the imageCheck verdict (readings without it never passed the palm-vs-back gate)', () => {
+    const noCheck: any = validPalmReadingJson();
+    delete noCheck.imageCheck;
+    const v = validatePalmistryAnalysis(noCheck);
+    expect(v.ok).toBe(false);
+    expect(v.problems).toContain('missing_image_check');
+  });
+
+  it('accepts all known imageCheck subjects (gating happens in the pipeline, not here)', () => {
+    for (const subject of ['palm', 'back_of_hand', 'not_a_hand', 'unclear']) {
+      const d: any = validPalmReadingJson();
+      d.imageCheck = { subject };
+      expect(validatePalmistryAnalysis(d).problems).not.toContain('missing_image_check');
+    }
+  });
+
   it('accepts a complete reading', () => {
     expect(validatePalmistryAnalysis(validPalmReadingJson()).ok).toBe(true);
   });

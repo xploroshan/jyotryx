@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { ServiceUnavailableException } from '@nestjs/common';
+import { ServiceUnavailableException, UnprocessableEntityException } from '@nestjs/common';
 import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
@@ -160,6 +160,72 @@ describe('PalmistryService', () => {
       expect(result.verification.imageSha256).toMatch(/^[0-9a-f]{64}$/);
       expect(Array.isArray(result.factors)).toBe(true);
       expect(result.geometry?.polylines?.length).toBeGreaterThan(0);
+    });
+
+    it('DORSAL GATE: a back-of-hand image gets a SPECIFIC 422, no retry, no charge', async () => {
+      // The dorsal-capture incident: the camera gates cannot geometrically
+      // tell an opposite-hand dorsal view from the expected palm, so the
+      // vision model's appearance-aware verdict is the authoritative
+      // rejection — and it must be specific (which SIDE), not the generic
+      // "clearer photo" advice that sent the user in the wrong direction.
+      fakeCreate.mockReset();
+      fakeCreate.mockResolvedValue(chatResponse({ imageCheck: { subject: 'back_of_hand' } }));
+
+      await expect(
+        service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg'),
+      ).rejects.toThrow(UnprocessableEntityException);
+
+      // A confident negative is an ANSWER: exactly one vision call, no retry.
+      expect(fakeCreate).toHaveBeenCalledTimes(1);
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+      expect(featureAccess.incrementUsage).not.toHaveBeenCalled();
+      // The audit row carries the machine-readable code for the status poll.
+      expect(prisma.palmistryReading.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            analysisData: expect.objectContaining({ status: 'failed', failCode: 'back_of_hand' }),
+          }),
+        }),
+      );
+    });
+
+    it('DORSAL GATE: the 422 body carries the machine-readable code for the client', async () => {
+      fakeCreate.mockReset();
+      fakeCreate.mockResolvedValue(chatResponse({ imageCheck: { subject: 'back_of_hand' } }));
+
+      const err = await service
+        .analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg')
+        .then(() => null)
+        .catch((e) => e);
+      expect(err).toBeInstanceOf(UnprocessableEntityException);
+      expect((err.getResponse() as any).code).toBe('back_of_hand');
+      expect(String((err.getResponse() as any).message)).toMatch(/back of your hand/i);
+    });
+
+    it('DORSAL GATE: a no-hand image gets the not_a_hand 422', async () => {
+      fakeCreate.mockReset();
+      fakeCreate.mockResolvedValue(chatResponse({ imageCheck: { subject: 'not_a_hand' } }));
+
+      const err = await service
+        .analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg')
+        .then(() => null)
+        .catch((e) => e);
+      expect(err).toBeInstanceOf(UnprocessableEntityException);
+      expect((err.getResponse() as any).code).toBe('not_a_hand');
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+    });
+
+    it('getReadingStatus surfaces failCode so the polling client can be specific', async () => {
+      prisma.palmistryReading.findFirst.mockResolvedValue({
+        id: 'palm-9',
+        userId: 'test-uuid',
+        imageUrl: '',
+        analysisData: { status: 'failed', failCode: 'back_of_hand' },
+        createdAt: new Date(),
+      });
+
+      const res = await service.getReadingStatus('test-uuid', 'palm-9');
+      expect(res).toMatchObject({ status: 'failed', failCode: 'back_of_hand' });
     });
 
     it('HONESTY: fails with 503 and does NOT charge when the vision analysis fails', async () => {

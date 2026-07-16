@@ -112,20 +112,30 @@ export function evaluateHandPose(
     : opts.detectedHand;
   const correctHand = !opts.expectedHand || physicalHand === opts.expectedHand;
 
-  // Palm facing the camera: cross-product z of the palm plane.
+  // Palm-vs-dorsal from label + winding — SEMANTICS MEASURED ON REAL PHOTOS
+  // (all four detected quadrants consistent, label scores 0.93–0.97):
+  //  - MediaPipe's handedness label is ANATOMICAL — the classifier sees
+  //    appearance (nails/knuckles), so a right hand is labelled 'Right'
+  //    whichever side faces the camera.
+  //  - The 2D winding (crossZ sign) encodes WHICH SIDE is shown. For an
+  //    un-mirrored photo of a RIGHT hand: palm → thumb/index on the image
+  //    RIGHT of the pinky → crossZ NEGATIVE; dorsal → POSITIVE. Left hand
+  //    mirrors both. (The originally shipped formula demanded the OPPOSITE
+  //    sign — built on a hand-authored fixture with backwards anatomy — so
+  //    it approved right-dorsal shots and rejected genuine right palms: the
+  //    dorsal-capture incident.)
+  //  - Mirrored (selfie) previews flip the label AND crossZ together, so the
+  //    formula needs no mirror correction.
+  // Residual risk is a MISLABELED frame (classifier error) — that's what the
+  // post-capture IMAGE confirmation and the server's vision image-check
+  // still backstop.
   const wrist = landmarks[0];
   const indexMcp = landmarks[5];
   const pinkyMcp = landmarks[17];
   const v1 = { x: indexMcp.x - wrist.x, y: indexMcp.y - wrist.y };
   const v2 = { x: pinkyMcp.x - wrist.x, y: pinkyMcp.y - wrist.y };
   const crossZ = v1.x * v2.y - v1.y * v2.x;
-  // For an upright hand seen palm-on (image coordinates, y grows DOWNWARD):
-  // Right hand → index MCP appears LEFT of pinky MCP → crossZ positive;
-  // Left hand → negative. Showing the BACK of the hand mirrors the layout and
-  // flips the sign. (Mirrored selfie previews flip the image, which flips
-  // crossZ AND the reported handedness together, so comparing against the
-  // DETECTED hand needs no extra correction.)
-  const palmFacing = opts.detectedHand === 'Right' ? crossZ > 0 : crossZ < 0;
+  const palmFacing = opts.detectedHand === 'Right' ? crossZ < 0 : crossZ > 0;
 
   // Coverage: hand bbox height fraction, inside frame margins.
   let minX = 1, maxX = 0, minY = 1, maxY = 0;
@@ -139,6 +149,34 @@ export function evaluateHandPose(
   const coverageOk = inFrame && maxY - minY >= minCoverage;
 
   return { handPresent: true, correctHand, palmFacing, coverageOk };
+}
+
+/**
+ * Post-capture confirmation on the EXACT still that will be analyzed.
+ *
+ * VIDEO-mode tracking can carry a stale or borderline lock through the
+ * shutter: in the dorsal-capture incident every live gate was green, yet the
+ * captured still was not even detectable as a hand in IMAGE mode. Re-running
+ * detection on the still catches that class of drift before the user is sent
+ * to a doomed (if honest) server analysis.
+ *
+ * Coverage is deliberately NOT re-checked here — the still is the same frame
+ * the live gate already measured; this check is about presence + identity.
+ */
+export function evaluateCapturedStill(
+  det: { landmarks: { x: number; y: number }[]; handedness: 'Left' | 'Right' } | null,
+  expectedHand: 'Left' | 'Right' | null,
+): { ok: boolean; reason: 'no_hand' | 'wrong_hand' | null } {
+  if (!det || det.landmarks?.length !== 21) return { ok: false, reason: 'no_hand' };
+  const pose = evaluateHandPose(det.landmarks, {
+    expectedHand,
+    detectedHand: det.handedness,
+    mirrored: false,
+    minCoverage: 0,
+  });
+  if (!pose.handPresent) return { ok: false, reason: 'no_hand' };
+  if (!pose.correctHand || !pose.palmFacing) return { ok: false, reason: 'wrong_hand' };
+  return { ok: true, reason: null };
 }
 
 /** Landmark displacement between two frames (mean per-point movement). */
