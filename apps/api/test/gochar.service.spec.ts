@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { EphemerisService } from '../src/ephemeris/ephemeris.service';
+import { GeoService } from '../src/modules/geo/geo.service';
 
 // Build a ChartResult-like object from a map of planet -> sidereal longitude.
 function chart(longitudes: Record<string, number>) {
@@ -30,12 +31,72 @@ describe('GocharService', () => {
     expect(await service.computePersonalization({ dateOfBirth: new Date(), timeOfBirth: null, placeOfBirth: PLACE }, new Date())).toBeNull();
   });
 
-  it('returns null when the place is not geocoded', async () => {
+  it('returns null when the place is not geocoded and no geo fallback is wired', async () => {
     const r = await service.computePersonalization(
       { dateOfBirth: new Date('1990-05-15'), timeOfBirth: '10:30', placeOfBirth: { name: 'Mumbai', lat: 0, lng: 0 } },
       new Date(),
     );
     expect(r).toBeNull();
+  });
+
+  describe('geocode fallback (name-only birthplace)', () => {
+    // A user who only ever typed a city name has no stored lat/lng. With the
+    // geo proxy wired, the service geocodes the name so they still get a
+    // chart-personalized reading instead of the shared almanac.
+    let geo: { search: jest.Mock };
+    let svc: GocharService;
+
+    beforeEach(async () => {
+      geo = { search: jest.fn() };
+      const mod: TestingModule = await Test.createTestingModule({
+        providers: [
+          GocharService,
+          { provide: EphemerisService, useValue: ephemeris },
+          { provide: GeoService, useValue: geo },
+        ],
+      }).compile();
+      svc = mod.get(GocharService);
+      ephemeris.computeChart.mockResolvedValue(chart({ Moon: 100, Sun: 50 }));
+      ephemeris.computeCurrentChart.mockResolvedValue(chart({ Moon: 200, Saturn: 300, Jupiter: 60 }));
+    });
+
+    it('geocodes a bare place-name string and personalizes the reading', async () => {
+      geo.search.mockResolvedValue([{ name: 'Sakleshpur', label: 'Sakleshpur, Karnataka, India', lat: 12.9, lng: 75.78, country: 'India', state: 'Karnataka', countryCode: 'IN' }]);
+      const r = await svc.computePersonalization(
+        { dateOfBirth: new Date('1980-02-28'), timeOfBirth: '05:30', placeOfBirth: 'Sakleshpur' },
+        new Date(),
+      );
+      expect(geo.search).toHaveBeenCalledWith('Sakleshpur', 1);
+      expect(r).not.toBeNull();
+      expect(r!.moonSign).toBe('Cancer');
+    });
+
+    it('geocodes the name from a { name } object lacking coordinates', async () => {
+      geo.search.mockResolvedValue([{ name: 'Sakleshpur', label: 'Sakleshpur', lat: 12.9, lng: 75.78, country: 'India', state: null, countryCode: 'IN' }]);
+      const r = await svc.computePersonalization(
+        { dateOfBirth: new Date('1980-02-28'), timeOfBirth: '05:30', placeOfBirth: { name: 'Sakleshpur' } },
+        new Date(),
+      );
+      expect(r).not.toBeNull();
+    });
+
+    it('stays null when the geocoder finds nothing (honest missing_place)', async () => {
+      geo.search.mockResolvedValue([]);
+      const r = await svc.computePersonalization(
+        { dateOfBirth: new Date('1980-02-28'), timeOfBirth: '05:30', placeOfBirth: 'Nowhereville' },
+        new Date(),
+      );
+      expect(r).toBeNull();
+    });
+
+    it('prefers stored coordinates over geocoding (no geo call when lat/lng present)', async () => {
+      const r = await svc.computePersonalization(
+        { dateOfBirth: new Date('1980-02-28'), timeOfBirth: '05:30', placeOfBirth: PLACE },
+        new Date(),
+      );
+      expect(geo.search).not.toHaveBeenCalled();
+      expect(r).not.toBeNull();
+    });
   });
 
   it('derives the natal Moon sign from the ephemeris', async () => {

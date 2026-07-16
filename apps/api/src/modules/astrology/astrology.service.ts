@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { assertValidBirthDetails } from './birth-details.validation';
@@ -16,6 +16,7 @@ import { computeBhakootScore } from './guna.util';
 import { REMEDY_TEMPLES, RemedyTempleSet } from './remedy-temples';
 import { buildMitigationPlan, MitigationPlan } from './mitigation';
 import { computeSadeSati } from '../daily-briefing/gochar.util';
+import { GeoService } from '../geo/geo.service';
 import {
   scoreTiming,
   rahuKaalWindow,
@@ -374,6 +375,9 @@ export class AstrologyService {
     private knowledgeService: KnowledgeService,
     private ephemerisService: EphemerisService,
     private kbService: KbService,
+    // Optional so unit suites that build the service standalone still work; the
+    // name→coordinates geocode fallback simply stays off without it.
+    @Optional() private geoService?: GeoService,
   ) {}
 
   private async callOpenAI(
@@ -520,8 +524,20 @@ export class AstrologyService {
       select: { placeOfBirth: true },
     });
     const place = user?.placeOfBirth as any;
-    if (place && typeof place.lat === 'number' && typeof place.lng === 'number') {
+    if (place && typeof place.lat === 'number' && typeof place.lng === 'number' && !(place.lat === 0 && place.lng === 0)) {
       return { lat: place.lat, lng: place.lng };
+    }
+    // No stored coordinates (the user only ever typed a city name). Geocode the
+    // name via the shared geo proxy so the chart is cast for the real place
+    // instead of silently falling back to the Delhi default.
+    const name = typeof place === 'string' ? place.trim() : typeof place?.name === 'string' ? place.name.trim() : '';
+    if (name && this.geoService) {
+      try {
+        const hits = await this.geoService.search(name, 1);
+        if (hits[0]) return { lat: hits[0].lat, lng: hits[0].lng };
+      } catch (err) {
+        this.logger.warn(`Geocode of "${name}" failed: ${(err as Error)?.message ?? err}`);
+      }
     }
     return null;
   }
