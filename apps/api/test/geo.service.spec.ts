@@ -48,6 +48,21 @@ describe('GeoService (offline city index)', () => {
     expect(bombay[0]?.lng).toBeCloseTo(72.88, 1);
   });
 
+  it('matches accented city names from an ASCII query (diacritic folding)', async () => {
+    // Without folding these return nothing, or a tiny same-spelled homonym.
+    const zurich = await service.search('Zurich');
+    expect(zurich[0]?.name).toMatch(/z[üu]rich/i);
+    expect(zurich[0]?.countryCode).toBe('CH');
+
+    const sao = await service.search('Sao Paulo');
+    expect(sao[0]?.name).toMatch(/s[ãa]o paulo/i);
+    expect(sao[0]?.countryCode).toBe('BR');
+
+    // Bogotá, Colombia (7.6M) must outrank Bogota, New Jersey (~8k).
+    const bogota = await service.search('Bogota');
+    expect(bogota[0]?.countryCode).toBe('CO');
+  });
+
   it('is a prefix search (partial name returns candidates)', async () => {
     const r = await service.search('mumb');
     expect(r.some((c) => c.name.toLowerCase().startsWith('mumb'))).toBe(true);

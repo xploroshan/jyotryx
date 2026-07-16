@@ -292,11 +292,9 @@ describe('DailyBriefingService — My Day personalization', () => {
     expect(r.personalized).toBe(true);
     expect(r.personalizationReason).toBe('ok');
     expect(r.moonSign).toBe('Cancer');
-    // The geocoded coordinates are persisted back so the profile shows the
-    // birthplace as located and future reads skip the geocode.
-    expect(prisma.user.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { placeOfBirth: { name: 'Sakleshpur', lat: 12.94, lng: 75.78 } } }),
-    );
+    // The name-derived geocode stays transient — it is NOT written back to the
+    // profile as if it were a user-confirmed birthplace.
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('still prompts (missing_place) when the name cannot be geocoded', async () => {

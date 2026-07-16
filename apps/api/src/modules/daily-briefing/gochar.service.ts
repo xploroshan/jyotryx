@@ -53,11 +53,6 @@ export interface GocharPersonalization {
   guidanceAvoid: string;
   guidanceDoKey: string;
   guidanceAvoidKey: string;
-  /** The coordinates the chart was cast at. When the user had no stored lat/lng
-   *  these were geocoded from the place name, so the caller can persist them. */
-  natalCoords: { lat: number; lng: number };
-  /** True when `natalCoords` came from geocoding the place name (not stored). */
-  coordsGeocoded: boolean;
 }
 
 /** Canonical panchang keys computed from real ephemeris longitudes. */
@@ -113,16 +108,14 @@ export class GocharService {
    * captured when a place is picked from the autocomplete) still get a
    * chart-personalized reading, instead of being stuck on the shared almanac.
    */
-  private async resolveCoords(
-    placeOfBirth: unknown,
-  ): Promise<{ lat: number; lng: number; geocoded: boolean } | null> {
+  private async resolveCoords(placeOfBirth: unknown): Promise<{ lat: number; lng: number } | null> {
     const stored = this.parseLatLng(placeOfBirth);
-    if (stored) return { ...stored, geocoded: false };
+    if (stored) return stored;
     const name = this.placeName(placeOfBirth);
     if (!name || !this.geoService) return null;
     try {
       const hits = await this.geoService.search(name, 1);
-      if (hits[0]) return { lat: hits[0].lat, lng: hits[0].lng, geocoded: true };
+      if (hits[0]) return { lat: hits[0].lat, lng: hits[0].lng };
     } catch (err) {
       this.logger.warn(`Geocode of "${name}" failed: ${(err as Error)?.message ?? err}`);
     }
@@ -196,8 +189,6 @@ export class GocharService {
         guidanceAvoid: guidance.avoidItem,
         guidanceDoKey: guidance.doKey,
         guidanceAvoidKey: guidance.avoidKey,
-        natalCoords: { lat: coords.lat, lng: coords.lng },
-        coordsGeocoded: coords.geocoded,
       };
     } catch (err) {
       this.logger.warn(`Gochar personalization failed: ${(err as Error)?.message ?? err}`);

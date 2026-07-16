@@ -479,11 +479,6 @@ describe('AstrologyService', () => {
       const res = await service.getBazi('test-uuid', { dateOfBirth: '1990-05-15', timeOfBirth: '14:30' });
       expect(geoService.search).toHaveBeenCalledWith('Sakleshpur', 1);
       expect(res.pillars.year.element).toBeTruthy();
-      // Resolved coordinates are persisted back so the profile shows the place
-      // as located and future charts skip the geocode.
-      expect(prisma.user.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { placeOfBirth: { name: 'Sakleshpur', lat: 12.94, lng: 75.78 } } }),
-      );
     });
   });
 

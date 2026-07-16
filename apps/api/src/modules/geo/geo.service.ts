@@ -23,6 +23,18 @@ export interface GeoSuggestion {
 const MIN_QUERY_LEN = 2;
 const MAX_LIMIT = 8;
 
+/**
+ * Normalise for matching: strip diacritics and lowercase, so an ASCII query
+ * ("Zurich", "Sao Paulo", "Bogota") matches the accented dataset name
+ * ("Zürich", "São Paulo", "Bogotá"). Applied symmetrically to the index and
+ * the query. Without this, accented cities silently return nothing — or worse,
+ * a tiny same-spelled homonym outranks the real city because the real one was
+ * filtered out.
+ */
+function fold(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 interface CityRecord {
   name: string;
   nameLower: string;
@@ -88,7 +100,7 @@ export class GeoService {
         if (!coords || coords.length < 2) continue;
         recs.push({
           name: c.name,
-          nameLower: c.name.toLowerCase(),
+          nameLower: fold(c.name),
           country: c.country,
           lat: coords[1],
           lng: coords[0],
@@ -99,7 +111,7 @@ export class GeoService {
       this.logger.error(`Failed to load city dataset: ${(err as Error)?.message ?? err}`);
     }
     for (const a of CITY_ALIASES) {
-      recs.push({ name: a.name, nameLower: a.name.toLowerCase(), country: a.country, lat: a.lat, lng: a.lng, population: a.population });
+      recs.push({ name: a.name, nameLower: fold(a.name), country: a.country, lat: a.lat, lng: a.lng, population: a.population });
     }
     recs.sort((a, b) => (a.nameLower < b.nameLower ? -1 : a.nameLower > b.nameLower ? 1 : 0));
     this.index = recs;
@@ -112,7 +124,7 @@ export class GeoService {
    * [] (never throws) for a too-short query or any internal error.
    */
   async search(query: string, limit = 6, _lang = 'en'): Promise<GeoSuggestion[]> {
-    const q = (query ?? '').trim().toLowerCase();
+    const q = fold((query ?? '').trim());
     if (q.length < MIN_QUERY_LEN) return [];
     const cappedLimit = Math.min(Math.max(1, Math.floor(limit) || 6), MAX_LIMIT);
 
