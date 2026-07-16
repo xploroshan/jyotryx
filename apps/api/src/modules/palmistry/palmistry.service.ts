@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger, Optional, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, Optional, ServiceUnavailableException, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -398,10 +398,28 @@ export class PalmistryService {
                 imageKey,
                 imageSha256,
                 verificationId,
-                analysisData: { status: 'failed', problems: err.problems },
+                analysisData: { status: 'failed', problems: err.problems, failCode: err.reason ?? null },
               },
             })
             .catch(() => {});
+          // A reasoned image rejection gets a SPECIFIC, actionable 422 — the
+          // back-of-hand incident showed the generic "clearer, well-lit
+          // photo" advice sends users in the wrong direction when the actual
+          // problem is which SIDE of the hand faces the camera.
+          if (err.reason === 'back_of_hand') {
+            throw new UnprocessableEntityException({
+              message:
+                'That looks like the BACK of your hand — turn your palm (the side with the lines) toward the camera and try again. You have not been charged.',
+              code: 'back_of_hand',
+            });
+          }
+          if (err.reason === 'not_a_hand') {
+            throw new UnprocessableEntityException({
+              message:
+                "We couldn't find a hand in this photo — please upload a clear photo of your open palm. You have not been charged.",
+              code: 'not_a_hand',
+            });
+          }
           throw new ServiceUnavailableException(
             "We couldn't analyze your palm this time — please try again with a clearer, well-lit photo. You have not been charged.",
           );
@@ -525,7 +543,7 @@ export class PalmistryService {
   async getReadingStatus(
     userId: string,
     readingId: string,
-  ): Promise<{ id: string; status: string; analysis?: PalmistryAnalysis }> {
+  ): Promise<{ id: string; status: string; failCode?: string; analysis?: PalmistryAnalysis }> {
     const reading = await this.prisma.palmistryReading.findFirst({
       where: { id: readingId, userId },
       select: { id: true, userId: true, imageUrl: true, analysisData: true, createdAt: true },
@@ -537,7 +555,9 @@ export class PalmistryService {
       return { id: reading.id, status: 'processing' };
     }
     if (data?.status === 'failed') {
-      return { id: reading.id, status: 'failed' };
+      // failCode lets the polling client show the SPECIFIC reason (e.g.
+      // back_of_hand) instead of the generic "couldn't analyze" copy.
+      return { id: reading.id, status: 'failed', failCode: data?.failCode ?? undefined };
     }
 
     return {
@@ -614,6 +634,7 @@ export function buildPalmistrySystemPrompt(palmKBSection: string, locale?: strin
 
 Return a STRICT JSON object with these keys:
 {
+  "imageCheck": { "subject": "palm | back_of_hand | not_a_hand | unclear" },
   "atAGlance": {
     "strengths": "3-5 comma-separated personality strengths (e.g. 'Resilient, analytical, independent, loyal')",
     "lifePath": "one short phrase capturing life direction (e.g. 'A path of growth, leadership, and purpose')",
@@ -666,6 +687,7 @@ Return a STRICT JSON object with these keys:
 }
 
 Rules:
+- FIRST, before anything else, look at the image and set imageCheck.subject HONESTLY: "palm" only when the palmar surface with its creases/lines faces the camera; "back_of_hand" when knuckles/fingernails face the camera and palm lines are NOT visible; "not_a_hand" when the image contains no real human hand; "unclear" when it is too dark/blurred to tell. If subject is NOT "palm", return ONLY {"imageCheck": {...}} and nothing else — NEVER fabricate line observations you cannot see.
 - Always include ALL major lines (Heart, Head, Life, Fate, Sun) in the lines array — mark a missing/very faint line as "weak" and explain.
 - Aim for 5-7 entries in lines (include any visible minor lines you see).
 - Aim for 4-6 entries in mounts and 3-5 in fingerAnalysis.

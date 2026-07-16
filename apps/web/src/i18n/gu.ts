@@ -661,6 +661,9 @@ export const gu: TranslationKeys = {
     gateSharp: 'In focus',
     gateSteady: 'Hold still',
     gateReady: 'Scanning…',
+    backOfHandError: 'That looks like the BACK of your hand — turn your palm (the side with the lines) toward the camera and try again. You have not been charged.',
+    notAHandError: "We couldn't find a hand in this photo — please upload a clear photo of your open palm. You have not been charged.",
+    captureConfirmFailed: 'Could not confirm your palm in the captured photo — make sure your PALM (the side with the lines) faces the camera. Retaking…',
   },
   kundli: {
     badge: 'વૈદિક જન્મ કુંડળી',

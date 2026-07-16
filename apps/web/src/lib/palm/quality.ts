@@ -112,19 +112,24 @@ export function evaluateHandPose(
     : opts.detectedHand;
   const correctHand = !opts.expectedHand || physicalHand === opts.expectedHand;
 
-  // Palm facing the camera: cross-product z of the palm plane.
+  // Label-vs-winding sanity check — HONEST LIMITS (measured, not assumed):
+  // running the real landmarker on real photos showed MediaPipe's handedness
+  // label follows the 2D WINDING under a palm assumption (a back-of-left-hand
+  // photo is labelled like a right palm, at 0.97 confidence). Consequences:
+  //  - This check is nearly a tautology: it only trips on noisy frames.
+  //  - An OPPOSITE-hand dorsal view is geometrically IDENTICAL to the
+  //    expected palm in 2D and CANNOT be rejected from landmarks (the
+  //    dorsal-capture incident). Fingertip z-depth was measured and is
+  //    dominated by hand tilt — also unusable.
+  // Real dorsal rejection therefore lives in (a) the post-capture IMAGE-mode
+  // confirmation (evaluateCapturedStill) and (b) the server's vision-model
+  // image check, which sees appearance (nails/knuckles), not just geometry.
   const wrist = landmarks[0];
   const indexMcp = landmarks[5];
   const pinkyMcp = landmarks[17];
   const v1 = { x: indexMcp.x - wrist.x, y: indexMcp.y - wrist.y };
   const v2 = { x: pinkyMcp.x - wrist.x, y: pinkyMcp.y - wrist.y };
   const crossZ = v1.x * v2.y - v1.y * v2.x;
-  // For an upright hand seen palm-on (image coordinates, y grows DOWNWARD):
-  // Right hand → index MCP appears LEFT of pinky MCP → crossZ positive;
-  // Left hand → negative. Showing the BACK of the hand mirrors the layout and
-  // flips the sign. (Mirrored selfie previews flip the image, which flips
-  // crossZ AND the reported handedness together, so comparing against the
-  // DETECTED hand needs no extra correction.)
   const palmFacing = opts.detectedHand === 'Right' ? crossZ > 0 : crossZ < 0;
 
   // Coverage: hand bbox height fraction, inside frame margins.
@@ -139,6 +144,34 @@ export function evaluateHandPose(
   const coverageOk = inFrame && maxY - minY >= minCoverage;
 
   return { handPresent: true, correctHand, palmFacing, coverageOk };
+}
+
+/**
+ * Post-capture confirmation on the EXACT still that will be analyzed.
+ *
+ * VIDEO-mode tracking can carry a stale or borderline lock through the
+ * shutter: in the dorsal-capture incident every live gate was green, yet the
+ * captured still was not even detectable as a hand in IMAGE mode. Re-running
+ * detection on the still catches that class of drift before the user is sent
+ * to a doomed (if honest) server analysis.
+ *
+ * Coverage is deliberately NOT re-checked here — the still is the same frame
+ * the live gate already measured; this check is about presence + identity.
+ */
+export function evaluateCapturedStill(
+  det: { landmarks: { x: number; y: number }[]; handedness: 'Left' | 'Right' } | null,
+  expectedHand: 'Left' | 'Right' | null,
+): { ok: boolean; reason: 'no_hand' | 'wrong_hand' | null } {
+  if (!det || det.landmarks?.length !== 21) return { ok: false, reason: 'no_hand' };
+  const pose = evaluateHandPose(det.landmarks, {
+    expectedHand,
+    detectedHand: det.handedness,
+    mirrored: false,
+    minCoverage: 0,
+  });
+  if (!pose.handPresent) return { ok: false, reason: 'no_hand' };
+  if (!pose.correctHand || !pose.palmFacing) return { ok: false, reason: 'wrong_hand' };
+  return { ok: true, reason: null };
 }
 
 /** Landmark displacement between two frames (mean per-point movement). */

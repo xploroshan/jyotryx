@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, UnrecoverableError } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
@@ -8,7 +8,7 @@ import { UserService } from '../modules/user/user.service';
 import { FeatureAccessService } from '../common/feature-access/feature-access.service';
 import { StorageService } from '../storage/storage.service';
 import { PALMISTRY_QUEUE } from './queue.constants';
-import { runPalmVisionPipeline } from '../modules/palmistry/palm-analysis.pipeline';
+import { PalmAnalysisFailedError, runPalmVisionPipeline } from '../modules/palmistry/palm-analysis.pipeline';
 import type { HandLandmarkInput } from '../modules/palmistry/palm-metrics.util';
 import type { PalmVerification } from '../modules/palmistry/palm-verification.util';
 
@@ -119,13 +119,20 @@ export class PalmistryProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(`Palmistry ${readingId} failed: ${(error as Error).message}`);
 
+      // A reasoned image rejection (back of hand / not a hand) is a VERDICT,
+      // not a transient failure — retrying the job would re-run the vision
+      // call on the same image for the same answer. Treat it as final
+      // immediately: refund, mark failed with the specific code, stop retries.
+      const rejection =
+        error instanceof PalmAnalysisFailedError && error.reason ? error.reason : null;
+
       // Refund on final attempt. Palmistry is pay-to-unlock, so restore the
       // one-time entitlement bound to this reading (no-op for subscriber/
       // free readings). Legacy credit-charged jobs still get credits back.
       // Every step is individually guarded: a DB blip in one refund must not
       // skip the remaining refunds or the failed-marker (which the client's
       // polling depends on to stop).
-      if (job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
+      if (rejection !== null || job.attemptsMade >= (job.opts?.attempts ?? 3) - 1) {
         await this.featureAccess
           .refundEntitlementByRef(readingId)
           .catch((e) => this.logger.error(`Entitlement refund failed for ${readingId}`, e as Error));
@@ -155,7 +162,13 @@ export class PalmistryProcessor extends WorkerHost {
             data: {
               analysisData: {
                 status: 'failed',
-                message: 'Analysis failed. Your purchase has been restored.',
+                message:
+                  rejection === 'back_of_hand'
+                    ? 'That looks like the back of your hand — turn your palm toward the camera and try again. Your purchase has been restored.'
+                    : rejection === 'not_a_hand'
+                      ? "We couldn't find a hand in this photo. Your purchase has been restored."
+                      : 'Analysis failed. Your purchase has been restored.',
+                ...(rejection ? { failCode: rejection } : {}),
                 ...(seed ? { verificationSeed: seed } : {}),
               },
             },
@@ -165,6 +178,9 @@ export class PalmistryProcessor extends WorkerHost {
         }
       }
 
+      // UnrecoverableError tells BullMQ to fail the job without further
+      // attempts — the verdict won't change on a re-run.
+      if (rejection) throw new UnrecoverableError((error as Error).message);
       throw error;
     }
   }

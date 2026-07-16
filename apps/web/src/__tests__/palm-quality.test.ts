@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   measureFrameQuality,
   evaluateHandPose,
+  evaluateCapturedStill,
   landmarkMovement,
   LUMA_MIN,
 } from '@/lib/palm/quality';
@@ -113,9 +114,16 @@ describe('evaluateHandPose', () => {
     expect(gates.coverageOk).toBe(false);
   });
 
-  it('detects the back of the hand (palm not facing)', () => {
+  it('flags a label/winding mismatch (noise or same-hand dorsal per the label)', () => {
+    // HONEST SEMANTICS (measured on real photos): MediaPipe's handedness
+    // label follows the 2D winding, so a real dorsal view usually arrives
+    // with the FLIPPED label and passes this check — an opposite-hand dorsal
+    // view is geometrically identical to the expected palm and CANNOT be
+    // rejected from landmarks. This gate only trips when label and winding
+    // disagree; real dorsal rejection is owned by the post-capture IMAGE
+    // confirm and the server's appearance-aware vision check.
     // Mirror the x-coordinates: for a detected RIGHT hand, index now sits to
-    // the RIGHT of pinky — the camera sees the back of the hand.
+    // the RIGHT of pinky.
     const back = palmOnRightHand(0.7).map((p) => ({ x: 1 - p.x, y: p.y }));
     const gates = evaluateHandPose(back, {
       expectedHand: 'Right',
@@ -131,6 +139,48 @@ describe('evaluateHandPose', () => {
       evaluateHandPose(palmOnRightHand().slice(0, 10), { expectedHand: null, detectedHand: 'Right', mirrored: false })
         .handPresent,
     ).toBe(false);
+  });
+});
+
+describe('evaluateCapturedStill (post-capture confirmation)', () => {
+  // Geometry measured from the REAL dorsal-capture incident fixture
+  // (mirrored): detected 'Left' @0.97 with left-palm winding.
+  const dorsalRightMirrored = () => {
+    const lm = palmOnRightHand(0.7).map((p) => ({ x: 1 - p.x, y: p.y }));
+    return { landmarks: lm, handedness: 'Left' as const };
+  };
+
+  it('rejects when no hand was detected in the still (the incident photo)', () => {
+    // The user's actual captured photo was NOT detectable in IMAGE mode —
+    // the VIDEO-mode tracker had carried a stale lock through the shutter.
+    expect(evaluateCapturedStill(null, 'Right')).toEqual({ ok: false, reason: 'no_hand' });
+    expect(
+      evaluateCapturedStill({ landmarks: palmOnRightHand().slice(0, 5), handedness: 'Right' }, 'Right'),
+    ).toEqual({ ok: false, reason: 'no_hand' });
+  });
+
+  it('rejects a wrong-hand still (label ≠ expected)', () => {
+    expect(evaluateCapturedStill(dorsalRightMirrored(), 'Right')).toEqual({
+      ok: false,
+      reason: 'wrong_hand',
+    });
+  });
+
+  it('accepts the expected palm regardless of frame coverage', () => {
+    // Small-in-frame is fine here: the live gate already enforced coverage
+    // on this exact frame; the still check is about presence + identity.
+    expect(evaluateCapturedStill({ landmarks: palmOnRightHand(0.3), handedness: 'Right' }, 'Right')).toEqual({
+      ok: true,
+      reason: null,
+    });
+  });
+
+  it('DOCUMENTED LIMIT: an opposite-hand dorsal view passes the geometric check', () => {
+    // Back of the LEFT hand ≡ right palm in 2D (the incident geometry, as
+    // the live tracker saw it). Landmarks cannot reject this — the server's
+    // vision image-check (back_of_hand → 422) is the authoritative gate.
+    const incident = { landmarks: palmOnRightHand(0.7), handedness: 'Right' as const };
+    expect(evaluateCapturedStill(incident, 'Right').ok).toBe(true);
   });
 });
 

@@ -611,8 +611,17 @@ export default function PalmistryPage() {
         }
         if (res?.status === "failed") {
           // Tag as terminal so the catch below rethrows instead of swallowing
-          // it and polling a dead reading for the full 2-minute window.
-          const failed: any = new Error(t.palmistry.analysisFailed);
+          // it and polling a dead reading for the full 2-minute window. The
+          // failCode carries the vision model's specific verdict (e.g. the
+          // photo showed the BACK of the hand) so the user gets actionable
+          // advice instead of the generic "try a clearer photo".
+          const failed: any = new Error(
+            (res as any)?.failCode === "back_of_hand"
+              ? t.palmistry.backOfHandError
+              : (res as any)?.failCode === "not_a_hand"
+                ? t.palmistry.notAHandError
+                : t.palmistry.analysisFailed,
+          );
           failed.status = 422;
           throw failed;
         }
@@ -689,6 +698,20 @@ export default function PalmistryPage() {
         if (sub === true) router.push("/pricing");
         else if (sub === false) router.push("/checkout?type=credits&pack=overage_palmistry");
         else router.push("/checkout?type=palmistry");
+        return;
+      }
+      // Specific image-rejection verdicts from the sync path (422 + code):
+      // localized, actionable, and NOT presented as retryable-as-is — the
+      // user must change what the camera sees, not just tap Retry.
+      const code = err?.body?.code;
+      if (code === "back_of_hand") {
+        setError(t.palmistry.backOfHandError);
+        setErrorRetryable(false);
+        return;
+      }
+      if (code === "not_a_hand") {
+        setError(t.palmistry.notAHandError);
+        setErrorRetryable(false);
         return;
       }
       setError(err.message || t.palmistry.analysisFailed);
@@ -1464,6 +1487,7 @@ export default function PalmistryPage() {
             gateSharp: t.palmistry.gateSharp,
             gateSteady: t.palmistry.gateSteady,
             gateReady: t.palmistry.gateReady,
+            confirmFailed: t.palmistry.captureConfirmFailed,
           }}
         />
       )}
