@@ -41,6 +41,61 @@ export const mockKbService = () => ({
   renderStatus: jest.fn().mockReturnValue(null),
 });
 
+/** A palmistry reading that passes validatePalmistryAnalysis (all majors,
+ *  valid enums, substantive narratives). Shared by service + e2e suites. */
+export const validPalmReadingJson = () => {
+  const line = (name: string) => ({
+    name,
+    subtitle: 'Life area',
+    description: 'Clear and well-defined across the palm.',
+    observations: ['Deep and clear'],
+    strength: 'strong',
+    interpretation: 'A substantive interpretation tied to what is visible in this palm.',
+  });
+  return {
+    atAGlance: { strengths: 'Resilient', lifePath: 'Growth', love: 'Sincere', bestSuitedFor: 'Strategy' },
+    handOverview: { handType: 'Air', palmShape: 'Square', fingers: 'Long', thumb: 'Strong', dominantHand: 'Likely right' },
+    handShape: { type: 'Air', description: 'Square palm with long fingers — analytical and communicative.' },
+    lines: ['Heart Line', 'Head Line', 'Life Line', 'Fate Line', 'Sun Line'].map(line),
+    mounts: [
+      { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership.' },
+      { name: 'Mount of Saturn', prominence: 'normal', interpretation: 'Discipline.' },
+      { name: 'Mount of Venus', prominence: 'elevated', interpretation: 'Warmth.' },
+    ],
+    fingerAnalysis: [
+      { finger: 'Thumb', length: 'long', interpretation: 'Willpower.' },
+      { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Balanced confidence.' },
+      { finger: 'Middle (Saturn)', length: 'average', interpretation: 'Structured.' },
+    ],
+    specialMarkings: [],
+    timingInsights: [{ ageRange: '20-35 years', area: 'career', description: 'A self-chosen path strengthens.' }],
+    overallReading: 'A thorough holistic synthesis of the personality and life themes visible in this specific palm.',
+    healthInsights: 'Vitality is strong; manage stress with steady daily routines and hydration.',
+    careerInsights: 'Aptitude for structured, strategic work with a creative dimension; leadership develops steadily.',
+    relationshipInsights: 'Deep, loyal emotional patterns; partnership built on mutual respect suits this hand.',
+    spiritualInsights: 'Considered choices on the spiritual path.',
+    cautions: 'Avoid overextending; ground decisions in conversation.',
+    closingAffirmation: 'Your path is yours to build.',
+  };
+};
+
+/** Fake raw OpenAI SDK client for the palm pipeline: alternates reading →
+ *  geometry responses (the pipeline makes exactly two calls per analysis). */
+export const mockPalmVisionClient = () => {
+  let call = 0;
+  const create = jest.fn(async () => {
+    call += 1;
+    const payload = call % 2 === 1
+      ? validPalmReadingJson()
+      : { polylines: [{ name: 'Heart Line', kind: 'major', points: [[0.2, 0.4], [0.4, 0.38], [0.6, 0.4], [0.8, 0.45]], confidence: 0.9 }] };
+    return {
+      choices: [{ message: { content: JSON.stringify(payload) } }],
+      usage: { prompt_tokens: 100, completion_tokens: 500, total_tokens: 600 },
+    };
+  });
+  return { chat: { completions: { create } } };
+};
+
 export const mockOpenAIService = () => ({
   chat: jest.fn().mockResolvedValue(null),
   chatCompletion: jest.fn().mockResolvedValue(null),

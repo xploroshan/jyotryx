@@ -51,6 +51,23 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// image-prep needs real image decoding (jsdom has no codecs) — it has its own
+// unit suite; here we pass the file through untouched so the page flow runs.
+vi.mock('@/lib/image-prep', () => ({
+  prepareImage: vi.fn(async (file: File) => ({
+    file,
+    dataUrl: 'data:image/jpeg;base64,ZmFrZQ==',
+    width: 1024,
+    height: 768,
+  })),
+  ImagePrepError: class ImagePrepError extends Error {
+    constructor(public code: string) {
+      super(code);
+      this.name = 'ImagePrepError';
+    }
+  },
+}));
+
 // ─── Mock analysis result ─────────────────────────────────────────────────
 const mockAnalysisResult = {
   lines: [
@@ -161,5 +178,92 @@ describe('Palmistry Page: Rendering', () => {
     const diagram = screen.getByTestId('palm-diagram');
     expect(diagram).toBeDefined();
     expect(diagram.textContent).toBe('analysis-loaded');
+  });
+});
+
+describe('Palmistry Page: Wireframe + authenticity', () => {
+  async function analyze(result: any) {
+    mockApiUpload.mockResolvedValueOnce(result);
+    const { container } = render(<PalmistryPage />);
+    const file = new File(['fake-image-data'], 'palm.png', { type: 'image/png' });
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.click(await screen.findByText(/Analyze Palm/));
+    await screen.findByText('Palm Analysis Results');
+    return container;
+  }
+
+  const geometryResult = {
+    ...mockAnalysisResult,
+    geometry: {
+      landmarks: Array.from({ length: 21 }, (_, i) => ({ x: 0.3 + (i % 5) * 0.1, y: 0.2 + Math.floor(i / 5) * 0.15, z: 0 })),
+      handedness: 'Right',
+      score: 0.97,
+      metrics: { palmAspect: 0.91, fingerRatio: 0.8, handShape: 'Air' },
+      polylines: [
+        { name: 'Heart Line', kind: 'major', points: [[0.2, 0.4], [0.4, 0.38], [0.6, 0.4], [0.8, 0.45]], confidence: 0.9 },
+        { name: 'Head Line', kind: 'major', points: [[0.2, 0.5], [0.5, 0.5], [0.8, 0.55]], confidence: 0.85 },
+        { name: 'Girdle of Venus', kind: 'minor', points: [[0.3, 0.3], [0.5, 0.28], [0.7, 0.3]], confidence: 0.6 },
+      ],
+    },
+    verification: {
+      verificationId: 'VERIF-abc123xyz',
+      groundednessScore: 0.86,
+      authentic: true,
+      checks: [{ code: 'handShape.type', expected: 'Air', observed: 'Air', pass: true }],
+    },
+    factors: [
+      { code: 'measurement.handShape.Air', label: 'Measured hand shape: Air', contribution: 'neutral', source: 'measurement' },
+      { code: 'line.heart_line.strong', label: 'Heart Line: strong', contribution: 'positive', source: 'line' },
+    ],
+  };
+
+  it('renders the neon wireframe (not the static diagram) when geometry exists', async () => {
+    const container = await analyze(geometryResult);
+    // Wireframe title + crisp SVG label for a traced line.
+    expect(screen.getByText(/Your Palm — Scan/)).toBeDefined();
+    expect(screen.getByText('HEART LINE')).toBeDefined();
+    // Real SVG paths exist; the mocked PalmDiagram is NOT used.
+    expect(container.querySelectorAll('svg path').length).toBeGreaterThan(2);
+    expect(screen.queryByTestId('palm-diagram')).toBeNull();
+  });
+
+  it('shows the verification badge with id and groundedness', async () => {
+    await analyze(geometryResult);
+    expect(screen.getByText('Verified reading')).toBeDefined();
+    expect(screen.getByText(/VERIF-abc123xyz/)).toBeDefined();
+    expect(screen.getByText(/86%/)).toBeDefined();
+  });
+
+  it('renders Show Your Work with measured + observed factors', async () => {
+    await analyze(geometryResult);
+    expect(screen.getByText('Measured hand shape: Air')).toBeDefined();
+    expect(screen.getByText('Heart Line: strong')).toBeDefined();
+  });
+
+  it('shows the sample-reading banner when the reading is not authentic', async () => {
+    await analyze({
+      ...mockAnalysisResult,
+      verification: { verificationId: 'v', groundednessScore: 0, authentic: false, authenticReason: 'no_image', checks: [] },
+    });
+    expect(screen.getByText('Sample reading')).toBeDefined();
+    expect(screen.queryByText('Verified reading')).toBeNull();
+  });
+
+  it('shows the duplicate soft-flag when the same photo was analysed before', async () => {
+    await analyze({
+      ...geometryResult,
+      verification: {
+        ...geometryResult.verification,
+        duplicateOf: { readingId: 'r-1', createdAt: '2026-07-01T00:00:00Z' },
+      },
+    });
+    expect(screen.getByText(/previously analysed on/)).toBeDefined();
+  });
+
+  it('falls back to the static PalmDiagram when no geometry came back', async () => {
+    await analyze({ ...mockAnalysisResult });
+    expect(screen.getByTestId('palm-diagram')).toBeDefined();
+    expect(screen.queryByText(/Your Palm — Scan/)).toBeNull();
   });
 });

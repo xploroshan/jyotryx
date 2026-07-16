@@ -511,16 +511,19 @@ model SharedMatch {
 }
 
 model PalmistryReading {
-  id           String   @id @default(uuid()) @db.Uuid
-  userId       String   @db.Uuid
-  imageUrl     String
-  imageKey     String? /// R2 object key for the palm image
-  analysisData Json /// AI-generated palm analysis
-  createdAt    DateTime @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  imageUrl       String
+  imageKey       String? /// R2 object key for the palm image
+  analysisData   Json /// AI-generated palm analysis
+  imageSha256    String?  @db.Char(64) /// SHA-256 of the analysed image bytes (uniqueness / duplicate detection)
+  verificationId String?  @unique /// URL-safe id printed on the report (authenticity)
+  createdAt      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, imageSha256])
   @@map("palmistry_readings")
 }
 

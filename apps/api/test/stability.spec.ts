@@ -263,13 +263,19 @@ describe('Stability: Graceful Degradation', () => {
       service = module.get<PalmistryService>(PalmistryService);
     });
 
-    it('should return fallback palm reading', async () => {
-      const result = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
+    it('fails honestly (503) for an image-backed reading when OpenAI is down — no fake reading', async () => {
+      const { ServiceUnavailableException } = await import('@nestjs/common');
+      await expect(
+        service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg'),
+      ).rejects.toThrow(ServiceUnavailableException);
+    });
 
-      expect(result).toBeDefined();
+    it('still serves the labelled no-image sample when OpenAI is down (graceful degradation)', async () => {
+      const result: any = await service.analyzePalm('test-uuid');
+
       expect(result.lines).toBeDefined();
-      expect(result.mounts).toBeDefined();
       expect(result.overallReading).toBeTruthy();
+      expect(result.verification.authentic).toBe(false);
     });
   });
 });

@@ -35,7 +35,7 @@ export class OpenAIService implements OnModuleInit {
     return this.llmService?.getModel() ?? this.configService.get<string>('openai.model', 'gpt-4o-mini');
   }
 
-  getModelForFeature(feature: 'default' | 'precision' | 'vision'): string {
+  getModelForFeature(feature: 'default' | 'precision' | 'vision' | 'palmistry-vision'): string {
     return this.llmService?.getModelForFeature(feature) ?? this.configService.get<string>('openai.model', 'gpt-4o-mini');
   }
 

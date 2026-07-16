@@ -3,15 +3,18 @@
 import { useTranslation } from "@/i18n";
 
 /**
- * A single deterministic chart factor behind a reading. Mirrors the API's
- * `ChartFactor` shape (apps/api/src/modules/astrology/factors.util.ts).
+ * A single deterministic factor behind a reading. Mirrors the API's
+ * `ChartFactor` shape (apps/api/src/modules/astrology/factors.util.ts) and its
+ * palmistry counterpart `PalmFactor` (palm-factors.util.ts).
  */
 export interface ChartFactor {
   code: string;
   label: string;
   detail?: string;
   contribution: "positive" | "negative" | "neutral";
-  source: "planet" | "yoga" | "dasha" | "dosha" | "panchang";
+  source:
+    | "planet" | "yoga" | "dasha" | "dosha" | "panchang" // astrology
+    | "line" | "mount" | "finger" | "measurement" | "marking"; // palmistry
 }
 
 /**
