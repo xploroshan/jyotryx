@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { ServiceUnavailableException } from '@nestjs/common';
 import { PalmistryService } from '../src/modules/palmistry/palmistry.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { UserService } from '../src/modules/user/user.service';
@@ -9,12 +10,58 @@ import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { StorageService } from '../src/storage/storage.service';
 import { mockKnowledgeService, mockStorageService } from './helpers/mocks';
 
+/** A reading that passes validatePalmistryAnalysis (all majors, valid enums,
+ *  substantive narrative sections). */
+export function validReadingJson() {
+  const line = (name: string) => ({
+    name,
+    subtitle: 'Life area',
+    description: 'Clear and well-defined across the palm.',
+    observations: ['Deep and clear'],
+    strength: 'strong',
+    interpretation: 'A substantive interpretation tied to what is visible in this palm.',
+  });
+  return {
+    atAGlance: { strengths: 'Resilient', lifePath: 'Growth', love: 'Sincere', bestSuitedFor: 'Strategy' },
+    handOverview: { handType: 'Air', palmShape: 'Square', fingers: 'Long', thumb: 'Strong', dominantHand: 'Likely right' },
+    handShape: { type: 'Air', description: 'Square palm with long fingers — analytical and communicative.' },
+    lines: [line('Heart Line'), line('Head Line'), line('Life Line'), line('Fate Line'), line('Sun Line')],
+    mounts: [
+      { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Leadership.' },
+      { name: 'Mount of Saturn', prominence: 'normal', interpretation: 'Discipline.' },
+      { name: 'Mount of Venus', prominence: 'elevated', interpretation: 'Warmth.' },
+    ],
+    fingerAnalysis: [
+      { finger: 'Thumb', length: 'long', interpretation: 'Willpower.' },
+      { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Balanced confidence.' },
+      { finger: 'Middle (Saturn)', length: 'average', interpretation: 'Structured.' },
+    ],
+    specialMarkings: [],
+    timingInsights: [{ ageRange: '20-35 years', area: 'career', description: 'A self-chosen path strengthens.' }],
+    overallReading: 'A thorough holistic synthesis of the personality and life themes visible in this specific palm.',
+    healthInsights: 'Vitality is strong; manage stress with steady daily routines and hydration.',
+    careerInsights: 'Aptitude for structured, strategic work with a creative dimension; leadership develops steadily.',
+    relationshipInsights: 'Deep, loyal emotional patterns; partnership built on mutual respect suits this hand.',
+    spiritualInsights: 'Considered choices on the spiritual path.',
+    cautions: 'Avoid overextending; ground decisions in conversation.',
+    closingAffirmation: 'Your path is yours to build.',
+  };
+}
+
+function chatResponse(payload: unknown) {
+  return {
+    choices: [{ message: { content: JSON.stringify(payload) } }],
+    usage: { prompt_tokens: 100, completion_tokens: 500, total_tokens: 600 },
+  };
+}
+
 describe('PalmistryService', () => {
   let service: PalmistryService;
   let prisma: any;
   let userService: any;
   let featureAccess: any;
   let openaiService: any;
+  let fakeCreate: jest.Mock;
 
   const mockUser = {
     id: 'test-uuid',
@@ -32,6 +79,8 @@ describe('PalmistryService', () => {
           userId: 'test-uuid',
           createdAt: new Date(),
         }),
+        findFirst: jest.fn().mockResolvedValue(null),
+        delete: jest.fn().mockResolvedValue({}),
       },
       user: {
         findUnique: jest.fn().mockResolvedValue(mockUser),
@@ -61,12 +110,25 @@ describe('PalmistryService', () => {
       incrementUsage: jest.fn().mockResolvedValue(undefined),
     };
 
+    // Fake OpenAI SDK client: first call returns the reading, second the
+    // geometry polylines (the pipeline makes exactly these two calls).
+    fakeCreate = jest
+      .fn()
+      .mockResolvedValueOnce(chatResponse(validReadingJson()))
+      .mockResolvedValueOnce(
+        chatResponse({
+          polylines: [
+            { name: 'Heart Line', kind: 'major', points: [[0.2, 0.4], [0.4, 0.38], [0.6, 0.4], [0.8, 0.45]], confidence: 0.9 },
+          ],
+        }),
+      );
     openaiService = {
       chat: jest.fn().mockResolvedValue(null),
       chatCompletion: jest.fn().mockResolvedValue(null),
-      chatWithImage: jest.fn().mockResolvedValue(null),
-      getClient: jest.fn().mockReturnValue(null),
+      getClient: jest.fn().mockReturnValue({ chat: { completions: { create: fakeCreate } } }),
       getModel: jest.fn().mockReturnValue('gpt-4o'),
+      getModelForFeature: jest.fn().mockReturnValue('gpt-4o'),
+      recordUsage: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -109,48 +171,121 @@ describe('PalmistryService', () => {
       expect(userService.deductWithRefund).not.toHaveBeenCalled();
     });
 
-    it('should return fallback analysis when OpenAI fails', async () => {
-      openaiService.chatWithImage.mockResolvedValue(null);
-      openaiService.chat.mockResolvedValue(null);
+    it('returns the validated analysis with all required sections + verification', async () => {
+      const result: any = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
 
-      const result = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
-
-      expect(result).toBeDefined();
-      expect(result.lines).toBeDefined();
-      expect(result.mounts).toBeDefined();
-    });
-
-    it('should return analysis with all required sections', async () => {
-      openaiService.chatWithImage.mockResolvedValue(null);
-      openaiService.chat.mockResolvedValue(null);
-
-      const result = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
-
-      // Check that key analysis fields exist
-      expect(result).toHaveProperty('lines');
-      expect(result).toHaveProperty('mounts');
+      expect(result.lines.length).toBeGreaterThanOrEqual(5);
+      expect(result.mounts.length).toBeGreaterThanOrEqual(3);
       expect(result).toHaveProperty('overallReading');
+      // Authenticity layer: verified id + content hash + factors present.
+      expect(result.verification.authentic).toBe(true);
+      expect(result.verification.verificationId).toBeTruthy();
+      expect(result.verification.imageSha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(Array.isArray(result.factors)).toBe(true);
+      expect(result.geometry?.polylines?.length).toBeGreaterThan(0);
     });
 
-    it('should save reading to database', async () => {
-      const imageBuffer = Buffer.from('fake-image-data');
+    it('HONESTY: fails with 503 and does NOT charge when the vision analysis fails', async () => {
+      // Both attempts return garbage → PalmAnalysisFailedError → 503, no consume.
+      fakeCreate.mockReset();
+      fakeCreate.mockResolvedValue(chatResponse({ nonsense: true }));
 
-      await service.analyzePalm('test-uuid', imageBuffer, 'image/jpeg');
+      await expect(
+        service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg'),
+      ).rejects.toThrow(ServiceUnavailableException);
 
-      expect(prisma.palmistryReading.create).toHaveBeenCalled();
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+      // A failed reading row is persisted for audit.
+      expect(prisma.palmistryReading.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ analysisData: expect.objectContaining({ status: 'failed' }) }),
+        }),
+      );
     });
 
-    it('should handle missing image gracefully', async () => {
-      const result = await service.analyzePalm('test-uuid');
+    it('HONESTY: fails with 503 (no charge) when an image is supplied but no vision client exists', async () => {
+      openaiService.getClient.mockReturnValue(null);
+
+      await expect(
+        service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg'),
+      ).rejects.toThrow(ServiceUnavailableException);
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+    });
+
+    it('soft-flags a byte-identical resubmission instead of blocking it', async () => {
+      prisma.palmistryReading.findFirst.mockResolvedValue({
+        id: 'palm-0',
+        createdAt: new Date('2026-07-01T00:00:00Z'),
+      });
+
+      const result: any = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
+
+      expect(result.verification.duplicateOf).toEqual({
+        readingId: 'palm-0',
+        createdAt: '2026-07-01T00:00:00.000Z',
+      });
+      // Still analysed + charged: a retry is a legitimate new reading.
+      expect(featureAccess.consumeEntitlement).toHaveBeenCalled();
+    });
+
+    it('should save reading to database with verification columns', async () => {
+      await service.analyzePalm('test-uuid', Buffer.from('fake-image-data'), 'image/jpeg');
+
+      expect(prisma.palmistryReading.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            imageSha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+            verificationId: expect.any(String),
+          }),
+        }),
+      );
+    });
+
+    it('grounds measurable claims against client-measured landmarks', async () => {
+      // Landmarks describing a clearly LONG palm + SHORT fingers → Fire hand;
+      // the model claimed Air, so grounding must correct it and record a check.
+      const L = 0.4;
+      const W = 0.7 * L;
+      const wrist = { x: 0.5, y: 0.9, z: 0 };
+      const rowY = wrist.y - L;
+      const lm = new Array(21).fill(null).map(() => ({ x: 0.5, y: rowY, z: 0 }));
+      lm[0] = wrist;
+      lm[5] = { x: 0.5 - W / 2, y: rowY, z: 0 };
+      lm[9] = { x: 0.5, y: rowY, z: 0 };
+      lm[13] = { x: 0.5 + W / 6, y: rowY, z: 0 };
+      lm[17] = { x: 0.5 + W / 2, y: rowY, z: 0 };
+      // Short middle finger (~60% of palm length), straight up in 3 segments.
+      const fingerLen = 0.6 * L;
+      lm[10] = { x: 0.5, y: rowY - fingerLen / 3, z: 0 };
+      lm[11] = { x: 0.5, y: rowY - (2 * fingerLen) / 3, z: 0 };
+      lm[12] = { x: 0.5, y: rowY - fingerLen, z: 0 };
+
+      const result: any = await service.analyzePalm(
+        'test-uuid',
+        Buffer.from('fake'),
+        'image/jpeg',
+        undefined,
+        undefined,
+        JSON.stringify({ landmarks: lm, handedness: 'Right', score: 0.95 }),
+      );
+
+      expect(result.handShape.type).toBe('Fire'); // corrected from claimed 'Air'
+      const shapeCheck = result.verification.checks.find((c: any) => c.code === 'handShape.type');
+      expect(shapeCheck).toMatchObject({ expected: 'Fire', observed: 'Air', pass: false });
+      expect(result.geometry.metrics.handShape).toBe('Fire');
+    });
+
+    it('should handle missing image gracefully (labelled sample, never charged)', async () => {
+      const result: any = await service.analyzePalm('test-uuid');
 
       expect(result).toBeDefined();
       expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
+      // The no-image sample is honestly labelled.
+      expect(result.verification.authentic).toBe(false);
+      expect(result.verification.authenticReason).toBe('no_image');
     });
 
-    it('does NOT consume the entitlement for a no-image request (only a canned fallback is returned)', async () => {
-      // A no-image request produces only the generic fallback (no Vision call).
-      // Access is still resolved, but nothing is consumed — the user isn't
-      // charged a one-time unlock for a reading that was never analysed.
+    it('does NOT consume the entitlement for a no-image request', async () => {
       await service.analyzePalm('test-uuid');
 
       expect(featureAccess.resolveUnlock).toHaveBeenCalledWith('test-uuid', 'PALMISTRY');
@@ -158,8 +293,6 @@ describe('PalmistryService', () => {
     });
 
     it('does NOT count a metered reading for a no-image request', async () => {
-      // Subscription model (credits off): a no-image request must not burn a
-      // metered reading either.
       featureAccess.creditsEnabled.mockResolvedValue(false);
 
       await service.analyzePalm('test-uuid');

@@ -35,6 +35,10 @@ interface LlmRuntimeConfig {
   defaultModel: string;
   precisionModel: string;
   visionModel: string;
+  /** Vision model for palmistry specifically — accuracy-critical, paid feature.
+   *  Defaults to the precision-grade gpt-4o rather than the mini vision bucket;
+   *  admin-overridable at runtime via `llm.vision.palmistryModel`. */
+  palmistryVisionModel: string;
   temperature: number;
   // ─── Phase 3 admin kill-switch + pricing overrides ─────────────────
   // `providerEnabled[name]` is the operator's explicit enable/disable
@@ -86,6 +90,7 @@ export class LlmService implements OnModuleInit {
       defaultModel: this.configService.get<string>('openai.model', 'gpt-4o-mini'),
       precisionModel: this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
       visionModel: this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
+      palmistryVisionModel: this.configService.get<string>('openai.modelVisionPalmistry', 'gpt-4o'),
       temperature: 0.7,
       providerEnabled: {},
       modelCostOverrides: {},
@@ -120,11 +125,12 @@ export class LlmService implements OnModuleInit {
     return this.currentConfig.defaultModel;
   }
 
-  getModelForFeature(feature: 'default' | 'precision' | 'vision'): string {
+  getModelForFeature(feature: 'default' | 'precision' | 'vision' | 'palmistry-vision'): string {
     this.maybeRefreshInBackground();
     switch (feature) {
       case 'precision': return this.currentConfig.precisionModel;
       case 'vision': return this.currentConfig.visionModel;
+      case 'palmistry-vision': return this.currentConfig.palmistryVisionModel;
       default: return this.currentConfig.defaultModel;
     }
   }
@@ -537,6 +543,9 @@ export class LlmService implements OnModuleInit {
       defaultModel: settings['llm.default.model'] || this.configService.get<string>('openai.model', 'gpt-4o-mini'),
       precisionModel: settings['llm.precision.model'] || this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
       visionModel: settings['llm.vision.model'] || this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
+      palmistryVisionModel:
+        settings['llm.vision.palmistryModel'] ||
+        this.configService.get<string>('openai.modelVisionPalmistry', 'gpt-4o'),
       temperature: parseFloat(settings['llm.default.temperature'] || '0.7') || 0.7,
       providerEnabled,
       modelCostOverrides,

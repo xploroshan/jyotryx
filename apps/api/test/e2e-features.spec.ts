@@ -30,6 +30,7 @@ import {
   mockKnowledgeService,
   mockKbService,
   mockOpenAIService,
+  mockPalmVisionClient,
   mockPrismaService,
   mockCacheService,
   mockUserService,
@@ -318,7 +319,17 @@ describe('E2E: Palmistry Endpoint', () => {
         { provide: ConfigService, useValue: mockConfigService() },
         { provide: UserService, useValue: userService },
         { provide: FeatureAccessService, useValue: featureAccess },
-        { provide: OpenAIService, useValue: mockOpenAIService() },
+        {
+          provide: OpenAIService,
+          useValue: {
+            ...mockOpenAIService(),
+            // Working vision client: an image-backed analysis must run the
+            // real pipeline (honesty contract: unavailable vision → 503).
+            getClient: jest.fn().mockReturnValue(mockPalmVisionClient()),
+            getModelForFeature: jest.fn().mockReturnValue('gpt-4o'),
+            recordUsage: jest.fn(),
+          },
+        },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: KbService, useValue: mockKbService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
@@ -359,13 +370,16 @@ describe('E2E: Palmistry Endpoint', () => {
       await expect(service.analyzePalm('test-uuid')).rejects.toThrow(PaymentRequiredException);
     });
 
-    it('BUG CONFIRMATION: different images produce identical fallback results', async () => {
-      const r1 = await service.analyzePalm('user-A', Buffer.from('image-data-one'), 'image/jpeg');
-      const r2 = await service.analyzePalm('user-B', Buffer.from('image-data-two-very-different'), 'image/png');
-      // This test documents the bug: results are identical regardless of input
-      expect(r1.overallReading).toBe(r2.overallReading);
-      expect(r1.lines.map((l) => l.name)).toEqual(r2.lines.map((l) => l.name));
-      expect(r1.mounts.map((m) => m.name)).toEqual(r2.mounts.map((m) => m.name));
+    it('UNIQUENESS: different images carry distinct verification hashes', async () => {
+      // The retired \"identical fallback\" bug is now structurally impossible for
+      // image-backed requests; every reading is verifiably bound to the exact
+      // bytes analysed.
+      const r1: any = await service.analyzePalm('user-A', Buffer.from('image-data-one'), 'image/jpeg');
+      const r2: any = await service.analyzePalm('user-B', Buffer.from('image-data-two-very-different'), 'image/png');
+      expect(r1.verification.imageSha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(r2.verification.imageSha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(r1.verification.imageSha256).not.toBe(r2.verification.imageSha256);
+      expect(r1.verification.verificationId).not.toBe(r2.verification.verificationId);
     });
   });
 });

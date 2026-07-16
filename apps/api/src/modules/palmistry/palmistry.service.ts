@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger, Optional } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -14,6 +14,14 @@ import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { StorageService } from '../../storage/storage.service';
 import { PALMISTRY_QUEUE } from '../../queue/queue.constants';
 import type { PalmistryJobData } from '../../queue/palmistry.processor';
+import { parseHandLandmarks, type HandLandmarkInput } from './palm-metrics.util';
+import {
+  landmarkFingerprint,
+  newVerificationId,
+  sha256Hex,
+  type PalmVerification,
+} from './palm-verification.util';
+import { PalmAnalysisFailedError, runPalmVisionPipeline } from './palm-analysis.pipeline';
 
 export interface PalmistryAnalysis {
   id: string;
@@ -122,11 +130,15 @@ export class PalmistryService {
     imageMimeType?: string,
     locale?: string,
     gender?: string,
+    landmarksRaw?: unknown,
   ): Promise<PalmistryAnalysis> {
     this.logger.log(`Analyzing palm for user: ${userId}`);
 
     const access = await this.resolvePalmAccess(userId);
-    return this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, access);
+    // Client-measured hand landmarks (untrusted input — validated here). They
+    // power the wireframe geometry + deterministic grounding; optional.
+    const landmarks = parseHandLandmarks(landmarksRaw ?? null);
+    return this.runPalmistryAnalysis(userId, imageBuffer, imageMimeType, locale, gender, access, landmarks);
   }
 
   /**
@@ -163,6 +175,7 @@ export class PalmistryService {
     locale: string | undefined,
     gender: string | undefined,
     access: PalmAccess,
+    landmarks: HandLandmarkInput | null = null,
   ): Promise<PalmistryAnalysis> {
     // A request with no image only ever produces the generic, canned fallback
     // reading — the Vision call below is skipped entirely (it requires an
@@ -172,6 +185,28 @@ export class PalmistryService {
     // analysed. The access check in resolvePalmAccess still runs; only the
     // charge (consumeEntitlement / incrementUsage) is waived here.
     const imageProvided = !!imageBuffer;
+
+    // ── Authenticity pre-compute ─────────────────────────────────────────
+    // Every reading gets a verification id; image-backed readings also get a
+    // content hash (uniqueness) and a landmark fingerprint (proof a real hand
+    // was measured). Byte-identical resubmissions are soft-flagged, never
+    // blocked — retries are legitimate.
+    const verificationId = newVerificationId();
+    const imageSha256 = imageBuffer ? sha256Hex(imageBuffer) : null;
+    const lmFingerprint = landmarkFingerprint(landmarks);
+    let duplicateOf: PalmVerification['duplicateOf'];
+    if (imageSha256) {
+      try {
+        const prior = await this.prisma.palmistryReading.findFirst({
+          where: { userId, imageSha256 },
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, createdAt: true },
+        });
+        if (prior) duplicateOf = { readingId: prior.id, createdAt: prior.createdAt.toISOString() };
+      } catch (err) {
+        this.logger.warn(`Palm duplicate lookup failed (continuing): ${(err as Error)?.message}`);
+      }
+    }
 
     // Upload image to R2 first (needed by both sync and async paths)
     let imageKey: string | null = null;
@@ -203,7 +238,20 @@ export class PalmistryService {
             userId,
             imageUrl,
             imageKey,
-            analysisData: { status: 'processing' },
+            imageSha256,
+            verificationId,
+            // The verification seed rides in the processing stub so the queue
+            // processor can assemble the final verification block without
+            // recomputing hashes (it never sees the raw bytes).
+            analysisData: {
+              status: 'processing',
+              verificationSeed: {
+                verificationId,
+                imageSha256,
+                landmarkFingerprint: lmFingerprint,
+                duplicateOf: duplicateOf ?? null,
+              },
+            },
           },
         });
 
@@ -215,6 +263,7 @@ export class PalmistryService {
           imageMimeType,
           locale,
           gender,
+          landmarks: landmarks ?? undefined,
           // Metered model: pass the counter so a failed job gives the reading
           // back (the unit is counted now, in recordPalmConsumption below).
           // Only when an image was actually provided — a no-image fallback
@@ -276,57 +325,94 @@ export class PalmistryService {
     }
 
     if (client && imageBuffer) {
-      const visionModel = this.openaiService.getModelForFeature('vision');
+      // HONESTY CONTRACT: an image-backed analysis either succeeds (validated
+      // output) or FAILS visibly with no charge — it is never silently swapped
+      // for the canned fallback that reads the same for everyone.
+      const visionModel = this.openaiService.getModelForFeature('palmistry-vision');
       try {
         const base64Image = imageBuffer.toString('base64');
-        const completion = await client.chat.completions.create({
-          model: visionModel,
-          messages: [
-            {
-              role: 'system',
-              content: buildPalmistrySystemPrompt(palmKBSection, locale, gender),
-            },
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: buildPalmistryUserPrompt(gender) },
-                { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}`, detail: 'high' } },
-              ],
-            },
-          ],
-          max_tokens: 3500,
-          response_format: { type: 'json_object' },
+        const result = await runPalmVisionPipeline({
+          client,
+          readingModel: visionModel,
+          geometryModel: visionModel,
+          imageUrl: `data:${imageMimeType};base64,${base64Image}`,
+          kbSection: palmKBSection,
+          locale,
+          gender,
+          landmarks,
+          recordUsage: (model, usage) =>
+            this.openaiService.recordUsage?.({ userId, feature: 'palmistry', model, usage }),
+          logger: this.logger,
         });
 
-        this.openaiService.recordUsage?.({
-          userId,
-          feature: 'palmistry',
-          model: visionModel,
-          usage: completion?.usage,
-        });
-
-        const content = completion.choices[0]?.message?.content;
-        if (content) {
-          try {
-            analysisData = JSON.parse(content);
-          } catch (parseErr) {
-            this.logger.error(
-              `Palmistry: vision returned invalid JSON, using fallback: ${(parseErr as Error)?.message}`,
-            );
-          }
+        const verification: PalmVerification = {
+          verificationId,
+          imageSha256,
+          landmarkFingerprint: lmFingerprint,
+          groundednessScore: result.grounding.groundednessScore,
+          checks: result.grounding.checks,
+          authentic: true,
+          duplicateOf,
+        };
+        analysisData = {
+          ...result.analysisData,
+          geometry: result.geometry,
+          factors: result.factors,
+          verification,
+        };
+      } catch (err) {
+        if (err instanceof PalmAnalysisFailedError) {
+          // Persist the failure for audit, charge nothing (consumption happens
+          // only after success below), and tell the user the truth.
+          await this.prisma.palmistryReading
+            .create({
+              data: {
+                userId,
+                imageUrl,
+                imageKey,
+                imageSha256,
+                verificationId,
+                analysisData: { status: 'failed', problems: err.problems },
+              },
+            })
+            .catch(() => {});
+          throw new ServiceUnavailableException(
+            "We couldn't analyze your palm this time — please try again with a clearer, well-lit photo. You have not been charged.",
+          );
         }
-      } catch (error) {
-        this.logger.error('OpenAI Vision palm analysis failed, using fallback', error);
+        throw err;
       }
     }
 
+    if (imageProvided && !analysisData) {
+      // Image supplied but no vision client is configured — analysis never ran.
+      // Honesty contract: never dress the canned fallback up as this user's
+      // reading (and never charge). Consumption only happens after success, so
+      // simply failing here charges nothing.
+      throw new ServiceUnavailableException(
+        'Palm analysis is temporarily unavailable — please try again shortly. You have not been charged.',
+      );
+    }
+
     if (!analysisData) {
+      // No image was provided (API-level path; the web UI requires a photo).
+      // Serve the clearly-labelled sample reading: authentic=false, no factors,
+      // no geometry, and never a charge.
       try {
         analysisData = await this.getKBEnrichedFallback();
       } catch (err) {
         this.logger.warn(`KB-enriched fallback failed, using static fallback: ${(err as Error)?.message}`);
         analysisData = getDefaultFallback();
       }
+      analysisData.verification = {
+        verificationId,
+        imageSha256: null,
+        landmarkFingerprint: null,
+        groundednessScore: 0,
+        checks: [],
+        authentic: false,
+        authenticReason: 'no_image',
+      } satisfies PalmVerification;
     }
 
     let readingId = '';
@@ -337,6 +423,8 @@ export class PalmistryService {
           userId,
           imageUrl,
           imageKey,
+          imageSha256,
+          verificationId,
           analysisData,
         },
       });

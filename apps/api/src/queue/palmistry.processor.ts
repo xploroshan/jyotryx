@@ -8,11 +8,9 @@ import { UserService } from '../modules/user/user.service';
 import { FeatureAccessService } from '../common/feature-access/feature-access.service';
 import { StorageService } from '../storage/storage.service';
 import { PALMISTRY_QUEUE } from './queue.constants';
-import {
-  buildPalmistrySystemPrompt,
-  buildPalmistryUserPrompt,
-  getDefaultFallback,
-} from '../modules/palmistry/palmistry.service';
+import { runPalmVisionPipeline } from '../modules/palmistry/palm-analysis.pipeline';
+import type { HandLandmarkInput } from '../modules/palmistry/palm-metrics.util';
+import type { PalmVerification } from '../modules/palmistry/palm-verification.util';
 
 export interface PalmistryJobData {
   readingId: string;
@@ -22,6 +20,8 @@ export interface PalmistryJobData {
   imageMimeType?: string;
   locale?: string;
   gender?: string;
+  /** Client-measured hand landmarks (already validated by the service). */
+  landmarks?: HandLandmarkInput;
   /** Subscription-model meter to give back if the job fails after counting. */
   meteredFeature?: string;
   meteredPeriodKey?: string;
@@ -43,66 +43,76 @@ export class PalmistryProcessor extends WorkerHost {
   }
 
   async process(job: Job<PalmistryJobData>): Promise<void> {
-    const { readingId, userId, creditCost, imageKey, imageMimeType: _imageMimeType, locale, gender, meteredFeature, meteredPeriodKey } = job.data;
+    const { readingId, userId, creditCost, imageKey, locale, gender, landmarks, meteredFeature, meteredPeriodKey } = job.data;
     this.logger.log(`Processing palmistry job ${job.id} — readingId=${readingId}`);
 
     try {
-      let analysisData: any;
       const client = this.openaiService.getClient();
-
-      // Fetch palmistry KB context
-      const palmKB = await this.knowledgeService.getByCategory('palmistry', 15);
-      const palmKBContext = this.knowledgeService.assembleContext(palmKB);
-      const palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
-
-      // If we have an image stored in R2, download it for Vision API
-      if (client && imageKey && this.storageService.isAvailable()) {
-        const visionModel = this.openaiService.getModelForFeature('vision');
-        try {
-          const presignedUrl = await this.storageService.getPresignedDownloadUrl(imageKey);
-          const completion = await client.chat.completions.create({
-            model: visionModel,
-            messages: [
-              {
-                role: 'system',
-                content: buildPalmistrySystemPrompt(palmKBSection, locale, gender),
-              },
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: buildPalmistryUserPrompt(gender) },
-                  { type: 'image_url', image_url: { url: presignedUrl, detail: 'high' } },
-                ],
-              },
-            ],
-            max_tokens: 3500,
-            response_format: { type: 'json_object' },
-          });
-
-          this.openaiService.recordUsage?.({
-            userId,
-            feature: 'palmistry',
-            model: visionModel,
-            usage: completion?.usage,
-          });
-
-          const content = completion.choices[0]?.message?.content;
-          if (content) {
-            analysisData = JSON.parse(content);
-          }
-        } catch (error) {
-          this.logger.error('Vision API palm analysis failed in queue', error);
-        }
+      if (!client || !imageKey || !this.storageService.isAvailable()) {
+        // HONESTY CONTRACT: a queued job always has a paid, image-backed
+        // reading behind it. With no vision client or no stored image there is
+        // nothing real to analyse — fail (and refund on the final attempt)
+        // instead of serving the canned same-for-everyone fallback.
+        throw new Error(
+          `Palmistry job cannot run: ${!client ? 'no vision client' : !imageKey ? 'no stored image' : 'storage unavailable'}`,
+        );
       }
 
-      if (!analysisData) {
-        analysisData = getDefaultFallback();
+      // Fetch palmistry KB context (best-effort).
+      let palmKBSection = '';
+      try {
+        const palmKB = await this.knowledgeService.getByCategory('palmistry', 15);
+        const palmKBContext = this.knowledgeService.assembleContext(palmKB);
+        palmKBSection = palmKBContext ? `\n\nReference Knowledge:\n${palmKBContext}` : '';
+      } catch (err) {
+        this.logger.warn(`Palmistry KB lookup failed, continuing without it: ${(err as Error)?.message}`);
       }
 
-      // Update the reading with analysis results
+      // Verification seed (hashes/id computed at enqueue time, when the raw
+      // bytes were available) rides in the processing stub.
+      const row = await this.prisma.palmistryReading.findUnique({
+        where: { id: readingId },
+        select: { analysisData: true },
+      });
+      const seed = (row?.analysisData as any)?.verificationSeed ?? {};
+
+      const visionModel = this.openaiService.getModelForFeature('palmistry-vision');
+      const presignedUrl = await this.storageService.getPresignedDownloadUrl(imageKey);
+
+      const result = await runPalmVisionPipeline({
+        client,
+        readingModel: visionModel,
+        geometryModel: visionModel,
+        imageUrl: presignedUrl,
+        kbSection: palmKBSection,
+        locale,
+        gender,
+        landmarks: landmarks ?? null,
+        recordUsage: (model, usage) =>
+          this.openaiService.recordUsage?.({ userId, feature: 'palmistry', model, usage }),
+        logger: this.logger,
+      });
+
+      const verification: PalmVerification = {
+        verificationId: seed.verificationId ?? '',
+        imageSha256: seed.imageSha256 ?? null,
+        landmarkFingerprint: seed.landmarkFingerprint ?? null,
+        groundednessScore: result.grounding.groundednessScore,
+        checks: result.grounding.checks,
+        authentic: true,
+        duplicateOf: seed.duplicateOf ?? undefined,
+      };
+
       await this.prisma.palmistryReading.update({
         where: { id: readingId },
-        data: { analysisData },
+        data: {
+          analysisData: {
+            ...result.analysisData,
+            geometry: result.geometry as any,
+            factors: result.factors as any,
+            verification: verification as any,
+          },
+        },
       });
 
       this.logger.log(`Palmistry reading ${readingId} completed successfully`);

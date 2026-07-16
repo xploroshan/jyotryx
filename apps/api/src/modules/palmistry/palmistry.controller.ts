@@ -63,13 +63,11 @@ export class PalmistryController {
   async analyzePalm(
     @CurrentUser() user: JwtPayload,
     @UploadedFile() file?: any,
-    @Body() body?: { locale?: string; gender?: string },
+    @Body() body?: { locale?: string; gender?: string; landmarks?: string },
   ): Promise<PalmistryAnalysis> {
-    // NOTE: a no-image request intentionally returns a fallback reading (see
-    // palmistry-e2e.spec), so we don't hard-reject it here. The ultra-review's
-    // concern — consuming a paid entitlement/metered reading for a canned
-    // no-image fallback — should be addressed on the consumption side (skip the
-    // charge when no image was analyzed), flagged as a follow-up.
+    // NOTE: a no-image request returns the clearly-labelled sample reading
+    // (verification.authentic=false) and is never charged; the web UI requires
+    // a photo, so this path exists only for direct API/legacy callers.
     const gender = body?.gender === 'male' || body?.gender === 'female' ? body.gender : undefined;
     return this.palmistryService.analyzePalm(
       user.sub,
@@ -77,6 +75,9 @@ export class PalmistryController {
       file?.mimetype,
       body?.locale,
       gender,
+      // Client-measured hand landmarks (JSON string in the multipart body).
+      // Untrusted: the service validates shape and ranges before use.
+      body?.landmarks,
     );
   }
 

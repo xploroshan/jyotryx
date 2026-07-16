@@ -74,6 +74,7 @@ import {
   mockPrismaService,
   mockUserService,
   mockOpenAIService,
+  mockPalmVisionClient,
   mockKnowledgeService,
   mockStorageService,
 } from './helpers/mocks';
@@ -141,7 +142,18 @@ describe('Palmistry E2E (HTTP)', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: UserService, useValue: userService },
         { provide: FeatureAccessService, useValue: featureAccess },
-        { provide: OpenAIService, useValue: mockOpenAIService() },
+        {
+          provide: OpenAIService,
+          useValue: {
+            ...mockOpenAIService(),
+            // A working vision client so an image upload runs the real
+            // pipeline (honesty contract: no client + image → 503, tested in
+            // the service spec; here we exercise the success path over HTTP).
+            getClient: jest.fn().mockReturnValue(mockPalmVisionClient()),
+            getModelForFeature: jest.fn().mockReturnValue('gpt-4o'),
+            recordUsage: jest.fn(),
+          },
+        },
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: StorageService, useValue: mockStorageService() },
       ],

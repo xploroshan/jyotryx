@@ -1,0 +1,6 @@
+
+# MediaPipe WASM runtime — copied from node_modules by scripts/copy-mediapipe-assets.mjs
+# (the hand_landmarker.task model IS committed; it has no npm source)
+/public/models/mediapipe/*.js
+/public/models/mediapipe/*.mjs
+/public/models/mediapipe/*.wasm

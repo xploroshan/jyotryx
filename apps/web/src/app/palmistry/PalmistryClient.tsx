@@ -3,6 +3,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PalmDiagram from "@/components/palmistry/PalmDiagram";
+import PalmWireframe, {
+  type PalmGeometryData,
+  type PalmVerificationData,
+} from "@/components/palmistry/PalmWireframe";
+import { ShowYourWork, type ChartFactor } from "@/components/transparency/ShowYourWork";
 import CameraCapture from "@/components/palmistry/CameraCapture";
 import { useTranslation } from "@/i18n";
 import { usePricingConfig } from "@/lib/usePricingConfig";
@@ -64,6 +69,12 @@ interface AnalysisResult {
   timingInsights: TimingInsight[];
   cautions: string;
   closingAffirmation: string;
+  /** Measured/extracted geometry of the user's own palm (wireframe source). */
+  geometry: PalmGeometryData | null;
+  /** Authenticity: verification id, hashes, grounding checks, honesty flags. */
+  verification: PalmVerificationData | null;
+  /** Deterministic "Show Your Work" factors. */
+  factors: ChartFactor[];
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -179,6 +190,43 @@ function mapAnalysis(result: any, t: any): AnalysisResult {
       }
     : null;
 
+  // ── Wireframe geometry / verification / factors (defensive parsing) ──
+  const rawGeo = result?.geometry;
+  const geometry: PalmGeometryData | null =
+    rawGeo && (Array.isArray(rawGeo.landmarks) || Array.isArray(rawGeo.polylines))
+      ? {
+          landmarks: Array.isArray(rawGeo.landmarks) ? rawGeo.landmarks : [],
+          handedness: rawGeo.handedness === "Left" ? "Left" : "Right",
+          metrics:
+            rawGeo.metrics && Number.isFinite(rawGeo.metrics.palmAspect)
+              ? {
+                  palmAspect: rawGeo.metrics.palmAspect,
+                  fingerRatio: rawGeo.metrics.fingerRatio,
+                  handShape: String(rawGeo.metrics.handShape || ""),
+                }
+              : null,
+          polylines: (Array.isArray(rawGeo.polylines) ? rawGeo.polylines : []).filter(
+            (p: any) => typeof p?.name === "string" && Array.isArray(p?.points) && p.points.length >= 2,
+          ),
+        }
+      : null;
+
+  const rawVer = result?.verification;
+  const verification: PalmVerificationData | null = rawVer
+    ? {
+        verificationId: String(rawVer.verificationId || ""),
+        groundednessScore: Number.isFinite(rawVer.groundednessScore) ? rawVer.groundednessScore : 0,
+        authentic: rawVer.authentic !== false,
+        authenticReason: typeof rawVer.authenticReason === "string" ? rawVer.authenticReason : undefined,
+        duplicateOf: rawVer.duplicateOf ?? null,
+        checks: Array.isArray(rawVer.checks) ? rawVer.checks : [],
+      }
+    : null;
+
+  const factors: ChartFactor[] = (Array.isArray(result?.factors) ? result.factors : []).filter(
+    (f: any) => typeof f?.code === "string" && typeof f?.label === "string",
+  );
+
   return {
     atAGlance,
     handOverview,
@@ -192,6 +240,9 @@ function mapAnalysis(result: any, t: any): AnalysisResult {
     timingInsights,
     cautions: typeof result?.cautions === "string" ? result.cautions : "",
     closingAffirmation: typeof result?.closingAffirmation === "string" ? result.closingAffirmation : "",
+    geometry,
+    verification,
+    factors,
   };
 }
 
@@ -433,6 +484,14 @@ export default function PalmistryPage() {
   const [showCamera, setShowCamera] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const pollAbortRef = useRef<{ cancelled: boolean } | null>(null);
+  // Hand landmarks detected client-side (MediaPipe, self-hosted) for the
+  // prepared photo. Best-effort: null when detection fails/unsupported — the
+  // reading proceeds without the wireframe geometry.
+  const landmarksRef = useRef<{
+    landmarks: { x: number; y: number; z: number }[];
+    handedness: "Left" | "Right";
+    score: number;
+  } | null>(null);
 
   // Cancel any in-flight polling on unmount
   useEffect(() => {
@@ -459,7 +518,7 @@ export default function PalmistryPage() {
     return null;
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     const validationError = validateFile(file);
     if (validationError) {
       setError(validationError);
@@ -467,17 +526,53 @@ export default function PalmistryPage() {
       return;
     }
     setError("");
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImage(e.target?.result as string);
-      setAnalysis(null);
-    };
-    reader.onerror = () => {
-      setError(t.palmistry.invalidImage);
-      setErrorRetryable(false);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Normalize before anything else: applies EXIF orientation (phone photos
+      // are often stored sideways — landmarks/overlays would misalign),
+      // downscales to a bounded long edge, and re-encodes HEIC to JPEG where
+      // the browser can decode it (Safari).
+      const { prepareImage, ImagePrepError } = await import("@/lib/image-prep");
+      try {
+        const prepared = await prepareImage(file);
+        setImageFile(prepared.file);
+        setImage(prepared.dataUrl);
+        setAnalysis(null);
+        // Kick off hand-landmark detection in the background (self-hosted
+        // MediaPipe). Fire-and-forget: the result enriches the analyze call
+        // with real geometry; failure just means no wireframe.
+        landmarksRef.current = null;
+        import("@/lib/palm/handLandmarker")
+          .then((m) => m.detectPalmLandmarks(prepared.dataUrl))
+          .then((det) => {
+            landmarksRef.current = det;
+          })
+          .catch(() => {
+            landmarksRef.current = null;
+          });
+      } catch (prepErr) {
+        if (prepErr instanceof ImagePrepError && prepErr.code === "decode_failed") {
+          // Typically HEIC on a non-Safari browser: actionable message.
+          setError(t.palmistry.invalidFileType);
+        } else {
+          setError(t.palmistry.invalidImage);
+        }
+        setErrorRetryable(false);
+      }
+    } catch {
+      // Module load failed (offline?): fall back to the raw file so the
+      // feature still works — the server re-validates anyway.
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImage(e.target?.result as string);
+        setAnalysis(null);
+      };
+      reader.onerror = () => {
+        setError(t.palmistry.invalidImage);
+        setErrorRetryable(false);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -543,6 +638,11 @@ export default function PalmistryPage() {
       formData.append("image", file);
       if (locale !== "en") formData.append("locale", locale);
       if (gender) formData.append("gender", gender);
+      // Real hand geometry measured client-side — powers the wireframe and
+      // the deterministic grounding checks server-side. Optional by design.
+      if (landmarksRef.current) {
+        formData.append("landmarks", JSON.stringify(landmarksRef.current));
+      }
 
       const initial = await api.upload<any>("/palmistry/analyze", formData);
       let result = initial;
@@ -918,6 +1018,27 @@ export default function PalmistryPage() {
               <div className="surface-card p-6">
                 <h2 className="text-lg font-bold text-gradient mb-4">{t.palmistry.results}</h2>
 
+                {/* Sample-reading banner — shown when the reading was NOT
+                    derived from a real palm image (honesty contract). */}
+                {analysis.verification && !analysis.verification.authentic && (
+                  <div className="mb-5 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25">
+                    <p className="text-sm font-semibold text-amber-700 mb-1">{t.palmistry.sampleReadingTitle}</p>
+                    <p className="text-xs text-[rgba(26,20,16,0.7)] leading-relaxed">{t.palmistry.sampleReadingBody}</p>
+                  </div>
+                )}
+
+                {/* Duplicate soft-flag: same photo analysed before. */}
+                {analysis.verification?.duplicateOf && (
+                  <div className="mb-5 px-4 py-2.5 rounded-xl bg-sky-500/8 border border-sky-500/20">
+                    <p className="text-xs text-sky-800">
+                      {t.palmistry.duplicateNotice.replace(
+                        "{date}",
+                        new Date(analysis.verification.duplicateOf.createdAt).toLocaleDateString(),
+                      )}
+                    </p>
+                  </div>
+                )}
+
                 {analysis.atAGlance && (
                   <section className="mb-5 p-4 rounded-xl bg-[rgba(255,252,245,0.86)] border border-[rgba(12,8,5,0.08)]">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-[rgba(12,8,5,0.66)] text-center mb-3">{t.palmistry.atAGlance}</p>
@@ -1010,13 +1131,54 @@ export default function PalmistryPage() {
                   </div>
                 )}
 
-                <div className="mb-6 p-4 rounded-xl bg-[rgba(255,252,245,0.70)]">
-                  <PalmDiagram
-                    analysis={analysis}
-                    onFeatureSelect={handleFeatureSelect}
-                    selectedFeature={selectedFeature}
-                  />
-                </div>
+                {/* The user's own palm as a neon wireframe when real geometry
+                    exists; the classic schematic otherwise. */}
+                {analysis.geometry &&
+                (analysis.geometry.polylines.length > 0 || analysis.geometry.landmarks.length === 21) ? (
+                  <div className="mb-6">
+                    <PalmWireframe
+                      geometry={analysis.geometry}
+                      sourceImage={image}
+                      onFeatureSelect={handleFeatureSelect}
+                      selectedFeature={selectedFeature}
+                      labels={{
+                        title: t.palmistry.wireframeTitle,
+                        download: t.palmistry.wireframeDownload,
+                        showPhoto: t.palmistry.wireframeShowPhoto,
+                        measured: t.palmistry.wireframeMeasured,
+                        major: t.palmistry.majorLines,
+                        minor: t.palmistry.minorLines,
+                        skeleton: t.palmistry.wireframeSkeleton,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-6 p-4 rounded-xl bg-[rgba(255,252,245,0.70)]">
+                    <PalmDiagram
+                      analysis={analysis}
+                      onFeatureSelect={handleFeatureSelect}
+                      selectedFeature={selectedFeature}
+                    />
+                  </div>
+                )}
+
+                {/* Verification badge — the report's authenticity anchor. */}
+                {analysis.verification?.authentic && analysis.verification.verificationId && (
+                  <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {t.palmistry.verifiedReading}
+                    </span>
+                    <span className="text-[11px] text-emerald-800/80 font-mono">
+                      {t.palmistry.verificationIdLabel}: {analysis.verification.verificationId}
+                    </span>
+                    <span className="text-[11px] text-emerald-800/80">
+                      {t.palmistry.groundednessLabel}: {Math.round(analysis.verification.groundednessScore * 100)}%
+                    </span>
+                  </div>
+                )}
 
                 <ScrollableRow
                   className="mb-6 rounded-xl bg-[rgba(255,252,245,0.78)] p-1"
@@ -1195,6 +1357,14 @@ export default function PalmistryPage() {
                   )}
                 </div>
 
+                {/* "Show Your Work" — the deterministic factors behind this
+                    reading (measured geometry + observed features). */}
+                {analysis.factors.length > 0 && (
+                  <div className="mt-6">
+                    <ShowYourWork factors={analysis.factors} />
+                  </div>
+                )}
+
                 {analysis.closingAffirmation && (
                   <div className="mt-6 pt-5 border-t border-[rgba(12,8,5,0.08)] text-center">
                     <p className="text-[10px] uppercase tracking-[0.25em] text-primary-300/60 mb-2">{t.palmistry.yourPath}</p>
@@ -1265,6 +1435,8 @@ export default function PalmistryPage() {
         <CameraCapture
           onCapture={handleCameraCapture}
           onClose={() => setShowCamera(false)}
+          // Vedic convention: male → right (active) palm, female → left.
+          expectedHand={gender === "male" ? "Right" : gender === "female" ? "Left" : null}
           labels={{
             title: t.palmistry.useCamera,
             capture: t.palmistry.takePhoto,
@@ -1275,6 +1447,13 @@ export default function PalmistryPage() {
             error: t.palmistry.cameraError,
             starting: t.palmistry.cameraStarting,
             overlayHint: t.palmistry.cameraOverlayHint,
+            gateHand: t.palmistry.gateHand,
+            gateWrongHand: t.palmistry.gateWrongHand,
+            gateCloser: t.palmistry.gateCloser,
+            gateLight: t.palmistry.gateLight,
+            gateSharp: t.palmistry.gateSharp,
+            gateSteady: t.palmistry.gateSteady,
+            gateReady: t.palmistry.gateReady,
           }}
         />
       )}

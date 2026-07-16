@@ -77,28 +77,26 @@ describe('Palmistry Service — Correctness & Bug Validation', () => {
     service = module.get<PalmistryService>(PalmistryService);
   });
 
-  describe('BUG: Fallback returns identical results for all users', () => {
-    it('should return IDENTICAL fallback results for different users (proves the bug)', async () => {
-      const result1 = await service.analyzePalm('user-1', Buffer.from('palm-image-A'), 'image/jpeg');
-      const result2 = await service.analyzePalm('user-2', Buffer.from('palm-image-B-different'), 'image/jpeg');
-
-      // BUG: Both users get the exact same lines, mounts, and readings
-      expect(result1.lines).toEqual(result2.lines);
-      expect(result1.mounts).toEqual(result2.mounts);
-      expect(result1.fingerAnalysis).toEqual(result2.fingerAnalysis);
-      expect(result1.overallReading).toEqual(result2.overallReading);
-      expect(result1.healthInsights).toEqual(result2.healthInsights);
-      expect(result1.careerInsights).toEqual(result2.careerInsights);
-      expect(result1.relationshipInsights).toEqual(result2.relationshipInsights);
+  describe('FIXED: the canned fallback can no longer masquerade as a real reading', () => {
+    // Historical bug (retired): when the vision model was unavailable, every
+    // user silently received the IDENTICAL canned reading, image or not.
+    // Under the honesty contract an image-backed analysis that cannot run
+    // FAILS visibly (503, no charge) instead of returning fake results.
+    it('fails honestly (503, no charge) for an image-backed request when vision is unavailable', async () => {
+      const { ServiceUnavailableException } = await import('@nestjs/common');
+      await expect(
+        service.analyzePalm('user-1', Buffer.from('palm-image-A'), 'image/jpeg'),
+      ).rejects.toThrow(ServiceUnavailableException);
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
     });
 
-    it('should return IDENTICAL results with and without image when OpenAI unavailable (proves the bug)', async () => {
-      const withImage = await service.analyzePalm('user-1', Buffer.from('some-image'), 'image/jpeg');
-      const withoutImage = await service.analyzePalm('user-1');
-
-      // BUG: Image is completely ignored in fallback
-      expect(withImage.overallReading).toEqual(withoutImage.overallReading);
-      expect(withImage.lines).toEqual(withoutImage.lines);
+    it('labels the no-image sample reading as NOT authentic', async () => {
+      const result: any = await service.analyzePalm('user-1');
+      expect(result.verification.authentic).toBe(false);
+      expect(result.verification.authenticReason).toBe('no_image');
+      // And it is never charged.
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+      expect(featureAccess.incrementUsage).not.toHaveBeenCalled();
     });
   });
 

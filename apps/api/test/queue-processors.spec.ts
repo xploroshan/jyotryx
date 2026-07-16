@@ -168,7 +168,11 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
     processor = module.get<PalmistryProcessor>(PalmistryProcessor);
   });
 
-  it('should process a palmistry job with fallback analysis', async () => {
+  it('fails honestly when the job has no stored image — never serves the canned fallback', async () => {
+    // HONESTY CONTRACT: a queued job is always paid + image-backed. With no
+    // image there is nothing real to analyse, so the job must throw (BullMQ
+    // will retry / trigger the refund path) instead of writing the identical-
+    // for-everyone fallback reading.
     const job = {
       id: 'job-1',
       data: {
@@ -180,25 +184,19 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
       opts: { attempts: 3 },
     } as any;
 
-    await processor.process(job);
-
-    expect(prisma.palmistryReading.update).toHaveBeenCalledWith(
+    await expect(processor.process(job)).rejects.toThrow(/cannot run/);
+    // Not the final attempt → no refund yet, and no fake analysis written.
+    expect(userService.addCredits).not.toHaveBeenCalled();
+    expect(prisma.palmistryReading.update).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'palm-1' },
         data: expect.objectContaining({
-          analysisData: expect.objectContaining({
-            lines: expect.any(Array),
-            mounts: expect.any(Array),
-            overallReading: expect.any(String),
-          }),
+          analysisData: expect.objectContaining({ lines: expect.any(Array) }),
         }),
       }),
     );
   });
 
-  it('should refund credits on final attempt failure', async () => {
-    prisma.palmistryReading.update.mockRejectedValue(new Error('DB down'));
-
+  it('refunds credits + marks the reading failed on the final attempt', async () => {
     const job = {
       id: 'job-2',
       data: {
@@ -210,7 +208,16 @@ describe('PalmistryProcessor (Item 2 — BullMQ)', () => {
       opts: { attempts: 3 },
     } as any;
 
-    await expect(processor.process(job)).rejects.toThrow('DB down');
+    // No stored image → the run itself fails; final attempt → refund + failed mark.
+    await expect(processor.process(job)).rejects.toThrow(/cannot run/);
     expect(userService.addCredits).toHaveBeenCalledWith('user-1', 3, 'PURCHASE', expect.stringContaining('Refund'));
+    expect(prisma.palmistryReading.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'palm-2' },
+        data: expect.objectContaining({
+          analysisData: expect.objectContaining({ status: 'failed' }),
+        }),
+      }),
+    );
   });
 });
