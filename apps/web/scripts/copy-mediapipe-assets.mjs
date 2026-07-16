@@ -9,10 +9,18 @@
  * version so the runtime always matches the JS API, and the repo stays lean.
  * The hand_landmarker.task model (7.8 MB) IS committed — it has no npm source.
  */
-import { copyFileSync, mkdirSync, existsSync } from 'node:fs';
+import { copyFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+
+// Integrity pin for the committed hand-landmark model. It feeds the
+// "measurement-grounded / verified reading" trust layer, so a silently
+// tampered or wrong-version model must fail the build, not skew geometry.
+// Source: https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
+const MODEL_FILE = 'hand_landmarker.task';
+const MODEL_SHA256 = 'fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -55,4 +63,20 @@ for (const [rel, f] of EXTRA) {
     copied++;
   }
 }
-console.log(`[mediapipe-assets] copied ${copied} files → public/models/mediapipe`);
+
+// Verify the committed model's integrity on every build.
+const modelPath = join(outDir, MODEL_FILE);
+if (!existsSync(modelPath)) {
+  console.error(`[mediapipe-assets] MISSING committed model ${modelPath}`);
+  process.exit(1);
+}
+const actual = createHash('sha256').update(readFileSync(modelPath)).digest('hex');
+if (actual !== MODEL_SHA256) {
+  console.error(
+    `[mediapipe-assets] ${MODEL_FILE} checksum mismatch!\n  expected ${MODEL_SHA256}\n  actual   ${actual}\n` +
+      'The committed model was modified — verify provenance before building.',
+  );
+  process.exit(1);
+}
+
+console.log(`[mediapipe-assets] copied ${copied} files → public/models/mediapipe (model checksum OK)`);
