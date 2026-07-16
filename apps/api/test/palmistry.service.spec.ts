@@ -8,7 +8,7 @@ import { FeatureAccessService } from '../src/common/feature-access/feature-acces
 import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { StorageService } from '../src/storage/storage.service';
-import { mockKnowledgeService, mockStorageService, validPalmReadingJson } from './helpers/mocks';
+import { mockKnowledgeService, mockStorageService, validPalmGeometryJson, validPalmReadingJson } from './helpers/mocks';
 
 function chatResponse(payload: unknown) {
   return {
@@ -72,18 +72,14 @@ describe('PalmistryService', () => {
       incrementUsage: jest.fn().mockResolvedValue(undefined),
     };
 
-    // Fake OpenAI SDK client: first call returns the reading, second the
-    // geometry polylines (the pipeline makes exactly these two calls).
-    fakeCreate = jest
-      .fn()
-      .mockResolvedValueOnce(chatResponse(validPalmReadingJson()))
-      .mockResolvedValueOnce(
-        chatResponse({
-          polylines: [
-            { name: 'Heart Line', kind: 'major', points: [[0.2, 0.4], [0.4, 0.38], [0.6, 0.4], [0.8, 0.45]], confidence: 0.9 },
-          ],
-        }),
-      );
+    // Fake OpenAI SDK client, routed by PROMPT (reading vs geometry) so the
+    // pipeline's completeness retry and call ordering never destabilize the
+    // suite. The default geometry is complete (5 majors → no retry).
+    fakeCreate = jest.fn(async (req: any) => {
+      const system = String(req?.messages?.[0]?.content ?? '');
+      const isGeometry = system.includes('computer-vision annotator');
+      return chatResponse(isGeometry ? validPalmGeometryJson() : validPalmReadingJson());
+    });
     openaiService = {
       chat: jest.fn().mockResolvedValue(null),
       chatCompletion: jest.fn().mockResolvedValue(null),
@@ -160,6 +156,49 @@ describe('PalmistryService', () => {
       expect(result.verification.imageSha256).toMatch(/^[0-9a-f]{64}$/);
       expect(Array.isArray(result.factors)).toBe(true);
       expect(result.geometry?.polylines?.length).toBeGreaterThan(0);
+    });
+
+    it('GEOMETRY COMPLETENESS: a sparse trace triggers ONE corrective retry and merges the results', async () => {
+      // First geometry attempt returns only the Heart Line (1/5 majors) —
+      // the pipeline must ask again, naming the missing majors, and merge.
+      fakeCreate.mockReset();
+      fakeCreate
+        .mockResolvedValueOnce(chatResponse(validPalmReadingJson()))
+        .mockResolvedValueOnce(
+          chatResponse({
+            polylines: [
+              { name: 'Heart Line', kind: 'major', points: [[0.2, 0.4], [0.4, 0.38], [0.6, 0.4], [0.8, 0.45]], confidence: 0.9 },
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(
+          chatResponse({
+            polylines: [
+              { name: 'Head Line', kind: 'major', points: [[0.25, 0.5], [0.4, 0.5], [0.55, 0.51], [0.7, 0.53]], confidence: 0.85 },
+              { name: 'Life Line', kind: 'major', points: [[0.32, 0.46], [0.3, 0.58], [0.32, 0.7], [0.38, 0.8]], confidence: 0.8 },
+              { name: 'Fate Line', kind: 'major', points: [[0.48, 0.8], [0.47, 0.68], [0.46, 0.56], [0.46, 0.46]], confidence: 0.7 },
+              { name: 'Sun Line', kind: 'major', points: [[0.58, 0.72], [0.575, 0.62], [0.57, 0.52], [0.565, 0.46]], confidence: 0.6 },
+            ],
+          }),
+        );
+
+      const result: any = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
+
+      expect(fakeCreate).toHaveBeenCalledTimes(3); // reading + geometry + retry
+      // The retry prompt names the missing majors.
+      const retryText = JSON.stringify(fakeCreate.mock.calls[2][0]);
+      expect(retryText).toMatch(/missed these major lines/);
+      expect(retryText).toMatch(/Head Line/);
+      // Merged trace carries all five majors.
+      const majors = result.geometry.polylines.filter((p: any) => p.kind === 'major');
+      expect(majors.length).toBe(5);
+    });
+
+    it('GEOMETRY COMPLETENESS: a full first trace does NOT retry', async () => {
+      // Default mocks already return all 5 majors — exactly two vision calls.
+      const result: any = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
+      expect(fakeCreate).toHaveBeenCalledTimes(2);
+      expect(result.geometry.polylines.filter((p: any) => p.kind === 'major').length).toBe(5);
     });
 
     it('DORSAL GATE: a back-of-hand image gets a SPECIFIC 422, no retry, no charge', async () => {

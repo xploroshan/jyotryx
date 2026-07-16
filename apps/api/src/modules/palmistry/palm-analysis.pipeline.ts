@@ -19,6 +19,8 @@ import { buildPalmistrySystemPrompt, buildPalmistryUserPrompt } from './palmistr
 import {
   buildGeometrySystemPrompt,
   buildGeometryUserPrompt,
+  majorLineCoverage,
+  MAJOR_LINE_NAMES,
   validatePolylines,
   type PalmPolyline,
 } from './palm-geometry.util';
@@ -156,9 +158,13 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
   // ── 2. Deterministic metrics from the measured landmarks ──
   const metrics = opts.landmarks ? computePalmMetrics(opts.landmarks.landmarks) : null;
 
-  // ── 3. Crease geometry (best-effort — absence never blocks the reading) ──
+  // ── 3. Crease geometry (best-effort — absence never blocks the reading).
+  // A sparse trace makes a sparse wireframe, and users judge the feature on
+  // it: when the first attempt misses major lines, retry ONCE with a
+  // corrective nudge naming what's missing, then merge (each line keeps its
+  // best trace; extra minors from either attempt are kept). ──
   let polylines: PalmPolyline[] = [];
-  try {
+  const runGeometryCall = async (extraNudge?: string): Promise<PalmPolyline[]> => {
     const completion = await opts.client.chat.completions.create({
       model: opts.geometryModel,
       messages: [
@@ -166,7 +172,7 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
         {
           role: 'user',
           content: [
-            { type: 'text', text: buildGeometryUserPrompt(opts.landmarks) },
+            { type: 'text', text: buildGeometryUserPrompt(opts.landmarks) + (extraNudge ?? '') },
             { type: 'image_url', image_url: { url: opts.imageUrl, detail: 'high' } },
           ],
         },
@@ -176,7 +182,26 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
     });
     opts.recordUsage(opts.geometryModel, completion?.usage);
     const content = completion.choices[0]?.message?.content;
-    polylines = validatePolylines(content ? safeJsonParse(content) : null);
+    return validatePolylines(content ? safeJsonParse(content) : null);
+  };
+  try {
+    polylines = await runGeometryCall();
+    if (majorLineCoverage(polylines) < 0.8) {
+      const found = new Set(polylines.filter((p) => p.kind === 'major').map((p) => p.name.toLowerCase()));
+      const missing = MAJOR_LINE_NAMES.filter((n) => !found.has(n.toLowerCase()));
+      opts.logger.warn(
+        `Palm geometry attempt 1 traced only ${found.size}/5 major lines — retrying for: ${missing.join(', ')}`,
+      );
+      try {
+        const second = await runGeometryCall(
+          `\n\nYour previous trace missed these major lines: ${missing.join(', ')}. ` +
+            'The Heart, Head and Life lines are prominently visible on virtually every open palm — look again carefully and trace ALL visible major lines plus the minor lines and branches.',
+        );
+        polylines = mergePolylines(polylines, second);
+      } catch (retryErr) {
+        opts.logger.warn(`Palm geometry retry failed — keeping first trace: ${(retryErr as Error)?.message}`);
+      }
+    }
   } catch (err) {
     opts.logger.warn(`Palm geometry call failed — wireframe will be unavailable: ${(err as Error)?.message}`);
   }
@@ -203,6 +228,26 @@ export async function runPalmVisionPipeline(opts: PalmPipelineOptions): Promise<
     : null;
 
   return { analysisData, geometry, factors, grounding };
+}
+
+/**
+ * Merge two geometry attempts: every line keeps its best trace (more points
+ * wins, then higher confidence), and lines unique to either attempt are kept.
+ */
+function mergePolylines(a: PalmPolyline[], b: PalmPolyline[]): PalmPolyline[] {
+  const byKey = new Map<string, PalmPolyline>();
+  for (const line of [...a, ...b]) {
+    const key = `${line.name.toLowerCase()}|${line.kind}`;
+    const existing = byKey.get(key);
+    if (
+      !existing ||
+      line.points.length > existing.points.length ||
+      (line.points.length === existing.points.length && line.confidence > existing.confidence)
+    ) {
+      byKey.set(key, line);
+    }
+  }
+  return [...byKey.values()];
 }
 
 /** Read the model's image-content verdict (tolerant of shape drift). */

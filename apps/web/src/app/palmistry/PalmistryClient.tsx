@@ -847,9 +847,13 @@ export default function PalmistryPage() {
           <p className="text-secondary max-w-xl mx-auto">{t.palmistry.description}</p>
         </div>
 
+        {/* min-w-0 on the columns: grid items default to min-width:auto, so
+            wide non-wrapping content (the wireframe card's header row) was
+            expanding the column past the phone viewport — the card rendered
+            ~555px wide on a 390px screen with its right edge cut off. */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Upload Area */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {/* Step 1: Gender */}
             <div className="surface-card p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -1046,7 +1050,7 @@ export default function PalmistryPage() {
           </div>
 
           {/* Analysis Results */}
-          <div>
+          <div className="min-w-0">
             {analysis ? (
               <div className="surface-card p-6">
                 <h2 className="text-lg font-bold text-gradient mb-4">{t.palmistry.results}</h2>

@@ -330,9 +330,11 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
           </div>
         )}
 
-        {/* Guided-scan gate chips */}
+        {/* Guided-scan gate chips — anchored to the BOTTOM half: mobile
+            browsers stack permission banners ("Camera access allowed") over
+            the top of the viewport, which was hiding the first chips. */}
         {guided && !snapshot && !starting && !error && (
-          <div className="absolute top-4 left-0 right-0 px-4 flex flex-wrap justify-center gap-1.5">
+          <div className="absolute bottom-32 left-0 right-0 px-4 flex flex-wrap justify-center gap-1.5">
             {gates ? (
               <>
                 {chip(gates.hand, labels.gateHand, labels.gateHand, "hand")}
@@ -350,7 +352,7 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
 
         {/* Post-capture confirmation failed → explain and keep scanning */}
         {guided && confirmFailed && !snapshot && !starting && !error && (
-          <div className="absolute bottom-40 left-0 right-0 px-6 text-center">
+          <div className="absolute bottom-52 left-0 right-0 px-6 text-center">
             <span className="inline-block px-3 py-1.5 rounded-full bg-amber-500/25 border border-amber-400/50 text-amber-200 text-xs font-semibold">
               {labels.confirmFailed}
             </span>
@@ -359,7 +361,7 @@ export default function CameraCapture({ onCapture, onClose, expectedHand = null,
 
         {/* Auto-capture progress ring text */}
         {guided && !snapshot && !starting && !error && readyProgress > 0 && (
-          <div className="absolute bottom-32 left-0 right-0 text-center">
+          <div className="absolute bottom-44 left-0 right-0 text-center">
             <span className="inline-block px-3 py-1.5 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 text-xs font-semibold">
               {labels.gateReady} {Math.round(readyProgress * 100)}%
             </span>
