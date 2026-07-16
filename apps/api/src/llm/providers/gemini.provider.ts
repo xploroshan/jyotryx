@@ -11,17 +11,26 @@ export class GeminiProvider implements LlmProvider {
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('gemini.apiKey');
     if (apiKey) {
-      try {
-        const { GoogleGenAI } = require('@google/genai');
-        this.client = new GoogleGenAI({ apiKey });
-      } catch {
-        this.client = null;
-      }
+      this.reinitialize(apiKey);
     }
   }
 
   isAvailable(): boolean {
     return this.client != null;
+  }
+
+  /** Swap the client for a new API key (admin key rotation / llm.gemini.key). */
+  reinitialize(apiKey: string): void {
+    if (!apiKey) {
+      this.client = null;
+      return;
+    }
+    try {
+      const { GoogleGenAI } = require('@google/genai');
+      this.client = new GoogleGenAI({ apiKey });
+    } catch {
+      this.client = null;
+    }
   }
 
   async chatCompletion(options: LlmChatOptions): Promise<LlmChatResult> {

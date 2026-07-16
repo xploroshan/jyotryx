@@ -77,44 +77,56 @@ export default function PricingClient({
       t.pricing.featPremiumHoroscope,
       t.pricing.featPremiumSupport,
     ];
+    // Subscriptions the backend refuses to sell must not be advertised:
+    // POST /payments/subscribe 400s while feature.subscriptions_enabled is
+    // off, so rendering Subscribe buttons then would be a guaranteed dead
+    // end. Only the free tier is shown in that mode (credit packs below
+    // remain the purchase path when credits are on).
+    const subscribable = settings["feature.subscriptions_enabled"] === "true";
+    const paidPlans: Plan[] = subscribable
+      ? [
+          {
+            id: "annual", name: t.pricing.planAnnualName, price: annualPrice, period: t.pricing.perYear,
+            features: premiumFeatures,
+            cta: t.pricing.ctaSubscribe, popular: recommended === "annual",
+            monthlyEquiv, savingsPct,
+          },
+          {
+            id: "monthly", name: t.pricing.planPremiumName, price: monthlyPrice, period: t.pricing.perMonth,
+            features: premiumFeatures,
+            cta: t.pricing.ctaSubscribe, popular: recommended === "monthly",
+          },
+        ]
+      : [];
     return [
       {
         id: "free", name: t.pricing.planFreeName, price: 0, period: "",
         features: [t.pricing.featFreeLimited, t.pricing.featFreeChat, t.pricing.featFreeHoroscope, t.pricing.featFreePanchang],
         cta: t.pricing.ctaGetStarted, popular: false,
       },
-      {
-        id: "annual", name: t.pricing.planAnnualName, price: annualPrice, period: t.pricing.perYear,
-        features: premiumFeatures,
-        cta: t.pricing.ctaSubscribe, popular: recommended === "annual",
-        monthlyEquiv, savingsPct,
-      },
-      {
-        id: "monthly", name: t.pricing.planPremiumName, price: monthlyPrice, period: t.pricing.perMonth,
-        features: premiumFeatures,
-        cta: t.pricing.ctaSubscribe, popular: recommended === "monthly",
-      },
+      ...paidPlans,
     ];
   };
 
-  const buildCreditPacks = (settings: Record<string, string>): CreditPack[] => [
-    {
-      id: "starter",
-      credits: parseInt(settings["pricing.credits.starter.credits"] || "50", 10),
-      price: parseInt(settings["pricing.credits.starter.price"] || "99", 10),
-    },
-    {
-      id: "popular",
-      credits: parseInt(settings["pricing.credits.popular.credits"] || "150", 10),
-      price: parseInt(settings["pricing.credits.popular.price"] || "249", 10),
-      popular: true,
-    },
-    {
-      id: "pro",
-      credits: parseInt(settings["pricing.credits.pro.credits"] || "500", 10),
-      price: parseInt(settings["pricing.credits.pro.price"] || "699", 10),
-    },
-  ];
+  // Only packs the checkout will actually accept are shown: resolveCreditPack
+  // (the server-side price/grant source of truth) returns null when either
+  // setting is missing, so a pack rendered from hardcoded fallbacks here
+  // would be rejected as "invalid pack" the moment the user tries to buy it.
+  const buildCreditPacks = (settings: Record<string, string>): CreditPack[] => {
+    const packs: CreditPack[] = [];
+    for (const { id, popular } of [
+      { id: "starter", popular: false },
+      { id: "popular", popular: true },
+      { id: "pro", popular: false },
+    ]) {
+      const credits = parseInt(settings[`pricing.credits.${id}.credits`] || "", 10);
+      const price = parseInt(settings[`pricing.credits.${id}.price`] || "", 10);
+      if (Number.isFinite(credits) && credits > 0 && Number.isFinite(price) && price > 0) {
+        packs.push({ id, credits, price, popular });
+      }
+    }
+    return packs;
+  };
 
   // Raw pricing settings — seeded from the server wrapper when available so
   // the first paint (and the crawler-visible HTML) carries real prices.
@@ -209,10 +221,14 @@ export default function PricingClient({
 
   const fmt = (n: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(n);
 
-  // Mode A: pricing/subscriptions disabled by the operator. The app is free
-  // except the pay-per-use features (handled on their own pages), so we
-  // don't show plans or credit packs here.
+  // Mode A: subscriptions/plans hidden by the operator. The app is free
+  // except the pay-per-use features, so no plan cards here. BUT while chat
+  // still charges credits, this page remains the only place to buy them —
+  // the out-of-credits funnel lands here, and hiding the packs would strand
+  // paying users at a "everything is free" dead end. So configured credit
+  // packs stay purchasable whenever credits are the live currency.
   if (pricingEnabled === false) {
+    const showPacks = creditsEnabled && creditPacks !== null && creditPacks.length > 0;
     return (
       <div className="mx-auto max-w-2xl px-4 py-24 text-center fade-in-up">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full btn-secondary text-sm text-secondary mb-6">
@@ -234,6 +250,31 @@ export default function PricingClient({
             Get a report
           </button>
         </div>
+        {showPacks && (
+          <div className="mt-16 text-left">
+            <h2 className="text-xl font-semibold text-surface-950 text-center mb-2">{t.pricing.creditPacksTitle}</h2>
+            <p className="text-xs text-[rgba(12,8,5,0.66)] text-center mb-6">{t.pricing.creditPacksSubtitle}</p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {creditPacks.map((pack) => (
+                <div key={pack.id} className={`surface-card p-5 relative ${pack.popular ? "border-primary-500/30 ring-1 ring-primary-500/10" : ""}`}>
+                  {pack.popular && (
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary-600 text-[11px] font-medium text-white">
+                      {t.pricing.bestValue}
+                    </div>
+                  )}
+                  <div className="text-xs text-[rgba(12,8,5,0.72)] mb-1">{pack.credits} {t.pricing.credits}</div>
+                  <div className="text-2xl font-bold text-surface-950 mb-4">{fmt(pack.price)}</div>
+                  <button
+                    onClick={() => router.push(`/checkout?type=credits&pack=${pack.id}`)}
+                    className="w-full py-2 rounded-lg text-xs font-medium btn-secondary"
+                  >
+                    {t.pricing.buyNow}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -254,8 +295,10 @@ export default function PricingClient({
         <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center max-w-md mx-auto">{error}</div>
       )}
 
-      {/* Plans */}
-      <Stagger.Container className="grid md:grid-cols-3 gap-4">
+      {/* Plans — a lone free card (subscriptions disabled) centers itself. */}
+      <Stagger.Container
+        className={plans !== null && plans.length === 1 ? "grid max-w-sm mx-auto gap-4" : "grid md:grid-cols-3 gap-4"}
+      >
         {plans === null
           ? [0, 1, 2].map((i) => (
               <div key={i} className="surface-card p-6 animate-pulse" data-testid="plan-skeleton">
@@ -319,8 +362,9 @@ export default function PricingClient({
       </Stagger.Container>
 
       {/* Credit Packs — pay-as-you-go alternative to subscriptions.
-          Hidden in the subscription model (credits off). */}
-      {creditsEnabled && (
+          Hidden in the subscription model (credits off), and when no pack is
+          configured yet (checkout would reject them anyway). */}
+      {creditsEnabled && (creditPacks === null || creditPacks.length > 0) && (
       <div className="mt-16">
         <h2 className="text-xl font-semibold text-surface-950 text-center mb-2">{t.pricing.creditPacksTitle}</h2>
         <p className="text-xs text-[rgba(12,8,5,0.66)] text-center mb-6">{t.pricing.creditPacksSubtitle}</p>

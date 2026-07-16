@@ -29,9 +29,24 @@ const MODEL_COSTS_USD_PER_1M: Record<string, { prompt: number; completion: numbe
 };
 const DEFAULT_COST = { prompt: 0.15, completion: 0.6 };
 
+/** Per-feature routing overrides set from the admin LLM tab
+ *  (`llm.feature.{root}.provider|model|max_tokens`). Matched on the ROOT of
+ *  the usage feature tag (`report:life` → `report`). */
+interface FeatureOverride {
+  provider?: string;
+  model?: string;
+  maxTokens?: number;
+}
+
 interface LlmRuntimeConfig {
   provider: string;
   apiKey: string | null;
+  /** Anthropic/Gemini keys are runtime-rotatable too — previously they were
+   *  write-only settings (stored by the admin panel, read by nothing) and the
+   *  providers only ever initialized from env. */
+  anthropicKey: string | null;
+  geminiKey: string | null;
+  featureOverrides: Record<string, FeatureOverride>;
   defaultModel: string;
   precisionModel: string;
   visionModel: string;
@@ -87,6 +102,9 @@ export class LlmService implements OnModuleInit {
     this.currentConfig = {
       provider: 'openai',
       apiKey: envKey,
+      anthropicKey: this.configService.get<string>('anthropic.apiKey') || null,
+      geminiKey: this.configService.get<string>('gemini.apiKey') || null,
+      featureOverrides: {},
       defaultModel: this.configService.get<string>('openai.model', 'gpt-4o-mini'),
       precisionModel: this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
       visionModel: this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
@@ -220,15 +238,48 @@ export class LlmService implements OnModuleInit {
   }
 
   /**
+   * Provider descriptors ordered so the effective primary comes first:
+   * an explicit per-feature provider override, else the admin's
+   * `llm.default.provider`, else openai. Previously the dropdown was stored
+   * but the chain stayed hardcoded openai → gemini → anthropic, so choosing
+   * "Anthropic" routed nothing (every request still hit OpenAI first).
+   */
+  private buildProviderChain(
+    preferred?: string,
+  ): Array<{ name: string; provider: OpenAIProvider | AnthropicProvider | GeminiProvider; policy: ResiliencePolicy }> {
+    const registry = {
+      openai: { name: 'openai', provider: this.openaiProvider, policy: this.openaiPolicy },
+      gemini: { name: 'gemini', provider: this.geminiProvider, policy: this.geminiPolicy },
+      anthropic: { name: 'anthropic', provider: this.anthropicProvider, policy: this.anthropicPolicy },
+    } as const;
+    const names = Object.keys(registry) as Array<keyof typeof registry>;
+    const pick = (candidate?: string): keyof typeof registry | null =>
+      candidate && names.includes(candidate as keyof typeof registry)
+        ? (candidate as keyof typeof registry)
+        : null;
+    const primary = pick(preferred) ?? pick(this.currentConfig.provider) ?? 'openai';
+    return [registry[primary], ...names.filter((n) => n !== primary).map((n) => registry[n])];
+  }
+
+  /**
    * Chat completion with circuit breaker, retry, timeout, and provider failover.
    * Returns parsed JSON if jsonMode is true, raw string otherwise, or null on total failure.
    */
   async chatCompletion(options: LlmChatOptions & { jsonMode?: boolean }): Promise<any | null> {
     await this.reloadConfig(false).catch(() => {});
 
-    const model = options.model || this.currentConfig.defaultModel;
     const feature = options.feature || 'chat';
-    const enrichedOptions = { ...options, model };
+    // Admin per-feature routing (llm.feature.{root}.*): an explicit override
+    // wins over the caller's own defaults — that's the point of the control.
+    const override = this.currentConfig.featureOverrides[feature.split(':')[0]] ?? {};
+    const model = override.model || options.model || this.currentConfig.defaultModel;
+    const enrichedOptions = {
+      ...options,
+      model,
+      maxTokens: override.maxTokens ?? options.maxTokens,
+      // llm.default.temperature applies whenever the caller didn't choose one.
+      temperature: options.temperature ?? this.currentConfig.temperature,
+    };
 
     // Ordered list of (name, availability, policy, provider) tuples — the
     // first tuple is always tried; the rest only run when failoverEnabled.
@@ -239,11 +290,15 @@ export class LlmService implements OnModuleInit {
     // is skipped silently — the caller doesn't even see the breaker
     // trip, and the retryCount on the next successful row reflects
     // the real failover depth we exercised.
-    const chain: Array<{ name: string; available: boolean; policy: ResiliencePolicy; run: () => Promise<any> }> = [
-      { name: 'openai',    available: this.isProviderEnabled('openai')    && this.openaiProvider.isAvailable(),                              policy: this.openaiPolicy,    run: () => this.openaiProvider.chatCompletion(enrichedOptions) },
-      { name: 'gemini',    available: this.isProviderEnabled('gemini')    && this.failoverEnabled && this.geminiProvider.isAvailable(),      policy: this.geminiPolicy,    run: () => this.geminiProvider.chatCompletion(enrichedOptions) },
-      { name: 'anthropic', available: this.isProviderEnabled('anthropic') && this.failoverEnabled && this.anthropicProvider.isAvailable(),   policy: this.anthropicPolicy, run: () => this.anthropicProvider.chatCompletion(enrichedOptions) },
-    ];
+    const chain = this.buildProviderChain(override.provider).map(({ name, provider, policy }, idx) => ({
+      name,
+      // The primary is always eligible; the rest are failovers and are
+      // additionally gated on the failover flag.
+      available:
+        this.isProviderEnabled(name) && (idx === 0 || this.failoverEnabled) && provider.isAvailable(),
+      policy,
+      run: () => provider.chatCompletion(enrichedOptions),
+    }));
 
     for (let i = 0; i < chain.length; i++) {
       const link = chain[i];
@@ -301,19 +356,23 @@ export class LlmService implements OnModuleInit {
   async chatCompletionStream(options: LlmChatOptions): Promise<AsyncIterable<string> | null> {
     await this.reloadConfig(false).catch(() => {});
 
-    const model = options.model || this.currentConfig.defaultModel;
-    const enrichedOptions = { ...options, model };
+    // Same admin routing as chatCompletion: per-feature override, then the
+    // default-provider ordering, then temperature/max-token defaults.
+    const override = this.currentConfig.featureOverrides[(options.feature || 'chat').split(':')[0]] ?? {};
+    const model = override.model || options.model || this.currentConfig.defaultModel;
+    const enrichedOptions = {
+      ...options,
+      model,
+      maxTokens: override.maxTokens ?? options.maxTokens,
+      temperature: options.temperature ?? this.currentConfig.temperature,
+    };
 
-    const candidates: Array<[string, LlmProvider]> = [];
-    if (this.isProviderEnabled('openai') && this.openaiProvider.isAvailable()) {
-      candidates.push(['openai', this.openaiProvider]);
-    }
-    if (this.isProviderEnabled('gemini') && this.failoverEnabled && this.geminiProvider.isAvailable()) {
-      candidates.push(['gemini', this.geminiProvider]);
-    }
-    if (this.isProviderEnabled('anthropic') && this.failoverEnabled && this.anthropicProvider.isAvailable()) {
-      candidates.push(['anthropic', this.anthropicProvider]);
-    }
+    const candidates: Array<[string, LlmProvider]> = this.buildProviderChain(override.provider)
+      .filter(
+        ({ name, provider }, idx) =>
+          this.isProviderEnabled(name) && (idx === 0 || this.failoverEnabled) && provider.isAvailable(),
+      )
+      .map(({ name, provider }) => [name, provider]);
 
     for (const [name, provider] of candidates) {
       try {
@@ -414,7 +473,7 @@ export class LlmService implements OnModuleInit {
         model,
         messages: options.messages,
         max_tokens: options.maxTokens ?? 2000,
-        temperature: options.temperature ?? 0.7,
+        temperature: options.temperature ?? this.currentConfig.temperature,
         ...(options.jsonMode && { response_format: { type: 'json_object' } }),
       };
 
@@ -506,7 +565,11 @@ export class LlmService implements OnModuleInit {
     // "false" disables the provider.
     const readEnabled = (name: string): boolean => {
       const a = settings[`llm.provider.${name}.enabled`];
-      const b = settings[`llm.${name}.enabled`];
+      // Legacy: the old LlmTab labelled Gemini "google", so installs that
+      // toggled it wrote llm.google.enabled — honour that intent too.
+      const b =
+        settings[`llm.${name}.enabled`] ??
+        (name === 'gemini' ? settings['llm.google.enabled'] : undefined);
       const effective = a !== undefined ? a : b;
       if (effective === undefined) return true; // no opinion → enabled
       return effective !== 'false';
@@ -537,9 +600,35 @@ export class LlmService implements OnModuleInit {
       modelCostOverrides[model][half as 'prompt' | 'completion'] = num;
     }
 
+    // ─── Per-feature routing overrides ─────────────────────────────────
+    // Key shape: `llm.feature.{root}.{provider|model|max_tokens}`, written
+    // by the admin LLM tab's Feature Controls and consumed in
+    // chatCompletion/chatCompletionStream above.
+    const featureOverrides: Record<string, FeatureOverride> = {};
+    for (const [key, raw] of Object.entries(settings)) {
+      const m = key.match(/^llm\.feature\.([a-z0-9_-]+)\.(model|provider|max_tokens)$/i);
+      if (!m || !raw) continue;
+      const entry = (featureOverrides[m[1]] ??= {});
+      if (m[2] === 'model') entry.model = raw;
+      else if (m[2] === 'provider') entry.provider = raw;
+      else {
+        const n = parseInt(raw, 10);
+        if (Number.isFinite(n) && n > 0) entry.maxTokens = n;
+      }
+    }
+
     const next: LlmRuntimeConfig = {
       provider: settings['llm.default.provider'] || 'openai',
       apiKey: settings['llm.openai.key'] || envKey,
+      anthropicKey:
+        settings['llm.anthropic.key'] || this.configService.get<string>('anthropic.apiKey') || null,
+      // Legacy alias: the old LlmTab stored the Gemini key as llm.google.key.
+      geminiKey:
+        settings['llm.gemini.key'] ||
+        settings['llm.google.key'] ||
+        this.configService.get<string>('gemini.apiKey') ||
+        null,
+      featureOverrides,
       defaultModel: settings['llm.default.model'] || this.configService.get<string>('openai.model', 'gpt-4o-mini'),
       precisionModel: settings['llm.precision.model'] || this.configService.get<string>('openai.modelPrecision', 'gpt-4o'),
       visionModel: settings['llm.vision.model'] || this.configService.get<string>('openai.modelVision', 'gpt-4o-mini'),
@@ -551,11 +640,22 @@ export class LlmService implements OnModuleInit {
       modelCostOverrides,
     };
 
-    const keyChanged = next.apiKey !== this.currentConfig.apiKey;
+    const openaiKeyChanged = next.apiKey !== this.currentConfig.apiKey;
+    const anthropicKeyChanged = next.anthropicKey !== this.currentConfig.anthropicKey;
+    const geminiKeyChanged = next.geminiKey !== this.currentConfig.geminiKey;
     this.currentConfig = next;
 
-    if (keyChanged) {
+    // Rotated keys must actually reach a client — previously only OpenAI
+    // reinitialized, so pasting/rotating an Anthropic or Gemini key stored a
+    // secret nothing ever read.
+    if (openaiKeyChanged) {
       this.openaiProvider.reinitialize(next.apiKey || '');
+    }
+    if (anthropicKeyChanged) {
+      this.anthropicProvider.reinitialize(next.anthropicKey || '');
+    }
+    if (geminiKeyChanged) {
+      this.geminiProvider.reinitialize(next.geminiKey || '');
     }
   }
 

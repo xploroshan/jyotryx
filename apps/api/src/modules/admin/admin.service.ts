@@ -1053,13 +1053,20 @@ export class AdminService {
       });
     }
 
-    // If any llm.* setting was touched, force the OpenAIService to reload
-    // its cached client so the new key/model takes effect immediately.
+    // If any llm.* setting was touched, force both LLM config caches to
+    // reload so the new key/model/toggle takes effect immediately — the
+    // LlmService cache otherwise waits out its 30s TTL, making "Save All
+    // Changes" feel dead compared to the rotate/kill-switch actions.
     if (Object.keys(settings).some((k) => k.startsWith('llm.'))) {
       try {
         await this.openaiService.invalidateCache();
       } catch (err) {
         this.logger.warn(`Failed to invalidate OpenAI cache: ${err}`);
+      }
+      try {
+        await this.llmService.invalidateCache();
+      } catch (err) {
+        this.logger.warn(`Failed to invalidate LlmService cache: ${err}`);
       }
     }
 

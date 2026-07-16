@@ -56,7 +56,15 @@ describe('Pricing Page', () => {
     vi.clearAllMocks();
     mockStoreState.isAuthenticated = true;
     mockStoreState.accessToken = 'valid-token';
-    mockApiGet.mockResolvedValueOnce({ 'feature.pricing_page_enabled': 'true', 'pricing.monthly.price': '499', 'pricing.annual.price': '4999' });
+    // Subscriptions must be ON for the paid plan cards to render at all —
+    // the page now refuses to advertise a Subscribe CTA the backend would
+    // 400 ("Subscriptions are not currently available.").
+    mockApiGet.mockResolvedValueOnce({
+      'feature.pricing_page_enabled': 'true',
+      'feature.subscriptions_enabled': 'true',
+      'pricing.monthly.price': '499',
+      'pricing.annual.price': '4999',
+    });
   });
 
   it('renders header with pricing text', async () => {
@@ -134,8 +142,8 @@ describe('Pricing Page', () => {
     // Simulate admin saving pricing.monthly.price = 100.
     mockApiGet.mockReset();
     mockApiGet.mockResolvedValueOnce({
-      'feature.pricing_page_enabled': 'true', 'pricing.monthly.price': '100',
-      'pricing.annual.price': '999',
+      'feature.pricing_page_enabled': 'true', 'feature.subscriptions_enabled': 'true',
+      'pricing.monthly.price': '100', 'pricing.annual.price': '999',
     });
     render(<PricingPage />);
     // Use findByText to wait for the post-fetch render.
@@ -147,8 +155,8 @@ describe('Pricing Page', () => {
   it('renders credit packs from settings', async () => {
     mockApiGet.mockReset();
     mockApiGet.mockResolvedValueOnce({
-      'feature.pricing_page_enabled': 'true', 'pricing.monthly.price': '499',
-      'pricing.annual.price': '4999',
+      'feature.pricing_page_enabled': 'true', 'feature.subscriptions_enabled': 'true',
+      'pricing.monthly.price': '499', 'pricing.annual.price': '4999',
       'pricing.credits.starter.credits': '50',
       'pricing.credits.starter.price': '99',
       'pricing.credits.popular.credits': '150',
@@ -161,5 +169,59 @@ describe('Pricing Page', () => {
     expect(await screen.findByText(/₹99/)).toBeDefined();
     expect(await screen.findByText(/₹249/)).toBeDefined();
     expect(await screen.findByText(/₹699/)).toBeDefined();
+  });
+
+  it('hides Subscribe plans when subscriptions are disabled (dead-end CTA guard)', async () => {
+    // POST /payments/subscribe 400s while feature.subscriptions_enabled is
+    // off — advertising a Subscribe button then is a guaranteed dead end.
+    mockApiGet.mockReset();
+    mockApiGet.mockResolvedValueOnce({
+      'feature.pricing_page_enabled': 'true',
+      'feature.subscriptions_enabled': 'false',
+      'pricing.monthly.price': '499', 'pricing.annual.price': '4999',
+    });
+    render(<PricingPage />);
+    // The free tier still renders…
+    expect(await screen.findByText('Get Started')).toBeDefined();
+    // …but no Subscribe CTA and no paid plan prices.
+    expect(screen.queryByText('Subscribe')).toBeNull();
+    expect(screen.queryByText(/₹499/)).toBeNull();
+  });
+
+  it('hides credit packs that have no saved settings (checkout would reject them)', async () => {
+    // resolveCreditPack (server) returns null for unconfigured packs, so
+    // rendering hardcoded fallbacks sold packs checkout rejects as invalid.
+    mockApiGet.mockReset();
+    mockApiGet.mockResolvedValueOnce({
+      'feature.pricing_page_enabled': 'true',
+      'feature.subscriptions_enabled': 'true',
+      'pricing.monthly.price': '499', 'pricing.annual.price': '4999',
+      // Only the starter pack is configured.
+      'pricing.credits.starter.credits': '50',
+      'pricing.credits.starter.price': '99',
+    });
+    render(<PricingPage />);
+    expect(await screen.findByText(/Credit Packs/)).toBeDefined();
+    expect(await screen.findByText(/₹99/)).toBeDefined();
+    // The old hardcoded popular/pro fallbacks must not render.
+    expect(screen.queryByText(/₹249/)).toBeNull();
+    expect(screen.queryByText(/₹699/)).toBeNull();
+  });
+
+  it('keeps configured credit packs purchasable on the "everything free" hero (chat funnel)', async () => {
+    // pricing page OFF + credits ON: chat still charges credits and its
+    // out-of-credits modal routes here — the packs must stay buyable.
+    mockApiGet.mockReset();
+    mockApiGet.mockResolvedValueOnce({
+      'feature.pricing_page_enabled': 'false',
+      'feature.credits_enabled': 'true',
+      'pricing.credits.starter.credits': '50',
+      'pricing.credits.starter.price': '99',
+    });
+    render(<PricingPage />);
+    expect(await screen.findByText(/Everything is/)).toBeDefined();
+    expect(await screen.findByText(/₹99/)).toBeDefined();
+    // No subscription plans on the free hero.
+    expect(screen.queryByText('Subscribe')).toBeNull();
   });
 });

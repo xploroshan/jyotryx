@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FeatureAccessModule } from '../../common/feature-access/feature-access.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { UserModule } from '../user/user.module';
@@ -43,6 +44,7 @@ import { PaymentModule } from '../payment/payment.module';
     DailyBriefingModule,
     ExperimentModule,
     PaymentModule,
+    FeatureAccessModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

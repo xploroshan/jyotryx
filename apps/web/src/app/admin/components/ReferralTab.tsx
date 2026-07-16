@@ -29,6 +29,11 @@ export function ReferralTab({ token }: { token: string }) {
   const [maxPerReferrer, setMaxPerReferrer] = useState(10);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  // The referral bonus is delivered as a temporary SUBSCRIPTION, and every
+  // feature gate ignores subscriptions while feature.subscriptions_enabled is
+  // off — so with subscriptions disabled the program "grants premium days"
+  // that unlock nothing. Surfaced as a warning below.
+  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,6 +44,8 @@ export function ReferralTab({ token }: { token: string }) {
       setEnabled(data.settings.enabled);
       setBonusDays(data.settings.bonusDays);
       setMaxPerReferrer(data.settings.maxPerReferrer);
+      const flags = await api.get<Record<string, string>>("/admin/settings?prefix=feature.", { token });
+      setSubscriptionsEnabled(flags["feature.subscriptions_enabled"] === "true");
     } catch (err) {
       setLoadError(errorMessage(err));
     } finally {
@@ -86,6 +93,20 @@ export function ReferralTab({ token }: { token: string }) {
 
   return (
     <div className="space-y-6">
+      {enabled && subscriptionsEnabled === false && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+          <p className="text-xs font-bold text-amber-700 mb-1">
+            ⚠ Referral bonuses currently grant nothing
+          </p>
+          <p className="text-xs text-amber-800">
+            The bonus is delivered as {bonusDays} days of Premium subscription, but
+            “Subscriptions enabled” is OFF (Pricing tab) — the feature gates ignore
+            subscriptions in that mode, so referred users get no actual benefit while the
+            stats below still count “premium days granted”. Enable subscriptions, or pause
+            the referral program until you do.
+          </p>
+        </div>
+      )}
       {/* Aggregate stat strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="Activated" value={stats.totalActivated} accent="text-emerald-400" />

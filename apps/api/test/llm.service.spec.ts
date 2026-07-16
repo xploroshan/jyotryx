@@ -197,3 +197,181 @@ describe('LlmService (Item 4 — Circuit Breaker + Failover)', () => {
     });
   });
 });
+
+/**
+ * Admin LLM routing — the settings the LLM tab writes must actually route
+ * requests. Each control below was previously write-only (audit findings:
+ * dead default-provider dropdown, write-only Anthropic/Gemini keys, decorative
+ * temperature, unconsumed per-feature overrides).
+ */
+describe('LlmService (admin routing settings)', () => {
+  let service: LlmService;
+  let openaiProvider: any;
+  let anthropicProvider: any;
+  let geminiProvider: any;
+  let prisma: any;
+
+  const okResult = (provider: string) => ({
+    content: `${provider} response`,
+    provider,
+    model: 'm',
+    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+  });
+
+  function makeProvider(name: string) {
+    return {
+      isAvailable: jest.fn().mockReturnValue(true),
+      chatCompletion: jest.fn().mockResolvedValue(okResult(name)),
+      chatCompletionStream: jest.fn().mockReturnValue((async function* () { yield `${name}-chunk`; })()),
+      reinitialize: jest.fn(),
+    };
+  }
+
+  async function boot(settings: Record<string, string>) {
+    openaiProvider = makeProvider('openai');
+    anthropicProvider = makeProvider('anthropic');
+    geminiProvider = makeProvider('gemini');
+    prisma = {
+      siteSetting: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue(Object.entries(settings).map(([key, value]) => ({ key, value }))),
+      },
+      llmUsage: { create: jest.fn().mockResolvedValue({}) },
+    };
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        LlmService,
+        { provide: OpenAIProvider, useValue: openaiProvider },
+        { provide: AnthropicProvider, useValue: anthropicProvider },
+        { provide: GeminiProvider, useValue: geminiProvider },
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, def?: any) => {
+              const cfg: Record<string, any> = {
+                'openai.apiKey': 'env-openai-key',
+                'openai.model': 'gpt-4o-mini',
+                'anthropic.apiKey': 'env-anthropic-key',
+                'gemini.apiKey': 'env-gemini-key',
+                'llm.failoverEnabled': 'true',
+              };
+              return cfg[key] ?? def;
+            }),
+          },
+        },
+      ],
+    }).compile();
+    service = module.get<LlmService>(LlmService);
+    return service;
+  }
+
+  it('llm.default.provider makes that provider the PRIMARY, not just a label', async () => {
+    await boot({ 'llm.default.provider': 'anthropic' });
+
+    const result = await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }] });
+
+    expect(result).toBe('anthropic response');
+    expect(anthropicProvider.chatCompletion).toHaveBeenCalledTimes(1);
+    expect(openaiProvider.chatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('an unknown default provider falls back to openai', async () => {
+    await boot({ 'llm.default.provider': 'mistral' });
+
+    await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }] });
+
+    expect(openaiProvider.chatCompletion).toHaveBeenCalled();
+  });
+
+  it('failover still runs when the chosen primary errors', async () => {
+    await boot({ 'llm.default.provider': 'anthropic' });
+    anthropicProvider.chatCompletion.mockRejectedValue(new Error('down'));
+
+    const result = await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }] });
+
+    expect(result).toBe('openai response');
+  });
+
+  it('llm.feature.{root}.provider routes ONLY that feature (matched on the tag root)', async () => {
+    await boot({ 'llm.feature.report.provider': 'gemini' });
+
+    await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }], feature: 'report:life' });
+    expect(geminiProvider.chatCompletion).toHaveBeenCalledTimes(1);
+    expect(openaiProvider.chatCompletion).not.toHaveBeenCalled();
+
+    await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }], feature: 'chat:career' });
+    expect(openaiProvider.chatCompletion).toHaveBeenCalledTimes(1);
+  });
+
+  it('llm.feature.{root}.model and .max_tokens override the call options', async () => {
+    await boot({
+      'llm.feature.chat.model': 'gpt-4o',
+      'llm.feature.chat.max_tokens': '512',
+    });
+
+    await service.chatCompletion({
+      messages: [{ role: 'user', content: 'hi' }],
+      feature: 'chat:general',
+      model: 'gpt-4o-mini',
+      maxTokens: 2000,
+    });
+
+    expect(openaiProvider.chatCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'gpt-4o', maxTokens: 512 }),
+    );
+  });
+
+  it('llm.default.temperature applies when the caller sets none — caller value wins otherwise', async () => {
+    await boot({ 'llm.default.temperature': '0.3' });
+
+    await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(openaiProvider.chatCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({ temperature: 0.3 }),
+    );
+
+    await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }], temperature: 0.9 });
+    expect(openaiProvider.chatCompletion).toHaveBeenLastCalledWith(
+      expect.objectContaining({ temperature: 0.9 }),
+    );
+  });
+
+  it('rotated Anthropic/Gemini keys reach their clients (reinitialize)', async () => {
+    await boot({
+      'llm.anthropic.key': 'rotated-anthropic-key',
+      'llm.gemini.key': 'rotated-gemini-key',
+    });
+
+    await service.invalidateCache();
+
+    expect(anthropicProvider.reinitialize).toHaveBeenCalledWith('rotated-anthropic-key');
+    expect(geminiProvider.reinitialize).toHaveBeenCalledWith('rotated-gemini-key');
+  });
+
+  it('legacy llm.google.* keys still control Gemini (old LlmTab wrote "google")', async () => {
+    await boot({
+      'llm.google.key': 'legacy-google-key',
+      'llm.google.enabled': 'false',
+    });
+
+    await service.invalidateCache();
+    expect(geminiProvider.reinitialize).toHaveBeenCalledWith('legacy-google-key');
+
+    // Disabled via the legacy flag: openai down must NOT fail over to gemini.
+    openaiProvider.chatCompletion.mockRejectedValue(new Error('down'));
+    await service.chatCompletion({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(geminiProvider.chatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('streamed requests honour the same routing (default provider first)', async () => {
+    await boot({ 'llm.default.provider': 'gemini' });
+
+    const stream = await service.chatCompletionStream({ messages: [{ role: 'user', content: 'hi' }] });
+    const chunks: string[] = [];
+    for await (const chunk of stream!) chunks.push(chunk);
+
+    expect(chunks).toEqual(['gemini-chunk']);
+    expect(openaiProvider.chatCompletionStream).not.toHaveBeenCalled();
+  });
+});

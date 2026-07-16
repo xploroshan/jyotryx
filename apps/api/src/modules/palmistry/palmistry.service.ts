@@ -167,7 +167,7 @@ export class PalmistryService {
     if (!usage.allowed) {
       throw new PaymentRequiredException(
         usage.isSubscriber
-          ? "You've used all your palmistry readings this month. Buy +2 readings to continue."
+          ? "You've used all your palmistry readings this month. Buy a readings top-up to continue."
           : "You've used your free palmistry readings. Subscribe for more.",
         { subscribe: !usage.isSubscriber, feature: 'palmistry' },
       );
@@ -512,7 +512,7 @@ export class PalmistryService {
       if (!claim.allowed) {
         throw new PaymentRequiredException(
           claim.isSubscriber
-            ? "You've used all your palmistry readings this month. Buy +2 readings to continue."
+            ? "You've used all your palmistry readings this month. Buy a readings top-up to continue."
             : "You've used your free palmistry readings. Subscribe for more.",
           { subscribe: !claim.isSubscriber, feature: 'palmistry' },
         );
