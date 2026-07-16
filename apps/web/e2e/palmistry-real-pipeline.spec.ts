@@ -136,6 +136,118 @@ test.describe('Real MediaPipe over real photos (capture-confirmation contract)',
   });
 });
 
+test.describe('Wireframe alignment over the REAL palm photo', () => {
+  test('overlay strokes track the photo (screenshot for visual review)', async ({ page }) => {
+    test.setTimeout(120_000);
+    await installApiMocks(page, {
+      'GET /payments/pricing': async (route) => route.fulfill(json({})),
+    });
+    await page.setViewportSize({ width: 390, height: 844 }); // iPhone-ish
+    await page.goto('/palmistry');
+
+    // REAL landmarks from the REAL palm photo.
+    const det = await detectFixture(page, 'hand-palm-right.jpg');
+    expect(det).not.toBeNull();
+    const lm = det!.landmarks;
+    // Anchor plausible crease traces to the real geometry so the alignment
+    // check exercises the exact landmark→viewBox→underlay mapping.
+    const lerp = (a: any, b: any, t: number) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    const across = (t: number, drop: number) => {
+      const l = lerp(lm[5], lm[0], drop);
+      const r = lerp(lm[17], lm[0], drop);
+      return [0.05, 0.35, 0.65, 0.95].map((s) => {
+        const p = lerp(l, r, s);
+        return [p.x, p.y + t] as [number, number];
+      });
+    };
+    const analysis = {
+      id: 'real-align-1',
+      userId: 'test-user-1',
+      status: 'completed',
+      atAGlance: { strengths: 'Grounded', lifePath: 'Steady', love: 'Loyal', bestSuitedFor: 'Craft' },
+      handOverview: { handType: 'Earth', palmShape: 'Broad', fingers: 'Balanced', thumb: 'Firm', dominantHand: 'Right' },
+      handShape: { type: 'Earth', description: 'Broad palm.' },
+      lines: ['Heart Line', 'Head Line', 'Life Line', 'Fate Line', 'Sun Line'].map((name) => ({
+        name, subtitle: 'Area', description: 'Clear', observations: ['Visible'], strength: 'strong',
+        interpretation: 'A grounded, steady interpretation of this line.',
+      })),
+      mounts: [
+        { name: 'Mount of Jupiter', prominence: 'elevated', interpretation: 'Drive.' },
+        { name: 'Mount of Venus', prominence: 'normal', interpretation: 'Warmth.' },
+        { name: 'Mount of Moon', prominence: 'normal', interpretation: 'Imagination.' },
+      ],
+      fingerAnalysis: [
+        { finger: 'Thumb', length: 'average', interpretation: 'Balance.' },
+        { finger: 'Index (Jupiter)', length: 'average', interpretation: 'Confidence.' },
+        { finger: 'Middle (Saturn)', length: 'long', interpretation: 'Duty.' },
+      ],
+      specialMarkings: [],
+      timingInsights: [{ ageRange: '20-35 years', area: 'career', description: 'Foundation years.' }],
+      overallReading: 'A steady, grounded palm with clear, honest lines and balanced proportions throughout.',
+      healthInsights: 'Solid constitution; keep routines steady and rest well.',
+      careerInsights: 'Built for consistent, compounding effort and craft mastery.',
+      relationshipInsights: 'Loyal and steady; values dependability and warmth.',
+      spiritualInsights: 'Practical spirituality.',
+      cautions: 'Watch rigidity.',
+      closingAffirmation: 'Steady hands build lasting things.',
+      geometry: {
+        landmarks: lm,
+        handedness: det!.handedness,
+        score: det!.score,
+        metrics: { palmAspect: 0.75, fingerRatio: 0.8, handShape: 'Earth' },
+        polylines: [
+          { name: 'Heart Line', kind: 'major', points: across(0.0, 0.22), confidence: 0.9 },
+          { name: 'Head Line', kind: 'major', points: across(0.0, 0.38), confidence: 0.88 },
+          { name: 'Life Line', kind: 'major', points: [0.15, 0.35, 0.6, 0.85].map((t) => {
+            const p = lerp(lerp(lm[5], lm[1], 0.55), lm[0], t);
+            return [p.x, p.y] as [number, number];
+          }), confidence: 0.85 },
+          { name: 'Fate Line', kind: 'major', points: [0.8, 0.55, 0.35, 0.18].map((t) => {
+            const p = lerp(lm[9], lm[0], t);
+            return [p.x, p.y] as [number, number];
+          }), confidence: 0.7 },
+          { name: 'Sun Line', kind: 'major', points: [0.7, 0.55, 0.4, 0.28].map((t) => {
+            const p = lerp(lm[13], lm[0], t);
+            return [p.x, p.y] as [number, number];
+          }), confidence: 0.6 },
+        ],
+      },
+      verification: {
+        verificationId: 'wf-real-align',
+        imageSha256: 'b'.repeat(64),
+        landmarkFingerprint: 'fp',
+        groundednessScore: 0.9,
+        checks: [],
+        authentic: true,
+      },
+      factors: [],
+      createdAt: new Date().toISOString(),
+    };
+    await page.route('**/api/palmistry/analyze', async (route) =>
+      route.fulfill(json(analysis)),
+    );
+    await page.addInitScript((authJson) => {
+      localStorage.setItem('myastro360-auth', authJson);
+    }, fakeAuthState);
+    await page.goto('/palmistry');
+    await page.getByRole('radio', { name: /Male — Right Palm/ }).click();
+    const input = page.locator('input[type="file"]');
+    await input.setInputFiles(path.join(__dirname, 'fixtures', 'hand-palm-right.jpg'));
+    await page.getByText(/Analyze Palm/).click();
+
+    const wireframe = page.locator('svg[aria-label*="Your Palm"]');
+    await expect(wireframe).toBeVisible({ timeout: 20000 });
+    await wireframe.screenshot({ path: '/tmp/palm-wireframe-real.png' });
+
+    // Toggle the photo underlay and capture the alignment view — the
+    // fingertip sparks and finger contours must sit ON the photographed
+    // fingers (reviewed as a screenshot; the mapping is 1:1 by viewBox).
+    await page.getByText(/Show/i).first().click();
+    await page.waitForTimeout(600);
+    await wireframe.screenshot({ path: '/tmp/palm-wireframe-real-overlay.png' });
+  });
+});
+
 test.describe('Dorsal rejection — page-level flow (mocked 422 verdict)', () => {
   test('the specific back-of-hand error is shown, not the generic advice', async ({ page }) => {
     await installApiMocks(page, {

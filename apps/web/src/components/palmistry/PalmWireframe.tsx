@@ -72,9 +72,18 @@ const SUB_COLOR = "#67e8f9"; // light cyan
 const SKELETON_COLOR = "#22d3ee"; // neon cyan
 const BG = "#05080f";
 
-const W = 1000; // viewBox width; height derives from the photo aspect
+// Canvas layout: the photo/hand occupies a central IMG_W-wide area whose
+// height follows the photo's aspect ratio (1:1 mapping with the normalized
+// landmark/polyline coordinates). Side GUTTERS host the major-line labels —
+// drawing labels over the hand turned the busy palm centre into clutter —
+// and a bottom BAND hosts the measured-geometry readout.
+const IMG_W = 1000;
+const GUT = 240;
+const BAND = 120;
+const W = IMG_W + GUT * 2; // total canvas width
 
-// MediaPipe hand topology (bone chains).
+// MediaPipe hand topology (bone chains, from the wrist — used for the thick
+// soft silhouette strokes only).
 const BONE_CHAINS = [
   [0, 1, 2, 3, 4], // thumb
   [0, 5, 6, 7, 8], // index
@@ -82,7 +91,50 @@ const BONE_CHAINS = [
   [0, 13, 14, 15, 16], // ring
   [0, 17, 18, 19, 20], // little
 ];
+// Finger-only chains (base knuckle → tip). The delicate contour highlights
+// use THESE — the earlier version ran thin lines all the way from a single
+// wrist point to every fingertip, which read as ugly rays across the palm.
+const FINGER_CHAINS = [
+  [1, 2, 3, 4], // thumb (from CMC)
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16],
+  [17, 18, 19, 20],
+];
+// Mid-finger joints (PIP/DIP + thumb MCP/IP) — small articulation nodes.
+const JOINTS = [2, 3, 6, 7, 10, 11, 14, 15, 18, 19];
 const KNUCKLE_ROW = [5, 9, 13, 17];
+
+type LmPoint = { x: number; y: number; z: number };
+const lerp = (a: LmPoint, b: LmPoint, t: number) => ({
+  x: a.x + (b.x - a.x) * t,
+  y: a.y + (b.y - a.y) * t,
+  z: 0,
+});
+
+/**
+ * Classical mount positions derived from the USER'S measured landmarks:
+ * the four finger mounts sit just below their base knuckles, Venus inside
+ * the thumb base, Luna low on the opposite (percussion) edge.
+ */
+function mountAnchors(lm: LmPoint[]) {
+  const wrist = lm[0];
+  const venusBase = lerp(lm[1], wrist, 0.45);
+  const lunaBase = lerp(lm[17], wrist, 0.62);
+  return [
+    { name: 'Mount of Jupiter', short: 'JUPITER', p: lerp(lm[5], wrist, 0.18) },
+    { name: 'Mount of Saturn', short: 'SATURN', p: lerp(lm[9], wrist, 0.16) },
+    { name: 'Mount of Apollo', short: 'APOLLO', p: lerp(lm[13], wrist, 0.16) },
+    { name: 'Mount of Mercury', short: 'MERCURY', p: lerp(lm[17], wrist, 0.18) },
+    { name: 'Mount of Venus', short: 'VENUS', p: lerp(venusBase, lm[9], 0.12) },
+    {
+      name: 'Mount of Moon',
+      short: 'LUNA',
+      // Push slightly outward from the palm centre toward the percussion edge.
+      p: { x: lunaBase.x + (lunaBase.x - lm[9].x) * 0.3, y: lunaBase.y, z: 0 },
+    },
+  ];
+}
 
 function lineColor(name: string, kind: string): string {
   const c = LINE_COLORS[name.toLowerCase()];
@@ -102,14 +154,37 @@ export default function PalmWireframe({
   const [hovered, setHovered] = useState<string | null>(null);
   // Edge-snapped polylines (falls back to the raw model trace until ready).
   const [snapped, setSnapped] = useState<Record<string, Point[]> | null>(null);
+  // Measured photo aspect (w/h). Landmarks + polylines are normalized to the
+  // IMAGE, so the canvas must share its aspect or every stroke is distorted —
+  // and the photo underlay must map 1:1 onto the same viewBox
+  // (preserveAspectRatio="none"), else overlay and photo visibly drift apart.
+  const [imgAspect, setImgAspect] = useState<number | null>(null);
 
   const hasLandmarks = geometry.landmarks?.length === 21;
-  // Photo aspect is unknown here; landmarks+polylines are normalized to the
-  // image, so we render square-ish 4:5 (portrait palm) — H chosen so labels fit.
-  const H = 1250;
+  const IH = imgAspect ? Math.round(IMG_W / imgAspect) : 1250; // image-area height
+  const H = IH + BAND; // total canvas height
 
-  const sx = useCallback((nx: number) => nx * W, []);
-  const sy = useCallback((ny: number) => ny * H, [H]);
+  const sx = useCallback((nx: number) => GUT + nx * IMG_W, []);
+  const sy = useCallback((ny: number) => ny * IH, [IH]);
+
+  // Measure the photo's aspect as soon as we have it.
+  useEffect(() => {
+    if (!sourceImage) {
+      setImgAspect(null);
+      return;
+    }
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (!cancelled && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setImgAspect(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = sourceImage;
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceImage]);
 
   // ── Edge-snap refinement: nudge the model's trace onto the photo's actual
   // creases (pure JS Sobel on a ≤512px grayscale copy; best-effort). ──
@@ -202,7 +277,7 @@ export default function PalmWireframe({
 
   return (
     <div className="rounded-2xl overflow-hidden border border-cyan-500/20 bg-[#05080f]">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-cyan-500/15">
+      <div className="flex flex-wrap items-center justify-between gap-y-1.5 px-4 py-2.5 border-b border-cyan-500/15">
         <p className="text-xs font-semibold tracking-[0.2em] uppercase text-cyan-300/90">
           {labels.title} <span aria-hidden className="text-cyan-500/60">::</span>
         </p>
@@ -272,9 +347,13 @@ export default function PalmWireframe({
           </filter>
         </defs>
 
-        {/* Optional photo underlay (local data URL — same-origin, no taint) */}
+        {/* Optional photo underlay (local data URL — same-origin, no taint).
+            preserveAspectRatio="none" + an aspect-true viewBox give an EXACT
+            1:1 mapping with the normalized landmark/polyline coordinates —
+            "slice" cropped the photo differently from the strokes and made
+            the overlay visibly out of sync with the hand. */}
         {showPhoto && sourceImage && (
-          <image href={sourceImage} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" opacity="0.35" />
+          <image href={sourceImage} x={GUT} y="0" width={IMG_W} height={IH} preserveAspectRatio="none" opacity="0.38" />
         )}
 
         {/* ── The hand as a soft glowing silhouette (elegant, not skeletal):
@@ -294,9 +373,11 @@ export default function PalmWireframe({
               .map((i) => `L ${sx(lm[i].x)},${sy(lm[i].y)}`)
               .join(" ") +
             ` L ${sx(lm[0].x + 0.07)},${sy(lm[0].y)} Z`;
+          const mounts = mountAnchors(lm);
+          const mountR = Math.max(26, palmW * 0.13);
           return (
             <g>
-              {/* Soft body fill */}
+              {/* Soft body fill (thick blurred strokes → glowing silhouette) */}
               <g opacity="0.14" filter="url(#wfGlow)">
                 {BONE_CHAINS.map((chain, ci) => (
                   <polyline
@@ -311,15 +392,17 @@ export default function PalmWireframe({
                 ))}
                 <path d={palmPath} fill={SKELETON_COLOR} stroke={SKELETON_COLOR} strokeWidth={fingerW} strokeLinejoin="round" />
               </g>
-              {/* Delicate contour highlight */}
-              <g opacity="0.3">
-                {BONE_CHAINS.map((chain, ci) => (
+              {/* Delicate FINGER contours — base knuckle → tip only. Running
+                  these from the wrist drew five thin rays across the palm
+                  (the "long skeletal lines" complaint). */}
+              <g opacity="0.32">
+                {FINGER_CHAINS.map((chain, ci) => (
                   <polyline
                     key={`ctr${ci}`}
                     points={chain.map((i) => `${sx(lm[i].x)},${sy(lm[i].y)}`).join(" ")}
                     fill="none"
                     stroke={SKELETON_COLOR}
-                    strokeWidth="1.2"
+                    strokeWidth="1.4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
@@ -329,12 +412,53 @@ export default function PalmWireframe({
                   fill="none"
                   stroke={SKELETON_COLOR}
                   strokeWidth="1"
+                  strokeDasharray="2 6"
                 />
               </g>
-              {/* Subtle fingertip sparks (small, friendly — not joints) */}
+              {/* Articulation nodes: measured joint positions. */}
+              {JOINTS.map((i) => (
+                <circle key={`jt${i}`} cx={sx(lm[i].x)} cy={sy(lm[i].y)} r="2.4" fill={SKELETON_COLOR} opacity="0.4" />
+              ))}
+              {/* Fingertip sparks */}
               {[4, 8, 12, 16, 20].map((i) => (
                 <circle key={`tip${i}`} cx={sx(lm[i].x)} cy={sy(lm[i].y)} r="3.5" fill={SKELETON_COLOR} opacity="0.6" filter="url(#wfGlow)" />
               ))}
+              {/* Classical mounts, anchored to the USER'S landmarks: dotted
+                  region rings with small labels — tappable like the lines. */}
+              <g fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+                {mounts.map((m) => (
+                  <g
+                    key={m.name}
+                    opacity={selectedFeature === m.name || hovered === m.name ? 0.95 : 0.45}
+                    style={{ cursor: onFeatureSelect ? "pointer" : undefined }}
+                    onClick={() => onFeatureSelect?.({ type: "mount", name: m.name })}
+                    onMouseEnter={() => setHovered(m.name)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
+                    <circle
+                      cx={sx(m.p.x)}
+                      cy={sy(m.p.y)}
+                      r={mountR}
+                      fill="none"
+                      stroke="#7dd3fc"
+                      strokeWidth="1.2"
+                      strokeDasharray="3 7"
+                    />
+                    <circle cx={sx(m.p.x)} cy={sy(m.p.y)} r="2.5" fill="#7dd3fc" />
+                    <text
+                      x={sx(m.p.x)}
+                      y={sy(m.p.y) + mountR + 20}
+                      textAnchor="middle"
+                      fontSize="15"
+                      letterSpacing="2"
+                      fill="#7dd3fc"
+                    >
+                      {m.short}
+                    </text>
+                    <title>{m.name}</title>
+                  </g>
+                ))}
+              </g>
             </g>
           );
         })()}
@@ -359,21 +483,33 @@ export default function PalmWireframe({
           </path>
         ))}
         {majorPaths.map((p) => (
-          <path
-            key={`${p.name}-${p.kind}`}
-            d={p.d}
-            fill="none"
-            stroke={lineColor(p.name, p.kind)}
-            strokeWidth={strokeFor(p.kind, p.name)}
-            strokeLinecap="round"
-            filter="url(#wfGlowStrong)"
-            style={{ cursor: onFeatureSelect ? "pointer" : undefined }}
-            onClick={() => onFeatureSelect?.({ type: "line", name: p.name })}
-            onMouseEnter={() => setHovered(p.name)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <title>{p.name}</title>
-          </path>
+          <g key={`${p.name}-${p.kind}`}>
+            {/* Wide, faint under-stroke gives the major lines a luminous
+                body instead of a thin thread. */}
+            <path
+              d={p.d}
+              fill="none"
+              stroke={lineColor(p.name, p.kind)}
+              strokeWidth={strokeFor(p.kind, p.name) + 7}
+              strokeLinecap="round"
+              opacity="0.22"
+              filter="url(#wfGlowStrong)"
+            />
+            <path
+              d={p.d}
+              fill="none"
+              stroke={lineColor(p.name, p.kind)}
+              strokeWidth={strokeFor(p.kind, p.name)}
+              strokeLinecap="round"
+              filter="url(#wfGlowStrong)"
+              style={{ cursor: onFeatureSelect ? "pointer" : undefined }}
+              onClick={() => onFeatureSelect?.({ type: "line", name: p.name })}
+              onMouseEnter={() => setHovered(p.name)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <title>{p.name}</title>
+            </path>
+          </g>
         ))}
 
         {/* ── Crisp labels with SHORT leader lines beside each line's end
@@ -381,6 +517,8 @@ export default function PalmWireframe({
         {(() => {
           // Anchor each label at its line-end height, on the nearer side, then
           // push overlapping labels apart vertically.
+          // Labels live in the side GUTTERS — over the hand they collided
+          // with the lines, the mounts and each other.
           const placed = majorPaths
             .filter((p) => p.end)
             .map((p) => {
@@ -390,7 +528,7 @@ export default function PalmWireframe({
                 onLeft,
                 ex: sx(p.end![0]),
                 ey: sy(p.end![1]),
-                ly: Math.min(H - 120, Math.max(90, sy(p.end![1]))),
+                ly: Math.min(IH - 40, Math.max(90, sy(p.end![1]))),
               };
             })
             .sort((a, b) => a.ly - b.ly);
@@ -399,8 +537,8 @@ export default function PalmWireframe({
             if (placed[i].ly - placed[i - 1].ly < MIN_GAP) placed[i].ly = placed[i - 1].ly + MIN_GAP;
           }
           return placed.map(({ p, onLeft, ex, ey, ly }) => {
-            const lx = onLeft ? 30 : W - 30;
-            const elbowX = onLeft ? Math.max(60, ex - 60) : Math.min(W - 60, ex + 60);
+            const lx = onLeft ? 24 : W - 24;
+            const elbowX = onLeft ? GUT - 26 : W - GUT + 26;
             return (
               <g key={`lbl-${p.name}`} opacity={hovered && hovered !== p.name ? 0.45 : 1}>
                 <path
@@ -429,13 +567,14 @@ export default function PalmWireframe({
           });
         })()}
 
-        {/* Measured-ratio readout (real measurements, HUD style) */}
+        {/* Measured-ratio readout in the bottom BAND — never over the palm. */}
         {geometry.metrics && (
           <g fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace" fontSize="20" fill="#67e8f9" opacity="0.9">
-            <text x="30" y={H - 84} letterSpacing="1">
+            <line x1="30" y1={IH + 18} x2={W - 30} y2={IH + 18} stroke="#164e63" strokeWidth="1" opacity="0.6" />
+            <text x="30" y={IH + 56} letterSpacing="1">
               {labels.measured.toUpperCase()}
             </text>
-            <text x="30" y={H - 52} opacity="0.8">
+            <text x="30" y={IH + 90} opacity="0.8">
               {`ASPECT ${geometry.metrics.palmAspect.toFixed(2)} · FINGER ${Math.round(geometry.metrics.fingerRatio * 100)}% · ${geometry.metrics.handShape.toUpperCase()} · ${geometry.handedness.toUpperCase()}`}
             </text>
           </g>

@@ -151,6 +151,11 @@ test.describe('Palmistry wireframe (real browser)', () => {
     }
     // Measured-geometry HUD readout is present.
     await expect(page.getByText(/MEASURED GEOMETRY/)).toBeVisible();
+    // Classical mounts anchored to the user's landmarks render as labelled
+    // regions (part of the D2 richness pass).
+    for (const mount of ['JUPITER', 'SATURN', 'APOLLO', 'MERCURY', 'VENUS', 'LUNA']) {
+      await expect(page.getByText(mount, { exact: true })).toBeVisible();
+    }
 
     // Verification badge with id + groundedness.
     await expect(page.getByText('Verified reading')).toBeVisible();

@@ -44,9 +44,9 @@ Return STRICT JSON:
 }
 
 Rules:
-- Trace each line with 6-16 points ordered along the crease, following its actual curvature in THIS image.
+- Trace each line with 8-16 points ordered along the crease, following its actual curvature in THIS image — enough points to capture every bend, not a straight chord.
 - "kind": "major" for Heart/Head/Life/Fate/Sun lines; "minor" for other named lines (Mercury/Health Line, Marriage Line(s), Girdle of Venus, Bracelets, Travel Lines, Intuition Line); "sub" for small branches or secondary creases splitting off a line.
-- Include every major line you can see. If a major line is genuinely not visible, omit it — do NOT invent geometry.
+- BE THOROUGH: virtually every palm shows the Heart, Head and Life lines prominently, and most show a Fate line — a trace with fewer than 4 major lines almost always means you did not look closely enough. Also trace the minor lines and visible branches (aim for 2-5 minors/subs on a clear photo). Only omit a line when it is genuinely absent, and never invent geometry.
 - Points MUST lie on the palm in the image. Accuracy beats completeness: a shorter, correct trace is better than a longer guess.
 - Do not include any prose, only the JSON object.`;
 }

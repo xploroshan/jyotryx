@@ -81,15 +81,27 @@ export const validPalmReadingJson = () => {
   };
 };
 
-/** Fake raw OpenAI SDK client for the palm pipeline: alternates reading →
- *  geometry responses (the pipeline makes exactly two calls per analysis). */
+/** A complete geometry trace: all 5 majors + a minor, so the pipeline's
+ *  completeness retry doesn't fire unless a test wants it to. */
+export const validPalmGeometryJson = () => ({
+  polylines: [
+    { name: 'Heart Line', kind: 'major', points: [[0.25, 0.42], [0.4, 0.4], [0.55, 0.41], [0.7, 0.44]], confidence: 0.9 },
+    { name: 'Head Line', kind: 'major', points: [[0.26, 0.5], [0.4, 0.5], [0.55, 0.51], [0.68, 0.53]], confidence: 0.88 },
+    { name: 'Life Line', kind: 'major', points: [[0.32, 0.46], [0.3, 0.58], [0.32, 0.7], [0.38, 0.8]], confidence: 0.87 },
+    { name: 'Fate Line', kind: 'major', points: [[0.48, 0.8], [0.47, 0.68], [0.46, 0.56], [0.46, 0.46]], confidence: 0.75 },
+    { name: 'Sun Line', kind: 'major', points: [[0.58, 0.72], [0.575, 0.62], [0.57, 0.52], [0.565, 0.46]], confidence: 0.6 },
+    { name: 'Marriage Line', kind: 'minor', points: [[0.7, 0.4], [0.74, 0.4], [0.78, 0.41], [0.8, 0.41]], confidence: 0.55 },
+  ],
+});
+
+/** Fake raw OpenAI SDK client for the palm pipeline. Routes by PROMPT (the
+ *  geometry call's system prompt names the annotator role) instead of call
+ *  order, so completeness retries and multi-analysis tests stay stable. */
 export const mockPalmVisionClient = () => {
-  let call = 0;
-  const create = jest.fn(async () => {
-    call += 1;
-    const payload = call % 2 === 1
-      ? validPalmReadingJson()
-      : { polylines: [{ name: 'Heart Line', kind: 'major', points: [[0.2, 0.4], [0.4, 0.38], [0.6, 0.4], [0.8, 0.45]], confidence: 0.9 }] };
+  const create = jest.fn(async (req: any) => {
+    const system = String(req?.messages?.[0]?.content ?? '');
+    const isGeometry = system.includes('computer-vision annotator');
+    const payload = isGeometry ? validPalmGeometryJson() : validPalmReadingJson();
     return {
       choices: [{ message: { content: JSON.stringify(payload) } }],
       usage: { prompt_tokens: 100, completion_tokens: 500, total_tokens: 600 },
