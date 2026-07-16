@@ -11,17 +11,26 @@ export class AnthropicProvider implements LlmProvider {
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('anthropic.apiKey');
     if (apiKey) {
-      try {
-        const Anthropic = require('@anthropic-ai/sdk');
-        this.client = new Anthropic({ apiKey });
-      } catch {
-        this.client = null;
-      }
+      this.reinitialize(apiKey);
     }
   }
 
   isAvailable(): boolean {
     return this.client != null;
+  }
+
+  /** Swap the client for a new API key (admin key rotation / llm.anthropic.key). */
+  reinitialize(apiKey: string): void {
+    if (!apiKey) {
+      this.client = null;
+      return;
+    }
+    try {
+      const Anthropic = require('@anthropic-ai/sdk');
+      this.client = new Anthropic({ apiKey });
+    } catch {
+      this.client = null;
+    }
   }
 
   async chatCompletion(options: LlmChatOptions): Promise<LlmChatResult> {

@@ -460,4 +460,74 @@ export class FeatureAccessService {
       });
     }
   }
+
+  // ─── Effective access (admin "what does each feature cost right now?") ──────
+
+  /**
+   * Compute, from the LIVE settings, what each paid feature effectively costs
+   * a free user and a subscriber right now. This is the admin panel's
+   * ground-truth readout — the free_mode incident showed that toggles whose
+   * effect isn't visible get mistrusted (or worse, silently broken).
+   *
+   * Derived from the same primitives the real gates consume
+   * (paidFeaturesFree / creditsEnabled / subscriptionsEnabled / getUsageLimit /
+   * getCreditCost); the monetization-matrix spec cross-checks every cell
+   * against the actual gate outcomes so this readout can never drift from
+   * reality without a test failing.
+   */
+  async getEffectiveAccess(): Promise<{
+    flags: { freeMode: boolean; creditsEnabled: boolean; subscriptionsEnabled: boolean };
+    features: Array<{
+      feature: 'chat' | 'palmistry' | 'report';
+      freeUser: EffectiveAccessCell;
+      subscriber: EffectiveAccessCell;
+    }>;
+  }> {
+    const [freeMode, creditsOn, subsOn] = await Promise.all([
+      this.paidFeaturesFree(),
+      this.creditsEnabled(),
+      this.subscriptionsEnabled(),
+    ]);
+
+    const cell = async (
+      feature: 'chat' | 'palmistry' | 'report',
+      tier: 'free' | 'subscriber',
+    ): Promise<EffectiveAccessCell> => {
+      if (freeMode) return { mode: 'free' };
+      // A "subscriber" tier is meaningless while subscriptions are disabled —
+      // nobody can hold an active subscription (isActiveSubscriber returns
+      // false), so the operator must see that column as not applicable.
+      if (tier === 'subscriber' && !subsOn) return { mode: 'not_applicable' };
+      if (creditsOn) {
+        if (tier === 'subscriber') return { mode: 'free' }; // Mode B: subscribers get it free
+        if (feature === 'chat') {
+          return { mode: 'credits', costCredits: await this.getCreditCost('chat', 1) };
+        }
+        return { mode: 'one_time_unlock' };
+      }
+      // Metered subscription model.
+      const isSub = tier === 'subscriber';
+      const limit = await this.getUsageLimit(feature, isSub);
+      return { mode: 'metered', limit, period: isSub ? 'month' : 'lifetime' };
+    };
+
+    const features = await Promise.all(
+      (['chat', 'palmistry', 'report'] as const).map(async (feature) => ({
+        feature,
+        freeUser: await cell(feature, 'free'),
+        subscriber: await cell(feature, 'subscriber'),
+      })),
+    );
+
+    return { flags: { freeMode, creditsEnabled: creditsOn, subscriptionsEnabled: subsOn }, features };
+  }
 }
+
+/** One cell of the effective-access matrix, rendered by the admin panel. */
+export type EffectiveAccessCell =
+  | { mode: 'free' }
+  | { mode: 'one_time_unlock' }
+  | { mode: 'credits'; costCredits: number }
+  | { mode: 'metered'; limit: number; period: 'month' | 'lifetime' }
+  | { mode: 'not_applicable' };
+

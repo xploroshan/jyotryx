@@ -55,9 +55,14 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
 import { ReferralService } from '../referral/referral.service';
 import { BriefingMailerService } from '../daily-briefing/briefing-mailer.service';
+import { FeatureAccessService } from '../../common/feature-access/feature-access.service';
 import { ExperimentService } from '../experiment/experiment.service';
 
-const KNOWN_LLM_PROVIDERS = new Set(['openai', 'gemini', 'anthropic', 'mistral', 'cohere', 'groq', 'google']);
+// Only providers with a real runtime client may be rotated — accepting a key
+// for a provider nothing consumes (mistral/cohere/groq, or the legacy
+// "google" alias) stores a secret that never reaches a client while the UI
+// reports success.
+const KNOWN_LLM_PROVIDERS = new Set(['openai', 'gemini', 'anthropic']);
 
 @ApiTags('Admin')
 @ApiBearerAuth('JWT-auth')
@@ -75,6 +80,7 @@ export class AdminController {
     private readonly referralService: ReferralService,
     private readonly briefingMailer: BriefingMailerService,
     private readonly experimentService: ExperimentService,
+    private readonly featureAccess: FeatureAccessService,
   ) {}
 
   @Get('dashboard')
@@ -283,7 +289,16 @@ export class AdminController {
       throw new BadRequestException(`Invalid setting values — ${parts.join('; ')}`);
     }
 
-    return this.adminService.updateSettings(dto, req.user.sub, req.user.email);
+    const result = await this.adminService.updateSettings(dto, req.user.sub, req.user.email);
+
+    // The briefing's on-time send is a BullMQ repeatable armed at boot; a
+    // changed send hour must re-arm it immediately or the mail keeps firing
+    // at the old hour. armScheduler swallows its own errors (logged) so a
+    // Redis hiccup can't fail the settings save.
+    if (Object.keys(dto).some((k) => k.startsWith('notification.briefing.'))) {
+      await this.briefingMailer.armScheduler();
+    }
+    return result;
   }
 
   @Get('referral/stats')
@@ -295,6 +310,17 @@ export class AdminController {
       this.referralService.getSettings(),
     ]);
     return { ...stats, settings };
+  }
+
+  @Get('access-matrix')
+  @ApiOperation({
+    summary:
+      'Effective access right now: what each paid feature costs a free user ' +
+      'and a subscriber under the CURRENT settings — the ground truth behind ' +
+      'the pricing toggles.',
+  })
+  async getAccessMatrix() {
+    return this.featureAccess.getEffectiveAccess();
   }
 
   @Get('briefing/stats')

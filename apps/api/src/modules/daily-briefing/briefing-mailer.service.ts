@@ -95,14 +95,36 @@ export class BriefingMailerService implements OnModuleInit {
       return;
     }
 
-    // Register the repeatable cron only once; BullMQ deduplicates by
-    // (job name, repeat options), so multiple replicas calling this on
-    // boot is safe.
+    await this.armScheduler();
+  }
+
+  /**
+   * (Re)arm the BullMQ repeatable that owns the on-time daily send.
+   *
+   * Removes EVERY repeatable registered under REPEATABLE_JOB_KEY before
+   * adding the current one. The old cleanup removed only the key built
+   * from the CURRENT settings hour — so after the admin moved "Send hour
+   * (UTC)", the OLD hour's repeatable survived (across restarts too) and
+   * the mail kept firing at the original hour forever. Enumerating by job
+   * name kills stale registrations regardless of what hour they were
+   * armed for.
+   *
+   * Called at boot and from the admin settings PUT whenever a
+   * notification.briefing.* key changes, so the new hour takes effect
+   * immediately — matching what the admin panel promises.
+   */
+  async armScheduler(): Promise<void> {
+    // Dead-port sentinel queue when queues are disabled — see onModuleInit.
+    if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true') return;
     try {
       const settings = await this.getSettings();
-      // Cron with a single-hour window — `0 H * * *`. Re-registering
-      // the same job key with a new pattern updates it cleanly.
-      await this.queue.removeRepeatableByKey?.(`__default__:::${REPEATABLE_JOB_KEY}::0 ${settings.sendHourUtc} * * *`);
+      const repeatables = (await this.queue.getRepeatableJobs?.()) ?? [];
+      for (const job of repeatables) {
+        if (job.name === REPEATABLE_JOB_KEY) {
+          await this.queue.removeRepeatableByKey(job.key);
+        }
+      }
+      // Cron with a single-hour window — `0 H * * *`.
       await this.queue.add(
         REPEATABLE_JOB_KEY,
         { kind: 'fanout' },
@@ -119,7 +141,7 @@ export class BriefingMailerService implements OnModuleInit {
     } catch (err) {
       // Don't crash the API on scheduler-init issues — the per-user
       // send path is still reachable from /admin/briefing/send-test.
-      this.logger.warn(`Briefing scheduler init failed: ${(err as Error)?.message ?? err}`);
+      this.logger.warn(`Briefing scheduler (re)arm failed: ${(err as Error)?.message ?? err}`);
     }
   }
 

@@ -2,29 +2,29 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { Badge, TabError, errorMessage } from "./helpers";
+import { TabError, errorMessage } from "./helpers";
 
+// Only providers with a real runtime client in the API (LlmService failover
+// chain). The old list also offered Mistral/Cohere/Groq cards whose keys and
+// toggles were stored but consumed by nothing — decorative controls an admin
+// would reasonably (and wrongly) trust.
 const llmProviders = [
   { id: "openai", name: "OpenAI", models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "o1", "o1-mini"], keyField: "llm.openai.key", color: "text-emerald-400" },
-  { id: "anthropic", name: "Anthropic", models: ["claude-opus-4-20250514", "claude-sonnet-4-20250514", "claude-haiku-4-5-20251001", "claude-3.5-sonnet-20241022"], keyField: "llm.anthropic.key", color: "text-purple-400" },
-  { id: "google", name: "Google Gemini", models: ["gemini-2.0-flash", "gemini-2.0-pro", "gemini-1.5-flash", "gemini-1.5-pro"], keyField: "llm.google.key", color: "text-blue-400" },
-  { id: "mistral", name: "Mistral AI", models: ["mistral-large-latest", "mistral-medium-latest", "mistral-small-latest", "open-mixtral-8x22b"], keyField: "llm.mistral.key", color: "text-orange-400" },
-  { id: "cohere", name: "Cohere", models: ["command-r-plus", "command-r", "command-light"], keyField: "llm.cohere.key", color: "text-sky-400" },
-  { id: "groq", name: "Groq", models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"], keyField: "llm.groq.key", color: "text-red-400" },
+  { id: "anthropic", name: "Anthropic", models: ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5"], keyField: "llm.anthropic.key", color: "text-purple-400" },
+  { id: "gemini", name: "Google Gemini", models: ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-pro", "gemini-1.5-flash"], keyField: "llm.gemini.key", color: "text-blue-400" },
 ];
 
+// The REAL feature roots tagged on llm_usage rows and consumed by the
+// per-feature overrides (llm.feature.{id}.provider|model|max_tokens) in
+// LlmService. Overrides here actually route/cap the calls.
 const aiFeatures = [
-  { id: "chat", name: "AI Chat / Consult", desc: "Interactive astrology consultations", tokensPerCall: "~800-2000", needsAI: true, suggestion: "AI Required", sugColor: "text-red-400" },
-  { id: "kundli", name: "Kundli Interpretation", desc: "Chart analysis & interpretations", tokensPerCall: "~1000-1500", needsAI: false, suggestion: "KB Sufficient", sugColor: "text-emerald-400" },
-  { id: "horoscope", name: "Daily Horoscope", desc: "Daily sign-based predictions", tokensPerCall: "~500-800", needsAI: false, suggestion: "KB Sufficient", sugColor: "text-emerald-400" },
-  { id: "palmistry", name: "Palmistry Reading", desc: "Palm image analysis (needs vision)", tokensPerCall: "~1200-2000", needsAI: true, suggestion: "AI Required (Vision)", sugColor: "text-red-400" },
-  { id: "matching", name: "Kundli Matching", desc: "Compatibility analysis", tokensPerCall: "~800-1200", needsAI: false, suggestion: "KB Sufficient", sugColor: "text-emerald-400" },
-  { id: "numerology", name: "Numerology", desc: "Name/number analysis", tokensPerCall: "~400-600", needsAI: false, suggestion: "KB Sufficient", sugColor: "text-emerald-400" },
-  { id: "daily_briefing", name: "My Day Briefing", desc: "Daily personalized predictions", tokensPerCall: "~600-1000", needsAI: false, suggestion: "KB + Rules", sugColor: "text-emerald-400" },
-  { id: "reports", name: "Report Generation", desc: "Detailed PDF reports (Life, Career, etc.)", tokensPerCall: "~2000-4000", needsAI: true, suggestion: "AI Recommended", sugColor: "text-amber-400" },
-  { id: "remedy", name: "Remedy Suggestions", desc: "Gemstones, mantras, remedies", tokensPerCall: "~400-600", needsAI: false, suggestion: "KB Sufficient", sugColor: "text-emerald-400" },
-  { id: "panchang", name: "Panchang", desc: "Daily Hindu calendar data", tokensPerCall: "0", needsAI: false, suggestion: "No AI Needed", sugColor: "text-emerald-400" },
-  { id: "muhurat", name: "Muhurat", desc: "Auspicious timing calculations", tokensPerCall: "0", needsAI: false, suggestion: "No AI Needed", sugColor: "text-emerald-400" },
+  { id: "chat", name: "AI Chat / Consult", desc: "Interactive astrology consultations", tokensPerCall: "~800-2000" },
+  { id: "report", name: "Report Generation", desc: "Detailed reports (Life, Career, etc.)", tokensPerCall: "~2000-4000" },
+  { id: "interpretation", name: "Kundli Deep-Dive", desc: "Long-form chart interpretation", tokensPerCall: "~1000-2000" },
+  { id: "horoscope", name: "Horoscope", desc: "Daily/weekly/monthly sign forecasts", tokensPerCall: "~500-800" },
+  { id: "tarot", name: "Tarot Reading", desc: "Spread interpretations", tokensPerCall: "~600-1200" },
+  { id: "vastu", name: "Vastu Analysis", desc: "Home/office vastu guidance", tokensPerCall: "~600-1000" },
+  { id: "palmistry", name: "Palmistry (vision)", desc: "Palm image analysis — model set via the palmistry vision setting, not overridable here", tokensPerCall: "~1200-2000" },
 ];
 
 type TodayByFeature = Record<string, { tokens: number; costUsd: number }>;
@@ -72,6 +72,22 @@ export function LlmTab({ token }: { token: string }) {
   const getAiSetting = (key: string, fallback: string = "") => aiSettings[key] || fallback;
 
   /**
+   * Is a provider enabled? MUST mirror the backend's absence-means-enabled
+   * rule (LlmService.readEnabled): an unset flag counts as ON. The old UI
+   * defaulted non-OpenAI toggles to unchecked, showing "disabled" while the
+   * provider was actively serving failover traffic on its env key.
+   * Both key shapes are honoured (llm.{id}.enabled and the OpsTab
+   * kill-switch's llm.provider.{id}.enabled) — either set to "false" wins,
+   * matching the backend.
+   */
+  const isProviderEnabled = (id: string) => {
+    const a = aiSettings[`llm.provider.${id}.enabled`];
+    const b = aiSettings[`llm.${id}.enabled`];
+    const effective = a !== undefined ? a : b;
+    return effective === undefined ? true : effective !== "false";
+  };
+
+  /**
    * Fold every `chat:*`, `report:*`, `tarot:*`, `horoscope:*` sub-tag
    * back onto its root feature key. Feature tagging in llm_usage is
    * intentionally granular ("chat:career", "report:life") so the Cost
@@ -94,7 +110,7 @@ export function LlmTab({ token }: { token: string }) {
     try {
       const updated = await api.put<Record<string, string>>("/admin/settings", aiSettings, { token });
       setAiSettings(updated);
-      setSuccess("AI settings saved successfully!");
+      setSuccess("AI settings saved — live now (config caches invalidated).");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
       setError(err.message || "Failed to save AI settings");
@@ -174,7 +190,7 @@ export function LlmTab({ token }: { token: string }) {
         {([
           { id: "providers" as const, label: "LLM Providers" },
           { id: "usage" as const, label: "Token Usage" },
-          { id: "features" as const, label: "Feature Controls" },
+          { id: "features" as const, label: "Feature Routing" },
         ]).map(t => (
           <button key={t.id} onClick={() => setAiSubTab(t.id)}
             className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${aiSubTab === t.id ? "bg-primary-600 text-white" : "text-ink-500 hover:text-ink-700"}`}>
@@ -187,7 +203,11 @@ export function LlmTab({ token }: { token: string }) {
       {aiSubTab === "providers" && (
         <div className="space-y-6">
           <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-ink-900 mb-4">Global Defaults</h3>
+            <h3 className="text-sm font-semibold text-ink-900 mb-1">Global Defaults</h3>
+            <p className="text-xs text-ink-500 mb-4">
+              The default provider is tried FIRST for every request; the other enabled
+              providers act as automatic failover in case it errors.
+            </p>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs text-ink-500 mb-1.5">Default Provider</label>
@@ -213,7 +233,7 @@ export function LlmTab({ token }: { token: string }) {
 
           <div className="grid sm:grid-cols-2 gap-4">
             {llmProviders.map(provider => {
-              const enabled = getAiSetting(`llm.${provider.id}.enabled`, provider.id === "openai" ? "true" : "false") === "true";
+              const enabled = isProviderEnabled(provider.id);
               const hasKey = !!getAiSetting(provider.keyField);
               return (
                 <div key={provider.id} className={`surface-card p-5 transition-all ${enabled ? "ring-1 ring-black/[0.1]" : "opacity-60"}`}>
@@ -228,7 +248,7 @@ export function LlmTab({ token }: { token: string }) {
                     <div>
                       <label className="block text-[11px] text-ink-500 mb-1">API Key</label>
                       <div className="flex gap-2">
-                        <input type="password" placeholder={hasKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
+                        <input type="password" placeholder={hasKey ? "•••••••• (saved)" : "Enter API key..."} value={getAiSetting(provider.keyField)} onChange={e => setAiSetting(provider.keyField, e.target.value)}
                           className="flex-1 px-3 py-2 rounded-lg surface-input text-xs font-mono" />
                         <button
                           type="button"
@@ -238,14 +258,18 @@ export function LlmTab({ token }: { token: string }) {
                           className="px-3 py-2 rounded-lg bg-amber-500/10 text-amber-400 text-[11px] font-medium hover:bg-amber-500/20 disabled:opacity-40"
                           title="Write the typed key as the new provider key and invalidate the LlmService cache."
                         >
-                          {rotating === provider.id ? "Rotating\u2026" : "Rotate"}
+                          {rotating === provider.id ? "Rotating…" : "Rotate"}
                         </button>
                       </div>
+                      <p className="text-[10px] text-ink-500 mt-1">
+                        Keys can also come from the server environment — an empty field here
+                        does not mean the provider has no key.
+                      </p>
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-black/[0.08]">
                       <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${hasKey && enabled ? "bg-emerald-400" : hasKey ? "bg-amber-400" : "bg-black/15"}`} />
-                        <span className="text-[11px] text-ink-500">{hasKey && enabled ? "Active" : hasKey ? "Key set, disabled" : "No key"}</span>
+                        <span className={`w-2 h-2 rounded-full ${enabled ? "bg-emerald-400" : "bg-black/15"}`} />
+                        <span className="text-[11px] text-ink-500">{enabled ? "Enabled" : "Disabled (kill switch)"}</span>
                       </div>
                       <span className="text-[11px] text-ink-500">{provider.models.length} models</span>
                     </div>
@@ -261,32 +285,6 @@ export function LlmTab({ token }: { token: string }) {
       {aiSubTab === "usage" && (
         <div className="space-y-6">
           <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-ink-900 mb-1">Global Token Budget</h3>
-            <p className="text-xs text-ink-500 mb-4">Set monthly token limits. When exceeded, features auto-fallback to Knowledge Base.</p>
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[11px] text-ink-500 mb-1">Monthly Token Limit (global)</label>
-                <input type="number" value={getAiSetting("llm.budget.monthly_tokens", "1000000")} onChange={e => setAiSetting("llm.budget.monthly_tokens", e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
-              </div>
-              <div>
-                <label className="block text-[11px] text-ink-500 mb-1">Per-User Daily Limit</label>
-                <input type="number" value={getAiSetting("llm.budget.user_daily_tokens", "10000")} onChange={e => setAiSetting("llm.budget.user_daily_tokens", e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg surface-input text-sm" />
-              </div>
-              <div>
-                <label className="block text-[11px] text-ink-500 mb-1">Fallback Behavior</label>
-                <select value={getAiSetting("llm.budget.fallback", "knowledge_base")} onChange={e => setAiSetting("llm.budget.fallback", e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg surface-input text-sm">
-                  <option value="knowledge_base">Use Knowledge Base</option>
-                  <option value="block">Block &amp; Show Limit Message</option>
-                  <option value="degrade">Use Cheaper Model</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-card p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-4">Token Usage by Feature</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -295,22 +293,20 @@ export function LlmTab({ token }: { token: string }) {
                     <th className="text-left text-[11px] text-ink-500 font-medium py-2 pr-4">Feature</th>
                     <th className="text-right text-[11px] text-ink-500 font-medium py-2 px-3">Tokens/Call</th>
                     <th className="text-right text-[11px] text-ink-500 font-medium py-2 px-3">Today</th>
-                    <th className="text-right text-[11px] text-ink-500 font-medium py-2 px-3">This Month</th>
-                    <th className="text-right text-[11px] text-ink-500 font-medium py-2 px-3">Calls</th>
-                    <th className="text-right text-[11px] text-ink-500 font-medium py-2 px-3">Est. Cost</th>
-                    <th className="text-right text-[11px] text-ink-500 font-medium py-2 pl-3">Limit</th>
+                    <th className="text-right text-[11px] text-ink-500 font-medium py-2 pl-3">Today Cost</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {aiFeatures.filter(f => f.tokensPerCall !== "0").map(feature => {
-                    const monthlyTokens = parseInt(getAiSetting(`llm.usage.${feature.id}.monthly_tokens`, "0"));
-                    // Real today-token value, folded from llm_usage
-                    // feature sub-tags by the helper above. Replaces
-                    // the old hardcoded-zero settings lookup.
+                  {aiFeatures.map(feature => {
+                    // Real values folded from llm_usage feature sub-tags. The
+                    // old table also showed "This Month"/"Calls"/"Limit"
+                    // columns backed by llm.usage.*/llm.limit.* settings that
+                    // nothing ever wrote or read — decorative numbers.
                     const todayTokens = todayTokensForFeature(feature.id);
-                    const calls = parseInt(getAiSetting(`llm.usage.${feature.id}.calls`, "0"));
-                    const featureLimit = getAiSetting(`llm.limit.${feature.id}`, "");
-                    const estCost = (monthlyTokens / 1000000 * 2.5).toFixed(2);
+                    let todayCost = 0;
+                    for (const [tag, row] of Object.entries(todayUsage)) {
+                      if (tag.split(":")[0] === feature.id) todayCost += row.costUsd;
+                    }
                     return (
                       <tr key={feature.id} className="border-b border-black/[0.06] hover:bg-black/[0.03]">
                         <td className="py-2.5 pr-4">
@@ -319,102 +315,77 @@ export function LlmTab({ token }: { token: string }) {
                         </td>
                         <td className="text-right text-ink-500 px-3 tabular-nums">{feature.tokensPerCall}</td>
                         <td className="text-right text-ink-700 px-3 tabular-nums">{todayTokens.toLocaleString()}</td>
-                        <td className="text-right text-ink-700 px-3 tabular-nums">{monthlyTokens.toLocaleString()}</td>
-                        <td className="text-right text-ink-500 px-3 tabular-nums">{calls.toLocaleString()}</td>
-                        <td className="text-right text-accent-400/80 px-3 tabular-nums">${estCost}</td>
-                        <td className="text-right pl-3">
-                          <input type="number" placeholder="No limit" value={featureLimit} onChange={e => setAiSetting(`llm.limit.${feature.id}`, e.target.value)}
-                            className="w-20 px-2 py-1 rounded text-right surface-input text-xs tabular-nums" />
-                        </td>
+                        <td className="text-right text-accent-400/80 pl-3 tabular-nums">${todayCost.toFixed(4)}</td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <div className="surface-card p-5">
-            <h3 className="text-sm font-semibold text-ink-900 mb-1">Top Token Consumers</h3>
-            <p className="text-xs text-ink-500 mb-4">Users ranked by token consumption this month. Set per-user overrides from the Users tab.</p>
-            <p className="text-sm text-ink-500 text-center py-6">Load the Users tab to see per-user token stats.</p>
+            <p className="text-[11px] text-ink-500 mt-3">
+              Full history, per-model breakdowns and spend alerts live in the Cost tab.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Feature Controls */}
+      {/* Feature Routing — per-feature provider/model/max-token overrides,
+          consumed live by LlmService (llm.feature.{id}.*). The old
+          "Feature Controls" AI/Hybrid/KB mode buttons and the token-budget
+          card wrote settings that no code read — removed rather than
+          promising behavior the backend doesn't have. */}
       {aiSubTab === "features" && (
         <div className="space-y-6">
-          <div className="surface-card p-4 flex flex-wrap gap-4 text-xs">
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary-500" /> <span className="text-ink-500">Using AI / LLM</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> <span className="text-ink-500">Using Knowledge Base only</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> <span className="text-ink-500">Hybrid (AI + KB fallback)</span></div>
+          <div className="surface-card p-4">
+            <p className="text-xs text-ink-500">
+              Route individual features to a specific provider/model or cap their output
+              tokens. Empty = use the global defaults above. Changes apply on save.
+            </p>
           </div>
 
           <div className="space-y-2">
-            {aiFeatures.map(feature => {
-              const mode = getAiSetting(`llm.feature.${feature.id}.mode`, feature.needsAI ? "ai" : "kb");
+            {aiFeatures.filter(f => f.id !== "palmistry").map(feature => {
               const model = getAiSetting(`llm.feature.${feature.id}.model`, "");
               const provider = getAiSetting(`llm.feature.${feature.id}.provider`, "");
               const maxTokens = getAiSetting(`llm.feature.${feature.id}.max_tokens`, "");
               return (
                 <div key={feature.id} className="surface-card p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${mode === "ai" ? "bg-primary-500" : mode === "hybrid" ? "bg-amber-500" : "bg-emerald-500"}`} />
-                        <h4 className="text-sm font-medium text-ink-900">{feature.name}</h4>
-                      </div>
-                      <p className="text-[11px] text-ink-500 mt-0.5 ml-4">{feature.desc}</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${provider || model || maxTokens ? "bg-primary-500" : "bg-black/15"}`} />
+                    <h4 className="text-sm font-medium text-ink-900">{feature.name}</h4>
+                    <span className="text-[11px] text-ink-500">{feature.desc}</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-black/[0.08] grid grid-cols-2 sm:grid-cols-4 gap-3 ml-4">
+                    <div>
+                      <label className="block text-[10px] text-ink-500 mb-1">Provider Override</label>
+                      <select value={provider} onChange={e => setAiSetting(`llm.feature.${feature.id}.provider`, e.target.value)}
+                        className="w-full px-2 py-1.5 rounded surface-input text-xs">
+                        <option value="">Use Default</option>
+                        {llmProviders.filter(p => isProviderEnabled(p.id)).map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="sm:text-right shrink-0">
-                      <span className={`text-[11px] font-medium ${feature.sugColor}`}>{feature.suggestion}</span>
+                    <div>
+                      <label className="block text-[10px] text-ink-500 mb-1">Model Override</label>
+                      <select value={model} onChange={e => setAiSetting(`llm.feature.${feature.id}.model`, e.target.value)}
+                        className="w-full px-2 py-1.5 rounded surface-input text-xs">
+                        <option value="">Use Default</option>
+                        {(llmProviders.find(p => p.id === (provider || getAiSetting("llm.default.provider", "openai")))?.models || []).map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      {(["ai", "hybrid", "kb"] as const).map(m => (
-                        <button key={m} onClick={() => setAiSetting(`llm.feature.${feature.id}.mode`, m)}
-                          className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${mode === m
-                            ? m === "ai" ? "bg-primary-600 text-white" : m === "hybrid" ? "bg-amber-600 text-white" : "bg-emerald-600 text-white"
-                            : "bg-black/[0.05] text-ink-500 hover:text-ink-500"
-                          }`}>
-                          {m === "ai" ? "AI" : m === "hybrid" ? "Hybrid" : "KB Only"}
-                        </button>
-                      ))}
+                    <div>
+                      <label className="block text-[10px] text-ink-500 mb-1">Max Tokens</label>
+                      <input type="number" placeholder="Default" value={maxTokens} onChange={e => setAiSetting(`llm.feature.${feature.id}.max_tokens`, e.target.value)}
+                        className="w-full px-2 py-1.5 rounded surface-input text-xs" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-ink-500 mb-1">Est. Tokens/Call</label>
+                      <p className="text-xs text-ink-500 py-1.5">{feature.tokensPerCall}</p>
                     </div>
                   </div>
-                  {(mode === "ai" || mode === "hybrid") && (
-                    <div className="mt-3 pt-3 border-t border-black/[0.08] grid grid-cols-2 sm:grid-cols-4 gap-3 ml-4">
-                      <div>
-                        <label className="block text-[10px] text-ink-500 mb-1">Provider Override</label>
-                        <select value={provider} onChange={e => setAiSetting(`llm.feature.${feature.id}.provider`, e.target.value)}
-                          className="w-full px-2 py-1.5 rounded surface-input text-xs">
-                          <option value="">Use Default</option>
-                          {llmProviders.filter(p => getAiSetting(`llm.${p.id}.enabled`, p.id === "openai" ? "true" : "false") === "true").map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-ink-500 mb-1">Model Override</label>
-                        <select value={model} onChange={e => setAiSetting(`llm.feature.${feature.id}.model`, e.target.value)}
-                          className="w-full px-2 py-1.5 rounded surface-input text-xs">
-                          <option value="">Use Default</option>
-                          {(llmProviders.find(p => p.id === (provider || getAiSetting("llm.default.provider", "openai")))?.models || []).map(m => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-ink-500 mb-1">Max Tokens</label>
-                        <input type="number" placeholder="Default" value={maxTokens} onChange={e => setAiSetting(`llm.feature.${feature.id}.max_tokens`, e.target.value)}
-                          className="w-full px-2 py-1.5 rounded surface-input text-xs" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-ink-500 mb-1">Est. Tokens/Call</label>
-                        <p className="text-xs text-ink-500 py-1.5">{feature.tokensPerCall}</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -430,9 +401,11 @@ export function LlmTab({ token }: { token: string }) {
               <div>
                 <h4 className="text-sm font-semibold text-primary-400 mb-1">Cost Optimization Suggestion</h4>
                 <p className="text-xs text-ink-500 leading-relaxed">
-                  <strong className="text-ink-700">Panchang, Muhurat, Numerology, Kundli Matching, and Daily Horoscope</strong> can run entirely on the Knowledge Base with rule-based computation, saving ~60% of token costs.
-                  Only <strong className="text-ink-700">AI Chat, Palmistry (vision), and Report Generation</strong> truly require LLM calls.
-                  Use <strong className="text-ink-700">Hybrid mode</strong> for features like Kundli Interpretation to use KB first and fall back to AI only for complex queries.
+                  Route high-volume, low-stakes features (Horoscope, Vastu) to a cheaper model
+                  like <strong className="text-ink-700">gpt-4o-mini</strong> or{" "}
+                  <strong className="text-ink-700">gemini-2.0-flash</strong>, and keep
+                  accuracy-critical paid features (Reports, Deep-Dive) on a precision model.
+                  Max-token caps bound the worst-case cost per call.
                 </p>
               </div>
             </div>

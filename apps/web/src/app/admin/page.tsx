@@ -24,6 +24,7 @@ const GdprTab = dynamic(() => import("./components/GdprTab").then(m => ({ defaul
 const ReferralTab = dynamic(() => import("./components/ReferralTab").then(m => ({ default: m.ReferralTab })), { ssr: false });
 const MonetizationTab = dynamic(() => import("./components/MonetizationTab").then(m => ({ default: m.MonetizationTab })), { ssr: false });
 const PaymentsTab = dynamic(() => import("./components/PaymentsTab").then(m => ({ default: m.PaymentsTab })), { ssr: false });
+const AccessMatrixCard = dynamic(() => import("./components/AccessMatrixCard").then(m => ({ default: m.AccessMatrixCard })), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────��──
 
@@ -69,6 +70,8 @@ export default function AdminPage() {
   const [reportPrice, setReportPrice] = useState("199");
   const [palmistryPrice, setPalmistryPrice] = useState("250");
   const [socialReportBase, setSocialReportBase] = useState("41345");
+  // Bumped after every settings save so the effective-access readout refetches.
+  const [accessMatrixRefresh, setAccessMatrixRefresh] = useState(0);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -282,6 +285,15 @@ export default function AdminPage() {
           <div>
             <h2 className="text-xl font-bold text-gradient mb-6">Pricing Management</h2>
 
+            {/* Ground-truth readout: what the gates actually enforce right now. */}
+            {accessToken && (
+              <AccessMatrixCard
+                token={accessToken}
+                refreshKey={accessMatrixRefresh}
+                pricingPageEnabled={pricingPageEnabled}
+              />
+            )}
+
             {/* ── Monetization mode ───────────────────────────────────── */}
             <h3 className="text-lg font-bold text-ink-900 mb-4">Monetization Mode</h3>
 
@@ -368,7 +380,13 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <h3 className="text-lg font-bold text-ink-900 mb-4">Subscription Plans</h3>
+            <h3 className="text-lg font-bold text-ink-900 mb-1">Subscription Plans</h3>
+            <p className="text-xs text-amber-700 mb-4">
+              ⚠ These prices control what the pricing page <strong>advertises</strong>. The
+              amount actually <strong>billed</strong> comes from the Cashfree plan
+              (CASHFREE_PLAN_MONTHLY / CASHFREE_PLAN_ANNUAL) — change the plan amount in the
+              Cashfree dashboard too, or advertised and billed prices will differ.
+            </p>
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
               <div className="surface-card p-6">
                 <h4 className="font-bold text-ink-900 mb-4">Premium Monthly</h4>
@@ -458,6 +476,9 @@ export default function AdminPage() {
                   }, { token: accessToken! });
                   setSuccess("Pricing updated successfully");
                   setTimeout(() => setSuccess(""), 3000);
+                  // Refresh the effective-access readout so the admin sees
+                  // what the gates now enforce.
+                  setAccessMatrixRefresh((k) => k + 1);
                 } catch (err: any) {
                   setError(err.message || "Failed to update pricing");
                 } finally {
@@ -468,7 +489,10 @@ export default function AdminPage() {
             >
               {pricingSaving ? "Saving..." : "Save Pricing"}
             </button>
-            <p className="text-xs text-ink-500 mt-3">Changes are applied immediately to the pricing page.</p>
+            <p className="text-xs text-ink-500 mt-3">
+              Feature gates (what users can access) apply immediately. The public /pricing
+              page is served from a cache and can take up to a minute to reflect changes.
+            </p>
           </div>
         )}
       </div>

@@ -120,10 +120,13 @@ export async function fetchHoroscope(
  * Fetch the operator-configured pricing settings (public endpoint — the same
  * one PricingClient hits). Used by the /pricing server wrapper so plan cards
  * and the Service/Offer JSON-LD render with real prices in initial HTML.
- * Hourly revalidate: pricing changes are rare, admin-driven events.
+ * Short revalidate: the admin panel promises pricing/visibility changes reach
+ * the public page quickly — an hour-stale price (or a stale
+ * pricing_page_enabled flip) makes the admin distrust their own toggles, and
+ * display could disagree with the live-validated checkout for that whole hour.
  */
 export async function fetchPricing(
-  revalidateSeconds = 60 * 60,
+  revalidateSeconds = 60,
 ): Promise<Record<string, string> | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/payments/pricing`, {
