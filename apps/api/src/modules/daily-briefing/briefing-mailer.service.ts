@@ -126,27 +126,30 @@ export class BriefingMailerService implements OnModuleInit {
   // ─── In-process scheduler (Redis-free fallback) ─────────────────────────
 
   /**
-   * Hourly tick that drives the daily fan-out WITHOUT BullMQ/Redis.
+   * Hourly tick that drives — and, crucially, CATCHES UP — the daily fan-out.
    *
-   * Fires at the top of every hour; runs the fan-out only on the hour
-   * that matches the configured `sendHourUtc`. This is the daily-mail
-   * path whenever `DISABLE_QUEUES=true` — when queues are enabled the
-   * BullMQ repeatable job owns the schedule and this tick stays a
-   * no-op, so the two mechanisms never both send.
+   * The daily mail used to fire at exactly one instant (`sendHourUtc`). If the
+   * app was restarting/deploying at that hour, Redis hiccupped, or the BullMQ
+   * repeatable job didn't re-register, the whole day was silently missed with
+   * no second chance. This tick is a self-healing net: it runs the fan-out
+   * every hour from the send hour onward, so a missed on-time send still goes
+   * out later the same day.
    *
-   * Cross-replica safety: if several API replicas run this cron at the
-   * same hour, the per-user guards still prevent duplicate mail — the
-   * `BriefingDelivery` unique index (userId, sendDate, channel) and the
-   * Resend `Idempotency-Key` (`briefing:<userId>:<date>`, deduped 24h)
-   * both collapse a repeat send to a no-op. The only cost is recomputing
-   * a briefing that's then skipped, which is acceptable for a once-a-day
-   * job.
+   * Split of duties:
+   *   - Queues live: the BullMQ repeatable job owns the on-time send AT the
+   *     hour; this tick only catches up in the hours AFTER it (so the two
+   *     don't both send at the exact hour).
+   *   - Queues disabled (`DISABLE_QUEUES=true`, no BullMQ): this tick is the
+   *     primary — it sends AT the hour and every hour after.
+   *
+   * Safe to overlap either way: the `BriefingDelivery` unique index
+   * (userId, sendDate, channel) and the Resend `Idempotency-Key`
+   * (`briefing:<userId>:<date>`, deduped 24h) collapse any repeat to a no-op,
+   * and `sendForUser` checks the delivery row BEFORE regenerating a briefing,
+   * so post-send sweeps are cheap.
    */
   @Cron('0 0 * * * *')
   async hourlyBriefingTick(): Promise<void> {
-    // Only the fallback path. When queues are live, BullMQ handles it.
-    if ((process.env.DISABLE_QUEUES ?? '').toLowerCase() !== 'true') return;
-
     let settings: BriefingSettings;
     try {
       settings = await this.getSettings();
@@ -155,7 +158,14 @@ export class BriefingMailerService implements OnModuleInit {
       return;
     }
     if (!settings.enabled) return;
-    if (new Date().getUTCHours() !== settings.sendHourUtc) return;
+
+    const queuesDisabled = (process.env.DISABLE_QUEUES ?? '').toLowerCase() === 'true';
+    const hour = new Date().getUTCHours();
+    // Queues live → catch up strictly AFTER the send hour (BullMQ owns the hour
+    // itself). Queues disabled → act FROM the send hour onward (we're the
+    // primary sender). Before the send hour, always a no-op.
+    const active = queuesDisabled ? hour >= settings.sendHourUtc : hour > settings.sendHourUtc;
+    if (!active) return;
 
     if (this.fanoutInFlight) {
       this.logger.warn('Briefing cron: previous fan-out still running — skipping this tick.');
@@ -163,7 +173,9 @@ export class BriefingMailerService implements OnModuleInit {
     }
     this.fanoutInFlight = true;
     try {
-      this.logger.log('Daily briefing fan-out tick (in-process cron — queues disabled).');
+      this.logger.log(
+        `Daily briefing ${queuesDisabled ? 'fan-out' : 'catch-up'} tick (in-process cron, hour=${hour}).`,
+      );
       await this.runDailyFanout();
     } catch (err) {
       this.logger.error(`Briefing cron fan-out failed: ${(err as Error)?.message ?? err}`);

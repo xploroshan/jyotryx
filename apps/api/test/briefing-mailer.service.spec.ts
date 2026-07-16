@@ -171,9 +171,15 @@ describe('BriefingMailerService.sendForUser', () => {
   });
 });
 
-describe('BriefingMailerService.hourlyBriefingTick (in-process cron fallback)', () => {
+describe('BriefingMailerService.hourlyBriefingTick (catch-up scheduler)', () => {
   const ORIGINAL_DISABLE = process.env.DISABLE_QUEUES;
+  // Pin the wall clock to 10:00 UTC so send-hour branches are deterministic.
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-07-16T10:00:00Z'));
+  });
   afterEach(() => {
+    jest.useRealTimers();
     if (ORIGINAL_DISABLE === undefined) delete process.env.DISABLE_QUEUES;
     else process.env.DISABLE_QUEUES = ORIGINAL_DISABLE;
     jest.clearAllMocks();
@@ -187,28 +193,39 @@ describe('BriefingMailerService.hourlyBriefingTick (in-process cron fallback)', 
     return prisma;
   }
 
-  it('is a no-op when DISABLE_QUEUES is not true (BullMQ owns the schedule)', async () => {
-    delete process.env.DISABLE_QUEUES;
-    const svc = await buildService({ prisma: prismaWithSendHour(new Date().getUTCHours()) });
-    const fanout = jest.spyOn(svc, 'runDailyFanout');
-    await svc.hourlyBriefingTick();
-    expect(fanout).not.toHaveBeenCalled();
-  });
-
-  it('runs the fan-out when queues are disabled and the hour matches', async () => {
-    process.env.DISABLE_QUEUES = 'true';
-    const svc = await buildService({ prisma: prismaWithSendHour(new Date().getUTCHours()) });
+  async function runsAt(sendHour: number, disableQueues: boolean): Promise<boolean> {
+    if (disableQueues) process.env.DISABLE_QUEUES = 'true';
+    else delete process.env.DISABLE_QUEUES;
+    const svc = await buildService({ prisma: prismaWithSendHour(sendHour) });
     const fanout = jest
       .spyOn(svc, 'runDailyFanout')
       .mockResolvedValue({ selected: 0, sent: 0, failed: 0, skipped: 0 });
     await svc.hourlyBriefingTick();
-    expect(fanout).toHaveBeenCalledTimes(1);
+    return (fanout as any).mock.calls.length > 0;
+  }
+
+  // Clock pinned to 10:00 UTC.
+  describe('queues disabled (this cron is the primary sender)', () => {
+    it('sends AT the send hour', async () => expect(await runsAt(10, true)).toBe(true));
+    it('catches up in the hours AFTER the send hour', async () => expect(await runsAt(9, true)).toBe(true));
+    it('does nothing BEFORE the send hour', async () => expect(await runsAt(11, true)).toBe(false));
   });
 
-  it('does not run when queues are disabled but the hour does not match', async () => {
+  describe('queues live (BullMQ owns the on-time send)', () => {
+    it('does NOT double-send at the exact send hour', async () => expect(await runsAt(10, false)).toBe(false));
+    it('DOES catch up after the send hour (self-heals a missed BullMQ tick)', async () =>
+      expect(await runsAt(9, false)).toBe(true));
+    it('does nothing before the send hour', async () => expect(await runsAt(11, false)).toBe(false));
+  });
+
+  it('never sends when the briefing is globally disabled', async () => {
     process.env.DISABLE_QUEUES = 'true';
-    const otherHour = (new Date().getUTCHours() + 1) % 24;
-    const svc = await buildService({ prisma: prismaWithSendHour(otherHour) });
+    const prisma = makePrismaMock();
+    (prisma.siteSetting.findMany as any).mockResolvedValue([
+      { key: 'notification.briefing.enabled', value: 'false' },
+      { key: 'notification.briefing.send_hour_utc', value: '9' },
+    ]);
+    const svc = await buildService({ prisma });
     const fanout = jest.spyOn(svc, 'runDailyFanout');
     await svc.hourlyBriefingTick();
     expect(fanout).not.toHaveBeenCalled();
