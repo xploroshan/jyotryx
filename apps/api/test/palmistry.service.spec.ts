@@ -121,6 +121,21 @@ describe('PalmistryService', () => {
   });
 
   describe('analyzePalm', () => {
+    it('MASTER SWITCH: "Make app completely free" overrides legacy credits mode (no 402, no charge)', async () => {
+      // Regression: the free_mode switch was only consulted when credits were
+      // OFF, so with credits on (the default) palmistry kept paywalling while
+      // the admin toggle claimed the app was free.
+      featureAccess.creditsEnabled.mockResolvedValue(true);
+      featureAccess.paidFeaturesFree.mockResolvedValue(true);
+
+      const result: any = await service.analyzePalm('test-uuid', Buffer.from('fake'), 'image/jpeg');
+
+      expect(result.lines.length).toBeGreaterThanOrEqual(5);
+      expect(featureAccess.resolveUnlock).not.toHaveBeenCalled();
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+      expect(featureAccess.incrementUsage).not.toHaveBeenCalled();
+    });
+
     it('should gate palm analysis on a one-time entitlement', async () => {
       const imageBuffer = Buffer.from('fake-image-data');
 

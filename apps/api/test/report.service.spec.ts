@@ -117,6 +117,21 @@ describe('ReportService', () => {
   });
 
   describe('generateReport', () => {
+    it('MASTER SWITCH: "Make app completely free" overrides legacy credits mode', async () => {
+      // Regression: free_mode was only consulted in the credits-off branch, so
+      // with credits on the master free switch never applied to reports.
+      featureAccess.creditsEnabled.mockResolvedValue(true);
+      featureAccess.paidFeaturesFree.mockResolvedValue(true);
+      prisma.report.create.mockResolvedValue(mockReport);
+      prisma.report.update.mockResolvedValue(mockReport);
+
+      await service.generateReport('test-uuid', { type: 'CAREER' });
+
+      expect(featureAccess.resolveUnlock).not.toHaveBeenCalled();
+      expect(featureAccess.consumeEntitlement).not.toHaveBeenCalled();
+      expect(userService.deductCredits).not.toHaveBeenCalled();
+    });
+
     it('should gate on a one-time entitlement before generating report', async () => {
       prisma.report.create.mockResolvedValue(mockReport);
       prisma.report.update.mockResolvedValue(mockReport);

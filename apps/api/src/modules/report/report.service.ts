@@ -85,6 +85,16 @@ export class ReportService {
     // failed generation never silently burns the unlock.
     const entType = `REPORT_${dto.type}` as EntitlementTypeName;
 
+    // The admin "Make app completely free" master switch (feature.free_mode)
+    // must override EVERY mode — including legacy credits mode. It was
+    // previously only consulted in the credits-off branch below, so with
+    // credits on (the default) reports kept demanding a paid unlock while the
+    // admin toggle promised they were free. Checked FIRST, mirroring
+    // resolveChatAccess / resolvePalmAccess.
+    if (await this.featureAccess.paidFeaturesFree()) {
+      return this.runReportGeneration(userId, dto, entType, 'subscriber');
+    }
+
     // Legacy (credits on): pay-to-unlock per report type via one-time
     // entitlement / subscription (unchanged).
     if (await this.featureAccess.creditsEnabled()) {
@@ -95,11 +105,7 @@ export class ReportService {
     // Subscription model: one report of EACH type per period — free users once
     // for life, subscribers once per billing month — then View-only until the
     // next cycle. Metered per type (counter `report_<type>`) against a shared
-    // `report` limit, so the user gets a full set, not one report total. The
-    // master free switch bypasses the cap.
-    if (await this.featureAccess.paidFeaturesFree()) {
-      return this.runReportGeneration(userId, dto, entType, 'subscriber');
-    }
+    // `report` limit, so the user gets a full set, not one report total.
     const counterFeature = `report_${dto.type.toLowerCase()}`;
     // Atomically CLAIM the once-per-cycle slot up front — the old check-then-
     // increment let two concurrent same-type requests both pass the cap and both

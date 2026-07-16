@@ -150,11 +150,18 @@ export class PalmistryService {
    * — closing the previously-unbounded palmistry cost leak.
    */
   private async resolvePalmAccess(userId: string): Promise<PalmAccess> {
+    // The admin "Make app completely free" master switch (feature.free_mode)
+    // must override EVERY mode — including legacy credits mode. It was
+    // previously checked only after creditsEnabled(), so with credits on
+    // (the default) palmistry kept demanding a paid unlock while chat and
+    // reports honoured the switch — the exact "admin toggle does nothing"
+    // trap. Checked FIRST, mirroring resolveChatAccess.
+    if (await this.featureAccess.paidFeaturesFree()) return { kind: 'subscriber' };
+
     if (await this.featureAccess.creditsEnabled()) {
       const mode = await this.featureAccess.resolveUnlock(userId, 'PALMISTRY');
       return { kind: mode };
     }
-    if (await this.featureAccess.paidFeaturesFree()) return { kind: 'subscriber' };
 
     const usage = await this.featureAccess.checkUsage(userId, 'palmistry');
     if (!usage.allowed) {
