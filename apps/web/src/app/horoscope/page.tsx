@@ -9,6 +9,7 @@ import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import { ZodiacGlyph } from "@/components/icons/astro";
 import HoroscopeClient from "./HoroscopeClient";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 
 /**
  * Server shell for the /horoscope hub.
@@ -152,6 +153,7 @@ export default async function HoroscopeHubPage() {
       {/* Interactive widget: tradition switching, Chinese zodiac, multi-
           tradition summary — client-only by nature (auth/store dependent). */}
       <HoroscopeClient />
+      <RelatedGuides path="/horoscope" />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { pageMetadata } from "@/lib/seo/page-metadata";
 import { TRADITION_PAGES } from "@/lib/seo/tradition-pages";
 import DivisionalClient from "./DivisionalClient";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 
 // Thin server wrapper: owns the route's metadata (title/canonical/OG) while
 // the interactive tool stays a client component. No hreflang — tradition
@@ -8,5 +9,10 @@ import DivisionalClient from "./DivisionalClient";
 export const metadata = pageMetadata({ path: "/divisional", ...TRADITION_PAGES["/divisional"] });
 
 export default function Page() {
-  return <DivisionalClient />;
+  return (
+    <>
+      <DivisionalClient />
+      <RelatedGuides path="/divisional" />
+    </>
+  );
 }

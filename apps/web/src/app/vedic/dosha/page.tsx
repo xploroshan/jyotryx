@@ -1,6 +1,7 @@
 import { pageMetadata } from "@/lib/seo/page-metadata";
 import { TRADITION_PAGES } from "@/lib/seo/tradition-pages";
 import VedicDoshaClient from "./VedicDoshaClient";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 
 // Thin server wrapper: owns the route's metadata (title/canonical/OG) while
 // the interactive tool stays a client component. No hreflang — tradition
@@ -8,5 +9,10 @@ import VedicDoshaClient from "./VedicDoshaClient";
 export const metadata = pageMetadata({ path: "/vedic/dosha", ...TRADITION_PAGES["/vedic/dosha"] });
 
 export default function Page() {
-  return <VedicDoshaClient />;
+  return (
+    <>
+      <VedicDoshaClient />
+      <RelatedGuides path="/vedic/dosha" />
+    </>
+  );
 }

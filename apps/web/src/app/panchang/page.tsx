@@ -8,6 +8,7 @@ import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import PanchangClient from "./PanchangClient";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 
 /**
  * Server shell for the /panchang hub ("aaj ka panchang").
@@ -147,6 +148,7 @@ export default async function PanchangHubPage() {
           </Link>
         </div>
       </section>
+      <RelatedGuides path="/panchang" />
     </div>
   );
 }
