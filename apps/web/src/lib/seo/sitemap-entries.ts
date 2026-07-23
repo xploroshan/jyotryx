@@ -7,9 +7,20 @@ import { TRADITION_PAGES } from "./tradition-pages";
 import { FEATURE_CONTENT_LOCALE, featureContentLocales } from "./feature-content";
 import { PANCHANG_SITEMAP_LOCALES } from "./panchang-city-content";
 import { LEARN_ARTICLES } from "@/lib/learn/articles";
-import { localeUrl } from "./page-metadata";
+import { languagesFor, localeUrl } from "./page-metadata";
 import { todayIST, startOfWeekIST, startOfMonthIST, startOfYearIST, CONTENT_VERSION } from "./dates";
-import { PREFIXED_LANDING_LOCALES, type Locale } from "@/i18n/locales";
+import { LANDING_LOCALES, PREFIXED_LANDING_LOCALES, type Locale } from "@/i18n/locales";
+
+/**
+ * Per-entry hreflang alternates (SEO audit I1: "mirror the matrix in the
+ * sitemap"). Uses the SAME locale-set sources as the page-level hreflang
+ * (languagesFor), so sitemap and <head> can never disagree — a mismatched
+ * pair invalidates the whole cluster in Google's eyes. Every URL in a
+ * translation cluster carries the identical full matrix (reciprocity).
+ */
+function langAlternates(path: string, locales?: readonly Locale[]) {
+  return { alternates: { languages: languagesFor(path, locales) } };
+}
 
 /**
  * Sitemap entry builders, extracted from app/sitemap.ts so the inclusion
@@ -48,21 +59,31 @@ export function sitemapFeatureLocales(): Locale[] {
 
 export function staticEntries(now = new Date()): MetadataRoute.Sitemap {
   const base = SITE_ORIGIN;
-  return [
-    { url: `${base}/`,                lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${base}/horoscope`,       lastModified: todayIST(now),            changeFrequency: "daily",   priority: 0.9 },
-    { url: `${base}/panchang`,        lastModified: todayIST(now),            changeFrequency: "daily",   priority: 0.9 },
-    { url: `${base}/panchang/cities`, lastModified: CONTENT_VERSION.directories, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${base}/kundli`,          lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.9 },
-    { url: `${base}/kundli/cities`,   lastModified: CONTENT_VERSION.directories, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${base}/matching`,        lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.8 },
-    { url: `${base}/numerology`,      lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.7 },
-    { url: `${base}/tarot`,           lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.7 },
-    { url: `${base}/palmistry`,       lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.6 },
-    { url: `${base}/vastu`,           lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.6 },
-    { url: `${base}/muhurat`,         lastModified: CONTENT_VERSION.features, changeFrequency: "weekly",  priority: 0.7 },
-    { url: `${base}/pricing`,         lastModified: CONTENT_VERSION.features, changeFrequency: "monthly", priority: 0.5 },
+  // [path, lastModified, changeFrequency, priority]
+  const rows: Array<[string, Date, "daily" | "weekly" | "monthly", number]> = [
+    ["/",                CONTENT_VERSION.features,    "weekly",  1.0],
+    ["/horoscope",       todayIST(now),               "daily",   0.9],
+    ["/panchang",        todayIST(now),               "daily",   0.9],
+    ["/panchang/cities", CONTENT_VERSION.directories, "weekly",  0.7],
+    ["/kundli",          CONTENT_VERSION.features,    "weekly",  0.9],
+    ["/kundli/cities",   CONTENT_VERSION.directories, "weekly",  0.7],
+    ["/matching",        CONTENT_VERSION.features,    "weekly",  0.8],
+    ["/numerology",      CONTENT_VERSION.features,    "weekly",  0.7],
+    ["/tarot",           CONTENT_VERSION.features,    "weekly",  0.7],
+    ["/palmistry",       CONTENT_VERSION.features,    "weekly",  0.6],
+    ["/vastu",           CONTENT_VERSION.features,    "weekly",  0.6],
+    ["/muhurat",         CONTENT_VERSION.features,    "weekly",  0.7],
+    ["/pricing",         CONTENT_VERSION.features,    "monthly", 0.5],
   ];
+  return rows.map(([path, lastModified, changeFrequency, priority]) => ({
+    url: `${base}${path === "/" ? "/" : path}`,
+    lastModified,
+    changeFrequency,
+    priority,
+    // hreflang only for paths that HAVE content-gated localized variants —
+    // same condition the pages themselves use.
+    ...(path === "/" || LOCALIZED_PATHS.includes(path) ? langAlternates(path) : {}),
+  }));
 }
 
 /**
@@ -93,6 +114,7 @@ export function signEntries(now = new Date()): MetadataRoute.Sitemap {
     lastModified: todayIST(now),
     changeFrequency: "daily" as const,
     priority: 0.85,
+    ...langAlternates(`/horoscope/${sign.slug}`, LANDING_LOCALES),
   }));
 }
 
@@ -103,6 +125,7 @@ export function signPeriodEntries(now = new Date()): MetadataRoute.Sitemap {
       lastModified: PERIOD_START[period](now),
       changeFrequency: period,
       priority: 0.75,
+      ...langAlternates(`/horoscope/${sign.slug}/${period}`, LANDING_LOCALES),
     })),
   );
 }
@@ -113,6 +136,7 @@ export function panchangCityEntries(now = new Date()): MetadataRoute.Sitemap {
     lastModified: todayIST(now),
     changeFrequency: "daily" as const,
     priority: 0.8,
+    ...langAlternates(`/panchang/${city.slug}`, PANCHANG_SITEMAP_LOCALES),
   }));
 }
 
@@ -139,6 +163,7 @@ export function localizedFeatureEntries(): MetadataRoute.Sitemap {
       lastModified: CONTENT_VERSION.features,
       changeFrequency: "weekly",
       priority: 0.8,
+      ...langAlternates("/"),
     });
     for (const path of paths) {
       if (!LOCALIZED_PATHS.includes(path)) continue;
@@ -147,6 +172,7 @@ export function localizedFeatureEntries(): MetadataRoute.Sitemap {
         lastModified: CONTENT_VERSION.features,
         changeFrequency: "weekly",
         priority: 0.6,
+        ...langAlternates(path),
       });
     }
   }
@@ -161,6 +187,7 @@ export function localizedSignEntries(now = new Date()): MetadataRoute.Sitemap {
       lastModified: todayIST(now),
       changeFrequency: "daily" as const,
       priority: 0.7,
+      ...langAlternates(`/horoscope/${sign.slug}`, LANDING_LOCALES),
     })),
     ...ZODIAC_SIGNS.flatMap((sign) =>
       (["weekly", "monthly", "yearly"] as const).map((period) => ({
@@ -168,6 +195,7 @@ export function localizedSignEntries(now = new Date()): MetadataRoute.Sitemap {
         lastModified: PERIOD_START[period](now),
         changeFrequency: period,
         priority: 0.6,
+        ...langAlternates(`/horoscope/${sign.slug}/${period}`, LANDING_LOCALES),
       })),
     ),
   ]);
@@ -181,6 +209,7 @@ export function localizedPanchangCityEntries(now = new Date()): MetadataRoute.Si
       lastModified: todayIST(now),
       changeFrequency: "daily" as const,
       priority: 0.7,
+      ...langAlternates(`/panchang/${city.slug}`, PANCHANG_SITEMAP_LOCALES),
     })),
   );
 }

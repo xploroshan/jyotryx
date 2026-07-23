@@ -40,7 +40,7 @@ export function localeUrl(locale: Locale, path: string): string {
  * different locale set (sign/period pages → LANDING_LOCALES, panchang city
  * pages → PANCHANG_SITEMAP_LOCALES) pass their set explicitly.
  */
-function languagesFor(path: string, locales: readonly Locale[] = featureContentLocales()): Record<string, string> {
+export function languagesFor(path: string, locales: readonly Locale[] = featureContentLocales()): Record<string, string> {
   const languages: Record<string, string> = {};
   for (const l of locales) languages[l] = localeUrl(l, path);
   languages["x-default"] = localeUrl(DEFAULT_LOCALE, path);
