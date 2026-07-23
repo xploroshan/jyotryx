@@ -23,6 +23,13 @@ import { ShareButton } from '@/components/share/ShareButton';
  * the interactive page.
  */
 
+// The param space is CLOSED (generateStaticParams enumerates every valid
+// value), so reject everything else at the ROUTER with a real HTTP 404.
+// Without this, notFound() thrown inside a streamed render (the root
+// loading.tsx makes responses stream) can only inject a meta-noindex into an
+// HTTP 200 — the "soft-404 at site scale" the SEO audit measured live.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return listSignSlugs().map((sign) => ({ sign }));
 }

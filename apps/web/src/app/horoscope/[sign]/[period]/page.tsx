@@ -39,6 +39,13 @@ function isPeriod(value: string): value is Period {
   return value === 'weekly' || value === 'monthly' || value === 'yearly';
 }
 
+// The param space is CLOSED (generateStaticParams enumerates every valid
+// value), so reject everything else at the ROUTER with a real HTTP 404.
+// Without this, notFound() thrown inside a streamed render (the root
+// loading.tsx makes responses stream) can only inject a meta-noindex into an
+// HTTP 200 — the "soft-404 at site scale" the SEO audit measured live.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   const periods: Period[] = ['weekly', 'monthly', 'yearly'];
   return listSignSlugs().flatMap((sign) => periods.map((period) => ({ sign, period })));

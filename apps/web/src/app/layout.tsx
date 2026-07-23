@@ -110,10 +110,9 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
-  keywords: [
-    "astrology", "vedic astrology", "kundli", "horoscope",
-    "palmistry", "kundli matching", "panchang", "muhurat", "MyAstro360",
-  ],
+  // NOTE: no `keywords` meta on purpose — it has carried zero ranking weight
+  // since ~2009 and only advertises the target list to competitors (SEO
+  // audit O5).
   // Same origin source as every canonical/hreflang/sitemap URL (server-api's
   // SITE_ORIGIN) so an env override can never split canonical resolution
   // from og:url/hreflang generation.
@@ -123,7 +122,14 @@ export const metadata: Metadata = {
   // `google-site-verification` meta tag) to verify ownership without a code
   // change. Omitted from the <head> when unset. (DNS TXT verification is an
   // alternative and doesn't need this.)
-  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
+  //
+  // SHAPE GUARD: the live site was found serving a Firebase project DOMAIN
+  // in this tag (the env var had been set to "jyotron-8a830.firebaseapp.com")
+  // — a value Google can never verify. Real GSC tokens are ~43-char
+  // URL-safe-base64 strings with no dots; anything else is silently dropped
+  // rather than published as a broken verification.
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION &&
+  /^[A-Za-z0-9_-]{20,100}$/.test(process.env.NEXT_PUBLIC_GSC_VERIFICATION)
     ? { verification: { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } }
     : {}),
   // NOTE: no `alternates.canonical` here on purpose. A static canonical in

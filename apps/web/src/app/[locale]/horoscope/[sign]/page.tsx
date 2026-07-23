@@ -29,6 +29,13 @@ import { ZodiacGlyph } from '@/components/icons/astro';
  * the page's own language. Enabled for the LANDING_LOCALES only.
  */
 
+// The param space is CLOSED (generateStaticParams enumerates every valid
+// value), so reject everything else at the ROUTER with a real HTTP 404.
+// Without this, notFound() thrown inside a streamed render (the root
+// loading.tsx makes responses stream) can only inject a meta-noindex into an
+// HTTP 200 — the "soft-404 at site scale" the SEO audit measured live.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return PREBUILD_LANDING_LOCALES.flatMap((locale) =>
     listSignSlugs().map((sign) => ({ locale, sign })),

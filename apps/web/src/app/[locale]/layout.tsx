@@ -14,6 +14,13 @@ import { I18nProvider } from '@/i18n/I18nProvider';
  * tree via I18nProvider, so `useTranslation()` renders the right language
  * in the SSR HTML.
  */
+// The param space is CLOSED (generateStaticParams enumerates every valid
+// value), so reject everything else at the ROUTER with a real HTTP 404.
+// Without this, notFound() thrown inside a streamed render (the root
+// loading.tsx makes responses stream) can only inject a meta-noindex into an
+// HTTP 200 — the "soft-404 at site scale" the SEO audit measured live.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return PREFIXED_LOCALES.map((locale) => ({ locale }));
 }
