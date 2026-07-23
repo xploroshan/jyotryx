@@ -7,6 +7,7 @@ import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
 import { FeatureSeoSection } from "@/components/seo/FeatureSeoSection";
 import { LanguageLinkRow } from "@/components/seo/LanguageLinkRow";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 import FeatureHeader from "@/components/editorial/FeatureHeader";
 import { FeatureGlyph } from "@/components/icons";
 import KundliClient from "./KundliClient";
@@ -54,6 +55,7 @@ export default function Page() {
         <KundliClient />
       </Suspense>
       <FeatureSeoSection content={FEATURE_CONTENT["/kundli"]} />
+      <RelatedGuides path="/kundli" />
       <LanguageLinkRow path="/kundli" />
     </>
   );

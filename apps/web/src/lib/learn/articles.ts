@@ -96,3 +96,21 @@ export const findArticleBySlug = (slug: string): LearnArticle | undefined =>
   LEARN_ARTICLES.find((a) => a.slug === slug);
 
 export const listArticleSlugs = (): string[] => LEARN_ARTICLES.map((a) => a.slug);
+
+/**
+ * Articles that support a given tool page, INVERTED from each article's own
+ * `toolLinks` (articles already declare which tools they feed, so this needs
+ * no separate hand-maintained map and can never drift from the article data).
+ *
+ * Powers the reverse internal link — tool → guides — which the SEO audit
+ * flagged as missing (O3: "link out to 3–6 supporting Learn articles").
+ * Articles link INTO tools already; this closes the loop so authority and
+ * crawl-discovery flow both ways. Newest-first, capped by `limit`.
+ */
+export function articlesForTool(toolPath: string, limit = 6): LearnArticle[] {
+  const norm = (href: string) => href.split(/[?#]/)[0].replace(/\/$/, "");
+  const target = norm(toolPath);
+  return LEARN_ARTICLES.filter((a) => a.toolLinks.some((t) => norm(t.href) === target))
+    .sort((a, b) => (a.dateModified < b.dateModified ? 1 : -1))
+    .slice(0, limit);
+}

@@ -5,6 +5,7 @@ import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
 import { FeatureSeoSection } from "@/components/seo/FeatureSeoSection";
 import { LanguageLinkRow } from "@/components/seo/LanguageLinkRow";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 import MatchingClient from "./MatchingClient";
 
 export const metadata = pageMetadata({ path: "/matching", ...FEATURE_PAGES["/matching"], hreflang: true });
@@ -27,6 +28,7 @@ export default function Page() {
       />
       <MatchingClient />
       <FeatureSeoSection content={FEATURE_CONTENT["/matching"]} />
+      <RelatedGuides path="/matching" />
       <LanguageLinkRow path="/matching" />
     </>
   );

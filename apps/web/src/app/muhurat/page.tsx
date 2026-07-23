@@ -5,6 +5,7 @@ import { jsonLdHtml, serviceLd } from "@/lib/seo/json-ld";
 import { SITE_ORIGIN } from "@/lib/seo/server-api";
 import { FeatureSeoSection } from "@/components/seo/FeatureSeoSection";
 import { LanguageLinkRow } from "@/components/seo/LanguageLinkRow";
+import { RelatedGuides } from "@/components/seo/RelatedGuides";
 import MuhuratClient from "./MuhuratClient";
 
 export const metadata = pageMetadata({ path: "/muhurat", ...FEATURE_PAGES["/muhurat"], hreflang: true });
@@ -27,6 +28,7 @@ export default function Page() {
       />
       <MuhuratClient />
       <FeatureSeoSection content={FEATURE_CONTENT["/muhurat"]} />
+      <RelatedGuides path="/muhurat" />
       <LanguageLinkRow path="/muhurat" />
     </>
   );
