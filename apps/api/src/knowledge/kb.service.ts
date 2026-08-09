@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LocaleBag, tr, trStatus, KbLocale } from './kb-locales';
+import { KbCoverageTracker, type KbCoverageReport } from './kb-coverage';
 
 // ─── Per-table i18n payload shapes ──────────────────────────────────────────
 // These are the authoritative shapes the integrity test asserts against.
@@ -132,6 +133,7 @@ interface KbRow<Payload> {
 @Injectable()
 export class KbService {
   private readonly logger = new Logger(KbService.name);
+  private readonly coverage = new KbCoverageTracker();
 
   private planetCache = new Map<string, KbRow<KbPlanetPayload>>();
   private nakshatraCache = new Map<string, KbRow<KbNakshatraPayload>>();
@@ -360,15 +362,39 @@ export class KbService {
   }
 
   /** Convenience: render a KB row in the user's locale, falling back to English. */
+  /**
+   * Render a row in the requested locale, falling back to English.
+   *
+   * Records the outcome for coverage reporting. The RETURNED VALUE is
+   * byte-identical to the previous `tr(row.i18n, locale)` — trStatus applies
+   * the same fallback and only additionally reports whether it hit — so this
+   * is instrumentation, not a behaviour change. Without it, a locale miss
+   * silently served English at 62 call sites and nothing could measure how
+   * much of the KB has actually been backfilled.
+   */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
-    return tr(row.i18n, locale);
+    const status = trStatus(row.i18n, locale);
+    this.coverage.record(locale, row.key, status.matched);
+    return status.value;
+  }
+
+  /** Locale-coverage counters since process start (see KbCoverageTracker). */
+  getCoverageReport(): KbCoverageReport {
+    return this.coverage.report();
+  }
+
+  /** Test/ops hook — clears the counters. */
+  resetCoverage(): void {
+    this.coverage.reset();
   }
 
   /** Like `render` but reports whether the locale was an exact hit. */
   renderStatus<T>(row: KbRow<T> | null, locale?: string | null): { value: T; matched: boolean } | null {
     if (!row) return null;
-    return trStatus(row.i18n, locale);
+    const status = trStatus(row.i18n, locale);
+    this.coverage.record(locale, row.key, status.matched);
+    return status;
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────
