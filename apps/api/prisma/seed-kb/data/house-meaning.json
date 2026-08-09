@@ -1,0 +1,114 @@
+{
+  "_source": "Placement library (4/N). Bhava themes keyed \"1\"..\"12\". Used by InterpretationService to name the life area a placement acts in, so the reading can say WHERE a planet operates without an LLM. Payload { text }. English-authored; run `npm run kb:backfill -- --tables=house-meaning` for the other 11 locales.",
+  "_shape": "{ text: string }",
+  "rows": [
+    {
+      "key": "1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Self, body, vitality and the impression you make before you speak. The lagna sets the tone every other house is read against."
+        }
+      }
+    },
+    {
+      "key": "2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Accumulated wealth, family lineage, speech and what you value. Money already earned rather than money being earned."
+        }
+      }
+    },
+    {
+      "key": "3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Courage, initiative, siblings, short journeys and the skill of your own hands. The house of self-effort."
+        }
+      }
+    },
+    {
+      "key": "4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Home, mother, inner peace, land and vehicles. The foundation you return to when the day is done."
+        }
+      }
+    },
+    {
+      "key": "5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Intelligence, children, creativity, romance and purva punya — the merit you arrived with."
+        }
+      }
+    },
+    {
+      "key": "6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Debt, disease, competition and daily service. Difficult by nature, but the house where discipline defeats obstacles."
+        }
+      }
+    },
+    {
+      "key": "7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Marriage, partnership and every formal agreement with another. The mirror house, directly opposite the self."
+        }
+      }
+    },
+    {
+      "key": "8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Longevity, upheaval, inheritance, the occult and joint resources. Sudden change, and what survives it."
+        }
+      }
+    },
+    {
+      "key": "9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Dharma, fortune, father, guru, higher learning and long journeys. Classically the most auspicious house."
+        }
+      }
+    },
+    {
+      "key": "10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Career, status, authority and visible action in the world. What you are known for publicly."
+        }
+      }
+    },
+    {
+      "key": "11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Gains, income, networks, elder siblings and fulfilled desires. Where effort converts into reward."
+        }
+      }
+    },
+    {
+      "key": "12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Loss, expenditure, foreign lands, seclusion and moksha. Release — costly when unconscious, liberating when chosen."
+        }
+      }
+    }
+  ]
+}

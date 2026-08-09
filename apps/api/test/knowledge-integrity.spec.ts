@@ -23,10 +23,23 @@ import { KB_SEEDS, KbSeedRow } from '../src/knowledge/kb-seeds';
 // localized LLM for any locale not yet present — so no English leaks into a
 // non-English UI. Remove an entry the moment its backfill lands.
 //
-// Now empty: the 4 placement tables (KbDashaImpact, KbMatchingTier, KbSignTrait,
-// KbPlanetInHouse) have been backfilled to all 12 locales, so they are once
-// again subject to the full all-12-locales invariant below.
-const BACKFILL_PENDING = new Set<string>([]);
+// The 4 earlier placement tables (KbDashaImpact, KbMatchingTier, KbSignTrait,
+// KbPlanetInHouse) have been backfilled to all 12 locales and are therefore
+// subject to the full invariant below.
+//
+// Placement library (4/N) — the six combination tables — is English-authored
+// and awaiting `npm run kb:backfill`. Until that runs, non-English requests
+// keep the localized LLM path (renderStatus().matched is false for them), so
+// this is a no-regression state, not a broken one. Delete each entry as its
+// backfill lands.
+const BACKFILL_PENDING = new Set<string>([
+  'kbHouseMeaning',
+  'kbPlanetInSign',
+  'kbYogaMeaning',
+  'kbKootaMeaning',
+  'kbAspectMeaning',
+  'kbTransitAlert',
+]);
 
 describe('KB integrity', () => {
   const tableNames = Object.keys(KB_SEEDS);

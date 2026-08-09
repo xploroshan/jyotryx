@@ -408,17 +408,17 @@ model ExperimentAssignment {
 }
 
 model ChatSession {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  category  String
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  category     String
   /// Optional persona the user picked on the "Chat with Astrologer"
   /// surface. Maps to a named astrologer config on the web; the API uses
   /// it to select a first-person human persona system prompt. Null for
   /// legacy/topic-only sessions.
   astrologerId String?
-  title     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  title        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   // messages relation removed — chat_messages is now a partitioned table
@@ -1029,6 +1029,87 @@ model KbPlanetInHouse {
 
   @@unique([key, tradition], name: "kb_planet_in_house_key_tradition_key", map: "kb_planet_in_house_key_tradition_key")
   @@map("kb_planet_in_house")
+}
+
+// ─── Placement Interpretation Library ───────────────────────────────────────
+// The gap identified in docs/KB_LLM_DEPENDENCY_AUDIT.md: the KB described
+// single entities (a planet, a sign, a number) but held no COMBINATION rows,
+// and combinations are exactly where chart interpretation lives. Without them
+// every kundli / dasha / divisional / KP / matching reading fell through to
+// the LLM. Each table follows the established (key, tradition) compound-unique
+// + i18n LocaleBag pattern, so KbService.render and `npm run kb:backfill`
+// work unchanged.
+
+model KbHouseMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// House number as a string, "1".."12"
+  tradition String?
+  i18n      Json /// { en: { text }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_house_meaning_key_tradition_key", map: "kb_house_meaning_key_tradition_key")
+  @@map("kb_house_meaning")
+}
+
+model KbPlanetInSign {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{Sign}", e.g. "Saturn:Aries" (9 grahas x 12 rashis)
+  tradition String?
+  i18n      Json /// { en: { text, dignity }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_planet_in_sign_key_tradition_key", map: "kb_planet_in_sign_key_tradition_key")
+  @@map("kb_planet_in_sign")
+}
+
+model KbYogaMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Yoga slug, e.g. "gajakesari"
+  tradition String?
+  i18n      Json /// { en: { name, text }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_yoga_meaning_key_tradition_key", map: "kb_yoga_meaning_key_tradition_key")
+  @@map("kb_yoga_meaning")
+}
+
+model KbKootaMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Koota slug, e.g. "nadi" (the 8 Ashtakoota factors)
+  tradition String?
+  i18n      Json /// { en: { name, text, lowScoreNote }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_koota_meaning_key_tradition_key", map: "kb_koota_meaning_key_tradition_key")
+  @@map("kb_koota_meaning")
+}
+
+model KbAspectMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{aspectHouseOffset}", e.g. "Saturn:7"
+  tradition String?
+  i18n      Json /// { en: { text }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_aspect_meaning_key_tradition_key", map: "kb_aspect_meaning_key_tradition_key")
+  @@map("kb_aspect_meaning")
+}
+
+model KbTransitAlert {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{houseFromMoon}", e.g. "Saturn:12" (gochar)
+  tradition String?
+  i18n      Json /// { en: { text, tone }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_transit_alert_key_tradition_key", map: "kb_transit_alert_key_tradition_key")
+  @@map("kb_transit_alert")
 }
 
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────

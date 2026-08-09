@@ -1,0 +1,196 @@
+{
+  "_source": "Placement library (4/N). Gochar alerts keyed \"{Planet}:{houseFromMoon}\". Replaces the HARDCODED ENGLISH transit strings the gochar path used, which were untranslatable by construction. Covers the Saturn Sade Sati / Ardha Kantaka / Ashtama Shani cycle plus Jupiter, Rahu and Ketu positions that classical texts flag. Payload { text, tone }. English-authored; run `npm run kb:backfill -- --tables=transit-alert`.",
+  "_shape": "{ text: string, tone: \"favourable\"|\"caution\"|\"mixed\" }",
+  "rows": [
+    {
+      "key": "Saturn:12",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Sade Sati begins — Saturn enters the 12th from your Moon. Expenses, sleep and endurance are tested; simplify rather than expand.",
+          "tone": "caution"
+        }
+      }
+    },
+    {
+      "key": "Saturn:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "The peak of Sade Sati — Saturn over your Moon. Heaviest emotionally; it rewards patience and punishes shortcuts.",
+          "tone": "caution"
+        }
+      }
+    },
+    {
+      "key": "Saturn:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "The closing phase of Sade Sati — Saturn in the 2nd from your Moon. Pressure on finances and family speech, easing as it completes.",
+          "tone": "caution"
+        }
+      }
+    },
+    {
+      "key": "Saturn:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Ardha Kantaka (small panoti) — Saturn in the 4th from your Moon. Domestic and property matters demand attention.",
+          "tone": "caution"
+        }
+      }
+    },
+    {
+      "key": "Saturn:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Ashtama Shani — Saturn in the 8th from your Moon. A demanding transit; avoid unnecessary risk and attend to health.",
+          "tone": "caution"
+        }
+      }
+    },
+    {
+      "key": "Saturn:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn in the 3rd from your Moon — one of its best positions. Sustained effort now produces disproportionate results.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Saturn:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn in the 6th from your Moon — strong for defeating competition, clearing debt and building discipline.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Saturn:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn in the 11th from your Moon — steady gains and the maturing of long-held goals.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:2",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 2nd from your Moon — favourable for wealth, family and speech.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 5th from your Moon — excellent for children, learning and creative merit.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 7th from your Moon — supportive for marriage, partnership and agreements.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 9th from your Moon — fortune, travel and guidance arrive readily.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:11",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 11th from your Moon — gains and fulfilled desires.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter over your Moon — optimism rises; guard against over-commitment and weight.",
+          "tone": "mixed"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 3rd from your Moon — effort exceeds reward for a while; keep expectations modest.",
+          "tone": "mixed"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:6",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter in the 6th from your Moon — obstacles need active management; health deserves attention.",
+          "tone": "mixed"
+        }
+      }
+    },
+    {
+      "key": "Rahu:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Rahu over your Moon — restlessness and unusual desires; decisions made now deserve a second look.",
+          "tone": "mixed"
+        }
+      }
+    },
+    {
+      "key": "Rahu:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Rahu in the 3rd from your Moon — bold initiative pays off; courage is amplified.",
+          "tone": "favourable"
+        }
+      }
+    },
+    {
+      "key": "Ketu:1",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Ketu over your Moon — detachment and a pull inward; good for spiritual work, poor for negotiation.",
+          "tone": "mixed"
+        }
+      }
+    }
+  ]
+}

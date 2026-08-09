@@ -1,0 +1,102 @@
+{
+  "_source": "Placement library (4/N). The 8 Ashtakoota factors keyed by slug. Lets the matching reading explain WHY a koota scored what it did — previously LLM-only, which is how a deterministic 36-point calculation ended up with a non-deterministic explanation. Payload { name, maxPoints, text, lowScoreNote }. English-authored; run `npm run kb:backfill -- --tables=koota-meaning`.",
+  "_shape": "{ name: string, maxPoints: number, text: string, lowScoreNote: string }",
+  "rows": [
+    {
+      "key": "varna",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Varna",
+          "maxPoints": 1,
+          "text": "Compares the spiritual/temperamental grade of the two Moon signs. Worth 1 point — the smallest factor, and a zero here is routinely overridden by the rest of the chart.",
+          "lowScoreNote": "A zero means the groom's varna sits below the bride's. Traditionally noted, rarely decisive on its own."
+        }
+      }
+    },
+    {
+      "key": "vashya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Vashya",
+          "maxPoints": 2,
+          "text": "Measures mutual magnetism — who naturally influences whom. Worth 2 points, and speaks to the balance of power in the relationship.",
+          "lowScoreNote": "A low score suggests one partner will tend to lead and the other to follow; workable when both accept it."
+        }
+      }
+    },
+    {
+      "key": "tara",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Tara",
+          "maxPoints": 3,
+          "text": "Compares birth nakshatras for mutual auspiciousness, indicating health and fortune for the couple. Worth 3 points.",
+          "lowScoreNote": "A low Tara points to periods of strain around health or luck; remedial timing (muhurat) is the classical response."
+        }
+      }
+    },
+    {
+      "key": "yoni",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Yoni",
+          "maxPoints": 4,
+          "text": "Physical and instinctive compatibility, drawn from the animal symbol of each birth nakshatra. Worth 4 points.",
+          "lowScoreNote": "A low Yoni indicates differing physical rhythms and needs — usually a matter of communication rather than incompatibility."
+        }
+      }
+    },
+    {
+      "key": "graha_maitri",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Graha Maitri",
+          "maxPoints": 5,
+          "text": "Friendship between the lords of the two Moon signs — mental and intellectual rapport. Worth 5 points and one of the most meaningful factors day to day.",
+          "lowScoreNote": "A low score suggests the two minds work differently. Genuine affection can still bridge it, but it takes conscious effort."
+        }
+      }
+    },
+    {
+      "key": "gana",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Gana",
+          "maxPoints": 6,
+          "text": "Temperament grouping — Deva (gentle), Manushya (balanced) or Rakshasa (intense). Worth 6 points and a strong indicator of everyday harmony.",
+          "lowScoreNote": "A Deva-Rakshasa mismatch is the classic friction pattern: one partner reads the other as harsh, the other reads them as fragile."
+        }
+      }
+    },
+    {
+      "key": "bhakoot",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Bhakoot",
+          "maxPoints": 7,
+          "text": "The distance between the two Moon signs, governing prosperity and family welfare. Worth 7 points.",
+          "lowScoreNote": "A zero (Bhakoot dosha) is taken seriously in tradition, but is considered cancelled when Graha Maitri is strong or the Moon-sign lords are the same."
+        }
+      }
+    },
+    {
+      "key": "nadi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Nadi",
+          "maxPoints": 8,
+          "text": "The largest single factor at 8 points, relating to constitutional type (Vata/Pitta/Kapha) and, classically, progeny.",
+          "lowScoreNote": "A zero is Nadi dosha — the most weighted objection in Guna Milan. It is regarded as cancelled when both share a Moon sign, or the Moon-sign lords are identical, or the nakshatra is the same but the pada differs."
+        }
+      }
+    }
+  ]
+}
