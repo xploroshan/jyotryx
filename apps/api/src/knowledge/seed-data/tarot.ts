@@ -1,4 +1,10 @@
-export const tarotKnowledge = [
+/**
+ * Tarot Knowledge — spreads, arcana and reading structure.
+ * NOTE: must stay exported as TAROT_DATA and imported by prisma/seed.ts;
+ * it was orphaned (camelCase, unimported) which left category 'tarot' empty
+ * in the DB while tarot.service.ts queried it on every request.
+ */
+export const TAROT_DATA = [
   {
     text: 'The Major Arcana consists of 22 cards (0-21) representing life\'s spiritual lessons and karmic influences. These cards carry significant weight in a reading and indicate major life events, spiritual growth, and deep archetypal energies. When multiple Major Arcana cards appear, the reading carries extra significance.',
     category: 'tarot',

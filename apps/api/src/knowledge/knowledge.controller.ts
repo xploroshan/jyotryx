@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { KnowledgeService } from './knowledge.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../modules/admin/admin.guard';
+import { isKbCategory } from './kb-categories';
 
 @ApiTags('Knowledge Base')
 @ApiBearerAuth('JWT-auth')
@@ -40,9 +41,13 @@ export class KnowledgeController {
     @Query('category') category?: string,
     @Query('limit') limit?: string,
   ) {
+    // `category` arrives from an HTTP query string, so it is untrusted:
+    // narrow it at the boundary. An unknown value searches ALL categories
+    // rather than exact-matching a name that cannot exist (which would
+    // always return zero results).
     const results = await this.knowledgeService.search(
       query,
-      category,
+      isKbCategory(category) ? category : undefined,
       limit ? parseInt(limit, 10) : 5,
     );
     return { results, count: results.length };

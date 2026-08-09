@@ -1,4 +1,10 @@
-export const vastuKnowledge = [
+/**
+ * Vastu Knowledge — directions, elements and remedies.
+ * NOTE: must stay exported as VASTU_DATA and imported by prisma/seed.ts;
+ * it was orphaned (camelCase, unimported) which left category 'vastu' empty
+ * in the DB while vastu.service.ts queried it on every request.
+ */
+export const VASTU_DATA = [
   {
     text: 'Vastu Shastra is the ancient Indian science of architecture and spatial design, dating back over 5,000 years. Based on the five elements (Pancha Bhootas) — Earth, Water, Fire, Air, and Space — Vastu aims to harmonize the energy flow in buildings to promote health, wealth, and happiness. The Vastu Purusha Mandala is the fundamental diagram mapping cosmic forces to the building.',
     category: 'vastu',

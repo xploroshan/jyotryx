@@ -11,6 +11,7 @@ import {
 } from '../../common/feature-access/feature-access.service';
 import { PaymentRequiredException } from '../../common/exceptions/payment-required.exception';
 import { OpenAIService } from '../../openai/openai.service';
+import type { KbCategory } from '../../knowledge/kb-categories';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
 import { getLocaleInstruction } from '../../common/locale';
@@ -382,8 +383,8 @@ Be specific with planetary positions, Dasha periods, Yogas, and transit effects.
     });
   }
 
-  private mapReportTypeToKB(type: string): string {
-    const map: Record<string, string> = {
+  private mapReportTypeToKB(type: string): KbCategory {
+    const map: Record<string, KbCategory> = {
       LIFE: 'planets',
       CAREER: 'houses',
       MARRIAGE: 'matching',

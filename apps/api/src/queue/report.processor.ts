@@ -10,6 +10,7 @@ import { UserService } from '../modules/user/user.service';
 import { FeatureAccessService } from '../common/feature-access/feature-access.service';
 import { getLocaleInstruction } from '../common/locale';
 import { REPORT_QUEUE } from './queue.constants';
+import type { KbCategory } from '../knowledge/kb-categories';
 
 export interface ReportJobData {
   reportId: string;
@@ -101,7 +102,7 @@ export class ReportProcessor extends WorkerHost {
       return this.loadFallbackSections(type, name, locale);
     }
 
-    const kbCategoryMap: Record<string, string> = {
+    const kbCategoryMap: Record<string, KbCategory> = {
       LIFE: 'planets', CAREER: 'houses', MARRIAGE: 'matching',
       WEALTH: 'yogas', PALM: 'palmistry', ANNUAL: 'signs',
     };

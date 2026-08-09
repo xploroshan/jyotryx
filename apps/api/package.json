@@ -26,6 +26,7 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "kb:backfill": "ts-node scripts/backfill-locales.ts",
+    "kb:sync": "ts-node scripts/backfill-knowledge.ts",
     "lint:fix": "eslint . --fix"
   },
   "prisma": {

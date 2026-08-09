@@ -1,49 +1,12 @@
 import { PrismaClient, Role, AuthProvider } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { PLANET_DATA } from '../src/knowledge/seed-data/planets';
-import { SIGN_DATA } from '../src/knowledge/seed-data/signs';
-import { HOUSE_DATA } from '../src/knowledge/seed-data/houses';
-import { NAKSHATRA_DATA } from '../src/knowledge/seed-data/nakshatras';
-import { YOGA_DATA } from '../src/knowledge/seed-data/yogas';
-import { DOSHA_DATA } from '../src/knowledge/seed-data/doshas';
-import { MATCHING_DATA } from '../src/knowledge/seed-data/matching';
-import { REMEDY_DATA } from '../src/knowledge/seed-data/remedies';
-import { PANCHANG_DATA } from '../src/knowledge/seed-data/panchang';
-import { PALMISTRY_DATA } from '../src/knowledge/seed-data/palmistry';
-import { MUHURAT_DATA } from '../src/knowledge/seed-data/muhurat';
-import { DIVISIONAL_CHART_DATA } from '../src/knowledge/seed-data/divisional-charts';
-import { NUMEROLOGY_DATA } from '../src/knowledge/seed-data/numerology';
-import { HOROSCOPE_DAILY_DATA } from '../src/knowledge/seed-data/horoscope-daily';
-import { CAREER_PROFESSION_DATA } from '../src/knowledge/seed-data/career-profession';
-import { TRANSIT_DASHA_DATA } from '../src/knowledge/seed-data/transits-dasha';
-import { HEALTH_ASTROLOGY_DATA } from '../src/knowledge/seed-data/health-astrology';
-import { ASHTAKVARGA_DATA } from '../src/knowledge/seed-data/ashtakvarga';
-import { SHADBALA_DATA } from '../src/knowledge/seed-data/shadbala';
+import {
+  ALL_KNOWLEDGE_SEEDS,
+  extractKeywords,
+} from '../src/knowledge/seed-data';
 import { SEED_TABLES } from './seed-kb';
 
 const prisma = new PrismaClient();
-
-const STOP_WORDS = new Set([
-  'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-  'could', 'should', 'may', 'might', 'shall', 'can', 'a', 'an',
-  'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of',
-  'with', 'by', 'from', 'this', 'that', 'these', 'those', 'it',
-  'its', 'they', 'them', 'their', 'we', 'our', 'you', 'your',
-  'he', 'she', 'his', 'her', 'not', 'no', 'nor', 'if', 'then',
-  'than', 'when', 'where', 'which', 'who', 'whom', 'how', 'what',
-  'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other',
-  'some', 'such', 'only', 'very', 'also', 'just', 'about',
-]);
-
-function extractKeywords(text: string): string[] {
-  const words = text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
-  return [...new Set(words)].slice(0, 30);
-}
 
 async function seedKnowledge() {
   const existingCount = await prisma.knowledgeDocument.count();
@@ -52,27 +15,7 @@ async function seedKnowledge() {
     return;
   }
 
-  const allData = [
-    ...PLANET_DATA,
-    ...SIGN_DATA,
-    ...HOUSE_DATA,
-    ...NAKSHATRA_DATA,
-    ...YOGA_DATA,
-    ...DOSHA_DATA,
-    ...MATCHING_DATA,
-    ...REMEDY_DATA,
-    ...PANCHANG_DATA,
-    ...PALMISTRY_DATA,
-    ...MUHURAT_DATA,
-    ...DIVISIONAL_CHART_DATA,
-    ...NUMEROLOGY_DATA,
-    ...HOROSCOPE_DAILY_DATA,
-    ...CAREER_PROFESSION_DATA,
-    ...TRANSIT_DASHA_DATA,
-    ...HEALTH_ASTROLOGY_DATA,
-    ...ASHTAKVARGA_DATA,
-    ...SHADBALA_DATA,
-  ];
+  const allData = ALL_KNOWLEDGE_SEEDS;
 
   console.log(`Seeding ${allData.length} knowledge documents...`);
 

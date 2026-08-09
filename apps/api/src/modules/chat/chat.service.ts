@@ -12,6 +12,7 @@ import { PaymentRequiredException } from '../../common/exceptions/payment-requir
 import { MemoryService } from '../memory/memory.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getAstrologer } from './astrologers';
+import type { KbCategory } from '../../knowledge/kb-categories';
 
 export interface ChatMessage {
   id: string;
@@ -537,14 +538,25 @@ export class ChatService {
     return this.getKBFallbackResponse(message, category, userProfile);
   }
 
-  private mapCategoryToKB(category: string): string | undefined {
-    const map: Record<string, string> = {
+  /**
+   * Chat intent -> vector-KB category.
+   *
+   * Typed as KbCategory so a name that is not in the corpus is a COMPILE
+   * error. Four of these seven were wrong and failed silently: 'remedies'
+   * and 'doshas' do not exist (the corpus uses the singular 'remedy' and
+   * 'dosha'), so those intents retrieved zero rows; 'career' and
+   * 'numerology' pointed at generic house/nakshatra chunks while the
+   * purpose-built 'career' (27 chunks) and 'numerology' (15 chunks)
+   * categories were never read by anything.
+   */
+  private mapCategoryToKB(category: string): KbCategory | undefined {
+    const map: Record<string, KbCategory> = {
       kundli: 'planets',
-      career: 'houses',
+      career: 'career',
       relationship: 'matching',
-      remedy: 'remedies',
-      health: 'doshas',
-      numerology: 'nakshatras',
+      remedy: 'remedy',
+      health: 'health',
+      numerology: 'numerology',
       wealth: 'yogas',
     };
     return map[category];

@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
 import { VectorSearchService } from './vector-search.service';
 import { EmbeddingService } from '../ai/embeddings/embedding-service';
+import { extractKeywords, tokenizeQuery } from './keywords.util';
+import type { KbCategory } from './kb-categories';
 
 export interface KBSearchResult {
   id: string;
@@ -30,7 +32,7 @@ export class KnowledgeService {
    */
   async search(
     query: string,
-    category?: string,
+    category?: KbCategory,
     topK: number = 5,
   ): Promise<KBSearchResult[]> {
     const results: KBSearchResult[] = [];
@@ -67,7 +69,36 @@ export class KnowledgeService {
       }
     }
 
+    if (results.length === 0 && category) {
+      // Distinguish "this query matched nothing" (fine) from "this category
+      // holds no rows at all" (a config/seed bug that silently ungrounds the
+      // caller). The latter is how tarot/vastu ran unseeded and how the four
+      // wrong chat category names went unnoticed. Checked once per category
+      // per process, so this costs one COUNT on first miss.
+      void this.warnIfCategoryEmpty(category);
+    }
+
     return results.slice(0, topK);
+  }
+
+  /** Categories already checked for emptiness — one DB COUNT per process. */
+  private readonly emptyCategoryChecked = new Set<string>();
+
+  private async warnIfCategoryEmpty(category: KbCategory): Promise<void> {
+    if (this.emptyCategoryChecked.has(category)) return;
+    this.emptyCategoryChecked.add(category);
+    try {
+      const count = await this.getDocumentCount(category);
+      if (count === 0) {
+        this.logger.error(
+          `KB category "${category}" has ZERO documents — every lookup against it ` +
+            'returns no grounding and the caller falls back to ungrounded output. ' +
+            'Run `npm run kb:sync` to backfill the seed corpus.',
+        );
+      }
+    } catch {
+      // Never let an observability check break a request.
+    }
   }
 
   /**
@@ -75,14 +106,10 @@ export class KnowledgeService {
    */
   private async keywordSearch(
     query: string,
-    category?: string,
+    category?: KbCategory,
     topK: number = 5,
   ): Promise<KBSearchResult[]> {
-    const queryWords = query
-      .toLowerCase()
-      .replace(/[^\w\s]/g, '')
-      .split(/\s+/)
-      .filter((w) => w.length > 2);
+    const queryWords = tokenizeQuery(query);
 
     if (queryWords.length === 0) return [];
 
@@ -150,7 +177,7 @@ export class KnowledgeService {
   /**
    * Search by category and topic for direct knowledge lookups (no LLM needed).
    */
-  async getByTopic(category: string, topic: string, limit: number = 50): Promise<KBSearchResult[]> {
+  async getByTopic(category: KbCategory, topic: string, limit: number = 50): Promise<KBSearchResult[]> {
     const docs = await this.prisma.knowledgeDocument.findMany({
       where: { category, topic },
       take: limit,
@@ -172,7 +199,7 @@ export class KnowledgeService {
   /**
    * Get all documents in a category.
    */
-  async getByCategory(category: string, limit: number = 100): Promise<KBSearchResult[]> {
+  async getByCategory(category: KbCategory, limit: number = 100): Promise<KBSearchResult[]> {
     const docs = await this.prisma.knowledgeDocument.findMany({
       where: { category },
       take: limit,
@@ -200,7 +227,7 @@ export class KnowledgeService {
     topic?: string,
     source?: string,
   ): Promise<{ id: string }> {
-    const keywords = this.extractKeywords(text);
+    const keywords = extractKeywords(text);
 
     const doc = await this.prisma.knowledgeDocument.create({
       data: {
@@ -253,7 +280,7 @@ export class KnowledgeService {
         category: item.category,
         topic: item.topic,
         source: item.source,
-        keywords: this.extractKeywords(item.text),
+        keywords: extractKeywords(item.text),
       }));
 
       const result = await this.prisma.knowledgeDocument.createMany({ data });
@@ -296,28 +323,4 @@ export class KnowledgeService {
     return matches / queryWords.length;
   }
 
-  private extractKeywords(text: string): string[] {
-    // Vedic astrology stop words to exclude
-    const stopWords = new Set([
-      'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-      'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-      'could', 'should', 'may', 'might', 'shall', 'can', 'a', 'an',
-      'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of',
-      'with', 'by', 'from', 'this', 'that', 'these', 'those', 'it',
-      'its', 'they', 'them', 'their', 'we', 'our', 'you', 'your',
-      'he', 'she', 'his', 'her', 'not', 'no', 'nor', 'if', 'then',
-      'than', 'when', 'where', 'which', 'who', 'whom', 'how', 'what',
-      'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other',
-      'some', 'such', 'only', 'very', 'also', 'just', 'about',
-    ]);
-
-    const words = text
-      .toLowerCase()
-      .replace(/[^\w\s]/g, '')
-      .split(/\s+/)
-      .filter((w) => w.length > 2 && !stopWords.has(w));
-
-    // Deduplicate and take top 30
-    return [...new Set(words)].slice(0, 30);
-  }
 }
