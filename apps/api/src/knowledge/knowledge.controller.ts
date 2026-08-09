@@ -67,7 +67,10 @@ export class KnowledgeController {
     const results = await this.knowledgeService.search(
       query,
       isKbCategory(category) ? category : undefined,
-      limit ? parseInt(limit, 10) : 5,
+      // Clamped: unparsed this produced NaN (slice(0, NaN) discards the whole
+      // result after paying for it) or an arbitrarily large LIMIT over the
+      // pgvector operator.
+      Math.min(Math.max(Number.parseInt(limit ?? '', 10) || 5, 1), 50),
     );
     return { results, count: results.length };
   }

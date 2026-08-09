@@ -4,6 +4,7 @@ import { OpenAIService } from '../openai/openai.service';
 import { VectorSearchService } from './vector-search.service';
 import { EmbeddingService } from '../ai/embeddings/embedding-service';
 import { extractKeywords, tokenizeQuery } from './keywords.util';
+import { normaliseLocale } from './kb-locales';
 import type { KbCategory } from './kb-categories';
 
 export interface KBSearchResult {
@@ -55,7 +56,7 @@ export class KnowledgeService {
           queryEmbedding,
           category,
           topK,
-          locale,
+          normaliseLocale(locale),
         );
         for (const r of vectorResults) {
           if (r.score > 0.3) {
@@ -132,7 +133,13 @@ export class KnowledgeService {
     // Prefer the requested locale, but never exclude English — an
     // untranslated corpus must still ground the answer rather than
     // returning nothing.
-    const norm = (locale ?? 'en').toLowerCase();
+    //
+    // normaliseLocale strips a region subtag: the column doc says BCP-47 but
+    // the matcher is exact equality against a closed 12-code set, so an
+    // import tagged 'hi-IN' (a perfectly valid BCP-47 tag) would match a
+    // 'hi' request against nothing and silently serve English — the exact
+    // silent-grounding-failure class this changeset exists to remove.
+    const norm = normaliseLocale(locale);
     if (norm !== 'en') where.locale = { in: [norm, 'en'] };
 
     const candidates = await this.prisma.knowledgeDocument.findMany({
@@ -238,6 +245,7 @@ export class KnowledgeService {
   /**
    * Add a document to the knowledge base with optional vector embedding.
    */
+  /** @param locale BCP-47; normalised and defaulted to 'en'. */
   async addDocument(
     text: string,
     category: string,

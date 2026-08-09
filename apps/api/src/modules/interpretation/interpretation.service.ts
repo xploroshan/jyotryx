@@ -248,16 +248,32 @@ export class InterpretationService {
     const tier = pct >= 70 ? 'excellent' : pct >= 55 ? 'good' : pct >= 40 ? 'average' : 'low';
     const tierSt = this.kb.renderStatus(await this.kb.getMatchingTier(tier), locale);
     if (!tierSt?.matched) return null;
-    const tv = tierSt.value as { summary?: unknown; guidance?: unknown };
+    const tv = tierSt.value as { summary?: unknown; points?: unknown; guidance?: unknown };
     const summary = this.str(tv.summary);
     if (!summary) return null;
 
-    const points: string[] = [];
+    // START from the tier row's OWN authored bullets (matching-tiers.json ships
+    // 4 per tier). The previous implementation went through assemble(), which
+    // read them; building `points` only from `payload.kootas` silently dropped
+    // the entire middle of the reading for any caller that sends no koota
+    // breakdown — and, because the result was still non-null, suppressed the
+    // LLM fallback that used to cover it.
+    const points: string[] = Array.isArray(tv.points)
+      ? tv.points.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+      : [];
     // `kootas` is the per-factor breakdown when the caller supplies it.
     const kootas = Array.isArray(payload.kootas) ? payload.kootas : [];
     for (const raw of kootas) {
       if (points.length >= 8) break;
-      const k = (raw ?? {}) as { name?: unknown; guna?: unknown; obtainedPoints?: unknown; maxPoints?: unknown };
+      const k = (raw ?? {}) as {
+        name?: unknown; guna?: unknown;
+        obtainedPoints?: unknown; maxPoints?: unknown;
+        // The web client sends `obtained`/`max` (MatchingClient.tsx), not the
+        // `obtainedPoints`/`maxPoints` spelling used elsewhere. Reading only the
+        // latter made `low` always false, so lowScoreNote — the Nadi-dosha
+        // sentence users actually ask about — could never fire.
+        obtained?: unknown; max?: unknown;
+      };
       const slug = this.str(k.name) ?? this.str(k.guna);
       if (!slug) continue;
       const kSt = this.kb.renderStatus(
@@ -272,12 +288,17 @@ export class InterpretationService {
 
       // Surface the low-score note only when this factor actually scored low —
       // that is the sentence a worried user is looking for.
-      const got = typeof k.obtainedPoints === 'number' ? k.obtainedPoints : null;
-      const max = typeof k.maxPoints === 'number' ? k.maxPoints : null;
+      const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+      const got = num(k.obtainedPoints) ?? num(k.obtained);
+      const max = num(k.maxPoints) ?? num(k.max);
       const low = got != null && max != null && max > 0 && got / max <= 0.5;
       const note = low ? this.str(kv.lowScoreNote) : null;
       points.push(note ? `${kname}: ${ktext} ${note}` : `${kname}: ${ktext}`);
     }
+
+    // Same guard assemble() applied: a summary with no bullets is a thinner
+    // reading than the LLM would give, so fall through rather than ship it.
+    if (points.length === 0) return null;
 
     return {
       summary,

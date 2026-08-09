@@ -39,7 +39,13 @@ describe('InterpretationService — placement library', () => {
         row({ name: 'Gajakesari Yoga', text: 'Jupiter in a kendra from the Moon.' }),
       ),
       getMatchingTier: jest.fn().mockResolvedValue(
-        row({ summary: 'A strong match overall.', guidance: 'Proceed with open conversation.' }),
+        // The real matching-tiers.json ships `points` (4 bullets per tier);
+        // the mock must too, or it does not represent production.
+        row({
+          summary: 'A strong match overall.',
+          points: ['Shared values support the match.', 'Communication styles align well.'],
+          guidance: 'Proceed with open conversation.',
+        }),
       ),
       getKootaMeaning: jest.fn().mockResolvedValue(
         row({ name: 'Nadi', maxPoints: 8, text: 'Constitutional compatibility.', lowScoreNote: 'Nadi dosha; often cancelled.' }),

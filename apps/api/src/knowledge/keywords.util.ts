@@ -84,5 +84,9 @@ export function extractKeywords(text: string): string[] {
  * list means the keyword tier bails out entirely.
  */
 export function tokenizeQuery(query: string): string[] {
-  return [...new Set(normalizeWords(query).filter(longEnough))];
+  // Capped like extractKeywords: the result goes straight into
+  // `keywords: { hasSome: [...] }`, and a long free-text question (the tarot
+  // and vastu DTOs carry no @MaxLength) would otherwise build a
+  // many-thousand-element array-overlap predicate per request.
+  return [...new Set(normalizeWords(query).filter(longEnough))].slice(0, 30);
 }

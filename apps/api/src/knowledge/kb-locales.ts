@@ -48,3 +48,15 @@ export function trStatus<T>(
   }
   return { value: bag.en, matched: !locale || locale === 'en' };
 }
+
+/**
+ * Normalise an incoming locale to the closed KB set.
+ *
+ * Strips a region subtag ('hi-IN' -> 'hi') and lowercases, then falls back to
+ * 'en' for anything not in KB_LOCALES. Both KB read paths use this so a
+ * region-tagged or mis-cased value can never silently match zero rows.
+ */
+export function normaliseLocale(locale?: string | null): KbLocale {
+  const base = (locale ?? 'en').toLowerCase().split('-')[0];
+  return isKbLocale(base) ? base : 'en';
+}

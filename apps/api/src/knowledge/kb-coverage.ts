@@ -20,6 +20,8 @@
  *     locale cannot grow this without limit.
  */
 
+import { isKbLocale } from './kb-locales';
+
 /** Cap on distinct missing keys retained per locale. */
 const MAX_SAMPLE_KEYS_PER_LOCALE = 50;
 
@@ -51,6 +53,15 @@ export class KbCoverageTracker {
     // signal — counting them would dilute every ratio toward 1.
     const l = (locale ?? 'en').toLowerCase();
     if (l === 'en') return;
+
+    // UNBOUNDED-GROWTH GUARD. `locale` reaches here straight from query
+    // strings on public endpoints (e.g. the @Public() GET
+    // /astrology/medical/body-zodiac takes a raw ?locale=). Without this
+    // check every distinct value permanently allocated a Map entry and a Set,
+    // so an unauthenticated caller could grow the heap without limit — and
+    // then have GET /knowledge/coverage sort and serialise all of it. The
+    // closed 12-locale set bounds both by construction.
+    if (!isKbLocale(l)) return;
 
     if (matched) {
       this.hits.set(l, (this.hits.get(l) ?? 0) + 1);

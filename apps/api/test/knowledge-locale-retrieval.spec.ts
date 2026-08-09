@@ -89,9 +89,14 @@ describe('locale-aware KB retrieval', () => {
       expect(vector.searchByVector).toHaveBeenCalledWith([0.1, 0.2, 0.3], 'dosha', 5, 'hi');
     });
 
-    it('forwards undefined for an English request', async () => {
+    it('forwards a NORMALISED locale, defaulting to en', async () => {
+      // normaliseLocale collapses undefined/'HI'/'hi-IN' to the closed KB set
+      // before it reaches SQL, so a region-tagged value can never match zero
+      // rows and silently fall back to English.
       await service.search('mangal dosha', 'dosha', 5);
-      expect(vector.searchByVector).toHaveBeenCalledWith([0.1, 0.2, 0.3], 'dosha', 5, undefined);
+      expect(vector.searchByVector).toHaveBeenCalledWith([0.1, 0.2, 0.3], 'dosha', 5, 'en');
+      await service.search('मंगल दोष', 'dosha', 5, 'hi-IN');
+      expect(vector.searchByVector).toHaveBeenLastCalledWith([0.1, 0.2, 0.3], 'dosha', 5, 'hi');
     });
 
     it('falls back to the keyword tier when the vector tier throws', async () => {
