@@ -340,7 +340,7 @@ export class ChatService {
     });
 
     const kbCategory = this.mapCategoryToKB(dbSession.category);
-    const kbResults = await this.knowledgeService.search(dto.message, kbCategory, 5);
+    const kbResults = await this.knowledgeService.search(dto.message, kbCategory, 5, dto.locale);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
     // Inject the user's stored memories, exactly like the non-streaming path.
@@ -501,7 +501,7 @@ export class ChatService {
   ): Promise<string> {
     // Fetch relevant knowledge base context for RAG
     const kbCategory = this.mapCategoryToKB(category);
-    const kbResults = await this.knowledgeService.search(message, kbCategory, 5);
+    const kbResults = await this.knowledgeService.search(message, kbCategory, 5, locale);
     const kbContext = this.knowledgeService.assembleContext(kbResults);
 
     // "Memory": fold in the durable facts/preferences the user has shared so

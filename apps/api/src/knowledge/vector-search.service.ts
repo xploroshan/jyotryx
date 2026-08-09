@@ -24,32 +24,39 @@ export class VectorSearchService {
     queryEmbedding: number[],
     category?: string,
     topK = 5,
+    locale?: string,
   ): Promise<VectorSearchResult[]> {
     const vecString = `[${queryEmbedding.join(',')}]`;
 
+    // Build the filter incrementally so the parameter positions stay correct
+    // for every combination of category/locale rather than duplicating the
+    // query per case (which is how the two-branch version drifted).
+    const conditions: string[] = ['embedding_vec IS NOT NULL'];
+    const params: unknown[] = [vecString];
+    if (category) {
+      params.push(category);
+      conditions.push(`category = $${params.length}`);
+    }
+    // Prefer the requested locale but always keep English: an untranslated
+    // corpus must still ground the answer. No-op while every row is 'en'.
+    const norm = (locale ?? 'en').toLowerCase();
+    if (norm !== 'en') {
+      params.push(norm);
+      conditions.push(`locale IN ($${params.length}, 'en')`);
+    }
+    params.push(topK);
+    const limitPos = params.length;
+
     try {
-      const results: VectorSearchResult[] = category
-        ? await this.prisma.$queryRawUnsafe(
-            `SELECT id, text, category, topic, source,
-                    1 - (embedding_vec <=> $1::vector) as score
-             FROM knowledge_documents
-             WHERE embedding_vec IS NOT NULL AND category = $2
-             ORDER BY embedding_vec <=> $1::vector
-             LIMIT $3`,
-            vecString,
-            category,
-            topK,
-          )
-        : await this.prisma.$queryRawUnsafe(
-            `SELECT id, text, category, topic, source,
-                    1 - (embedding_vec <=> $1::vector) as score
-             FROM knowledge_documents
-             WHERE embedding_vec IS NOT NULL
-             ORDER BY embedding_vec <=> $1::vector
-             LIMIT $2`,
-            vecString,
-            topK,
-          );
+      const results: VectorSearchResult[] = await this.prisma.$queryRawUnsafe(
+        `SELECT id, text, category, topic, source,
+                1 - (embedding_vec <=> $1::vector) as score
+         FROM knowledge_documents
+         WHERE ${conditions.join(' AND ')}
+         ORDER BY embedding_vec <=> $1::vector
+         LIMIT $${limitPos}`,
+        ...params,
+      );
 
       return results.map((r) => ({
         ...r,

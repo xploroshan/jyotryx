@@ -30,10 +30,19 @@ export class KnowledgeService {
    * Hybrid search: vector similarity first, fill remaining slots with keyword search.
    * Falls back to keyword-only if embedding generation fails.
    */
+  /**
+   * Retrieve grounding chunks.
+   *
+   * `locale` prefers same-language chunks and falls back to English when the
+   * corpus has none — so a Hindi query grounds on Hindi text once translated
+   * chunks exist, and behaves exactly as before until then. Never returns
+   * empty purely because a locale is untranslated.
+   */
   async search(
     query: string,
     category?: KbCategory,
     topK: number = 5,
+    locale?: string,
   ): Promise<KBSearchResult[]> {
     const results: KBSearchResult[] = [];
     const seenIds = new Set<string>();
@@ -46,6 +55,7 @@ export class KnowledgeService {
           queryEmbedding,
           category,
           topK,
+          locale,
         );
         for (const r of vectorResults) {
           if (r.score > 0.3) {
@@ -60,7 +70,7 @@ export class KnowledgeService {
 
     // Step 2: Fill remaining slots with keyword search
     if (results.length < topK) {
-      const keywordResults = await this.keywordSearch(query, category, topK - results.length);
+      const keywordResults = await this.keywordSearch(query, category, topK - results.length, locale);
       for (const r of keywordResults) {
         if (!seenIds.has(r.id)) {
           results.push(r);
@@ -108,6 +118,7 @@ export class KnowledgeService {
     query: string,
     category?: KbCategory,
     topK: number = 5,
+    locale?: string,
   ): Promise<KBSearchResult[]> {
     const queryWords = tokenizeQuery(query);
 
@@ -117,6 +128,12 @@ export class KnowledgeService {
     if (category) {
       where.category = category;
     }
+
+    // Prefer the requested locale, but never exclude English — an
+    // untranslated corpus must still ground the answer rather than
+    // returning nothing.
+    const norm = (locale ?? 'en').toLowerCase();
+    if (norm !== 'en') where.locale = { in: [norm, 'en'] };
 
     const candidates = await this.prisma.knowledgeDocument.findMany({
       where: {

@@ -740,7 +740,12 @@ model LlmUsage {
 model KnowledgeDocument {
   id        String   @id @default(uuid()) @db.Uuid
   text      String /// The chunk of text content
-  category  String /// e.g. "kundli", "horoscope", "dosha", "remedy", "matching", "panchang", "numerology", "palmistry", "general"
+  /// BCP-47 locale of `text`. The corpus is English-authored; translated
+  /// chunks land here so a Hindi chat query can retrieve Hindi grounding
+  /// instead of English text handed to a model told to answer in Hindi.
+  /// search() prefers the requested locale and falls back to 'en'.
+  locale    String   @default("en")
+  category  String /// One of KB_CATEGORIES (src/knowledge/kb-categories.ts) — the canonical closed set
   topic     String? /// Sub-topic e.g. "mars_in_7th_house", "mangal_dosha"
   source    String? /// Book name or source reference
   embedding Json? /// Float[] vector stored as JSON (text-embedding-3-small: 1536 dims)
@@ -750,6 +755,7 @@ model KnowledgeDocument {
 
   @@index([category])
   @@index([category, topic])
+  @@index([category, locale])
   @@map("knowledge_documents")
 }
 

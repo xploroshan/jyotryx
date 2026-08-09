@@ -24,6 +24,13 @@
  * pulling the ~264KB corpus into memory.
  */
 
+// NAMING NOTE: this list is deliberately inconsistent — 'dosha' and 'remedy'
+// are singular while 'houses', 'planets' and 'yogas' are plural, and
+// 'divisional_charts' is snake_case. Renaming them would mean a data
+// migration over every existing row for a purely cosmetic gain, and the
+// actual HARM of the inconsistency (a typo silently matching nothing) is
+// already eliminated: every lookup is typed as KbCategory, so a wrong name
+// cannot compile. Left as-is on purpose.
 export const KB_CATEGORIES = [
   'ashtakvarga',
   'career',

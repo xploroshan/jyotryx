@@ -44,20 +44,22 @@ const prisma = new PrismaClient();
  * already present and silently skip it, which would have re-created the very
  * class of gap this script exists to close.
  */
-function identityOf(category: string, text: string): string {
-  return `${category}::${text.trim()}`;
+function identityOf(category: string, text: string, locale: string): string {
+  return `${locale}::${category}::${text.trim()}`;
 }
 
 async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry');
 
   const existing = await prisma.knowledgeDocument.findMany({
-    select: { id: true, category: true, topic: true, text: true },
+    select: { id: true, category: true, topic: true, text: true, locale: true },
   });
 
-  const seen = new Set(existing.map((row) => identityOf(row.category, row.text)));
+  const seen = new Set(existing.map((row) => identityOf(row.category, row.text, row.locale)));
   const missing: KnowledgeSeed[] = ALL_KNOWLEDGE_SEEDS.filter(
-    (seed) => !seen.has(identityOf(seed.category, seed.text)),
+    // The corpus is English-authored; translated chunks arrive with their
+    // own locale and therefore their own identity.
+    (seed) => !seen.has(identityOf(seed.category, seed.text, 'en')),
   );
 
   // Per-category report: what the corpus declares vs what the DB holds.
@@ -109,6 +111,7 @@ async function main(): Promise<void> {
     const batch = missing.slice(i, i + batchSize).map((item) => ({
       text: item.text,
       category: item.category,
+      locale: 'en',
       topic: item.topic,
       source: item.source,
       keywords: extractKeywords(item.text),
