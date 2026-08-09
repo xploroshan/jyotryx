@@ -12,6 +12,7 @@ import { en } from '@/i18n/en';
 import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { ZodiacGlyph } from '@/components/icons/astro';
 import { ShareButton } from '@/components/share/ShareButton';
+import { LiveDataFallback } from "@/components/seo/LiveDataFallback";
 
 /**
  * Server-rendered SEO landing page for "<sign> daily horoscope today".
@@ -198,9 +199,7 @@ export default async function HoroscopeSignPage({ params }: RouteProps) {
               </dl>
             </>
           ) : (
-            <p className="text-sm text-[rgba(12,8,5,0.72)]">
-              Today's forecast is being prepared — please refresh in a moment.
-            </p>
+            <LiveDataFallback message="Today's forecast is being prepared — please refresh in a moment." />
           )}
         </section>
 

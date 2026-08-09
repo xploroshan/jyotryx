@@ -755,6 +755,47 @@ For a free hosted option, use Grafana Cloud's OTLP endpoint.
 | DNS/CDN | Cloudflare free | $0 |
 | **Total** | | **~$170-255/mo** |
 
+### Cost-down / pause mode
+
+The web tier is designed to survive the backend being switched off: every
+server-side API call on the public pages fails safe (`server-api.ts` returns
+`null`, never throws), so pages keep returning **200 with their static
+content**. That means the backend can be paused **without losing search
+visibility** — the indexed pages, sitemap, hreflang and JSON-LD all keep
+serving from Vercel.
+
+**Never pause the Vercel project to save money.** It is the cheapest
+component and the only one holding the indexed surface; pausing it drops
+pages out of Google within weeks.
+
+**`DISABLE_LIVE_DATA=true`** (Vercel → Settings → Environment Variables →
+Production, then **Redeploy**) is the switch that makes this a clean,
+intentional state rather than a degraded one:
+
+| | Switch **off** (default) | Switch **on** |
+|---|---|---|
+| Panchang / horoscope API calls | made on every ISR revalidation (51 cities × locales, 12 signs × 4 periods × locales) | **skipped before `fetch()`** — instant render, no timeouts, no Sentry noise |
+| Live block when API is down | "…being prepared, please refresh in a moment" | section omitted entirely (no thin-content notice for crawlers) |
+| Page status / SEO markup | 200, full markup | **identical** — 200, full markup |
+| Pricing + share links | live | **still live** (deliberately not gated — a fallback price while checkout charges the real one would misprice the product) |
+
+Pause ladder, cheapest effort first:
+
+1. **Stop the daily LLM spend.** `instagram-daily.yml` runs 02:00 UTC daily
+   and calls `ANTHROPIC_API_KEY`. Kill switch: repo → Settings → Secrets and
+   variables → Actions → **Variables** → `SOCIAL_ENGINE_ENABLED=false`.
+2. **Set `DISABLE_LIVE_DATA=true`** on Vercel and redeploy.
+3. **Railway** — stop/remove the API service (image stays in GHCR).
+4. **Supabase** — Pause project (data retained); downgrade Pro → Free or you
+   keep paying while paused.
+5. **Upstash** — usage drops to ~0 with the API off; downgrade to Free.
+6. **LLM providers** — set a low hard spend cap. Do *not* revoke keys.
+7. Leave **R2** (data loss) and **Vercel** (SEO) alone.
+
+Resume: reverse the order (Supabase → Upstash → Railway → DNS `api.` record
+DNS-only → `curl /api/health/ready` → re-register Cashfree / Play RTDN
+webhooks if the API URL changed → unset `DISABLE_LIVE_DATA` → redeploy).
+
 ---
 
 ## Quick Reference: Commands Cheat Sheet
