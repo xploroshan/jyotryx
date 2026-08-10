@@ -1057,6 +1057,7 @@ export const gu: TranslationKeys = {
     q4: 'મારા આરોગ્ય સુધારવા માટે કયા ઉપાય છે?',
     askPlaceholder: 'તમારો પ્રશ્ન પૂછો...',
     online: 'ઓનલાઇન',
+    offline: 'ઓફલાઇન',
     askAnything: 'કંઈ પણ પૂછો',
     signIn: 'ચેટ માટે સાઇન ઇન કરો',
     disclaimer: 'ભવિષ્યવાણીઓ ફક્ત માર્ગદર્શન અને મનોરંજનના હેતુઓ માટે છે.',

@@ -1056,6 +1056,7 @@ export const pa: TranslationKeys = {
     q4: 'ਮੇਰੀ ਸਿਹਤ ਵਿੱਚ ਸੁਧਾਰ ਲਈ ਕੀ ਉਪਾਅ ਹਨ?',
     askPlaceholder: 'ਆਪਣਾ ਸਵਾਲ ਪੁੱਛੋ...',
     online: 'ਔਨਲਾਈਨ',
+    offline: 'ਔਫਲਾਈਨ',
     askAnything: 'ਕੁਝ ਵੀ ਪੁੱਛੋ',
     signIn: 'ਚੈਟ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ',
     disclaimer: 'ਭਵਿੱਖਬਾਣੀਆਂ ਸਿਰਫ਼ ਮਾਰਗਦਰਸ਼ਨ ਅਤੇ ਮਨੋਰੰਜਨ ਦੇ ਉਦੇਸ਼ਾਂ ਲਈ ਹਨ।',

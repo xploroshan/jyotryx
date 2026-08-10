@@ -10,6 +10,7 @@ import { ModerationService } from '../src/safety/moderation.service';
 import { MemoryService } from '../src/modules/memory/memory.service';
 import { LlmService } from '../src/llm/llm.service';
 import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { mockKnowledgeService, mockLlmService, mockMemoryService } from './helpers/mocks';
 
 describe('ChatService', () => {
@@ -61,6 +62,11 @@ describe('ChatService', () => {
       user: {
         findUnique: jest.fn().mockResolvedValue(mockUser),
       },
+      // Chat now READS the user's already-computed chart to ground timing
+      // answers. Default: this user has never generated a kundli.
+      kundliChart: {
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
     };
 
     userService = {
@@ -85,6 +91,10 @@ describe('ChatService', () => {
       getCreditCost: jest.fn(async (_name: string, fb: number) => fb),
       checkUsage: jest.fn().mockResolvedValue({ allowed: true, periodKey: 'LIFETIME', isSubscriber: false }),
       incrementUsage: jest.fn().mockResolvedValue(undefined),
+      // Metered chat now CLAIMS the unit atomically up front (tryConsumeUsage)
+      // and gives it back on failure, instead of the check-then-increment race.
+      tryConsumeUsage: jest.fn().mockResolvedValue({ allowed: true, periodKey: 'LIFETIME', isSubscriber: false }),
+      decrementUsage: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -112,6 +122,10 @@ describe('ChatService', () => {
         {
           provide: FeatureAccessService,
           useValue: featureAccess,
+        },
+        {
+          provide: GocharService,
+          useValue: { computePersonalization: jest.fn().mockResolvedValue(null) },
         },
       ],
     }).compile();
@@ -165,8 +179,11 @@ describe('ChatService', () => {
       await service.sendMessage('test-uuid', { message: 'Hi', category: 'general' });
 
       expect(userService.deductCredits).not.toHaveBeenCalled();
-      expect(featureAccess.checkUsage).toHaveBeenCalledWith('test-uuid', 'chat');
-      expect(featureAccess.incrementUsage).toHaveBeenCalledWith('test-uuid', 'chat', 'LIFETIME');
+      // The unit is CLAIMED atomically up front rather than read-then-counted
+      // after the LLM round-trip, and is not released because a reply was
+      // delivered.
+      expect(featureAccess.tryConsumeUsage).toHaveBeenCalledWith('test-uuid', 'chat');
+      expect(featureAccess.decrementUsage).not.toHaveBeenCalled();
     });
 
     it('should create a new session when none exists', async () => {
@@ -202,12 +219,16 @@ describe('ChatService', () => {
       expect(prisma.chatSession.create).not.toHaveBeenCalled();
     });
 
-    it('should return fallback response when OpenAI fails', async () => {
+    it('should return fallback response when OpenAI fails — and REFUND, not charge', async () => {
+      // `LlmService.chatCompletion` returns null (never throws) when every
+      // provider fails, so the try/catch refund never fired for the dominant
+      // outage mode: the user paid full price for a canned non-answer.
       openaiService.chatCompletion.mockResolvedValue(null);
       prisma.chatSession.findFirst.mockResolvedValue(null);
       prisma.chatSession.create.mockResolvedValue(mockSession);
       prisma.chatMessage.create.mockResolvedValue(mockMessage);
       prisma.chatMessage.findMany.mockResolvedValue([]);
+      userService.addCredits = jest.fn().mockResolvedValue(undefined);
 
       const result = await service.sendMessage('test-uuid', {
         message: 'Tell me something',
@@ -216,6 +237,12 @@ describe('ChatService', () => {
 
       expect(result.reply).toBeDefined();
       expect(result.reply.content).toBeTruthy();
+      expect(userService.addCredits).toHaveBeenCalledWith(
+        'test-uuid',
+        1,
+        'PURCHASE',
+        expect.stringContaining('Refund'),
+      );
     });
   });
 

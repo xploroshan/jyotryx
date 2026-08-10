@@ -5,6 +5,7 @@ import { NumerologyService } from '../src/modules/numerology/numerology.service'
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
 import { MemoryService } from '../src/modules/memory/memory.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { AstrologyService } from '../src/modules/astrology/astrology.service';
 import { ChatService } from '../src/modules/chat/chat.service';
@@ -34,6 +35,7 @@ import {
   mockEphemerisService,
   mockStorageService,
   mockMemoryService,
+  mockGocharService,
 } from './helpers/mocks';
 
 // ─── Graceful Degradation Tests ──────────────────────────────────────────────
@@ -162,6 +164,7 @@ describe('Stability: Graceful Degradation', () => {
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         ],
       }).compile();
 

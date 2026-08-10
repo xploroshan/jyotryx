@@ -62,3 +62,56 @@ true but misleading; the problem was which SIDE of the hand faced the camera.
 **Rule:** Every honest-failure path should carry a machine-readable code end
 to end (pipeline → 422 body / poll failCode → localized client copy) so the
 user's next attempt actually fixes the problem.
+
+## 5. An LLM feature with no injected "now" answers from its training cutoff
+**Incident:** "When will I find a job" in Chat with Astrologer returned "mid
+2024" — a window already in the past. The chat system prompt carried the
+user's DOB but no current date, no computed chart and no dasha timeline, even
+though `kundli_charts.chartData` already held a per-user Vimshottari tree with
+real ISO dates and `GocharService` could compute today's transits from the
+exact fields chat was already fetching. Every timing answer was invented; this
+one was just visibly wrong.
+**Rules:**
+- Any prompt whose answers can be time-relative MUST carry `TODAY'S DATE:
+  <ISO>` plus an explicit "never name a window that has already passed"
+  clause. The date alone is not enough — models still echo a memorised year.
+- Before adding LLM reasoning, grep for a DETERMINISTIC source of the same
+  fact. This codebase computes charts, dashas and transits from Swiss
+  Ephemeris; a feature that asks the model to guess them is strictly worse and
+  usually already has the data one query away.
+- Read-only grounding must use the PERSISTED artifact when the compute path
+  charges credits (`generateKundli` bills 2) — grounding must never bill.
+- Absence of data must be stated, not omitted. A prompt that drops the profile
+  block but keeps "use the user's actual birth details for accurate chart
+  reading" produces a confidently fabricated ascendant. Emit an explicit
+  MISSING-DATA block and make chart instructions conditional on the tier.
+
+## 6. The open-ended surface needs the strictest guardrails, not the loosest
+**Incident:** `palmistry.service.ts` has carried "Never claim to predict death,
+exact dates, or medical diagnoses" since launch. Chat — where a user can ask
+literally anything — carried no harm clause at all, and `self-harm` /
+`self-harm/intent` were absent from HARD_BLOCK_CATEGORIES, so a suicidal
+disclosure was forwarded to an astrology persona (or, once blocked, answered
+with "this violates our content policy").
+**Rules:**
+- When one feature gets a safety clause, audit every sibling that reaches the
+  same model. Keep the wording in ONE shared constant.
+- Crisis categories get a crisis RESPONSE (helplines, no astrology, never
+  charged), never a generic policy rejection.
+
+## 7. "Returns null on failure" silently defeats a refund written as try/catch
+**Incident:** `LlmService.chatCompletion` returns `null` when every provider in
+the failover chain fails — it never throws. Chat's refund lived in a `catch`,
+so the dominant outage path skipped it: the user paid full price for canned
+boilerplate, and the streaming path *incremented* the meter on it. Separately,
+the SSE observer hardcoded `refunded: true` for failures whose refund handler
+had never run.
+**Rules:**
+- Check the failure CONTRACT of a dependency (null vs throw) before relying on
+  try/catch for money. Model degradation explicitly (`{ text, degraded }`).
+- Never report a refund you did not perform — derive the flag from the refund
+  call's own return value.
+- Everything after the charge point belongs inside the refund handler,
+  including DB writes and retrieval, not just the model call.
+- Metered features must CLAIM atomically (`tryConsumeUsage`) and release on
+  failure; check-then-increment across an LLM round-trip is an open door.

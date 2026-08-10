@@ -14,6 +14,7 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
 import { MemoryService } from '../src/modules/memory/memory.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { MemoryCacheService } from '../src/common/cache.service';
 import { LlmService } from '../src/llm/llm.service';
@@ -33,6 +34,7 @@ import {
   mockEphemerisService,
   mockStorageService,
   mockMemoryService,
+  mockGocharService,
 } from './helpers/mocks';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1311,6 +1313,7 @@ describe('Consult (Chat) — Session & Response Correctness', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
       ],
     }).compile();
     service = module.get<ChatService>(ChatService);

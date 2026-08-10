@@ -269,9 +269,12 @@ export default function ChatPage() {
             <Image src={astrologer.photo} alt={astrologer.name} width={36} height={36} unoptimized className="h-9 w-9 rounded-full object-cover" />
             <div className="min-w-0">
               <h3 className="font-medium text-surface-950 text-sm truncate">{astrologer.name}</h3>
-              <span className="flex items-center gap-1.5 text-[11px] text-emerald-500">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                {astrologer.online ? t.chat.online : t.chat.online}
+              {/* Both branches of this ternary used to read `t.chat.online`,
+                  so an astrologer marked offline still showed a pulsing green
+                  "Online" badge. */}
+              <span className={`flex items-center gap-1.5 text-[11px] ${astrologer.online ? 'text-emerald-500' : 'text-[rgba(12,8,5,0.55)]'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${astrologer.online ? 'bg-emerald-500 animate-pulse' : 'bg-[rgba(12,8,5,0.35)]'}`} />
+                {astrologer.online ? t.chat.online : t.chat.offline}
               </span>
             </div>
           </div>

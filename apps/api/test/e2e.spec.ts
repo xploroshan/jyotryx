@@ -14,6 +14,7 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
 import { MemoryService } from '../src/modules/memory/memory.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { LlmService } from '../src/llm/llm.service';
 import { REDIS_CLIENT } from '../src/redis/redis.module';
@@ -28,6 +29,7 @@ import {
   mockUser,
   createMockRedis,
   mockMemoryService,
+  mockGocharService,
 } from './helpers/mocks';
 import * as crypto from 'crypto';
 
@@ -62,6 +64,7 @@ describe('E2E: Auth → Chat Flow', () => {
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -206,6 +209,7 @@ describe('E2E: OTP Send → Verify → Chat', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -268,6 +272,7 @@ describe('E2E: Chat Session Lifecycle', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -1002,6 +1007,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -1061,6 +1067,7 @@ describe('E2E: Chat Credit Management', () => {
         { provide: KnowledgeService, useValue: knowledgeMock },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
       ],
     }).compile();
 
