@@ -36,6 +36,12 @@ import * as dashaImpactsData from './data/dasha-impacts.json';
 import * as matchingTiersData from './data/matching-tiers.json';
 import * as signTraitsData from './data/sign-traits.json';
 import * as planetInHouseData from './data/planet-in-house.json';
+import * as houseMeaningData from './data/house-meaning.json';
+import * as planetInSignData from './data/planet-in-sign.json';
+import * as yogaMeaningData from './data/yoga-meaning.json';
+import * as kootaMeaningData from './data/koota-meaning.json';
+import * as aspectMeaningData from './data/aspect-meaning.json';
+import * as transitAlertData from './data/transit-alert.json';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
@@ -69,7 +75,13 @@ export interface SeedTable {
     | 'kbDashaImpact'
     | 'kbMatchingTier'
     | 'kbSignTrait'
-    | 'kbPlanetInHouse';
+    | 'kbPlanetInHouse'
+    | 'kbHouseMeaning'
+    | 'kbPlanetInSign'
+    | 'kbYogaMeaning'
+    | 'kbKootaMeaning'
+    | 'kbAspectMeaning'
+    | 'kbTransitAlert';
   /** Compound-unique index key for upsert `where`. */
   uniqueKey:
     | 'kb_planets_key_tradition_key'
@@ -93,7 +105,13 @@ export interface SeedTable {
     | 'kb_dasha_impacts_key_tradition_key'
     | 'kb_matching_tiers_key_tradition_key'
     | 'kb_sign_traits_key_tradition_key'
-    | 'kb_planet_in_house_key_tradition_key';
+    | 'kb_planet_in_house_key_tradition_key'
+    | 'kb_house_meaning_key_tradition_key'
+    | 'kb_planet_in_sign_key_tradition_key'
+    | 'kb_yoga_meaning_key_tradition_key'
+    | 'kb_koota_meaning_key_tradition_key'
+    | 'kb_aspect_meaning_key_tradition_key'
+    | 'kb_transit_alert_key_tradition_key';
   /** On-disk path relative to this file (for backfill rewrites). */
   dataFile: string;
   /** Loaded rows. */
@@ -237,5 +255,41 @@ export const SEED_TABLES: readonly SeedTable[] = [
     uniqueKey: 'kb_planet_in_house_key_tradition_key',
     dataFile: 'data/planet-in-house.json',
     rows: rowsOf(planetInHouseData),
+  },
+  {
+    modelName: 'kbHouseMeaning',
+    uniqueKey: 'kb_house_meaning_key_tradition_key',
+    dataFile: 'data/house-meaning.json',
+    rows: rowsOf(houseMeaningData),
+  },
+  {
+    modelName: 'kbPlanetInSign',
+    uniqueKey: 'kb_planet_in_sign_key_tradition_key',
+    dataFile: 'data/planet-in-sign.json',
+    rows: rowsOf(planetInSignData),
+  },
+  {
+    modelName: 'kbYogaMeaning',
+    uniqueKey: 'kb_yoga_meaning_key_tradition_key',
+    dataFile: 'data/yoga-meaning.json',
+    rows: rowsOf(yogaMeaningData),
+  },
+  {
+    modelName: 'kbKootaMeaning',
+    uniqueKey: 'kb_koota_meaning_key_tradition_key',
+    dataFile: 'data/koota-meaning.json',
+    rows: rowsOf(kootaMeaningData),
+  },
+  {
+    modelName: 'kbAspectMeaning',
+    uniqueKey: 'kb_aspect_meaning_key_tradition_key',
+    dataFile: 'data/aspect-meaning.json',
+    rows: rowsOf(aspectMeaningData),
+  },
+  {
+    modelName: 'kbTransitAlert',
+    uniqueKey: 'kb_transit_alert_key_tradition_key',
+    dataFile: 'data/transit-alert.json',
+    rows: rowsOf(transitAlertData),
   },
 ];

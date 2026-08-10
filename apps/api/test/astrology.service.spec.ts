@@ -280,7 +280,9 @@ describe('AstrologyService', () => {
       await service.getHoroscope('aries', 'daily');
 
       expect(cacheService.set).toHaveBeenCalledWith(
-        expect.stringContaining('horoscope:VEDIC:aries:daily:'),
+        // v2: the cache key is versioned so entries written by the previous
+        // build (model-invented lucky values) are not served after deploy.
+        expect.stringContaining('horoscope:v2:VEDIC:aries:daily:'),
         expect.objectContaining({ sign: 'Aries', period: 'daily' }),
         24 * 60 * 60 * 1000,
       );

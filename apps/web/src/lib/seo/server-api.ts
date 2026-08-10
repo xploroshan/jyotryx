@@ -28,6 +28,40 @@ const API_BASE_URL =
   process.env.API_URL ||
   'http://localhost:4000/api';
 
+/**
+ * Master switch for the LIVE data blocks on the public landing pages —
+ * today's panchang timings and today's horoscope forecast.
+ *
+ * Set `DISABLE_LIVE_DATA=true` in the Vercel environment to stop the web
+ * tier calling the API for these blocks. It exists for COST CONTROL:
+ *
+ *  - These two are the only API calls that fan out across the whole SEO
+ *    surface (51 cities x locales for panchang, 12 signs x 4 periods x
+ *    locales for horoscope) — hundreds of ISR revalidations. Everything
+ *    else on those pages is static.
+ *  - With this on, the API (Railway) can be scaled to zero — or left up
+ *    under far less load — while every page still returns 200 with its
+ *    static content. The indexed pages, sitemap, hreflang and JSON-LD are
+ *    all preserved, so pausing the backend costs no search visibility.
+ *  - It short-circuits BEFORE fetch(), so when the API is off a render
+ *    returns instantly instead of waiting on a connection that will fail.
+ *
+ * DELIBERATELY NOT GATED — these stay live so the flag can never make the
+ * app lie to a user:
+ *  - fetchPricing: one low-volume URL, and showing fallback prices while
+ *    checkout charges the real ones would misprice the product.
+ *  - fetchSharedMatch: user-generated share links, fetched on demand.
+ *
+ * WHY AN ENV VAR AND NOT AN ADMIN-PANEL SETTING: every admin setting lives
+ * in the database, behind the very API this flag exists to switch off. A
+ * DB-backed toggle could not be read in the exact state it is meant to
+ * control. This is read from the Vercel environment by the web tier alone,
+ * so it works with the entire backend down.
+ */
+export function liveDataDisabled(): boolean {
+  return (process.env.DISABLE_LIVE_DATA ?? '').toLowerCase() === 'true';
+}
+
 export interface PanchangPayload {
   date: string;
   tithi: string;
@@ -59,6 +93,8 @@ export async function fetchPanchang(
   revalidateSeconds = 60 * 60 * 6,
   locale?: string,
 ): Promise<PanchangPayload | null> {
+  // Cost switch: skip the call entirely (see liveDataDisabled above).
+  if (liveDataDisabled()) return null;
   try {
     const localeQ = locale && locale !== 'en' ? `&locale=${encodeURIComponent(locale)}` : '';
     const url = `${API_BASE_URL}/astrology/panchang?lat=${lat}&lng=${lng}${localeQ}`;
@@ -88,6 +124,8 @@ export async function fetchHoroscope(
   revalidateSeconds = 60 * 60 * 6,
   locale?: string,
 ): Promise<HoroscopePayload | null> {
+  // Cost switch: skip the call entirely (see liveDataDisabled above).
+  if (liveDataDisabled()) return null;
   try {
     const localeQ = locale && locale !== 'en' ? `&locale=${encodeURIComponent(locale)}` : '';
     const url = `${API_BASE_URL}/astrology/horoscope/${encodeURIComponent(

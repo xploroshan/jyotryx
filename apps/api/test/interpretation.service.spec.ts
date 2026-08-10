@@ -16,6 +16,9 @@ describe('InterpretationService', () => {
     getSignTrait: jest.Mock;
     getPlanetInHouse: jest.Mock;
     getNumberMeaning: jest.Mock;
+    getPlanetInSign: jest.Mock;
+    getYogaMeaning: jest.Mock;
+    getKootaMeaning: jest.Mock;
     renderStatus: jest.Mock;
   };
   let prisma: { deepDiveUnlock: { findUnique: jest.Mock; create: jest.Mock; delete: jest.Mock } };
@@ -41,6 +44,11 @@ describe('InterpretationService', () => {
       getSignTrait: jest.fn().mockResolvedValue(null),
       getPlanetInHouse: jest.fn().mockResolvedValue(null),
       getNumberMeaning: jest.fn().mockResolvedValue(null),
+      // Placement library (4/N). Without these the new lookups throw and are
+      // swallowed by tryKb's catch — the path would silently never run.
+      getPlanetInSign: jest.fn().mockResolvedValue(null),
+      getYogaMeaning: jest.fn().mockResolvedValue(null),
+      getKootaMeaning: jest.fn().mockResolvedValue(null),
       renderStatus: jest.fn().mockReturnValue(null),
     };
     prisma = {

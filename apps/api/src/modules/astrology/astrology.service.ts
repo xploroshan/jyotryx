@@ -7,6 +7,7 @@ import { OpenAIService } from '../../openai/openai.service';
 import { MemoryCacheService } from '../../common/cache.service';
 import { KnowledgeService } from '../../knowledge/knowledge.service';
 import { KbService } from '../../knowledge/kb.service';
+import { luckyNumberFor, luckyColorFor, isZodiacSignSlug } from './sign-attributes.util';
 import { EphemerisService } from '../../ephemeris/ephemeris.service';
 import { getLocaleInstruction } from '../../common/locale';
 import { getTraditionConfig, AVAILABLE_TRADITIONS, CHINESE_ANIMALS, CHINESE_ELEMENTS } from './traditions';
@@ -1249,6 +1250,68 @@ export class AstrologyService {
     ];
   }
 
+  /**
+   * Deterministic horoscope aspects from the KB.
+   *
+   * `seed-data/horoscope-daily.ts` holds 36 chunks keyed exactly
+   * `${sign}_career`, `${sign}_health`, `${sign}_love` under category
+   * 'horoscopes' — a complete, purpose-built address space that nothing in
+   * the app queried. getHoroscope instead searched the 12 generic 'signs'
+   * chunks and asked the model to invent these three fields.
+   *
+   * Uses getByTopic (exact index lookup on (category, topic)) rather than
+   * search(): no embedding call, no similarity threshold, no chance of
+   * returning another sign's text.
+   *
+   * Returns empty for non-English locales — the chunks are English, and
+   * serving them to a localised request would regress the translation.
+   */
+  private async getKbHoroscopeAspects(
+    sign: string,
+    localeKey: string,
+    tradition: string,
+    period: string,
+  ): Promise<{ career?: string; health?: string; love?: string; covered: boolean }> {
+    const slug = sign.toLowerCase();
+    // TRADITION GATE. The chunks are explicitly Vedic (they cite Mangal Dosha,
+    // gemstones, Venus dasha), and SIGN_RULER is Vedic rulership. Serving them
+    // under a Western/Hellenistic/Chinese horoscope would put Vedic remedies in
+    // a Western reading and make getMultiTraditionHoroscope return byte-identical
+    // text for traditions it asks the model to CONTRAST.
+    if (tradition !== 'VEDIC') return { covered: false };
+    // PERIOD GATE. The topics are `${sign}_career|_health|_love` with no period
+    // dimension, so reusing them for weekly/monthly/yearly would serve the same
+    // paragraph for every period and never change it — turning a yearly
+    // horoscope into a static sign profile. Daily only until period-scoped rows
+    // are authored.
+    if (period !== 'daily') return { covered: false };
+    if (localeKey !== 'en' || !isZodiacSignSlug(slug)) return { covered: false };
+
+    try {
+      const [career, health, love] = await Promise.all([
+        this.knowledgeService.getByTopic('horoscopes', `${slug}_career`, 1),
+        this.knowledgeService.getByTopic('horoscopes', `${slug}_health`, 1),
+        this.knowledgeService.getByTopic('horoscopes', `${slug}_love`, 1),
+      ]);
+      const pick = (rows: { text: string }[]): string | undefined => rows?.[0]?.text || undefined;
+      const aspects = { career: pick(career), health: pick(health), love: pick(love) };
+      // "covered" only when ALL three are present — a partial hit would leave
+      // the prompt trimmed for a field the KB cannot actually supply.
+      const covered = !!(aspects.career && aspects.health && aspects.love);
+      if (!covered) {
+        this.logger.warn(
+          `KB horoscope aspects incomplete for ${slug} ` +
+            `(career=${!!aspects.career} health=${!!aspects.health} love=${!!aspects.love}) ` +
+            '- falling back to the model for the missing fields. Run `npm run kb:sync`.',
+        );
+      }
+      return { ...aspects, covered };
+    } catch (err) {
+      this.logger.warn(`KB horoscope lookup failed, using model output: ${(err as Error).message}`);
+      return { covered: false };
+    }
+  }
+
   async getHoroscope(sign: string, period?: 'daily' | 'weekly' | 'monthly' | 'yearly', locale?: string, tradition?: string): Promise<HoroscopeResult> {
     const activePeriod = period || 'daily';
     const activeTradition = tradition || 'VEDIC';
@@ -1257,7 +1320,10 @@ export class AstrologyService {
     // instruction), so the locale MUST be part of the cache key — otherwise the
     // first language requested each day is served to every other language for 24h.
     const localeKey = (locale || 'en').toLowerCase();
-    const cacheKey = `horoscope:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${localeKey}:${today}`;
+    // v2: the KB/deterministic layer changed the response shape's content.
+    // Without a version bump, Redis entries written by the previous build keep
+    // serving model-invented lucky values for up to 24h after deploy.
+    const cacheKey = `horoscope:v2:${activeTradition}:${sign.toLowerCase()}:${activePeriod}:${localeKey}:${today}`;
     const cached = await this.cacheService.get<HoroscopeResult>(cacheKey);
     if (cached) return cached;
 
@@ -1285,9 +1351,32 @@ export class AstrologyService {
     const traditionLabel = activeTradition === 'VEDIC' ? 'Vedic' : activeTradition === 'WESTERN' ? 'Western' : activeTradition === 'CHINESE' ? 'Chinese' : '';
     const userPrompt = `Generate ${periodDescriptions[activePeriod]} ${traditionLabel} horoscope for ${formattedSign}. Provide specific, actionable guidance unique to this sign.`;
 
+    // ---- Deterministic layer -------------------------------------------
+    // career/health/love for all 12 signs are already written in the KB
+    // (category 'horoscopes', topics `${sign}_career|_health|_love` — 36
+    // chunks), and luckyNumber/luckyColor are fixed classical
+    // correspondences. Asking a model to re-invent them daily costs tokens
+    // and lets the same sign get different "lucky numbers" on consecutive
+    // days. Take them from the KB/table instead.
+    //
+    // ENGLISH ONLY, deliberately: the horoscope chunks are English, so
+    // serving them to a Hindi request would be a localisation regression.
+    // Non-English keeps the existing localised LLM path until those rows are
+    // translated — the same "flip per locale as the backfill lands" pattern
+    // the KB plan uses elsewhere.
+    const kbAspects = await this.getKbHoroscopeAspects(sign, localeKey, activeTradition, activePeriod);
+
+    // When the KB covers these fields, stop paying the model to produce
+    // them — it shortens the completion rather than just discarding output.
+    const trimmedUserPrompt = kbAspects.covered
+      ? `${userPrompt}\n\nReturn ONLY the fields: prediction, mood, compatibility. ` +
+        'Do NOT return career, health, love, luckyNumber or luckyColor — those are ' +
+        'supplied deterministically from the knowledge base.'
+      : userPrompt;
+
     const aiPrediction = await this.callOpenAI(
       systemPrompt,
-      userPrompt,
+      trimmedUserPrompt,
       true, 1500, 0.7, 'default', locale,
       { feature: `horoscope:${activePeriod}:${activeTradition.toLowerCase()}` },
     );
@@ -1298,11 +1387,14 @@ export class AstrologyService {
         date: today,
         period: activePeriod,
         prediction: aiPrediction.prediction,
-        career: aiPrediction.career || `${formattedSign}'s professional sector is influenced by favorable planetary transits. Focus on strategic decisions and networking opportunities.`,
-        health: aiPrediction.health || `${formattedSign} benefits from mindful practices aligned with your ruling planet's energy. Pay attention to your body's signals and maintain a balanced routine.`,
-        love: aiPrediction.love || `Relationship dynamics are enhanced by Venus's current transit. ${formattedSign} can expect meaningful connections and deeper emotional bonds.`,
-        luckyNumber: aiPrediction.luckyNumber,
-        luckyColor: aiPrediction.luckyColor,
+        // KB first, model second, generic copy last.
+        career: kbAspects.career || aiPrediction.career || `${formattedSign}'s professional sector is influenced by favorable planetary transits. Focus on strategic decisions and networking opportunities.`,
+        health: kbAspects.health || aiPrediction.health || `${formattedSign} benefits from mindful practices aligned with your ruling planet's energy. Pay attention to your body's signals and maintain a balanced routine.`,
+        love: kbAspects.love || aiPrediction.love || `Relationship dynamics are enhanced by Venus's current transit. ${formattedSign} can expect meaningful connections and deeper emotional bonds.`,
+        // Fixed correspondences — never model-generated when the sign is known.
+        // Vedic rulership correspondences — not valid for Western/Chinese.
+        luckyNumber: (activeTradition === 'VEDIC' ? luckyNumberFor(sign) : undefined) ?? aiPrediction.luckyNumber,
+        luckyColor: (activeTradition === 'VEDIC' && localeKey === 'en' ? luckyColorFor(sign) : undefined) ?? aiPrediction.luckyColor,
         mood: aiPrediction.mood,
         compatibility: aiPrediction.compatibility,
       };
@@ -1414,11 +1506,17 @@ export class AstrologyService {
       date: today,
       period: activePeriod,
       prediction: predictions[seed],
-      career: careerPredictions[seed],
-      health: healthPredictions[seed],
-      love: lovePredictions[seed],
-      luckyNumber: ((dayOfYear + signIdx + periodOffset) % 9) + 1,
-      luckyColor: colors[(dayOfYear + signIdx + periodOffset) % colors.length],
+      // Must match the success path, or the "fixed correspondence" guarantee is
+      // broken by whichever path happens to populate the 24h cache first.
+      career: kbAspects.career || careerPredictions[seed],
+      health: kbAspects.health || healthPredictions[seed],
+      love: kbAspects.love || lovePredictions[seed],
+      luckyNumber:
+        (activeTradition === 'VEDIC' ? luckyNumberFor(sign) : undefined) ??
+        ((dayOfYear + signIdx + periodOffset) % 9) + 1,
+      luckyColor:
+        (activeTradition === 'VEDIC' && localeKey === 'en' ? luckyColorFor(sign) : undefined) ??
+        colors[(dayOfYear + signIdx + periodOffset) % colors.length],
       mood: moods[(seed + periodOffset) % moods.length],
       compatibility: signs[(signIdx + dayOfYear + periodOffset) % 12],
     };

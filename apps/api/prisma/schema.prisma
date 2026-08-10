@@ -408,17 +408,17 @@ model ExperimentAssignment {
 }
 
 model ChatSession {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  category  String
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  category     String
   /// Optional persona the user picked on the "Chat with Astrologer"
   /// surface. Maps to a named astrologer config on the web; the API uses
   /// it to select a first-person human persona system prompt. Null for
   /// legacy/topic-only sessions.
   astrologerId String?
-  title     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  title        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   // messages relation removed — chat_messages is now a partitioned table
@@ -738,18 +738,36 @@ model LlmUsage {
 // ─── Knowledge Base ─────────────────────────────────────────────────────────
 
 model KnowledgeDocument {
-  id        String   @id @default(uuid()) @db.Uuid
-  text      String /// The chunk of text content
-  category  String /// e.g. "kundli", "horoscope", "dosha", "remedy", "matching", "panchang", "numerology", "palmistry", "general"
-  topic     String? /// Sub-topic e.g. "mars_in_7th_house", "mangal_dosha"
-  source    String? /// Book name or source reference
-  embedding Json? /// Float[] vector stored as JSON (text-embedding-3-small: 1536 dims)
-  keywords  String[] /// Extracted keywords for fast text search
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String                       @id @default(uuid()) @db.Uuid
+  text         String /// The chunk of text content
+  /// BCP-47 locale of `text`. The corpus is English-authored; translated
+  /// chunks land here so a Hindi chat query can retrieve Hindi grounding
+  /// instead of English text handed to a model told to answer in Hindi.
+  /// search() prefers the requested locale and falls back to 'en'.
+  locale       String                       @default("en")
+  category     String /// One of KB_CATEGORIES (src/knowledge/kb-categories.ts) — the canonical closed set
+  topic        String? /// Sub-topic e.g. "mars_in_7th_house", "mangal_dosha"
+  source       String? /// Book name or source reference
+  embedding    Json? /// Float[] vector stored as JSON (text-embedding-3-small: 1536 dims)
+  keywords     String[] /// Extracted keywords for fast text search
+  /// The REAL pgvector column, added by 20260412_add_pgvector. Declared here
+  /// as Unsupported() purely so the schema is honest about it: while it was
+  /// invisible, `prisma migrate dev` generated `DROP COLUMN embedding_vec`
+  /// (verified with `prisma migrate diff`) — which would silently destroy
+  /// every embedding and the HNSW index, after which vector search fails,
+  /// its catch swallows the error, and retrieval degrades to keyword-only
+  /// with nothing logged.
+  embeddingVec Unsupported("vector(1536)")? @map("embedding_vec")
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
 
   @@index([category])
   @@index([category, topic])
+  @@index([category, locale])
+  /// Declared for the same reason as embeddingVec: created by
+  /// 20260411_gin_index_keywords, and invisible to the schema it was being
+  /// proposed for deletion.
+  @@index([keywords], type: Gin, map: "knowledge_documents_keywords_gin")
   @@map("knowledge_documents")
 }
 
@@ -1029,6 +1047,87 @@ model KbPlanetInHouse {
 
   @@unique([key, tradition], name: "kb_planet_in_house_key_tradition_key", map: "kb_planet_in_house_key_tradition_key")
   @@map("kb_planet_in_house")
+}
+
+// ─── Placement Interpretation Library ───────────────────────────────────────
+// The gap identified in docs/KB_LLM_DEPENDENCY_AUDIT.md: the KB described
+// single entities (a planet, a sign, a number) but held no COMBINATION rows,
+// and combinations are exactly where chart interpretation lives. Without them
+// every kundli / dasha / divisional / KP / matching reading fell through to
+// the LLM. Each table follows the established (key, tradition) compound-unique
+// + i18n LocaleBag pattern, so KbService.render and `npm run kb:backfill`
+// work unchanged.
+
+model KbHouseMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// House number as a string, "1".."12"
+  tradition String?
+  i18n      Json /// { en: { text }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_house_meaning_key_tradition_key", map: "kb_house_meaning_key_tradition_key")
+  @@map("kb_house_meaning")
+}
+
+model KbPlanetInSign {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{Sign}", e.g. "Saturn:Aries" (9 grahas x 12 rashis)
+  tradition String?
+  i18n      Json /// { en: { text, dignity }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_planet_in_sign_key_tradition_key", map: "kb_planet_in_sign_key_tradition_key")
+  @@map("kb_planet_in_sign")
+}
+
+model KbYogaMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Yoga slug, e.g. "gajakesari"
+  tradition String?
+  i18n      Json /// { en: { name, text }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_yoga_meaning_key_tradition_key", map: "kb_yoga_meaning_key_tradition_key")
+  @@map("kb_yoga_meaning")
+}
+
+model KbKootaMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// Koota slug, e.g. "nadi" (the 8 Ashtakoota factors)
+  tradition String?
+  i18n      Json /// { en: { name, text, lowScoreNote }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_koota_meaning_key_tradition_key", map: "kb_koota_meaning_key_tradition_key")
+  @@map("kb_koota_meaning")
+}
+
+model KbAspectMeaning {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{aspectHouseOffset}", e.g. "Saturn:7"
+  tradition String?
+  i18n      Json /// { en: { text }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_aspect_meaning_key_tradition_key", map: "kb_aspect_meaning_key_tradition_key")
+  @@map("kb_aspect_meaning")
+}
+
+model KbTransitAlert {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String /// "{Planet}:{houseFromMoon}", e.g. "Saturn:12" (gochar)
+  tradition String?
+  i18n      Json /// { en: { text, tone }, ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, tradition], name: "kb_transit_alert_key_tradition_key", map: "kb_transit_alert_key_tradition_key")
+  @@map("kb_transit_alert")
 }
 
 // ─── Daily Stats Aggregation ────────────────────────────────────────────────

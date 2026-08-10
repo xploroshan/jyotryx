@@ -14,6 +14,7 @@ import { PANCHANG_SITEMAP_LOCALES } from '@/lib/seo/panchang-city-content';
 import { en } from '@/i18n/en';
 import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { LanguageLinkRow } from '@/components/seo/LanguageLinkRow';
+import { LiveDataFallback } from "@/components/seo/LiveDataFallback";
 
 /**
  * Server-rendered SEO landing page for "Panchang for <city>".
@@ -205,9 +206,10 @@ export default async function PanchangCityPage({ params }: RouteProps) {
             </p>
           </section>
         ) : (
-          <section className="surface-card p-6 mb-6 text-sm text-[rgba(12,8,5,0.72)]">
-            Panchang data is being calculated — please refresh in a moment.
-          </section>
+          <LiveDataFallback
+            variant="card"
+            message="Panchang data is being calculated — please refresh in a moment."
+          />
         )}
 
         {/* SEO long-form */}

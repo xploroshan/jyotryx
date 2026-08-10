@@ -1,0 +1,1086 @@
+{
+  "_source": "Placement library (4/N). Planet-in-sign interpretation keyed \"{Planet}:{Sign}\" (9 grahas x 12 rashis = 108). Complements kb_planet_in_house: the house says WHERE a graha acts, the sign says HOW it expresses. Composed from the graha karaka function, the rashi expression mode and classical dignity (exaltation/debilitation/own), which is how the classical texts derive it. Payload { text, dignity }. English-authored; run `npm run kb:backfill -- --tables=planet-in-sign`.",
+  "_shape": "{ text: string, dignity: \"exalted\"|\"debilitated\"|\"own\"|\"neutral\" }",
+  "rows": [
+    {
+      "key": "Sun:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through sharp, initiating fire — fast to start, impatient with delay. This is Sun's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Sun:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through steady, sensory earth — slow to move, immovable once settled. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through restless, dual air — curious, verbal, quick to switch. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through protective, tidal water — feeling first, guarded and retentive. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through proud, radiant fire — needing to be seen and to matter. Sun rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Sun:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through analytical, corrective earth — precise, useful, quietly critical. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through balancing, relational air — weighing, pairing, averse to discord. This is Sun's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Sun:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through intense, submerged water — probing, secretive, all-or-nothing. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through expansive, principled fire — aiming far, disliking constraint. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through structural, ambitious earth — patient, hierarchical, results-driven. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through detached, systemic air — unconventional, collective-minded. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Sun:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your sense of self, authority and vitality express through dissolving, compassionate water — porous, imaginative, boundaryless. Sun is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through sharp, initiating fire — fast to start, impatient with delay. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through steady, sensory earth — slow to move, immovable once settled. This is Moon's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Moon:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through restless, dual air — curious, verbal, quick to switch. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through protective, tidal water — feeling first, guarded and retentive. Moon rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Moon:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through proud, radiant fire — needing to be seen and to matter. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through analytical, corrective earth — precise, useful, quietly critical. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through balancing, relational air — weighing, pairing, averse to discord. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through intense, submerged water — probing, secretive, all-or-nothing. This is Moon's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Moon:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through expansive, principled fire — aiming far, disliking constraint. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through structural, ambitious earth — patient, hierarchical, results-driven. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through detached, systemic air — unconventional, collective-minded. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Moon:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your emotional nature and instinctive responses move through dissolving, compassionate water — porous, imaginative, boundaryless. Moon is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through sharp, initiating fire — fast to start, impatient with delay. Mars rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Mars:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through steady, sensory earth — slow to move, immovable once settled. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through restless, dual air — curious, verbal, quick to switch. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through protective, tidal water — feeling first, guarded and retentive. This is Mars's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Mars:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through proud, radiant fire — needing to be seen and to matter. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through analytical, corrective earth — precise, useful, quietly critical. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through balancing, relational air — weighing, pairing, averse to discord. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through intense, submerged water — probing, secretive, all-or-nothing. Mars rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Mars:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through expansive, principled fire — aiming far, disliking constraint. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through structural, ambitious earth — patient, hierarchical, results-driven. This is Mars's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Mars:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through detached, systemic air — unconventional, collective-minded. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mars:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your drive, courage and capacity for conflict operate through dissolving, compassionate water — porous, imaginative, boundaryless. Mars is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through sharp, initiating fire — fast to start, impatient with delay. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through steady, sensory earth — slow to move, immovable once settled. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through restless, dual air — curious, verbal, quick to switch. Mercury rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through protective, tidal water — feeling first, guarded and retentive. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through proud, radiant fire — needing to be seen and to matter. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through analytical, corrective earth — precise, useful, quietly critical. This is Mercury's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through balancing, relational air — weighing, pairing, averse to discord. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through intense, submerged water — probing, secretive, all-or-nothing. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through expansive, principled fire — aiming far, disliking constraint. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through structural, ambitious earth — patient, hierarchical, results-driven. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through detached, systemic air — unconventional, collective-minded. Mercury is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Mercury:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your intellect, speech and commercial sense work through dissolving, compassionate water — porous, imaginative, boundaryless. This is Mercury's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through sharp, initiating fire — fast to start, impatient with delay. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through steady, sensory earth — slow to move, immovable once settled. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through restless, dual air — curious, verbal, quick to switch. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through protective, tidal water — feeling first, guarded and retentive. This is Jupiter's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through proud, radiant fire — needing to be seen and to matter. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through analytical, corrective earth — precise, useful, quietly critical. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through balancing, relational air — weighing, pairing, averse to discord. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through intense, submerged water — probing, secretive, all-or-nothing. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through expansive, principled fire — aiming far, disliking constraint. Jupiter rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through structural, ambitious earth — patient, hierarchical, results-driven. This is Jupiter's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through detached, systemic air — unconventional, collective-minded. Jupiter is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Jupiter:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your wisdom, faith and sense of growth expand through dissolving, compassionate water — porous, imaginative, boundaryless. Jupiter rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Venus:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through sharp, initiating fire — fast to start, impatient with delay. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through steady, sensory earth — slow to move, immovable once settled. Venus rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Venus:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through restless, dual air — curious, verbal, quick to switch. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through protective, tidal water — feeling first, guarded and retentive. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through proud, radiant fire — needing to be seen and to matter. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through analytical, corrective earth — precise, useful, quietly critical. This is Venus's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Venus:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through balancing, relational air — weighing, pairing, averse to discord. Venus rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Venus:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through intense, submerged water — probing, secretive, all-or-nothing. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through expansive, principled fire — aiming far, disliking constraint. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through structural, ambitious earth — patient, hierarchical, results-driven. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through detached, systemic air — unconventional, collective-minded. Venus is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Venus:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your capacity for love, beauty and comfort seeks expression through dissolving, compassionate water — porous, imaginative, boundaryless. This is Venus's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through sharp, initiating fire — fast to start, impatient with delay. This is Saturn's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through steady, sensory earth — slow to move, immovable once settled. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through restless, dual air — curious, verbal, quick to switch. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through protective, tidal water — feeling first, guarded and retentive. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through proud, radiant fire — needing to be seen and to matter. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through analytical, corrective earth — precise, useful, quietly critical. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through balancing, relational air — weighing, pairing, averse to discord. This is Saturn's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through intense, submerged water — probing, secretive, all-or-nothing. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through expansive, principled fire — aiming far, disliking constraint. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through structural, ambitious earth — patient, hierarchical, results-driven. Saturn rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through detached, systemic air — unconventional, collective-minded. Saturn rules this sign, so it is at home — comfortable, self-directed and stable rather than spectacular.",
+          "dignity": "own"
+        }
+      }
+    },
+    {
+      "key": "Saturn:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your discipline, endurance and relationship with limitation take shape through dissolving, compassionate water — porous, imaginative, boundaryless. Saturn is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through sharp, initiating fire — fast to start, impatient with delay. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through steady, sensory earth — slow to move, immovable once settled. This is Rahu's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through restless, dual air — curious, verbal, quick to switch. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through protective, tidal water — feeling first, guarded and retentive. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through proud, radiant fire — needing to be seen and to matter. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through analytical, corrective earth — precise, useful, quietly critical. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through balancing, relational air — weighing, pairing, averse to discord. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through intense, submerged water — probing, secretive, all-or-nothing. This is Rahu's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through expansive, principled fire — aiming far, disliking constraint. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through structural, ambitious earth — patient, hierarchical, results-driven. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through detached, systemic air — unconventional, collective-minded. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Rahu:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your ambition and hunger for what you lack fixate through dissolving, compassionate water — porous, imaginative, boundaryless. Rahu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Aries",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through sharp, initiating fire — fast to start, impatient with delay. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Taurus",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through steady, sensory earth — slow to move, immovable once settled. This is Ketu's sign of debilitation — the function is under strain here, and matures late or through difficulty. Check for neecha bhanga (cancellation), which often turns it into a defining strength.",
+          "dignity": "debilitated"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Gemini",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through restless, dual air — curious, verbal, quick to switch. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Cancer",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through protective, tidal water — feeling first, guarded and retentive. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Leo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through proud, radiant fire — needing to be seen and to matter. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Virgo",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through analytical, corrective earth — precise, useful, quietly critical. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Libra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through balancing, relational air — weighing, pairing, averse to discord. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Scorpio",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through intense, submerged water — probing, secretive, all-or-nothing. This is Ketu's sign of exaltation — the placement operates at full strength, and its qualities show up early and reliably.",
+          "dignity": "exalted"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Sagittarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through expansive, principled fire — aiming far, disliking constraint. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Capricorn",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through structural, ambitious earth — patient, hierarchical, results-driven. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Aquarius",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through detached, systemic air — unconventional, collective-minded. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    },
+    {
+      "key": "Ketu:Pisces",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Your detachment and inherited mastery withdraw through dissolving, compassionate water — porous, imaginative, boundaryless. Ketu is a guest here: neither strengthened nor undermined, so surrounding aspects and the house it occupies decide the outcome.",
+          "dignity": "neutral"
+        }
+      }
+    }
+  ]
+}

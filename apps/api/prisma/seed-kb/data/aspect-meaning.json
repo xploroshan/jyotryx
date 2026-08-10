@@ -1,0 +1,141 @@
+{
+  "_source": "Placement library (4/N). Graha drishti keyed \"{Planet}:{houseOffset}\" — every graha aspects the 7th, with Mars adding 4/8, Jupiter 5/9 and Saturn 3/10. Payload { text }. English-authored; run `npm run kb:backfill -- --tables=aspect-meaning`.",
+  "_shape": "{ text: string }",
+  "rows": [
+    {
+      "key": "Sun:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "The Sun's gaze on the 7th brings authority into partnership — steady leadership, or a tendency to dominate the agreement."
+        }
+      }
+    },
+    {
+      "key": "Moon:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "The Moon's aspect softens the 7th: emotional attunement to the partner, with moods that colour the relationship."
+        }
+      }
+    },
+    {
+      "key": "Mars:4",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mars' 4th aspect disturbs domestic peace — energy and friction at home; excellent for property matters pursued actively."
+        }
+      }
+    },
+    {
+      "key": "Mars:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mars on the 7th brings passion and drive to partnership, and a sharp edge to disagreements. Classically the Kuja/Manglik consideration."
+        }
+      }
+    },
+    {
+      "key": "Mars:8",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mars' 8th aspect brings sudden turns and surgical intensity — decisive in crisis, accident-prone when unchecked."
+        }
+      }
+    },
+    {
+      "key": "Mercury:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Mercury's aspect makes partnership a conversation: negotiation, contracts and intellectual rapport matter more than sentiment."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:5",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter's 5th aspect blesses intelligence, children and creative merit — one of the most protective aspects in the chart."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter on the 7th is the classical protector of marriage: an ethical, growth-oriented partner and honourable agreements."
+        }
+      }
+    },
+    {
+      "key": "Jupiter:9",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Jupiter's 9th aspect strengthens dharma, fortune and the guru principle — belief that guides rather than constrains."
+        }
+      }
+    },
+    {
+      "key": "Venus:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Venus on the 7th brings harmony, attraction and pleasure to partnership; comfort can be preferred over confrontation."
+        }
+      }
+    },
+    {
+      "key": "Saturn:3",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn's 3rd aspect disciplines courage and initiative — slow, deliberate effort that outlasts faster starters."
+        }
+      }
+    },
+    {
+      "key": "Saturn:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn on the 7th delays and then stabilises partnership: later commitment, tested by duty, durable once formed."
+        }
+      }
+    },
+    {
+      "key": "Saturn:10",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Saturn's 10th aspect grinds career upward — recognition arrives late but is rarely reversed."
+        }
+      }
+    },
+    {
+      "key": "Rahu:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Rahu's aspect brings the unconventional or foreign into partnership — magnetic, ambitious, and prone to illusion about the other."
+        }
+      }
+    },
+    {
+      "key": "Ketu:7",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "text": "Ketu's aspect brings detachment to partnership — spiritual depth, or a reluctance to be fully held."
+        }
+      }
+    }
+  ]
+}

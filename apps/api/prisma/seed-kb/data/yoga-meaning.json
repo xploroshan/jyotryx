@@ -1,0 +1,206 @@
+{
+  "_source": "Placement library (4/N). Named-yoga callouts keyed by slug. Lets a kundli reading name and explain a detected yoga from the KB rather than asking the LLM to recall classical definitions (a known hallucination surface). Payload { name, text }. English-authored; run `npm run kb:backfill -- --tables=yoga-meaning`.",
+  "_shape": "{ name: string, text: string }",
+  "rows": [
+    {
+      "key": "gajakesari",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Gajakesari Yoga",
+          "text": "Jupiter in a kendra (1/4/7/10) from the Moon. Confers intelligence, good judgement and lasting reputation; the native tends to be respected rather than merely popular."
+        }
+      }
+    },
+    {
+      "key": "budhaditya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Budhaditya Yoga",
+          "text": "Sun and Mercury conjunct. Sharp analytical intelligence and clear communication. Strong when Mercury is not combust; when it is, the intellect is there but expression struggles."
+        }
+      }
+    },
+    {
+      "key": "chandra_mangala",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Chandra-Mangala Yoga",
+          "text": "Moon conjunct Mars. Drive fused with emotion — capable of real earning power, but the temper needs governing."
+        }
+      }
+    },
+    {
+      "key": "panch_mahapurusha_ruchaka",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Ruchaka Yoga",
+          "text": "Mars in own or exalted sign in a kendra. One of the five Mahapurusha yogas: courage, physical strength, command."
+        }
+      }
+    },
+    {
+      "key": "panch_mahapurusha_bhadra",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Bhadra Yoga",
+          "text": "Mercury in own or exalted sign in a kendra. Mahapurusha yoga of intellect, eloquence and business acumen."
+        }
+      }
+    },
+    {
+      "key": "panch_mahapurusha_hamsa",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Hamsa Yoga",
+          "text": "Jupiter in own or exalted sign in a kendra. Mahapurusha yoga of wisdom, ethics and a naturally teaching disposition."
+        }
+      }
+    },
+    {
+      "key": "panch_mahapurusha_malavya",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Malavya Yoga",
+          "text": "Venus in own or exalted sign in a kendra. Mahapurusha yoga of beauty, comfort, artistry and refined taste."
+        }
+      }
+    },
+    {
+      "key": "panch_mahapurusha_sasa",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Sasa Yoga",
+          "text": "Saturn in own or exalted sign in a kendra. Mahapurusha yoga of endurance, authority over others and slow, durable rise."
+        }
+      }
+    },
+    {
+      "key": "dhana",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Dhana Yoga",
+          "text": "A wealth combination formed when the lords of the 2nd, 5th, 9th or 11th connect. Indicates accumulation rather than windfall — money that stays."
+        }
+      }
+    },
+    {
+      "key": "raja",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Raja Yoga",
+          "text": "A kendra lord linked with a trikona lord. The classical power combination: authority, status and material success together."
+        }
+      }
+    },
+    {
+      "key": "viparita_raja",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Viparita Raja Yoga",
+          "text": "Lords of the 6th, 8th or 12th connecting among themselves. Rise THROUGH difficulty — setbacks that end up creating the opportunity."
+        }
+      }
+    },
+    {
+      "key": "neecha_bhanga",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Neecha Bhanga Raja Yoga",
+          "text": "A debilitated planet whose debilitation is cancelled. Often the most interesting placement in a chart: an early weakness that becomes a defining strength."
+        }
+      }
+    },
+    {
+      "key": "kemadruma",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Kemadruma Yoga",
+          "text": "No planet in the 2nd or 12th from the Moon. Traditionally a yoga of isolation and fluctuating support; substantially reduced when the Moon is aspected or in a kendra from the lagna."
+        }
+      }
+    },
+    {
+      "key": "shakata",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Shakata Yoga",
+          "text": "Moon in the 6th, 8th or 12th from Jupiter. Fortunes that rise and fall in cycles rather than climbing steadily."
+        }
+      }
+    },
+    {
+      "key": "amala",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Amala Yoga",
+          "text": "A benefic in the 10th from the lagna or Moon. Spotless reputation — the native's public name outlives their tenure."
+        }
+      }
+    },
+    {
+      "key": "saraswati",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Saraswati Yoga",
+          "text": "Jupiter, Venus and Mercury well placed in kendras/trikonas or the 2nd. Exceptional aptitude for learning, art and expression."
+        }
+      }
+    },
+    {
+      "key": "parivartana",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Parivartana Yoga",
+          "text": "Two house lords exchanging signs. Fuses the affairs of both houses — each is accessed through the other."
+        }
+      }
+    },
+    {
+      "key": "kala_sarpa",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Kala Sarpa Yoga",
+          "text": "All seven planets hemmed between Rahu and Ketu. Intense, karmically driven life with concentrated periods of pressure and breakthrough; effects soften markedly when a planet sits outside the axis."
+        }
+      }
+    },
+    {
+      "key": "guru_chandala",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Guru-Chandala Yoga",
+          "text": "Jupiter conjunct Rahu. Unconventional wisdom that questions inherited belief — brilliant or misdirected depending on Jupiter's strength."
+        }
+      }
+    },
+    {
+      "key": "adhi",
+      "tradition": null,
+      "i18n": {
+        "en": {
+          "name": "Adhi Yoga",
+          "text": "Benefics in the 6th, 7th and 8th from the Moon. Confers leadership, resources and a comfortable, well-supported life."
+        }
+      }
+    }
+  ]
+}

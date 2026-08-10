@@ -155,17 +155,17 @@ export class InterpretationService {
         return this.assemble(this.kb.renderStatus(await this.kb.getDashaImpact(lord), locale));
       }
       if (domain === 'matching') {
-        // Compatibility is tier-driven: map the ashtakoota percentage to a band.
-        const pct = this.matchPercentage(payload);
-        if (pct == null) return null;
-        const tier = pct >= 70 ? 'excellent' : pct >= 55 ? 'good' : pct >= 40 ? 'average' : 'low';
-        return this.assemble(this.kb.renderStatus(await this.kb.getMatchingTier(tier), locale));
+        // `await` is REQUIRED: returning the promise unawaited lets a
+        // rejection escape this method's try/catch entirely, so a KB
+        // failure would propagate out of interpret() instead of falling
+        // through to the LLM as the catch below promises.
+        return await this.assembleMatching(payload, locale);
       }
       if (domain === 'kundli') {
-        return this.assembleKundli(payload, locale);
+        return await this.assembleKundli(payload, locale);
       }
       if (domain === 'numerology') {
-        return this.assembleNumerology(payload, locale);
+        return await this.assembleNumerology(payload, locale);
       }
     } catch (e) {
       // Never let a KB hiccup break interpretation — fall through to the LLM.
@@ -229,6 +229,85 @@ export class InterpretationService {
    * so the localized LLM path runs. Each placement/dasha point is added only
    * when its own row matches, so no English leaks into a translated reading.
    */
+  /**
+   * KB-assembled compatibility reading.
+   *
+   * The 36-point Guna Milan score is computed deterministically by
+   * guna.util.ts — but the EXPLANATION of it was LLM-only, so a fixed
+   * calculation ended up with a non-reproducible rationale. The tier row
+   * gives the headline; kb_koota_meaning explains each factor, and
+   * specifically why a weak one scored low (Nadi dosha and its cancellations
+   * being the case users actually ask about).
+   */
+  private async assembleMatching(
+    payload: Record<string, unknown>,
+    locale?: string,
+  ): Promise<InterpretationResult | null> {
+    const pct = this.matchPercentage(payload);
+    if (pct == null) return null;
+    const tier = pct >= 70 ? 'excellent' : pct >= 55 ? 'good' : pct >= 40 ? 'average' : 'low';
+    const tierSt = this.kb.renderStatus(await this.kb.getMatchingTier(tier), locale);
+    if (!tierSt?.matched) return null;
+    const tv = tierSt.value as { summary?: unknown; points?: unknown; guidance?: unknown };
+    const summary = this.str(tv.summary);
+    if (!summary) return null;
+
+    // START from the tier row's OWN authored bullets (matching-tiers.json ships
+    // 4 per tier). The previous implementation went through assemble(), which
+    // read them; building `points` only from `payload.kootas` silently dropped
+    // the entire middle of the reading for any caller that sends no koota
+    // breakdown — and, because the result was still non-null, suppressed the
+    // LLM fallback that used to cover it.
+    const points: string[] = Array.isArray(tv.points)
+      ? tv.points.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+      : [];
+    // `kootas` is the per-factor breakdown when the caller supplies it.
+    const kootas = Array.isArray(payload.kootas) ? payload.kootas : [];
+    for (const raw of kootas) {
+      if (points.length >= 8) break;
+      const k = (raw ?? {}) as {
+        name?: unknown; guna?: unknown;
+        obtainedPoints?: unknown; maxPoints?: unknown;
+        // The web client sends `obtained`/`max` (MatchingClient.tsx), not the
+        // `obtainedPoints`/`maxPoints` spelling used elsewhere. Reading only the
+        // latter made `low` always false, so lowScoreNote — the Nadi-dosha
+        // sentence users actually ask about — could never fire.
+        obtained?: unknown; max?: unknown;
+      };
+      const slug = this.str(k.name) ?? this.str(k.guna);
+      if (!slug) continue;
+      const kSt = this.kb.renderStatus(
+        await this.kb.getKootaMeaning(slug.toLowerCase().replace(/\s+/g, '_')),
+        locale,
+      );
+      if (!kSt?.matched) continue;
+      const kv = kSt.value as { name?: unknown; text?: unknown; lowScoreNote?: unknown };
+      const kname = this.str(kv.name);
+      const ktext = this.str(kv.text);
+      if (!kname || !ktext) continue;
+
+      // Surface the low-score note only when this factor actually scored low —
+      // that is the sentence a worried user is looking for.
+      const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+      const got = num(k.obtainedPoints) ?? num(k.obtained);
+      const max = num(k.maxPoints) ?? num(k.max);
+      const low = got != null && max != null && max > 0 && got / max <= 0.5;
+      const note = low ? this.str(kv.lowScoreNote) : null;
+      points.push(note ? `${kname}: ${ktext} ${note}` : `${kname}: ${ktext}`);
+    }
+
+    // Same guard assemble() applied: a summary with no bullets is a thinner
+    // reading than the LLM would give, so fall through rather than ship it.
+    if (points.length === 0) return null;
+
+    return {
+      summary,
+      points,
+      guidance: this.str(tv.guidance) ?? '',
+      disclaimer: DISCLAIMER,
+    };
+  }
+
   private async assembleKundli(
     payload: Record<string, unknown>,
     locale?: string,
@@ -245,14 +324,57 @@ export class InterpretationService {
     const planets = Array.isArray(payload.planets) ? payload.planets : [];
     for (const raw of planets) {
       if (points.length >= 6) break;
-      const p = (raw ?? {}) as { planet?: unknown; house?: unknown };
+      const p = (raw ?? {}) as { planet?: unknown; house?: unknown; sign?: unknown };
       const planet = this.str(p.planet);
       const house = typeof p.house === 'number' ? p.house : null;
       if (!planet || house == null || house < 1 || house > 12) continue;
       const st = this.kb.renderStatus(await this.kb.getPlanetInHouse(`${planet}:${house}`), locale);
       if (st?.matched) {
         const text = this.str((st.value as { text?: unknown }).text);
-        if (text) points.push(text);
+        if (text) {
+          // Placement library (4/N): the house says WHERE the graha acts, the
+          // sign says HOW it expresses, and dignity says how strongly. Adding
+          // the sign layer is what makes a KB-assembled placement competitive
+          // with the LLM's version rather than a thinner substitute.
+          const sign = this.str(p.sign);
+          let enriched = text;
+          if (sign) {
+            const signSt = this.kb.renderStatus(
+              await this.kb.getPlanetInSign(`${planet}:${sign}`),
+              locale,
+            );
+            if (signSt?.matched) {
+              const sv = signSt.value as { text?: unknown; dignity?: unknown };
+              const stext = this.str(sv.text);
+              const dignity = this.str(sv.dignity);
+              // Only the notable dignities earn a mention — tagging every
+              // placement "neutral" would be noise.
+              if (stext) {
+                enriched = dignity && dignity !== 'neutral'
+                  ? `${text} ${stext} (${dignity})`
+                  : `${text} ${stext}`;
+              }
+            }
+          }
+          points.push(enriched);
+        }
+      }
+    }
+
+    // Named yogas, when the chart detection supplied them.
+    const yogas = Array.isArray(payload.yogas) ? payload.yogas : [];
+    for (const rawYoga of yogas) {
+      if (points.length >= 8) break;
+      const slug = this.str(
+        typeof rawYoga === 'string' ? rawYoga : (rawYoga as { slug?: unknown })?.slug,
+      );
+      if (!slug) continue;
+      const ySt = this.kb.renderStatus(await this.kb.getYogaMeaning(slug.toLowerCase()), locale);
+      if (ySt?.matched) {
+        const yv = ySt.value as { name?: unknown; text?: unknown };
+        const yname = this.str(yv.name);
+        const ytext = this.str(yv.text);
+        if (yname && ytext) points.push(`${yname}: ${ytext}`);
       }
     }
 

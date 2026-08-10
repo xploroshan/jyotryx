@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LocaleBag, tr, trStatus, KbLocale } from './kb-locales';
+import { KbCoverageTracker, type KbCoverageReport } from './kb-coverage';
 
 // ─── Per-table i18n payload shapes ──────────────────────────────────────────
 // These are the authoritative shapes the integrity test asserts against.
@@ -110,6 +111,42 @@ export interface KbPlanetInHousePayload {
   text: string;
 }
 
+// ─── Placement library (4/N) ────────────────────────────────────────────────
+// Combination tables. The KB previously described only single entities, so
+// every chart interpretation fell through to the LLM for its meaning layer.
+
+export interface KbHouseMeaningPayload {
+  text: string;
+}
+
+export interface KbPlanetInSignPayload {
+  text: string;
+  /** Classical dignity of the graha in this rashi. */
+  dignity: 'exalted' | 'debilitated' | 'own' | 'neutral';
+}
+
+export interface KbYogaMeaningPayload {
+  name: string;
+  text: string;
+}
+
+export interface KbKootaMeaningPayload {
+  name: string;
+  maxPoints: number;
+  text: string;
+  /** Shown when the couple scored zero/low on this koota. */
+  lowScoreNote: string;
+}
+
+export interface KbAspectMeaningPayload {
+  text: string;
+}
+
+export interface KbTransitAlertPayload {
+  text: string;
+  tone: 'favourable' | 'caution' | 'mixed';
+}
+
 interface KbRow<Payload> {
   id: string;
   key: string;
@@ -132,6 +169,7 @@ interface KbRow<Payload> {
 @Injectable()
 export class KbService {
   private readonly logger = new Logger(KbService.name);
+  private readonly coverage = new KbCoverageTracker();
 
   private planetCache = new Map<string, KbRow<KbPlanetPayload>>();
   private nakshatraCache = new Map<string, KbRow<KbNakshatraPayload>>();
@@ -155,6 +193,12 @@ export class KbService {
   private matchingTierCache = new Map<string, KbRow<KbMatchingTierPayload>>();
   private signTraitCache = new Map<string, KbRow<KbSignTraitPayload>>();
   private planetInHouseCache = new Map<string, KbRow<KbPlanetInHousePayload>>();
+  private houseMeaningCache = new Map<string, KbRow<KbHouseMeaningPayload>>();
+  private planetInSignCache = new Map<string, KbRow<KbPlanetInSignPayload>>();
+  private yogaMeaningCache = new Map<string, KbRow<KbYogaMeaningPayload>>();
+  private kootaMeaningCache = new Map<string, KbRow<KbKootaMeaningPayload>>();
+  private aspectMeaningCache = new Map<string, KbRow<KbAspectMeaningPayload>>();
+  private transitAlertCache = new Map<string, KbRow<KbTransitAlertPayload>>();
 
   private loaded = {
     planet: false,
@@ -179,6 +223,12 @@ export class KbService {
     matchingTier: false,
     signTrait: false,
     planetInHouse: false,
+    houseMeaning: false,
+    planetInSign: false,
+    yogaMeaning: false,
+    kootaMeaning: false,
+    aspectMeaning: false,
+    transitAlert: false,
   };
 
   // Coalesces concurrent loads of the same table onto a single promise so
@@ -359,16 +409,78 @@ export class KbService {
     return this.lookup(this.planetInHouseCache, key, null);
   }
 
+  // ─── Placement library (4/N) accessors ───────────────────────────────────
+
+  /** Bhava theme, keyed "1".."12" — WHERE a placement acts. */
+  async getHouseMeaning(house: number | string): Promise<KbRow<KbHouseMeaningPayload> | null> {
+    await this.ensureLoaded('houseMeaning');
+    return this.lookup(this.houseMeaningCache, String(house), null);
+  }
+
+  /** Planet-in-sign, keyed "{Planet}:{Sign}" — HOW a graha expresses. */
+  async getPlanetInSign(key: string): Promise<KbRow<KbPlanetInSignPayload> | null> {
+    await this.ensureLoaded('planetInSign');
+    return this.lookup(this.planetInSignCache, key, null);
+  }
+
+  /** Named-yoga callout, keyed by slug (e.g. "gajakesari"). */
+  async getYogaMeaning(slug: string): Promise<KbRow<KbYogaMeaningPayload> | null> {
+    await this.ensureLoaded('yogaMeaning');
+    return this.lookup(this.yogaMeaningCache, slug, null);
+  }
+
+  /** One of the 8 Ashtakoota factors, keyed by slug (e.g. "nadi"). */
+  async getKootaMeaning(slug: string): Promise<KbRow<KbKootaMeaningPayload> | null> {
+    await this.ensureLoaded('kootaMeaning');
+    return this.lookup(this.kootaMeaningCache, slug, null);
+  }
+
+  /** Graha drishti, keyed "{Planet}:{houseOffset}". */
+  async getAspectMeaning(key: string): Promise<KbRow<KbAspectMeaningPayload> | null> {
+    await this.ensureLoaded('aspectMeaning');
+    return this.lookup(this.aspectMeaningCache, key, null);
+  }
+
+  /** Gochar alert, keyed "{Planet}:{houseFromMoon}". */
+  async getTransitAlert(key: string): Promise<KbRow<KbTransitAlertPayload> | null> {
+    await this.ensureLoaded('transitAlert');
+    return this.lookup(this.transitAlertCache, key, null);
+  }
+
   /** Convenience: render a KB row in the user's locale, falling back to English. */
+  /**
+   * Render a row in the requested locale, falling back to English.
+   *
+   * Records the outcome for coverage reporting. The RETURNED VALUE is
+   * byte-identical to the previous `tr(row.i18n, locale)` — trStatus applies
+   * the same fallback and only additionally reports whether it hit — so this
+   * is instrumentation, not a behaviour change. Without it, a locale miss
+   * silently served English at 62 call sites and nothing could measure how
+   * much of the KB has actually been backfilled.
+   */
   render<T>(row: KbRow<T> | null, locale?: string | null): T | null {
     if (!row) return null;
-    return tr(row.i18n, locale);
+    const status = trStatus(row.i18n, locale);
+    this.coverage.record(locale, row.key, status.matched);
+    return status.value;
+  }
+
+  /** Locale-coverage counters since process start (see KbCoverageTracker). */
+  getCoverageReport(): KbCoverageReport {
+    return this.coverage.report();
+  }
+
+  /** Test/ops hook — clears the counters. */
+  resetCoverage(): void {
+    this.coverage.reset();
   }
 
   /** Like `render` but reports whether the locale was an exact hit. */
   renderStatus<T>(row: KbRow<T> | null, locale?: string | null): { value: T; matched: boolean } | null {
     if (!row) return null;
-    return trStatus(row.i18n, locale);
+    const status = trStatus(row.i18n, locale);
+    this.coverage.record(locale, row.key, status.matched);
+    return status;
   }
 
   // ─── Internals ──────────────────────────────────────────────────────────
@@ -410,6 +522,12 @@ export class KbService {
           case 'matchingTier':      await this.loadMatchingTiers();       break;
           case 'signTrait':         await this.loadSignTraits();          break;
           case 'planetInHouse':     await this.loadPlanetInHouse();       break;
+          case 'houseMeaning':      await this.loadHouseMeaning();        break;
+          case 'planetInSign':      await this.loadPlanetInSign();        break;
+          case 'yogaMeaning':       await this.loadYogaMeaning();         break;
+          case 'kootaMeaning':      await this.loadKootaMeaning();        break;
+          case 'aspectMeaning':     await this.loadAspectMeaning();       break;
+          case 'transitAlert':      await this.loadTransitAlert();        break;
         }
         this.loaded[table] = true;
       } catch (err) {
@@ -460,6 +578,12 @@ export class KbService {
   private loadMatchingTiers()      { return this.loadInto(this.prisma.kbMatchingTier,      this.matchingTierCache); }
   private loadSignTraits()         { return this.loadInto(this.prisma.kbSignTrait,         this.signTraitCache); }
   private loadPlanetInHouse()      { return this.loadInto(this.prisma.kbPlanetInHouse,      this.planetInHouseCache); }
+  private loadHouseMeaning()       { return this.loadInto(this.prisma.kbHouseMeaning,       this.houseMeaningCache); }
+  private loadPlanetInSign()       { return this.loadInto(this.prisma.kbPlanetInSign,       this.planetInSignCache); }
+  private loadYogaMeaning()        { return this.loadInto(this.prisma.kbYogaMeaning,        this.yogaMeaningCache); }
+  private loadKootaMeaning()       { return this.loadInto(this.prisma.kbKootaMeaning,       this.kootaMeaningCache); }
+  private loadAspectMeaning()      { return this.loadInto(this.prisma.kbAspectMeaning,      this.aspectMeaningCache); }
+  private loadTransitAlert()       { return this.loadInto(this.prisma.kbTransitAlert,       this.transitAlertCache); }
 }
 
 function cacheKey(key: string, tradition: string | null | undefined): string {

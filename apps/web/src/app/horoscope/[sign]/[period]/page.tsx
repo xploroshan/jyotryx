@@ -11,6 +11,7 @@ import { LANDING_LOCALES } from '@/i18n/locales';
 import { en } from '@/i18n/en';
 import { interpolate, buildFaqs } from '@/i18n/interpolate';
 import { ZodiacGlyph } from '@/components/icons/astro';
+import { LiveDataFallback } from "@/components/seo/LiveDataFallback";
 
 /**
  * Server-rendered SEO landing pages for the longer horoscope periods —
@@ -196,9 +197,7 @@ export default async function HoroscopePeriodPage({ params }: RouteProps) {
               </dl>
             </>
           ) : (
-            <p className="text-sm text-[rgba(12,8,5,0.72)]">
-              This forecast is being prepared — please refresh in a moment.
-            </p>
+            <LiveDataFallback message="This forecast is being prepared — please refresh in a moment." />
           )}
         </section>
 
