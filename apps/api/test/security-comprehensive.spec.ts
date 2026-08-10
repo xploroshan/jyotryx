@@ -14,6 +14,7 @@ import { OpenAIService } from '../src/openai/openai.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
 import { MemoryService } from '../src/modules/memory/memory.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { KbService } from '../src/knowledge/kb.service';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
@@ -32,6 +33,7 @@ import {
   createMockRedis,
   mockLlmService,
   mockMemoryService,
+  mockGocharService,
 } from './helpers/mocks';
 import * as crypto from 'crypto';
 
@@ -627,6 +629,7 @@ describe('Security: Credit Refund on AI Failure', () => {
         { provide: KnowledgeService, useValue: knowledgeMock },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
       ],
     }).compile();
 
@@ -796,6 +799,7 @@ describe('Security: Data Isolation', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();
@@ -949,6 +953,7 @@ describe('Security: Input Sanitization', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: KbService, useValue: mockKbService() },
       ],
     }).compile();

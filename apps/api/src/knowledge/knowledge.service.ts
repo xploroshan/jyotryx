@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OpenAIService } from '../openai/openai.service';
 import { VectorSearchService } from './vector-search.service';
 import { EmbeddingService } from '../ai/embeddings/embedding-service';
-import { extractKeywords, tokenizeQuery } from './keywords.util';
+import { extractKeywords, probeTokens, tokenizeQuery } from './keywords.util';
 import { normaliseLocale } from './kb-locales';
 import type { KbCategory } from './kb-categories';
 
@@ -159,10 +159,17 @@ export class KnowledgeService {
     });
 
     if (candidates.length === 0) {
+      // Probe on the CONTENT words, not on token zero. Token zero is an
+      // interrogative for most natural questions, and substring-matching
+      // "when" across the corpus returns arbitrary chunks that are then
+      // presented to the model as authoritative grounding.
+      const probes = probeTokens(query);
+      if (probes.length === 0) return [];
+
       const textResults = await this.prisma.knowledgeDocument.findMany({
         where: {
           ...where,
-          text: { contains: queryWords[0], mode: 'insensitive' },
+          OR: probes.map((p) => ({ text: { contains: p, mode: 'insensitive' as const } })),
         },
         take: topK,
         select: {

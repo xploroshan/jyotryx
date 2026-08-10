@@ -8,8 +8,10 @@ import { LlmService } from '../src/llm/llm.service';
 import { KnowledgeService } from '../src/knowledge/knowledge.service';
 import { ModerationService } from '../src/safety/moderation.service';
 import { MemoryService } from '../src/modules/memory/memory.service';
+import { GocharService } from '../src/modules/daily-briefing/gochar.service';
 import { FeatureAccessService } from '../src/common/feature-access/feature-access.service';
-import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockUser, mockMemoryService } from './helpers/mocks';
+import { mockKnowledgeService, mockOpenAIService, mockConfigService, mockUserService, mockUser, mockMemoryService,
+  mockGocharService } from './helpers/mocks';
 import { firstValueFrom, toArray } from 'rxjs';
 
 // Non-subscriber by default so the existing credit-deduction assertions
@@ -84,6 +86,7 @@ describe('ChatService — SSE Streaming (Item 3)', () => {
         { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: FeatureAccessService, useValue: mockFeatureAccess() },
       ],
     }).compile();
@@ -254,6 +257,7 @@ describe('ChatService — SSE Streaming (Item 3)', () => {
           { provide: KnowledgeService, useValue: mockKnowledgeService() },
         { provide: ModerationService, useValue: { checkAndRecord: jest.fn().mockResolvedValue(null) } },
         { provide: MemoryService, useValue: mockMemoryService() },
+        { provide: GocharService, useValue: mockGocharService() },
         { provide: FeatureAccessService, useValue: mockFeatureAccess() },
         ],
       }).compile();

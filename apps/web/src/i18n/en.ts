@@ -1109,6 +1109,7 @@ export const en = {
     q4: 'What remedies can improve my health?',
     askPlaceholder: 'Ask your question...',
     online: 'Online',
+    offline: 'Offline',
     askAnything: 'Ask anything',
     signIn: 'Sign in to chat',
     disclaimer: 'Predictions are for guidance and entertainment purposes only.',

@@ -272,6 +272,16 @@ export const mockMemoryService = () => ({
 });
 
 /**
+ * GocharService as ChatService consumes it: the per-user transit overlay used
+ * to ground a reading in today's sky. Returns null by default (the "not enough
+ * birth data to cast a chart" case), which every caller must tolerate.
+ */
+export const mockGocharService = () => ({
+  computePersonalization: jest.fn().mockResolvedValue(null),
+  computeEphemerisPanchang: jest.fn().mockResolvedValue(null),
+});
+
+/**
  * In-memory mock of the ioredis client. Supports the ops the app uses:
  * get, set (with EX/PX), del, ping, incr, expire, ttl, quit, on.
  * Honors TTLs so tests that depend on expiry behavior still work.

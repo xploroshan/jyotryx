@@ -90,3 +90,30 @@ export function tokenizeQuery(query: string): string[] {
   // many-thousand-element array-overlap predicate per request.
   return [...new Set(normalizeWords(query).filter(longEnough))].slice(0, 30);
 }
+
+/**
+ * Content-bearing tokens for the last-resort `text: { contains: … }` tier.
+ *
+ * That tier used to probe `queryWords[0]` — token ZERO of the raw query.
+ * `tokenizeQuery` deliberately keeps stop-words (a short question can reduce to
+ * nothing without them) but `extractKeywords` strips them, so an interrogative
+ * opener — "when", "will", "what", "how" — can never match the `keywords`
+ * column. The result: "when will I find a job" found no keyword candidates,
+ * then substring-searched the corpus for "when", matched arbitrary chunks
+ * containing that word, and injected them under the header "Reference
+ * Knowledge (use this to ground your responses)". Every question opening with
+ * an interrogative — which is most of them — degraded this way, silently.
+ *
+ * Returns ALL content words rather than picking one. Any single-token
+ * heuristic is arbitrary: "longest" prefers "find" over "job", "first" prefers
+ * "find" too, and neither is defensible. ORing the whole set lets the scorer
+ * rank the matches, which is what it is for.
+ *
+ * Empty when nothing meaningful survives, so the caller skips the tier instead
+ * of matching noise.
+ */
+export function probeTokens(query: string): string[] {
+  const words = normalizeWords(query).filter((w) => longEnough(w) && !STOP_WORDS.has(w));
+  // Bounded: this becomes an OR of ILIKE predicates.
+  return [...new Set(words)].slice(0, 8);
+}
