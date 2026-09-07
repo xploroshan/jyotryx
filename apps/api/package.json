@@ -76,7 +76,7 @@
     "google-auth-library": "^10.9.0",
     "helmet": "^8.1.0",
     "ioredis": "^5.10.1",
-    "nestjs-pino": "^4.6.1",
+    "nestjs-pino": "^5.1.0",
     "openai": "^6.34.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
